@@ -52,7 +52,8 @@ else{
 	    mysql_select_db($short_domain); // Do I need to do this if I specify a database in the select statement. DUMB!
 	    $nodes = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(nid) AS nodes FROM node;")));
       $users = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(uid) AS users FROM users")));
-      $views = array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
+      $views = 0;
+      $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
 	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
       echo '<div style="float:left;height:270px;width:300px;" ';
       if($visible_count>=$number_visible){
