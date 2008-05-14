@@ -125,14 +125,14 @@ function sortDivs(parentId,sortField){
       newarray[0] = divs[i].innerHTML
       newarray[1] = divs[i].getAttribute("nodes");
       newarray[2] = divs[i].getAttribute("domain");
-      newarray[3] = divs[i].getAttribute('views');
+      newarray[3] = divs[i].getAttribute("views");
       oldDivs[i] = newarray;}
     for(i=0;i<divs.length;i++){
       var newId = divs.length - (i + 1);
       divs[newId].innerHTML=oldDivs[i][0];
       divs[newId].setAttribute("nodes",oldDivs[i][1]);
-      divs[newId].setAttribute("views",oldDivs[i][3]);
-      divs[newId].setAttribute("domain",oldDivs[i][2]);}}
+      divs[newId].setAttribute("domain",oldDivs[i][2]);
+      divs[newId].setAttribute("views",oldDivs[i][3]);}}
   if(sortField =='nodes'){
     if(lastSort =='nodes'){
       sortDivs(parentId,'reverse');
@@ -163,8 +163,8 @@ function sortDivs(parentId,sortField){
     for(i=0;i<divs.length;i++){
       divs[i].innerHTML = oldDivs[i][0];
       divs[i].setAttribute('nodes',oldDivs[i][1]);
-      divs[i].setAttribute("views",oldDivs[i][3]);
-      divs[i].setAttribute('domain',oldDivs[i][2]);}}
+      divs[i].setAttribute('domain',oldDivs[i][2]);
+      divs[i].setAttribute("views",oldDivs[i][3]);}}
   if(sortField =='views'){
     if(lastSort =='views'){
       sortDivs(parentId,'reverse');
@@ -195,8 +195,8 @@ function sortDivs(parentId,sortField){
     for(i=0;i<divs.length;i++){
       divs[i].innerHTML = oldDivs[i][0];
       divs[i].setAttribute('nodes',oldDivs[i][1]);
-      divs[i].setAttribute("views",oldDivs[i][3]);
-      divs[i].setAttribute('domain',oldDivs[i][2]);}}
+      divs[i].setAttribute('domain',oldDivs[i][2]);
+      divs[i].setAttribute("views",oldDivs[i][3]);}}
   if(sortField =='domain'){
     if(lastSort =='domain'){
       sortDivs(parentId,'reverse');
