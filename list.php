@@ -111,9 +111,7 @@ function prevBlock(parentId){
   var alertString = '';
   for(i=prevFirstShown-1;i>(prevFirstShown-(prevLastShown-prevFirstShown+2));i--){
     alertString +=' '+i;
-    divs[i].className = 'listnothidden';}
-  alert(alertString);
-}
+    divs[i].className = 'listnothidden';}}
 
 function sortDivs(parentId,sortField){
   divs = document.getElementById(parentId).childNodes;
