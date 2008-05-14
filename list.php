@@ -128,7 +128,7 @@ function sortDivs(parentId,sortField){
       divs[newId].setAttribute("domain",oldDivs[i][2]);}}
   if(sortField =='nodes'){
     if(lastSort =='nodes'){
-      sortDivs(parentId,reverse);
+      sortDivs(parentId,'reverse');
       lastSort = '';
       return;
     }
