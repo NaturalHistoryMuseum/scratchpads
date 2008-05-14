@@ -274,7 +274,7 @@ function imagex_form_alter($form_id, &$form) {
     '#prefix' => '<div>',
     '#suffix' => '</div>',
     '#value' => '<div class="postlet">
-	<applet name="postlet" code="Main.class" archive="'.base_path().drupal_get_path('module','imagex').'/postlet/postlet.jar" width="400" height="200" mayscript>
+	<applet name="postlet" code="Main.class" archive="'.base_path().drupal_get_path('module','imagex').'/postlet/postlet-0-15.jar" width="400" height="200" mayscript>
 		<param name = "dropimage"		value = "'.url('',null,null,true).drupal_get_path('module','imagex').'/postlet/image.jpg"/>
 		<param name = "dropimageupload"		value = "'.url('',null,null,true).drupal_get_path('module','imagex').'/postlet/imageupload.jpg"/>
 		<param name = "maxthreads"		value = "5" />
