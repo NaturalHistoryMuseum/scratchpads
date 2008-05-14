@@ -74,7 +74,7 @@ originalimage'.$short_domain.'.src = "http://quartz.nhm.ac.uk/screenshots/'.$dom
 ';
   }
 ?>
-var lastSort = '';
+var lastSort = 'domain';
 function mouseOverScreenshots(from,to){
   document.getElementById(from).src = to.src;}
 
@@ -157,6 +157,12 @@ function sortDivs(parentId,sortField){
       divs[i].setAttribute('nodes',oldDivs[i][1]);
       divs[i].setAttribute('domain',oldDivs[i][2]);}}
   if(sortField =='domain'){
+    if(lastSort =='domain'){
+      sortDivs(parentId,'reverse');
+      lastSort = '';
+      return;
+    }
+    lastSort = 'domain';
     var oldDivs = new Array();
     var divsDomains = new Array();
     for(i=0;i<divs.length;i++){
