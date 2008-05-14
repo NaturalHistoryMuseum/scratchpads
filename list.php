@@ -44,7 +44,7 @@ else{
 	$database_details = parse_ini_file('/var/www/drupal_db_passwords',true);
 	mysql_connect("localhost", "root", $database_details['root']['password'], TRUE, 2);
 	if(isset($_GET['thumbnails'])){
-	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
+	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');">Views</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  foreach ($domains as $domain){
@@ -60,7 +60,7 @@ else{
       }else{
         echo 'class="listnothidden" ';
       }
-      echo 'nodes="'.$nodes.'" domain="'.$domain.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.280x210-drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+      echo 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.280x210-drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
       $visible_count ++;
     }
           ?></div><div class="mainfull"></div>');
@@ -125,11 +125,13 @@ function sortDivs(parentId,sortField){
       newarray[0] = divs[i].innerHTML
       newarray[1] = divs[i].getAttribute("nodes");
       newarray[2] = divs[i].getAttribute("domain");
+      newarray[3] = divs[i].getAttribute('views');
       oldDivs[i] = newarray;}
     for(i=0;i<divs.length;i++){
       var newId = divs.length - (i + 1);
       divs[newId].innerHTML=oldDivs[i][0];
       divs[newId].setAttribute("nodes",oldDivs[i][1]);
+      divs[newId].setAttribute("views",oldDivs[i][3]);
       divs[newId].setAttribute("domain",oldDivs[i][2]);}}
   if(sortField =='nodes'){
     if(lastSort =='nodes'){
@@ -154,12 +156,46 @@ function sortDivs(parentId,sortField){
             newarray[0] = divs[i].innerHTML
             newarray[1] = divs[i].getAttribute('nodes');
             newarray[2] = divs[i].getAttribute('domain');
+            newarray[3] = divs[i].getAttribute('views');
             oldDivs[j] = newarray;
             j++;}}}
       lastvalue = value;}
     for(i=0;i<divs.length;i++){
       divs[i].innerHTML = oldDivs[i][0];
       divs[i].setAttribute('nodes',oldDivs[i][1]);
+      divs[i].setAttribute("views",oldDivs[i][3]);
+      divs[i].setAttribute('domain',oldDivs[i][2]);}}
+  if(sortField =='views'){
+    if(lastSort =='views'){
+      sortDivs(parentId,'reverse');
+      lastSort = '';
+      return;
+    }
+    lastSort = 'views';
+    var oldDivs = new Array();
+    var divsNodesNumbers = new Array();
+    for(i=0;i<divs.length;i++){
+      divsNodesNumbers[i] = divs[i].getAttribute('views');}
+    divsNodesNumbers.sort(function(a,b){return a - b});
+    var j=0;
+    var lastvalue = -1;
+    while(value = divsNodesNumbers.pop()){
+      if(value!=lastvalue){
+        // Get all the sites with this value of nodes
+        for(i=0;i<divs.length;i++){
+          if(divs[i].getAttribute('views') == value){
+            var newarray = Array();
+            newarray[0] = divs[i].innerHTML
+            newarray[1] = divs[i].getAttribute('nodes');
+            newarray[2] = divs[i].getAttribute('domain');
+            newarray[3] = divs[i].getAttribute('views');
+            oldDivs[j] = newarray;
+            j++;}}}
+      lastvalue = value;}
+    for(i=0;i<divs.length;i++){
+      divs[i].innerHTML = oldDivs[i][0];
+      divs[i].setAttribute('nodes',oldDivs[i][1]);
+      divs[i].setAttribute("views",oldDivs[i][3]);
       divs[i].setAttribute('domain',oldDivs[i][2]);}}
   if(sortField =='domain'){
     if(lastSort =='domain'){
@@ -183,6 +219,7 @@ function sortDivs(parentId,sortField){
           newarray[0] = divs[i].innerHTML
           newarray[1] = divs[i].getAttribute('nodes');
           newarray[2] = divs[i].getAttribute('domain');
+          newarray[3] = divs[i].getAttribute('views');
           oldDivs[j] = newarray;
           j++;
         }
@@ -192,6 +229,7 @@ function sortDivs(parentId,sortField){
       divs[i].innerHTML = oldDivs[i][0];
       divs[i].setAttribute('nodes',oldDivs[i][1]);
       divs[i].setAttribute('domain',oldDivs[i][2]);
+      divs[i].setAttribute("views",oldDivs[i][3]);
     }
   }
 }
