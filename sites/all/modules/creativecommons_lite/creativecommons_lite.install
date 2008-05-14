@@ -1,0 +1,40 @@
+<?php
+// $Id: creativecommons_lite.install,v 1.2.2.1 2007/05/19 16:43:53 gloscon Exp $
+
+/**
+ * install cc_lite tables 
+ *
+ */
+function creativecommons_lite_install() {
+
+    switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // query to insert lite table 
+      db_query("CREATE TABLE {creativecommons_lite} (
+				  id int(10) NOT NULL auto_increment,
+				  nid int(10) NOT NULL default '0',
+				  data text NOT NULL,
+				  PRIMARY KEY  (id),
+				  KEY nid (nid))
+				  TYPE=MyISAM;");
+	  break;
+	  // TODO add pgsql here 
+	  
+	}   
+}
+
+/**
+ * hook uninstall -- uninstall cclite table 
+ *
+ */
+function creativecommons_lite_uninstall() { 
+
+  db_query('DROP TABLE {creativecommons_lite}');
+  // delete all variable node type variable_get creativecommons_lite_$node->type
+  // creativecommons_lite_rdf  default false 
+  // TODO if comes in feature request 
+  // variable_del('creativecommons_lite_rdf');
+  
+}
+// eof

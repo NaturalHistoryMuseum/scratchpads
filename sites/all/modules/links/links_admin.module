@@ -1,0 +1,386 @@
+<?php
+/** @file
+ * $Id: links_admin.module,v 1.2.2.2 2007/04/26 03:16:54 syscrusher Exp $
+ *
+ * links_admin provides a user interface to manage all links cataloged for
+ * the site, regardless of which module(s) is/are using each link.
+ *
+ * Author:  Scott Courtney (drupal.org user "syscrusher")
+ *
+ * RELEASE STATUS: This is ALPHA code; do not use in production sites.
+ */
+
+require_once "links.inc";
+
+/**
+ * Displays the summary description for the module
+ */
+function links_admin_help($section="") {
+  switch($section) {
+    case 'admin/modules#description':
+      return t('Manages entries in the Links database.');
+      break;
+  }
+}
+
+/**
+ * Returns an array of the permission names that apply to this module
+ */
+function links_admin_perm() {
+  return array('administer links','change url globally','access links statistics');
+}
+
+/**
+ * Manages the global settings for the module
+ */
+function links_admin_settings() {
+  $form = array();
+  
+  $form['description'] = array(
+    '#type' => 'markup',
+    '#value' => '<p>' . t('These settings control the behavior of the link-management services.'),
+  );
+  
+  $form['display_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Display settings'),
+  );
+  
+  $form['display_settings']['links_admin_pagelines'] = array(
+    '#type' => 'select',
+    '#title' => t("Links per page in administrative screens"),
+    '#options' => drupal_map_assoc(array(5,10,15,20,25,30,40,50)),
+    '#default_value' => variable_get('links_admin_pagelines',10),
+    '#description' => t("This setting controls how many links will be displayed per page in link administration pages."),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_menu
+ */
+function links_admin_menu($may_cache) {
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/content/links',
+      'title' => t('administer links database'),
+      'description' => t('Update individual links, and mark links for scheduled validation.'),
+      'callback' => 'links_admin_list_page',
+      'access' => user_access('administer links'),
+      'weight' => -10,
+    );
+    $items[] = array(
+      'path' => 'admin/content/links/list',
+      'title' => t('administer links database'),
+      'callback' => 'links_admin_list_page',
+      'access' => user_access('administer links'),
+      'type' => MENU_CALLBACK,
+      'weight' => -10,
+    );
+  }
+  return $items;
+}
+
+// Menu callback functions
+
+
+function links_admin_list_page($lid = NULL) {
+// TODO: The dead code after this is intentional; feature not yet enabled.
+  #return t("<p>This feature is still under development.</p>");
+  if (isset($lid)) {
+    return drupal_get_form('links_admin_nodes', links_admin_nodes($lid));
+  }
+  else {
+    return drupal_get_form('links_admin_links', links_admin_links());
+  }
+}
+
+function links_admin_nodes($lid) {
+  drupal_set_title(t('Edit Link References'));
+  $pagelines = variable_get('links_admin_pagelines',10);
+  // Do the link-specific query
+  $query = "select l.lid, l.link_title, ln.nid, ln.link_title node_link_title, ln.module, ln.clicks, n.title node_title from {links} l, {links_node} ln, {node} n where l.lid=ln.lid and ln.nid=n.nid and l.lid=$lid order by module, node_link_title";
+  $result = pager_query($query, $pagelines, 0, "select count(*) from {links_node} where lid=$lid");
+  $form = array();
+  $form['lid'] = array(
+    '#type' => 'hidden',
+    '#value' => $lid,
+  );
+  $rows = array(
+    '#tree' => 1,
+  );
+  while ($row = db_fetch_object($result)) {
+    // Only use the link_title column the first time it is found
+    if (! is_array($form['link_title'])) {
+      $form['link_title'] = array(
+        '#type' => 'markup',
+        '#value' => $row->link_title,
+      );
+    }
+    $formrow = array();
+    $formrow['nid'] = array(
+      '#type' => 'hidden',
+      '#value' => $row->nid,
+    );
+    $formrow['module'] = array(
+      '#type' => 'hidden',
+      '#value' => $row->module,
+    );
+    $formrow['module_show'] = array(
+      '#type' => 'markup',
+      '#value' => htmlspecialchars($row->module),
+    );
+    $formrow['remove'] = array(
+      '#type' => 'checkbox',
+      '#return_value' => 1,
+      '#default_value' => 0,
+    );
+    $formrow['link_node_title'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $row->node_link_title,
+      '#size' => 60,
+      '#maxlength' => 255,
+    );
+    $formrow['clicks'] = array(
+      '#type' => 'markup',
+      '#value' => t('Clicked %clicks times', array('%clicks'=>$row->clicks)),
+    );
+    $formrow['node_title'] = array(
+      '#type' => 'markup',
+      '#value' => l($row->node_title, 'node/'.$row->nid),
+    );
+    $rows[] = $formrow;
+  }
+  $form['linkrefs'] = $rows;
+  
+  return $form;
+}
+
+function theme_links_admin_nodes($form) {
+  $header = array(t('Remove'), t('Owning module'), t('Local Link Title (optional)'), t('Statistics'));
+  $rows = array();
+  foreach($form['linkrefs'] as $key=>$linkref) {
+    if (is_int($key)) {
+      $row = array();
+      $row[] = drupal_render($linkref['nid']) . drupal_render($linkref['remove']);
+      $row[] = drupal_render($linkref['module']) . drupal_render($linkref['module_show']);
+      $row[] = drupal_render($linkref['link_node_title']) . '<br />(' .t('Article: ') . drupal_render($linkref['node_title']) . ')';
+      $row[] = drupal_render($linkref['clicks']);
+      $rows[] = $row;
+    }
+  }
+  $output .= '<p>' . t('Default title for this link: %title', array('%title'=>drupal_render($form['link_title']))) . '</p>';
+  $output .= theme('table', $header, $rows);
+  $output .= drupal_render($form['lid']);
+  $output .= '<p>' . t('The link title field in this form controls the displayed title for each reference to the link, not the link\'s main title in the catalog. Where the title is empty, the link\'s default title will automatically be used.') . '</p>';
+
+  // STUB
+  $output .= '<p><strong>THIS FORM IS UNDER DEVELOPMENT AND CURRENTLY DOES NOT UPDATE ANYTHING</strong>';
+
+  return $output;
+}
+
+function links_admin_links() {
+  $pagelines = variable_get('links_admin_pagelines',10);
+  // Do the overview query
+  $query = "select l.lid, l.link_title, l.url, l.last_click_time, count(ln.nid) nodes, sum(ln.clicks) total_clicks from {links} l left join {links_node} ln on l.lid=ln.lid group by l.lid order by link_title, url";
+  $result = pager_query($query, $pagelines, 0, "select count(*) from {links}");
+  $disabled = !db_num_rows($result);
+
+// TODO....Investigate need for this
+//  $destination = drupal_get_destination();
+  
+  // Provide the mass update form
+  $operations = array(
+    '' => array(t('(Select operation)'), ''),
+    'update' => array(t('Update titles and/or URLs'), ''),
+    'delete' => array(t('Delete the selected links'), ''),
+    'check'  => array(t('Mark for validity check'), ''),
+  );
+  $options = array();
+  foreach ($operations as $key => $value) {
+    $options[$key] = $value[0];
+  }
+
+  $form['update_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Update options'),
+  );
+  $form['update_options']['operation'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => $disabled ? 'disabled="disabled"' : '',
+  );
+  $form['update_options']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+  );
+  $form['links'] = array(
+    '#tree' => 1,
+  );
+  while ($link = db_fetch_object($result)) {
+    $row = array();
+    $row['checked'] = array(
+      '#type' => 'checkbox',
+      '#default_value' =>  0,
+      '#return_value' => 1,
+    );
+    $row['title'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $link->link_title,
+      '#size' => 50,
+      '#maxlength' => 255,
+    );
+    $row['url'] = array(
+      '#type' => 'textfield',
+      '#default_value' => $link->url,
+      '#size' => 50,
+      '#maxlength' => 255,
+    );
+    $row['statistics'] = array(
+      '#type' => 'markup',
+      '#value' => t('used %n places<br />last clicked %d<br />%c total clicks',
+        array('%c'=>$link->total_clicks, '%n'=>$link->nodes, '%d'=>format_date($link->last_click_time, 'small'))),
+    );
+    $row['operations'] = array(
+      '#tree' => true,
+    );
+    $row['operations']['delete'] = array(
+      '#type' => 'markup',
+      '#value' => l(t('delete'), 'admin/content/links/delete/'. $link->lid),
+    );
+    $row['operations']['references'] = array(
+      '#type' => 'markup',
+      '#value' => l(t('references'), 'admin/content/links/list/'. $link->lid),
+    );
+    $row['operations']['goto'] = array(
+      '#type' => 'markup',
+      '#value' => '<a href="' . $link->url . '" target="_new">' . t('goto link') . '</a>',
+    );
+    if (module_exists('links_monitor')) {
+      $row['operations']['monitor'] = array(
+        '#type' => 'markup',
+        '#value' => l(t('monitor'), 'admin/content/links/monitor/'. $link->lid),
+      );
+    }
+    $form['links'][$link->lid] = $row;
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Update',
+    );
+  }
+  if (!count($form['links'])) {
+    $rows = array(array('data' => t('No links available.'), 'colspan' => '4'));
+  } else {
+    $form['pager'] = array('#value' => theme('pager', NULL, $pagelines, 0));
+  }
+  return $form;
+}
+
+function links_admin_links_submit($form_id, $edit)  {
+  // Handle operations
+  $op = $_POST['op'];
+  $edit = $_POST['edit'];
+  if (($op == t('Update') || $op == t('Delete all')) && isset($edit['operation']) && isset($edit['links'])) {
+    $edit['links'] = array_diff($edit['links'], array(0));
+// TODO: NEED TO FINISH MOVING THIS CODE...
+/*
+    if (count($edit['links']) == 0) {
+      form_set_error('', t('Please select some links on which to perform the update.'));
+    } else {
+      if ($operations[$edit['operation']][1]) {
+        // Flag changes
+        $operation = $operations[$edit['operation']][1];
+        foreach ($edit['links'] as $lid => $value) {
+          if ($value) {
+            db_query($operation, $lid);
+          }
+        }
+        drupal_set_message(t('The update has been performed.'));
+      } else if ($edit['operation'] == 'delete') {
+        // Mass delete
+        if ($edit['confirm']) {
+          foreach ($edit['links'] as $lid=>$value) {
+            if (! $value) {
+              unset($edit['links'][$lid]);
+            }
+          }
+          $inlist = implode(',',array_keys($edit['links']));
+          // TODO: Add the actual deletion here
+          $result = db_query("DELETE FROM {links_node} WHERE lid IN (%s)", $inlist);
+          $result = db_query("DELETE FROM {links_monitor} WHERE lid IN (%s)", $inlist);
+          $result = db_query("DELETE FROM {links} WHERE lid IN (%s)", $inlist);
+          drupal_set_message(t('The links have been deleted, and removed from content pages that used them.'));
+        } else {
+          $extra = '<ul>';
+          foreach ($edit['links'] as $lid=>$value) {
+            if (! $value) {
+              unset($edit['links'][$lid]);
+            }
+          }
+          $inlist = implode(',',array_keys($edit['links']));
+          $result = db_query("SELECT lid,lid,link_title FROM {links} WHERE lid IN (%s) ORDER BY link_title", $inlist);
+          while ($row = db_fetch_array($result)) {
+              $extra .= '<li>'. form_hidden('links]['. $row['lid'], 1) . $row['link_title'] .'</li>';
+          }
+          $extra .= '</ul>';
+          $extra .= form_hidden('operation', 'delete');
+
+          $output = theme('confirm',
+                          t('Are you sure you want to delete these links, and remove them from any content pages that use them?'),
+                          'admin/links',
+                          t('This action cannot be undone.'),
+                          t('Delete all'),
+                          t('Cancel'),
+                          $extra);
+          return $output;
+        }
+      }
+    }
+*/
+  }
+}
+
+function theme_links_admin_links($form) {
+  // convert the form data into a rows for a table
+  $rows = array();
+  foreach (element_children($form['links']) as $key) {
+    $row = array();
+    if (is_array($form['links'][$key])) {
+      $row[] = drupal_render($form['links'][$key]['checked']);
+      $row[] = drupal_render($form['links'][$key]['title']) . '<br />' . drupal_render($form['links'][$key]['url']);
+      $row[] = drupal_render($form['links'][$key]['statistics']);
+      $row[] = drupal_render($form['links'][$key]['operations']['references'])
+        . '<br />' . drupal_render($form['links'][$key]['operations']['delete'])
+        . '<br />' . drupal_render($form['links'][$key]['operations']['goto']);
+    }
+    $rows[] = $row;
+  }
+  $header = array(t('Select'), t('Link Title and URL'), t('Statistics'), t('Operations'));
+
+  // Add a pager
+  // $tags 0=>first, 1=>previous, 2=>list, 3=>next, 4=>last
+  if ($pager = theme('pager', NULL, 10)) {
+    $rows[] = array(array('data' => $pager, 'colspan' => '4'));
+  }
+
+  // Check for no rows
+  if (!$rows) {
+    $rows[] = array(array('data' => t('No links available.'), 'colspan' => '4'));
+  }
+
+  // Render the top form
+  $output = drupal_render($form['update_options']);
+  // then the table
+  $output .= theme('table', $header, $rows);
+  $output .= '<p>' . t('<strong>Warning:</strong> Changing a URL here changes it for <em>all content pages</em> that refer to that link. Changing the title here changes it for all content pages that do not provide their own title for the link. It may be advisable to click on the <b>references</b> link and review where a link is used before changing its title.') . '</p>';
+
+  // STUB
+  $output .= '<p><strong>THIS FORM IS UNDER DEVELOPMENT AND CURRENTLY DOES NOT UPDATE ANYTHING</strong><p>';
+
+  // then anything left over
+  $output .= drupal_render($form);
+  return $output;
+}

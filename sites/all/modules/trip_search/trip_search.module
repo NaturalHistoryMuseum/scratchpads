@@ -1,0 +1,1532 @@
+<?php
+// $Id: trip_search.module,v 1.49.2.11 2007/03/10 21:10:48 mindless Exp $
+
+/**
+ * @file
+ * An alternative to the core search module, providing site-wide searching based on DB fulltext indexes
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function trip_search_help($section){
+  switch ($section) {
+    case 'admin/settings/trip_search':
+      return t('The trip_search module provides site-wide search capability.  Below you can refine the search presentation.');
+    case 'admin/help#trip_search':
+      return t('<p>The trip_search module offers alternative search methods including search by category and advanced operators (full phrase, optional words, etc.).</p><p>In <a href="!trip_search-config">administer &raquo; settings &raquo; trip_search</a> you can set up an introductory text for display at the top of search forms and a ceiling on the number of hits that may be returned.</p><h3>User access permission for searching</h3>     <p><strong>fulltext search:</strong> Allows a role to view the search form, perform a search, and view results.</p>', array('!trip_search-config' => url('admin/settings/trip_search')));
+    case 'trip_search':
+      return variable_get('trip_search_help', '');
+    case 'trip_search/help':
+      $output = t('<p>You can improve your search results by adding "operators" that refine your keywords.  All of these operators can be entered directly into the basic search box.  Alternately, you can use the <a href="!advanced">Advanced search</a> page.</p><h3>Advanced search operators</h3>', array('!advanced' => url('trip_search/advanced')));
+      $operators = trip_search_operators();
+      foreach ($operators as $operator) {
+        $output .= '<h4>'. $operator['symbol'] .' '. t('searches') .'</h4><p>'. $operator['description'] .'<br /><i>'. t('Sample: ') .'</i>'. $operator['sample'] .'</p>';
+      }
+      return $output;
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function trip_search_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks[]['info'] = t('Search');
+    return $blocks;
+  }
+  else if ($op == 'configure' && $delta == 0) {
+    $form['trip_search_block_message'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Block message'),
+      '#default_value' => variable_get('trip_search_block_message', t('Enclose phrases in double quotes ("").')),
+      '#cols' => 70,
+      '#rows' => 5,
+      '#description' => t('Message to display at the bottom of search block.'),
+    );
+    return $form;
+  }
+  else if ($op == 'save' && $delta == 0) {
+    variable_set('trip_search_block_message', $edit['trip_search_block_message']);
+  }
+  else if ($op == 'view') {
+    // Hide search block when viewing search page, which always includes form.
+    if (user_access('fulltext search') && (substr($_GET['q'], 0, 11) != 'trip_search')) {
+      $form = drupal_get_form('trip_search_page', TRUE);
+      $block['subject'] = t('Search');
+      $block['content'] = $form . variable_get('trip_search_block_message', t('Enclose phrases in double quotes ("").'));
+      return $block;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function trip_search_menu($may_cache) {
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array('path' => 'admin/settings/trip_search',
+                     'title' => t('SQL search'),
+                     'description' => t('Configure settings for SQL search.'),
+                     'callback' => 'drupal_get_form',
+                     'callback arguments' => array('trip_search_settings'));
+    $items[] = array('path' => 'trip_search',
+                     'title' => t('Advanced search'),
+                     'callback' => 'drupal_get_form',
+                     'callback arguments' => array('trip_search_page'),
+                     'access' => user_access('fulltext search'),
+                     'type' => MENU_SUGGESTED_ITEM);
+    $items[] = array('path' => 'trip_search/autocomplete',
+                     'title' => t('SQL search autocomplete'),
+                     'callback' => 'trip_search_autocomplete',
+                     'type' => MENU_CALLBACK);
+// THIS NEEDS LOOKING AT - DO WE PROPOSE TABS PER CONTENT TYPE?
+/*    foreach (node_list() as $type) {
+      $items[] = array('path' => "trip_search/basic/$type",
+                'title' => node_invoke($type, 'node_name'),
+                'callback' => 'trip_search_page',
+                'type' => MENU_SUGGESTED_ITEM,
+                'access' => user_access('fulltext search'));
+    }*/
+  }
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function trip_search_perm() {
+  return array('fulltext search');
+}
+
+/**
+ * Menu callback; displays a search form and, if available, search results.
+ */
+function trip_search_page($block = FALSE) {
+  if ($block === TRUE) {
+    return trip_search_form(TRUE);
+  }
+
+  trip_search_html_head();
+
+  $form = array('#action' => url('trip_search'), '#redirect' => FALSE);
+  $form['#after_build'] = array('_trip_search_do_search');
+  // The simple search part
+  if ($block != 'advanced') {
+    $form['search_form'] = array_merge(array(
+      '#type' => 'fieldset',
+      '#title' => t('Search criteria'),
+      '#collapsible' => TRUE,
+    ), trip_search_form());
+  }
+  // The advanced search part
+  if ($block != 'basic') {
+    $form['advanced'] = array_merge(array(
+      '#type' => 'fieldset',
+      '#title' => t('Advanced search criteria'),
+      '#collapsible' => TRUE,
+    ), trip_search_advanced_form());
+  }
+
+  return $form;
+}
+
+function _trip_search_do_search($form, $form_values) {
+  $requested_advanced = ($form_values['op'] == t('Advanced search') || arg(1) == 'advanced');
+  $form['search_form']['#collapsed'] = $requested_advanced;
+  $form['advanced']['#collapsed'] = !$requested_advanced;
+
+  // Parse search keys.
+  $raw_keys = array();
+  if ($form_values['keys']) {
+    $raw_keys[] = $form_values['keys'];
+  }
+  else if ($_GET['keys']) {
+    $raw_keys[] = $_GET['keys'];
+  }
+  if ($form_values['require']) {
+    $raw_keys[] = $form_values['require'];
+  }
+  if ($form_values['exclude']) {
+    foreach (explode(' ', $form_values['exclude']) as $exclude) {
+      $raw_keys[] = '-'. $exclude;
+    }
+  }
+  if ($form_values['or']) {
+    $raw_keys[] = implode(' OR ', explode(' ', $form_values['or']));
+  }
+  if ($form_values['phrase']) {
+    $raw_keys[] = '"'. $form_values['phrase'] .'"';
+  }
+  if ($form_values['taxonomy_operator'] > 0 && !empty($form_values['taxonomy_terms'])
+      && $taxonomy = array_diff($form_values['taxonomy_terms'], array(0))) {
+    $operator = ($form_values['taxonomy_operator'] == 1) ? ',' : '+';
+    $raw_keys[] = 'tids:'. implode($operator, $taxonomy);
+  }
+  if ($form_values['content_types']) {
+    $types = array();
+    foreach ($form_values['content_types'] as $type => $selected) {
+      if ($selected) {
+        $types[] = $type;
+      }
+    }
+    if ($types) {
+      $raw_keys[] = 'types:'. implode('+', $types);
+    }
+  }
+  if ($form_values['after']) {
+    $raw_keys[] = 'after:'. $form_values['after'];
+  }
+  if ($form_values['before']) {
+    $raw_keys[] = 'before:'. $form_values['before'];
+  }
+  if ($form_values['uid']) {
+    $raw_keys[] = 'uid:'. $form_values['uid'];
+  }
+  if ($form_values['user']) {
+    $raw_keys[] = 'user:"'. $form_values['user'] .'"';
+  }
+  if ($form_values['unpublished']) {
+    $raw_keys[] = 'unpublished:'. $form_values['unpublished'];
+  }
+  $raw_keys = implode(' ', $raw_keys);
+
+  // Done if not searching
+  if (empty($raw_keys)) {
+    if ($form_values['op']) {
+      drupal_set_message(t('Enter search criteria.'), 'error');
+    }
+    return $form;
+  }
+
+  // Output search results
+  $parsed_keys = trip_search_parse($raw_keys);
+  if (empty($parsed_keys->require) && empty($parsed_keys->or)) {
+    drupal_set_message(t('Enter some words to find.'), 'error');
+    return $form;
+  }
+  $per_page = variable_get('trip_search_max', 10);
+  $from = $_REQUEST['page'] ? $_REQUEST['page'] * $per_page : 0;
+  $hits = 0;
+
+  // Get term results; only show these if this is the first page ($from == 0)
+  if (module_exists('taxonomy') && $from == 0 && ($find = trip_search_get('taxonomy', $parsed_keys))) {
+    if (variable_get('trip_search_rank_results', 1)) {
+      $find = trip_search_rank_results($find, $parsed_keys);
+    }
+    $hits += count($find);
+    foreach (array_keys($find) as $result) {
+      $find[$result]['snippet'] = trip_search_excerpt($parsed_keys, $find[$result]['snippet']);
+      $str .= theme('trip_search_item', $find[$result]);
+    }
+    $form['categories'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Matching categories'),
+      'results' => array('#value' => $str),
+    );
+    unset($str);
+  }
+
+  // Get the node results
+  if ($find = trip_search_get('node', $parsed_keys)) {
+    if (variable_get('trip_search_rank_results', 1)) {
+      $find = trip_search_rank_results($find, $parsed_keys);
+    }
+    $hits += ($count = count($find));
+// This next bit is a hack tried from http://drupal.org/node/75812
+    global $page, $pager_page_array, $pager_total_items, $pager_total;
+    $page = isset($_GET['page']) ? $_GET['page'] : '';
+    $pager_page_array = explode(',', $page);
+    $pager_total_items[0] = $count;
+    $pager_total[0] = ceil($pager_total_items[0] / $per_page);
+    $pager_page_array[0] = max(0, min((int)$pager_page_array[0], ((int)$pager_total[0]) - 1));
+// End of hack
+
+    foreach (array_slice($find, $from, $per_page) as $item) {
+      $node = node_load($item['id']);
+      $comments = $node->comment_count;
+      $query = module_exists('highlight') ? 'highlight='. urlencode(trip_search_highlight($parsed_keys)) : null;
+      $item = array('link' => url('node/'. $item['id'], $query),
+                    'type' => node_invoke($node, 'node_name'),
+                    'title' => $node->title,
+                    'user' => theme('username', $node),
+                    'date' => $node->created,
+                    'hits' => $item['hits'],
+//                    'extra' => format_plural($comments, '1 comment', '%count comments'), No comments
+                    'snippet' => trip_search_excerpt($parsed_keys, check_markup($node->body, $node->format, FALSE)));
+      $str .= theme('trip_search_item', $item, $item['type']);
+    }
+    if ($pager = theme('pager', array(), $per_page)) {
+      $str .= $pager; // $str contains all the search results on the page, plus the pager links
+    }
+    $results_output = t('Results @from to @max of @count', array('@from' => $from + 1, '@max' => min($from + $per_page, $count), '@count' => $count));
+    $form['results_list'] = array(
+      '#type' => 'fieldset',
+      '#title' => $results_output,
+      'list' => array('#value' => $str),
+    );
+
+    // Optionally display results filtering by category and node type
+    if ($from == 0) {
+      if (variable_get('trip_search_use_filtering_category', 0) && ($terms = node_trip_search($parsed_keys, 'terms')) && count($terms) > 1) {
+        foreach ($terms as $term) {
+          $t_links[] .= l($term->name .' ('. $term->count .')', 'trip_search', NULL, 'keys='. urlencode($raw_keys .' tids:'. $term->tid));
+        }
+        $form['category_filter'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Filter results by category'),
+          'results' => array('#value' => theme('item_list', $t_links)),
+        );
+      }
+      if (variable_get('trip_search_use_filtering_content', 0) && ($types = node_trip_search($parsed_keys, 'types')) && count($types) > 1) {
+        foreach ($types as $type) {
+          $n_links[] = l($type->type .' ('. $type->count .')', 'trip_search', NULL, 'keys='. urlencode($raw_keys .' types:'. $type->type));
+        }
+        $form['type_filter'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Filter results by type'),
+          'results' => array('#value' => theme('item_list', $n_links)),
+        );
+      }
+      if (variable_get('trip_search_use_filtering_user', 0) && ($users = node_trip_search($parsed_keys, 'users')) && count($users) > 1) {
+        foreach ($users as $user) {
+          $u_links[] = l($user->name .' ('. $user->count .')', 'trip_search', NULL, 'keys='. urlencode($raw_keys .' uid:'. $user->uid));
+        }
+        $form['user_filter'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Filter results by user'),
+          'results' => array('#value' => theme('item_list', $u_links)),
+        );
+      }
+    }
+  }
+
+  if (!$hits) {
+    drupal_set_message(t('Your search yielded no results. Try some other criteria and be sure search terms are not common words or too short.'), 'error');
+  }
+
+  // Log the search query - but only on the first pass through (other pages will be $_GET)
+  if ($_POST['op']) {
+    $msg = t('@count matches for "@keys".', array ('@count' => $hits, '@keys' => $raw_keys));
+    $link = l(t('View results'), 'trip_search/', array(), 'keys='. check_plain($raw_keys));
+    watchdog('trip_search', $msg, WATCHDOG_NORMAL, $link);
+  }
+
+  return $form;
+}
+
+/*
+ * Generate comma separated list of keywords/phrases.
+ */
+function trip_search_highlight($parsed_keys) {
+  if ($parsed_keys->require) {
+    $keys[] = implode(',', $parsed_keys->require);
+  }
+  if ($parsed_keys->or) {
+    $keys[] = implode(',', $parsed_keys->or);
+  }
+  return implode(',', $keys);
+}
+
+/*
+ * Reorder results based on cumulative "score" on ranking parameters.
+ */
+function trip_search_rank_results($results, $parsed_keys) {
+  $keys = trip_search_translate_keys($parsed_keys, 'array');
+  if (count($keys) == 0) {
+    return $results;
+  }
+  if ($results[0]['hits']) {
+    $keys = array_keys($results);
+    $max_hits = $results[$keys[0]]['hits'];
+  }
+  foreach (array_keys($results) as $id) {
+    if ($title_score = variable_get('trip_search_title_score', 5)) {
+      foreach ($keys as $key) {
+        preg_match_all('|\b'. preg_quote($key) .'\b|', $results[$id]['title'], $matches);
+        $results[$id]['score'] += $title_score * count($matches[0]);
+      }
+    }
+    if ($body_score = variable_get('trip_search_body_score', 1)) {
+      foreach ($keys as $key) {
+        preg_match_all('|\b'. preg_quote($key) .'\b|', $results[$id]['body'], $matches);
+        $results[$id]['score'] += $body_score * count($matches[0]);
+      }
+    }
+
+//    if (variable_get('trip_search_check_tags', 0)) {
+//      foreach ($keys as $key) {
+//        preg_match_all('|<[^>]+>(.*'. preg_quote($key) .'.*)</[^>]+>|U', $results[$id]['body'], $matches);
+//        foreach($matches[0] as $match) {
+//          $tag = '';
+//        }
+//      }
+//    }
+
+    if ($promote_score = variable_get('trip_search_promote_score', 4) && $results[$id]['promote'] == 1) {
+      $results[$id]['score'] += $promote_score;
+    }
+    if ($max_hits > 0 && $hits_score = variable_get('trip_search_hits_score', 4) && $results[$id]['hits']) {
+      $results[$id]['score'] += $hits_score * ($results[$id]['hits'] / $max_hits);
+    }
+  }
+  array_multisort($results, SORT_DESC);
+  return $results;
+}
+
+/*
+ * Peform a search.
+ */
+function trip_search_get($hook = 'node', $keys) {
+  $find = module_invoke($hook, 'trip_search', $keys, 'find');
+  return $find ? $find : array();
+}
+
+function trip_search_get_vocabularies($type = 0) {
+  $terms = taxonomy_form_all(1);
+  $vocabularies = taxonomy_get_vocabularies($type);
+  //omit undesired vocabularies from listing
+  $omits = variable_get('trip_search_omitted_vocab', array());
+  foreach ($omits as $omit) {
+    $omitted = taxonomy_get_vocabulary($omit);
+    unset($terms[$omitted->name]);
+  }
+  return $terms;
+}
+
+function trip_search_get_uid() {
+  $result = db_query('SELECT uid, name FROM {users} where uid > 0 and status = 1 order by name');
+  $select = array(0 => '<'. t('none') .'>');
+  if (($count = db_num_rows($result)) > 1000) {
+    $select[0] = '<'. t('too many users for this option') .'>';
+  }
+  else {
+    for ($i = 0; $i < $count; $i++) {
+      $user_info = db_fetch_object($result);
+      $select[$user_info->uid] = $user_info->name;
+    }
+  }
+  return $select;
+}
+
+function trip_search_autocomplete($string) {
+  $matches = array();
+  $params = variable_get('trip_search_omitted_users', array());
+  $omit_sql = empty($params) ? '' : ' AND uid NOT IN (%d'. str_repeat(',%d', count($params)-1) .')';
+  array_unshift($params, "SELECT name FROM {users} u WHERE status <> 0 AND LOWER(name) LIKE LOWER('%s%%')$omit_sql", $string);
+  array_push($params, 0, 10);
+  $result = call_user_func_array('db_query_range', $params);
+  while ($user = db_fetch_object($result)) {
+    $matches[$user->name] = check_plain($user->name);
+  }
+  print drupal_to_js($matches);
+  exit();
+}
+
+
+/**
+ * Theme "Filter by content" fields
+ */
+function theme_trip_search_filter_fields($fieldset) {
+  $rows = array();
+  foreach ($fieldset as $field_key => $field_name) {
+    if (is_array($field_name) && $field_key{0} != '#') {
+      $row = array();
+      $row[] = '<strong>'. $field_name['#title'] .'</strong>';
+      $element = $field_name;
+      unset($element['#title']);
+      unset($element['#description']);
+      $row[] = theme($element['#type'], $element) . $field_name['#description'];
+      $rows[] = $row;
+    }
+  }
+  $header = array('', '');
+  return theme_table($header, $rows, array('class' => 'trip-search-fields', 'width' => '100%'));
+}
+
+/**
+ * Theme "Filter by content" fields
+ */
+function theme_trip_search_filter_dates($fieldset) {
+  $output = '<div class="trip-search-dates">';
+
+  if (module_exists('jscalendar')) {
+    // Use jscalendar provided with Javascript tools module
+    $field = $fieldset['after'];
+    $output .= '<strong>'. $field['#title'] .'&nbsp;</strong>';
+    $output .= '<input type="text" maxlength="'. $field['#maxlength'] .'" name="'. $field['#name'] .'" id="'. $field['#id'] .'" size="'. $field['#size'] .'" value="'. check_plain($field['#value']) .'" class="form-text jscalendar" />'. $field['#suffix'];
+    $output .= '<input type="hidden" name="edit[after_jscalendar][ifFormat]" id="edit-after_jscalendar-ifFormat" value="%d/%m/%Y" />';
+    $output .= '<input type="hidden" name="edit[after_jscalendar][showsTime]" id="edit-after_jscalendar-showsTime" value="false" />';
+
+    $field = $fieldset['before'];
+    $output .= '&nbsp;<strong>'. $field['#title'] .'&nbsp;</strong>';
+    $output .= '<input type="text" maxlength="'. $field['#maxlength'] .'" name="'. $field['#name'] .'" id="'. $field['#id'] .'" size="'. $field['#size'] .'" value="'. check_plain($field['#value']) .'" class="form-text jscalendar" />'. $field['#suffix'];
+    $output .= '<input type="hidden" name="edit[before_jscalendar][ifFormat]" id="edit-before_jscalendar-ifFormat" value="%d/%m/%Y" />';
+    $output .= '<input type="hidden" name="edit[before_jscalendar][showsTime]" id="edit-before_jscalendar-showsTime" value="false" />';
+  }
+  else {
+    // Use old jscalendar provided with trip_search (deprecated)
+    $field = $fieldset['after'];
+    $output .= '<strong>'. $field['#title'] .'&nbsp;</strong>';
+    $output .= '<input type="text" maxlength="'. $field['#maxlength'] .'" name="'. $field['#name'] .'" id="'. $field['#id'] .'" size="'. $field['#size'] .'" value="'. check_plain($field['#value']) .'" class="form-text" /><a href="javascript: void(0);" onclick="return getCalendar(\''. $field['#id'] .'\');"><img src="'. drupal_get_path('module', 'trip_search') .'/popupcalendar/calendar.png" alt="" border="0" /></a>';
+
+    $field = $fieldset['before'];
+    $output .= '&nbsp;<strong>'. $field['#title'] .'&nbsp;</strong>';
+    $output .= '<input type="text" maxlength="'. $field['#maxlength'] .'" name="'. $field['#name'] .'" id="'. $field['#id'] .'" size="'. $field['#size'] .'" value="'. check_plain($field['#value']) .'" class="form-text" /><a href="javascript: void(0);" onclick="return getCalendar(\''. $field['#id'] .'\');"><img src="'. drupal_get_path('module', 'trip_search') .'/popupcalendar/calendar.png" alt="" border="0" /></a>';
+  }
+
+  return $output .'</div>';
+}
+
+/**
+ * Generate advanced search form.
+ */
+function trip_search_advanced_form() {
+  $form['form_type'] = array(
+    '#type' => 'hidden',
+    '#value' => 'advanced',
+  );
+
+  $form['fields'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter on content'),
+    '#theme'  => 'trip_search_filter_fields',
+    '#description' => t('Note that you should not use double quotes in the advanced search'),
+  );
+  $form['fields']['require'] = array(
+    '#type' => 'textfield',
+    '#title' => t('All of the words'),
+    '#size' => 30,
+    '#maxlength' => 200,
+    '#description' => t('with %all the words', array('%all' => t('all'))),
+  );
+  $form['fields']['phrase'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Required phrase'),
+    '#size' => 30,
+    '#maxlength' => 200,
+    '#description' => t('with the %exact', array('%exact' => t('exact phrase'))),
+  );
+  $form['fields']['or'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Any of the words'),
+    '#size' => 30,
+    '#maxlength' => 200,
+    '#description' => t('with %one the words', array('%one' => t('at least one of'))),
+  );
+  $form['fields']['exclude'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Excluded words'),
+    '#size' => 30,
+    '#maxlength' => 200,
+    '#description' => t('%without the words', array('%without' => t('without'))),
+  );
+  if (user_access('administer nodes')) {
+    $form['fields']['unpublished'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include unpublished content in search'),
+    );
+  }
+  $form['dates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter by date'),
+    '#theme'  => 'trip_search_filter_dates',
+    '#description' => t('Date format <strong>must</strong> be dd/mm/yyyy. Use calendar to enter dates'),
+  );
+  $form['dates']['before'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Before'),
+    '#attributes' => array('class' => 'jscalendar'),
+    '#size' => 10,
+    '#maxlength' => 10,
+  );
+  $form['dates']['after'] = array(
+    '#type' => 'textfield',
+    '#title' => t('After'),
+    '#attributes' => array('class' => 'jscalendar'),
+    '#size' => 10,
+    '#maxlength' => 10,
+  );
+  if (variable_get('trip_search_toggle_category', 0)) {
+    $form['taxonomy'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filter by categories'),
+    );
+    $form['taxonomy']['taxonomy_operator'] = array(
+      '#type' => 'radios',
+      '#title' => t('Find content'),
+      '#default_value' => 0,
+      '#options' => array(t('Irrespective of category (no filtering)'), t('In %all of the selected categories', array('%all' => t('all'))), t('In %atleastone of the selected categories', array('%atleastone' => t('at least one')))),
+    );
+    $form['taxonomy']['taxonomy_terms'] = array(
+      '#type' => 'select',
+      '#title' => t(''),
+      '#multiple' => TRUE,
+      '#options' => trip_search_get_vocabularies(),
+      '#description' => t('Select one or more terms to include'),
+    );
+  }
+  if (variable_get('trip_search_toggle_user', 0)) {
+    $form['users'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filter by user'),
+      '#description' => t('You can select a user on which to filter. The results will include documents published by your selected user.'),
+    );
+    $form['users']['user'] = array(
+      '#type' => 'textfield',
+      '#title' => '',
+      '#autocomplete_path' => 'trip_search/autocomplete',
+      '#size' => 50,
+      '#maxlength' => 64,
+    );
+  }
+  if (variable_get('trip_search_toggle_node_types', 0)) {
+    $node_display = node_get_types('names');
+    $form['content'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filter by content type'),
+      '#description' => t('You can select one or more content types on which to filter. The results will include only documents of these types'),
+    );
+    $form['content']['content_types'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Choose content types to include'),
+//      '#default_value' => variable_get('trackerlite_content', array()),
+      '#options' => $node_display,
+//      '#description' => t('Check the types that you want to display as recent posts'),
+      '#attributes' => $attributes = NULL,
+      '#required' => FALSE,
+    );
+  }
+  $form['button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Advanced search'),
+  );
+
+  return $form;
+}
+
+/**
+ * Generate a search form.
+ */
+function trip_search_form($short = FALSE) {
+  // Show short textfield if appropriate (e.g., in block).
+  $short ? $length = 18: $length = 30;
+  $form['keys'] = array(
+    '#type' => 'textfield',
+    '#title' => '',
+    '#size' => $length,
+    '#maxlength' => 200,
+  );
+  $form['form_type'] = array(
+    '#type' => 'hidden',
+    '#value' => 'search',
+  );
+  $form['button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+
+  if ($short) {
+    // This is necessary to send the form to the trip_search page
+    $form['#action'] = url('trip_search');
+  }
+  else {
+    $f_links .= l(t('Search tips'), 'trip_search/help');
+    $form['trip_search_links'] = array('#value' => $f_links);
+  }
+
+  return $form;
+}
+
+/**
+ * Provide some default formatting.
+ */
+function trip_search_html_head() {
+  drupal_add_css(drupal_get_path('module', 'trip_search') .'/trip_search.css');
+  if (!module_exists('jscalendar')) {
+    drupal_add_js(drupal_get_path('module', 'trip_search') .'/popupcalendar/calendar.js');
+  }
+}
+
+/**
+ * Admin settings.
+ */
+function trip_search_settings() {
+  global $db_url;
+  // In e.g. multi-site configurations the db_url may be an array.
+  $db = is_array($db_url) ? $db_url['default'] : $db_url;
+  $db_type = substr($db, 0, strpos($db, '://'));
+
+  $form['db_type'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Database type'),
+  );
+  $form['db_type']['trip_search_type'] = array(
+    '#prefix' => '<b>',
+    '#value' => t('Unable to determine the database type: note that this module only functions with either MySQL or PostgreSQL'),
+    '#suffix' => '</b>',
+  );
+  switch ($db_type) {
+    case 'mysqli':
+    case 'mysql':
+      variable_set('trip_search_type', 'mysql_full');
+      $form['db_type']['trip_search_type']['#value'] = t('You are using a MySQL database with full text searching');
+      break;
+    case 'pgsql':
+      variable_set('trip_search_type', 'regex');
+// PUT THIS BACK WHEN SOMEBODY MANAGES TO SUPPORT POSTGRE!
+//      $form['db_type']['trip_search_type']['#value'] = t('You are using regular expressions on a PostgreSQL database and must enable full text searching (requires creating indices, see help text)');
+      $form['db_type']['trip_search_type']['#value'] = t('You are using a PostgreSQL database which is not supported in this version');
+// WHERE DOES THIS QUERY WILDCARD STUFF GO?
+      $query->wildcard = '*';
+      $query->like = '~*';
+      $query->not_like = '!~*';
+      // These two delimiters are for MySQL regex support; pgsql probably needs different ones.
+      $query->delimiter_left = '[[:<:]]';
+      $query->delimiter_right = '[[:>:]]';
+      // Is this correct for matching zero or more of any character?
+      $query->wildcard = '*';
+      break;
+    default:
+      drupal_set_message(t('Unable to identify the database: THIS SEARCH MODULE WILL NOT WORK!.'), 'error');
+  }
+
+  $form['main'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Main settings'),
+  );
+  $form['main']['trip_search_help'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Search explanation'),
+    '#default_value' => variable_get('trip_search_help', ''),
+    '#cols' => 70,
+    '#rows' => 5,
+    '#description' => t('This text will be displayed at the top of the search form.  It is useful for helping or instructing your users.'),
+  );
+  $form['main']['trip_search_secure'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Check node security'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_secure', 0),
+    '#description' => t('When this option is enabled, the node access sub-system is used to ensure that search results are limited to those to which the user has view access. Note that since each node\'s access rights are checked, this can potentially add a significant overhead to the search process: the option should only be used if you wish specifically to enforce private content.'),
+  );
+  $form['main']['trip_search_max'] = array(
+    '#type' => 'select',
+    '#title' => t('Maximum items'),
+    '#default_value' => variable_get('trip_search_max', 10),
+    '#options' => array(5 => 5, 10 => 10, 15 => 15, 20 => 20, 25 => 25, 30 => 30, 50 => 50, 75 => 75, 100 => 100),
+    '#description' => t('The maximum number of search results to display per page.'),
+    '#extra' => 0,
+    '#multiple' => 0,
+  );
+
+  $form['ranking'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Ranking of results'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('If enabled, ranking will sort search results before they are displayed.  Use these settings to make particular factors score higher or lower in the ranking. Entering 0 in the score will cause the ranking not to take effect'),
+  );
+  $form['ranking']['trip_search_rank_results'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use ranking'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_rank_results', 1),
+    '#description' => t('Ranking of search results, to present most relevant results first, has some overhead in terms of CPU demands. Disable to increase speed.'),
+  );
+  $form['ranking']['trip_search_title_score'] = array(
+    '#type' => 'textfield',
+    '#title' => t('In title'),
+    '#default_value' => variable_get('trip_search_title_score', 5),
+    '#size' => 5,
+    '#maxlength' => 10,
+    '#description' => t('Search word is in title.'),
+  );
+  $form['ranking']['trip_search_body_score'] = array(
+    '#type' => 'textfield',
+    '#title' => t('In body'),
+    '#default_value' => variable_get('trip_search_body_score', 1),
+    '#size' => 5,
+    '#maxlength' => 10,
+    '#description' => t('Search word is in body.'),
+  );
+  $form['ranking']['trip_search_promoted_score'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Promoted'),
+    '#default_value' => variable_get('trip_search_promoted_score', 3),
+    '#size' => 5,
+    '#maxlength' => 10,
+    '#description' => t('Node has been promoted (is "sticky" or static on front page).'),
+  );
+  if (module_exists('statistics') && variable_get('statistics_count_content_views', 0)) {
+    $form['ranking']['trip_search_hits_score'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Most hits'),
+      '#default_value' => variable_get('trip_search_hits_score', 4),
+      '#size' => 5,
+      '#maxlength' => 10,
+      '#description' => t('Most-visited page will get this score, with other pages getting a percentage of this score based on their relative hits.'),
+    );
+  }
+  else {
+// Do something here?
+    $group .= '<p>' . t('To enable hit count ranking, first install the statistics module and enable node hit counting.') . '</p>';
+  }
+
+  // Handle the filtering
+  $form['filtering'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filtering of results'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('If enabled, result filtering will allow the user to further filter the search result set. Note that this has performance implications, since each filter causes an additional search to be made in the database'),
+  );
+  $form['filtering']['trip_search_use_filtering_category'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable filtering by category'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_use_filtering_category', 0),
+//    '#description' => t('When this option is enabled, search results can be filtered by category.'),
+  );
+  $form['filtering']['trip_search_use_filtering_content'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable filtering by content type'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_use_filtering_content', 0),
+//    '#description' => t('WWhen this option is enabled, search results can be filtered by content type.'),
+  );
+  $form['filtering']['trip_search_use_filtering_user'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable filtering by user'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_use_filtering_user', 0),
+//    '#description' => t('When this option is enabled, search results can be filtered by user.'),
+  );
+
+  // Toggle settings on advanced search form
+  $form['selection'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced search page selection criteria options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Enable or disable the display of particular form sections on the advanced search page.'),
+  );
+  $toggles = array('trip_search_toggle_category' => t('Categories'),
+    'trip_search_toggle_user' => t('User'),
+    'trip_search_toggle_node_types' => t('Content type'));
+//  foreach ($toggles as $name => $title) {
+// Content type
+  $form['selection']['trip_search_toggle_node_types'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Content type',
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_toggle_node_types', 0),
+  );
+  // Categories
+  $form['selection']['trip_search_toggle_category'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Categories',
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_toggle_category', 0),
+  );
+//  }
+
+  $vocabularies = taxonomy_get_vocabularies();
+  $select = array();
+  $select[0] = '<'. t('none') .'>';
+  foreach ($vocabularies as $vocabulary) {
+    $select[$vocabulary->vid] = $vocabulary->name;
+  }
+  $form['selection']['trip_search_omitted_vocab'] = array(
+    '#type' => 'select',
+    '#title' => t('Omitted vocabularies'),
+    '#default_value' => variable_get('trip_search_omitted_vocab', 0),
+    '#options' => $select,
+    '#description' => t('Select vocabularies which should be %omitted on the Advanced Search page.', array('%omitted' => t('omitted'))),
+    '#extra' => '',
+    '#multiple' => TRUE,
+  );
+  // Users
+  $form['selection']['trip_search_toggle_user'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Users',
+    '#return_value' => 1,
+    '#default_value' => variable_get('trip_search_toggle_user', 0),
+  );
+
+  $form['selection']['trip_search_omitted_users'] = array(
+    '#type' => 'select',
+    '#title' => t('Omitted users'),
+    '#default_value' => variable_get('trip_search_omitted_users', 0),
+    '#options' => trip_search_get_uid(TRUE),
+    '#description' => t('Select users which should be %omitted on the Advanced Search page.', array('%omitted' => t('omitted'))),
+    '#extra' => '',
+    '#multiple' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Convert a date from dd/mm/yyyy format to a timestamp. Must be compatible
+ * with CalendarFormat variable in the popup calendar.
+ */
+function trip_search_get_timestamp($date){
+  $date = explode('/', $date);
+  return mktime(0, 0, 0, $date[1], $date[0], $date[2]);
+}
+
+/*
+ * Handles Requires, Exclusions, and Ors
+ */
+function trip_search_translate_keys($parsed_keys, $op, $query=NULL) {
+  switch ($op) {
+    case 'array':
+      $keys = $parsed_keys->require ? $parsed_keys->require : array();
+      if ($parsed_keys->or) {
+        $ors = array();
+        foreach ($parsed_keys->or as $or) {
+          $ors = array_merge($ors, $or);
+        }
+        $keys = array_merge($keys, $ors);
+      }
+      return $keys;
+    case 'mysql_full':
+      if ($parsed_keys->require) {
+        foreach ($parsed_keys->require as $require) {
+//          $keys[] = '+' . $require;
+          if (substr($require, 0, 1) == '"' && substr($require, -1, 1) == '"') {
+            $query->search_string .= '+"%s" ';
+            $query->params[] = trim($require, '"');
+          }
+          else {
+            $query->search_string .= '+%s ';
+            $query->params[] = $require;
+          }
+        }
+      }
+      // This is where the exclusion is done
+      if ($parsed_keys->exclude) {
+        foreach ($parsed_keys->exclude as $exclude) {
+//          $keys[] = '-' . $exclude;
+          if (substr($require, 0, 1) == '"' && substr($require, -1, 1) == '"') {
+            $query->search_string .= '-"%s" ';
+            $query->params[] = trim($exclude, '"');
+          }
+          else {
+            $query->search_string .= '-%s ';
+            $query->params[] = $exclude;
+          }
+        }
+      }
+      if ($parsed_keys->or) {
+        foreach($parsed_keys->or as $or) {
+          foreach ($or as $or_keyword) {
+            $or_keywords[] = '%s';
+            $query->params[] = trim($or_keyword, '"');
+          }
+          $ors[] = '+('. implode(' ', $or_keywords) .')';
+        }
+//        $keys[] = implode(' ', $ors);
+        $query->search_string .= implode(' ', $ors);
+      }
+/*      if(is_array($keys)) {
+        $keys = implode(' ', $keys);
+      }
+      break;*/
+  }
+//  return $keys;
+  return $query;
+}
+
+/**
+ * Returns snippets from a piece of text, with certain keywords highlighted.
+ * Used for formatting search results.
+ * This is a slight revision of (proposed) fn in core search module as written by Steven Wittens.
+ */
+function trip_search_excerpt($parsed_keys, $text) {
+  $keys = trip_search_translate_keys($parsed_keys, 'array');
+  if (count($keys) == 0) {
+    $return = '<!-- excerpted text no keys ';
+    $return .= implode(' - ', $keys);
+    $return.= '-->'. truncate_utf8($text, 128) .' ...';
+    return $return;
+  }
+  $text = strip_tags(str_replace(array('<', '>'), array(' <', '> '), $text));
+
+  // Extract a fragment per keyword for at most 4 keywords.
+  // First we collect ranges of text around each keyword, starting/ending at spaces.
+  $ranges = array();
+  foreach ($keys as $k => $key) {
+    if (strlen($key) == 0) {
+      unset($keys[$k]);
+      continue;
+    }
+    if (count($out) == 4) {
+      break;
+    }
+    $keys[$k] = $key = str_replace('"', '', $key);
+    // Note: workaround for lack of stripos() in PHP4
+    if (($p = strpos($text, stristr($text, $key))) !== false) {
+      if (($q = strpos($text, ' ', max(0, $p - 60))) !== false) {
+        $end = substr($text, $p, 80);
+        if (($s = strrpos($end, ' ')) !== false) {
+          $ranges[$q] = $p + $s;
+        }
+      }
+    }
+  }
+
+  // If we didn't find anything, return the beginning.
+  if (count($ranges) == 0) {
+    return '<!-- excerpted text nothing found -->'. truncate_utf8($text, 128) .' ...';
+  }
+
+  // Sort the text ranges by starting position.
+  ksort($ranges);
+
+  // Now we collapse overlapping text ranges into one. The sorting makes it O(n).
+  $newranges = array();
+  foreach ($ranges as $from2 => $to2) {
+    if (!isset($from1)) {
+      $from1 = $from2;
+      $to1 = $to2;
+      continue;
+    }
+    if ($from2 <= $to1) {
+      $to1 = max($to1, $to2);
+    }
+    else {
+      $newranges[$from1] = $to1;
+      $from1 = $from2;
+      $to1 = $to2;
+    }
+  }
+  $newranges[$from1] = $to1;
+
+  // Fetch text
+  $out = array();
+  foreach ($newranges as $from => $to) {
+    $out[] = substr($text, $from, $to - $from);
+  }
+  $text = ' ... '. implode(' ... ', $out) .' ... ';
+
+  // Highlight keywords. Must be done at once to prevent conflicts ('strong' and '<strong>').
+  array_walk($keys, '_trip_search_excerpt_replace');
+  $text = preg_replace('/('. implode('|', $keys) .')/i', '<span class="trip-search-excerpt">\0</span>', $text);
+  return '<!-- excerpted text -->'. $text;
+}
+
+/**
+ * Helper for array_walk in trip_search_excerpt.
+ */
+function _trip_search_excerpt_replace(&$text) {
+  $text = preg_quote($text, '/');
+}
+
+/**
+ * Returns a list of supported operators for searching.
+ * Used for providing user help.
+ */
+function trip_search_operators() {
+  $operators[] = array('type' => 'basic', 'symbol' => '-', 'sample' => '-Windows', 'description' => t('Use the "-" operator (a minus sign preceding your keyword) to exclude a term from a search.'));
+  $operators[] = array('type' => 'basic', 'symbol' => '""', 'sample' => '"drupal module"', 'description' => t('Enclose multiple words in double quotes to find matches for an exact phrase.'));
+  $operators[] = array('type' => 'basic', 'symbol' => 'OR', 'sample' => 'search OR find', 'description' => t('Separate words with "OR" to find one or another, but not necessarily both.'));
+  $operators[] = array('type' => 'advanced', 'symbol' => 'types:', 'sample' => 'types:story+page', 'description' => t('Use this operator together with a list of types (separated by the + symbol) to get only results of specific content types.'));
+  $operators[] = array('type' => 'advanced', 'symbol' => 'before:', 'sample' => 'before:14/06/2004', 'description' => t('The before: operator can be used to restrict your search to content posted before a given date.'));
+  $operators[] = array('type' => 'advanced', 'symbol' => 'after:', 'sample' => 'after:14/06/2004', 'description' => t('The after: operator can be used to restrict your search to content posted after a given date.'));
+  $operators[] = array('type' => 'advanced', 'symbol' => 'user:', 'sample' => 'user:pjames', 'description' => t('This operator is used to filter results by user name.'));
+  $operators[] = array('type' => 'advanced_private', 'symbol' => 'uid:', 'sample' => 'uid:3', 'description' => t('Use this operator together with a user id to get only results posted by a given user.'));
+  if (module_exists('taxonomy')) {
+    $operators[] = array('type' => 'advanced_private', 'symbol' => 'tids:', 'sample' => 'tids:3,5', 'description' => t('Use this operator followed by a list of category ids to filter results by category.'));
+  }
+  return $operators;
+}
+
+/**
+ * Parse a set of search keys into search parameters.
+ *
+ * @param $search
+ *   A search string with keys.
+ *
+ * @return
+ *   Object containing search parameters as properties.
+ */
+function trip_search_parse($search_string) {
+  //find quoted strings and put each string into $quotes[0]
+  preg_match_all('{(user:|-)?"(.*?)"}is', $search_string, $quotes);
+
+  // Remove all the quoted strings from the original
+  foreach ($quotes[0] as $key => $value) {
+//      $output .= $key . ' => ' . $value . '<br />';
+    $search_string = str_replace($value, '', $search_string);
+    $quotes[0][$key] = $quotes[1][$key] .'"'. db_escape_string($quotes[2][$key]) .'"';
+  }
+  // trim excess blanks and escape apostrophes in search string
+  $search_string = trim($search_string);
+  $search_string = str_replace("'", "\'", $search_string);
+  // split the remaining string into an array
+  $non_quotes = split(' ', $search_string);
+  // now merge the two arrays
+  if ($non_quotes[0] != NULL) {
+    foreach ($non_quotes as $key => $value) {
+      $non_quotes[$key] = db_escape_string($non_quotes[$key]);
+    }
+    $search = array_merge($non_quotes, $quotes[0]);
+  }
+  else {
+    $search = $quotes[0];
+  }
+
+  for ($i = 0; $i < count($search); $i++) {
+    // destroy malicious input
+//    $search[$i] = db_escape_string($search[$i]);
+    // '-' conveys exclude term
+    if (substr($search[$i], 0, 1) == '-') {
+      $keys->exclude[] = substr($search[$i], 1, strlen($search[$i]));
+    }
+    // detect OR operator
+    else if ($search[$i + 1] == 'OR') {
+      $keys->or[] = array($search[$i], $search[$i + 2]);
+      $i += 2;
+    }
+    else if ($search[$i] == 'OR') {
+      $keys->or[count($keys->or) - 1][] = $search[$i + 1];
+      $i++;
+    }
+    // detect after date
+    else if (substr($search[$i], 0, 6) == 'after:') {
+      $keys->after = trip_search_get_timestamp(substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i])));
+    }
+    // detect before date
+    else if (substr($search[$i], 0, 7) == 'before:') {
+      $keys->before = trip_search_get_timestamp(substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i])));
+    }
+    // detect user name
+    else if (substr($search[$i], 0, 5) == 'user:') {
+      $keys->user = trim(substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i])), '"');
+    }
+    // detect user id
+    else if (substr($search[$i], 0, 4) == 'uid:') {
+      $keys->uid = substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i]));
+    }
+    // detect node types
+    else if (substr($search[$i], 0, 6) == 'types:') {
+      $keys->type = explode('+', substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i])));
+    }
+    // detect categories
+    else if (substr($search[$i], 0, 5) == 'tids:') {
+      $str_tids = substr($search[$i], strpos($search[$i], ':') + 1, strlen($search[$i]));
+      if (preg_match('/^([0-9]+,)+[0-9]+$/', $str_tids)) {
+        $keys->tid_operator = 'AND';
+        $tids = explode(',', $str_tids);
+      }
+      else if (preg_match('/^([0-9]+[+ ])*[0-9]+$/', $str_tids)) {
+        $keys->tid_operator = 'OR';
+        // The '+' character in a query string may be parsed as ' '.
+        $tids = preg_split('/[+ ]/', $str_tids);
+      }
+      $keys->term = $tids;
+    }
+    // search unpublished (admins only)
+    else if (substr($search[$i], 0, 12) == 'unpublished:' && user_access('administer nodes')) {
+      $keys->unpublished = (bool)substr($search[$i], 12);
+    }
+    // if simple keyword, add to requires
+    else {
+      $keys->require[] = $search[$i];
+    }
+  }
+
+  return $keys;
+}
+
+/**
+ * Generate fragments of an SQL SELECT statement for searching.
+ * Required, excluded, or optional (OR operator) search keys are treated here.
+ * Additional operators (e.g., node type, term id) are treated within
+ * module-specific functions using the module_trip_search() hook.
+ *
+ * @param $query
+ *   Existing fragments.
+ *
+ * @param $find
+ *   Object containing parsed search parameters.
+ *
+ * @return
+ *   Filled out fragments based on search parameters.
+ */
+function trip_search_expand_query(&$query, $keys) {
+  global $db_url;
+  // If doing regular expression matching, set appropriate query string parameters.
+  // Regular expressions only for postgres
+  // In fact this probably does not work properly, it is untested against postgres
+  if (variable_get('trip_search_type', 'mysql_full') == 'regex') {
+    $query->wildcard = '*';
+    $query->like = '~*';
+    $query->not_like = '!~*';
+    // These two delimiters are for MySQL regex support; pgsql probably needs different ones.
+    $query->delimiter_left = '[[:<:]]';
+    $query->delimiter_right = '[[:>:]]';
+    // Is this correct for matching zero or more of any character?
+    $query->wildcard = '*';
+  }
+  else {
+    $query->like = 'LIKE';
+    $query->not_like = 'NOT LIKE';
+    $query->delimiter_left = '%%';
+    $query->delimiter_right = '%%';
+    $query->wildcard = '%%';
+  }
+  // Generate SQL snippet for required words.
+  if ($keys->require) {
+    $keys->require = str_replace('*', $query->wildcard, $keys->require);
+    foreach ($keys->require as $require) {
+      foreach ($query->fields as $field) {
+        $requires[] = $field .' '. $query->like ." '". $query->delimiter_left . $require . $query->delimiter_right ."'";
+      }
+      $query->wheres[] = '('. implode(' OR ', $requires) .')';
+      array_splice($requires, 0);
+    }
+  }
+  // Generate SQL snippet for OR operator words.
+  if ($keys->or) {
+    foreach ($keys->or as $or) {
+      $or = str_replace('*', $query->wildcard, $or);
+      foreach ($or as $value) {
+        foreach ($query->fields as $field) {
+          $ors[] = $field .' '. $query->like ." '". $query->delimiter_left . $value . $query->delimiter_right ."'";
+        }
+        $wheres[] = implode(' OR ', $ors);
+        array_splice($ors, 0);
+      }
+      $query->wheres[] = '(('. implode(') OR (', $wheres) .'))';
+      array_splice($wheres, 0);
+    }
+  }
+  // Generate SQL snippet for excluded words.
+  if ($keys->exclude) {
+    $keys->exclude = str_replace('*', $query->wildcard, $keys->exclude);
+    foreach ($keys->exclude as $exclude) {
+      foreach ($query->fields as $field) {
+        $nullcheck = '(ISNULL($field) OR ';
+        $excludes[] = $nullcheck . $field .' '. $query->not_like ." '". $query->delimiter_left . $exclude . $query->delimiter_right ."')";
+      }
+      $query->wheres[] = '('. implode(' AND ', $excludes) .')';
+      array_splice($excludes, 0);
+    }
+  }
+  return $query;
+}
+
+/**
+ * Return formatted search result.
+ *
+ * @param $item
+ *   Search result item, representing a single search result to be formatted.
+ * @param $type
+ *   For node results, type of node.
+ */
+function theme_trip_search_item($item, $type = NULL) {
+  if (module_hook($type, 'search_item')) {
+    $output = module_invoke($type, 'search_item', $item);
+  }
+  else {
+    $output = ' <dl class="search-results"><dt class="title"><a href="'. $item['link'] .'">'. $item['title'] .'</a></dt>';
+    $info = array();
+    if ($item['type']) {
+      $info[] = array('title' => $item['type'], 'href' => NULL);
+    }
+    if ($item['user']) {
+      $info[] = array('title' => $item['user'], 'href' => NULL, 'html' => TRUE);
+    }
+    if ($item['hits']) {
+      $info[] = array('title' => $item['hits'] . ' ' . t('reads'), 'href' => NULL);
+    }
+    if ($item['date']) {
+      $info[] = array('title' => format_date($item['date'], 'small'), 'href' => NULL);
+    }
+    if (isset($item['extra'])) {
+      $info[] = array('title' => $item['extra'], 'href' => NULL);
+    }
+    $output .= ' <dd>'. ($item['snippet'] ? '<p>'. $item['snippet'] . '</p>' : '');
+    if ($info) {
+      $output .= '<p class="search-info">'. theme('links', $info) .'</p>';
+    }
+    $output .= "</dd></dl>\n";
+  }
+
+  return $output;
+}
+
+/**
+ * These functions actually gather the results. They could eventually move to their respective modules.
+ */
+function taxonomy_trip_search($keys, $op = NULL) {
+  if (!module_exists('taxonomy')) {
+    return;
+  }
+  $find = array();
+  $max = variable_get('trip_search_query_max', 500);
+  if (variable_get('trip_search_type', 'mysql_full') == 'mysql_full') {
+    if ($query = trip_search_translate_keys($keys, 'mysql_full')) {
+      $query->wheres[] = "MATCH (t.name,t.description) AGAINST ('". $query->search_string ."' IN BOOLEAN MODE)";
+    }
+  }
+  else {
+    $query->fields = array('t.name', 't.description');
+    trip_search_expand_query($query, $keys);
+  }
+  $query->selects = 't.name, t.description';
+  if ($query->wheres) {
+    $where = ' WHERE '. implode(' AND ', $query->wheres);
+  }
+  else {
+    return;
+  }
+
+  $sql = 'SELECT DISTINCT(t.tid), '. $query->selects . ' FROM {term_data} t '. $query->joins . $where;
+  $result = db_query_range($sql, $query->params, 0, $max);
+  while ($term = db_fetch_object($result)) {
+    if (!$find[$term->tid]) {
+      $find[$term->tid]['score'] = 0;
+      $find[$term->tid]['title'] = $term->name;
+      $find[$term->tid]['snippet'] = $term->description;
+      $find[$term->tid]['link'] = url('taxonomy/term/' . $term->tid);
+    }
+  }
+  return $find;
+}
+
+/*function user_trip_search($keys) {
+  $max = variable_get('trip_search_query_max', 500);
+  $result = db_query_range('SELECT * FROM {users} WHERE name LIKE "%'. $keys .'%"', 0, $max);
+  while ($account = db_fetch_object($result)) {
+    if (!$find['account'][$account->uid]) {
+      $find['account'][$account->uid]['score'] = 0;
+      $find['account'][$account->uid]['title'] = $account->name;
+      $find['account'][$account->uid]['snippet'] = '';
+      $find['account'][$account->uid]['link'] = 'user/view' . $account->uid;
+    }
+  }
+  if ($find['account']) {
+    return $find;
+  }
+}*/
+
+function node_trip_search($keys, $op = NULL) {
+  $max = variable_get('trip_search_query_max', 500);
+  $use_security = variable_get('trip_search_secure', 0) == 1 ? TRUE : FALSE;
+  $query->selects = 'n.title,n.type,nr.body,n.status,n.sticky';
+  $query->search_string = '';
+  $query->params = $query->wheres = array();
+  if (variable_get('trip_search_type', 'mysql_full') == 'mysql_full') {
+    $query = trip_search_translate_keys($keys, 'mysql_full', $query);
+    if ($query->search_string) {
+      if ($keys->exclude && !$keys->require) {
+        $exclusion = 'NOT ';
+        $query->search_string = str_replace('-', '', $query->search_string);
+      }
+      else {
+        $exclusion = '';
+      }
+      $query->wheres[] = $exclusion ."MATCH (n.title,nr.body) AGAINST ('". $query->search_string ."' IN BOOLEAN MODE)";
+    }
+  }
+  else {
+    $query->fields = array('n.title', 'nr.body');
+  }
+  if (!$keys->unpublished) {
+    $query->wheres[] = 'n.status = 1';
+  }
+
+// THE SEARCH AGAINST FILES HAS BEEN REMOVED. LIMITED USEFULNESS AND ADDS OVERHEAD
+//  $query->fields[] = 'f.filepath';
+//  $query->joins .= ' LEFT JOIN {files} f ON n.nid = f.nid';
+
+  $query->joins = ' INNER JOIN {node_revisions} nr ON n.vid = nr.vid';
+  if (module_exists('statistics') && variable_get('statistics_count_content_views', 0)) {
+    $query->selects .= ',nc.totalcount';
+    $query->joins .= ' INNER JOIN {node_counter} nc ON n.nid = nc.nid';
+    $query->order_bys[] = 'nc.totalcount DESC';
+  }
+  if ($keys->uid) {
+    $query->wheres[] = 'n.uid = %s';
+    $query->params[] = $keys->uid;
+  }
+  else if ($keys->user) {
+    if ($user = db_fetch_object(db_query("SELECT uid, name FROM {users} WHERE name = '%s'", $keys->user))) {
+      $query->wheres[] = 'n.uid = '. $user->uid;
+    }
+    else if ($op == 'find') {
+      drupal_set_message(t('Requested user "@user" not found.', array('@user' => $keys->user)), 'error');
+    }
+  }
+  if ($keys->after && $keys->before) {
+    $query->wheres[] = 'n.created BETWEEN '. $keys->after .' AND '. $keys->before;
+  }
+  else if ($keys->after) {
+    $query->wheres[] = 'n.created > '. $keys->after;
+  }
+  else if ($keys->before) {
+    $query->wheres[] = 'n.created < '. $keys->before;
+  }
+  if (count($keys->type) > 1) {
+    $query->wheres[] = 'n.type IN ("%s"'. str_repeat(',"%s"', count($keys->type)-1) .')';
+    $query->params = array_merge($query->params, $keys->type);
+  }
+  else if (count($keys->type) == 1) {
+    $query->wheres[] = 'n.type = "%s"';
+    $query->params[] = $keys->type[0];
+  }
+  if ($keys->term) {
+    foreach ($keys->term as $index => $tid) {
+      $term = taxonomy_get_term($tid);
+      $tree = taxonomy_get_tree($term->vid, $tid, -1, 1);
+      $descendant_tids[] = array_merge(array($tid), array_map('_taxonomy_get_tid_from_term', $tree));
+    }
+
+    if ($keys->tid_operator == 'OR') {
+      $str_tids = implode (',', call_user_func_array('array_merge', $descendant_tids));
+      $query->joins .= ' INNER JOIN {term_node} tn ON n.nid = tn.nid';
+      $query->wheres[] = 'tn.tid IN (%s)';
+      $query->params[] = $str_tids;
+    }
+    else {
+      foreach ($descendant_tids as $index => $tids) {
+        $query->joins .= ' INNER JOIN {term_node} tn'. $index .' ON n.nid = tn'. $index .'.nid';
+        $query->wheres[] = 'tn'. $index .'.tid IN (%s)';
+        $query->params[] = implode (',', $tids);
+      }
+    }
+  }
+  $query->order_bys[] = 'n.sticky DESC';
+  $query->order_bys[] = 'n.created DESC';
+
+  if (module_exists('comment')) {
+    // Replicate query and modify to search against comments
+    $query->selects .= ',n.created';
+    $comments = drupal_clone($query);
+    $comments->joins = ' INNER JOIN {comments} c ON n.nid = c.nid'. $comments->joins;
+    // Rewrite user/date/content matches to be against comment instead of node
+    $map = array('uid' => 'uid ', 'created' => 'timestamp ');
+    foreach ($comments->wheres as $i => $where) {
+      $comments->wheres[$i] = preg_replace('/^n.(uid|created) /e', '"c.".$map["\1"]', $where);
+    }
+    if (!$keys->unpublished) {
+      $comments->wheres[] = 'c.status = 0';
+    }
+    if (variable_get('trip_search_type', 'mysql_full') == 'mysql_full') {
+      if ($comments->search_string) {
+        $comments->wheres[0] = $exclusion ."MATCH (c.subject,c.comment) AGAINST ('". $comments->search_string ."' IN BOOLEAN MODE)";
+      }
+    } else {
+      $comments->fields[0] = 'c.subject';
+      $comments->fields[1] = 'c.comment';
+      trip_search_expand_query($comments, $keys);
+    }
+    $query->params = array_merge($query->params, $comments->params);
+  }
+  if ($query->fields) {
+    trip_search_expand_query($query, $keys);
+  }
+
+  switch ($op) {
+    case 'find':
+      if (isset($comments)) {
+        $sql = '('. db_rewrite_sql('SELECT n.nid, '. $query->selects .' FROM {node} n '. $query->joins .' WHERE '. implode(' AND ', $query->wheres)) .') UNION ('. db_rewrite_sql('SELECT n.nid, '. $comments->selects .' FROM {node} n '. $comments->joins .' WHERE '. implode(' AND ', $comments->wheres)) .') ORDER BY '. preg_replace('/[a-z]+\./', '', implode(',', $query->order_bys));
+      }
+      else {
+        $sql = db_rewrite_sql('SELECT n.nid, '. $query->selects .' FROM {node} n '. $query->joins .' WHERE '. implode(' AND ', $query->wheres) .' ORDER BY '. implode(',', $query->order_bys));
+      }
+      $result = db_query_range($sql, $query->params, 0, $max);
+      while ($node = db_fetch_object($result)) {
+        if (!isset($find[$node->nid]) && (!$use_security || node_access('view', $node))) {
+          $find[$node->nid]['score'] = 0;
+          if ($node->totalcount) {
+            $find[$node->nid]['hits'] = $node->totalcount;
+          }
+          $find[$node->nid]['id'] = $node->nid;
+          $find[$node->nid]['title'] = $node->title;
+          $find[$node->nid]['snippet'] = $node->body;
+          $find[$node->nid]['promote'] = $node->sticky;
+        }
+      }
+      return $find;
+    case 'terms':
+      // Skip if matched on one or multiple ANDed terms
+      if ((!empty($str_tids) && strpos($str_tids, ',') === false) || $keys->tid_operator == 'AND') {
+        return array();
+      }
+      if (count($keys->term) == 0) {
+        $query->joins .= ' INNER JOIN {term_node} tn ON n.nid = tn.nid';
+        if (isset($comments)) {
+          $comments->joins .= ' INNER JOIN {term_node} tn ON n.nid = tn.nid';
+        }
+      }
+      if (isset($comments)) {
+        $sql = '('. db_rewrite_sql('SELECT t.tid, t.name, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' INNER JOIN {term_data} t ON tn.tid = t.tid WHERE '. implode(' AND ', $query->wheres)) .' GROUP BY t.tid) UNION ALL ('. db_rewrite_sql('SELECT t.tid, t.name, COUNT(n.nid) AS count FROM {node} n '. $comments->joins .' INNER JOIN {term_data} t ON tn.tid = t.tid WHERE '. implode(' AND ', $comments->wheres)) .' GROUP BY t.tid) ORDER BY name';
+      }
+      else {
+        $sql = db_rewrite_sql('SELECT t.tid, t.name, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' INNER JOIN {term_data} t ON tn.tid = t.tid WHERE '. implode(' AND ', $query->wheres) .' GROUP BY t.tid ORDER BY t.name');
+      }
+      $result = db_query($sql, $query->params);
+      $terms = array();
+      while ($term = db_fetch_object($result)) {
+        if (isset($terms[$term->tid])) {
+          $terms[$term->tid]->count += $term->count;
+        }
+        else {
+          $terms[$term->tid] = $term;
+        }
+      }
+      return $terms;
+    case 'types':
+      // Skip if matched a single type
+      if (count($keys->type) == 1) {
+        return array();
+      }
+      if (isset($comments)) {
+        $sql = '('. db_rewrite_sql('SELECT n.type, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' WHERE '. implode(' AND ', $query->wheres)) .' GROUP BY n.type) UNION ALL ('. db_rewrite_sql('SELECT n.type, COUNT(n.nid) AS count FROM {node} n '. $comments->joins .' WHERE '. implode(' AND ', $comments->wheres)) .' GROUP BY n.type) ORDER BY type';
+      }
+      else {
+        $sql = db_rewrite_sql('SELECT n.type, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' WHERE '. implode(' AND ', $query->wheres) .' GROUP BY n.type ORDER BY n.type');
+      }
+      $result = db_query($sql, $query->params);
+      $types = array();
+      while ($type = db_fetch_object($result)) {
+        if (isset($types[$type->type])) {
+          $types[$type->type]->count += $type->count;
+        }
+        else {
+          $types[$type->type] = $type;
+        }
+      }
+      return $types;
+    case 'users':
+      // Skip if matched a single user
+      if ($keys->uid || $keys->user) {
+        return array();
+      }
+      if (isset($comments)) {
+        $sql = '('. db_rewrite_sql('SELECT n.uid, u.name, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' INNER JOIN {users} u ON n.uid = u.uid WHERE '. implode(' AND ', $query->wheres)) .' GROUP BY n.uid) UNION ALL ('. db_rewrite_sql('SELECT n.uid, u.name, COUNT(n.nid) AS count FROM {node} n '. $comments->joins .' INNER JOIN {users} u ON n.uid = u.uid WHERE '. implode(' AND ', $comments->wheres)) .' GROUP BY n.uid) ORDER BY name';
+      }
+      else {
+        $sql = db_rewrite_sql('SELECT n.uid, u.name, COUNT(n.nid) AS count FROM {node} n '. $query->joins .' INNER JOIN {users} u ON n.uid = u.uid WHERE '. implode(' AND ', $query->wheres) .' GROUP BY n.uid ORDER BY u.name');
+      }
+      $result = db_query($sql, $query->params);
+      $users = array();
+      while ($user = db_fetch_object($result)) {
+        if (isset($users[$user->uid])) {
+          $users[$user->uid]->count += $user->count;
+        }
+        else {
+          $users[$user->uid] = $user;
+        }
+      }
+      return $users;
+  }
+}
+?>

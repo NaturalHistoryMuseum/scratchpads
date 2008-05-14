@@ -1,0 +1,192 @@
+<?php
+
+/**
+ * This file installs the DwC specimen module.
+ */
+
+/*
+TODO:
+ 1. Install database
+ 2. Create the taxonomies
+ 3. Ensure the bio_image module is weighted higher than location */
+
+/**
+ * Implementation of hook_install
+ */
+function bio_image_install(){  
+  //bio_image_uninstall();
+  // Increase the module's weight so that it is executed after taxonomy (Don't fuck up).
+  $result = db_query("UPDATE {system} SET weight = 11 WHERE name = 'bio_image'");
+  // Install the taxonomies:
+  $vocabularies = array(
+    array(
+      array('name' => 'Imaging Technique','help' => 'Select the imaging technique that was used to produce the images.','description' => 'Describes the way that images have been taken','hierarchy' => 1,'module' => 'bio_image', 'nodes'=> array('image'=>1)),
+      array(
+        array('name' => 'Photograph','description' => 'Captured with a regular camera.'),
+        array('name' => 'Illustration','description' => 'Figurative, hand drawn or computer rendered.'),
+        array('name' => 'Light Micrograph','description' => 'Captured through a regular microscope.'),
+        array('name' => 'Scanning Electron Micrograph','description' => 'Captured through a Scanning Electron Microscope.'),
+        array('name' => 'Transmission Electron Micrograph','description' => 'Captured through a Transmission Electron Microscope.'),
+        array('name' => 'Other','description' => 'None of the above.')
+      )
+    ),
+    array(
+      array('name' => 'Preparation Technique','help' => 'Describe how the specimen was prepared for imaging (Leave blank if your image isn\'t a specimen)','description' => 'Describe how the specimen was prepared for imaging.','module' => 'bio_image','tags'=>1,'nodes'=> array('image'=>1)),
+      array()
+    ),
+    array(
+      array('name' => 'Keywords','help'=>'Comma-separated keywords describing the image Parts, sex, form, developmental stage, view angle, people, building etc. Enclose phrases in "quotation marks". Examples: Antenna, Head, Juvenile, "First instar", conference, museum, specimen.','description' => 'Describe the parts, sex, form, developmental stage, view angle etc shown in the image.','module' => 'bio_image','tags'=>1,'nodes'=> array('image'=>1)),
+      array()
+    )
+  );
+  foreach ($vocabularies as $vocabulary){
+    taxonomy_save_vocabulary($vocabulary[0]);
+    $vid = $vocabulary[0]['vid'];
+    foreach($vocabulary[1] as $term){
+      $term['vid'] = $vid;
+      $children = $term['children'];
+      taxonomy_save_term($term);
+      $parent=array($term['tid']);
+      if (isset($children)){
+        foreach($children as $term){
+          $term['parent'] = $parent;
+          $term['vid'] = $vid;
+          taxonomy_save_term($term);
+        }
+      }
+    }
+  }
+  $groups = array(
+    array(    
+      'label' => 'Specimen',
+      'settings' => array (
+        'form' => array (
+          'style' => 'fieldset_collapsed','description' => 'If appropriate, associate your image/s with a specimen record by selecting a record from the available list, or create a new specimen record by adding information in the appropriate fields.  Minimally a specimen record must include information in all fields under the "Required" tab.' 
+        ),
+        'display' => array(
+          'description' => 'Description',
+          'teaser' => null,
+          'full' => null,
+          'label' => null
+        ),
+      ),
+      'weight' => 0,
+      'group_name' => 'bio_image_darwincore_group'      
+    ),
+    array(    
+      'label' => 'Publication',
+      'settings' => array (
+        'form' => array (
+          'style' => 'fieldset_collapsed','description' => 'If appropriate, associate your image/s with a bibliographic citation by selecting a record from the available list, or create a new biblio record by adding information in the appropriate fields.' 
+        ),
+        'display' => array(
+          'description' => 'Description',
+          'teaser' => null,
+          'full' => null,
+          'label' => null
+        ),
+      ),
+      'weight' => 0,
+      'group_name' => 'bio_image_biblio_group'      
+    )
+  );
+
+  foreach ($groups as $group){
+    fieldgroup_save_group('image',$group);
+  }
+  $fields = array(
+    array(
+      'field_widget_type' => 'nodereference-addnode_select',
+      'widget_type' => 'addnode_select',
+      'label' => 'Specimen',
+      'weight' => 0,
+      'description' => 'Select or Create a Specimen which the selected images are of.',
+      'default_value_php' => '',
+      'group' => 0,
+      'db_storage' => 1,
+      'required' => 0,
+      'multiple' => 0,
+      'referenceable_types' => array('darwincore' => 'darwincore'),
+      'advanced_view' => '--',
+      'advanced_view_args' => null, 
+      'type_name' => 'image',
+      'field_name' => 'bio_image_darwincore',
+      'field_type' => 'nodereference',
+      'module' => 'nodereference, addnode',
+      'default_value' => null
+    ),
+    array(
+      'field_widget_type' => 'nodereference-addnode_select',
+      'widget_type' => 'addnode_select',
+      'label' => 'Publication',
+      'weight' => 0,
+      'description' => 'Select or Create a publication which the selected images were published in.',
+      'default_value_php' => '',
+      'group' => 0,
+      'db_storage' => 1,
+      'required' => 0,
+      'multiple' => 0,
+      'referenceable_types' => array('biblio' => 'biblio'),
+      'advanced_view' => '--',
+      'advanced_view_args' => null, 
+      'type_name' => 'image',
+      'field_name' => 'bio_image_biblio',
+      'field_type' => 'nodereference',
+      'module' => 'nodereference, addnode',
+      'default_value' => null
+    )
+  );
+  foreach($fields as $field){
+    // We also need to add CCK content to the image.
+    _content_admin_field_add_new_submit('boobies',$field);
+    _content_admin_field_submit('Whatever happened to Geoff Capes?',$field);
+  }
+  $groupings = array(
+    array(
+      'type_name' => 'image',
+      'group' => 'bio_image_biblio_group',
+      'field_name' => 'bio_image_biblio'
+    ),
+    array(
+      'type_name' => 'image',
+      'group' => 'bio_image_darwincore_group',
+      'field_name' => 'bio_image_darwincore'
+    )
+  );
+  foreach ($groupings as $grouping){
+    fieldgroup_content_admin_form_submit('They don\'t like it up em', $grouping, false);
+  }
+  if($result){
+    drupal_set_message('This should have installed ok');
+  }
+  else {
+    drupal_set_message('Dunno why this hasn\'t installed','ERROR');
+  }
+}
+
+function bio_image_uninstall(){
+  // Remove the tables and various settings.
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocabulary){
+    if ($vocabulary->module == 'bio_image'){
+      /*$terms = taxonomy_get_tree($vocabulary->vid);
+      foreach ($terms as $term){
+        taxonomy_del_term($term->tid);      
+      }*/
+      taxonomy_del_vocabulary($vocabulary->vid);
+    }
+  }
+  // Remove fields, groups, field-group associations and field-nodetype associations
+  // Yes, this SQL could be more efficient, who cares? It's run once in a blue moon.
+  $sql = "
+   DELETE FROM {node_field} WHERE field_name = 'bio_image_darwincore';
+   DELETE FROM {node_field} WHERE field_name = 'bio_image_biblio';
+   DELETE FROM {node_field_instance} WHERE field_name = 'bio_image_darwincore';
+   DELETE FROM {node_field_instance} WHERE field_name = 'bio_image_biblio';
+   DELETE FROM {node_group} WHERE group_name = 'bio_image_darwincore_group';
+   DELETE FROM {node_group} WHERE group_name = 'bio_image_biblio_group';   
+   DELETE FROM {node_group_fields} WHERE group_name = 'bio_image_darwincore_group';
+   DELETE FROM {node_group_fields} WHERE group_name = 'bio_image_biblio_group';   
+  ";
+  db_query($sql);
+}

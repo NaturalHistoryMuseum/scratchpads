@@ -1,0 +1,365 @@
+<?php
+// $Id: tql.module,v 1.1.2.2 2007/03/11 20:23:06 roetzi Exp $
+
+/**
+ * @file
+ * Taxonomy query language is a views plugin which provides a filter over vocabularies which
+ * can be entered as a query.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function tql_menu($may_cache) {
+  $items = array();
+  if (!$may_cache) {
+    $items[] = array('path' => 'tql/autocomplete',
+      'title' => t('Autocomplete tql query'),
+      'callback' => 'tql_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK);
+  }
+  return $items;
+}
+
+/**
+ * Implementation of hook_search().
+ * This creates a tab on the search page to execute a query.
+ */
+function tql_search($op = 'serach', $keys = NULL) {
+  switch ($op) {
+    case 'name':
+      // Name of tab for search page
+      return t('Taxonomy');
+
+    case 'search':
+      if ($keys && $nid_sql = tql_generate_sql($keys)) {
+        $search_results = array();
+        // Create SQL for nids and number of results
+        $sql = 'SELECT nid FROM {node} WHERE status = 1 AND nid in (' . $nid_sql . ')';
+        $count_sql = 'SELECT COUNT(*) FROM {node} WHERE status = 1 AND nid in (' . $nid_sql . ')';
+        // Let 'pager' execute the query and make nice 'previous', 'next' links
+        $result = pager_query($sql, 10, 0, $count_sql, $keys);
+        while ($node = db_fetch_object($result)) {
+          // Load node
+          $node = node_load($node->nid);
+          // Generate snippet
+          $node->snippet = check_markup($node->teaser, $node->format, FALSE);
+          $terms = taxonomy_link('taxonomy terms', $node);
+          $node->snippet .= theme('links', $terms);
+          // Let other modules add extra stuff to search result
+          $extra = node_invoke_nodeapi($node, 'search result');
+          // Construct search result entry
+          $search_results[] = array(
+            'link' => url('node/' . $node->nid, NULL, NULL, TRUE),
+            'title' => $node->title,
+            'type' => node_get_types('name', $node),
+            'user' => theme('username', $node),
+            'date' => $node->changed,
+            'extra' => $extra,
+            'snippet' => $node->snippet
+          );
+        }
+        return $search_results;
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function tql_form_alter($form_id, &$form) {
+  if ($form_id == 'search_form' && arg(1) == 'tql') {
+    $form['basic']['#title'] = t('Enter your query');
+    $form['basic']['inline']['keys']['#autocomplete_path'] = 'tql/autocomplete/0';
+  }
+}
+
+/**
+ * Implementation of hook_views_tables().
+ * Provide information for views module.
+ */
+function tql_views_tables() {
+  if (module_exists('taxonomy')) {
+
+    // Views filter for a query over all vocabularies.
+    $tables["tql_node"] = array(
+        'name' => 'node', // {node} table is used
+        'provider' => 'internal',
+        'filters' => array(
+          'tid' => array(
+            'name' => t('Taxonomy: Query over all Vocabularies'),
+            'value' => array(
+              '#type' => 'textfield',
+              '#autocomplete_path' => 'tql/autocomplete/0',
+            ),
+            'option' => 'string',
+            'operator' => array('Has'),
+            'handler' => 'tql_handler_filter_query',
+            'help' => t('All terms from every vocabulary will be used to check against the specified query. This filter is not aware of taxonomy hierarchies. Please see the taxonomy help for more information.'),
+          ),
+        )
+      );
+
+    $vocabularies = taxonomy_get_vocabularies();
+    foreach ($vocabularies as $voc) {
+      // Views filter for a query over a single vocabulary
+      $tables["tql_node_$voc->vid"] = array(
+        'name' => 'node',
+        'provider' => 'internal',
+        'filters' => array(
+          'tid' => array(
+            'name' => t('Taxonomy: Query for @voc-name', array('@voc-name' => $voc->name)),
+            'value' => array(
+              '#type' => 'textfield',
+              '#autocomplete_path' => 'tql/autocomplete/' . $voc->vid,
+            ),
+            'option' => 'string',
+            'operator' => array('Has'),
+            'handler' => 'tql_handler_filter_query',
+            'vocabulary' => $voc->vid,
+            'help' => t("Only terms associated with %voc-name will be used to check against the specified query. This filter is not aware of taxonomy hierarchies. Please see the taxonomy help for more information.", array('%voc-name' => $voc->name)),
+          ),
+        )
+      );
+
+    }
+  }
+  return $tables;
+}
+
+/**
+ * Implementation of hook_views_arguments().
+ * Provide information for views module.
+ */
+function tql_views_arguments() {
+  $arguments = array(
+    'tql_query' => array(
+      'name' => t('Taxonomy: Query'),
+      'handler' => 'tql_handler_arg_query',
+      'option' => 'string',
+      'help' => t('Todo: query, named query. Options can be set to the name of an exposed <em>Taxonomy: Query</em> filter to insert the argument into this field.'),
+    )
+  );
+  return $arguments;
+}
+
+/**
+ * Callback when query filter is used as a views argument.
+ */
+function tql_handler_arg_query ($op, &$query, $argtype, $arg = NULL) {
+  switch($op) {
+    case 'summary':
+      $query->ensure_table('term_data', true);
+      $query->add_field('name', 'term_data');
+      $query->add_field('weight', 'term_data');
+      $query->add_field('tid', 'term_data');
+      $fieldinfo['field'] = "term_data.name";
+      return $fieldinfo;
+
+    case 'sort':
+      $query->add_orderby('node', 'title', $argtype);
+      break;
+
+    case 'filter':
+      // query or query name is in $arg
+      // execute query or stored query and apply this to $query
+      $filter = array('value' => $arg);
+      $filterinfo = array('table' => 'node');
+      tql_handler_filter_query('', $filter, $filterinfo, $query);
+      // If option field is set, we store the query as a $_GET variable.
+      // That way it can be inserted into an exposed field
+      if (isset($argtype['options'])) {
+        $_GET[$argtype['options']] = $arg;
+      }
+      break;
+
+    case 'link':
+      break;
+
+    case 'title':
+      // query or query name is in $query
+      // return title
+      $title = $query;
+      return $title;
+  }
+}
+
+/**
+ * Callback when filter has to construct SQL query for views.
+ */
+function tql_handler_filter_query($op, $filter, $filterinfo, &$query) {
+
+  if (isset($filterinfo['vocabulary'])) {
+    $sql = tql_generate_sql($filter['value'], array($filterinfo['vocabulary']));
+  }
+  else {
+    $sql = tql_generate_sql($filter['value']);
+  }
+
+  if ($sql) {
+    $table = $filterinfo['table'];
+    $query->ensure_table($table);
+    $query->add_where("node.nid in (" . $sql . ")");
+  }
+  else {
+    $query->add_where("FALSE");
+  }
+
+}
+
+/**
+ * Generate an SQL query of a tag query.
+ *
+ * @param $query
+ *   The query which should be parsed
+ * @param $vocabulary_list
+ *   An array of vocabulary IDs if the query should be restricted to these vocabularies.
+ * @return
+ *   The generated SQL is a select query over a list of node ids and can be used 
+ *   in a where clause as 'WHERE node.nid in ($sql_query)'.
+ */
+function tql_generate_sql($query, $vocabularyList = NULL) {
+  $sql = NULL;
+
+  // Include needed files
+  include_once ('ast/TqlAbstractAstVisitor.php');
+  include_once ('ast/TqlAstDumper.php');
+  include_once ('ast/TqlErrorFormatter.php');
+  include_once ('ast/TqlNameToTid.php');
+  include_once ('ast/TqlMySqlGenerator.php');
+  include_once ('ast/TqlParser.php');
+  include_once ('ast/TqlLexer.php');
+
+  // init the lexer with the query
+  $lexer = new TqlLexer($query);
+  $parser = new TqlParser();
+
+  // build the AST
+  while ($lexer->yylex()) {
+    $parser->doParse($lexer->token, $lexer->node);
+  }
+  $parser->doParse(0, 0);
+
+  if ($parser->successful) {
+
+    // map terms (strings) to term ids (integers)
+    $tagTank = tql_create_tag_tank ($parser->ast, $vocabularyList); 
+
+    // generate code for mysql
+    $sqlGenerator = new TqlMySqlGenerator();
+    $sql = $sqlGenerator->generate($parser->ast, $tagTank->terms, 'term_node');
+
+    // write the query nicely formatted
+    $dumper = new TqlAstDumper();
+    drupal_set_message($dumper->dump($parser->ast));
+  }
+  else {
+    tql_create_tag_tank ($parser->astParts, $vocabularyList); 
+    $errorPrinter = new TqlErrorFormatter();
+    $error = $errorPrinter->error($parser->astParts, $query);
+    drupal_set_message (t("Error in query: ") .  $error,'error');
+  }
+  return $sql;
+}
+
+/**
+ * Creates a TqlNameToTid object and reports missing terms to drupal.
+ *
+ * @param $ast
+ *   Object of type TqlNode or an array of such objects.
+ * @param $vocabularyList
+ *   Array of vocabulary IDs to use or 'null' if all should be taken into account.
+ * @return
+ *   TqlNameToId Object
+ */
+function tql_create_tag_tank ($ast, $vocabularyList) {
+  $tagTank = new TqlNameToTid();
+  if (is_array($ast)) {
+    foreach ($ast as $partOfAST){
+      // map terms (strings) to term ids (integers)   
+      $tagTank->computeTermIDs($partOfAST, $vocabularyList);
+    }
+  }
+  else {
+    $tagTank->computeTermIDs($ast, $vocabularyList);
+  }
+  // report terms which do not occur in the selected vocabularies at all    
+  if (count($tagTank->missingTerms)>0){
+    drupal_set_message (t("The following terms were not found: ") .  implode(', ', $tagTank->missingTerms),'error');
+  }
+  return $tagTank;
+}
+
+/**
+ * Menu callback to autocomplete a query.
+ *
+ * @param $vid
+ *   The vocabulary to restrict the autocompletion. If this is zero, no restriction is used.
+ * @param $string
+ *   The query for which autocompletion should be done.
+ */
+function tql_autocomplete($vid = 0, $string = '') {
+
+  // Include needed files
+  include_once ('ast/TqlAbstractAstVisitor.php');
+  include_once ('ast/TqlParser.php');
+  include_once ('ast/TqlLexer.php');
+
+  // Remove unneeded whitespace
+  $string = trim($string);
+
+  // initialize the lexer with the query
+  $lexer = new TqlLexer($string);
+
+  // Get last token
+  $last_token = NULL;
+  while ($lexer->yylex()) {
+    $last_token = $lexer->token;
+    $last_node = $lexer->node;
+  }
+
+  // Only autocomplete identifiers
+  if ($last_token == TqlParser::TK_IDENTIFIER) {
+    // Restrict terms to vocabulary if requested
+    if ($vid) {
+      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%%%s%%') ORDER BY t.name", 't', 'tid'), $vid, $last_node->value, 0, 10);
+    }
+    else {
+      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) LIKE LOWER('%%%s%%') ORDER BY t.name", 't', 'tid'), $last_node->value, 0, 10);
+    }
+
+    // Base part of autocompleted string
+    $prefix = substr($string, 0, $last_node->column);
+    // Check if a quote is left of the last token
+    $has_left_quote = ($last_node->column-1 >= 0) ? $string[$last_node->column-1] == '"' : false;
+
+    // Construct response array
+    $matches = array();
+    while ($tag = db_fetch_object($result)) {
+      $name = $tag->name;
+      if (strpos($name, ' ') !== false) {
+        // the term needs to be in quotes
+        if ($has_left_quote) {
+          $name .= '"';
+        }
+        else {
+          $name = '"' . $name . '"';
+        }
+      }
+      elseif ($has_left_quote) {
+        // a quote is already there, close it
+        $name .= '"';
+      }
+      // Array key is for textfield, array value for display
+      $matches[$prefix . $name] = check_plain($tag->name);
+    }
+    // Return matches as javascript array
+    print(drupal_to_js($matches));
+    exit();
+  }
+  else {
+    exit();
+  }
+}

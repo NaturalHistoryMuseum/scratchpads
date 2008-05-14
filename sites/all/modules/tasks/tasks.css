@@ -1,0 +1,42 @@
+/* $Id: tasks.css,v 1.5 2007/06/19 19:53:03 scor Exp $ */
+
+table#task-list {
+	width:100%;
+	margin-top:10px;
+}
+
+table#task-list td {
+	padding:10px;
+	border-bottom:1px solid #fff;
+	background:#e0e0e0;
+	border-right:1px solid #fff;
+}
+
+table#task-list tr.task-expand td {
+  background: #eee;
+  border-bottom: 10px #fff solid;
+}
+
+table#task-list tr.completed td {
+  background: #c1f0bf;
+}
+
+table#task-list th {
+	padding:6px 10px 6px 10px;
+	background:#ccc;
+	border-bottom:1px solid #fff;
+	font-size:10px;
+}
+
+#tasks-view-filter-form .form-item, #tasks-view-filter-form input {
+	display:inline;
+	margin-bottom:0;
+}
+
+#tasks-filter div {
+	text-align:right;
+}
+
+#completedate div {
+	display:inline;
+}

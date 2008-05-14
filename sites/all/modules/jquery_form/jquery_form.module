@@ -1,0 +1,17 @@
+<?php
+// $Id: jquery_form.module,v 1.1 2007/08/05 15:11:14 wimleers Exp $
+
+/**
+ * All this module does, is providing a central function for adding the Form
+ * Plugin for jQuery. It ensures that the Form Plugin will be added only once
+ * per page.
+ */
+
+function jquery_form_add() {
+  static $added;
+
+  if (!isset($added)) {
+    drupal_add_js(drupal_get_path('module', 'jquery_form') .'/jquery_form.js');
+    $added = TRUE;
+  }
+}

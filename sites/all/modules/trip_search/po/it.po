@@ -1,0 +1,499 @@
+# LANGUAGE translation of Drupal (c:\moduli\trip_search.module)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# $Id: it.po,v 1.3 2007/02/01 01:12:51 mindless Exp $
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2004-11-25 23:53+0100\n"
+"PO-Revision-Date: 2007-01-22 17:39+0100\n"
+"Last-Translator: Martin KNAPP\n"
+"Language-Team: Italian <michele@drupalitalia.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Country: ITALY\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+# c:\moduli\trip_search.module:15
+#: trip_search.module:15
+msgid "An alternative to the core search module, providing site-wide searching without custom indexing."
+msgstr "Un'alternativa al modulo di ricerca base, consente ricerche in tutto il sito senza indicizzazione personalizzata."
+
+# c:\moduli\trip_search.module:17
+#: trip_search.module:17
+msgid "The trip_search module provides site-wide search capability.  Below you can refine the search presentation."
+msgstr "Il modulo cerca_in_corsa fornisce la capacità di ricerca nel sito. Qui sotto puoi migliorare la presentazione della ricerca."
+
+# c:\moduli\trip_search.module:19
+#: trip_search.module:19
+msgid "<p>The trip_search module offers alternative search methods including search by category and advanced operators (full phrase, optional words, etc.).</p><p>In <a href=\"%trip_search-config\">administer &raquo; settings &raquo; trip_search</a> you can set up an introductory text for display at the top of search forms and a ceiling on the number of hits that may be returned.</p><h3>User access permission for searching</h3>     <p><strong>fulltext search:</strong> Allows a role to view the search form, perform a search, and view results.</p>"
+msgstr ""
+"<p>Il modulo cerca_in_corsa.</p>\n"
+"      In <a href=\"%trip_search-config\">amministra &raquo; impostazioni &raquo; cerca_in_corsa</a> puoi inserire un testo introduttivo da mostrare in cima alla maschera di ricerca e un numero massimo di voci da restituire.</p>\n"
+"      <h3>Permessi utente per l'accesso alla ricerca</h3>\n"
+"      <p><strong>cerca contenuto:</strong> Consente a un ruolo di vedere la maschera di ricerca, effettuare una ricerca e vedere i risultati.</p>\n"
+"      "
+
+#: trip_search.module:23
+msgid "<p>You can improve your search results by adding \"operators\" that refine your keywords.  All of these operators can be entered directly into the basic search box.  Alternately, you can use the <a href=\"%advanced\">Advanced search</a> page.</p><h3>Advanced search operators</h3>"
+msgstr ""
+
+# c:\moduli\trip_search.module:59;143
+#: trip_search.module:26
+msgid "searches"
+msgstr "cerca"
+
+#: trip_search.module:26
+msgid "Sample: "
+msgstr ""
+
+# c:\moduli\trip_search.module:35;41
+#: trip_search.module:37
+#: ;58
+msgid "Search"
+msgstr "Cerca"
+
+#: trip_search.module:43
+msgid "Block message"
+msgstr ""
+
+#: trip_search.module:44
+#: ;59
+msgid "Enclose phrases in double quotes (\"\")."
+msgstr ""
+
+#: trip_search.module:47
+msgid "Message to display at the bottom of search block."
+msgstr ""
+
+#: trip_search.module:72
+#: ;102;706
+msgid "advanced search"
+msgstr ""
+
+#: trip_search.module:114
+msgid "Validation error, please try again.  If this error persists, please contact the site administrator."
+msgstr ""
+
+#: trip_search.module:115
+msgid "Unable to run search"
+msgstr ""
+
+# c:\moduli\trip_search.module:142
+#: trip_search.module:210
+msgid "Search criteria"
+msgstr "Cerca"
+
+#: trip_search.module:220
+msgid "Advanced search criteria"
+msgstr ""
+
+#: trip_search.module:249
+msgid "Matching categories"
+msgstr ""
+
+#: trip_search.module:296
+#: ;302
+msgid "Results %from to %max of %count"
+msgstr ""
+
+#: trip_search.module:314
+msgid "Filter results by category"
+msgstr ""
+
+#: trip_search.module:331
+msgid "Filter results by type"
+msgstr ""
+
+#: trip_search.module:346
+msgid "Filter results by user"
+msgstr ""
+
+# c:\moduli\trip_search.module:105
+#: trip_search.module:358
+msgid "Your search yielded no results."
+msgstr "La tua ricerca non ha prodotto risultati."
+
+# c:\moduli\trip_search.module:110
+#: trip_search.module:363
+#, fuzzy
+msgid "%count matches for \"%keys\"."
+msgstr "%num risultati per \"%keys\" %more"
+
+# c:\moduli\trip_search.module:111;111
+#: trip_search.module:364
+msgid "view results"
+msgstr "mostra risultati"
+
+#: trip_search.module:460
+#: ;963
+msgid "none"
+msgstr ""
+
+# c:\moduli\trip_search.module:76
+#: trip_search.module:613
+#, fuzzy
+msgid "Filter on content"
+msgstr "cerca contenuto"
+
+#: trip_search.module:615
+msgid "Note that you should not use double quotes in the advanced search"
+msgstr ""
+
+#: trip_search.module:619
+msgid "All of the words"
+msgstr ""
+
+#: trip_search.module:623
+msgid "with %all the words"
+msgstr ""
+
+#: trip_search.module:623
+#: ;680
+msgid "all"
+msgstr ""
+
+#: trip_search.module:627
+msgid "Required phrase"
+msgstr ""
+
+#: trip_search.module:631
+msgid "with the %exact"
+msgstr ""
+
+#: trip_search.module:631
+msgid "exact phrase"
+msgstr ""
+
+#: trip_search.module:635
+msgid "Any of the words"
+msgstr ""
+
+#: trip_search.module:639
+msgid "with %one the words"
+msgstr ""
+
+#: trip_search.module:639
+msgid "at least one of"
+msgstr ""
+
+#: trip_search.module:643
+msgid "Excluded words"
+msgstr ""
+
+#: trip_search.module:647
+msgid "%without the words"
+msgstr ""
+
+#: trip_search.module:647
+msgid "without"
+msgstr ""
+
+#: trip_search.module:651
+msgid "Filter by date"
+msgstr ""
+
+#: trip_search.module:653
+msgid "Date format <strong>must</strong> be dd/mm/yyyy. Use calendar to enter dates"
+msgstr ""
+
+#: trip_search.module:657
+msgid "Before"
+msgstr ""
+
+#: trip_search.module:665
+msgid "After"
+msgstr ""
+
+#: trip_search.module:674
+msgid "Filter by categories"
+msgstr ""
+
+# c:\moduli\trip_search.module:76
+#: trip_search.module:678
+#, fuzzy
+msgid "Find content"
+msgstr "cerca contenuto"
+
+#: trip_search.module:680
+msgid "Irrespective of category (no filtering)"
+msgstr ""
+
+#: trip_search.module:680
+msgid "In %all of the selected categories"
+msgstr ""
+
+#: trip_search.module:680
+msgid "In %atleastone of the selected categories"
+msgstr ""
+
+#: trip_search.module:680
+msgid "at least one"
+msgstr ""
+
+#: trip_search.module:687
+msgid "Select one or more terms to include"
+msgstr ""
+
+#: trip_search.module:693
+msgid "Filter by user"
+msgstr ""
+
+#: trip_search.module:694
+msgid "You can select a user on which to filter. The results will include documents published by your selected user."
+msgstr ""
+
+#: trip_search.module:701
+msgid "Select a user"
+msgstr ""
+
+#: trip_search.module:712
+msgid "Filter by content type"
+msgstr ""
+
+#: trip_search.module:713
+msgid "You can select one or more content types on which to filter. The results will include only documents of these types"
+msgstr ""
+
+#: trip_search.module:717
+msgid "Choose content types to include"
+msgstr ""
+
+# c:\moduli\trip_search.module:59;143
+#: trip_search.module:744
+msgid "search"
+msgstr "cerca"
+
+# c:\moduli\trip_search.module:59;143
+#: trip_search.module:751
+#, fuzzy
+msgid "search tips"
+msgstr "cerca"
+
+#: trip_search.module:785
+msgid "Database type"
+msgstr ""
+
+#: trip_search.module:789
+msgid "I am unable to determine the database type: note that this module only functions with either MySQL or PostgreSQL"
+msgstr ""
+
+#: trip_search.module:798
+msgid "You are using a MySQL database and must enable full text searching (requires creating indices, see help text)"
+msgstr ""
+
+#: trip_search.module:804
+msgid "You are using a PostgreSQL database which is not supported in this version"
+msgstr ""
+
+#: trip_search.module:816
+msgid "Unable to identify the database: THIS SEARCH MODULE WILL NOT WORK!"
+msgstr ""
+
+#: trip_search.module:817
+msgid "Unable to identify the database: THIS SEARCH MODULE WILL NOT WORK!."
+msgstr ""
+
+#: trip_search.module:823
+msgid "Main settings"
+msgstr ""
+
+# c:\moduli\trip_search.module:168
+#: trip_search.module:827
+msgid "Search explanation"
+msgstr "Spiegazione ricerca"
+
+# c:\moduli\trip_search.module:168
+#: trip_search.module:831
+msgid "This text will be displayed at the top of the search form.  It is useful for helping or instructing your users."
+msgstr "Questo testo verrà mostrato in cima alla maschera di ricerca. E' utile per aiutare o istruire i tuoi utenti."
+
+#: trip_search.module:835
+msgid "Check node security"
+msgstr ""
+
+#: trip_search.module:838
+msgid "When this option is enabled, the node access sub-system is used to ensure that search results are limited to those to which the user has view access. Note that since each node's access rights are checked, this can potentially add a significant overhead to the search process: the option should only be used if you wish specifically to enforce private content."
+msgstr ""
+
+# c:\moduli\trip_search.module:169
+#: trip_search.module:842
+msgid "Maximum items"
+msgstr "Massimo voci"
+
+# c:\moduli\trip_search.module:169
+#: trip_search.module:845
+#, fuzzy
+msgid "The maximum number of search results to display per page."
+msgstr "Il numero massimo di risultati mostrati da mostrare per ogni dato tipo di risultato della ricerca."
+
+#: trip_search.module:852
+msgid "Ranking of results"
+msgstr ""
+
+#: trip_search.module:855
+msgid "If enabled, ranking will sort search results before they are displayed.  Use these settings to make particular factors score higher or lower in the ranking. Entering 0 in the score will cause the ranking not to take effect"
+msgstr ""
+
+#: trip_search.module:859
+msgid "Use ranking"
+msgstr ""
+
+#: trip_search.module:862
+msgid "Ranking of search results, to present most relevant results first, has some overhead in terms of CPU demands. Disable to increase speed."
+msgstr ""
+
+#: trip_search.module:866
+msgid "In title"
+msgstr ""
+
+#: trip_search.module:870
+msgid "Search word is in title."
+msgstr ""
+
+#: trip_search.module:874
+msgid "In body"
+msgstr ""
+
+#: trip_search.module:878
+msgid "Search word is in body."
+msgstr ""
+
+#: trip_search.module:882
+msgid "Promoted"
+msgstr ""
+
+#: trip_search.module:886
+msgid "Node has been promoted (is \"sticky\" or static on front page)."
+msgstr ""
+
+#: trip_search.module:891
+msgid "Most hits"
+msgstr ""
+
+#: trip_search.module:895
+msgid "Most-visited page will get this score, with other pages getting a percentage of this score based on their relative hits."
+msgstr ""
+
+#: trip_search.module:900
+msgid "To enable hit count ranking, first install the statistics module and enable node hit counting."
+msgstr ""
+
+# c:\moduli\trip_search.module:111;111
+#: trip_search.module:906
+#, fuzzy
+msgid "Filtering of results"
+msgstr "mostra risultati"
+
+#: trip_search.module:909
+msgid "If enabled, result filtering will allow the user to further filter the search result set. Note that this has performance implications, since each filter causes an additional search to be made in the database"
+msgstr ""
+
+#: trip_search.module:913
+msgid "Enable filtering by category"
+msgstr ""
+
+#: trip_search.module:920
+msgid "Enable filtering by content type"
+msgstr ""
+
+#: trip_search.module:927
+msgid "Enable filtering by user"
+msgstr ""
+
+#: trip_search.module:936
+msgid "Advanced search page selection criteria options"
+msgstr ""
+
+#: trip_search.module:939
+msgid "Enable or disable the display of particular form sections on the advanced search page."
+msgstr ""
+
+#: trip_search.module:941
+msgid "Categories"
+msgstr ""
+
+#: trip_search.module:942
+msgid "User"
+msgstr ""
+
+#: trip_search.module:943
+msgid "Content type"
+msgstr ""
+
+#: trip_search.module:969
+msgid "Omitted vocabularies"
+msgstr ""
+
+#: trip_search.module:972
+msgid "Select vocabularies which should be %omitted on the Advanced Search page."
+msgstr ""
+
+#: trip_search.module:972
+#: ;989
+msgid "omitted"
+msgstr ""
+
+#: trip_search.module:986
+msgid "Omitted users"
+msgstr ""
+
+#: trip_search.module:989
+msgid "Select users which should be %omitted on the Advanced Search page."
+msgstr ""
+
+#: trip_search.module:1168
+msgid "Use the \"-\" operator (a minus sign preceding your keyword) to exclude a term from a search."
+msgstr ""
+
+#: trip_search.module:1169
+msgid "Enclose multiple words in double quotes to find matches for an exact phrase."
+msgstr ""
+
+#: trip_search.module:1170
+msgid "Separate words with \"OR\" to find one or another, but not necessarily both."
+msgstr ""
+
+#: trip_search.module:1171
+msgid "Use this operator together with a list of types (separated by the + symbol) to get only results of specific content types."
+msgstr ""
+
+#: trip_search.module:1172
+msgid "The before: operator can be used to restrict your search to content posted before a given date."
+msgstr ""
+
+#: trip_search.module:1173
+msgid "The after: operator can be used to restrict your search to content posted after a given date."
+msgstr ""
+
+#: trip_search.module:1174
+msgid "This operator is used to filter results by user name."
+msgstr ""
+
+#: trip_search.module:1175
+msgid "Use this operator together with a user id to get only results posted by a given user."
+msgstr ""
+
+#: trip_search.module:1177
+msgid "Use this operator followed by a list of category ids to filter results by category."
+msgstr ""
+
+#: trip_search.module:1389
+msgid "reads"
+msgstr ""
+
+#: trip_search.module:1525
+msgid "Requested user \"%user\" not found."
+msgstr ""
+
+# c:\moduli\trip_search.module:0
+#: trip_search.module:365
+#: ;0
+msgid "trip_search"
+msgstr "cerca_in_corsa"
+
+#: trip_search.module:92
+msgid "fulltext search"
+msgstr ""
+

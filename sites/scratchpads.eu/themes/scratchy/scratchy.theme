@@ -1,0 +1,341 @@
+<?php
+// $Id: scratchy.theme,v 1.56.2.2 2007/05/31 06:13:36 drumm Exp $
+
+/**
+ * @file
+ * A slim, CSS-driven theme which does not depend on a template engine like phptemplate
+ */
+
+function scratchy_features() {
+  return array(
+       'toggle_logo',
+       'toggle_favicon',
+       'toggle_name',
+       'toggle_mission');
+}
+
+function scratchy_regions() {
+  return array(
+       'right' => t('Right sidebar'),
+       'bottom' => t('Bottom footer')
+  );
+}
+
+function scratchy_page($content, $show_blocks = TRUE) {
+  $language = $GLOBALS['locale'];
+  if (theme_get_setting('toggle_favicon')) {
+    drupal_set_html_head('<link rel="shortcut icon" href="'. check_url(theme_get_setting('favicon')) .'" type="image/x-icon" />');
+  }
+  $title = drupal_get_title();
+  // Get blocks before so that they can alter the header (JavaScript, Stylesheets etc.)
+  $blocks_right = theme_blocks('right');
+  $blocks_bottom = theme_blocks('bottom');
+  echo '<?';
+?>xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="<?php echo $language;?>" xml:lang="<?php echo $language?>">
+<head>
+<title><?php echo $title ? strip_tags($title)." | ". variable_get("site_name", "Drupal") : variable_get("site_name", "Drupal") ." | ". variable_get("site_slogan", ""); ?></title>
+<?php
+if(function_exists('jquery_ui_backport_add')){
+  jquery_ui_backport_add();
+}
+echo drupal_get_html_head();
+echo drupal_get_css();
+echo drupal_get_js();
+?>
+<!--[if lte IE 6]>
+  <script type="text/javascript" src="<?php echo url(drupal_get_path('theme','scratchy').'/supersleight/supersleight-min.js'); ?>"></script>
+<![endif]-->
+</head>
+  <body>
+    <div class="header">
+<?php
+  if ($logo = theme_get_setting('logo')) {
+    ?><a href="<?php echo base_path(); ?>" title="<?php echo t('Home'); ?>"><img src="<?php echo $logo; ?>" alt="<?php echo t('Home');?>"/></a><?php
+  }else{
+    ?><h1>No Logo Defined</h1><?php
+  }
+  if(theme_get_setting('toggle_search')){
+    // Search box. Shove at the very top right.
+    ?><div id="searchbox"><?php echo drupal_get_form('search_theme_form'); ?></div><?php
+  }if ($breadcrumbs = drupal_get_breadcrumb()){
+    array_shift($breadcrumbs);
+    if($breadcrumbs){
+      ?><div id="breadcrumbs"><?php echo theme('breadcrumb',$breadcrumbs); ?></div><?php
+    }
+  }
+  ?></div><?php
+  $primary_links = theme('primarylinks', menu_primary_links(), array('class' => 'links'));
+  if (isset($primary_links) || isset($secondary_links)) {
+    ?><div class="navlinks"><?php
+    if (isset($primary_links)) {
+      echo $primary_links;
+    }
+    ?></div><?php
+  }
+
+  ?><div id="iecentral"><div id="content"><div id="main<?php 
+  if (!$show_blocks || empty($blocks_right)) {
+    echo "-wide";
+  }
+  ?>"><?php
+  echo theme('help').theme('status_messages');
+  if (drupal_is_front_page()) {
+    ?><div class="node" style="background-color: #444;color: white;">
+  <div class="boxtop"><div class="bc ctr"></div><div class="bc ctl"></div></div>
+  <div class="boxcontent">
+    <div class="subboxcontent"><div class="content"><h1 style="margin:0;">This site will soon become the home of the EDIT Scratchpads project. Until then, please check the <a href="http://www.editwebrevisions.info/">Work Package Six</a> site for more information</h1></div></div>
+  </div>
+  <div class="boxbtm">
+    <div class="bc cbr"></div>
+    <div class="bc cbl"></div>
+  </div>
+</div>    
+    <?php
+    if(theme_get_setting('toggle_mission')){
+      $mission = theme_get_setting('mission');
+      if($mission){
+        ?><div class="node">
+  <div class="boxtop"><div class="bc ctr"></div><div class="bc ctl"></div></div>
+  <div class="boxcontent">
+    <div class="subboxcontent"><div class="content"><?php echo $mission; ?></div></div>
+  </div>
+  <div class="boxbtm">
+    <div class="bc cbr"></div>
+    <div class="bc cbl"></div>
+  </div>
+</div><?php
+      }
+    }
+  }
+  
+  if ($tabs = theme('menu_local_tasks')) {
+    echo $tabs;
+  }
+?>
+<!-- begin content -->
+<?php echo $content; ?>
+<!-- end content -->
+</div>
+<?php
+  if ($show_blocks && !empty($blocks_right)) {
+    ?><div id="sidebar-right"><div>
+  <div class="boxtop"><div class="bc ctr"></div><div class="bc ctl"></div></div><div class="boxcontent"><div class="subboxcontent"><?php echo $blocks_right;?></div></div><div class="boxbtm"><div class="bc cbr"></div><div class="bc cbl"></div></div></div></div><?php
+  }
+  ?><div class="mainfull"></div><div id="footer"><div align="center" style="padding: 20px"><a 
+href="http://www.editwebrevisions.info/aboutus"><img src="/sites/all/images/edit_small.png" 
+alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="/sites/all/images/scratchpads.png"/></a><a rel="license" 
+href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
+style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="/sites/all/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
+<!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+  <Work rdf:about="">
+    <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
+  <dc:type rdf:resource="http://purl.org/dc/dcmitype/Text" />
+  </Work>
+  <License rdf:about="http://creativecommons.org/licenses/by-nc-sa/3.0/"><permits rdf:resource="http://web.resource.org/cc/Reproduction"/><permits rdf:resource="http://web.resource.org/cc/Distribution"/><requires rdf:resource="http://web.resource.org/cc/Notice"/><requires rdf:resource="http://web.resource.org/cc/Attribution"/><prohibits rdf:resource="http://web.resource.org/cc/CommercialUse"/><permits rdf:resource="http://web.resource.org/cc/DerivativeWorks"/><requires rdf:resource="http://web.resource.org/cc/ShareAlike"/></License></rdf:RDF> --></div>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+<script type="text/javascript">
+_uacct = "UA-2428547-2";
+urchinTracker();
+</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div><?php
+  if ($footer = variable_get('site_footer', '')) {
+    echo $footer;
+  }
+  ?></div></div></div><?php
+  if ($show_blocks && !empty($blocks_bottom)){
+    ?>
+<div class="bottom">
+  <?php echo $blocks_bottom; ?>
+</div>
+    <?php
+  }?>
+  </body>
+</html>  
+<?php
+}
+
+/* Forum stuff */
+function scratchy_forum_display($forums, $topics, $parents, $tid, $sortby, $forum_per_page){
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_forum_display($forums, $topics, $parents, $tid, $sortby, $forum_per_page);
+}
+function scratchy_forum_topic_list($tid, $topics, $sortby, $forum_per_page) {
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_forum_topic_list($tid, $topics, $sortby, $forum_per_page);
+}
+function scratchy_forum_icon($new_posts, $num_posts = 0, $comment_mode = 0, $sticky = 0) {
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_forum_icon($new_posts, $num_posts, $comment_mode, $sticky);
+}
+function scratchy_forum_topic_navigation($node) {
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_forum_topic_navigation($node);
+}
+function scratchy_forum_list($forums, $parents, $tid) {
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_forum_list($forums, $parents, $tid);
+}
+function scratchy_theme_forum($node, $teaser, $page){
+  require_once('scratchy-forum.inc.php');
+  return _scratchy_theme_forum($node, $teaser, $page);
+}
+
+function scratchy_primarylinks($links, $css){
+  $output = '<ul class="links">';
+  foreach ($links as $link){
+    /*
+    $output .= '<li><a href="/'.$link['href'].'"';
+    if (isset($css['class'])){
+      $output .=' class="'.$css['class'].'"';
+    }
+    if(isset($css['id'])){
+      $output .= ' id="'.$css['id'].'"';
+    }
+    $output .='>'.$link['title'].'</a></li>';
+    */
+    $output .= '<li>'.l($link['title'], $link['href'], $link['attributes'], $link['query'], $link['fragment'], FALSE, $html).'</li>';
+  }
+  $output .= '</ul>';
+  return $output;
+}
+
+function scratchy_node($node, $teaser = 0, $page = 0) {
+  //$output = '<xmp>'.print_r($node,true).'</xmp>';  
+  //return $output;
+  
+  if(function_exists('scratchy_theme_'.$node->type)){
+    return call_user_func('scratchy_theme_'.$node->type,$node,$teaser,$page);
+  }
+ 
+  $output = '<div class="node'. ((!$node->status) ? ' unpublished' : '') . (($node->sticky && !$page) ? ' sticky' : '') .'">
+  <div class="boxtop">
+    <div class="bc ctr"></div>
+    <div class="bc ctl"></div>
+  </div>
+  <div class="boxcontent">
+    <div class="boxtitle'.(($node->sticky && !$page) ? '-sticky' : '').'">
+      <h1>'. ($teaser ? l($node->title, "node/$node->nid") : check_plain($node->title)) .'</h1>
+    </div>
+    <div class="subboxcontent">';
+  
+  // Removed for now.  I SHALL RETURN!
+  /*if ($tabs = theme('menu_local_tasks')) {
+    $output .= $tabs;
+  }*/
+  
+  $output .='<div class="content">';
+  if ($teaser && $node->teaser) {
+    $output .= $node->teaser;
+  }
+  else {
+    $output .= $node->body;
+  }
+  $output .='</div>';
+
+  if (theme_get_setting("toggle_node_info_$node->type")) {
+    $submitted['node_submitted'] = array(
+      'title' => t("By !author at @date", array('!author' => theme('username', $node), '@date' => format_date($node->created, 'small'))),
+      'html' => TRUE,
+    );
+  }
+  else {
+    $submitted['node_submitted'] = array();
+  }
+
+  $terms = array();
+  if (module_exists('taxonomy')) {
+    $terms = taxonomy_link("taxonomy terms", $node);
+  }
+
+  $links = array_merge($submitted, $terms);
+  if ($node->links) {
+    $links = array_merge($links, $node->links);
+  }
+  if (count($links)) {
+    $output .= '<div class="links">'. theme('links', $links, array('class' => 'links inline')) ."</div>\n";
+  }
+  
+  $output .='</div>
+  </div>
+  <div class="boxbtm">
+    <div class="bc cbr"></div>
+    <div class="bc cbl"></div>
+  </div>
+</div>';
+  return $output;
+}
+
+function scratchy_comment($comment, $links = "") {
+  $submitted['comment_submitted'] = array(
+    'title' => t('By !author at @date', array('!author' => theme('username', $comment), '@date' => format_date($comment->timestamp, 'small'))),
+    'html' => TRUE,
+  );  
+  $output = '<div class="comment'. ($comment->status == COMMENT_NOT_PUBLISHED ? ' comment-unpublished' : '') .'">
+  <div class="boxtop">
+    <div class="bc ctr"></div>
+    <div class="bc ctl"></div>
+  </div>
+  <div class="boxcontent">
+    <div class="boxtitle-none boxtitle">
+      <h1>'. l($comment->subject, $_GET['q'], NULL, NULL, "comment-$comment->cid") .'</h1>
+    </div>
+    <div class="subboxcontent">
+      <div class="content">'.$comment->comment.'</div>
+      <div class="links">'.theme('links', array_merge($submitted, $links)).'</div>
+    </div>
+  </div>
+  <div class="boxbtm">
+    <div class="bc cbr"></div>
+    <div class="bc cbl"></div>
+  </div>
+</div>';
+  return $output;
+}
+
+function scratchy_menu_local_tasks($args1, $args2){
+  $output = '';
+  if ($primary = menu_primary_local_tasks()) {
+    $output .= '<ul class="primary">'. $primary .'</ul>';
+  }
+  if ($secondary = menu_secondary_local_tasks()) {
+    $output .= '<ul class="secondary">'. $secondary .'</ul>';
+  }
+  return $output;
+}
+
+function scratchy_help() {
+  if ($help = menu_get_active_help()) {
+    ?><div class="help"><?php echo $help;?></div><hr/><?php
+  }
+}
+
+function scratchy_maintenance_page($content, $messages = TRUE, $partial = FALSE) {
+  drupal_set_header('Content-Type: text/html; charset=utf-8');
+  drupal_add_css(path_to_theme() .'/common.css', 'theme');
+  $output = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+  $output .= '<html xmlns="http://www.w3.org/1999/xhtml">';
+  $output .= '<head>';
+  $output .= ' <title>'. strip_tags(drupal_get_title()) .'</title>';
+  $output .= drupal_get_html_head();
+  $output .= drupal_get_js();
+  $output .= '</head>';
+  $output .= '<body>';
+  $output .= '<h1>' . drupal_get_title() . '</h1>';
+
+  if ($messages) {
+    $output .= theme('status_messages');
+  }
+
+  $output .= "\n<!-- begin content -->\n";
+  $output .= $content;
+  $output .= "\n<!-- end content -->\n";
+
+  if (!$partial) {
+    $output .= '</body></html>';
+  }
+
+  return $output;
+}

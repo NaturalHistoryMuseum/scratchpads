@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * Add the javascript file
+ */
+function tablesorter_menu($may_cache) {
+
+	if(!$may_cache){
+
+		drupal_add_js(drupal_get_path('module', 'tablesorter') .'/tablesorter.js');
+		drupal_add_css(drupal_get_path('module', 'tablesorter') .'/extras/blue/style.css', 'module', 'all', false);
+		
+	}
+
+}
+

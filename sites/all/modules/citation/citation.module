@@ -1,0 +1,826 @@
+<?php
+
+/**
+ * Implementation of hook menu
+ */
+function citation_menu($may_cache){
+	
+	if ($may_cache) {
+
+		$items[]= array (
+	      'path' => 'admin/settings/citation',
+	      'title' => t('Citation'),
+	      'callback' => 'drupal_get_form',
+			  'callback arguments' => array('citation_admin_form'),
+	      'access' => user_access('administer citations'),
+	      'description' => t('Configuration of citation.'),
+	      'type' => MENU_NORMAL_ITEM,
+	    );
+
+		$items[]= array (
+	      'path' => 'citation',
+	      'callback' => 'citation_page_view',
+	      'access' => user_access('access citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/references',
+				'callback' => 'citation_get_form',
+	      'callback arguments' => array('citation_references_form'),
+	      'access' => user_access('create citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/ajax_callback',
+	      'callback' => 'citation_ajax_callback',
+	      'access' => user_access('create citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/ajax_email_validation',
+	      'callback' => 'citation_ajax_email_validation',
+	      'access' => user_access('create citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/email',
+				'callback' => 'citation_get_form',
+	      'callback arguments' => array('citation_email_form'),
+	      'access' => user_access('create citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+
+	}else{
+		
+		$path = drupal_get_path('module', 'citation');
+		drupal_add_js($path.'/citation.js');
+		drupal_add_css($path.'/citation.css','module', 'all', false);
+		
+		// we want the module dir from within our scripts so add it here
+		drupal_add_js("var citations_directory = '".$path."';", 'inline');
+			
+		drupal_add_js("var thickbox = '".module_exists('thickbox')."';", 'inline');
+		drupal_add_js("var create_citations = '".user_access('create citations')."';", 'inline');
+			
+	}
+	
+	return $items;
+	
+}
+
+function citation_perm(){
+	return array('create citations','administer citations', 'send citation email','access citations');
+}
+
+
+
+
+function citation_nodeapi($node, $op){
+	
+	switch ($op){
+		
+		case 'load':
+		
+			drupal_add_js('citation_add_citation("nodes", '.$node->nid.');', 'inline');
+		
+		break;
+		
+		case 'delete':
+		
+			citation_delete_node($node->nid);
+		
+		break;
+		
+	}
+	
+}
+
+
+/**
+ * Implementation of hook_block().
+ */
+function citation_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info'] = t('Authors / sources');
+			$blocks[0]['description'] = t('A generated list of all authors & sources for a particular page.');
+		break;
+		
+    case 'view':
+		
+      if (user_access('create citations')) { 
+
+				switch ($delta) {
+         case 0:
+						$blocks['title'] = t('Authors / sources');
+            $blocks['content'] = '<div id="citation"><div class="loading"><img width="32" height="32" alt="Loading data..." src="/'.drupal_get_path('module', 'citation').'/extras/loading.gif" /></div></div>';
+				break;
+				}	
+
+			}
+
+		break;
+	}
+	
+	return $blocks;
+	
+}
+
+
+
+/**
+ * Implementation of hook_views_pre_view
+ * Add all nodes to the js citation obj
+ */
+function citation_views_pre_view(&$view, $items){
+
+	// we only want to know the names of the views on the page - everything else can be done server side
+	
+	static $tid;
+	
+	if(!$tid){
+		
+		$tid = citation_get_view_tid($view);
+		
+		if($tid){
+		drupal_add_js('citation_add_citation("tid",'.$tid.');', 'inline');	
+		}
+	
+	}
+	
+	
+	drupal_add_js('citation_add_citation("views", "'.$view->name.'");', 'inline');
+
+	foreach($items as $item){
+		
+		drupal_add_js('citation_add_citation("'.$view->name.'", '.$item->nid.');', 'inline');
+		
+	}
+
+}
+
+
+/**
+ * Get the current view's tid
+ */
+function citation_get_view_tid($view){
+	
+	// ajax calls
+  if($_POST['tid']){
+		return intval(str_replace('#','',$_POST['tid'])); // bug fix for IE6
+	}
+	
+	$result = eval($view->view_args_php);
+	    if (is_array($result)) {
+	      $args = $result;
+	    }
+	
+	for($x=0;$x<count($view->argument);$x++){	
+		
+		switch($view->argument[$x]['type']){
+			
+			case 'taxid':
+			
+				if($view->args){
+					$tid = $view->args[$x];
+				}elseif(arg(0)=='taxonomy'){
+					$tid = arg(2);
+				}
+			
+			break;
+			
+		}
+			
+	}
+	
+	return $tid;
+
+}
+
+
+/**
+ * Ajax callback;
+ */
+function citation_ajax_callback(){
+	
+	$func = $_POST['form_id'].'_submit';
+	$func($_POST['form_id'], $_POST);
+	
+}
+
+
+/**
+ * Menu callback;
+ */
+function citation_get_form($form_id){
+	
+	if(!module_exists('thickbox') && $form_id == 'citation_email_form'){
+	return drupal_get_form($form_id);	
+	}else{
+	print drupal_get_form($form_id);
+	exit;
+	}
+	
+}
+
+function citation_admin_form(){
+	
+	 $form['citation_email'] = array(
+	  '#type' => 'textarea',
+	  '#title' => t('Citation email'),
+	  '#default_value' => variable_get('citation_email', '!references Sent from !site on !date'),
+	  '#description' => t('The text of the citation email. Allowed variables are !site, !mailto, !date, !title, !references and !created.'),
+	);
+	
+	return system_settings_form($form);
+	
+}
+
+
+
+
+function citation_references_form(){
+	
+	if(is_array($_POST['tid'])){
+	$tid = array_shift($_POST['tid']);		
+	}elseif($_POST['tid']){
+		$tid = $_POST['tid'];	
+	}else{
+		return;
+	}
+
+	$items = array();
+	
+	foreach($_POST['views'] as $view_name){
+
+		$override_nids = false;
+
+		$view = views_get_view($view_name);
+		
+		//get the type of view
+		if($view->page_type){
+			$view->type = $view->page_type;
+		}elseif($view->block_type){
+			$view->type = $view->block_type;
+		}
+			
+		//get the theme function to use
+		if (!($func = theme_get_function("citation_reference_" . $view->name))) {
+	    
+			if (!($func = theme_get_function("citation_reference_" . $view->type))) {
+
+				$func = theme_get_function('citation_reference');
+				
+			}	
+
+	  }
+
+		// remove all node nids which are in the view - at the end of this we will have only nodes which weren't part of a view
+		if(is_array($_POST['nodes']) && is_array($_POST[$view_name])){
+		  $_POST['nodes'] = array_diff($_POST['nodes'], $_POST[$view_name]);
+		}
+
+		// if the view controls module is installed, user might have updated 
+		if(module_exists('view_controls') && user_access('control views')){
+		
+			$view_plugins = view_controls_get_plugins();
+			
+			//if it's a view control plugin get current nodes in view
+			if($view_plugins[$view->type]){
+		
+				// only overdie if there are positioned nodes
+				$count_positions = view_controls_count_positions(array('tid'=>$tid, 'view_name' => $view_name));
+		
+				if($count_positions){
+
+					$built_view = views_build_view('items', $view, array($tid));
+						
+					$items +=	$func($built_view['items'], $view, $tid);
+					
+						foreach($built_view['items'] as $item){
+							
+							$form[$item->nid] = array('#type' => 'hidden', '#value' => $item->nid, '#name' => 'nid[]');
+						
+						}
+					
+					$override_nids = true;	
+					
+				}
+
+		
+			}
+		
+		}
+		
+		if(!$override_nids){
+			
+			$items += $func($_POST[$view_name], $view, $tid);
+			
+			foreach($_POST[$view_name] as $nid){
+				
+				$form[$nid] = array('#type' => 'hidden', '#value' => $nid, '#name' => 'nid[]');
+			
+			}
+			
+		}
+		
+	}
+	
+	//if there's any individual nodes left, add them here
+	if(count($_POST['nodes'])){
+	
+		$func = theme_get_function('citation_reference');
+		$items += $func($_POST['nodes'], $view, $tid);
+
+			foreach($_POST['nodes'] as $nid){
+
+				$form[$nid] = array('#type' => 'hidden', '#value' => $nid, '#name' => 'nid[]');
+
+			}
+		
+	}
+	
+	if(count($items)){
+
+		ksort($items);
+
+		foreach($items as $item){
+			
+			if(is_array($item)){
+			
+				$plain[] = $item['plain'];
+				$html[] = $item['html'];
+				
+			}else{
+				
+				$plain[] = $item;
+				$html[] = $item;
+				
+			}
+			
+		}
+		
+		$output = '<div>';
+		$output .= theme('item_list', $html);
+		$output .= '</div>';
+	
+		$form['#action'] = url('citation/create_citation');
+		$form['references'] = array('#type' => 'hidden', '#value' => implode(', ', $plain));
+		$form['tid'] = array('#type' => 'hidden', '#value' => $tid);
+		$form['submit'] = array('#type' => 'submit', '#value' => t('Create citation'));
+		
+	}else{
+		
+		$output = '<p>'.t('There is no citation data available for this page.').'</p>';
+		
+	}
+	 
+	$form['#prefix'] = $output;
+	
+	return $form;
+	
+}
+
+
+
+
+function citation_references_form_submit($form_id, $form_values){
+	
+	global $conf;
+
+	// we are overiding the form submission with ajax, and this form should only be submitted via ajax (we need the page data)
+	if($_POST['page_data']){
+
+		if($form_values['title'] == 'Taxonomy term'){
+			$term = taxonomy_get_term($form_values['tid']);
+			$form_values['title'] = $term->name;
+		}
+
+		$cid = db_next_id('citation');
+		
+		$citation = theme('citation', $_POST['references'], $form_values['title'], $cid);
+		
+		//change back the amps which were replaced client side
+		$page = str_replace('***amp***', '&', $_POST['page_data']);
+
+		//create the directories
+		$citation_file_directories = array('root' => file_directory_path().'/citations');
+		$citation_file_directories['citation'] = $citation_file_directories['root'].'/'.$cid;
+		$citation_file_directories['images'] = $citation_file_directories['citation'].'/images';
+		$citation_file_directories['css'] = $citation_file_directories['citation'].'/css';
+
+		foreach($citation_file_directories as $citation_file_directory){
+			file_check_directory($citation_file_directory, FILE_CREATE_DIRECTORY);
+		}
+
+		//strip out all <script></script>
+		$scripts = '/<script(.*?)\/script>/';
+		$page = preg_replace($scripts,'',$page);
+
+		//create directories for storing permanent files
+
+		//copy all files to permanent dir
+		preg_match_all('/src="(.+?)"/i', $page, $sources);
+
+		$external = 0;
+
+		foreach($sources[1] as $image){
+
+			if(!$files[$image]){
+
+				if(strpos($image, 'http://') !== false){
+
+					$image_type = @exif_imagetype($image); 
+
+					$destination = realpath($citation_file_directories['images']);
+					$filename = 'external_'.$external;
+
+					$external++;
+
+					if($image_type){
+
+						switch ($image_type){
+
+							case 1:
+								$filename .= '.gif';
+							break;
+
+							case 3:
+								$filename .= '.png';
+							break;
+
+							default:
+								$filename .= '.jpg';
+							break;
+
+						}
+
+						$data = file_get_contents($image);
+
+					  $file = fopen($destination.'/'.$filename, "w+");
+						fputs($file, $data);
+						fclose($file);
+
+					}
+
+				}else{
+
+					$filename = basename($image);
+					citation_create_permanent_file($image, $citation_file_directories['images'].'/'.$filename);
+
+
+				}
+
+				$files[$image] = true;
+				$page = str_replace($image, '/'.$citation_file_directories['images'].'/'.$filename, $page);
+
+			}
+
+		}
+
+		// copy all css files to permanent dir
+		preg_match_all('/<style type="text\/css" media="all">@import "(.+?)";<\/style>/i', $page, $style_sheets);
+		
+		if(is_array($style_sheets[1])){
+		
+			foreach($style_sheets[1] as $style_sheet){
+				
+				$filename = $citation_file_directories['css'].'/'.basename($style_sheet);
+		
+				if(citation_create_permanent_file($style_sheet, $filename)){
+					$page = str_replace($style_sheet, '/'.$filename, $page);
+				}
+		
+			}
+		
+		}
+		
+		//strip out onload
+		
+		$page = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+		  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+		<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" id="cited-page">'.$page.'</html>';	
+
+		// create the citation
+		citation_add_citation($cid, $form_values['title'], $page, $citation);
+		
+		//add all the nodes		
+		foreach($form_values['nid'] as $nid){
+			
+			if(is_numeric($nid)){
+				citation_add_node($cid, $nid);
+			}
+	
+		}
+
+		drupal_get_messages();
+		print $cid;
+		exit;
+		
+	}else{
+		return(t('Sorry, this form needs to be submitted via ajax. Please turn javascript on.'));
+	}
+	
+}
+
+
+function citation_email_form(){
+
+	global $user;
+
+	if(is_numeric(arg(2))){
+	$cid = arg(2);	
+	}
+
+	if($citation = citation_get_citation($cid)){	
+		
+		$url = url('citation/'.$cid, null, null, true);
+		$link = l($url, $url);
+		
+		 $form['#prefix'] = '<div id="citation-created"><h2>'.t('Your citation has been created. The permanent url of this page is:').'</h2>'.$link.'<h2>Reference:</h2><p>'.$citation->reference_data.'</p></div>';	
+		
+		 $form['title'] = array(
+		  '#type' => 'hidden',
+		  '#value' => $citation->title
+		);
+		
+		 $form['references'] = array(
+		  '#type' => 'hidden',
+		  '#value' => $citation->reference_data
+		);
+		
+		 $form['created'] = array(
+		  '#type' => 'hidden',
+		  '#value' => format_date($citation->created, 'long')
+		);
+		
+		if(user_access('send citation email')){
+		
+			if(!$user){
+	
+				 $form['mail'] = array(
+				  '#type' => 'textfield',
+				  '#title' => t('Email'),
+				  '#size' => 60,
+				  '#maxlength' => 128,
+				  '#required' => TRUE,
+					'#validate' => array ('citation_email_form_validate_email' => array ())
+				);
+	
+			}else{
+				
+				$form['mail'] = array(
+					'#type' => 'hidden',
+					'#value' => $user->mail
+					);
+				
+			}
+			
+			$form['submit'] = array('#type' => 'submit', '#value' => t('Email me this citation'));	
+		
+		}
+		
+		if(module_exists('thickbox')){
+		$form['#suffix'] = '<script type="text/javascript">$(document).ready(function(){init_citation_email_form();});</script>';
+		}
+
+		
+  }
+	
+return $form;
+
+}
+
+function citation_email_form_validate_email($element){
+	
+	if(!valid_email_address($element['#value'])){
+		form_set_error("mail", t('Sorry, this is not a valid email - please check and re-enter.'));
+	}
+	
+}
+
+function citation_ajax_email_validation(){
+	
+	if(!valid_email_address($_POST['email'])){
+		print 'error';
+	}else{
+		print 'valid';
+	}
+	
+	exit;
+	
+}
+
+function citation_email_form_submit($form_id, $form_values){
+	
+	$mail = $form_values['mail'];
+
+	$from = variable_get('site_mail', ini_get('sendmail_from'));
+	
+	$variables = array(
+		'!site' => variable_get('site_name', 'drupal'), 
+		'!mailto' => $mail, 
+		'!date' => format_date(time()),
+		'!title' => $form_values['title'],
+		'!references' => $form_values['references'], 
+		'!created' => $form_values['created']
+	);
+	
+	$body = t(variable_get('citation_email', '!references Sent from !site on !date'), $variables);
+	
+	$subject = t('Citation from !site', $variables);
+
+	//mail the user.
+  drupal_mail('citation', $mail, $subject, strip_tags(check_markup($body, FILTER_HTML_STRIP)), $from);	
+	
+	if(!module_exists('thickbox')){
+		drupal_set_message(t('This citation has been mailed to %email', array('%email' => $mail)));
+	}
+		
+}
+
+function citation_page_view(){
+	
+	$page = citation_get_page(arg(1));
+	echo $page;
+	exit;
+	
+}
+
+function citation_create_permanent_file($file, $permanent_file){
+	
+	//file copy cannot handle an initial / so remove it if it exists					
+	if(strpos($file,'/') === 0){
+		$to_copy = substr($file, 1, strlen($file)-1);
+	}else{
+		$to_copy = $file;
+	}
+
+	return file_copy($to_copy, $permanent_file, FILE_EXISTS_REPLACE);
+	
+}
+
+function theme_citation_reference($items, $view = array(), $tid = null){
+	
+	$themed_items = array();
+
+	foreach($items as $item){
+		
+		if(is_numeric($item)){
+			$node = node_load($item);
+		}elseif(is_numeric($item->nid)){
+			$node = node_load($item->nid);
+		}else{
+			$node = null;
+		}
+	
+		if($node){
+			$user = user_load(array('uid' => $node->uid));
+			$themed_items[$user->name] = array(
+				'html' => l($user->name, 'user/'.$user->uid), 
+				'plain' => $user->name
+			);			
+		}elseif($item){
+			$themed_items[$item] = $item;
+		}
+		
+	}
+	
+	return $themed_items;
+	
+}
+
+function theme_citation($references, $title, $cid){
+
+	global $conf;
+
+	$output = $references;
+	$output.= '. ';
+	$output.= 'Retrieved on '.date('F j, Y');
+	$output.= '. ';
+	$output.= '<em>'.$title.'</em>'; 
+	$output.= '. ';
+	$output.= $conf['site_name'];
+	$output.= '. '.url('citation/'.$cid, null, null, true);
+	
+	return $output;
+	
+}
+
+function citation_add_citation($cid, $title, $page_data, $citation){
+
+	db_query('INSERT INTO citation (cid, title, page_data, reference_data, created) VALUES (%d, "%s", "%s", "%s", %d)',$cid, $title, $page_data, $citation, time());
+	
+}
+
+function citation_add_node($cid, $nid){
+	
+	db_query('INSERT INTO citation_nodes (cid, nid) VALUES (%d, %d)',$cid, $nid);
+	
+}
+
+function citation_delete_node($nid){
+	
+	db_query('DELETE FROM citation_nodes WHERE nid = %d', $nid);
+	
+}
+
+function citation_get_citation($cid){
+
+$result = db_query('SELECT title, reference_data, created FROM citation WHERE cid=%d LIMIT 1',$cid);
+
+	if($result){
+		return db_fetch_object($result);
+	}
+
+}	
+
+function citation_get_page($cid){
+
+$result = db_query('SELECT page_data FROM citation WHERE cid=%d LIMIT 1',$cid);
+
+	if($result){
+		return db_result($result, 0);
+	}
+
+}
+
+/* views */
+
+function citation_views_tables(){
+  $tables['citation_nodes'] = array(
+    'name' => 'citation_nodes',
+    'join' => array(
+      'type' => 'inner',
+      'left' => array(
+        'table' => 'node',
+        'field' => 'nid',
+      ),
+      'right' => array(
+        'field' => 'nid'
+      )      
+    ),
+  );
+
+  $tables['citation'] = array(
+    'name' => 'citation',
+    'join' => array(
+      'type'=>'inner',
+      'left' => array(
+        'table'=>'citation_nodes',
+        'field'=>'cid'
+      ),
+      'right' => array(
+        'field' => 'cid'
+      )
+    ),
+    'fields' => array(
+      'cid' => array('name' => t('Citation: Citation ID')),
+			'title' => array(
+        'name' => t('Citation: Title'),
+        'sortable' => true,
+        'help' => t('Display the title of the cited page.'),
+	      'handler' => 'views_handler_field_citation_title',
+	      'addlfields' => array('cid'),
+				'option' => array(
+	         '#type' => 'select',
+	         '#options' => array(
+	           'link' => 'As link',
+	           'nolink' => 'Without link'
+	          ),
+	      ),
+				
+      ),
+			'created' => array(
+        'name' => t('Citation: Created Time'),
+        'sortable' => true,
+        'handler' => views_handler_field_dates(),
+        'option' => 'string',
+       ),
+    )
+  );
+
+  return $tables;
+
+}
+
+/*
+ * Format a field as a link to a node.
+ */
+function views_handler_field_citation_title($fieldinfo, $fielddata, $value, $data) {
+
+	if ($fielddata['options'] == 'nolink') {
+    return check_plain($value);
+  }
+  return l($value, "citation/$data->citation_cid");
+
+}
+
+
+
+

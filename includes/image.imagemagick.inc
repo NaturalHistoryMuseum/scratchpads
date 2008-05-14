@@ -1,0 +1,1 @@
+../sites/all/modules/image/image.imagemagick.inc

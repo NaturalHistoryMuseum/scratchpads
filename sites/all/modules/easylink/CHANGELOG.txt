@@ -1,0 +1,24 @@
+$Id: CHANGELOG.txt,v 1.1.2.4 2007/10/12 15:48:56 linuxbox Exp $
+CHANGELOG for EasyLink for Drupal 5.x
+2007-10-12
+  New features:
+    o Changed configuration from textfield to dropdown with views populated.
+  Changes:
+    o Since TinyMCE and views already support permissions:
+      - Replaced 'administer easylink' permission with 'administer tinymce'
+      - Replaced 'use easylink' permission with 'use tinymce'
+  Documentation:
+    o Updated README.txt with better installation instructions for new users.
+
+2007-10-11
+  Bugfixes:
+    o Fixed icon not showing in TinyMCE configuration page.
+    o Fix to respect views nodes-per-page setting after switching pages.
+    o Fixed help not showing on modules admin page.
+
+5.x-1.x-dev
+  New features:
+    o Added permission "use easylink"
+    o Changed required permission to use easylink in TinyMCE from "administer easylink" to "use easylink"
+    o Added support for views with exposed filters
+    o Added a default view so you can use EasyLink out of the box

@@ -1,0 +1,105 @@
+<?php
+// $Id: pagearray.module,v 1.6 2007/06/28 13:40:20 nedjo Exp $
+
+/**
+ * @file
+ * Fetches a page's output in array form.
+ */
+
+/**
+ * Fetch a page's output in array form.
+ *
+ * Based on index.php and phptemplate's page theming, this function returns the
+ * result of a page request as an array.
+ */
+function pagearray_page($path) {
+  global $theme;
+
+  $path = drupal_get_normal_path($path);
+  $orig_q = $_GET['q'];
+  $_GET['q'] = $path;
+
+  _menu_append_contextual_items();
+
+  menu_set_active_item($path);
+
+  // Adpated from index.php.
+  $return = menu_execute_active_handler();
+  
+  // Menu status constants are integers; page content is a string.
+  if (is_int($return)) {
+    $result = array(
+      'status' => FALSE,
+      'value' => $return,
+    );
+  }
+  elseif (isset($return)) {
+    $result = array(
+      'status' => TRUE,
+    );
+    // Construct page title
+    if (drupal_get_title()) {
+      $head_title = array(strip_tags(drupal_get_title()), variable_get('site_name', 'Drupal'));
+    }
+    else {
+      $head_title = array(variable_get('site_name', 'Drupal'));
+      if (variable_get('site_slogan', '')) {
+        $head_title[] = variable_get('site_slogan', '');
+      }
+    }
+    // Set regions.
+    $regions = array();
+    foreach (array_keys(system_region_list($theme)) as $region) {
+      $regions[$region] = theme('blocks', $region);
+    }
+    // Load Drupal.settings.
+    $raw_scripts = array();
+    foreach (array('header', 'footer') as $scope) {
+      $javascript = drupal_add_js(NULL, NULL, $scope);
+      foreach ($javascript as $type => $data) {
+        if (!$data) {
+          unset($javascript[$type]);
+        }
+        elseif ($type == 'setting') {
+          $javascript[$type] = call_user_func_array('array_merge_recursive', $data);
+        }
+      }
+      $raw_scripts = array_merge_recursive($raw_scripts, $javascript);
+    }
+    // Adapted from phptemplate.engine's phptemplate_page() function.
+    $result['page'] = array(
+      'base_path'           => base_path(),
+      'breadcrumb'          => theme('breadcrumb', drupal_get_breadcrumb()),
+      'closure'             => theme('closure'),
+      'content'             => $return,
+      'feed_icons'          => drupal_get_feeds(),
+      'footer_message'      => filter_xss_admin(variable_get('site_footer', FALSE)) . "\n" . theme('blocks', 'footer'),
+      'head'                => drupal_get_html_head(),
+      'head_title'          => implode(' | ', $head_title),
+      'help'                => theme('help'),
+      'language'            => $GLOBALS['locale'],
+      'logo'                => theme_get_setting('logo'),
+      'messages'            => theme('status_messages'),
+      'mission'             => drupal_is_front_page() ? filter_xss_admin(theme_get_setting('mission')) : '',
+      'primary_links'       => menu_primary_links(),
+      'search_box'          => (theme_get_setting('toggle_search') ? drupal_get_form('search_theme_form') : ''),
+      'secondary_links'     => menu_secondary_links(),
+      'site_name'           => (theme_get_setting('toggle_name') ? variable_get('site_name', 'Drupal') : ''),
+      'site_slogan'         => (theme_get_setting('toggle_slogan') ? variable_get('site_slogan', '') : ''),
+      'css'                 => drupal_add_css(),
+      'styles'              => drupal_get_css(),
+      'scripts'             => drupal_get_js(),
+      'raw_scripts'         => $raw_scripts,
+      'title'               => drupal_get_title(),
+      'regions'             => $regions,
+    );
+  }
+  else {
+    $result = array(
+      'status' => FALSE,
+      'value' => NULL,
+    );
+  }
+  $_GET['q'] = $orig_q;
+  return $result;
+}

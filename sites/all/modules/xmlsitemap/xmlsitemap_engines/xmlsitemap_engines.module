@@ -1,0 +1,250 @@
+<?php
+// $Id: xmlsitemap_engines.module,v 1.1.2.1 2007/11/20 14:19:04 darrenoh Exp $
+
+/**
+ * @file Define actions for Google, Yahoo, Ask, and Moreover.
+ */
+
+/**
+ * Implementation of hook_xmlsitemap_engines().
+ */
+function xmlsitemap_engines_xmlsitemap_engines($op, $type = NULL) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      $form = array_merge($form, _xmlsitemap_engines_google('form'));
+      $form = array_merge($form, _xmlsitemap_engines_yahoo('form'));
+      $form = array_merge($form, _xmlsitemap_engines_ask('form'));
+      $form = array_merge($form, _xmlsitemap_engines_moreover('form'));
+      return $form;
+    case 'ping':
+      _xmlsitemap_engines_google('ping');
+      _xmlsitemap_engines_yahoo('ping');
+      _xmlsitemap_engines_ask('ping');
+      _xmlsitemap_engines_moreover('ping');
+      break;
+    case 'access':
+      if (strpos($_SERVER['HTTP_USER_AGENT'], 'Googlebot') !== FALSE) {
+        return _xmlsitemap_engines_google('access', $type);
+      }
+  }
+}
+
+/**
+ * Define actions for Google.
+ */
+function _xmlsitemap_engines_google($op, $type = NULL) {
+  switch ($op) {
+    case 'form':
+      $form['google'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Google'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['google']['xmlsitemap_engines_google_submit'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Submit site map to Google.'),
+        '#default_value' => variable_get('xmlsitemap_engines_google_submit', FALSE),
+      );
+      $form['google']['xmlsitemap_engines_google_url'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Submission URL'),
+        '#default_value' => variable_get('xmlsitemap_engines_google_url', 'http://www.google.com/webmasters/tools/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)),
+        '#description' => t('The URL to submit the site map to.'),
+      );
+      $form['google']['xmlsitemap_engines_google_verify'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Verification link'),
+        '#default_value' => variable_get('xmlsitemap_engines_google_verify', ''),
+        '#description' => t('In order to show statistics, Google will ask you to verify that you control this site by creating a file with a certain name. Enter that name here and the XML Sitemap module will create a path to that file name. This will only work if you have clean URLs enabled.'),
+      );
+      return $form;
+    case 'ping':
+      if (variable_get('xmlsitemap_engines_google_submit', FALSE)) {
+        $result = drupal_http_request(variable_get('xmlsitemap_engines_google_url', 'http://www.google.com/webmasters/tools/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)));
+        if ($result->code == 200) {
+          watchdog('xmlsitemap', t('Sitemap successfully submitted to Google.'));
+        }
+        else {
+          watchdog('xmlsitemap', t('Error occurred submitting sitemap to Google: @code', array('@code' => $result->code)), WATCHDOG_ERROR);
+        }
+      }
+      break;
+    case 'access':
+      return t('!sitemap downloaded by Google.', array('!sitemap' => $type));
+  }
+}
+
+/**
+ * Define actions for Yahoo.
+ */
+function _xmlsitemap_engines_yahoo($op) {
+  switch ($op) {
+    case 'form':
+      $form['yahoo'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Yahoo'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['yahoo']['xmlsitemap_engines_yahoo_submit'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Submit site map to Yahoo.'),
+        '#default_value' => variable_get('xmlsitemap_engines_yahoo_submit', FALSE),
+      );
+      $form['yahoo']['xmlsitemap_engines_yahoo_url'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Submission URL'),
+        '#default_value' => variable_get('xmlsitemap_engines_yahoo_url', 'http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)),
+        '#description' => t('The URL to submit the site map to.'),
+      );
+      $form['yahoo']['xmlsitemap_engines_yahoo_verify'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Verification link'),
+        '#default_value' => variable_get('xmlsitemap_engines_yahoo_verify', ''),
+        '#description' => t('Before allowing you to view additional information, Yahoo will ask you to verify that you control this site by creating a file with a certain name. Enter that name here and the XML Sitemap module will create a path to that file name. This will only work if you have clean URLs enabled.'),
+      );
+      $form['yahoo']['xmlsitemap_engines_yahoo_verify_string'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Authentication key'),
+        '#default_value' => variable_get('xmlsitemap_engines_yahoo_verify_string', ''),
+        '#description' => t('Yahoo will ask you to put an authentication key in the verification file. Enter it here.'),
+      );
+      return $form;
+    case 'ping':
+      if (variable_get('xmlsitemap_engines_yahoo_submit', FALSE)) {
+        $result = drupal_http_request(variable_get('xmlsitemap_engines_yahoo_url', 'http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)));
+        if ($result->code == 200) {
+          watchdog('xmlsitemap', t('Site map successfully submitted to Yahoo.'));
+        }
+        else {
+          watchdog('xmlsitemap', t('Error occurred submitting site map to Yahoo: @code', array('@code' => $result->code)), WATCHDOG_ERROR);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Define actions for Ask.com.
+ */
+function _xmlsitemap_engines_ask($op) {
+  switch ($op) {
+    case 'form':
+      $form['ask'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Ask.com'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['ask']['xmlsitemap_engines_ask_submit'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Submit site map to Ask.com.'),
+        '#default_value' => variable_get('xmlsitemap_engines_ask_submit', FALSE),
+      );
+      $form['ask']['xmlsitemap_engines_ask_url'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Submission URL'),
+        '#default_value' => variable_get('xmlsitemap_engines_ask_url', 'http://submissions.ask.com/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)),
+        '#description' => t('The URL to submit the site map to.'),
+      );
+      return $form;
+    case 'ping':
+      if (variable_get('xmlsitemap_engines_ask_submit', FALSE)) {
+        $result = drupal_http_request(variable_get('xmlsitemap_engines_ask_url', 'http://submissions.ask.com/ping?sitemap='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)));
+        if ($result->code == 200) {
+          watchdog('xmlsitemap', t('Site map successfully submitted to Ask.com.'));
+        }
+        else {
+          watchdog('xmlsitemap', t('Error occurred submitting site map to Ask.com: @code', array('@code' => $result->code)), WATCHDOG_ERROR);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Define actions for Moreover.
+ */
+function _xmlsitemap_engines_moreover($op) {
+  switch ($op) {
+    case 'form':
+      $form['moreover'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Moreover'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['moreover']['xmlsitemap_engines_moreover_submit'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Submit site map to Moreover.'),
+        '#default_value' => variable_get('xmlsitemap_engines_moreover_submit', FALSE),
+        '#description' => t('At the time this module was written, MSN required site submission to be done manually at !link. Moreover supplies site update alerts to MSN and so provides a way to submit your site map to MSN automatically.', array('!link' => l('http://search.msn.com/docs/submit.aspx', 'http://search.msn.com/docs/submit.aspx'))),
+      );
+      $form['moreover']['xmlsitemap_engines_moreover_url'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Submission URL'),
+        '#default_value' => variable_get('xmlsitemap_engines_moreover_url', 'http://api.moreover.com/ping?u='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)),
+        '#description' => t('The URL to submit the site map to.'),
+      );
+      return $form;
+    case 'ping':
+      if (variable_get('xmlsitemap_engines_moreover_submit', FALSE)) {
+        $result = drupal_http_request(variable_get('xmlsitemap_engines_moreover_url', 'http://api.moreover.com/ping?u='. xmlsitemap_url('sitemap.xml', drupal_lookup_path('alias', 'sitemap.xml') ? drupal_lookup_path('alias', 'sitemap.xml') : NULL, NULL, NULL, TRUE)));
+        if ($result->code == 200) {
+          watchdog('xmlsitemap', t('Site map successfully submitted to Moreover.'));
+        }
+        else {
+          watchdog('xmlsitemap', t('Error occurred submitting site map to Moreover: @code', array('@code' => $result->code)), WATCHDOG_ERROR);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function xmlsitemap_engines_menu($may_cache) {
+  $items = array();
+  $access_content = user_access('access content');
+  if ($may_cache) {
+    if ($verify = variable_get('xmlsitemap_engines_google_verify', '')) {
+      $items[] = array(
+        'path' => $verify,
+        'title' => t('Google verification page'),
+        'callback' => '_xmlsitemap_engines_verify',
+        'callback arguments' => array('google'),
+        'type' => MENU_CALLBACK,
+        'access' => $access_content,
+      );
+    }
+    if (($verify = variable_get('xmlsitemap_engines_yahoo_verify', '')) != '') {
+      $items[] = array(
+        'path' => $verify,
+        'title' => t('Yahoo verification page'),
+        'callback' => '_xmlsitemap_engines_verify',
+        'callback arguments' => array('yahoo'),
+        'type' => MENU_CALLBACK,
+        'access' => $access_content,
+      );
+    }
+  }
+  return $items;
+}
+
+/**
+ * Menu callback; display verification page.
+ */
+function _xmlsitemap_engines_verify($engine) {
+  switch ($engine) {
+    case 'google':
+      print 'Hello, Google!';
+      break;
+    case 'yahoo':
+      print variable_get('xmlsitemap_engines_yahoo_verify_string', '');
+      break;
+  }
+}
+

@@ -1,0 +1,106 @@
+Subform Element Developer Documentation
+----------------------------------------
+by Wolfgang Ziegler, nuppla@zites.net
+
+This module provides a new form element, that can be used by other modules.
+This form element allows you to reuse existing forms inside your form!
+
+So you can build forms that reuse existing forms while you extend them with further form items.
+Note that form reusing means not only reusing the visual representation, but also the 
+validation and submit logic.
+
+
+How to use the subform element?
+-------------------------------
+All one needs to do, is to create a form element of the #type 'subform'. It needs the form_id
+as parameter (#id) and it takes also an optional array of #arguments, which will be passed
+to the form function.
+Then one has to define an additional submit handler (subform_element_submit),
+which cares for submitting the subforms (if the validation was fine).
+
+
+ok, let's show a short usage example.
+
+function subform_element_test_form($node) {
+  //this will present a full working node edit form
+  $form['node'] = array(
+    '#type' => 'subform',
+    '#id' => $node->type .'_node_form',
+    '#arguments' => array($node),
+  );
+  //this sets the subform submit handler, not necessary for creating pageroute page types!
+  $form['#submit']['subform_element_submit'] = array();
+
+  return $form;
+}
+
+So this will create a fully working node form for you!
+
+So this makes reusing forms really easy, however you have to take care about proper
+access checks yourself!
+
+Attribute Reference
+--------------------
+#id: The form_id of the form to include
+#arguments (optional): An array of arguments that shall be passed to the forms function
+#data_separation (optional): Defaults to TRUE. Prevents conflicts by separating the data in $_POST.
+#subform_after_build (optional): An optional array of after_build functions for the subform.
+#extra_form (optional): An optional array of further form elements that will be added to the form.
+
+You have to make sure that subform_element_submit() will be invoked on form submit. It
+will submit all subforms for you.
+
+
+#data_separation
+-----------------
+Without data separation the values of each form will be transmitted as usual in the
+$_POST array. So if both forms use a field with the same name, e.g. 'title' both will
+end up in $_POST['title'], so obviously the latter title will overwrite the first one.
+
+To prevent this #data_separation can be set to TRUE (this is default!). If this is activated,
+the subform element will prefix the elements name so that the data ends up in e.g.
+$_POST[$subform_id]['title'], where $subform_id is the id of your subform. So the data
+is separated and you can safely combine forms with overlapping element names.
+
+Deactivate #data_separation only if you are sure that there are no overlapping element
+names. This has only the benefit of reducing a bit complexity of the subform element,
+but nothing you need to worry about. So if you are not sure, just stay with the default
+value.
+
+Note that #data_separation applies to all form elements except from files. Due to the
+way file uploads work in drupal, there is no #data_separation possible. So one has to
+avoid element name collisions for file uploads!
+
+
+#subform_after_build
+--------------------
+One can add an array of #after_build functions to the subform here. Functions given in
+this attribute will be added to the subforms #after_build attribute. So this is useful
+if you want to adapt the subform.
+One can also use hook_form_alter() to adapt a subform, however this attribute ensures
+that the modifications will only apply to the subform and not to the originial form.
+
+Usage example, deactivate some fields from a node form:
+..
+  $form['node'] = array(
+    '#type' => 'subform',
+    '#id' => $node->type .'_node_form',
+    '#arguments' => array($node),
+    '#subform_after_build' => array('node_form_example_after_build'),
+  );
+ ..
+ 
+function node_form_example_after_build($form_element, &$form_values) {
+  foreach (array('preview', 'submit', 'delete', 'author') as $name) {
+    $form_element[$name]['#access'] = FALSE;
+  }
+  return $form_element;
+}
+
+
+
+Limitations
+-----------
+ * Currently there is no support for #multipart forms.
+ * #data_separation doesn't apply to files. Have a look at the #data_separation explanation 
+   for more on this

@@ -1,0 +1,129 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Forces a site to include a footer which can only be changed by editing the source code
+ */
+
+/**
+ * Implemenation of fook_menu
+function scratchpadify_menu($may_cache){
+  if(!$may_cache){
+    // I hate cacheing, it annoys me!
+    $items[] = array(
+      'path' => 'admin/build/themes',
+      'title' => t('Gone'),
+      'callback' => 'drupal_not_found',
+      'type' => MENU_CALLBACK
+    );
+    return $items;
+  }
+}*/
+ 
+/**
+ * Implementation of hook_footer()
+ */
+function scratchpadify_footer($main=0){
+  // Add the following HTML to the footer of ALL pages
+  $string = '<div align="center" style="padding: 20px"><a 
+href="http://www.editwebrevisions.info/aboutus"><img src="/sites/all/images/edit_small.png" 
+alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="/sites/all/images/scratchpads.png"/></a><a rel="license" 
+href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
+style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="/sites/all/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
+<!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+  <Work rdf:about="">
+    <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
+  <dc:type rdf:resource="http://purl.org/dc/dcmitype/Text" />
+  </Work>
+  <License rdf:about="http://creativecommons.org/licenses/by-nc-sa/3.0/"><permits rdf:resource="http://web.resource.org/cc/Reproduction"/><permits rdf:resource="http://web.resource.org/cc/Distribution"/><requires rdf:resource="http://web.resource.org/cc/Notice"/><requires rdf:resource="http://web.resource.org/cc/Attribution"/><prohibits rdf:resource="http://web.resource.org/cc/CommercialUse"/><permits rdf:resource="http://web.resource.org/cc/DerivativeWorks"/><requires rdf:resource="http://web.resource.org/cc/ShareAlike"/></License></rdf:RDF> --></div>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+<script type="text/javascript">
+_uacct = "UA-2428547-2";
+urchinTracker();
+</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div>';
+  return $string;
+}
+
+/**
+ * Implementation of hook_block().
+ *
+ */
+function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
+  switch ($op){
+    case 'list':
+      return array(array('info'=>'Scratchpad statistics'));
+    case 'view':
+      $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
+      $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
+      $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
+      $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
+      return array('subject'=>'Statistics','content'=>theme_item_list($items));
+      break; 
+    case 'configure': // No need to add any extra configuration - Open to suggestions.
+      $form['additional_text']=array(
+        '#description' => t('Enter any additional text you would like above the statistics.'),
+        '#title' => t('Additional text'),
+        '#type' => 'textfield',
+        '#weight' => -9,
+        '#default_value' => variable_get('scratchpadify-stats-block-text')
+      );
+      return $form;
+    case 'save':
+      variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
+      break;       
+  }
+}
+
+function scratchpadify_form_alter($form_id, &$form) {
+  if(substr($_SERVER['HTTP_HOST'],0,16) != 'quartz.nhm.ac.uk' && 
+     substr($_SERVER['HTTP_HOST'],0,12) != 'taxonlib.org' && 
+     substr($_SERVER['HTTP_HOST'],0,14) != 'scratchpads.eu' &&
+    ($form_id == 'user_admin_perm' || 
+     substr($form_id,0,12) == 'filter_admin')){
+    drupal_set_message('Please change these settings from Quartz ONLY','error');
+    drupal_goto('');
+  }
+  if (isset($form['og_nodeapi']['#collapsed'])){
+    $form['og_nodeapi']['#collapsed'] = true;
+  }
+  if (!function_exists('scratchpadify_tidy')){
+    function scratchpadify_tidy(&$form){
+      $form['log']['#access'] = FALSE;
+      $form['author']['#type'] = 'hidden';
+      // Create an advanced fieldset, and move shit into it.
+      $form['advanced'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced'),
+        '#collapsed' => true,
+        '#weight' => 100,
+        '#collapsible' => true
+      );
+      $form['advanced']['og_nodeapi'] = $form['og_nodeapi'];
+      unset($form['og_nodeapi']);
+      $form['advanced']['path'] = $form['path'];
+      unset($form['path']);
+      $form['advanced']['menu'] = $form['menu'];
+      unset($form['menu']);
+      $form['advanced']['options'] = $form['options'];
+      unset($form['options']);
+      $form['advanced']['comment_settings'] = $form['comment_settings'];
+      unset($form['comment_settings']);  
+    }
+  }
+  global $user;
+  if($user->uid==1){
+    if($form_id == 'fileshare_node_form'){
+      $form['file_filter']['#type'] = 'hidden';
+      $form['file_filter']['_method']['#value'] = 0;
+      $form['file_filter']['_modify']['#value'] = 1;
+      //print_r($form);exit;
+    }
+  }
+  if($form_id == 'image_node_form'){
+    scratchpadify_tidy($form['third_stage']);
+  }
+  elseif ($form_id == $form['#node']->type .'_node_form') {
+    scratchpadify_tidy($form);
+  }
+}

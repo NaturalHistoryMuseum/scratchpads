@@ -1,0 +1,459 @@
+<?php
+// $Id: editview.module,v 1.5.2.2 2008/01/29 00:21:44 agileware Exp $
+
+function editview_help($section = 'admin/help#editview') {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Plugin for views to make an editable view.');
+  }
+}
+
+function editview_menu($may_cache) {
+  $items = array();
+
+  // the ajax callback is always the current path plus /editview_submit. This
+  // means the view will always have the same node/taxonomy context when it
+  // looks at the path. (a bit of a hack)
+  if (!$may_cache) {
+    $arguments = explode('/', $_GET['q']);
+    $last = array_pop($arguments);
+    if ($last == 'editview_submit') {
+      $items[] = array('path' => $_GET['q'],
+        'callback' => 'editview_render_node',
+        'type' => MENU_CALLBACK,
+      );
+    }
+  }
+  return $items;
+}
+
+function editview_render_node () {
+    $output = editview_node();
+    echo drupal_to_js(array('form' => $output, 'message' => theme('status_messages')));
+    exit;
+}
+
+/*
+ * Node function to draw a row both within the page view, and as an AJAX callback.
+ */
+function editview_node ($node = null, $view = null) {
+  // If we didn't pass in the node, we posted to this page. Build these values from the post
+  if (is_null($node)) $node = node_load($_POST['nid']);
+  if (is_null($view)) $view = views_get_view($_POST['view_name']);
+
+  // if this function doesn't exist then we get errors for all forms on the
+  // page. The function was added by the patch at http://drupal.org/node/119208
+  if (function_exists('form_reset_errors'))
+    form_reset_errors();
+
+  if (isset($_POST['nid']) && $_POST['nid'] == $node->nid) {
+    switch ($_POST['op']) {
+      case t('Confirm'):
+        drupal_get_form('editview_delete_form', $node, $view);
+        $result = '';
+        break;
+      case t('Delete'):
+        $result = drupal_get_form('editview_delete_form', $node, $view);
+        break;
+      default:
+        // We cancelled the delete or submitted this node, show the normal form
+        $result = drupal_get_form('editview_node_form_'.$node->nid, $node, $view);
+
+        if (($_POST['form_id'] != 'editview_node_form_') && count(form_get_errors()) == 0) {
+          // This reloads the node after successful save, so that a new form
+          // token is created. This allows the user to submit the form/node a
+          // second time without drupal throwing an error
+          $_POST = array();
+          $node = node_load($node->nid, null, true);
+
+          // argh! image uploads actually don't work without the following
+          // three lines. The file object returned by file_check_upload
+          // is stored in a static variable, so it seems changes we make
+          // to it are permanent. Because we're loading the node twice we
+          // need to update the location of the uploaded image file or we
+          // get an error thrown in image_prepare.
+          $file = file_check_upload('image');
+          $original_path = $node->images[IMAGE_ORIGINAL];
+          $file->filepath = _image_filename($original_path, IMAGE_ORIGINAL) . $file->filename;
+
+          return editview_node($node, $view);
+        }
+        break;
+    }
+  } else {
+    $result = drupal_get_form('editview_node_form_'.$node->nid, $node, $view);
+  }
+
+  // Wrap the resulting form in a div, so we can catch it for AJAX funkyness
+  return "<div class='editview-wrapper'>".$result."</div>";
+}
+
+function editview_forms($args) {
+  $forms = array();
+  // Map all the forms with an ID to the standard editview node form
+  if (!strncmp($args[0], 'editview_node_form_', 19)) {
+    $forms[$args[0]] = array(
+      'callback' => 'editview_node_form',
+    );
+  }
+  return $forms;
+}
+
+function _editview_node_type($view) {
+  $type = false;
+  foreach ($view->filter as $filter) {
+    if ($filter['field'] == 'node.type') {
+      $type = $filter['value'][0];
+      break;
+    }
+  }
+  return $type;
+}
+
+function editview_form_alter($form_id, &$form) {
+   if ($form['#base'] == 'editview_node_form') {
+    $form['submit']['#value'] = t('Update');
+    if ($form['#node']->nid == '') {
+      $form['submit']['#value'] = t('Add');
+    }  
+   }
+}
+
+function editview_node_form($node, $view) {
+  global $user;
+
+  $form = node_form($node);
+  editview_alter_node_form($node, $form);
+
+  // DO NOT REMOVE THIS NEXT LINE, this makes it work:
+  // Base needs to be changed after we've completed building the form
+  $form['#base'] = 'editview_node_form';
+  $form['#theme'] = 'editview_node_form';
+  $form['view_name'] = array('#type' => 'hidden', '#value' => $view->name);
+  $form['nid'] = array('#name' => 'nid', '#type' => 'hidden', '#value' => $node->nid);
+
+  // Make the form unique
+  $form['#id'] .= '-' . $node->nid;
+  $form = editview_make_form_ids_unique($form, $node->nid);
+  return $form;
+}
+
+function editview_node_form_validate($form_id, $form_values, $form) {
+  return node_validate($form_values, $form);
+}
+
+function editview_node_form_submit($form_id, $form_values) {
+  if ($form_values['op'] != t('Delete')) {
+    node_form_submit($form_id, $form_values);
+  }
+
+  return false;
+}
+
+function editview_views_style_plugins() {
+  $result = array(
+    'editview_compressed' => array(
+      'name' => t('Editview - compressed'),
+      'theme' => 'views_editview',
+      //'validate' => 'views_ui_plugin_validate_table',
+      'needs_fields' => true,
+      'needs_table_header' => true,
+      'even_empty' => true,
+      ),
+    'editview_table' => array(
+      'name' => t('Editview - table'),
+      'theme' => 'views_editview',
+      //'validate' => 'views_ui_plugin_validate_table',
+      'needs_fields' => true,
+      'needs_table_header' => true,
+      'even_empty' => true,
+      ),
+    );
+
+  return $result;
+}
+
+function theme_views_editview($view, $nodes) {
+  global $user;
+
+  // add css
+  drupal_add_css(drupal_get_path('module', 'editview') . '/editview.css');
+
+  // add js
+  //drupal_add_js(drupal_get_path('module', 'editview') . '/form.js'); // jquery Form plugin
+  drupal_add_js(drupal_get_path('module', 'editview') . '/jquery.form.js'); // jquery Form plugin
+  drupal_add_js(drupal_get_path('module', 'editview') . '/editview.js');
+
+  // Get the type and print an error if one isn't set
+  $type = _editview_node_type($view);
+  if (!$type) {
+    drupal_set_message("This Editview view doesn't appear to be filtered by node type. This could cause problems.", 'error');
+  }
+
+  // Instantiate nodes, because views don't pass us all the information in one hit
+  $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+  $node = (object)$node;
+
+  // Display the new node form
+  $edit_rows .= editview_node($node, $view);
+
+  // If we've created a new node, build it and rebuild the view
+  if (($_POST['form_id'] == 'editview_node_form_') && (count(form_get_errors()) == 0)) {
+    // Saved correctly, unset the form_id so we don't save it again
+    $_POST = array();
+    // TODO: One day make this rerun the query to get the nodes list, rather than rebuilding the view
+    // You end up with a view inside a view :(
+    return views_build_view($view->build_type, $view, $view->args, $view->use_pager, $view->pager_limit);
+  }
+
+  // Print the nodes to the screen
+  foreach ($nodes as $node) {
+    $node = node_load($node->nid);
+    $edit_rows .= editview_node($node, $view);
+  }
+
+  // tell the javascript where to submit nodes
+  if (!substr_count($_GET['q'], '/editview_submit')) {
+    $submit_path = $_GET['q'] . '/editview_submit';
+  } else {
+    $submit_path = $_GET['q'];
+  }
+  $submit_url = "<span style='display: none' id='editview-submit-url'>" . url($submit_path, null, null, true) . "</span>";
+  $messages = theme('status_messages');
+  if ($messages == '') {
+    $editview_messages = "<div id='editview_messages' style='display: none;'></div>\n";
+  } else {
+    $editview_messages = "<div id='editview_messages'>".$messages."</div>\n";
+  }
+
+  $output .= "<div id='editview-view-content-wrapper'>" . $submit_url . $editview_messages . $edit_rows . "</div>";
+  return  $output;
+}
+
+function editview_make_form_ids_unique($form, $nid) {
+  // much of this code is from form_builder. we set input elements' #id to a
+  // unique id by postpending -$nid.
+
+  if ((!empty($form['#type'])) && ($info = _element_info($form['#type']))) {
+    // overlay $info onto $form, retaining preexisting keys in $form
+    $form += $info;
+  }
+
+  if (isset($form['#input']) && $form['#input']) {
+    $form['#id'] = (isset($form['#id'])) ? $form['#id'] : 'edit-' . implode('-', $form['#parents']);
+    $form['#id'] .= '-' . $nid;
+  }
+
+  // recurse through sub-elements
+  foreach (element_children($form) as $key) {
+    // don't squash an existing tree value
+    if (!isset($form[$key]['#tree'])) {
+      $form[$key]['#tree'] = $form['#tree'];
+    }
+
+    // don't squash existing parents value
+    if (!isset($form[$key]['#parents'])) {
+      // Check to see if a tree of child elements is present. If so, continue down the tree if required.
+      $form[$key]['#parents'] = $form[$key]['#tree'] && $form['#tree'] ? array_merge($form['#parents'], array($key)) : array($key);
+    }
+    $form[$key] = editview_make_form_ids_unique($form[$key], $nid);
+  }
+  return $form;
+}
+
+/**
+ * A non-caching version of taxonomy_node_get_terms
+ */
+function editview_taxonomy_node_get_terms($nid, $key = 'tid') {
+  $result = db_query(db_rewrite_sql('SELECT t.* FROM {term_node} r INNER JOIN {term_data} t ON r.tid = t.tid INNER JOIN {vocabulary} v ON t.vid = v.vid WHERE r.nid = %d ORDER BY v.weight, t.weight, t.name', 't', 'tid'), $nid);
+  $terms = array();
+  while ($term = db_fetch_object($result)) {
+    $terms[$term->$key] = $term;
+  }
+  return $terms;
+}
+
+function editview_alter_node_form($node, &$form) {
+  // this is done in drupal_get_form, but we need to call it with a different
+  // form id so that various hook_form_alters will recognise this form as a node form.
+  foreach (module_implements('form_alter') as $module) {
+    $function = $module .'_form_alter';
+    $function($node->type . '_node_form', $form);
+  }
+}
+
+function theme_editview_convert_field($field, $view) {
+  if ($field['#type'] == 'textarea') {
+    $field['#resizable'] = false; // resizable causes layout problems in IE
+    $field['#rows'] = 2;
+  }
+  return $field;
+}
+
+/**
+ * Implementation of hook_field_form_render()
+ */
+function editview_field_form_render($field, &$form, $view) {
+  $element = array('class' => 'editview-field');
+  $vocab_id = str_replace('term_node_', '', $field['tablename']);
+  if (is_numeric($vocab_id))
+    $element['data'] = drupal_render($form['taxonomy'][$vocab_id]);
+  else {
+    $element['valign'] = 'top';
+
+    switch ($field['field']) {
+      case 'iid':
+        unset($form['image_attach']['iid']['#description']);
+        $element['data'] = drupal_render($form['image_attach']['iid']);
+        $form['image_attach']['image']['#size'] = 20;
+        $element['data'] .= drupal_render($form['image_attach']['image']);
+        break;
+      case 'field_product_links_url':
+        unset($form['field_product_links']['more']);
+        unset($form['field_product_links']['tokens']);
+        $element['data'] = drupal_render($form['field_product_links']);
+        break;
+      default:
+        $element['data'] = editview_search_for_field($field, $form, $view);
+        break;
+    }
+  }
+  return empty($element['data']) ? null : $element;
+}
+
+function editview_search_for_field($field, &$form, $view) {
+  $itemname = str_replace('_value', '', $field['field']);
+  if (isset($form[$itemname])) {
+    // replace textareas with textfields to save space
+    $form[$itemname] = theme('editview_convert_field', $form[$itemname], $view);
+    return drupal_render($form[$itemname]);
+  }
+  else {
+    // this field may be nested within a fieldset, so we'll look inside
+    // fieldsets.
+    foreach ($form as $key => $item) {
+      if (element_child($key) && array_key_exists($itemname, $form[$key])) {
+        $form[$key][$itemname] = theme('editview_convert_field', $form[$key][$itemname], $view);
+        return drupal_render($form[$key][$itemname]);
+      }
+    }
+  }
+}
+
+/**
+ * We can't use module_invoke_all because we need to pass form by reference so
+ * that drupal_render records that the field has been rendered.
+ */
+function editview_invoke_hook_field_form_render($field, &$form, $view) {
+  $hook = 'field_form_render';
+  $classes = array();
+  $return = array('data' => '');
+  foreach (module_implements($hook) as $module) {
+    $function = $module . '_' . $hook;
+    $result = $function($field, $form, $view);
+    if (isset($result) && is_array($result)) {
+      foreach ($result as $key => $value) {
+        switch ($key) {
+          case 'data':
+            $return['data'] .= $value;
+            break;
+          case 'class':
+            $classes[] = $value;
+            break;
+          case 'valign':
+          default:
+            $return[$key] = $value;
+            break;
+        }
+      }
+    }
+  }
+  $return['class'] = implode(' ', $classes);
+  return $return;
+}
+
+function editview_render_field($field, &$form, $view) {
+  return editview_invoke_hook_field_form_render($field, $form, $view);
+}
+
+function theme_editview_node_form($form) {
+  $view = $form['#parameters'][2];
+  $row = array();
+
+  // this line makes update and delete buttons appear when the form is reloaded after an ajax submit
+  $view->type = ($view->type == 'block' ? $view->block_type : $view->page_type);
+  
+  foreach ($view->field as $field) {
+    $element = editview_render_field($field, $form, $view);
+    if (!empty($element))
+      $row[] = $element;
+  }
+
+  foreach ($form as $key => $field) {
+    // note that not all elements of the $form array are fields.
+    if (is_array($field) && $field['#type'] == 'submit') {
+      $form[$key]['#attributes']['class'] .= 'editview-button editview-submit ';
+      $form[$key]['#attributes']['id'] = 'editview-submit-' . $form['#node']->nid;
+      // TODO: Make these buttons say 'Update' except for the first one which should say 'Add'.
+      $submit_html .= drupal_render($form[$key]);
+    }
+    if ($key == 'delete') {
+      $form[$key]['#attributes']['class'] .= 'editview-button editview-delete ';
+      $form[$key]['#attributes']['id'] = 'editview-delete-' . $form['#node']->nid;
+      $delete_html .= drupal_render($form[$key]);
+    }
+  }
+
+  // we'll tack the rest of the form on in a hidden span so that the values
+  // are there but they aren't shown.
+  // TODO: Change most of these values to be of type #value in a form_alter before we get to rendering...
+  // that way we can send less to the browser
+  $hidden_html = "<span style='display: none;'>" . drupal_render($form) . "</span>\n";
+
+  $result_append = '';
+  if ($view->type == 'editview_compressed') {
+    $result_append = $submit_html.$delete_html.$hidden_html;
+    $header = _views_construct_header($view, $view->fields);
+  } if ($view->type == 'editview_table') {
+    $row[] = $submit_html;
+    $row[] = $delete_html.$hidden_html;
+    $header = (is_null($form['nid']['#value']) ? _views_construct_header($view, $view->fields) : null);
+  }
+
+  $result = theme('table', $header, array($row), array('class' => 'editview-row'));
+  $result .= $result_append;
+  return $result;
+}
+
+function editview_delete_form($node, $view) {
+  // TODO: Should check this before we even make it to this function
+  if (node_access('delete', $node)) {
+    $form['nid'] = array('#type' => 'hidden', '#value' => $node->nid);
+    $form['view_name'] = array('#type' => 'hidden', '#value' => $view->name);
+    $form['#attributes'] = array('class' => 'confirmation');
+    $form['actions'] = array('#prefix' => '<div class="container-inline">', '#suffix' => '</div>');
+    $form['actions']['description'] = array('#value' => t('Are you sure you want to delete %title? This action cannot be undone', 
+       array('%title' => $node->title)));
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Confirm'),
+      '#attributes' => array('class' => 'editview-delete-button editview-confirm', 'id' => 'editview-confirm-' . $node->nid),
+      );
+    $form['actions']['cancel'] = array(
+      '#type' => 'button',
+      '#value' => t('Cancel'),
+      '#attributes' => array('class' => 'editview-delete-button editview-cancel', 'id' => 'editview-cancel-' . $node->nid),
+      );
+
+    return $form;
+  }
+}
+
+function editview_delete_form_submit($form_id, $form_values) {
+  if ($form_values['op'] == t('Confirm')) {
+    node_delete($form_values['nid']);
+  }
+
+  return false;
+}
+

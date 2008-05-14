@@ -1,0 +1,249 @@
+# $Id: links_related-module.pot,v 1.1.2.1 2007/04/27 22:48:57 syscrusher Exp $
+#
+# LANGUAGE translation of Drupal (links_related.module)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  links_related.module,v 1.15.2.5 2007/04/27 22:12:07 syscrusher
+#  links_related.info,v 1.1.2.1 2007/04/26 01:25:53 syscrusher
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2007-04-27 18:45-0400\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: links_related.module:12
+msgid "links"
+msgstr ""
+
+#: links_related.module:17
+msgid "list links"
+msgstr ""
+
+#: links_related.module:20
+msgid "edit links"
+msgstr ""
+
+#: links_related.module:31
+msgid "related links"
+msgstr ""
+
+#: links_related.module:32
+msgid "Configure settings for related links attached to other content."
+msgstr ""
+
+#: links_related.module:46 links_related.info:0
+msgid "Adds an extra URL field to nodes of admin-specified types."
+msgstr ""
+
+#: links_related.module:78
+msgid "The &quot;links&quot; module is disabled or not installed. Node links will not function until this is corrected. Check the availability of that module, and enable if needed, in the !modules."
+msgstr ""
+
+#: links_related.module:84;138
+msgid "Other settings for how the links behave and how they are displayed are available in the !linksettingspage."
+msgstr ""
+
+#: links_related.module:89
+msgid "Displayed links (teaser mode)"
+msgstr ""
+
+#: links_related.module:91;99
+msgid "None"
+msgstr ""
+
+#: links_related.module:91;99
+msgid "All"
+msgstr ""
+
+#: links_related.module:92
+msgid "This setting controls how many links are displayed near the node title (in most themes) for the teaser or listing format."
+msgstr ""
+
+#: links_related.module:97
+msgid "Displayed links (full-page mode)"
+msgstr ""
+
+#: links_related.module:108
+msgid "Trims the displayed text (but not the actual URL) for links displayed near the article title. Does not affect display of links as end-notes within the article body."
+msgstr ""
+
+#: links_related.module:113
+msgid "Show end-notes list"
+msgstr ""
+
+#: links_related.module:116
+msgid "If enabled, list of the article's related links will be appended to the end of the content, when in full-page display mode. This listing will also appear as part of the separate links tab (if that feature is enabled)."
+msgstr ""
+
+#: links_related.module:121
+msgid "List embedded links"
+msgstr ""
+
+#: links_related.module:124
+msgid "If enabled, a list of links contained within the article text will be appended to the end of the content, when in full-page display mode. This listing will also appear as part of the separate links tab (if that feature is enabled)."
+msgstr ""
+
+#: links_related.module:129
+msgid "Show links tab"
+msgstr ""
+
+#: links_related.module:132
+msgid "If enabled, a tab will be added to node displays to display the list of related and embedded links on their own separate page."
+msgstr ""
+
+#: links_related.module:137
+msgid "Node edit settings"
+msgstr ""
+
+#: links_related.module:143
+msgid "Blank link lines"
+msgstr ""
+
+#: links_related.module:146
+msgid "This setting controls how many blank &quot;Related Links&quot; lines appear after already-defined links during node editing."
+msgstr ""
+
+#: links_related.module:151
+msgid "<p>To choose what content types have link URLs available, use the !workflowpage to set the 'has related links url' attribute for the desired node types. Note that you may need to revisit this setting if you add modules that define new node types, because the default is OFF for each content type.</p>"
+msgstr ""
+
+#: links_related.module:151
+msgid "default content workflow page"
+msgstr ""
+
+#: links_related.module:224;306
+msgid "Related links"
+msgstr ""
+
+#: links_related.module:230
+msgid "Allow related links"
+msgstr ""
+
+#: links_related.module:231
+msgid "Disabled"
+msgstr ""
+
+#: links_related.module:231
+msgid "Optional"
+msgstr ""
+
+#: links_related.module:231
+msgid "Required"
+msgstr ""
+
+#: links_related.module:233
+msgid "This setting enables or disables related links for this content type."
+msgstr ""
+
+#: links_related.module:251;312;433
+msgid "Related Links"
+msgstr ""
+
+#: links_related.module:252
+msgid "Links are stored as part of the !page. Monitoring and dead link detection are centrally managed from there. <strong>To add more links, just click &quot;Preview&quot; to add another blank row. To remove a link from this article, just blank out its URL field or check the Delete box.</strong> If you blank out the title but leave the URL, then the system will suggest a title for you. The Weight allows you to determine the order in which links are displayed; lower numbers float to the top."
+msgstr ""
+
+#: links_related.module:252
+msgid "links management feature"
+msgstr ""
+
+#: links_related.module:272
+msgid "(at least one link required for this content type)"
+msgstr ""
+
+#: links_related.module:283;629
+msgid "URL"
+msgstr ""
+
+#: links_related.module:283
+msgid "Weight"
+msgstr ""
+
+#: links_related.module:283
+msgid "Delete"
+msgstr ""
+
+#: links_related.module:540;583
+msgid "Matched text: !match"
+msgstr ""
+
+#: links_related.module:543
+msgid "Links from Article Text"
+msgstr ""
+
+#: links_related.module:557
+msgid "Embedded Links"
+msgstr ""
+
+#: links_related.module:560
+msgid "These are the links found inside the page content. You can choose to replace the direct URLs with managed links from the site's links catalog (adding new links if necessary), or to replace existing catalog links with the actual direct URLs. Titles added or changed here do not override titles for the same link if it appears on other pages."
+msgstr ""
+
+#: links_related.module:616
+msgid "also known as: %aka"
+msgstr ""
+
+#: links_related.module:622
+msgid "Found title"
+msgstr ""
+
+#: links_related.module:641
+msgid "Make non-catalog link"
+msgstr ""
+
+#: links_related.module:641
+msgid "Make catalog link"
+msgstr ""
+
+#: links_related.module:649
+msgid "Administer link"
+msgstr ""
+
+#: links_related.module:656
+msgid "Detach from this node"
+msgstr ""
+
+#: links_related.module:656
+msgid "Attach to this node"
+msgstr ""
+
+#: links_related.module:665
+msgid "Weblink page"
+msgstr ""
+
+#: links_related.module:665;735
+msgid "Edit"
+msgstr ""
+
+#: links_related.module:671
+msgid "Create weblink page"
+msgstr ""
+
+#: links_related.module:690
+msgid "Save changes"
+msgstr ""
+
+#: links_related.module:732
+msgid "Created a standalone weblink page for the link !page_link. !edit_link"
+msgstr ""
+
+#: links_related.module:752
+msgid "Link Title"
+msgstr ""
+
+#: links_related.module:752
+msgid "and URL"
+msgstr ""
+
+#: links_related.module:0
+msgid "links_related"
+msgstr ""
+

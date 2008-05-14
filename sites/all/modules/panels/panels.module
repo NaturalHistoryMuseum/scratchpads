@@ -1,0 +1,1040 @@
+<?php
+// $Id: panels.module,v 1.10.4.75 2007/12/31 07:26:53 merlinofchaos Exp $
+/**
+ * @file panels.module
+ * Core API for Panels. Provides display editing and rendering capabilities.
+ */
+function panels_help($section = NULL) {
+  $output = '';
+  switch ($section) {
+    case 'admin/help#panels':
+    case 'admin/panels':
+      $output = '<p>'. t('Panels is the core engine for a number of submodules, including panels-pages, panels-nodes, and mini-panels.  Panels allows the website adminstrator (or sometimes the end-user) to manipulate the layout of individual pages, sidebars, and content pieces, as well as easily dictate what content is displayed in the layout.') .'</p>';
+      $output .= '<p>'. t('Most Drupal users are familiar with the block to region layout mechanism in which you can assign a block to any region defined in your theme.  Panels takes this concept a massive step forward.  Through the panels interface you can start by creating a layout with any number of columns, headers, and footer, and control the width of those areas.') .'</p>';
+      $output .= '<p>'. t('After creating your layout, you can assign pieces of content to those areas in an easy drag and drop interface.  Content is not limited to blocks, but can be nodes, views, blocks, or other types of content that extend themselves to panels.') .'</p>';
+      $output .= '<p><b>'. t('Panels-pages') .'</b>' .t(', is the the primary panels module, you can use this for creating single full page layouts.  This replaces the standard panel that existed in the earlier versions of panels. If you are upgrading your site from Panels 1, and you cannot find where your panels went, be sure to enable the panel pages module!') .'</p>';
+      $output .= '<p><b>'. t('Panels-nodes') .'</b>' .t(', is useful for creating layouts that only occupy the content area of your pages.  Frequently, it is desirable to add an area to a node layout, such as a pull quote for a newspaper or a photo block, that you don\'t necessarily want on every node.  Panels Nodes lets you control the layout of a single node at a time and place content such as blog posts, images, blogs in and around the post.') .'</p>';
+      $output .= '<p><b>'. t('Mini-panels') .'</b>' .t(', is a layout mechanism for blocks.  It won\'t take long using panels before you get to a point when you want a panel inside of a panel.  Or a panel that can be used as a block.  That is exactly what mini-panels does. You can create a small panel here with various pieces of content and then put it inside of a panels-page or panels-node.') .'</p>';
+      return $output;
+  }
+}
+
+/**
+ * Returns the API version of Panels. This didn't exist in 1.
+ *
+ * @return An array with the major and minor versions
+ */
+function panels_api_version() {
+  return array(2, 0);
+}
+
+/**
+ * Implementation of hook_menu
+ */
+function panels_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/panels',
+      'title' => t('Panels'),
+      'access' => user_access('access administration pages'),
+      'callback' => 'system_admin_menu_block_page',
+      'description' => t('Administer items related to the Panels module.'),
+    );
+    $items[] = array(
+      'path' => 'panels/node/autocomplete',
+      'title' => t('Autocomplete node'),
+      'callback' => 'panels_node_autocomplete',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/common/ajax',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_common_ajax'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/add-content',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax_add_content'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/add-config',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax_add_config'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/configure',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax_configure'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/cache',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax_cache'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/cache-settings',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_ajax_cache_settings'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+    $items[] = array(
+      'path' => 'panels/ajax/panel_settings',
+      'title' => t('ajax'),
+      'callback' => 'panels_ajax_passthru',
+      'callback arguments' => array('panels_panel_settings_ajax'),
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
+  }
+  else {
+    drupal_add_css(panels_get_path('css/panels.css'));
+    drupal_add_js(panels_get_path('js/panels.js'));
+  }
+
+  return $items;
+}
+
+/**
+ * Load a panels include file.
+ */
+function panels_load_include($include, $path = 'includes/') {
+  require_once './' . panels_get_path("$path$include.inc");
+}
+
+/**
+ * Helper function for our AJAX stuff to call through to the right location
+ */
+function panels_ajax_passthru() {
+  $args = func_get_args();
+  $callback = array_shift($args);
+
+  panels_load_include('plugins');
+  if (arg(1) == 'common') {
+    panels_load_include('common');
+  }
+  else {
+    panels_load_include('display_edit');
+  }
+  return call_user_func_array($callback, $args);
+}
+
+/**
+ * Simple render function to make sure output is what we want.
+ * @ingroup panels_ajax
+ */
+function panels_ajax_render($output = NULL, $title = NULL, $url = NULL) {
+  if (!is_object($output)) {
+    $temp = new stdClass();
+    $temp->output = $output;
+    switch ($output) {
+      case 'dismiss':
+        $temp->type = $output;
+        break;
+      default:
+        $temp->type = 'display';
+    }
+    $temp->title = $title;
+    $temp->url = $url;
+    $output = $temp;
+  }
+  if (!$output->output || !$output->type) {
+    $output->output = t('The input was invalid');
+    $output->type = 'display';
+    $output->title = t('Error');
+  }
+  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
+  print drupal_to_js($output);
+  exit;
+}
+
+
+/**
+ * Handle a form for AJAX in a manner that happens to be basically the
+ * opposite of the normal flow; if the form hasn't been processed,
+ * just render it and exit; if it has been submitted successfuly, however,
+ * then we return whatever the submit function returned and do our
+ * next step accordingly.
+ *
+ * @param $form_id
+ *   The id of the form
+ * @param $title
+ *   The title for the modal dialog, if rendered.
+ * @param $url
+ *   The next URL to go to; may be NULL.
+ * @param ...
+ *   Any arguments that go to the form.
+ */
+function panels_ajax_form($form_id, $title, $url) {
+  $args = func_get_args();
+
+  // Remove the $title and $url
+  array_splice($args, 1, 2);
+
+  $form = call_user_func_array('drupal_retrieve_form', $args);
+  $form['#redirect'] = FALSE;
+
+  $result = drupal_process_form($form_id, $form);
+  if (isset($result)) {
+    return $result;
+  }
+
+  // If the form wasn't submitted successfully, render the form.
+  $output = theme('status_messages');
+  $output .= drupal_render_form($form_id, $form);
+  panels_ajax_render($output, $title, $url);
+}
+
+/**
+ * panels path helper function
+ */
+function panels_get_path($file, $base_path = false, $module = 'panels') {
+  if ($base_path) {
+    $output = base_path();
+  }
+  return $output . drupal_get_path('module', $module) . '/' . $file;
+}
+
+/**
+ * Implementation of hook_perm
+ */
+function panels_perm() {
+  return array('view all panes', 'view pane admin links', 'administer pane visibility', 'administer advanced pane settings', 'use panels caching features');
+}
+
+// ---------------------------------------------------------------------------
+// panels custom image button
+
+/**
+ * Custom form element to do our nice images.
+ */
+function panels_elements() {
+  $type['panels_imagebutton'] = array('#input' => TRUE, '#button_type' => 'submit',);
+  return $type;
+}
+
+/**
+ * Theme our image button.
+ */
+function theme_panels_imagebutton($element) {
+  return '<input type="image" ' .
+    'class="form-' . $element['#button_type'] . ' ' . $element['#class'] . '" ' .
+    'name="'. $element['#name'] .'" ' .
+    'value="'. check_plain($element['#default_value']) .'" ' .
+    'id="' . $element['#id'] . '" ' .
+    drupal_attributes($element['#attributes']) .
+    ' src="' . base_path() . $element['#image'] . '" ' .
+    'alt="' . $element['#title'] . '" ' .
+    'title="' . $element['#title'] . '" ' .
+    "/>\n";
+}
+
+function panels_imagebutton_value() {
+  // null function guarantees default_value doesn't get moved to #value.
+}
+
+/**
+ * Add a single button to a form.
+ */
+function panels_add_button($image, $name, $text, $class, $id = NULL) {
+  return array(
+    '#type' => 'panels_imagebutton',
+    '#image' => panels_get_path('images/' . $image),
+    '#title' => $text,
+    '#default_value' => $name,
+    '#class' => $class,
+    '#id' => $id,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// cache handling stuff for display editing
+
+/**
+ * Get a display from the cache; this is used if the display is currently
+ * being edited, which can be a seriously multi-step process.
+ */
+function panels_cache_get($did) {
+  return panels_common_cache_get('panels', $did);
+/*
+  static $cache = array();
+  if (!array_key_exists($did, $cache)) {
+    $data = cache_get('panels_display:' . session_id() . ':' . $did, 'cache');
+    $cache[$did] = unserialize($data->data);
+  }
+  return $cache[$did];
+*/
+}
+
+/**
+ * Save the edited display into the cache.
+ */
+function panels_cache_set($did, $cache) {
+  return panels_common_cache_set('panels', $did, $cache);
+//  cache_set('panels_display:' . session_id() . ':' . $did, 'cache', serialize($cache), time() + 86400);
+}
+
+/**
+ * Clear a display from the cache; used if the editing is aborted.
+ */
+function panels_cache_clear($did) {
+  return panels_common_cache_clear('panels', $did);
+//  cache_clear_all('panels_display:' . session_id() . ':' . $did, 'cache');
+}
+
+// ---------------------------------------------------------------------------
+// cache handling stuff for non-display objects.
+
+/**
+ * Get an object from cache.
+ */
+function panels_common_cache_get($obj, $did, $skip_cache = FALSE) {
+  static $cache = array();
+  $key = "$obj:$did";
+  if ($skip_cache) {
+    unset($cache[$key]);
+  }
+
+  if (!array_key_exists($key, $cache)) {
+    $data = db_fetch_object(db_query("SELECT * FROM {panels_object_cache} WHERE sid = '%s' AND obj = '%s' AND did = %d", session_id(), $obj, $did));
+    if ($data) {
+      $cache[$key] = unserialize($data->data);
+    }
+  }
+  return isset($cache[$key]) ? $cache[$key] : NULL;
+}
+
+/**
+ * Save the edited display into the cache.
+ */
+function panels_common_cache_set($obj, $did, $cache) {
+  panels_common_cache_clear($obj, $did);
+  db_query("INSERT INTO {panels_object_cache} (sid, obj, did, data, timestamp) VALUES ('%s', '%s', %d, '%s', %d)", session_id(), $obj, $did, serialize($cache), time());
+}
+
+/**
+ * Clear a display from the cache; used if the editing is aborted.
+ */
+function panels_common_cache_clear($obj, $did) {
+  db_query("DELETE FROM {panels_object_cache} WHERE sid = '%s' AND obj = '%s' AND did = %d", session_id(), $obj, $did);
+}
+
+/**
+ * Clean up old caches
+ */
+function panels_cron() {
+  // delete anything 7 days old or more.
+  db_query("DELETE FROM {panels_object_cache} WHERE timestamp < %d", time() - (86400 * 7));
+}
+
+/**
+ * Global storage function, used mostly so that _submit hooks can pass data
+ * back to their originator more easily. TODO: deprecated but still in use.
+ */
+function panels_set($var, $value = NULL) {
+  static $vars = array();
+  if ($value !== NULL) {
+    $vars[$var] = $value;
+  }
+  return $vars[$var];
+}
+
+/**
+ * Retrieve from global storage
+ */
+function panels_get($var) {
+  return panels_set($var);
+}
+
+// ---------------------------------------------------------------------------
+// panels display editing
+
+/**
+ * Main API entry point to edit a panel display.
+ *
+ * TODO: Doc this. Important.
+ */
+function panels_edit($display, $destination = NULL, $content_types = NULL) {
+  panels_load_include('display_edit');
+  panels_load_include('plugins');
+  return _panels_edit($display, $destination, $content_types);
+}
+
+/**
+ * Shortcut to the panels layout editor
+ *
+ * TODO: Doc this. Important.
+ */
+function panels_edit_layout($display, $finish, $destination = NULL) {
+  panels_load_include('display_edit');
+  panels_load_include('plugins');
+  return _panels_edit_layout($display, $finish, $destination);
+}
+
+/**
+ * Shortcut to the panels layout settings editor
+ *
+ * TODO: Doc this. Important.
+ */
+function panels_edit_layout_settings($display, $finish, $destination = NULL) {
+  panels_load_include('display_edit');
+  panels_load_include('plugins');
+  return _panels_edit_layout_settings( $display, $finish, $destination);
+}
+
+
+// ---------------------------------------------------------------------------
+// panels database functions
+
+/**
+ * Forms the basis of a panel display
+ */
+class panels_display {
+  var $args = array();
+  var $content = array();
+  var $panels = array();
+  var $incoming_content = NULL;
+  var $css_id = NULL;
+  var $context = array();
+}
+
+/**
+ * Clean up a display and make sure it has some required information if
+ * it doesn't already exist. Currently we wrequire a context, an incoming
+ * content and a css_id.
+ */
+function panels_sanitize_display(&$display) {
+  if (!isset($display->args)) {
+    $display->args = array();
+  }
+
+  if (!isset($display->incoming_content)) {
+    $display->incoming_content = NULL;
+  }
+
+  if (!isset($display->context)) {
+    $display->context = array();
+  }
+
+  if (!isset($display->css_id)) {
+    $display->css_id = NULL;
+  }
+}
+
+
+/**
+ * Creates a new display, setting the ID to our magic new id.
+ */
+function panels_new_display() {
+  $display = new panels_display();
+  $display->did = 'new';
+  return $display;
+}
+
+/**
+ * Load a display from the database
+ */
+function panels_load_displays($dids) {
+  $displays = array();
+  if (empty($dids) || !is_array($dids)) {
+    return $displays;
+  }
+
+  $subs = implode(', ', array_fill(0, count($dids), '%d'));
+
+  $result = db_query("SELECT * FROM {panels_display} WHERE did IN ($subs)", $dids);
+
+  while ($obj = db_fetch_array($result)) {
+    $display = new panels_display();
+
+    foreach ($obj as $key => $value) {
+      $display->$key = $value;
+    }
+
+    // unserialize important bits:
+    $display->layout_settings = empty($display->layout_settings) ? array() : unserialize($display->layout_settings);
+    $display->panel_settings = empty($display->panel_settings) ? array() : unserialize($display->panel_settings);
+    $display->cache = empty($display->cache) ? array() : unserialize($display->cache);
+
+    $display->panels = $display->content = array();
+
+    $displays[$display->did] = $display;
+  }
+
+  $result = db_query("SELECT * FROM {panels_pane} WHERE did IN ($subs) ORDER BY did, panel, position", $dids);
+
+  while ($pane = db_fetch_object($result)) {
+    $pane->configuration = unserialize($pane->configuration);
+    $pane->cache = empty($pane->cache) ? array() : unserialize($pane->cache);
+    $pane->access = ($pane->access ? explode(', ', $pane->access) : array());
+
+    $displays[$pane->did]->panels[$pane->panel][] = $pane->pid;
+    $displays[$pane->did]->content[$pane->pid] = $pane;
+  }
+  return $displays;
+}
+
+/**
+ * Load a single display.
+ */
+function panels_load_display($did) {
+  $displays = panels_load_displays(array($did));
+  if (!empty($displays)) {
+    return array_shift($displays);
+  }
+}
+
+/**
+ * Save a display.
+ */
+function panels_save_display(&$display) {
+  if ($display->did && $display->did != 'new') {
+    if (empty($display->cache)) {
+      $display->cache = array();
+    }
+
+    db_query("UPDATE {panels_display} SET layout = '%s', layout_settings = '%s', panel_settings = '%s', cache = '%s' WHERE did = %d", $display->layout, serialize($display->layout_settings), serialize($display->panel_settings), serialize($display->cache), $display->did);
+    db_query("DELETE FROM {panels_pane} WHERE did = %d", $display->did);
+  }
+  else {
+    $display->did = db_next_id("{panels_display}_did");
+    db_query("INSERT INTO {panels_display} (did, layout, layout_settings, panel_settings, cache) VALUES (%d, '%s', '%s', '%s', '%s')", $display->did, $display->layout, serialize($display->layout_settings), serialize($display->panel_settings), serialize($display->cache));
+  }
+
+  // update all the panes
+  foreach ((array) $display->panels as $id => $panes) {
+    $position = 0;
+    $new_panes = array();
+    foreach ((array) $panes as $pid) {
+      $pane = $display->content[$pid];
+      $pane->position = $position++;
+      if (!is_numeric($pid)) {
+        unset($display->content[$pid]);
+        $pane->pid = db_next_id("{panels_pane}_pid");
+      }
+      if (empty($pane->cache)) {
+        $pane->cache = array();
+      }
+
+      db_query("INSERT INTO {panels_pane} (pid, did, panel, type, subtype, configuration, cache, access, position) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', %d)", $pane->pid, $display->did, $pane->panel, $pane->type, $pane->subtype, serialize($pane->configuration), serialize($pane->cache), !empty($pane->access) ? implode(', ', $pane->access) : '', $pane->position);
+      // and put it back so our pids and positions can be used
+      $display->content[$pid] = $pane;
+      $new_panes[] = $pid;
+    }
+    $display->panels[$id] = $panes;
+  }
+
+  // Clear any cached content for this display.
+  panels_load_include('plugins');
+  panels_clear_cached_content($display);
+
+  return $display; // to be nice, even tho we have a reference.
+}
+
+/**
+ * Delete a display
+ */
+function panels_delete_display($display) {
+  if (is_object($display)) {
+    $did = $display->did;
+  }
+  else {
+    $did = $display;
+  }
+  db_query("DELETE FROM {panels_display} WHERE did = %d", $did);
+  db_query("DELETE FROM {panels_pane} WHERE did = %d", $did);
+}
+
+/**
+ * Export a display into code
+ */
+function panels_export_display($display, $prefix = '') {
+  $output = '';
+  $output .= $prefix . '$display = new stdClass()' . ";\n";
+  $output .= $prefix . '$display->did = \'new\'' . ";\n";
+  $fields = array('name', 'layout', 'layout_settings', 'panel_settings');
+  foreach ($fields as $field) {
+    $output .= $prefix . '$display->' . $field . ' = ' . panels_var_export($display->$field, $prefix) . ";\n";
+  }
+
+  $output .= $prefix . '$display->content = array()' . ";\n";
+  $output .= $prefix . '$display->panels = array()' . ";\n";
+  $panels = array();
+
+  $counter = 0;
+  $counters = array();
+  foreach ($display->content as $pane) {
+    $id = 'new-' . ++$counter;
+    $output .= $prefix . '$pane = new stdClass()'  . ";\n";
+    $output .= $prefix . '  $pane->pid = \'' . $id . '\'' . ";\n";
+    $fields = array('panel', 'type', 'subtype', 'access', 'configuration');
+    foreach ($fields as $field) {
+      $output .= $prefix . '  $pane->' . $field . ' = ' . panels_var_export($pane->$field, "$prefix  ") . ";\n";
+    }
+    $output .= $prefix . '$display->content[\'' . $id . '\'] = $pane' . ";\n";
+    if (!isset($counters[$pane->panel])) {
+      $counters[$pane->panel] = 0;
+    }
+    $output .= $prefix . '$display->panels[\'' . $pane->panel . '\'][' . $counters[$pane->panel]++ .'] = \'' . $id . "';\n";
+  }
+  return $output;
+}
+
+function panels_var_export($object, $prefix = '') {
+  if (is_array($object) && empty($object)) {
+    $output = 'array()';
+  }
+  else {
+    $output = var_export($object, TRUE);
+  }
+
+  if ($prefix) {
+    $output = str_replace("\n", "\n$prefix", $output);
+  }
+  return $output;
+}
+
+/**
+ * Render a display by loading the content into an appropriate
+ * array and then passing through to panels_render_layout.
+ *
+ * if $incoming_content is NULL, default content will be applied. Use
+ * an empty string to indicate no content.
+ * @render
+ */
+function panels_render_display(&$display) {
+  panels_load_include('plugins');
+  $layout = panels_get_layout($display->layout);
+  if (!$layout) {
+    return NULL;
+  }
+
+  // TODO: This may not be necessary now. Check this.
+  panels_sanitize_display($display);
+
+  $output = '';
+
+  // Let modules act just prior to render.
+  foreach (module_implements('panels_pre_render') as $module) {
+    $function = $module . '_panels_pre_render';
+    $output .= $function($display);
+  }
+
+  $output .= panels_render_layout($layout, $display, $display->css_id, $display->layout_settings);
+
+  // Let modules act just after render.
+  foreach (module_implements('panels_post_render') as $module) {
+    $function = $module . '_panels_post_render';
+    $output .= $function($display);
+  }
+  return $output;
+}
+
+/**
+ * For external use: Given a layout ID and a $content array, return the
+ * panel display. The content array is filled in based upon the content
+ * available in the layout. If it's a two column with a content
+ * array defined like array('left' => t('Left side'), 'right' =>
+ * t('Right side')), then the $content array should be array('left' =>
+ * $output_left, 'right' => $output_right)
+ * @render
+ */
+function panels_print_layout($id, $content) {
+  panels_load_include('plugins');
+  $layout = panels_get_layout($id);
+  if (!$layout) {
+    return;
+  }
+
+  return panels_render_layout($layout, $content);
+}
+
+/**
+ * Given a full layout structure and a content array, render a panel display.
+ * @render
+ */
+function panels_render_layout($layout, $content, $css_id = NULL, $settings = array()) {
+  if (file_exists(path_to_theme() . '/' . $layout['css'])) {
+    drupal_add_css(path_to_theme() . '/' . $layout['css']);
+  }
+  else {
+    drupal_add_css(panels_get_path($layout['css'], false, $layout['module']));
+  }
+
+  // This now comes after the CSS is added, because panels-within-panels must
+  // have their CSS added in the right order; inner content before outer content.
+  if (is_object($content)) {
+    $cache = FALSE;
+    if (empty($content->cache['method'])) {
+      $content = panels_render_panes($content);
+    }
+    else {
+      $cache = panels_get_cached_content($content, $content->args, $content->context);
+      if ($cache === FALSE) {
+        $cache = new panels_cache_object();
+        $cache->set_content(panels_render_panes($content));
+        panels_set_cached_content($cache, $content, $content->args, $content->context);
+      }
+      $content = $cache->content;
+    }
+  }
+
+  $output = theme($layout['theme'], check_plain($css_id), $content, $settings);
+
+  return $output;
+}
+
+/**
+ * Render all the panes in a display into a $content array to be used by
+ * the display theme function.
+ */
+function panels_render_panes($display) {
+  // First, render all the panes into little boxes. We do this here because
+  // some panes request to be rendered after other panes (primarily so they
+  // can do the leftovers of forms).
+  $panes = array();
+  $later = array();
+  
+  foreach ($display->content as $pid => $pane) {
+    // If the user can't see this pane, do not render it.
+    if (!panels_pane_access($pane)) {
+      continue;
+    }
+
+    // If this pane wants to render last, add it to the $later array.
+    $content_type = panels_get_content_type($pane->type);
+
+    if (!empty($content_type['render last'])) {
+      $later[$pid] = $pane;
+      continue;
+    }
+
+    $panes[$pid] = panels_render_pane($display, $pane);
+  }
+
+  foreach ($later as $pid => $pane) {
+    $panes[$pid] = panels_render_pane($display, $pane);
+  }
+
+  // Loop through all panels, put all panes that belong to the current panel
+  // in an array, then render the panel. Primarily this ensures that the
+  // panes are in the proper order.
+  $content = array();
+  foreach ($display->panels as $panel_name => $pids) {
+    $panel = array();
+    foreach ($pids as $pid) {
+      if (!empty($panes[$pid])) {
+        $panel[$pid] = $panes[$pid];
+      }
+    }
+    $content[$panel_name] = panels_render_panel($display, $panel_name, $panel);
+  }
+
+  return $content;
+}
+
+/**
+ * Render a single pane, identifying its context, and put it into
+ * the $panes array.
+ */
+function panels_render_pane(&$display, &$pane) {
+  if (empty($pane->context)) {
+    $pane->context = panels_pane_select_context($pane, $display->context);
+    if ($pane->context === FALSE) {
+      return FALSE;
+    }
+  }
+
+  $content = panels_get_pane_content($display, $pane, $display->args, $pane->context, $display->incoming_content);
+
+  $keywords = !empty($display->keywords) ? $display->keywords : array();
+  // Override the title if configured to
+  if (!empty($pane->configuration['override_title'])) {
+    // Give previous title as an available substitution here.
+    $keywords['%title'] = $content->title;
+    $content->title = $pane->configuration['override_title_text'];
+  }
+
+  // Pass long the css_id that is usually available.
+  if (!empty($pane->configuration['css_id'])) {
+    $content->css_id = $pane->configuration['css_id'];
+  }
+
+  // Pass long the css_class that is usually available.
+  if (!empty($pane->configuration['css_class'])) {
+    $content->css_class = $pane->configuration['css_class'];
+  }
+
+  // Perform substitutions
+  if (!empty($keywords)) {
+    $content->title = strtr($content->title, $keywords);
+  }
+
+  // Sterilize the title
+  $content->title = filter_xss_admin($content->title);
+
+  // If a link is specified, populate.
+  if (!empty($content->title_link)) {
+    if (!is_array($content->title_link)) {
+      $url = array('href' => $content->title_link);
+    }
+    else {
+      $url = $content->title_link;
+    }
+    // set defaults so we don't bring up notices
+    $url += array('href' => '', 'attributes' => NULL, 'query' => NULL, 'fragment' => NULL, 'absolute' => NULL);
+    $content->title = l($content->title,
+      $url['href'],
+      $url['attributes'],
+      $url['query'],
+      $url['fragment'],
+      $url['absolute'], TRUE);
+  }
+  return $content;
+}
+
+/**
+ * Select a context for a pane.
+ *
+ * @param $pane
+ *   A fully populated pane.
+ * @param $contexts
+ *   A keyed array of available contexts.
+ *
+ * @return
+ *   The matching contexts or NULL if none or necessary, or FALSE if
+ *   requirements can't be met.
+ */
+function panels_pane_select_context($pane, $contexts) {
+  // Identify which of our possible contexts apply.
+  if (empty($pane->subtype)) {
+    return;
+  }
+
+  $content_type = panels_ct_get_types($pane->type);
+  // If the pane requires a context, fetch it; if no context is returned,
+  // do not display the pane.
+  if (empty($content_type[$pane->subtype]['required context'])) {
+    return;
+  }
+
+  $context = panels_context_select($contexts, $content_type[$pane->subtype]['required context'], $pane->configuration['context']);
+  if (empty($context)) {
+    return FALSE;
+  }
+  return $context;
+}
+
+/**
+ * Given a display and the id of a panel, get the style in which to render
+ * that panel.
+ */
+function panels_get_panel_style_and_settings($panel_settings, $panel) {
+  if (empty($panel_settings)) {
+    return array(panels_get_style('default'), array());
+  }
+
+  if (empty($panel_settings['individual']) || empty($panel_settings['panel'][$panel]['style'])) {
+    $style = panels_get_style($panel_settings['style']);
+    $style_settings = $panel_settings['style_settings']['default'];
+  }
+  else {
+    $style = panels_get_style($panel_settings['panel'][$panel]['style']);
+    $style_settings = $panel_settings['style_settings'][$panel];
+  }
+
+  return array($style, $style_settings);
+}
+
+/**
+ * Render a panel, by storing the content of each pane in an appropriate array
+ * and then passing through to the theme function that will render the panel
+ * in the configured panel style.
+ *
+ * @param $display
+ *   A display object.
+ * @param $panel
+ *   The ID of the panel being rendered
+ * @param $panes
+ *   An array of panes that are assigned to the panel that's being rendered.
+ * @return
+ *   The rendered HTML for a panel.
+ * @render
+ */
+function panels_render_panel($display, $panel, $panes) {
+  list($style, $style_settings) = panels_get_panel_style_and_settings($display->panel_settings, $panel);
+
+  // Retrieve the pid (can be a panel page id, a mini panel id, etc.), this
+  // might be used (or even necessary) for some panel display styles.
+  // TODO: Got to fix this to use panel page name instead of pid, since pid is
+  // no longer guaranteed. This needs an API to be able to set the final id.
+  $owner_id = 0;
+  if (isset($display->owner) && is_object($display->owner) && isset($display->owner->id)) {
+    $owner_id = $display->owner->id;
+  }
+
+  return theme($style['render panel'], $display, $owner_id, $panes, $display->panel_settings['style_settings'], $panel);
+}
+
+
+/**
+ * Print the layout link. Sends out to a theme function.
+ * @layout
+ */
+function panels_print_layout_link($id, $layout, $link) {
+  drupal_add_css(panels_get_path('css/panels_admin.css'));
+  $file = panels_get_path($layout['icon'], false, $layout['module']);
+  $image = l(theme('image', $file), $link, NULL, NULL, NULL, NULL, TRUE);
+  $title = l($layout['title'], $link);
+  return theme('panels_layout_link', $title, $id, $image, $link);
+}
+
+// @layout
+function panels_print_layout_icon($id, $layout, $title = NULL) {
+  drupal_add_css(panels_get_path('css/panels_admin.css'));
+  $file = panels_get_path($layout['icon'], false, $layout['module']);
+  return theme('panels_layout_icon', $id, theme('image', $file), $title);
+}
+
+/**
+ * Theme the layout link image
+ * @layout
+ */
+function theme_panels_layout_link($title, $id, $image, $link) {
+  $output .= '<div class="layout-link">';
+  $output .= $image;
+  $output .= '<div>' . $title . '</div>';
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Theme the layout icon image
+ * @layout
+ */
+function theme_panels_layout_icon($id, $image, $title = NULL) {
+  $output .= '<div class="layout-icon">';
+  $output .= $image;
+  if ($title) {
+    $output .= '<div class="caption">' . $title . '</div>';
+  }
+  $output .= '</div>';
+  return $output;
+}
+
+/**
+ * Render a panel pane like a block.
+ *
+ * A panel pane can have the following fields:
+ *
+ * $pane->type -- the content type inside this pane
+ * $pane->subtype -- The subtype, if applicable. If a view it will be the
+ *   view name; if a node it will be the nid, etc.
+ * $content->title -- The title of the content
+ * $content->content -- The actual content
+ * $content->links -- Any links associated with the content
+ * $content->more -- An optional 'more' link (destination only)
+ * $content->admin_links -- Administrative links associated with the content
+ * $content->feeds -- Any feed icons or associated with the content
+ * $content->subject -- A legacy setting for block compatibility
+ * $content->module -- A legacy setting for block compatibility
+ * $content->delta -- A legacy setting for block compatibility
+ */
+function theme_panels_pane($content, $pane, $display) {
+  if (!empty($content->content)) {
+    $idstr = $classstr = '';
+    if (!empty($content->css_id)) {
+      $idstr = ' id="' . $content->css_id . '"';
+    }
+    if (!empty($content->css_class)) {
+      $classstr = ' ' . $content->css_class;
+    }
+
+    $output = "<div class=\"panel-pane$classstr\"$idstr>\n";
+    if (user_access('view pane admin links') && !empty($content->admin_links)) {
+      $output .= "<div class=\"admin-links panel-hide\">" . theme('links', $content->admin_links) . "</div>\n";
+    }
+    if (!empty($content->title)) {
+      $output .= "<h2 class=\"title\">$content->title</h2>\n";
+    }
+
+    if (!empty($content->feeds)) {
+      $output .= "<div class=\"feed\">" . implode(' ', $content->feeds) . "</div>\n";
+    }
+
+    $output .= "<div class=\"content\">$content->content</div>\n";
+
+    if (!empty($content->links)) {
+      $output .= "<div class=\"links\">" . theme('links', $content->links) . "</div>\n";
+    }
+
+
+    if (!empty($content->more)) {
+      if (empty($content->more['title'])) {
+        $content->more['title'] = t('more');
+      }
+      $output .= "<div class=\"more-link\">" . l($content->more['title'], $content->more['href']) . "</div>\n";
+    }
+
+    $output .= "</div>\n";
+    return $output;
+  }
+}
+
+/**
+ * Helper function for autocompletion of node titles.
+ * This is mostly stolen from clipper.
+ */
+function panels_node_autocomplete($string) {
+  // TODO: Compare this to the nodequeue version, see which is better.
+  // TODO: The nodequeue version is totally better. Steal it.
+  if ($string != '') { // if there are node_types passed, we'll use those in a MySQL IN query.
+    $preg_matches = array();
+    $match = preg_match('/\[nid: (\d+)\]/', $string, $preg_matches);
+    if (!$match) {
+      $match = preg_match('/^nid: (\d+)/', $string, $preg_matches);
+    }
+    if ($match) {
+      $arg = $preg_matches[1];
+      $where = "n.nid = %d";
+    }
+    else {
+      $arg = $string;
+      $where = "LOWER(title) LIKE LOWER('%%%s%%')";
+    }
+    $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, u.name FROM {node} n INNER JOIN {users} u ON u.uid = n.uid WHERE $where"), $arg, 0, 10);
+
+    $matches = array();
+    while ($node = db_fetch_object($result)) {
+      $name = empty($node->name) ? variable_get('anonymous', t('Anonymous')) : check_plain($node->name);
+      $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">'. check_plain($node->title) .'</span> <span class="autocomplete_user">('. t('by @user', array('@user' => $name)) .')</span>';
+    }
+    drupal_set_header('Content-Type: text/javascript; charset=utf-8');
+    print drupal_to_js($matches);
+  }
+}

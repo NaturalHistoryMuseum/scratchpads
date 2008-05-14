@@ -1,0 +1,21 @@
+<?php
+// $Id: tasks.install,v 1.4 2007/03/16 20:00:44 moonray Exp $
+
+// Create the database table on install (MySQL only for now)
+function tasks_install() {
+  if ($GLOBALS['db_type'] == 'mysqli' || $GLOBALS['db_type'] == 'mysql') {
+    drupal_set_message("Creating required tasks.module MySQL tables for first install");
+    db_query("CREATE TABLE {tasks} (
+      nid int(10) unsigned NOT NULL default '0',
+      parent int(10) unsigned NOT NULL default '0',
+      assigned_to int(10) unsigned NOT NULL default '0',
+      order_by float unsigned NOT NULL default '0',
+      completed date NOT NULL default '0000-00-00',
+      PRIMARY KEY (nid)
+    ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;");
+  }
+}
+
+function tasks_uninstall() {
+  db_query('DROP TABLE {tasks}');
+}

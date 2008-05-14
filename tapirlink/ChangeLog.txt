@@ -1,0 +1,78 @@
+Release 0.5 (2007-09-09)
+------------------------
+(revision 434)
+
+    * Configuration interface can now make use of existing equivalent mappings
+      when clcking on the "automap" button.
+    * Added alias support for query templates.
+    * Caching of query templates, output models and response structures is now
+      activated by default (there were many bugfixes related with caching).
+    * Bugfix: Complex types without content type but with attributes were not 
+      working in response structures.
+    * Bugfix: Attribute references were not working in response structures using
+      PHP 4.x.
+    * Bugfix: Choices in response structures were not working properly when the
+      first option had no content (thanks to Kevin Richards for the fix).
+    * Bugfix: Generic response cache was not working.
+
+Release 0.4 (2007-07-24)
+------------------------
+(revision 413)
+
+    * New schema handler to load concepts from CNS files.
+    * Added initial support to simpleContent and complexContent extension
+      in response structures.
+    * Bugfix: Inventories with multiple concepts were not working before
+      this release.
+    * Bugfix: TAPIR environment variable lastUpdated was renamed to lastUpdate.
+    * Bugfix: Searches with inline output models were not working when response
+      structures involved multiple namespaces.
+    * Bugfix: XML Schema "include" and "import" constructs now work with all 
+      kinds of relative locations (thanks to Roger Hyam).
+    * Removed the limitation that namespaces must be associated with only one 
+      XML Schema.
+    * Bugfix: Searches and inventories with limit = 0 were not working.
+    * Implemented automapping.
+    * Bugfix: Filter comparisons involving concepts that had an underlying fixed
+      value mapping might not work if the value type was numeric.
+    * Concepts can now be locally mapped to TAPIR environment variables.
+    * Bugfix: Element bibliographicCitation in metadata responses was using a
+      wrong namespace.
+    * Bugfix: Elements relatedInformation, hasContact and geo:Point were in 
+      wrong order in metadata responses.
+    * Bugfix: Attribute startTime in the indexingPreferences element (metadata
+      response) was in a wrong format.
+
+Release 0.3.1 (2007-04-23)
+--------------------------
+
+    * Adapted Darwin schema handler to work with the new Darwin namespace.
+
+Release 0.3 (2007-04-12)
+------------------------
+
+    * Added support to LSID resolution.
+    * Made necessary adjustments to work with an RDF representation of
+      DarwinCore as a response structure.
+    * Bugfix related to the representation of concept ids in the capabilities 
+      response (existing providers will need to regenerate the capabilities 
+      configuration file by saving again the local mapping using the configurator).
+
+Release 0.2 (2007-03-11)
+------------------------
+
+    * Added support to new attribute "required" inside node mappings.
+    * Added namespace awareness to output model xpaths.
+    * Added support to the new parameter omit-ns.
+    * Added support to XML Schema import and ref.
+    * Added support to all TAPIR environment variables.
+    * Created the idea of having XSLT skins for data navigation. 
+      Two skins available: default and darwin. Added new configuration 
+      option to specify a default skin.
+    * Several bug fixes.
+
+Release 0.1 (2007-01-14)
+------------------------
+
+    * First public release.
+

@@ -1,0 +1,452 @@
+# $Id: de.po,v 1.1.2.1 2007/11/17 11:17:08 hass Exp $
+#
+# LANGUAGE translation of Drupal (gsitemap.module)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  gsitemap.module,v 1.56.2.7 2007/03/18 21:55:39 darrenoh
+#  gsitemap.info,v 1.3.2.3 2007/02/13 15:57:06 darrenoh
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Deutsche Übersetzung von Google Sitemap für Drupal\n"
+"POT-Creation-Date: 2007-03-18 17:59-0400\n"
+"PO-Revision-Date: 2007-11-17 12:15+0100\n"
+"Last-Translator: Alexander Hass\n"
+"Language-Team: Alexander Hass\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: GERMANY\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: xmlsitemap.module:15
+msgid "Configure the site map. Your site map is at !url."
+msgstr "Die Sitemap konfigurieren. Die Sitemap befindet sich unter !url."
+
+#: xmlsitemap.module:17
+msgid "Configure behavior for search engines."
+msgstr "Das Verhalten für Suchmaschinen konfigurieren."
+
+#: xmlsitemap.module:19
+msgid "Set up additional links for your site map."
+msgstr "Zusätzliche Verweise angeben, die zur Sitemap hinzugefügt werden."
+
+#: xmlsitemap.module:33
+#: xmlsitemap.info:0;0
+#: xmlsitemap_engines/xmlsitemap_engines.info:0
+#: xmlsitemap_node/xmlsitemap_node.info:0
+#: xmlsitemap_term/xmlsitemap_term.info:0
+#: xmlsitemap_user/xmlsitemap_user.info:0
+msgid "XML Sitemap"
+msgstr "XML-Sitemap"
+
+#: xmlsitemap.module:34;42
+msgid "Configure site map."
+msgstr "Sitemap konfigurieren."
+
+#: xmlsitemap.module:41;342
+#: xmlsitemap_node/xmlsitemap_node.module:198
+msgid "Site map"
+msgstr "Sitemap"
+
+#: xmlsitemap.module:48
+msgid "Search engines"
+msgstr "Suchmaschinen"
+
+#: xmlsitemap.module:49
+msgid "Configure search engines."
+msgstr "Suchmaschinen konfigurieren."
+
+#: xmlsitemap.module:56
+msgid "Additional"
+msgstr "Zusätzlich"
+
+#: xmlsitemap.module:57
+msgid "Configure additional links."
+msgstr "Zusätzliche Verweise konfigurieren."
+
+#: xmlsitemap.module:65;342
+msgid "Site map index"
+msgstr "Sitemap Index"
+
+#: xmlsitemap.module:76
+msgid "Site map !number"
+msgstr "Sitemap !number"
+
+#: xmlsitemap.module:93
+msgid "Chunk size"
+msgstr "Paketgröße"
+
+#: xmlsitemap.module:97
+msgid "This is the number of links to include in one site map. Values can range between 1 and 50,000. If the total number of links exceeds the chunk size, multiple site maps will be generated."
+msgstr "Dies ist Anzahl der Verweise innerhalb einer Sitemap. Die Werte können im Bereich von 1 bis 50.000 liegen. Sollte die Gesamtanzahl von Verweisen die Paketgröße überschreiten, werden mehrere Sitemaps generiert."
+
+#: xmlsitemap.module:102
+msgid "Front page priority"
+msgstr "Priorität der Startseite"
+
+#: xmlsitemap.module:105
+msgid "This is the absolute priority for the front page."
+msgstr "Dieses ist die absolute Priorität für die Startseite."
+
+#: xmlsitemap.module:116
+msgid "Cannot send more than 50,000 links at one time."
+msgstr "Mehr wie 50.000 Links können nicht auf einmal übertragen werden."
+
+#: xmlsitemap.module:134
+msgid "Submission settings"
+msgstr "Einstellungen zur Übermittlung"
+
+#: xmlsitemap.module:138
+msgid "Submit site map when updated."
+msgstr "Übermittlung der Sitemap nach einer Aktualisierung."
+
+#: xmlsitemap.module:140
+msgid "If enabled, search engines will be notified of changes to the site map each time it is updated."
+msgstr "Sobald aktiviert, werden die Suchmaschinen bei jeder Aktualisierung über Änderungen an der Sitemap benachrichtigt."
+
+#: xmlsitemap.module:144
+msgid "Submit site map on cron run."
+msgstr "Übermittlung der Sitemap durch einen Cron-Lauf."
+
+#: xmlsitemap.module:146
+msgid "If enabled, search engines will be notified of changes to the site map each time cron is run."
+msgstr "Sobald aktiviert, werden die Suchmaschinen bei jedem Cron-Lauf über Änderungen an der Sitemap benachrichtigt."
+
+#: xmlsitemap.module:150
+msgid "Log access."
+msgstr "Zugriffe protokollieren."
+
+#: xmlsitemap.module:152
+msgid "If enabled, a watchdog entry will be made each time the site map is accessed, containing information about the requestor."
+msgstr "Sobald aktiviert, wird bei jedem Zugriff auf die Sitemap ein Eintrag im Wächterprotokoll erzeugt, welcher die Informationen des Anfragers enthält."
+
+#: xmlsitemap.module:176
+msgid "Link priority"
+msgstr "Priorität der Verweise"
+
+#: xmlsitemap.module:179
+msgid "This is the default priority for additional links."
+msgstr "Dies ist die Standardpriorität für zusätzliche Verweise."
+
+#: xmlsitemap.module:187
+msgid "Enter a Drupal path to add to the site map."
+msgstr "Einen Drupal-Pfad eingeben, der zur Sitemap hinzugefügt wird."
+
+#: xmlsitemap.module:218
+msgid "Delete"
+msgstr "Löschen"
+
+#: xmlsitemap.module:218
+msgid "Path"
+msgstr "Pfad"
+
+#: xmlsitemap.module:218
+msgid "Priority"
+msgstr "Priorität"
+
+#: xmlsitemap.module:239
+msgid "Save configuration"
+msgstr "Konfiguration speichern"
+
+#: xmlsitemap.module:301
+msgid "Default"
+msgstr "Standard"
+
+#: xmlsitemap.module:310
+msgid "Not in site map"
+msgstr "Nicht in der Sitemap"
+
+#: xmlsitemap.module:336
+msgid "Site map @chunk"
+msgstr "Sitemap @chunk"
+
+#: xmlsitemap.module:359
+msgid "!sitemap downloaded by @user-agent at @address."
+msgstr "!sitemap wurde heruntergeladen von @user-agent über @address."
+
+#: xmlsitemap.module:420
+msgid "Unable to load site map. Make sure your temporary directory exists and is writable by Drupal."
+msgstr "Die Sitemap konnte nicht geladen werden. Das temporäre Verzeichnis muss vorhanden sein und Drupal darin schreiben können."
+
+#: xmlsitemap.module:364;0
+#: docs/xmlsitemap.php:175;178
+#: xmlsitemap_engines/xmlsitemap_engines.module:67;70;119;122;157;160;196;199
+msgid "xmlsitemap"
+msgstr "xmlsitemap"
+
+#: xmlsitemap.info:0
+msgid "Creates an XML site map in accordance with the sitemaps.org specification."
+msgstr "Erzeugt eine XML-Sitemap in Übereinstimmung mit den sitemap.org Spezifikationen."
+
+#: docs/xmlsitemap.php:149
+#: xmlsitemap_engines/xmlsitemap_engines.module:41
+msgid "Google"
+msgstr "Google"
+
+#: docs/xmlsitemap.php:155
+#: xmlsitemap_engines/xmlsitemap_engines.module:47
+msgid "Submit site map to Google."
+msgstr "Übermittlung der Sitemap an Google."
+
+#: docs/xmlsitemap.php:160
+#: xmlsitemap_engines/xmlsitemap_engines.module:52;98;148;187
+msgid "Submission URL"
+msgstr "Eintragungs-URL"
+
+#: docs/xmlsitemap.php:162
+#: xmlsitemap_engines/xmlsitemap_engines.module:54;100;150;189
+msgid "The URL to submit the site map to."
+msgstr "Die Sitemap wird an diese URL übertragen."
+
+#: docs/xmlsitemap.php:166
+#: xmlsitemap_engines/xmlsitemap_engines.module:58;104
+msgid "Verification link"
+msgstr "Kontrolldatei"
+
+#: docs/xmlsitemap.php:168
+#: xmlsitemap_engines/xmlsitemap_engines.module:60
+#, fuzzy
+msgid "In order to show statistics, Google will ask you to verify that you control this site by creating a file with a certain name. Enter that name here and the XML Sitemap module will create a path to that file name. This will only work if you have clean URLs enabled."
+msgstr "Um die Statistiken anzusehen, wird Google zu einer Überprüfung des Eigentümers der Website auffordern, indem eine Seite mit einem bestimmten Namen erzeugt wird. Dazu wird hier der Name eingegeben und das XML-Sitemap-Modul wird den Pfad zu dieser Datei erzeugen. Hierzu müssen „lesbare URLs“ aktiviert sein."
+
+#: docs/xmlsitemap.php:175
+#: xmlsitemap_engines/xmlsitemap_engines.module:67
+msgid "Sitemap successfully submitted to Google."
+msgstr "Sitemap wurde erfolgreich an Google übertragen."
+
+#: docs/xmlsitemap.php:178
+#: xmlsitemap_engines/xmlsitemap_engines.module:70
+msgid "Error occurred submitting sitemap to Google: @code"
+msgstr "Fehler bei der Übertragung der Sitemap an Google: @code"
+
+#: docs/xmlsitemap.php:184
+#: xmlsitemap_engines/xmlsitemap_engines.module:75
+msgid "!sitemap downloaded by Google."
+msgstr "!sitemap wurde von Google heruntergeladen."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:87
+msgid "Yahoo"
+msgstr "Yahoo"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:93
+msgid "Submit site map to Yahoo."
+msgstr "Übermittlung der Sitemap an Yahoo."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:106
+#, fuzzy
+msgid "Before allowing you to view additional information, Yahoo will ask you to verify that you control this site by creating a file with a certain name. Enter that name here and the XML Sitemap module will create a path to that file name. This will only work if you have clean URLs enabled."
+msgstr "Yahoo wird zu einer Überprüfung des Eigentümers der Website auffordern, bevor der Zugriff auf zusätzliche Informationen angezeigt wird, indem eine Seite mit einem bestimmten Namen erzeugt wird. Dazu wird hier der Name eingegeben und das XML-Sitemap-Modul wird den Pfad zu dieser Datei erzeugen. Hierzu müssen „lesbare URLs“ aktiviert sein."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:110
+msgid "Authentication key"
+msgstr "Authentifizierungsschlüssel"
+
+# not literally
+#: xmlsitemap_engines/xmlsitemap_engines.module:112
+msgid "Yahoo will ask you to put an authentication key in the verification file. Enter it here."
+msgstr "Yahoo wird einen Authentifizierungsschlüssel für die Kontrolldatei zu Verfügung stellen. Geben Sie diesen hier ein."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:119
+msgid "Site map successfully submitted to Yahoo."
+msgstr "Sitemap wurde erfolgreich an Yahoo übertragen."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:122
+msgid "Error occurred submitting site map to Yahoo: @code"
+msgstr "Fehler bei der Übertragung der Sitemap an Yahoo: @code"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:137
+msgid "Ask.com"
+msgstr "Ask.com"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:143
+msgid "Submit site map to Ask.com."
+msgstr "Übermittlung der Sitemap an Ask.com."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:157
+msgid "Site map successfully submitted to Ask.com."
+msgstr "Sitemap wurde erfolgreich an Ask.com übertragen."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:160
+msgid "Error occurred submitting site map to Ask.com: @code"
+msgstr "Fehler bei der Übertragung der Sitemap an Ask.com: @code"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:175
+msgid "Moreover"
+msgstr "Moreover"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:181
+msgid "Submit site map to Moreover."
+msgstr "Übermittlung der Sitemap an Moreover."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:183
+msgid "At the time this module was written, MSN required site submission to be done manually at !link. Moreover supplies site update alerts to MSN and so provides a way to submit your site map to MSN automatically."
+msgstr "Zu dem Zeitpunkt als dieses Modul geschrieben wurde, war bei MSN eine manuelle Eintragung der Website unter !link erforderlich. Moreover liefert Aktualisierungsbenachrichtigungen von Websites an MSN und ermöglicht damit einen Weg die Sitemap automatisch an MSN zu übertragen."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:196
+msgid "Site map successfully submitted to Moreover."
+msgstr "Sitemap wurde erfolgreich an Moreover übertragen."
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:199
+msgid "Error occurred submitting site map to Moreover: @code"
+msgstr "Fehler bei der Übertragung der Sitemap an Moreover: @code"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:216
+msgid "Google verification page"
+msgstr "Überprüfungsseite für Google"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:226
+msgid "Yahoo verification page"
+msgstr "Überprüfungsseite für Yahoo"
+
+#: xmlsitemap_engines/xmlsitemap_engines.module:0
+msgid "xmlsitemap_engines"
+msgstr "xmlsitemap_engines"
+
+#: xmlsitemap_engines/xmlsitemap_engines.info:0
+msgid "XML Sitemap: Engines"
+msgstr "XML-Sitemap: Engines"
+
+#: xmlsitemap_engines/xmlsitemap_engines.info:0
+msgid "Submits site map to search engines."
+msgstr "Übermittelt die Sitemap an Suchmaschinen."
+
+# XML added
+#: xmlsitemap_node/xmlsitemap_node.module:173
+#: xmlsitemap_user/xmlsitemap_user.module:142
+msgid "Site map settings"
+msgstr "Einstellungen der XML-Sitemap"
+
+#: xmlsitemap_node/xmlsitemap_node.module:182
+#: xmlsitemap_term/xmlsitemap_term.module:143;158
+#: xmlsitemap_user/xmlsitemap_user.module:154
+msgid "Site map priority"
+msgstr "Priorität in der Sitemap"
+
+#: xmlsitemap_node/xmlsitemap_node.module:185
+#: xmlsitemap_term/xmlsitemap_term.module:146
+#: xmlsitemap_user/xmlsitemap_user.module:157
+msgid "The default priority is %priority."
+msgstr "Die Standardpriorität ist %priority."
+
+#: xmlsitemap_node/xmlsitemap_node.module:204
+msgid "Priority adjustment"
+msgstr "Anpassung der Priorität"
+
+#: xmlsitemap_node/xmlsitemap_node.module:207
+msgid "This number will be added to the priority of this content type."
+msgstr "Diese Zahl wird der Priorität dieses Inhaltstypen hinzugefügt."
+
+#: xmlsitemap_node/xmlsitemap_node.module:216
+msgid "Content priority"
+msgstr "Priorität des Inhalts"
+
+#: xmlsitemap_node/xmlsitemap_node.module:217
+msgid "The default priority for specific content types can be set on the !link pages."
+msgstr "Die Standardpriorität von speziellen Inhaltstypen kann auf den !link Seiten eingestellt werden."
+
+# "settings" is not required, not literally
+#: xmlsitemap_node/xmlsitemap_node.module:218
+#, fuzzy
+msgid "content type settings"
+msgstr "Inhaltstypen"
+
+#: xmlsitemap_node/xmlsitemap_node.module:224
+msgid "Promotion adjustment"
+msgstr "Promotionanpassung"
+
+#: xmlsitemap_node/xmlsitemap_node.module:227
+msgid "This number will be added to the priority of each post that is promoted to the front page."
+msgstr "Dieser Wert wird der Priorität jedes Beitrages hinzugefügt, welcher auf der Startseite beworben wird."
+
+#: xmlsitemap_node/xmlsitemap_node.module:231
+msgid "Comment ratio weight"
+msgstr "Kommentarreihenfolge"
+
+#: xmlsitemap_node/xmlsitemap_node.module:234
+msgid "This number will be multiplied by the ratio of the number of comments on a post to the highest number of comments on any post&#8212;that is, this number will be added to the priority of the post with the most comments."
+msgstr "Dieser Wert wird mit dem Verhältnis der Anzahl an Kommentaren in diesem Beitrag, über die Anzahl der Kommentare des Beitrages mit den meisten Kommentaren multipliziert, d.h. der Wert wird der Priorität des Beitrages mit den meisten Kommentaren hinzugefügt."
+
+#: xmlsitemap_node/xmlsitemap_node.module:238
+msgid "Count comments in change date and frequency"
+msgstr "Zähle die Kommentare mit Änderungsdatum und Frequenz"
+
+#: xmlsitemap_node/xmlsitemap_node.module:240
+msgid "If enabled, the frequency of comments on a post will affect its change frequency and last modification date."
+msgstr "Sobald aktiviert, wird die Änderungsfrequenz und das Änderungsdatum, durch die Frequenz der Kommentare zu einem Beitrag beeinflusst."
+
+#: xmlsitemap_node/xmlsitemap_node.module:322
+msgid "Save content type"
+msgstr "Inhaltstyp speichern"
+
+#: xmlsitemap_node/xmlsitemap_node.module:322
+msgid "Reset to defaults"
+msgstr "Zurücksetzen"
+
+#: xmlsitemap_node/xmlsitemap_node.module:159
+msgid "override node priority"
+msgstr "Priorität des Beitrages überschreiben"
+
+#: xmlsitemap_node/xmlsitemap_node.module:0
+msgid "xmlsitemap_node"
+msgstr "xmlsitemap_node"
+
+#: xmlsitemap_node/xmlsitemap_node.info:0
+msgid "XML Sitemap: Node"
+msgstr "XML-Sitemap: Beitrag"
+
+#: xmlsitemap_node/xmlsitemap_node.info:0
+msgid "Adds nodes to the site map."
+msgstr "Fügt Beiträge zur Sitemap hinzu."
+
+#: xmlsitemap_term/xmlsitemap_term.module:161
+msgid "This will be the default priority of terms in this vocabulary."
+msgstr "Dies wird die Standardpriorität von Begriffen in diesem Vokabular."
+
+#: xmlsitemap_term/xmlsitemap_term.module:127
+msgid "override term priority"
+msgstr "Priorität des Begriffes überschreiben"
+
+#: xmlsitemap_term/xmlsitemap_term.module:0
+msgid "xmlsitemap_term"
+msgstr "xmlsitemap_term"
+
+#: xmlsitemap_term/xmlsitemap_term.info:0
+msgid "XML Sitemap: Term"
+msgstr "XML-Sitemap: Begriff"
+
+#: xmlsitemap_term/xmlsitemap_term.info:0
+msgid "Adds taxonomy terms to the site map."
+msgstr "Fügt Taxonomie-Begriffe der Sitemap hinzu."
+
+# XML added
+#: xmlsitemap_user/xmlsitemap_user.module:96
+msgid "Default site map priority"
+msgstr "Standardpriorität in der XML-Sitemap"
+
+#: xmlsitemap_user/xmlsitemap_user.module:99
+msgid "This number will be added to the priority of this user role."
+msgstr "Diese Zahl wird der Priorität dieser Benutzerrolle hinzugefügt."
+
+#: xmlsitemap_user/xmlsitemap_user.module:113
+msgid "Delete role"
+msgstr "Rolle löschen"
+
+#: xmlsitemap_user/xmlsitemap_user.module:129
+msgid "override profile priority"
+msgstr "Priorität des Profils überschreiben"
+
+#: xmlsitemap_user/xmlsitemap_user.module:0
+msgid "xmlsitemap_user"
+msgstr "xmlsitemap_user"
+
+#: xmlsitemap_user/xmlsitemap_user.info:0
+msgid "XML Sitemap: User"
+msgstr "XML-Sitemap: Benutzer"
+
+#: xmlsitemap_user/xmlsitemap_user.info:0
+msgid "Adds user profiles to the site map."
+msgstr "Fügt Benutzerprofile zur Sitemap hinzu."
+

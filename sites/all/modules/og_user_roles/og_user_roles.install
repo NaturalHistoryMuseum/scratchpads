@@ -1,0 +1,44 @@
+<?php
+// $Id: og_user_roles.install,v 1.1.2.3 2008/01/10 20:01:19 somebodysysop Exp $
+
+function og_user_roles_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+
+      db_query("CREATE TABLE {og_users_roles} (
+        uid int(10) unsigned NOT NULL DEFAULT '0',
+        rid int(10) unsigned NOT NULL DEFAULT '0',
+        gid int(10) unsigned NOT NULL DEFAULT '0',
+        PRIMARY KEY  (uid, rid, gid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+
+      break;
+    case 'pgsql':
+
+      db_query("CREATE TABLE {og_users_roles} (
+        uid int NOT NULL DEFAULT '0',
+        rid int NOT NULL DEFAULT '0',
+        gid int NOT NULL DEFAULT '0',
+        PRIMARY KEY  (uid, rid, gid)
+      );");
+
+      break;
+  }
+
+  drupal_set_message(t('OG User Roles module enabled. Please see the included README file for further installation instructions.'));
+
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function og_user_roles_uninstall() {
+
+  db_query('DROP TABLE {og_users_roles}');
+  db_query('DROP TABLE {og_user_test}');
+
+  drupal_set_message(t('OG User Roles module successfully uninstalled'));
+}
+
+?>

@@ -1,0 +1,394 @@
+# translation of de_56.po to
+# $Id: de.po,v 1.1.2.3 2007/11/09 12:49:47 snpower Exp $
+# -----------------------------------------------------------------------------
+# translation of de.po to
+# translation of lightbox2.po to
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+#
+# Generated from files:
+#  lightbox2.module,v 1.16.2.17.2.17 2007/10/11 10:52:29 snpower
+#  lightbox2.info,v 1.1.2.1.2.1 2007/09/26 16:34:54 snpower
+#
+# -----------------------------------------------------------------------------
+msgid ""
+msgstr ""
+"Project-Id-Version: de_56\n"
+"POT-Creation-Date: 2007-10-19 11:08+0100\n"
+"PO-Revision-Date: 2007-10-24 18:38+0200\n"
+"Last-Translator: Helge\n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#: lightbox2.module:30 lightbox2.info:0
+msgid "Enables Lightbox V2 for Drupal"
+msgstr "Aktiviert Lightbox 2 in Drupal"
+
+#: lightbox2.module:33
+#, fuzzy
+msgid ""
+"<h3>Overview</h3>\n"
+"      <p align=\"justify\">Lightbox JS V2 is a simple, unobtrusive script "
+"used to overlay images on the current page. It's a snap to setup and works "
+"on all modern browsers. The module comes with a Lightbox2 Lite option which "
+"does not use the jQuery libraries; it is therefore less likely to conflict "
+"with anything else.</p>\n"
+"      <p align=\"justify\">Places images above your current page, not "
+"within. This frees you from the constraints of the layout, particularly "
+"column widths. Keeps users on the same page. Clicking to view an image and "
+"then having to click the back button to return to your site is bad for "
+"continuity (and no fun!).</p>\n"
+"<h3>Features</h3>\n"
+"The version 2 module has several benefits over the plain Lightbox module.  "
+"Note, not all of these features are available when the \"Lightbox2 Lite\" "
+"option is enabled.\n"
+"<ul>\n"
+"<li>Image Sets: group related images and navigate through them with ease - "
+"ideal for your image galleries.</li>\n"
+"<li>Visual Effects: fancy pre-loader and transition when you click on the "
+"image.</li>\n"
+"<li>Zoom Capability: larger images are reduced in size so they fit snugly "
+"inside the browser window.  A zoom button can then be clicked on to see it "
+"in its original size.</li>\n"
+"<li>Automatic Image Detection: configurable automatic re-formatting of\n"
+"image thumbnails, so there is no need to add 'rel=\"lightbox\"' to each\n"
+"image link on your site.  <a\n"
+"href=\"http://drupal.org/project/image\">Image</a>, <a\n"
+"href=\"http://drupal.org/project/inline\">Inline</a>, <a\n"
+"href=\"http://drupal.org/project/flickr\">Flickr</a>, <a\n"
+"href=\"http://drupal.org/project/img_assist\">Image Assist</a> and <a\n"
+"href=\"http://drupal.org/project/imagefield\">CCK Imagefield</a> modules are "
+"all\n"
+"supported (images must have the \"inline\", \"thumbnail\", \"image-thumbnail"
+"\" or\n"
+"\"flickr-photo-img\" classes).</li>\n"
+"<li><a href=\"http://drupal.org/project/imagecache\">Imagecache</a> Support: "
+"adds a Lightbox2 field formatter for <a href=\"http://drupal.org/project/"
+"imagefield\">CCK imagefields</a> for your custom <a href=\"http://drupal.org/"
+"project/views\">views</a>.</li>\n"
+"<li>Image Node Link: a link to the image node can be provided within the "
+"lightbox itself.</li>\n"
+"<li>Page Exclusion Capability: exclude certain pages on your site from "
+"having the lightbox2 functionality.</li>\n"
+"<li>Gallery 2 Support: support for Gallery 2 images via the <a href=\"http://"
+"drupal.org/project/gallery\">Gallery</a> module (beta).</li>\n"
+"</ul>\n"
+"      <p align=\"justify\"><h3>Usage</h3></p>\n"
+"      <p>Add rel=&quot;lightbox&quot; attribute to any link tag to activate "
+"the lightbox. For example: </p>\n"
+"      <p>&lt;a href=&quot;image-1.jpg&quot; rel=&quot;lightbox&quot; "
+"title=&quot;my caption&quot;&gt;image #1&lt;/a&gt;</p>\n"
+"      <p>Optional: Use the title attribute if you want to show a caption.</"
+"p>\n"
+"   <p>If you have a set of related images that you would like to group, "
+"follow\n"
+"   step one but additionally include a group name between square brackets in "
+"the\n"
+"   rel attribute. For example:</p><p>&lt;a href=\"images/image-1.jpg\"\n"
+"   rel=\"lightbox[roadtrip]\"&gt;image #1&lt;/a&gt;<br />\n"
+"&lt;a href=\"images/image-2.jpg\" rel=\"lightbox[roadtrip]\"&gt;image\n"
+"#2&lt;/a&gt;<br />\n"
+"&lt;a href=\"images/image-3.jpg\" rel=\"lightbox[roadtrip]\"&gt;image\n"
+"#3&lt;/a&gt;<br /></p>\n"
+"<p>No limits to the number of image sets per page or how many images are "
+"allowed\n"
+"in each set. Go nuts!</p>"
+msgstr ""
+"<h3>Übersicht</h3>\n"
+"      <p align=\"justify\">Lightbox JS 2 ist ein einfaches, dezentes Script "
+"um Bilder über die aktuelle Seite zu legen. Es ist schnell einzurichten und "
+"funktioniert mit allen aktuellen Browsern. Das Modul beinhaltet eine "
+"Lightbox 2 Lite-Option, welche nicht die jQuery-Bibliotheken benötigt und "
+"dadurch kaum zu Konflikten führen kann.</p>\n"
+"      <p align=\"justify\">Es platziert Bilder über der aktuellen Seite, "
+"nicht in der Seite. Dies löst einen aus den Grenzen des Layouts, "
+"insbesondere Spaltenbreiten.  Der Benutzer bleibt auf der gleichen Seite und "
+"muss nicht erst umständlich auf das Bild klicken und anschließend auf den "
+"Zurück-Knopf seines Browsers, was die Betrachtung der Seite stört.</p>\n"
+"<h3>Funktionen</h3>\n"
+"Die Version 2 hat einige Vorzüge gegenüber früheren Versionen der Lightbox. "
+"Allerdings sind nicht alle Funktionen mit der Lightbox 2 Lite-Version "
+"verfügbar.\n"
+"<ul>\n"
+"<li>Bildersammlungen: Bilder können gruppiert und mittels einer Navigation "
+"leicht durchgesehen werden - ideal für Galerien.</li>\n"
+"<li>Visuelle Effekte: ein origineller Ladebildschirm und ein dezenter "
+"Übergang beim Klick auf das Bild.</li>\n"
+"<li>Zoom-Funktion: Große Bilder werden verkleinert, damit sie in das Browser-"
+"Fenster passen. Durch den Zoom-Knopf ist es möglich das Bild in Original-"
+"Größe zu betrachten.</li>\n"
+"<li>Automatische Bilderkennung: einstellbare, automatische Benutzung von "
+"Lightbox 2 bei Bildern ohne die Verwendung von 'rel=\"lightbox\"' bei jedem "
+"Bild auf der Seite.  <a\n"
+"href=\"http://drupal.org/project/image\">Bild</a>, <a\n"
+"href=\"http://drupal.org/project/inline\">Inline</a>, <a\n"
+"href=\"http://drupal.org/project/flickr\">Flickr</a>, <a\n"
+"href=\"http://drupal.org/project/img_assist\">Bilder Assistent</a> und <a\n"
+"href=\"http://drupal.org/project/imagefield\">CCK Imagefield</a> Module "
+"werden alle unterstützt (Bilder müssen eine \"inline\", \"\"thumbnail\", "
+"\"image-thumbnail\" oder \"flickr-photo-img\" Klasse haben).</li>\n"
+"<li><a href=\"http://drupal.org/project/imagecache\">Imagecache</a> "
+"Unterstützung: Fügt eine Lightbox 2 Feld-Formatierung für <a href=\"http://"
+"drupal.org/project/imagefield\">CCK Imagefields</a> zu den eigenen <a href="
+"\"http://drupal.org/projects/views\">Views</a> hinzu.</li>\n"
+"<li>Bild Node-Verweis: ein Verweis zum Bild Node kann in der Lightbox "
+"angezeigt werden.</li>\n"
+"<li>Ausschluß von Seiten: Ermöglicht es Lightbox 2 auf speziellen Seiten zu "
+"deaktivieren.</li>\n"
+"<li>Gallery 2 Unterstützung: unterstützt Bilder aus Galerien des <a href="
+"\"http://drupal.org/project/gallery\">Gallery</a>-Moduls (Beta).</li>\n"
+"</ul>\n"
+"      <p align=\"justify\"><h3>Benutzung</h3>\n"
+"      <p>Das Attribut 'rel=&quot;lightbox&quot;' muss zum Verweis, welcher "
+"in der Lightbox geöffnet werden soll, hinzugefügt werden. Zum Beispiel: </"
+"p>\n"
+"      <p>&lt;a href=&quot;bild-1.jpg&quot; rel=&quot;lightbox&quot; "
+"title=&quot;Meine Beschriftung&quot;&gt;Bild 1&lt;/a&gt;</p>\n"
+"      <p>Optional: Das title-Attribut kann benutzt werden um eine "
+"Beschriftung anzuzeigen.</p>\n"
+"   <p>Wenn mehrere Bilder vorhanden sind, welche zu einer Gruppe "
+"zusammengefasst werden sollen, dann fügt man zusätzlich zum vorherigen "
+"Vorgehen noch einen Gruppennamen in eckigen Klammern zum rel-Attribut hinzu. "
+"Zum Beispiel:</p><p>&lt;a href=\"bilder/bild-1.jpg\"\n"
+"   rel=\"lightbox[urlaub07]\"&gt;Bild 1&lt;/a&gt;<br />\n"
+"&lt;a href=\"bilder/bild-2.jpg\" rel=\"lightbox[urlaub07]\"&gt;Bild\n"
+"2&lt;/a&gt;<br />\n"
+"&lt;a href=\"bilder/bild-3.jpg\" rel=\"lightbox[urlaub07]\"&gt;Bild\n"
+"3&lt;/a&gt;<br /></p>\n"
+"<p>Es gibt keine Begrenzung der Anzahl der Bilder auf einer Seite oder "
+"innerhalb einer Gruppierung.</p>"
+
+#: lightbox2.module:91 lightbox2.info:0
+msgid "Lightbox2"
+msgstr "Lightbox 2"
+
+#: lightbox2.module:95
+msgid "Allows the user to configure the lightbox2 settings"
+msgstr "Erlaubt dem Benutzer die Einstellungen von Lightbox 2 zu ändern"
+
+#: lightbox2.module:125
+msgid "View Image Details"
+msgstr "Betrachte Bild Details"
+
+#: lightbox2.module:125
+msgid "Image !current of !total"
+msgstr "Bild !current von !total"
+
+#: lightbox2.module:132
+msgid "Lightbox2 Lite"
+msgstr "Lightbox 2 Lite"
+
+#: lightbox2.module:140
+msgid "Use Lightbox2 Lite"
+msgstr "Benutze Lightbox 2 Lite"
+
+#: lightbox2.module:141
+msgid ""
+"Checking this box will enable Lightbox2 Lite and will disable all of the "
+"automatic image node URL re-formatting features.  It also disables all "
+"grouping features."
+msgstr ""
+"Aktiviert Lightbox 2 Lite und deaktiviert die automatische Benutzung von "
+"Lightbox 2 bei Verknüpfungen zu Bildern. Ebenso werden alle Funktionen zur "
+"Anzeige von mehreren Bildern deaktiviert."
+
+#: lightbox2.module:150
+msgid "General settings"
+msgstr "Allgemeine Einstellungen"
+
+#: lightbox2.module:158
+msgid "Use Alternative Layout"
+msgstr "Benutze alternatives Layout"
+
+#: lightbox2.module:159
+msgid ""
+"Enabling this option alters the layout of the lightbox elements.  This "
+"doesn't apply when using Lightbox Lite."
+msgstr ""
+"Ändert das Layout der Lightbox. Nicht möglich bei der Benutzung von Lightbox "
+"2 Lite."
+
+#: lightbox2.module:166
+msgid "Force visibility of navigation links"
+msgstr "Navigation immer anzeigen"
+
+#: lightbox2.module:167
+msgid ""
+"When viewing grouped images using the default layout, the navigational links "
+"to the next and previous images are only displayed when you hover over the "
+"image.  Checking this box forces these links to be displayed all the time."
+msgstr ""
+"Beim Betrachten von mehreren Bildern mit dem normalen Layout werden die "
+"Verweise zum nächsten und vorherigen Bild nur angezeigt, wenn man mit dem "
+"Mauszeiger über das Bild fährt. Durch die Aktivierung dieser Box werden die "
+"Verweise immer angezeigt."
+
+#: lightbox2.module:174
+msgid "Image Count Text"
+msgstr "Text für Bildübersicht"
+
+#: lightbox2.module:175
+msgid ""
+"This text is used to display the image count underneath the image in the "
+"lightbox when image grouping is enabled.  Use !current as a placeholder for "
+"the number of the current image and !total for the total number of images in "
+"the group.  For example, \"Image !current of !total\"."
+msgstr ""
+"Dieser Text zeigt die Anzahl der Bilder in der aktuellen Gruppierung "
+"unterhalb des Bildes an, wenn die Gruppierung von Bildern aktiviert ist. !"
+"current ist der Platzhalter für die Nummer des aktuellen Bildes und !total "
+"für die gesamte Anzahl von Bildern in der Gruppierung. Zum Beispiel: \"Bild !"
+"current von !total\"."
+
+#: lightbox2.module:182
+msgid "Disable Zoom Feature"
+msgstr "Deaktiviere Zoom-Funktion"
+
+#: lightbox2.module:183
+msgid ""
+"By default, when the image being displayed in the lightbox is larger than "
+"the browser window, it is resized to fit within the window and a zoom button "
+"is provided for users who wish to view the image in its original size.  "
+"Checking this box will disable this feature and all images will be displayed "
+"without any resizing."
+msgstr ""
+"Normalerweise wird das Bild, falls es größer ist als das Browser-Fenster, "
+"verkleinert und es wird ein Zoom-Knopf angezeigt für Benutzer, welche das "
+"Bild in Originalgröße betrachten wollen. Durch die Aktivierung dieser Box "
+"wird diese Funktion deaktiviert und alle Bilder werden ohne Verkleinerung "
+"angezeigt."
+
+#: lightbox2.module:190
+msgid "Enable Gallery 2 Filter"
+msgstr "Aktiviere Gallery 2 Filter"
+
+#: lightbox2.module:191
+msgid "Checking this box will enable the Gallery 2 filter."
+msgstr "Aktiviert den Gallery 2 Filter."
+
+#: lightbox2.module:198
+msgid "Disable LightBox for these urls"
+msgstr "Verwende Lightbox 2 nicht bei diesen URLs"
+
+#: lightbox2.module:199
+msgid ""
+"List the urls where the lightbox should be disabled, e.g. \"node/add/page"
+"\".  Use &lt;front&gt; to match the front page.  Put each url on a separate "
+"line. You can use the % character as a wildcard."
+msgstr ""
+"Eine Auflistung der URLs bei welchen Lightbox 2 deaktiviert sein sollte, z."
+"B. \"node/add/page\". Benutzen Sie &lt;front&gt; für die Startseite. "
+"Benutzen Sie für jede URL eine eigene Zeile. Man kann das %-Zeichen als "
+"Platzhalter benutzen."
+
+#: lightbox2.module:208
+msgid "Automatic image handling options"
+msgstr "Automatische Anwendung von Lightbox"
+
+#: lightbox2.module:209
+msgid ""
+"These options allow automatic URL re-formatting of Image Nodes.  This "
+"removes the need for you to add 'rel=\"lightbox\"' to each image node link "
+"throughout your site.  Only image nodes which have the CSS classes \"inline"
+"\", \"thumbnail\", \"image-thumbnail\" or \"flickr-photo-img\" will have "
+"their URLs automatically re-formatted.  This feature is not available when "
+"using Lightbox2 Lite."
+msgstr ""
+"Die Option aktiviert die automatische Benutzung von Lightbox 2 bei Bild-"
+"Nodes. Durch die Aktivierung ist es nicht mehr notwendig 'rel=\"lightbox\"' "
+"zu jedem Bild hinzuzufügen. Nur Bilder, welche die CSS-Klassen \"inline\", "
+"\"thumbnail\", \"image-thumbnail\" oder \"flickr-photo-img\" verwenden, "
+"werden automatisch in der Lightbox angezeigt. Diese Funktion ist nicht mit "
+"Lightbox 2 Lite verfügbar."
+
+#: lightbox2.module:217
+msgid "Enable for Image Nodes"
+msgstr "Aktiviere für Bild-Nodes"
+
+#: lightbox2.module:218
+msgid "Checking this box will enable automatic URL formatting for Image Nodes."
+msgstr ""
+"Durch die Aktivierung werden automatisch alle Bilder in einer Lightbox "
+"angezeigt."
+
+#: lightbox2.module:225
+msgid "Enable for Flickr images"
+msgstr "Aktiviere für Flickr Bilder"
+
+#: lightbox2.module:226
+msgid ""
+"Checking this box will enable automatic URL formatting for Flickr images."
+msgstr ""
+"Durch die Aktivierung werden automatisch alle Flickr Bilder in einer "
+"Lightbox angezeigt."
+
+#: lightbox2.module:233
+msgid "Text for Node Link"
+msgstr "Text für Verweise zum Node"
+
+#: lightbox2.module:234
+msgid ""
+"This is the text that will appear as the link to the node underneath the "
+"image in the lightbox"
+msgstr ""
+"Dieser Text erscheint als Verweis zum Node unterhalb des Bildes in der "
+"Lightbox"
+
+#: lightbox2.module:241
+msgid "Enable Grouping"
+msgstr "Aktiviere Gruppierung"
+
+#: lightbox2.module:242
+msgid ""
+"Checking this box will enable automatic grouping of Image Nodes on a page. "
+"Useful for image galleries."
+msgstr ""
+"Aktiviert die automatische Gruppierung von Bild-Nodes auf einer Seite. "
+"Nützlich für Bildergalerien."
+
+#: lightbox2.module:249
+msgid "Disable Lightbox for Gallery Lists"
+msgstr "Deaktiviere Lightbox in Galerien"
+
+#: lightbox2.module:250
+msgid ""
+"Checking this box will disable the lightbox for images in gallery lists.  "
+"This means it is possible to open a gallery by clicking on the teaser image, "
+"but the lightbox will still appear when viewing images within the gallery."
+msgstr ""
+"Deaktiviert Lightbox 2 in Galerie-Ansichten. Das heisst, dass es möglich ist "
+"eine Galerie durch einen Klick auf das Vorschaubild zu öffnen, Lightbox 2 "
+"aber innerhalb der Galerie zur Anzeige der Bilder benutzt wird."
+
+#: lightbox2.module:262
+msgid "Image links from G2 are formatted for use with Lightbox.V2"
+msgstr ""
+"Bild-Verweise aus G2 werden für die Verwendung durch Lightbox 2 vorbereitet"
+
+#: lightbox2.module:270
+msgid "Lightbox filter"
+msgstr "Lightbox 2 Filter"
+
+#: lightbox2.module:273
+msgid "Turns g2_filter links into Lightbox.V2 appropriate links"
+msgstr "Wandelt g2_filter Verweise in Lightbox 2 kompatible Verweise um"
+
+#: lightbox2.module:321
+msgid "press !x to close"
+msgstr "!x zum Schließen drücken"
+
+#: lightbox2.module:80
+msgid "administer lightbox2"
+msgstr "Lightbox 2 verwalten"
+
+#: lightbox2.module:0 lightbox2.install:11;35
+msgid "lightbox2"
+msgstr "lightbox2"
+
+#: lightbox2.info:0
+msgid "Javascript tools"
+msgstr "JavaScript Tools"

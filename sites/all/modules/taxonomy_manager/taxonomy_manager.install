@@ -1,0 +1,27 @@
+<?php
+
+// $Id: $
+
+/**
+ * Implementation of hook_install
+ */
+function taxonomy_manager_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysqli':
+    case 'mysql':
+      db_query("CREATE TABLE {taxonomy_manager_merge} (
+        main_tid int unsigned NOT NULL default '0', 
+        merged_tid int unsigned NOT NULL default '0', 
+        PRIMARY KEY(merged_tid)  
+      ) /*!40100 DEFAULT CHARACTER SET UTF8 */");
+      break;
+    
+    case 'pgsql':
+      db_query("CREATE TABLE {taxonomy_manager_merge} (
+        main_tid int_unsigned NOT NULL default '0', 
+        merged_tid int_unsigned NOT NULL default '0', 
+        PRIMARY KEY(merged_tid)  
+      )");
+      break;
+  }
+}

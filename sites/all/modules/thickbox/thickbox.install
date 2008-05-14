@@ -1,0 +1,9 @@
+<?php
+// $Id: thickbox.install,v 1.1 2006/11/21 13:47:48 frjo Exp $
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function thickbox_uninstall() {
+  variable_del('thickbox_auto');
+}

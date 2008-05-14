@@ -1,0 +1,25 @@
+
+.nhm-printable{
+	margin: 20px 10px;
+	text-align: right;
+	font-size: 0.9em;
+}
+
+.nhm-printable img{
+	position: relative;
+	top: 3px;
+}
+
+.printable div.nhm-printable, .printable .view-controls{
+	display: none;
+}
+
+.printable div.view-control-output{
+	overflow: visible;
+	height: auto;
+}
+
+.printable, .printable *{
+	color: #000!important;
+	background: #fff none!important;
+}

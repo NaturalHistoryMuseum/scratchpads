@@ -1,0 +1,196 @@
+<?php
+
+function panels_vocab_menu($may_cache){
+	
+	if ($may_cache) {
+
+		$items[]= array (
+	      'path' => 'admin/settings/panels_vocab',
+	      'title' => t('Panels Vocabulary'),
+	      'callback' => 'drupal_get_form',
+			  'callback arguments' => array('panels_vocab_admin_form'),
+	      'access' => user_access('Administer panels vocabulary'),
+	      'description' => t('Configuration of panels vocabulary.'),
+	      'type' => MENU_NORMAL_ITEM,
+	    );
+	
+	}
+	
+	return $items;
+	
+}	
+
+function panels_vocab_perm(){
+	return array('Administer panels vocabulary');
+}
+
+function panels_vocab_admin_form(){
+	
+	$panels = panels_page_load_all();
+	
+	if(is_array($panels)){
+		
+		$panel_options = array();
+
+		foreach($panels as $panel){
+
+			$panel_options[$panel->pid] = $panel->name; 
+
+		}
+		
+		
+		$form['panels_vocab_auto'] = array(
+		  '#type' => 'select',
+			'#multiple' => true,
+			'#size' => count($panel_options),
+		  '#title' => t('Automatically add new vocabularies'),
+		  '#default_value' => variable_get('panels_vocab_auto', array()),
+		  '#options' => $panel_options,
+			'#description' => t("New vocabularies will be automatically added to the selected panels pages"),
+		);
+		
+		$form['panels_vocab_form'] = array(
+		  '#type' => 'select',
+			'#multiple' => true,
+			'#size' => count($panel_options),
+		  '#title' => t('Provide form option'),
+		  '#default_value' => variable_get('panels_vocab_form', array()),
+		  '#options' => $panel_options,
+			'#description' => t("Provide the option of adding vocabulary to the selected panels pages when adding & editing vocabularies."),
+		);
+		
+	}else{
+		
+		$form['#prefix'] = t("Sorry, you need to have some panel pages to configure this module.");
+		
+	}
+	
+	return system_settings_form($form);
+	
+}
+
+function panels_vocab_taxonomy($op, $type, $array = NULL){
+	
+	if($type == 'vocabulary'){
+
+		switch($op){
+
+			case 'update':
+			case 'insert':
+
+				$auto_add = variable_get('panels_vocab_auto', array());
+
+				if(is_array($auto_add) && is_array($array['panels_auto_add'])){
+					
+					$vocab_to_add = $auto_add + $array['panels_auto_add'];
+					
+				}elseif(is_array($array['panels_auto_add'])){
+					
+					$vocab_to_add =  $array['panels_auto_add'];
+					
+				}elseif(is_array($auto_add)){
+					
+					$vocab_to_add = $auto_add;
+					
+				}	
+
+				if(is_array($vocab_to_add)){
+
+					foreach($vocab_to_add as $pid => $selected){
+
+						$panels_page = panels_page_load($pid);
+
+							foreach($panels_page->arguments as $key => $argument){
+
+								if($argument['argument_settings']['vids']){
+
+									if($selected){ // add this to the panel
+									$panels_page->arguments[$key]['argument_settings']['vids'][$array['vid']] = $array['vid'];
+									}else{
+									$panels_page->arguments[$key]['argument_settings']['vids'][$array['vid']] = 0;	
+									}
+
+								}
+
+							}
+
+						panels_page_save($panels_page);
+
+					}
+
+				}
+				
+				
+
+			break;
+
+			}
+		
+	}
+	
+
+}
+
+function panels_vocab_form_alter($form_id, &$form){
+	
+	switch($form_id){
+		
+		case 'taxonomy_form_vocabulary':
+		
+		$admin_settings = variable_get('panels_vocab_form', array());
+		
+			if(count($admin_settings)){
+				
+				$panels = panels_page_load_all();
+				
+				if(is_array($panels)){
+
+					foreach($panels as $panel){
+
+						if($admin_settings[$panel->pid]){
+						$panel_options[$panel->pid] = $panel->name; 	
+						}	
+						
+						// if editing, get default settings for panels 
+						if($form['vid']['#value']){
+						
+							foreach($panel->arguments as $argument){
+								
+								if($argument['argument_settings']['vids'][$form['vid']['#value']]){
+									
+									$default_options[] = $panel->pid;
+									
+								}
+							
+							}
+							
+						}
+
+					}
+
+						if(count($panel_options)){
+
+							$form['panels_auto_add'] = array(
+							  '#type' => 'checkboxes',
+							  '#title' => t('Use this vocabulary in the following panels'),
+							  '#options' => $panel_options,
+								'#default_value' => $default_options,
+								'#description' => t("This vocabulary will be used in the arguments of the selected panels page."),
+							);
+							
+						}
+
+				}
+
+				
+			}
+		
+		break;
+		
+		
+	}
+	
+}
+
+
+

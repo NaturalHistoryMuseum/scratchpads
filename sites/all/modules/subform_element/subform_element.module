@@ -1,0 +1,215 @@
+<?php
+// $Id: subform_element.module,v 1.1.2.8 2007/05/01 11:59:34 fago Exp $
+
+/**
+ * @file
+ * Provides a new form element, that eases reusing already existing forms
+ */
+
+/*
+ * Implementation of hook_elements()
+ */
+function subform_element_elements() {
+  $type['subform'] = array(
+    '#id' => 'subform_element',
+    '#after_build' => array('subform_element_build_subform'), 
+    '#subform_after_build' => array(),
+    '#extra_form' => array(),
+    '#redirect' => false,
+    '#arguments' => array(),
+    '#data_separation' => TRUE,
+  );
+  return $type;
+}
+
+/*
+ * This function invokes drupal_get_form() once again for the subform.
+ */
+function subform_element_build_subform($form_element, &$form_values) {
+  $form_id = $form_element['#id'];
+  $subform = call_user_func_array('drupal_retrieve_form', array_merge(array($form_id), $form_element['#arguments']));
+  $subform['#token'] = FALSE;
+
+  //add all custom after build functions to the subform by keeping the existing one
+  $args = isset($subform['#after_build']) ? array($subform['#after_build'], $form_element['#subform_after_build']) : array($form_element['#subform_after_build']);
+  $subform['#after_build'] = call_user_func_array ('array_merge', $args);
+  $subform = array_merge_recursive($subform, $form_element['#extra_form']);
+
+  if ($form_element['#data_separation']) {
+    //separate the data in $_POST
+    $subform['#process']['subform_element_separate_data_prepare'] = array();
+    $subform['#pre_render'][] = 'subform_element_separate_data';
+  }
+
+  //if the form has been submitted, set the form_id to the subform's id
+  if (isset($form_element['#post']) && isset($form_element['#post']['form_id'])) {
+    $subform['#post'] = $form_element['#data_separation'] ? $_POST[$form_id] : $form_element['#post'];
+    $subform['#post']['form_id'] = $form_id;
+  }
+
+  subform_element_call('drupal_prepare_form', $form_id, $subform);
+
+  unset($subform['form_id']);
+  $subform['#type'] = 'subform'; //set the type back again to subform
+
+  //don't validate the subform in the first place, subform_element_validate() will take care of this
+  $subform['#validated'] = TRUE;
+  $form_element['#form'] = $subform;
+  $form_element['#validate'] = array('subform_element_validate' => array());
+
+  //don't render it, again we will take care of this
+  $form_element['#type'] = 'subform_element';
+  $form_element['#children'] = '';
+  return $form_element;
+}
+
+/*
+ * Validates the subform element by validating the form
+ */
+function subform_element_validate($element) {
+  global $subforms;
+
+  $element['#form']['#validated'] = FALSE;
+  subform_element_call('drupal_validate_form', $element['#id'], $element['#form']);
+
+  //save subforms in the global, so that the submit handler is able to submit them
+  if (!isset($subforms)) {
+    $subforms = array();
+  }
+  $subforms[] = $element['#form'];
+}
+
+
+/*
+ * Submits the subforms of a form
+ */
+function subform_element_submit() {
+  global $subforms;
+
+  if (isset($subforms)) {
+    foreach ($subforms as $key => $subform) {
+      if (!isset($subform['#submitted'])) {
+        $subforms[$key]['#submitted'] = TRUE;
+        $redirect = subform_element_call('drupal_submit_form', $subform['#post']['form_id'], $subform);
+      }
+    }
+    return $redirect;
+  }
+}
+
+/*
+ * Theme function for a subform element
+ * invokes drupal_render_form on the subform like it's done on a normal form
+ */
+function theme_subform_element(&$element) { 
+  return drupal_render_form($element['#id'], $element['#form']);
+}
+
+/*
+ * Theme function for a whole subform - Puts a div around its content
+ */
+function theme_subform(&$element) {
+  _form_set_class($element, array('subform'));
+  return '<div id="'. $element['#id'] .'">'. $element['#children'] .'</div>';
+}
+
+/*
+ * Invokes the given function on the given (sub)form
+ * This function cares about the globals used by the form system,
+ * so that there are always the right globals in place!
+ * It's intended to be used with drupal_prepare_form, drupal_validate_form, drupal_submit_form
+ */
+function subform_element_call($function, $form_id, &$form) {
+  global $form_values, $form_submitted, $user, $form_button_counter;
+  static $saved_globals = array();
+
+  if (!isset($saved_globals[$form_id])) {
+    $saved_globals[$form_id] = array();
+    $saved_globals[$form_id]['before'] = array();
+    $saved_globals[$form_id]['form_values'] = array();
+    $saved_globals[$form_id]['form_submitted'] = FALSE;
+    $saved_globals[$form_id]['form_button_counter'] = array(0, 0);
+  }
+
+  array_push($saved_globals[$form_id]['before'], array($form_values, $form_submitted, $form_button_counter));
+
+  //restore global variables
+  $form_values = $saved_globals[$form_id]['form_values'];
+  $form_submitted = $saved_globals[$form_id]['form_submitted'];
+  $form_button_counter = $saved_globals[$form_id]['form_button_counter'];
+
+  $return_value = $function($form_id, $form);
+  
+  //save global variables for the next time we have to operate on this form_id
+  $saved_globals[$form_id]['form_values'] = $form_values;
+  $saved_globals[$form_id]['form_submitted'] = $form_submitted;
+  $saved_globals[$form_id]['form_button_counter'] = $form_button_counter;
+
+  // We've finished calling functions that alter the global values, so we can
+  // restore the ones that were there before this function was called.
+  list($form_values, $form_submitted, $form_button_counter) = array_pop($saved_globals[$form_id]['before']);
+  
+  //propagate if the subform has been submitted
+  $form_submitted = $form_submitted || $saved_globals[$form_id]['form_submitted'];
+  //also count the form buttons of subforms to the outer form
+  if ($function == 'drupal_prepare_form' && $saved_globals[$form_id]['form_button_counter'][0]) {
+    $form_button_counter[0] += $saved_globals[$form_id]['form_button_counter'][0];
+    $form_button_counter[1] += $saved_globals[$form_id]['form_button_counter'][1];
+  }
+
+  return $return_value;
+}
+
+/*
+ * Invoked through #process
+ * Prepares the subform data separation by scanning for already set element names
+ */
+function subform_element_separate_data_prepare($form) {
+  _subform_element_save_element_names_recursive($form);
+  return $form;
+}
+
+function _subform_element_save_element_names_recursive(&$form) {
+  if ((!isset($form['#access']) || $form['#access'])) {
+    //recurse
+    foreach (element_children($form) as $key) {
+      _subform_element_save_element_names_recursive($form[$key]);
+    }
+    $element = $form;
+    /* Use element defaults */
+    if ((!empty($element['#type'])) && ($info = _element_info($element['#type']))) {
+      $element += $info;
+    }
+    if (isset($element['#name'])) {
+      $form['#set_name'] = $element['#name'];
+    }
+  }
+}
+
+
+/*
+ * This is optionally invoked by #pre_render
+ * Separates the data in $_POST by adding an prefix to each form elements name
+ */
+function subform_element_separate_data($form_id, &$form) {
+  _subform_element_add_name_prefix_recursive($form_id, $form);
+}
+
+function _subform_element_add_name_prefix_recursive($prefix, &$form) {
+  if ((!isset($form['#access']) || $form['#access'])) {
+    //recurse
+    foreach (element_children($form) as $key) {
+      _subform_element_add_name_prefix_recursive($prefix, $form[$key]);
+    }
+    if ($form['#type'] != 'file') { //we have to exclude file elements, due to their special behavior
+      // if the element got a customized name, prefix this one
+      if (isset($form['#set_name'])) {
+        //I'm not aware of any elements using ][ inside the name, so this should do it
+        $form['#name'] = $prefix. '['. $form['#set_name'] .']';
+      }
+      else {
+        $form['#name'] = $prefix. '['. implode('][', $form['#parents']) .']';
+      }
+    }
+  }
+}

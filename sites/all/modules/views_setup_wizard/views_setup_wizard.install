@@ -1,0 +1,13 @@
+<?php
+
+function views_setup_wizard_unistall(){
+
+variable_del('views_setup_wizard_comments');
+variable_del('views_setup_wizard_hide_locked_views');
+variable_del('views_setup_wizard_panels');
+variable_del('views_setup_wizard_panels_template');
+variable_del('views_setup_wizard_locked_nodes');
+variable_del('views_setup_wizard_locked_plugins');
+variable_del('views_setup_wizard_locked_views');
+
+}

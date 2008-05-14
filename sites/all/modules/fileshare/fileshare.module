@@ -1,0 +1,784 @@
+<?php
+// $Id: fileshare.module,v 1.21.2.4 2007/02/12 19:29:32 jamier Exp $
+
+/**
+ * @file
+ * Enables users to browse, download or upload files in the 'files' directory. *
+ *
+ * You may want to change some settings in your php.ini file to adjust the
+ * upload file size restrictions. I can't seem to set them dynamically.
+ * The settings to look for are:
+ *
+ *  ini_set('post_max_size', '61M'); // This should be larger than 'upload_max_filesize'
+ *  ini_set('upload_max_filesize', '60M');
+ *  ini_set('max_input_time', '300');
+ *  ini_set('max_execution_time', '300'); // 5 minuites
+ *
+ *  Also be sure to check that your temp directory has enough space.
+ */
+
+/**
+ * Implementation of hook_node_info().
+ *
+ * This is a required node hook. This function describes the nodes provided by
+ * this module. The name value provide a human readable name for the node while
+ * the base value tells Drupal how the module's functions map to hooks (i.e.
+ * if the base is fileshare_foo then fileshare_foo_insert will be called
+ * when inserting the node).
+ */
+function fileshare_node_info() {
+  return array('fileshare' => array('name' => t('fileshare'), 'module' => 'fileshare', 'description' => 'Create a Fileshare page.'));
+}
+
+/**
+ * Implementation of hook_access().
+ *
+ * Node modules may implement node_access() to determine the operations
+ * users may perform on nodes. This example uses a very common access pattern.
+ */
+function fileshare_access($op, $node) {
+  global $user;
+
+  if ($op == 'view') {
+    $private = db_result(db_query('SELECT _private FROM {node_fileshare} WHERE vid = %d', $node->vid));
+    if ($private == 1) {
+      if ($user->uid == $node->uid) {
+        return TRUE;
+      } else {
+        return FALSE;
+      }
+    } else {
+      return NULL;
+    }
+  }
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create fileshares');
+  }
+  // Users who create a node may edit or delete it later, assuming they have the
+  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('manage own fileshares') && ($user->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ *
+ * Since we are limiting the ability to create new nodes to certain users,
+ * we need to define what those permissions are here. We also define a permission
+ * to allow users to edit the nodes they created.
+ */
+function fileshare_perm() {
+  return array('create fileshares'
+    ,'set file paths'
+    ,'modify files'
+    ,'download files'
+    ,'manage own fileshares'
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ *
+ * In order for users to be able to add nodes of their own, we need to
+ * give them a link to the node composition form here.
+ */
+function fileshare_menu($may_cache) {
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'node/add/fileshare', 
+      'title' => t('fileshare'),
+      'access' => user_access('create fileshares')
+    );
+  }
+  // for javascript handler
+  if (arg(0) == 'fileshare' && arg(1) == 'handler' && is_numeric(arg(2))) {
+    $node = node_load(arg(2));
+    $items[] = array(
+      'path' => 'fileshare/handler/'.$node->nid,
+      'access' => (user_access('download files') || (user_access('manage own fileshares') && ($user->uid == $node->uid))),
+      'type' => MENU_CALLBACK,
+      'callback' => '_fileshare_handler',
+      'callback arguments' => array('node' => $node)
+    );
+  }
+  // The default download function doesn't let the download of the files that aren't in the 'files' table.
+  $items[] = array(
+    'path' => 'fileshare/files/'.arg(2),
+    'access' => user_access('download files'),
+    'type' => MENU_CALLBACK,
+    'callback' => '_fileshare_download'
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_form().
+ *
+ * Now it's time to describe the form for collecting the information
+ * specific to this node type. This hook requires us to return an array with
+ * a sub array containing information for each element in the form.
+ */
+function fileshare_form(&$node) {
+  // update older fileshares || prep new ones
+  $defaultpath = file_directory_path().'/'._sanitize_filename($node->title).$node->nid;
+  if ($node->_filepath == $defaultpath || !isset($node->_filepath)) { 
+    $new = TRUE; 
+    if (!isset($node->_basepath)) {
+      $node->_basepath = file_directory_path();
+      $node->_method = 1; // private
+    }
+  }
+  // We need to define form elements for the node's title and body.
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5
+  );
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Body'),
+    '#rows' => 8,
+    '#default_value' => $node->body,
+    '#required' => FALSE
+  );
+  $form['body_filter']['filter'] = filter_form($node->format);
+  $form['file_filter'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Fileshare Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#description' => t('The current post file size limit is set to %post-max, and the upload size is %upload-max.', 
+      array('%post-max' => ini_get('post_max_size'), '%upload-max' => ini_get('upload_max_filesize'))),
+  );
+  $form['file_filter']['_method'] = array(
+    '#type' => 'radios', 
+    '#title' => t('Download method'), 
+    '#default_value' => $node->_method,
+    '#options' => array(t('<strong>Public</strong> - files are downloaded using http directly.'), 
+      t('<strong>Private</strong> - files are transferred by Drupal and downloads tracked.'))
+  );
+  $form['file_filter']['_filepath'] = array('#type' => 'value', '#value' => $node->_filepath);
+  if ($new && user_access('set file paths')) {
+    $form['file_filter']['_basepath'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Node base path'),
+      '#default_value' => $node->_basepath,
+      '#maxlength' => 255,
+      '#description' => t("If you want any sort of access control on the downloading of files, the <strong>Download method</strong> 
+        needs to be set to <em>Private</em>. The default path you see now is taken from the Drupal File system settings. 
+        You can only set the Node file path at the time of node creation.<br><br><strong>Note:</strong> You may spec a file path 
+        from the root of your webserver outside of the drupal directory, but you must set the download method to private.
+        <br><br><em>The base path should not have a trailing slash.</em>")
+    );
+  } else {
+    $form['file_filter']['_basepath'] = array(
+      '#type' => 'value', 
+      '#value' => $node->_basepath
+    );
+    $form['file_filter']['item'] = array(
+      '#type' => 'item',
+      '#title' => t("This node's base path is <em>%filepath</em>.", array('%filepath' => $node->_basepath))
+    );
+  }
+  $form['file_filter']['_modify'] = array(
+    '#type' => 'checkbox',
+    '#title' => '<strong>'.t('Allow files to be uploaded to and deleted from this directory').'</strong>',
+    '#return_value' => 1,
+    '#default_value' => _tf($node->_modify),
+    '#description' => ($new) ? NULL : t('If you would like to upload files to your 
+      fileshare directory via FTP, please use <em>"%filepath".</em>', 
+      array('%filepath' => $node->_basepath.$node->_filepath))
+  );
+  $form['file_filter']['_thumbs'] = array(
+    '#type' => 'checkbox',
+    '#title' => '<strong>'.t('Show preview thumbs').'</strong>',
+    '#return_value' => 1,
+    '#default_value' => _tf($node->_thumbs),
+    '#description' => ($new) ? NULL : t('Preview thumbs can be uploaded via FTP to
+      <em>"%filepath".</em> All preview images must be either "jpg" or "gif" formatted, and
+      named the same as the image files they are meant to preview. Put all the preview images
+      directly into the "_previews" folder - do not put them into sub-folders or try to match the file hierarchy.',
+      array('%filepath' => $node->_basepath.$node->_filepath.'/_previews'))
+  );
+  $form['file_filter']['_whitelist'] = array(
+    '#type' => 'textfield',
+    '#title' => t('File extension whitelist'),
+    '#default_value' => ($new) ? 'jpg jpeg gif png txt html htm doc xls pdf ppt pps ai psd' : $node->_whitelist,
+    '#maxlength' => 255,
+    '#description' => t("File extensions that are allowed to be uploaded. Separate extensions with a space and do not include the leading dot. 
+      If left blank the default 'jpg jpeg gif png txt html htm doc xls pdf ppt pps ai psd' will be applied.")
+  );
+  $form['file_filter']['_private'] = array(
+    '#type' => 'checkbox',
+    '#title' => '<strong>'.t('Set the node private').'</strong>',
+    '#return_value' => 1,
+    '#default_value' => _tf($node->_private),
+    '#description' =>  t('A private node can be viewed only from his owner.')
+  );
+  return $form;
+}
+
+/**
+ * Previewing fileshares = bad
+ */
+function fileshare_form_alter($form_id, &$form) {
+  if ($form_id == 'fileshare_node_form') {
+    unset($form['preview']);
+  }
+}
+
+/**
+ * Implementation of hook_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */ 
+function fileshare_insert($node) {
+  // convert and sanitize node title as directory name
+  $node->_filepath = '/'._sanitize_filename($node->title).$node->nid;
+  // remove trailing slash
+  if (substr($node->_basepath, -1, 1) == '/') { $node->_basepath = substr($node->_basepath, 0, -1); }
+  if (!is_dir($node->_basepath.$node->_filepath)) {
+    umask(0000);
+    if(!mkdir($node->_basepath.$node->_filepath, 02775)) { // checks and writes directory
+      die('DIRECTORY ERROR - please check that "'.$node->_basepath.'" is the correct path and that it is writable by your the webserver.');
+    } else {
+      drupal_set_message('Directory <strong>"'.basename($node->_filepath).'"</strong> created.');
+      $thumbspath = $node->_basepath.$node->_filepath.'/_previews';
+      umask(0000);
+      if(!mkdir($thumbspath, 02775)) { // checks and writes previews subdirectory
+        die('DIRECTORY ERROR - please check "'.$thumbspath.'".');
+      } else { // both directories written
+        drupal_set_message('Directory <strong>"'.basename($thumbspath).'"</strong> created.');
+      }
+    }
+  }
+  db_query("INSERT INTO {node_fileshare} (vid, nid, _filepath, _basepath, _whitelist, _method, _modify, _thumbs, _private) VALUES (%d, %d, '%s', '%s', '%s', %b, %b, %b, %b)", 
+    $node->vid, $node->nid, $node->_filepath, $node->_basepath, $node->_whitelist, $node->_method, $node->_modify, $node->_thumbs, $node->_private);
+}
+
+/**
+ * Implementation of hook_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ */
+function fileshare_update($node) {
+  // remove trailing slash
+  if (substr($node->_basepath, -1, 1) == '/') { $node->_basepath = substr($node->_basepath, 0, -1); }
+  if (substr($node->_filepath, 0, 1) != '/') { $node->_filepath = '/'.$node->_filepath; }
+  // if this is a new node or we're adding a new revision,  
+  if ($node->revision) {
+    fileshare_insert($node);
+  } else {
+    // convert and sanitize node title as directory name
+    $rename = '/'._sanitize_filename($node->title).$node->nid;
+    if ($node->_filepath != $rename) {
+      if (!rename($node->_basepath.$node->_filepath, $node->_basepath.$rename)) {
+        die('RENAMING ERROR - from "'.$node->_basepath.$node->_filepath.'" to "'.$node->_basepath.$rename.'".');
+      }
+    }
+  $node->_filepath = $rename;
+  db_query("UPDATE {node_fileshare} SET _filepath = '%s',  _basepath = '%s', _whitelist = '%s', _method = %b, _modify = %b, _thumbs = %b, _private = %b WHERE vid = %d", 
+    $node->_filepath, $node->_basepath, $node->_whitelist, $node->_method, $node->_modify, $node->_thumbs, $node->_private, $node->vid);
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * When a node revision is deleted, we need to remove the corresponding record
+ * from our table. The only way to handle revision deletion is by implementing
+ * hook_nodeapi().
+ */
+function fileshare_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'delete revision':
+      // Notice that we're matching a single revision based on the node's vid.
+      db_query('DELETE FROM {node_fileshare} WHERE vid = %d', $node->vid);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_delete().
+ *
+ * When a node is deleted, we need to remove all related records from out table.
+ */
+function fileshare_delete($node) {
+  // Notice that we're matching all revision, by using the node's nid.
+  db_query('DELETE FROM {node_fileshare} WHERE nid = %d', $node->nid);
+  if (_recursive_rmdir($node->_basepath.$node->_filepath)) {
+    drupal_set_message('The directory: <strong>"'.$node->_basepath.$node->_filepath.'"</strong> has been deleted.');
+    watchdog('fileshare', check_plain($node->title." and the contents of ".$node->_basepath.$node->_filepath." were deleted"), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+  } else {
+    drupal_set_message('ERROR: "'.$node->_basepath.$node->_filepath.'" could not be deleted.','error');
+  }
+}
+
+/**
+ * Implementation of hook_load().
+ *
+ * Now that we've defined how to manage the node data in the database, we
+ * need to tell Drupal how to get the node back out. This hook is called
+ * every time a node is loaded, and allows us to do some loading of our own.
+ */
+function fileshare_load($node) {
+  $additions = db_fetch_object(db_query('SELECT _filepath, _basepath, _whitelist, _method, _modify, _thumbs, _private FROM 
+    {node_fileshare} WHERE vid = %d', $node->vid));
+  return $additions;
+}
+
+/**
+ * Implementation of hook_view().
+ *
+ * This is a typical implementation that simply runs the node text through
+ * the output filters.
+ */
+function fileshare_view(&$node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+  $order_info = theme('fileshare_order_info', $node);
+  if ($teaser) {
+    $node->content['teaser']['#value'] .= $order_info; 
+  } elseif ($page) {
+    $node->content['body']['#value'] .= $order_info;
+  }
+  return $node;
+}
+
+/**
+ * A custom theme function.
+ *
+ * By using this function to format our node-specific information, themes
+ * can override this presentation if they wish. We also wrap the default
+ * presentation in a CSS class that is prefixed by the module name. This
+ * way, style sheets can modify the output without requiring theme code.
+ */
+function theme_fileshare_order_info($node) {
+  global $user;
+  $output .= '<noscript><div class="messages error"><strong>You have no Javascript!</strong>
+    You must use a Javascript enabled browser.</div></noscript>';
+  $output .= '<div id="fs">';
+  $output .= drupal_get_form('_fsform', $node);
+  $output .= '</div>';
+  if (_tf($node->_modify) && (user_access('modify files') || (user_access('manage own fileshares') && ($user->uid == $node->uid)))) {
+    $output .= drupal_get_form('_uploadform',$node);
+  } else {
+    $output .= '<div id="-uploadform"></div>'; // so we don't get .js errors on load
+  }
+  $modulepath = drupal_get_path('module', 'fileshare');
+  drupal_add_js($modulepath.'/fileshare.js');
+  // drupal_add_js('fileshare.js','module', 'header', FALSE, FALSE);
+  drupal_add_css($modulepath.'/fileshare.css');
+  return $output;
+}
+
+/**
+ * File upload form on view node
+ */
+function _uploadform($node) {
+  $form['#attributes'] = array(
+    'enctype' => 'multipart/form-data', 
+    'class' => 'node-form',
+    'style' => 'display:none'
+    );
+  $form['file'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Upload and New Folder Options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('The "target" folder will receive file uploads, or may be deleted.')
+    );
+  $form['file']['targetdir'] = array(
+    '#type' => 'select',
+    '#title' => t('Select a target folder'),
+    '#options' => array(),
+    '#description' => t('Choose from the list of opened folders. This menu will update to reflect the folders shown above.'),
+    '#DANGEROUS_SKIP_CHECK' => TRUE,
+    );
+  $form['file']['filename'] = array(
+    '#type' => 'file',
+    '#title' => t('Upload a file to target directory'),
+    '#size' => 30,
+    '#description' => t('Click "Browse..." to select a file to upload into the target folder.
+      <em>%upload_max maximum file size.</em>', 
+      array('%upload_max' => ini_get('upload_max_filesize'))),
+      );
+  $form['file']['submit'] = array('#type' => 'submit', '#value' => t('Upload'));
+  $form['file']['dirname'] = array(
+    '#type' => 'textfield',
+    '#title' => t('New folder name'),
+    '#description' => t('Enter the folder name you wish to create. New folders will appear in the selected target.'),
+    );
+  $form['file']['create'] = array('#type' => 'submit', '#value' => t('New folder'));
+  $form['file']['root'] = array('#type' => 'hidden', '#value' => $node->_basepath.$node->_filepath);
+  $form['file']['nid'] = array('#type' => 'hidden', '#value' => $node->nid);
+  return $form;
+}
+
+/**
+ * File upload form validation
+ * Checks to ensure file was selected for upload
+ * Called by drupal_get_form in _uploadform()
+ */
+function _uploadform_validate($form_id, $form_values) {
+  switch ($_POST['op']) {
+    case t('Upload'):
+      $upload = $_FILES['files']['name']['filename'];
+      $error = $_FILES['files']['error']['filename'];
+      if ($error > 0) {
+        $errors = array(
+          1 => "The uploaded file exceeds the ".ini_get('upload_max_filesize')." maximum file size.",
+          2 => "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.",
+          3 => "The file was only partially uploaded.",
+          4 => "No file was uploaded.",
+          6 => "The file upload failed, the server is missing it's temporary folder.",
+          7 => "The uploaded file failed to write to disk.",
+        );
+        form_set_error('filename',t($errors[$error]));
+        break;
+      }
+      if ($upload == '') {
+        form_set_error('filename',t('You must select a file to upload.'));
+      } else {
+        // Validate file against whitelist.
+        $node = node_load($form_values['nid']);
+        if ($node->_whitelist == '') $node->_whitelist = 'jpg jpeg gif png txt html htm doc xls pdf ppt pps ai psd';
+        $regex = '/\.('. ereg_replace(' +', '|', preg_quote($node->_whitelist)) .')$/i';
+        if (!preg_match($regex, $upload)) {
+          form_set_error('upload', t('The selected file <em>%name</em> can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', 
+            array('%name' => $upload, '%files-allowed' => $node->_whitelist)));
+        }
+      }
+      break;
+    case t('New folder'):
+      if ($form_values['dirname']=='') {
+        form_set_error('dirname',t('You must first enter a folder name.'));
+      }
+      break;
+  }
+}
+
+/**
+ * Saves the file submitted in _uploadform()
+ * Called by drupal_get_form in _uploadform()
+ */
+function _uploadform_submit($form_id, $form_values) { 
+  switch ($_POST['op']) {
+    case t('Upload'):
+      // Get file upload info object
+      $file = file_check_upload('filename');
+      $file->filename = _sanitize_filename($file->filename);
+      // Could not use file_save_upload() as it uses the system file directory for it's checks
+      // @todo: implement better error checking - rewrite file_save_upload and it's dependant functions
+      if (@copy($file->filepath, $form_values['targetdir'].'/'.$file->filename)) {
+        chmod($form_values['targetdir'].'/'.$file->filename, 0664);
+        drupal_set_message('The file: <strong>"'.$file->filename.'"</strong> uploaded successfully!');
+        $node = node_load($form_values['nid']);
+        watchdog('fileshare', check_plain($file->filename.' uploaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+      } else {
+        drupal_set_message('Upload failed. Please check your filename.','error');
+      }
+      break;
+    case t('New folder'):
+      $targetdir = $form_values['targetdir'].'/'._sanitize_filename($form_values['dirname']);
+      if (!file_check_directory($targetdir,TRUE,'targetdir')) {
+        drupal_set_message('There was a problem creating: <strong>"'.$targetdir.'"</strong>.','error');
+      }
+      break;
+  }
+} 
+
+/**
+ * Sets up the form for the JAH handler 
+ * to handle file and folder deletes.
+ */
+function _fsform($node) {
+  $form['deletefile'] = array('#type' => 'hidden');
+  $form['nid'] = array('#type' => 'hidden', '#value' => $node->nid);
+  // Javascript handler start settings
+  $form['div'] = array('#value' => 
+    '<div id="startFileShare" name="'.url('fileshare/handler/'.$node->nid).'"></div>'
+    );
+  return $form;
+}
+
+/**
+ * Handles the delete file request by submitDelete in fileshare.js
+ */
+function _fsform_validate($form_id, $form_values) {
+  global $user;
+  $node = node_load($form_values['nid']);
+  // ensure that you are only deleting files from the file directory and build path from node
+  $deletefile = $node->_basepath.$node->_filepath.trim(str_replace('../', '', $form_values['deletefile']),".");
+  // checks user access and confirms that the delete string is within the root, but is not the root itself
+  if ((substr($form_values['deletefile'],0,1) == '/' && strlen($form_values['deletefile']) > 2) && (user_access('modify files') || (user_access('manage own fileshares') && ($user->uid == $node->uid)))) { 
+    if (file_check_directory($deletefile)) {
+      if (_recursive_rmdir($deletefile)) {
+        drupal_set_message('The folder and it\'s contents: <strong>"'.basename($deletefile).'"</strong> has been deleted.');
+        watchdog('fileshare', check_plain($deletefile." and it's contents were deleted from ".$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+      } else {
+        drupal_set_message('The folder: <strong>"'.basename($deletefile).'"</strong> could not be deleted.','error'); 
+        return FALSE;
+      }
+    } else {
+      if (file_delete($deletefile)) {
+        drupal_set_message('The file: <strong>"'.basename($deletefile).'"</strong> has been deleted.');
+        watchdog('fileshare', check_plain($deletefile.' was deleted from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+      } else {
+        drupal_set_message('The file: <strong>"'.$deletefile.'"</strong> could not be deleted.','error'); 
+        return FALSE;
+      }
+    }
+  } else {
+    drupal_set_message('You are not authorized to remove: <strong>"'.$deletefile.'"</strong>.','error');
+  }
+}
+
+/**
+ * delete a directory and all it's contents - recursively
+ * @param $filepath - relative path to directory
+ */
+function _recursive_rmdir($filepath) {
+  // Read directory to delete 
+  $handle = opendir($filepath);
+  while (false !== ($file = readdir($handle))) {
+    if ($file != "." && $file != "..") {
+      if (is_dir($filepath.'/'.$file)) {
+        _recursive_rmdir($filepath.'/'.$file); //recursive delete directory
+      } else {
+        if(!file_delete($filepath.'/'.$file)) { // delete file
+          return FALSE;
+        }
+      }
+    }
+  }
+  closedir($handle);
+  rmdir($filepath); // delete directory
+  return TRUE;
+}
+
+/**
+ * Returns a filename based on the $name paramater that has been
+ * striped of special characters, it's spaces changed to underscores,
+ * and shortened to 50 characters.
+ */
+function _sanitize_filename($name) {
+  $special_chars = array("?","[","]","/","\\","=","+","<",">",":",";",",");
+  $name = str_replace($special_chars,"",$name);
+  $name = str_replace(' ','_',$name);
+  $name = trim($name,".");
+  return substr($name,0,64); 
+}
+
+/**
+ * Looks for the first occurence of $needle in $haystack
+ * and replaces it with $replace.
+ */
+function _str_replace_once($needle, $replace, $haystack) {
+  $pos = strpos($haystack, $needle);
+  if ($pos === false) {
+    return $haystack; // Nothing found
+  }
+  return substr_replace($haystack, $replace, $pos, strlen($needle));
+}
+
+/**
+ * fix postgres boolean 't' and 'f'.
+ * replace with 1 and 0
+ */
+function _tf($tf) {
+  ($tf == 'f' || $tf == FALSE) ? $tf = 0 : $tf = 1;
+  return $tf;
+}
+
+/**
+ ******************************** HANDLER FUNCTIONS **********************************
+ */
+
+/**
+ * RECURSIVE READ DIRECTORY
+ * for AJAX file browsing
+ * Called by _fsform()
+ */
+function _fileshare_handler($node) {
+  global $user;
+  // ensure that users are not able to ascend the file tree with relitive paths
+  isset($_GET['dir']) ? $dir = trim(str_replace('../', '', $_GET['dir']),".") : $dir = '';
+  isset($_GET['pre']) ? $pre = check_plain($_GET['pre']) : $pre = '';
+  $modify     = _tf($node->_modify) && (user_access('modify files') || ( user_access('manage own fileshares') && ($user->uid == $node->uid)));
+  $download   = (user_access('download files') || ( user_access('manage own fileshares') && ($user->uid == $node->uid)));
+  $tag        = 'a';
+  $output     = '';
+  // Read files in a directory
+  $handle = opendir($node->_basepath.$node->_filepath.$dir);
+  while (false !== ($fileget = readdir($handle))) { // read directory
+    $file[] = $fileget; // create file array
+  }
+  sort($file);  // sort directory array
+  for ($x=0; $x <= (count($file) -1); $x++) { // loop through rows of array
+    if (substr($file[$x], 0, 1) != "." && $file[$x] != '_previews') {
+      if (is_dir($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])) {
+        $output .= '<div class="fs_row">'."\n";
+        $output .= '<div class="fs_data">'."\n";
+        if ($modify) { 
+          $output .= '<a href="javascript:submitDelete(\''
+            .$dir.'/'.$file[$x].'\');" alt="delete file" class="fs_delete">'
+            ."&nbsp;</a>\n";
+        }
+        $output .= "</div>\n";
+        $output .= '<a href="javascript:;" onclick="fileshare_folder(this,\''.$pre.$tag.'\');" ';
+        $output .= 'alt="'.$node->_basepath.$node->_filepath.$dir.'/'.$file[$x].'" ';
+        $output .= 'name="'.url('fileshare/handler/'.$node->nid
+          ,'dir='.$dir.'/'.$file[$x]
+          .'&pre='.$pre.$tag).'" ';
+        $output .= 'class="fs_closed">'."\n";
+        $output .= $file[$x]; 
+        $output .= "</a>\n";
+        $output .= "</div>\n";
+        $output .= '<div class="fs_nest" id="'.$pre.$tag.'"></div>'."\n"; 
+        ++$tag;
+      } else {
+        $output .= '<div class="fs_row">'."\n";
+        $output .= '<div class="fs_data">'."\n";
+        $output .= '<b>'.date("j/n/y",filemtime($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])).'</b>';
+        $output .= '<i>'._resize_bytes(filesize($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])).'</i>';
+          // allow deletion if modify was checked and access permissions are met
+        if ($modify) { 
+          $output .= '<a href="javascript:submitDelete(\''
+            .$dir.'/'.$file[$x].'\');" alt="delete file" class="fs_delete">'
+            ."&nbsp;</a>\n";
+        }
+        $output .= "</div>\n";
+      if ($download) {
+          if ($node->_method) { 
+            $output .= '<a href="'.url('fileshare/files/'.$node->nid.$dir.'/'.$file[$x]).'" class="fs_file">'."\n"; // _method is private
+          } else { 
+            $output .= '<a href="'.base_path().$node->_basepath.$node->_filepath.$dir.'/'.$file[$x].'" class="fs_file">'."\n"; // _method is public
+          }
+        } else {
+          $output .= '<div class="fs_file">';
+        }
+        if (_tf($node->_thumbs) == 1) { // check to for display of image previews (1 == true)
+          $preview = $node->_basepath.$node->_filepath.'/_previews/'.substr($file[$x],0,-3);
+          $exts = array('jpg','gif');
+          foreach ($exts as $ext) {
+            if (file_exists($preview.$ext)) { // check to see if preview file is there 
+              $output .= '<img src="'.base_path().$preview.$ext.'" border="0" align="absmiddle">'."\n";
+            }
+          }
+        }
+        $output .= $file[$x];
+        if ($download) { $output .= "</a>\n"; } else { $output .= "</div>\n"; }
+        $output .= '</div>'."\n";
+      }
+    }
+  }
+  closedir($handle);
+  if ($output == '') { // Safari needs some output returned to the jahHandler
+    echo "&nbsp;";
+  } else {
+    echo $output;
+  }
+}
+
+/**
+ * Returns a human readable file size 
+ */
+function _resize_bytes($size) {
+  $count = 0;
+  $format = array("b","kb","mb","gb","tb");
+  while(($size/1024)>1 && $count<4) {
+    $size=$size/1024;
+    $count++;
+  }
+  return number_format($size,0,'',',').' '.$format[$count];
+}
+
+/**
+ * Process the download request.
+ */
+function _fileshare_download($node) {
+  global $user;
+  $node = node_load(arg(2));
+  if ((user_access('download files') || (user_access('manage own fileshares') && ($user->uid == $node->uid))) && node_access('view', $node)) {
+    // Merge remainder of arguments from GET['q'], into relative file path.
+    $args = func_get_args();
+    $argspath = implode('/', $args);
+    $fullpath = $node->_basepath.$node->_filepath.'/'.$argspath;
+    
+    if (file_exists($fullpath)) {
+      $filename = basename($fullpath);
+      $filetype = mime_content_type($fullpath);
+      $filesize = filesize($fullpath);
+
+      $name = mime_header_encode($filename);
+      $type = mime_header_encode($filetype);
+
+      watchdog('fileshare', check_plain($filename.' downloaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+      $headers = array (
+        'Content-Type: '. $type .'; name='. $name,
+        'Content-Length: '. $filesize,
+        'Content-Disposition: '. $disposition .'; filename='. $name
+      );
+      _fileshare_transfer($fullpath, $headers);
+      return;
+    } else { 
+      return drupal_not_found();
+    }
+  } else {
+    drupal_access_denied();
+    return;
+  }
+}
+
+/**
+ * Transfer file using http to client. Removes dependancy on drupal system file path.
+ *
+ * @param $source File to transfer.
+ * @param $headers An array of http headers to send along with file.
+ */
+function _fileshare_transfer($source, $headers) {
+  ob_end_clean();
+  $data = '';
+
+  // Transfer file in 1024 byte chunks to save memory usage.
+  if ($fd = fopen($source, 'rb')) {
+    while (!feof($fd)) {
+      $data .= fread($fd, 1024);
+    }
+    fclose($fd);
+    foreach ($headers as $header) {
+      // To prevent HTTP header injection, we delete new lines that are
+      // not followed by a space or a tab.
+      // See http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+      $header = preg_replace('/\r?\n(?!\t| )/', '', $header);
+      header($header);
+    }
+    print $data;
+  } else {
+    drupal_not_found();
+  }
+  exit();
+}
+
+/**
+ * Check file type to spec for download
+ *
+ * refer _fileshare_download()
+ */
+if (!function_exists ("mime_content_type")) {
+  function mime_content_type ($file) {
+    $mime = exec ("file -bi " . escapeshellcmd($file));
+    if ($mime) return $mime;
+    return "application/octet-stream";
+  }
+}

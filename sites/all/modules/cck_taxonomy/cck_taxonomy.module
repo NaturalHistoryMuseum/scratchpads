@@ -1,0 +1,258 @@
+<?php
+
+function cck_taxonomy_field_info() {
+  return array(
+    'cck_taxonomy' => array('label' => 'CCK taxonomy'),
+  );
+}
+
+function cck_taxonomy_field_settings($op, &$field) {
+  switch ($op) {
+    case 'database columns':
+      $columns = array(
+        'tid' => array('type' => 'int', 'length' => 10, 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      );
+      return $columns;
+  }
+}
+
+function cck_taxonomy_form_alter($form_id, &$form) {
+  if ($form_id == '_content_admin_field') {
+    if ($form['#programmed']) {
+      $form['#validate']['cck_taxonomy_content_admin_field_validate'] = array();
+    }
+    else {
+      if ($form['field_type']['#value'] == 'cck_taxonomy') {
+        // Disable this since there will always only be one choice
+        $form['widget']['widget_type']['#disabled'] = 'true';
+
+        // Take the multiple setting from the vocabulary.
+        $vid = substr($form['widget']['widget_type']['#default_value'], 13);
+        $vocab = taxonomy_get_vocabulary($vid);
+        $form['field']['multiple']['#disabled'] = 'true';
+        $form['field']['multiple']['#value'] = $vocab->multiple;
+      }
+    }
+  }
+  // Change the behavior of the taxonomy vocabulary form so that it isn't
+  // required to assign a content type to a vocabulary.
+  if ($form_id == 'taxonomy_form_vocabulary') {
+    $form['nodes']['#required'] = FALSE;
+  }
+}
+
+/**
+ * This handler is only added to #programmed instances of the _content_admin_field
+ * form. In those cases the updated value of 'multiple' is stuck in the #post
+ * array.
+ */
+function cck_taxonomy_content_admin_field_validate($form_id, $form_values, $form) {
+  form_set_value($form['field']['multiple'], $form['field']['multiple']['#post']['field']['multiple']['#value']);
+}
+
+/*
+ * Because the cck_taxonomy widgets are dependent on the definition of the
+ * taxonomy vocabulary, if the vocabulary changes, we have to update the
+ * field definitions as well.
+ */
+function cck_taxonomy_taxonomy($op, $type, $array = NULL) {
+  if ($type == 'vocabulary') {
+    // Find out which widget we're dealing with.
+    $widget_type = 'cck_taxonomy_'. $array['vid'];
+    // Get all the field instances that use the affected widget.
+    $result = db_query("SELECT field_name, type_name FROM {node_field_instance} WHERE widget_type = '%s'", $widget_type);
+    switch ($op) {
+      case 'update':
+        // A vocabulary has been updated. This has potential repercussions on
+        // the CCK fields. Thus we need to re-submit the field configuration
+        // forms with the new values. For each field instance, get the field
+        // configuration form, update its values, and re-submit it using drupal_execute.
+        while ($row = db_fetch_object($result)) {
+          // Getting the form is easy.
+          $form = _content_admin_field($row->type_name, $row->field_name);
+          // Updating the value *looks* easy, but this isn't the end of the story.
+          // This will get stuck in the #post part of the field in the built
+          // form and ignored. Therefore, there is an extra validation handler
+          // for _content_admin_field (see cck_taxonomy_form_alter and
+          // cck_taxonomy_content_admin_field_validate). This handler uses
+          // form_set_value to update the global $form_values at the appropriate
+          // time. Very convoluted.
+          $form['field']['multiple']['#value'] = $array['multiple'];
+          drupal_execute('_content_admin_field', $form, $row->type_name, $row->field_name);
+        }
+        break;
+
+      case 'delete':
+        // Delete the fields that are based on this vocabulary.
+        while ($row = db_fetch_object($result)) {
+          $form = _content_admin_field_remove($row->type_name, $row->field_name);
+          drupal_execute('_content_admin_field_remove', $form, $row->type_name, $row->field_name);
+        }
+        break;
+    }
+  }
+}
+
+function cck_taxonomy_widget_info() {
+  $vocabularies = taxonomy_get_vocabularies();
+  $vocabs = array();
+  foreach ($vocabularies as $vid => $vocab) {
+    if (!$vocab->tags) {
+      $vocabs['cck_taxonomy_'. $vocab->vid] = array(
+        'label' => $vocab->name,
+        'field types' => array('cck_taxonomy'),
+      );
+    }
+  }
+  return $vocabs;
+}
+
+/**
+ * Implementation of hook_widget().
+ */
+function cck_taxonomy_widget($op, &$node, $field, &$items) {
+  switch ($op) {
+    case 'prepare form values':
+      $items_transposed = content_transpose_array_rows_cols($items);
+      if ($items_transposed['tid']) {
+        $items_transposed['tid'] = drupal_map_assoc($items_transposed['tid']);
+        $items['default tid'] = $items_transposed['tid'];
+      }
+      break;
+
+    case 'form':
+      $form[$field['field_name']] = array('#tree' => TRUE);
+      $vid = substr($field['widget']['type'], 13);
+
+      $vocabulary = taxonomy_get_vocabulary($vid);
+
+      if ($field['required']) {
+        $blank = 0;
+      }
+      else {
+        $blank = '<'. t('none') .'>';
+      }
+
+      $form[$field['field_name']]['tid'] = _taxonomy_term_select(check_plain($field['widget']['label']),
+                                          'taxonomy',
+                                          $items['default tid'],
+                                          $vid,
+                                          empty($field['widget']['description']) ? $vocabulary->help : $field['widget']['description'],
+                                          intval($vocabulary->multiple),
+                                          $blank);
+
+      $form[$field['field_name']]['tid']['#weight'] = $field['weight'];
+      $form[$field['field_name']]['tid']['#required'] = $field['required'];
+
+      return $form;
+
+    case 'process form values':
+      if (is_array($items['tid'])) {
+        unset($items['tid'][0]);
+        foreach ($items['tid'] as $tid) {
+          $items[$tid] = array('tid' => $tid);
+        }
+      }
+      else {
+        $items[$items['tid']] = array('tid' => $items['tid']);
+      }
+      unset($items['tid']);
+      break;
+  }
+}
+
+function cck_taxonomy_field_formatter_info() {
+  return array(
+    'default' => array(
+      'label' => 'Default',
+      'field types' => array('cck_taxonomy'),
+    ),
+  );
+}
+
+function cck_taxonomy_field_formatter($field, $item, $formatter, $node) {
+  switch ($formatter) {
+    default:
+      $name = db_result(db_query('SELECT name FROM {term_data} WHERE tid = %d', $item['tid']));
+      return $name;
+  }
+}
+
+function cck_taxonomy_get_vid($field) {
+  if ($field['widget'] && $field['widget']['type']) {
+    return substr($field['widget']['type'], 13);
+  }
+}
+
+function cck_taxonomy_views_tables() {
+  $tables = array();
+  // field_name, type_name, widget_type
+  $result = db_query("SELECT nfi.*, nf.db_storage FROM {node_field_instance} nfi INNER JOIN {node_field} nf ON nfi.field_name = nf.field_name WHERE widget_type LIKE 'cck_taxonomy_%'");
+  while ($row = db_fetch_object($result)) {
+
+    // Build the list of options
+    $vid = substr($row->widget_type, 13);
+    $options = array();
+    $tree = taxonomy_form($vid);
+    foreach ($tree['#options'] as $index => $option) {
+      if (is_object($option)) {
+        foreach($option->option as $key => $value) {
+          $options[$key] = $value;
+        }
+      }
+    }
+
+    // Rely on CCK to provide us with the correct table name.
+    if ($row->db_storage == CONTENT_DB_STORAGE_PER_FIELD) {
+      $table_name = _content_tablename($row->field_name, CONTENT_DB_STORAGE_PER_FIELD);
+    }
+    else {
+      $table_name = _content_tablename($row->type_name, CONTENT_DB_STORAGE_PER_CONTENT_TYPE);
+    }
+    
+    # Get the taxonomy multi select property
+    $vocab = taxonomy_get_vocabulary($vid);
+    $multiple = $vocab->multiple;
+
+    $table = array(
+      'name' => $table_name,
+      'provider' => 'cck_taxonomy',
+      'join' => array(
+        'left' => array('table' => 'node', 'field' => 'vid',),
+        'right' => array('field' => 'vid'),
+      ),
+      'filters' => array(
+        $row->field_name .'_tid' => array(
+          'name' => t('CCK Taxonomy: @field_name', array('@field_name' => $row->field_name)),
+          'help' => t('Filter on @field_name terms.', array('@field_name' => $row->field_name)),
+          'operator' => 'views_handler_operator_or',
+          'value' => array('#type' => 'select', '#options' => $options,'#multiple' => $multiple),
+        ),
+      ),
+    );
+    $tables['cck_taxonomy_'. $row->field_name] = $table;
+  }
+  return $tables;
+}
+
+function cck_taxonomy_token_list($type = 'all') {
+  if ($type == 'field' || $type == 'all') {
+    $tokens = array();
+
+    $tokens['cck_taxonomy']['raw']       = t("Raw term value.");
+    $tokens['cck_taxonomy']['formatted'] = t("Formatted term value.");
+
+    return $tokens;
+  }
+}
+
+function cck_taxonomy_token_values($type, $object = NULL) {
+  if ($type == 'field') {
+    $item = array_shift($object);
+
+    $tokens['raw']       = $item['tid'];
+    $tokens['formatted'] = $item['view'];
+
+    return $tokens;
+  }
+}

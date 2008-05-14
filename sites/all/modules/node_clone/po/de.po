@@ -1,0 +1,81 @@
+# Copyright 2007 Alexander Hass
+# No version information was available in the source files.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: node_clone 5.x\n"
+"POT-Creation-Date: 2006-12-25 18:29+0100\n"
+"PO-Revision-Date: 2007-05-11 22:40+0100\n"
+"Last-Translator: Alexander Hass\n"
+"Language-Team: Alexander Hass\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Country: GERMANY\n"
+
+#: clone.module:9
+msgid "The clone module allows users to make a copy of an existing node and then edit that copy. The authorship is set to the current user, the menu and url aliases are reset, and the words \"Clone of\" are inserted into the title to remind you that you are not editing the original node."
+msgstr "Das Modul „Duplizieren“ erlaubt es Benutzern eine Kopie einer vorhanden Node zu erstellen und diese anschließend zu bearbeiten. Der aktuelle Benutzer wird zum Author, das Menü sowie der URL Alias wird zurückgesetzt und die Worte „Duplikat von“ werden in den Titel eingefügt um Sie daran zu erinnern, dass nicht die orginale Node bearbeitet wird."
+
+#: clone.module:10
+msgid "Users with the \"clone node\" permission can utilize this functionality. A new tab will appear on node pages with the word \"Clone\"."
+msgstr "Benutzer mit der Berechtigung „Beitrag duplizieren“ können diese Funktionalität verwenden. Ein neuer „Duplizieren“ Tabulator wird auf den Beitragseiten erscheinen."
+
+#: clone.module:31
+#: clone.info:0
+msgid "Clone module"
+msgstr "Duplizieren Modul"
+
+#: clone.module:32
+#: clone.info:0
+msgid "Allows users to clone (copy then edit) an existing node."
+msgstr "Erlaubt Benutzern einen vorhanden Beitrag zu duplizieren (kopieren und bearbeiten)."
+
+#: clone.module:45
+msgid "Clone"
+msgstr "Duplizieren"
+
+#: clone.module:67
+msgid "Configuration options for the clone module:"
+msgstr "Konfigurationsoptionen für das „Duplizieren“ Modul:"
+
+#: clone.module:72
+msgid "Should the publishing options ( e.g. published, promoted, etc) be reset to the defaults?"
+msgstr "Sollen die Veröffentlichungseinstellungen (z.b. Veröffentlicht, Startseite, etc.) auf die Standardeinstellungen zurückgesetzt werden?"
+
+#: clone.module:79
+msgid "@s: reset publishing options when cloned"
+msgstr "@s: Veröffentlichungseinstellungen beim Duplizieren zurücksetzten"
+
+#: clone.module:84
+msgid "none"
+msgstr "Keine"
+
+#: clone.module:87
+msgid "Omitted content types"
+msgstr "Ausgelassene Inhaltstypen"
+
+#: clone.module:90
+msgid "Select any node types which should <em>never</em> be cloned. Typically you should will want to select here all node types for which cloning fails (e.g. image nodes)."
+msgstr "Alle Inhaltstypen auswählen, welche <em>nie</em> dupliziert werden sollen. Typischerweise sollten hier alle Beitrage ausgewählt werden, bei denen das Duplizieren fehlschlägt (z.b. Bildbeiträge)."
+
+#: clone.module:134
+msgid "Clone of @title"
+msgstr "Duplikat von @title"
+
+#: clone.module:145
+msgid "This clone will not be saved to the database until you submit."
+msgstr "Dieses Duplikat wird erst in der Datenbank gespeichert, wenn der Beitrag gespeichert wird."
+
+#: clone.module:19
+msgid "clone node"
+msgstr "Beitrag duplizieren"
+
+#: clone.module:0
+msgid "clone"
+msgstr "Duplizieren"
+
+#: clone.info:0
+msgid "node_clone"
+msgstr "node_clone"
+

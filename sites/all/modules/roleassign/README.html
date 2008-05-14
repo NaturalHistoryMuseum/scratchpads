@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- $Id: README.html,v 1.1.2.1 2007/02/28 16:35:55 tbarregren Exp $ -->
+<!-- Copyright (C) 2007 Thomas Barregren <mailto:thomas@webbredaktoren.se> -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta name="generator" content="HTML Tidy for Windows (vers 14 February 2006), see www.w3.org" />
+    <title>
+      README: RoleAssign
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+  <body>
+    <h1>
+      RoleAssign
+    </h1>
+    <p>
+      RoleAssign specifically allows site administrators to further delegate the task of managing user's roles.
+    </p>
+    <p>
+      RoleAssign introduces a new permission called <code>assign roles</code>. Users with this permission are able to assign selected roles to still other users. Only users with the <code>administer access control</code> permission may select which roles are available for assignment through this module.
+    </p>
+    <p>
+      This module is sponsored by <a href="http://www.webbredaktoren.se/">Webbredaktören</a>.
+    </p>
+    <!--break-->
+    <h2>
+      Background
+    </h2>
+    <p>
+      It is possible for site administrators to delegate the user administration through the <code>administer users</code> permission. But that doesn't include the right to assign roles to users. That is necessary if the delegatee should be able to administrate user accounts without intervention from a site administrator.
+    </p>
+    <p>
+      To delegate the assignment of roles, site administrators have had until now no other choice than also grant the <code>administer access control</code> permission. But that is not advisable, since it gives right to access all roles, and worse, to grant any rights to any role. That can be abused by the delegatee, who can assign himself all rights and thereby take control over the site.
+    </p>
+    <p>
+      This module solves this dilemma by introducing the <code>assign roles</code> permission. While editing a user's account information, a user with this permission will be able to select roles for the user from a set of available roles. Roles available are configured by users with the <code>administer access control</code> permission.
+    </p>
+    <h2>
+      Install
+    </h2>
+    <ol>
+      <li>Copy the entire <kbd>roleassign</kbd> directory, containing the <kbd>roleassign.module</kbd> and other files, to your Drupal modules directory.
+      </li>
+      <li>Log in as site administrator.
+      </li>
+      <li>Go to the administration page for modules and enable the module.
+      </li>
+    </ol>
+    <h2>
+      Configuration
+    </h2>
+    <ol>
+      <li>Log in as site administrator.
+      </li>
+      <li>Go to the administration page for access control and grant <code>assign roles</code> permission to those roles that should be able to assign roles to other users. Notice that besides the <code>assign roles</code> permission, these roles also must have the <code>administer users</code> permission.
+      </li>
+      <li>Go to the administration page for role assign and select those roles that should be available for assignment by users with <code>assign roles</code> permission.
+      </li>
+      <li>For each user that should be able to assign roles, go to the user's account and select a role with both the <code>assign roles</code> and the <code>administer users</code> permissions.
+      </li>
+    </ol>
+    <h2>
+      Usage
+    </h2>
+    <ol>
+      <li>Log in as a user with both the <code>assign roles</code> and the <code>administer users</code> permissions.
+      </li>
+      <li>To change the roles of a user, go to the user's account and review the assignable roles and change them as necessary.
+      </li>
+    </ol>
+    <h2>
+      License
+    </h2>
+    <p>
+      RoleAssign revision 1.17. Copyright © 2006 <a href="mailto:thomas@webbredaktoren.se">Thomas Barregren</a>.
+    </p>
+    <p>
+      RoleAssign is free software; you can redistribute it and/or modify it under the terms of the <a href="http://www.gnu.org/licenses/gpl.html#SEC1">GNU General Public License</a> as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+    </p>
+    <p>
+      RoleAssign is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the <a href="http://www.gnu.org/licenses/gpl.html#SEC1">GNU General Public License</a> for more details.
+    </p>
+    <p>
+      You should have received a copy of the <a href="http://www.gnu.org/licenses/gpl.html#SEC1">GNU General Public License</a> along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+    </p>
+  </body>
+</html>

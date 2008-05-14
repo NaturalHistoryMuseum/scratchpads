@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Create an X Virtual Frame Buffer (wait for it to start)
+Xvfb :2 -screen 0 1040x768x24 -fbdir /tmp -nolisten inet6 &
+sleep 10
+
+# Change to the directory with the firefox-screen script and for output
+cd /var/www/html/screenshots
+
+# For each site.
+for i in $( ls -1 /var/www/html/sites |grep -v ^all$|grep -v ^default|grep -v \~|grep -v settings);do
+	./firefox-screenshot $i
+	sleep 5
+done
+
+# Finally, kill the XVFB
+killall Xvfb
