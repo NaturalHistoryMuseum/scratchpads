@@ -79,6 +79,7 @@ function mouseOverScreenshots(from,to){
   document.getElementById(from).src = to.src;}
 
 function nextBlock(parentId){
+  document.getElementById('prevscratchpads').className = 'listnothidden';
   divs = document.getElementById(parentId).childNodes;
   var prevFirstShown=1000000
   var prevLastShown=-1
@@ -98,6 +99,7 @@ function nextBlock(parentId){
     divs[i].className = 'listnothidden';}}
 
 function prevBlock(parentId){
+  document.getElementById('nextscratchpads').className = 'listnothidden';
   divs = document.getElementById(parentId).childNodes;
   var prevFirstShown=1000000
   var prevLastShown=-1
@@ -108,9 +110,10 @@ function prevBlock(parentId){
         prevLastShown = i;}
       if(i<prevFirstShown){
         prevFirstShown = i;}}}
-  var alertString = '';
+  if(prevFirstShown-(prevLastShown-prevFirstShown+2)<1){
+    document.getElementById('prevscratchpads').className = 'listhidden';
+  }  
   for(i=prevFirstShown-1;i>(prevFirstShown-(prevLastShown-prevFirstShown+2));i--){
-    alertString +=' '+i;
     divs[i].className = 'listnothidden';}}
 
 function sortDivs(parentId,sortField){
