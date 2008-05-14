@@ -132,6 +132,7 @@ function sortDivs(parentId,sortField){
       lastSort = '';
       return;
     }
+    lastSort = 'nodes';
     var oldDivs = new Array();
     var divsNodesNumbers = new Array();
     for(i=0;i<divs.length;i++){
