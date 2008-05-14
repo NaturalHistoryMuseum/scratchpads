@@ -44,7 +44,7 @@ else{
 	$database_details = parse_ini_file('/var/www/drupal_db_passwords',true);
 	mysql_connect("localhost", "root", $database_details['root']['password'], TRUE, 2);
 	if(isset($_GET['thumbnails'])){
-	  ?>document.write('<style type="text/css">.listhidden{display:none}div.listnothidden{display:block}</style><h3><a onclick="prevBlock(\'allsites\');">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
+	  ?>document.write('<style type="text/css">.listhidden{display:none}div.listnothidden{display:block}</style><h3><a onclick="prevBlock(\'allsites\');" id="prevscratchpads" style="listhidden">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  foreach ($domains as $domain){
