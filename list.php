@@ -108,8 +108,12 @@ function prevBlock(parentId){
         prevLastShown = i;}
       if(i<prevFirstShown){
         prevFirstShown = i;}}}
+  var alertString = '';
   for(i=prevLastShown+1;i>(prevLastShown-2-(prevLastShown-prevFirstShown));i--){
-    divs[i].className = 'listnothidden';}}
+    alertString +=' '+i;
+    divs[i].className = 'listnothidden';}
+  alert(alertString);
+}
 
 function sortDivs(parentId,sortField){
   divs = document.getElementById(parentId).childNodes;
