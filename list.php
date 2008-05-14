@@ -109,6 +109,7 @@ function prevBlock(parentId){
       if(i<prevFirstShown){
         prevFirstShown = i;}}}
   var alertString = '';
+  alert('prevLastShow: '+prevLastShown+'<br/>prevFirstShown: '+prevFirstShown);
   for(i=prevLastShown+1;i>(prevLastShown-2-(prevLastShown-prevFirstShown));i--){
     alertString +=' '+i;
     divs[i].className = 'listnothidden';}
