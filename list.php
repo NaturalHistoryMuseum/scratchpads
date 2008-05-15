@@ -47,6 +47,12 @@ else{
 	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');">Views</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
+	  $num_domains = count($domains);
+	  $shuffle_array=array();
+	  for($i=0;$i<$num_domains;$i++){
+	    $shuffle_array[$i]=$i;
+	  }
+	  shuffle($shuffle_array);
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
 	    mysql_select_db($short_domain); // Do I need to do this if I specify a database in the select statement. DUMB!
@@ -54,6 +60,7 @@ else{
       $users = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(uid) AS users FROM users")));
       $views = 0;
       $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
+      $random = array_pop($shuffle_array);
 	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
       echo '<div style="float:left;height:270px;width:300px;" ';
       if($visible_count>=$number_visible){
@@ -116,7 +123,40 @@ function prevBlock(parentId){
   }  
   for(i=prevFirstShown-1;i>(prevFirstShown-(prevLastShown-prevFirstShown+2));i--){
     divs[i].className = 'listnothidden';}}
-
+function _sortDivs(sortBy,divs){
+    if(lastSort ==sortBy){
+      sortDivs(parentId,'reverse');
+      lastSort = '';
+      return;
+    }
+    lastSort = sortBy;
+    var oldDivs = new Array();
+    var divsNodesNumbers = new Array();
+    for(i=0;i<divs.length;i++){
+      divsNodesNumbers[i] = divs[i].getAttribute(sortBy);}
+    divsNodesNumbers.sort(function(a,b){return a - b});
+    var j=0;
+    var lastvalue = -1;
+    while(value = divsNodesNumbers.pop()){
+      if(value!=lastvalue){
+        // Get all the sites with this value of nodes
+        for(i=0;i<divs.length;i++){
+          if(divs[i].getAttribute(sortBy) == value){
+            var newarray = Array();
+            newarray[0] = divs[i].innerHTML
+            newarray[1] = divs[i].getAttribute('nodes');
+            newarray[2] = divs[i].getAttribute('domain');
+            newarray[3] = divs[i].getAttribute('views');
+            newarray[4] = divs[i].getAttribute('random');
+            oldDivs[j] = newarray;
+            j++;}}}
+      lastvalue = value;}
+    for(i=0;i<divs.length;i++){
+      divs[i].innerHTML = oldDivs[i][0];
+      divs[i].setAttribute('nodes',oldDivs[i][1]);
+      divs[i].setAttribute('domain',oldDivs[i][2]);
+      divs[i].setAttribute("views",oldDivs[i][3]);
+      divs[i].setAttribute("random",oldDivs[i][4]);}}
 function sortDivs(parentId,sortField){
   divs = document.getElementById(parentId).childNodes;
   if(sortField =='reverse'){
@@ -127,77 +167,21 @@ function sortDivs(parentId,sortField){
       newarray[1] = divs[i].getAttribute("nodes");
       newarray[2] = divs[i].getAttribute("domain");
       newarray[3] = divs[i].getAttribute("views");
+      newarray[4] = divs[i].getAttribute("random");
       oldDivs[i] = newarray;}
     for(i=0;i<divs.length;i++){
       var newId = divs.length - (i + 1);
       divs[newId].innerHTML=oldDivs[i][0];
       divs[newId].setAttribute("nodes",oldDivs[i][1]);
       divs[newId].setAttribute("domain",oldDivs[i][2]);
-      divs[newId].setAttribute("views",oldDivs[i][3]);}}
+      divs[newId].setAttribute("views",oldDivs[i][3]);
+      divs[newId].setAttribute("random",oldDivs[i][4]);}}
   if(sortField =='nodes'){
-    if(lastSort =='nodes'){
-      sortDivs(parentId,'reverse');
-      lastSort = '';
-      return;
-    }
-    lastSort = 'nodes';
-    var oldDivs = new Array();
-    var divsNodesNumbers = new Array();
-    for(i=0;i<divs.length;i++){
-      divsNodesNumbers[i] = divs[i].getAttribute('nodes');}
-    divsNodesNumbers.sort(function(a,b){return a - b});
-    var j=0;
-    var lastvalue = -1;
-    while(value = divsNodesNumbers.pop()){
-      if(value!=lastvalue){
-        // Get all the sites with this value of nodes
-        for(i=0;i<divs.length;i++){
-          if(divs[i].getAttribute('nodes') == value){
-            var newarray = Array();
-            newarray[0] = divs[i].innerHTML
-            newarray[1] = divs[i].getAttribute('nodes');
-            newarray[2] = divs[i].getAttribute('domain');
-            newarray[3] = divs[i].getAttribute('views');
-            oldDivs[j] = newarray;
-            j++;}}}
-      lastvalue = value;}
-    for(i=0;i<divs.length;i++){
-      divs[i].innerHTML = oldDivs[i][0];
-      divs[i].setAttribute('nodes',oldDivs[i][1]);
-      divs[i].setAttribute('domain',oldDivs[i][2]);
-      divs[i].setAttribute("views",oldDivs[i][3]);}}
+    _sortDivs('nodes',divs);}
   if(sortField =='views'){
-    if(lastSort =='views'){
-      sortDivs(parentId,'reverse');
-      lastSort = '';
-      return;
-    }
-    lastSort = 'views';
-    var oldDivs = new Array();
-    var divsNodesNumbers = new Array();
-    for(i=0;i<divs.length;i++){
-      divsNodesNumbers[i] = divs[i].getAttribute('views');}
-    divsNodesNumbers.sort(function(a,b){return a - b});
-    var j=0;
-    var lastvalue = -1;
-    while(value = divsNodesNumbers.pop()){
-      if(value!=lastvalue){
-        // Get all the sites with this value of nodes
-        for(i=0;i<divs.length;i++){
-          if(divs[i].getAttribute('views') == value){
-            var newarray = Array();
-            newarray[0] = divs[i].innerHTML
-            newarray[1] = divs[i].getAttribute('nodes');
-            newarray[2] = divs[i].getAttribute('domain');
-            newarray[3] = divs[i].getAttribute('views');
-            oldDivs[j] = newarray;
-            j++;}}}
-      lastvalue = value;}
-    for(i=0;i<divs.length;i++){
-      divs[i].innerHTML = oldDivs[i][0];
-      divs[i].setAttribute('nodes',oldDivs[i][1]);
-      divs[i].setAttribute('domain',oldDivs[i][2]);
-      divs[i].setAttribute("views",oldDivs[i][3]);}}
+    _sortDivs('views',divs);}
+  if(sortField =='random'){
+    _sortDivs('random',divs);}
   if(sortField =='domain'){
     if(lastSort =='domain'){
       sortDivs(parentId,'reverse');
@@ -221,6 +205,7 @@ function sortDivs(parentId,sortField){
           newarray[1] = divs[i].getAttribute('nodes');
           newarray[2] = divs[i].getAttribute('domain');
           newarray[3] = divs[i].getAttribute('views');
+          newarray[4] = divs[i].getAttribute('random');
           oldDivs[j] = newarray;
           j++;
         }
