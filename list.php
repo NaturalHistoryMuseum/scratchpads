@@ -123,7 +123,7 @@ function prevBlock(parentId){
   }  
   for(i=prevFirstShown-1;i>(prevFirstShown-(prevLastShown-prevFirstShown+2));i--){
     divs[i].className = 'listnothidden';}}
-function _sortDivs(sortBy,divs){
+function _sortDivs(sortBy,divs,parentId){
     if(lastSort ==sortBy){
       sortDivs(parentId,'reverse');
       lastSort = '';
@@ -177,11 +177,11 @@ function sortDivs(parentId,sortField){
       divs[newId].setAttribute("views",oldDivs[i][3]);
       divs[newId].setAttribute("random",oldDivs[i][4]);}}
   if(sortField =='nodes'){
-    _sortDivs('nodes',divs);}
+    _sortDivs('nodes',divs,parentId);}
   if(sortField =='views'){
-    _sortDivs('views',divs);}
+    _sortDivs('views',divs,parentId);}
   if(sortField =='random'){
-    _sortDivs('random',divs);}
+    _sortDivs('random',divs,parentId);}
   if(sortField =='domain'){
     if(lastSort =='domain'){
       sortDivs(parentId,'reverse');
