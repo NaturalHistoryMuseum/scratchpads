@@ -146,7 +146,7 @@ function image_gallery_page($type = NULL, $tid = 0) {
     $descendant_tids = array_merge(array($galleries[$i]->tid), array_map('_taxonomy_get_tid_from_term', $tree));
     // The values of $descendant_tids should be safe for raw inclusion in the
     // SQL since they're all loaded from integer fields in the database.
-    $sql = 'SELECT n.nid FROM {node} n INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. implode(',', $descendant_tids) .') AND n.status = 1 ORDER BY n.sticky DESC, n.created DESC';
+    $sql = 'SELECT n.nid FROM {node} n INNER JOIN {term_node} tn ON n.nid = tn.nid WHERE tn.tid IN ('. implode(',', $descendant_tids) .') AND n.status = 1 ORDER BY n.sticky DESC, n.title ASC';
     if ($nid = db_result(db_query_range(db_rewrite_sql($sql), 0, 1))) {
       $galleries[$i]->latest = node_load(array('nid' => $nid));
     }
