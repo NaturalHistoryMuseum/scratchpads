@@ -53,6 +53,7 @@ else{
 	    $shuffle_array[$i]=$i;
 	  }
 	  shuffle($shuffle_array);
+	  shuffle($domains);
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
 	    mysql_select_db($short_domain); // Do I need to do this if I specify a database in the select statement. DUMB!
