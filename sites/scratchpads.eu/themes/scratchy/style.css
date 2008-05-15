@@ -1,4 +1,6 @@
-img { behavior: url(iepngfix.htc); }
+/***************************************************************
+ * GENERAL
+ ***************************************************************/
 body {
   color: black;
   background-color: white;
@@ -6,103 +8,18 @@ body {
   margin: 0;
   font-family: helvetica, arial, sans-serif;
   text-align: justify;
-  font-size: 10pt;
-}
+  font-size: 10pt;}
+a{
+  text-decoration: none;
+  color: #003b00;}
+a:hover{
+  text-decoration: underline;}
 hr {
   border: 0;
   border-bottom: solid 1px #cccccc;
-  margin: 10px;
-}
-div.header {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 110px;
-  background-image: url('images/header.png');
-  background-position: 50% 0%;
-  text-align: center;
-}
+  margin: 10px;}
 div#iecentral{
-  text-align: center;
-}
-div.navlinks{
-  background-image: url('images/header-background.gif');
-  background-repeat: repeat-x;
-  background-position: 0 0;
-  height: 35px;
-  /* I should be sent to hell for this: */
-  color: white;
-  background-color: white;
-  /* Phew, hot down there */
-  padding: 5px;
-  text-align: center;
-}
-a{
-  text-decoration: none;
-  color: #003b00;
-}
-a:hover{
-  text-decoration: underline;
-}
-div.navlinks a{
-  color: white;
-  font-size: 120%;
-  padding: 0 10px;
-  font-weight: bold;
-}
-div.navlinks a:hover, div.navlinks a:active{
-  color: green;
-  text-decoration: none;
-}
-#content {
-  padding: 10px 0 0 0;
-  width: 980px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: justify;
-}
-div#main {
-  width: 720px;
-  margin: 0;
-  position: relative;
-  float: left;
-}
-div#main-wide {
-  width: 980px;
-  margin: 0;
-  position: relative;
-  float: left;
-}
-div#sidebar-right {
-  width: 240px;
-  margin: 0;
-  position: relative;
-  float: right;
-  font-size:90%;
-}
-div.mainfull
-{
-  margin: 0;padding: 0;
-  clear: both;
-	width: 100%;
-}
-div.node {
-  color: black;
-  padding: 0;
-  /* Removed to try and get the fancy pants stuff border: dashed 1px #ccc;*/
-  margin: 0 0 10px 0;
-  z-index: 100;
-}
-div.node h2{
-  padding: 0;
-  line-height: normal;
-  padding: 5px;
-  margin: 0;
-}
-div.content{
-  padding: 0 10px 10px 10px;
-  margin: 0;
-}
+  text-align: center;}
 h1 {font-size: 170%;}
 h2 {font-size: 140%;margin:0;}
 h3 {font-size: 130%;}
@@ -110,6 +27,58 @@ h4 {font-size: 120%;}
 h5 {font-size: 120%;}
 h6 {font-size: 110%;}
 p  {font-size: 100%;margin:0;}
+.sticky{
+  background-color: #f5f5f5;}
+.comment {
+  padding: 3px 0;}
+/***************************************************************
+ * CONTENT
+ ***************************************************************/
+#content {
+  padding: 10px 0 0 0;
+  width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: justify;}
+div#main {
+  width: 720px;
+  margin: 0;
+  position: relative;
+  float: left;}
+div#main-wide {
+  width: 980px;
+  margin: 0;
+  position: relative;
+  float: left;}
+div.mainfull{
+  margin: 0;padding: 0;
+  clear: both;
+	width: 100%;}
+div.node {
+  color: black;
+  padding: 0;
+  /* Removed to try and get the fancy pants stuff border: dashed 1px #ccc;*/
+  margin: 0 0 10px 0;
+  z-index: 100;}
+div.node h2{
+  padding: 0;
+  line-height: normal;
+  padding: 5px;
+  margin: 0;}
+div.content{
+  padding: 0 10px 10px 10px;
+  margin: 0;}
+/***************************************************************
+ * HEADER
+ ***************************************************************/
+div.header {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 110px;
+  background-image: url('images/header.png');
+  background-position: 50% 0%;
+  text-align: center;}
 #searchbox {
   position: absolute;
   right: 0;
@@ -119,13 +88,11 @@ p  {font-size: 100%;margin:0;}
   background-position: 0 100%;
   filter:alpha(opacity=60);
   -moz-opacity: 0.6;
-  opacity: 0.6;
-}
+  opacity: 0.6;}
 #searchbox input {
   background-color: white;
   color: black;
-  border: solid 2px black;
-}
+  border: solid 2px black;}
 #breadcrumbs{
   position: absolute;
   left: 0;
@@ -136,78 +103,67 @@ p  {font-size: 100%;margin:0;}
   filter:alpha(opacity=60);
   -mox-opacity: 0.6;
   opacity:0.6;
-  color: white;
-}
+  color: white;}
 #breadcrumbs a{
-  color:white;
-}
-.sticky{
-  background-color: #f5f5f5;
-}
-.bc {
-	position: relative;
-	width: 8px;
-	height: 8px;
-	font-size: 1px;
-	background-repeat: no-repeat;
-	margin-bottom: -1px;
-	z-index: 2;
-	line-height: 0px;
-}
-.ctr {
-	float: right;
-	background-image: url(images/ctr.gif);
-	margin-right: -1px;
-	margin-top: -1px;
-	line-height: 0px;
-}
-.ctl {
-	float: left;
-	background-image: url(images/ctl.gif);
-	margin-left: -1px;
-	margin-top: -1px;
-	line-height: 0px;
-}
-.cbr {
-	float: right;
-	background-image: url(images/cbr.gif);
-	margin-right: -1px;
-	margin-top: 1px;
-	line-height: 0px;
-}
-.cbl {
-	float: left;
-	background-image: url(images/cbl.gif);
-	margin-left: -1px;
-	margin-top: 1px;
-	line-height: 0px;
-}
-.boxtop {
-	border-top: 1px #ccc solid;
-	border-left: 1px #ccc solid;
-	border-right: 1px #ccc solid;
-	height: 8px;
-	line-height: 0px;
-}
-.boxbtm {
-	border-bottom: 1px #ccc solid;
-	border-left: 1px #ccc solid;
-	border-right: 1px #ccc solid;
-	height: 8px;
-	line-height: 0px;
-}
-.boxcontent{
-	border-left: 1px #ccc solid;
-	border-right: 1px #ccc solid;
-}
-.subboxcontent{
-  /*min-height: 50px;*/
-}
+  color:white;}
+/***************************************************************
+ * LINKS
+ ***************************************************************/
+ul.primary {
+  border-bottom:1px solid #BBBBBB;
+  border-collapse:collapse;
+  height:auto;
+  line-height:normal;
+  list-style-image:none;
+  list-style-position:outside;
+  list-style-type:none;
+  margin:5px 5px 10px 5px;
+  padding:0pt 0pt 0pt 5px;
+  white-space:nowrap;}
+div.navlinks{
+  background-image: url('images/header-background.gif');
+  background-repeat: repeat-x;
+  background-position: 0 0;
+  height: 35px;
+  /* I should be sent to hell for this: */
+  color: white;
+  background-color: white;
+  /* Phew, hot down there */
+  padding: 5px;
+  text-align: center;}
+div.navlinks a{
+  color: white;
+  font-size: 120%;
+  padding: 0 10px;
+  font-weight: bold;}
+div.navlinks a:hover, div.navlinks a:active{
+  color: green;
+  text-decoration: none;}
+/***************************************************************
+ * SIDEBAR
+ ***************************************************************/
+#sidebar-right>h2{
+  display:none;}
+div#sidebar-right {
+  width: 240px;
+  margin: 0;
+  position: relative;
+  float: right;
+  font-size:90%;}  
+/***************************************************************
+ * CURVY BOX
+ ***************************************************************/
+.bc  {position: relative;width: 8px;height: 8px;font-size: 1px;background-repeat: no-repeat;margin-bottom: -1px;z-index: 2;line-height: 0px;}
+.ctr {float: right;background-image: url(images/ctr.gif);margin-right: -1px;margin-top: -1px;line-height: 0px;}
+.ctl {float: left;background-image: url(images/ctl.gif);margin-left: -1px;margin-top: -1px;line-height: 0px;}
+.cbr {float: right;background-image: url(images/cbr.gif);margin-right: -1px;margin-top: 1px;line-height: 0px;}
+.cbl {float: left;background-image: url(images/cbl.gif);margin-left: -1px;margin-top: 1px;line-height: 0px;}
+.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;}
+.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;}
+.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;}
+.subboxcontent{/*min-height: 50px;*/}
 .subboxcontent .links {
   font-size: 80%;
-}
-.comment {
-  padding: 3px 0;
 }
 .boxtitle, .boxtitle-sticky{
 	position: relative;
@@ -235,18 +191,10 @@ p  {font-size: 100%;margin:0;}
 .boxtitle-sticky h1 a{
   color: white;
 }
-ul.primary {
-  border-bottom:1px solid #BBBBBB;
-  border-collapse:collapse;
-  height:auto;
-  line-height:normal;
-  list-style-image:none;
-  list-style-position:outside;
-  list-style-type:none;
-  margin:5px 5px 10px 5px;
-  padding:0pt 0pt 0pt 5px;
-  white-space:nowrap;
-}
+
+/***************************************************************
+ * FOOTER
+ ***************************************************************/
 div.bottom {
   /*bottom: 0;*/
   width: 100%;
@@ -256,81 +204,61 @@ div.bottom {
   background-color: white;
   padding-top: 5px;
   font-size: 90%;
-	z-index: 20;
-}
+	z-index: 20;}
 div.bottom .block {
-  display: inline;
-}
+  display: inline;}
 div.bottom h2 {
-  display:none;
-}
+  display:none;}
 div.bottom a{
-  color: #bbb;
-}
+  color: #bbb;}
 div.bottom ul {
   border-collapse:collapse;
   height:auto;
   line-height:normal;
   list-style-image:none;
   list-style-position:outside;
-  white-space:nowrap;
-}
+  white-space:nowrap;}
 div.bottom ul li {
   display:inline;
-  list-style-type: none;
-}
+  list-style-type: none;}
 div.bottom ul li ul{
-  display: none;
-}
+  display: none;}
 legend {
-  font-size: 120%;
-}
-
-/**********************************************************************************
- * Forum
- **********************************************************************************/
+  font-size: 120%;}
+/***************************************************************
+ * FORUM
+ ***************************************************************/
 td.container{
   background-color: #444;
   color: white;
-  padding: 5px;
-}
+  padding: 5px;}
 td.container a{
-  color: white;
-  }
+  color: white;  }
 .forum table, #forum table {
   border: solid 3px black;
-  width: 95%;
-}
+  width: 95%;}
 .forum th, #forum th {
   background-image: url('images/header-background.gif');
   background-color: black;
   height: 32px;
   padding-left: 10px;
   color: white;
-  border: 0;
-}
+  border: 0;}
 .forum th a, #forum th a{
-  color: white;
-}
+  color: white;}
 .forum tr {
-  background-color: #fff;
-}
+  background-color: #fff;}
 /**********************************************************************************
  * FAQ Page
  **********************************************************************************/
 #faqpage div.content{
-  padding: 0;
-}
+  padding: 0;}
 h2 {
-  padding: 5px 0;
-}
+  padding: 5px 0;}
 p.faqquestion:hover {
   text-decoration: underline;
-  cursor: help;
-}
+  cursor: help;}
 .item-list > ul > li{
-  list-style-type: none !important;
-}
+  list-style-type: none !important;}
 .faqquestion{
-  color: #003b00;
-}
+  color: #003b00;}
