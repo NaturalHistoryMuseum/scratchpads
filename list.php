@@ -44,7 +44,7 @@ else{
 	$database_details = parse_ini_file('/var/www/drupal_db_passwords',true);
 	mysql_connect("localhost", "root", $database_details['root']['password'], TRUE, 2);
 	if(isset($_GET['thumbnails'])){
-	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> [<a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');">Views</a>] <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
+	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> <a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');">Views</a> | <a onclick="sortDivs(\'allsites\',\'random\');">Random</a> <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  $num_domains = count($domains);
