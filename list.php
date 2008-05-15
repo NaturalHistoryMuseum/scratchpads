@@ -44,7 +44,7 @@ else{
 	$database_details = parse_ini_file('/var/www/drupal_db_passwords',true);
 	mysql_connect("localhost", "root", $database_details['root']['password'], TRUE, 2);
 	if(isset($_GET['thumbnails'])){
-	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}.sortedby{background-color: #8DBDD8;color:white;}.siteslistlinks a{position:relative;padding: 3px 20px;margin:3px;border:solid 1px #eee;}.siteslistlinks a:hover{text-decoration:none;background-color:#7dadc8;}</style><h3 style="padding:0;margin:0;line-height:12px;font-weight:normal">Sort by</h3><h3 class="siteslistlinks"><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a><a onclick="sortDivs(\'allsites\',\'nodes\');" id="sortbynodes"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Nodes</a><a onclick="sortDivs(\'allsites\',\'domain\');" id="sortbydomain"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Domain</a><a onclick="sortDivs(\'allsites\',\'views\');" id="sortbyviews"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Views</a><a onclick="sortDivs(\'allsites\',\'random\');" id="sortbyrandom" class="sortedby"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/desc.gif"/>Random</a><a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
+	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}.siteslistlinks a{position:relative;padding: 3px 20px;margin:3px;}</style><h3 style="padding:0;margin:0;line-height:12px;font-weight:normal">Sort by</h3><h3 class="siteslistlinks"><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a><a onclick="sortDivs(\'allsites\',\'nodes\');" id="sortbynodes"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Nodes</a><a onclick="sortDivs(\'allsites\',\'domain\');" id="sortbydomain"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Domain</a><a onclick="sortDivs(\'allsites\',\'views\');" id="sortbyviews"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Views</a><a onclick="sortDivs(\'allsites\',\'random\');" id="sortbyrandom"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/desc.gif"/>Random</a><a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  shuffle($domains);
@@ -157,19 +157,14 @@ function _sortDivs(sortBy,divs,parentId){
       divs[i].setAttribute("random",oldDivs[i][4]);}}
 function addArrows(sortby,upordown){
   if(sortby!='domain'){
-    document.getElementById('sortbydomain').className = '';
     document.getElementById('sortbydomain').innerHTML = '<img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Domain';}
   if(sortby!='views'){
-    document.getElementById('sortbyviews').className = '';
     document.getElementById('sortbyviews').innerHTML = '<img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Views';}
   if(sortby!='nodes'){
-    document.getElementById('sortbynodes').className = '';
     document.getElementById('sortbynodes').innerHTML = '<img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Nodes';}
   if(sortby!='random'){
-    document.getElementById('sortbyrandom').className = '';
     document.getElementById('sortbyrandom').innerHTML = '<img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Random';}
   document.getElementById('sortby'+sortby).innerHTML = sortby.substr(0, 1).toUpperCase() + sortby.substr(1);
-  document.getElementById('sortby'+sortby).className = 'sortedby';
   if(upordown){
     document.getElementById('sortby'+sortby).innerHTML = '<img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/asc.gif"/>'+document.getElementById('sortby'+sortby).innerHTML
   }else{
