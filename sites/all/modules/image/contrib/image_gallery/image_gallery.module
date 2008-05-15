@@ -154,7 +154,7 @@ function image_gallery_page($type = NULL, $tid = 0) {
 
   $images = array();
   if ($tid) {
-    $result = pager_query(db_rewrite_sql("SELECT n.nid FROM {term_node} t INNER JOIN {node} n ON t.nid=n.nid WHERE n.status=1 AND n.type='image' AND t.tid=%d ORDER BY n.sticky DESC, n.created DESC"), variable_get('image_images_per_page', 6), 0, db_rewrite_sql("SELECT COUNT(DISTINCT(n.nid)) FROM {term_node} t INNER JOIN {node} n ON t.nid=n.nid WHERE n.status=1 AND n.type='image' AND t.tid=%d"), $tid);
+    $result = pager_query(db_rewrite_sql("SELECT n.nid FROM {term_node} t INNER JOIN {node} n ON t.nid=n.nid WHERE n.status=1 AND n.type='image' AND t.tid=%d ORDER BY n.sticky DESC, n.title ASC"), variable_get('image_images_per_page', 6), 0, db_rewrite_sql("SELECT COUNT(DISTINCT(n.nid)) FROM {term_node} t INNER JOIN {node} n ON t.nid=n.nid WHERE n.status=1 AND n.type='image' AND t.tid=%d"), $tid);
     while ($node = db_fetch_object($result)) {
       $images[] = node_load(array('nid' => $node->nid));
     }
