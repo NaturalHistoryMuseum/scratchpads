@@ -123,7 +123,7 @@ echo drupal_get_js();
 <?php
   if ($show_blocks && !empty($blocks_right)) {
     ?><div id="sidebar-right"><div>
-  <?php echo $blocks_right;?><?php
+  <?php echo $blocks_right;?></div></div><?php
   }
   ?><div class="mainfull"></div><div id="footer"><div align="center" style="padding: 20px"><a 
 href="http://www.editwebrevisions.info/aboutus"><img src="/sites/all/images/edit_small.png" 
