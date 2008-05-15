@@ -44,7 +44,7 @@ else{
 	$database_details = parse_ini_file('/var/www/drupal_db_passwords',true);
 	mysql_connect("localhost", "root", $database_details['root']['password'], TRUE, 2);
 	if(isset($_GET['thumbnails'])){
-	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}.sortedby{text-decoration:underline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> <a onclick="sortDivs(\'allsites\',\'nodes\');" id="sortbynodes">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');" id="sortbydomain">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');" id="sortbyviews">Views</a> | <a onclick="sortDivs(\'allsites\',\'random\');" class="sortedby" id="sortbyrandom">&darr; Random</a> <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
+	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> <a onclick="sortDivs(\'allsites\',\'nodes\');" id="sortbynodes">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');" id="sortbydomain">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');" id="sortbyviews">Views</a> | <a onclick="sortDivs(\'allsites\',\'random\');" id="sortbyrandom">&darr; Random</a> <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  shuffle($domains);
@@ -121,9 +121,11 @@ function prevBlock(parentId){
 function _sortDivs(sortBy,divs,parentId){
     if(lastSort ==sortBy){
       sortDivs(parentId,'reverse');
+      addArrows(sortBy,false);
       lastSort = '';
       return;
     }
+    addArrows(sortBy,true);
     lastSort = sortBy;
     var oldDivs = new Array();
     var divsNodesNumbers = new Array();
@@ -152,6 +154,17 @@ function _sortDivs(sortBy,divs,parentId){
       divs[i].setAttribute('domain',oldDivs[i][2]);
       divs[i].setAttribute("views",oldDivs[i][3]);
       divs[i].setAttribute("random",oldDivs[i][4]);}}
+function addArrows(sortby,upordown){
+  document.getElementById('sortbydomain').innerHTML = 'Domain';
+  document.getElementById('sortbyviews').innerHTML = 'Views';
+  document.getElementById('sortbynodes').innerHTML = 'Nodes';
+  document.getElementById('sortbyrandom').innerHTML = 'Random';
+  if(upordown){
+    document.getElementById('sortby'+sortby).innerHTML = '&uarr; '+document.getElementById('sortby'+sortby).innerHTML
+  }else{
+    document.getElementById('sortby'+sortby).innerHTML = '&darr; '+document.getElementById('sortby'+sortby).innerHTML
+  }
+}
 function sortDivs(parentId,sortField){
   divs = document.getElementById(parentId).childNodes;
   if(sortField =='reverse'){
@@ -180,11 +193,11 @@ function sortDivs(parentId,sortField){
   if(sortField =='domain'){
     if(lastSort =='domain'){
       sortDivs(parentId,'reverse');
-      document.getElementById('sortbydomain').innerHTML = '&uarr; Domain';
+      addArrows('domain',true);
       lastSort = '';
       return;
     }
-    document.getElementById('sortbydomain').innerHTML = '&darr; Domain';
+    addArrows('domain',false);
     lastSort = 'domain';
     var oldDivs = new Array();
     var divsDomains = new Array();
