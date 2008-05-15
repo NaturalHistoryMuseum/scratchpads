@@ -47,12 +47,6 @@ else{
 	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}</style><h3><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt;&lt;&lt;</a> <a onclick="sortDivs(\'allsites\',\'nodes\');">Nodes</a> | <a onclick="sortDivs(\'allsites\',\'domain\');">Domain</a> | <a onclick="sortDivs(\'allsites\',\'views\');">Views</a> | <a onclick="sortDivs(\'allsites\',\'random\');">Random</a> <a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">&gt;&gt;&gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
-	  $num_domains = count($domains);
-	  $shuffle_array=array();
-	  for($i=0;$i<$num_domains;$i++){
-	    $shuffle_array[$i]=$i;
-	  }
-	  shuffle($shuffle_array);
 	  shuffle($domains);
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
@@ -69,7 +63,7 @@ else{
       }else{
         echo 'class="listnothidden" ';
       }
-      echo 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$random.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.280x210-drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+      echo 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.280x210-drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
       $visible_count ++;
     }
           ?></div><div class="mainfull"></div>');
@@ -83,7 +77,7 @@ originalimage'.$short_domain.'.src = "http://quartz.nhm.ac.uk/screenshots/'.$dom
 ';
   }
 ?>
-var lastSort = 'domain';
+var lastSort = 'random';
 function mouseOverScreenshots(from,to){
   document.getElementById(from).src = to.src;}
 
