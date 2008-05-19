@@ -42,6 +42,8 @@ function scratchy_page($content, $show_blocks = TRUE) {
 if(function_exists('jquery_ui_backport_add')){
   jquery_ui_backport_add();
 }
+drupal_add_css(drupal_get_path('theme','scratchy').'/print.css','theme','print',FALSE);
+drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
 echo drupal_get_html_head();
 echo drupal_get_css();
 echo drupal_get_js();
