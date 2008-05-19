@@ -86,17 +86,6 @@ echo drupal_get_js();
   ?>"><?php
   echo theme('help').theme('status_messages');
   if (drupal_is_front_page()) {
-    ?><div class="node" style="background-color: #444;color: white;">
-  <div class="boxtop"><div class="bc ctr"></div><div class="bc ctl"></div></div>
-  <div class="boxcontent">
-    <div class="subboxcontent"><div class="content"><h1 style="margin:0;">This site will soon become the home of the EDIT Scratchpads project. Until then, please check the <a href="http://www.editwebrevisions.info/">Work Package Six</a> site for more information</h1></div></div>
-  </div>
-  <div class="boxbtm">
-    <div class="bc cbr"></div>
-    <div class="bc cbl"></div>
-  </div>
-</div>    
-    <?php
     if(theme_get_setting('toggle_mission')){
       $mission = theme_get_setting('mission');
       if($mission){
