@@ -98,10 +98,24 @@ echo drupal_get_js();
     if(theme_get_setting('toggle_mission')){
       $mission = theme_get_setting('mission');
       if($mission){
-        ?><div class="node">
-  <div class="boxtop"><div class="bc ctr"></div><div class="bc ctl"></div></div>
-  <div class="boxcontent">
-    <div class="subboxcontent"><div class="content"><?php echo $mission; ?></div></div>
+        ?>
+<style type="text/css">
+
+</style>
+<div class="cornerbox teaserbox mission">
+  <div class="boxtop">
+  <div class="bc ctr"></div>
+  <div class="bc ctl"></div>
+</div>
+<div class="boxcontent">
+  <div class="padding">
+    <div class="teaserboxpadding1">
+      <div class="teaserboxpadding2">
+        <?php echo $mission; ?>
+      </div>
+    </div>
+    <div class="break"></div>
+    </div>
   </div>
   <div class="boxbtm">
     <div class="bc cbr"></div>

@@ -184,9 +184,9 @@ div#sidebar-right {
 .ctl {float: left;background-image: url(images/ctl.gif);margin-left: -1px;margin-top: -1px;line-height: 0px;}
 .cbr {float: right;background-image: url(images/cbr.gif);margin-right: -1px;margin-top: 1px;line-height: 0px;}
 .cbl {float: left;background-image: url(images/cbl.gif);margin-left: -1px;margin-top: 1px;line-height: 0px;}
-.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;}
-.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;}
-.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;}
+.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;z-index:100;}
 .subboxcontent{/*min-height: 50px;*/}
 .subboxcontent .links {
   font-size: 80%;
@@ -217,7 +217,48 @@ div#sidebar-right {
 .boxtitle-sticky h1 a{
   color: white;
 }
-
+.cornerbox {
+  margin:0px 0px 15px;
+}
+/***************************************************************
+ * MISSION STATEMENT
+ ***************************************************************/
+.mission li{
+  padding:0;
+  margin:0;
+  display:block;
+  height:40px;
+  padding:3px 0 0 0;
+  width:200px;
+  font-size: 120%;
+  font-weight:700;
+  background-image:url('images/button.jpg');
+  color:white;
+  text-align:center;
+}
+.mission li:hover{
+  background-image:url('images/button-over.jpg');
+}
+.mission ul{
+  margin:0;
+  padding:0;
+  border-left:solid 1px #ccc;
+}
+.padding{
+  margin:0;
+  padding:0;
+}
+.teaserboxpadding1{
+  height:284px;
+  position:relative;
+}
+.teaserboxpadding2{
+  height:300px;
+  overflow:hidden;
+  position:absolute;
+  top:-8px;
+  width: 718px;
+}
 /***************************************************************
  * FOOTER
  ***************************************************************/
