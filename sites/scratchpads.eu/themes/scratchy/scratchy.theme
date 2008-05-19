@@ -355,7 +355,7 @@ function scratchy_maintenance_page($content, $messages = TRUE, $partial = FALSE)
 }
 
 function scratchy_block($block) {
-  if(strpos($block->content,'class="boxtop"')>0){
+  if(strpos($block->content,'class="boxtop"')>0 || $block->region != 'right'){
     return "<div class=\"block block-$block->module\" id=\"block-$block->module-$block->delta\">
   <h2 class=\"title\">$block->subject</h2>
   <div class=\"content\">$block->content</div>
@@ -365,7 +365,7 @@ function scratchy_block($block) {
 	<div class="bc ctr"></div>
 	<div class="bc ctl"></div>
 </div>
-<div class="boxcontent">'.$block->content.'</div>
+<div class="boxcontent">'.print_r($block,true).$block->content.'</div>
 <div class="boxbtm">
 	<div class="bc cbr"></div>
 	<div class="bc cbl"></div>
