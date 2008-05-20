@@ -220,7 +220,7 @@ function _tinytax_view_blocks($delta){
   $block['content'] = theme('tinytax_term_list',$parents, $children, $delta);
   // Load the Javascript and CSS
   drupal_add_js(drupal_get_path('module','tinytax').'/tinytax.js');
-  drupal_add_css(drupal_get_path('module','tinytax').'/tinytax.css');
+  drupal_add_css(drupal_get_path('module','tinytax').'/tinytax.css','module','screen',FALSE);
   return $block;
 }
 
