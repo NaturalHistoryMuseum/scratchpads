@@ -283,7 +283,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
       elseif ($num_parents){
         $return_string .= ' tinytaxlast';
       }
-      $return_string .= _theme_tinytax_term_list_link($child, $vid);
+      $return_string .= _theme_tinytax_term_list_link($child, $vid, $used_terms);
     }
     $return_string .='</div>';
   }
