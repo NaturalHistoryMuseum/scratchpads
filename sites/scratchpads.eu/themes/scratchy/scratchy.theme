@@ -369,7 +369,7 @@ function scratchy_status_messages($display = NULL) {
   if(count($messages)===0){
     return '';
   }
-  $output = '<div class="boxtop">
+  $output = '<div class="messagescontainer"><div class="boxtop">
 	<div class="bc ctr"></div>
 	<div class="bc ctl"></div>
 </div>
@@ -392,5 +392,5 @@ function scratchy_status_messages($display = NULL) {
 <div class="boxbtm">
 	<div class="bc cbr"></div>
 	<div class="bc cbl"></div>
-</div>';
+</div></div>';
 }

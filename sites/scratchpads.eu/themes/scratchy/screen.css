@@ -54,7 +54,7 @@ div.mainfull{
   margin: 0;padding: 0;
   clear: both;
 	width: 100%;}
-div.node {
+div.node, div.messagescontainer{
   color: black;
   padding: 0;
   /* Removed to try and get the fancy pants stuff border: dashed 1px #ccc;*/
@@ -68,6 +68,14 @@ div.node h2{
 div.content{
   padding: 0 10px 10px 10px;
   margin: 0;}
+div.messagescontainer{
+  background-color: #eee;}
+div.messagescontainer .boxcontent{
+  padding:10px 20px;}
+div.error{
+  color:#f00;
+  background-color:inherit;
+  border: none;}
 /***************************************************************
  * HEADER
  ***************************************************************/
