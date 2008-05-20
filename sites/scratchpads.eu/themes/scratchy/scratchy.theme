@@ -364,7 +364,7 @@ function scratchy_block($block) {
   }
 }
 
-function theme_status_messages($display = NULL) {
+function scratchy_status_messages($display = NULL) {
   $messages = drupal_get_messages();
   if(count($messages)===0){
     return '';
