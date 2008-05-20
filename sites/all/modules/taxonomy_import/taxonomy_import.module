@@ -458,36 +458,36 @@ function taxonomy_import_parse($text, $vid, $import_format) {
     	$names = array();
     	$hierarchy = array();
     	foreach ($lines as $line){
-        if (trim($line)=="")
-          break;
-        $line_parts = split("\t",$line);
-        $taxon_parts = array();
-        for($i=0;$i<$number_of_ranks;$i++){
-          if(!in_array(trim($line_parts[$i]),$names) && trim($line_parts[$i]!="")){
-            $name = trim($line_parts[$i]);
-            $names[$sequence] = $name;
-            $reference = $line_parts[$line_parts_index['description']];
-  		      $synonyms = split(";",$line_parts[$line_parts_index['synonyms']]);
-  		      if ($term_data !="")
-  		        $term_data .=",";
-            $term_data .= "(".$sequence.",".$vid.",'".addslashes($name)."','".addslashes(trim($reference))."',0)";
-          	foreach($synonyms as $synonym){
-          	  if ($synonym_data!="")
-          	    $synonym_data.=",";
-          	  $synonym_data .= '('.$sequence.',\''.addslashes(trim($synonym)).'\')';
-          	}
-  		      if ($term_hierarchy !="")
-  		        $term_hierarchy .=",";
-        		if ($i>0){
-        			// Add to hierarchy
-        			$parent = trim($line_parts[$i-1]);
-        			$parent_id = array_search($parent, $names);
-              $term_hierarchy .= '('.$sequence.','.$parent_id.')';
-        		}
-        		else {      			
-              $term_hierarchy .= '('.$sequence.',0)';
-        		}
-            $sequence++;
+        if (trim($line)!=""){
+          $line_parts = split("\t",$line);
+          $taxon_parts = array();
+          for($i=0;$i<$number_of_ranks;$i++){
+            if(!in_array(trim($line_parts[$i]),$names) && trim($line_parts[$i]!="")){
+              $name = trim($line_parts[$i]);
+              $names[$sequence] = $name;
+              $reference = $line_parts[$line_parts_index['description']];
+    		      $synonyms = split(";",$line_parts[$line_parts_index['synonyms']]);
+    		      if ($term_data !="")
+    		        $term_data .=",";
+              $term_data .= "(".$sequence.",".$vid.",'".addslashes($name)."','".addslashes(trim($reference))."',0)";
+            	foreach($synonyms as $synonym){
+            	  if ($synonym_data!="")
+            	    $synonym_data.=",";
+            	  $synonym_data .= '('.$sequence.',\''.addslashes(trim($synonym)).'\')';
+            	}
+    		      if ($term_hierarchy !="")
+    		        $term_hierarchy .=",";
+          		if ($i>0){
+          			// Add to hierarchy
+          			$parent = trim($line_parts[$i-1]);
+          			$parent_id = array_search($parent, $names);
+                $term_hierarchy .= '('.$sequence.','.$parent_id.')';
+          		}
+          		else {      			
+                $term_hierarchy .= '('.$sequence.',0)';
+          		}
+              $sequence++;
+            }
           }
         }
     	}
