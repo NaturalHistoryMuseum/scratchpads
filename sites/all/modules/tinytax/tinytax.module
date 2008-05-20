@@ -225,9 +225,31 @@ function _tinytax_view_blocks($delta){
 }
 
 /**
+ * Items with content
+ * 
+ * Calculates which terms have content associated with them (and also
+ * the parent nodes)  This enabled a user to browse quickly to content.
+ */
+function _terms_used($vid){
+  $results = db_query("SELECT DISTINCT tid FROM {term_node} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d)",$vid);
+  $terms = array();
+  while($tid = array_pop(db_fetch_array($results))){
+    if(!isset($terms[$tid])){
+      $terms[$tid] = $tid;
+      $parents = taxonomy_get_parents_all($tid);
+      foreach($parents as $parent){
+        $terms[$parent->tid] = $parent->tid;
+      }
+    }
+  }
+  return $terms;
+}
+
+/**
  * Theme taxonomy_block_item_list
  */
 function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
+  $used_terms = _terms_used($vid);
   $num_parents = count($parents);
   $num_children = count($children);
   $return_string = '';
@@ -247,7 +269,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
         $return_string .= ' tinytaxlast';
       }
     }
-    $return_string .= _theme_tinytax_term_list_link($parent, $vid);
+    $return_string .= _theme_tinytax_term_list_link($parent, $vid, $used_terms);
   }
   if ($num_children){
     $return_string .='<div class="tinytaxlast tinytax tinytaxnode">';
@@ -270,13 +292,17 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
   }
   return $return_string;
 }
-function _theme_tinytax_term_list_link($term, $vid){
+function _theme_tinytax_term_list_link($term, $vid, $used_terms){
+  $class = 'tinytaxlink';
+  if(in_array($term->tid,$used_terms)){
+    $class .= 'used';
+  }  
   $return_string = '">'.
   l(
     $term->name,
     'taxonomy/term/'.$term->tid,
     array(
-      'class'=>'tinytaxlink',
+      'class'=>$class,
       'title'=> t('Click to see the descendants of this name'),
       'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
     )
