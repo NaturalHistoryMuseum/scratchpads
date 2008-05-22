@@ -14,10 +14,12 @@
  * checks to see if the node->type is associated with a vocabulary, and if so, it
  * checks to see if any of the vocabulary terms are present in fields in this node.
  */
-function autotag_nodeapi($node, $op, $form = NULL, $a4 = NULL){
+function autotag_nodeapi($node, $op, $a3 = NULL, $a4 = NULL){
   switch($op){
-    case 'validate':
-      $node = _autotag_search($node, $form);
+    case 'submit':
+    case 'update':
+    case 'alter':
+      $node = _autotag_search($node);
     default:
       // Do nothing
       break;
@@ -27,7 +29,7 @@ function autotag_nodeapi($node, $op, $form = NULL, $a4 = NULL){
 /**
  * Following function gets the terms from the database, and does the tagging
  */
-function _autotag_search($node, $form){
+function _autotag_search($node){
   // First get all vocabularies, and see which ones apply to this content type
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
@@ -37,9 +39,7 @@ function _autotag_search($node, $form){
     }
   }
   // Get all the fields to search from this node  
-  //print_r($form);exit;
-  $fields = _autotag_fields_to_search($form, _autotag_fields_to_ignore($node));
-  print_r($fields);exit;
+  $fields = _autotag_fields_to_search($node);
   // Get total number to search
   $vids_string = implode(",",$vids);
   $result = db_query("SELECT COUNT(*) FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid  WHERE t.vid IN (".$vids_string.")");
@@ -76,11 +76,11 @@ function _autotag_search($node, $form){
  * a single string
  */
 function _autotag_search_field($field, $term, $synonym){
-  if(is_array($field) || is_object($field)){
+  if(is_array($field)){
     // Field is an array (and likely to be an array of arrays).  Lets
     // recurse into it and check away
-    foreach($field as $field_part=>$value){
-      if(_autotag_search_field($value, $term, $synonym)){
+    foreach($field as $field_part){
+      if(_autotag_search_field($field_part, $term, $synonym)){
         return true;
       }
     }
@@ -89,70 +89,21 @@ function _autotag_search_field($field, $term, $synonym){
     if(strpos(strtolower($field), $term)!== false){
       return true;
     }
-    elseif(strpos(strtolower($field), $synonym)!== false){
+    elseif(trim($synonym) !="" && strpos(strtolower($field), $synonym)!== false){
       return true;
     }
   }
   return false;
 }
-
-/**
- * Return a list of fields to ignore _always_
- */
-function _autotag_fields_to_ignore(){
-  return array(
-    'nid', 'vid', 'created', 'uid', 'type', 'changed', 'log', 'author', 'preview', 'submit', 'delete'
-  );
-}
 /**
  * Function simply returns an array of fields to search when given a node
  */
-function _autotag_fields_to_search($form, $fields_to_ignore, $parent_type=""){
-  // Parse through the form, returning any fields which are "textfield" or "textarea"
-  /*
-  $fields_to_return = array();
-  foreach($form as $key=>$value){
-    if(is_array($value) || is_object($value)){
-      if(substr($key,0,1)!='#' && !in_array($key, $fields_to_ignore)){
-        $fields =_autotag_fields_to_search($value, $fields_to_ignore, $key);
-        if(count($fields)){
-          $fields_to_return = array_merge($fields, $fields_to_return);
-        }
-      }
-    } else {
-      if($key=='#type' && ($value=='textfield' || $value=='textarea') && substr($parent_type,0,1)!='#'){
-        $fields_to_return[$parent_type] = $parent_type;
-      }
-    }
+function _autotag_fields_to_search($node){
+  $fields = array();
+  foreach($node as $key=>$value){
+    $fields[] = $key;
   }
-  return $fields_to_return;
-  */
-  
-  $return_fields = array();
-  /**
-   * Following function does the work.  Only needed in this function, hence why it is nested.
-   */
-  function field_parse($field_array){
-    foreach($field_array as $key=>$value){
-      if(is_array($value)||is_object($value)){
-        return field_parse($value);
-      }
-      elseif($key=='#type' && ($value=='textarea'||$value=='textfield')){
-        echo "*";
-        return true;
-      }
-    }
-  }
-  // Go through each of the root parts and see if it has a textarea or textfield in it
-  foreach($form as $field_name => $field_value){
-    if(!in_array($field_name, $fields_to_ignore) && substr($field_name,0,1)!='#'){
-      if(field_parse($field_value)){
-        echo "#";
-        $return_fields[]= $field_name;
-      }
-    }
-  }
-  return $return_fields;
+  return $fields;
 }
 
 /**
