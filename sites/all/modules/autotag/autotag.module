@@ -76,11 +76,11 @@ function _autotag_search($node){
  * a single string
  */
 function _autotag_search_field($field, $term, $synonym){
-  if(is_array($field)){
+  if(is_array($field) || is_object($field)){
     // Field is an array (and likely to be an array of arrays).  Lets
     // recurse into it and check away
-    foreach($field as $field_part){
-      if(_autotag_search_field($field_part, $term, $synonym)){
+    foreach($field as $field_part=>$value){
+      if(_autotag_search_field($value, $term, $synonym)){
         return true;
       }
     }
@@ -89,11 +89,20 @@ function _autotag_search_field($field, $term, $synonym){
     if(strpos(strtolower($field), $term)!== false){
       return true;
     }
-    elseif(trim($synonym) !="" && strpos(strtolower($field), $synonym)!== false){
+    elseif(strpos(strtolower($field), $synonym)!== false){
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Return a list of fields to ignore _always_
+ */
+function _autotag_fields_to_ignore(){
+  return array(
+    'nid', 'vid', 'created', 'uid', 'type', 'changed', 'log', 'author', 'preview', 'submit', 'delete'
+  );
 }
 /**
  * Function simply returns an array of fields to search when given a node
