@@ -99,21 +99,137 @@ function _autotag_search_field($field, $term, $synonym){
 /**
  * Return a list of fields to ignore _always_
  */
-function _autotag_fields_to_ignore(){
-  return array(
-    'nid', 'vid', 'created', 'uid', 'type', 'changed', 'log', 'author', 'preview', 'submit', 'delete'
-  );
+function _autotag_fields_to_ignore($content_type){
+  return array_merge(array(
+    'nid',
+    'vid',
+    'status',
+    'type',
+    'created',
+    'comment',
+    'changed',
+    'promote',
+    'sticky',
+    'revision_timestamp',
+    'log',
+    'format',
+    'uid',
+    'name',
+    'picture',
+    'data',
+    'path',
+    'last_comment_timestamp',
+    'last_comment_name',
+    'comment_count',
+    'files',
+    'iid',
+    'taxonomy',
+    'readmore',
+    'content',
+    'links'
+  ),variable_get('autotag_ignorefields_'.$content_type,array()));
 }
 /**
  * Function simply returns an array of fields to search when given a node
  */
 function _autotag_fields_to_search($node){
   $fields = array();
+  $ignore_fields = _autotag_fields_to_ignore();
   foreach($node as $key=>$value){
-    $fields[] = $key;
+    if(!in_array($key, $ignore_fields)){
+      $fields[] = $key;
+    }
   }
   return $fields;
 }
+
+/**
+ * Implementation of hook_menu
+ * 
+ * Needed only for the module's settings page
+ */
+function autotag_menu($maycache){
+  $items = array();
+  if (!$may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/autotag',
+      'title' => t('Autotag settings'),
+      'description' => t('Change the default autotag settings to include or exclude fields when auto tagging content.'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('autotag_admin_settings'),
+      'access' => user_access('administer site configuration')
+    );
+  }
+  return $items;
+}
+/**
+ * Autotag settings page
+ *
+ * @return Form for the page
+ */
+function autotag_admin_settings() {
+  $args = array('page_node_form');
+  $form = call_user_func_array('drupal_retrieve_form', $args);
+  if (isset($form['#multistep']) && $form['#multistep']) {
+    // Clean up old multistep form session data.
+    _drupal_clean_form_sessions();
+    //$_SESSION['form'][$form_build_id] = array('timestamp' => time(), 'args' => $args);
+    $form['#build_id'] = $form_build_id;
+  }
+  drupal_process_form($args,$form);
+  $form_id = 'page_node_form';
+  $node = 'page';
+  node_invoke($node,'form_alter',$form_id,$form);
+  print_r($form);exit;
+  /*
+  $content_types = node_get_types('types');
+  foreach($content_types as $node_name => $node){
+    if($node_name == 'page'){
+      
+    print_r(node_form($node));exit;
+    $form[$content] = array(
+      '#type' => 'fieldset',
+      '#title' => $content_title,
+      '#collapsible' => true,
+      '#collapsed' => true
+    );
+    $form[$content]['fields'] = array(
+    
+    );
+    }
+  }
+  */
+  /*
+  $form['hashcash_addorignore'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add Or Ignore'),
+    '#default_value' => variable_get('hashcash_addorignore', false),
+    '#description' => t('If checked, the box below states the forms that will have hashcash added.<br/>If unchecked the box below states the forms to NOT add hashcash to')
+  );
+  $form['hashcash_form_ids'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Form IDs'),
+    '#default_value' => variable_get('hashcash_form_ids',"user_login\nuser_login_block"),
+    '#description' => t('As stated above, the form IDs to ignore or add hashcash to')
+  );
+  $days = array(1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7);
+  $form['hashcash_expire'] = array(
+    '#type' => 'select',
+    '#title' => t('Expire time (days)'),
+    '#default_value' => variable_get('hashcash_expire',2),
+    '#description' => t('Time after which hashcash values can be repeated'),
+    '#options' => $days
+  );
+  */
+  return system_settings_form($form);
+}
+
+/**
+ * Quick!
+function autotag_form_alter($form, $form_id){
+  print_r($form);print_r($form_id);exit;
+}
+ */
 
 /**
  * Autotag settings page
