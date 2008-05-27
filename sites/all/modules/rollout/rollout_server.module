@@ -44,10 +44,8 @@ function rollout_server_settings($form_id, $form_values){
 function rollout_server_install($form_id, $form_values){
   // Does the installing/disabling
   // We want to ensure that only LOCALHOST is allowed here.
-  if ($_SERVER['REMOTE_ADDR']!=$_SERVER['SERVER_ADDR'] && !$_SERVER['SERVER_ADDR']!=''){ // FIXME - Better security required
-    return false;
-  }
-  elseif(gethostbyname($_SERVER['SERVER_NAME']) != $_SERVER['REMOTE_ADDR']) {
+  // FIXME - Better security required
+  if(gethostbyname($_SERVER['SERVER_NAME']) != $_SERVER['REMOTE_ADDR']){
     return false;
   }
   system_modules();
