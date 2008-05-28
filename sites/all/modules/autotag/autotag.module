@@ -168,19 +168,20 @@ function autotag_menu($maycache){
  * @return Form for the page
  */
 function autotag_admin_settings() {
-  $args = array('page_node_form');
-  $form = call_user_func_array('drupal_retrieve_form', $args);
-  if (isset($form['#multistep']) && $form['#multistep']) {
-    // Clean up old multistep form session data.
-    _drupal_clean_form_sessions();
-    //$_SESSION['form'][$form_build_id] = array('timestamp' => time(), 'args' => $args);
-    $form['#build_id'] = $form_build_id;
+  $content_types = node_get_types('types');
+    $fields = array();
+  foreach($content_types as $type){
+    $form = content_admin_display_overview_form($type->type);
+    foreach($form['fields'] as $fieldname => $fieldarray){
+      if($fieldarray['type']['#value'] == 'Text'){
+        $fields[] = $fieldname;
+      }
+    }
   }
-  drupal_process_form($args,$form);
-  $form_id = 'page_node_form';
-  $node = 'page';
-  node_invoke($node,'form_alter',$form_id,$form);
-  print_r($form);exit;
+  print_r($fields);
+  exit;
+  return $form;
+  //print_r($form);exit;
   /*
   $content_types = node_get_types('types');
   foreach($content_types as $node_name => $node){
