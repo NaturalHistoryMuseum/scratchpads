@@ -1,0 +1,497 @@
+<?php
+// $Id: bio.module,v 1.2.2.25 2008/01/28 08:30:13 webchick Exp $
+
+/**
+ * @file
+ * Bio module optionally creates a "Biography" node per user.
+ * 
+ * Use cases for this module include:
+ * - Add a Biography for each of your employees.
+ * - Make user profiles into nodes, for extra functionality.
+ * - Add CCK fields to the user registration form.
+ */
+
+// Panels integration.
+if (module_exists('panels')) {
+  include_once drupal_get_path('module', 'bio') .'/bio_panels.inc';
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function bio_init() {
+  // TODO: This interferes with aggressive caching. Can we do this in
+  // hook_menu() instead? Looks like we'd need to make bio follow after node.
+  // Could cause problems w/ registration and/or CRUD functions.
+
+  // Don't allow non-admin users to create more than one bio. 
+  if (isset($_GET['q']) && $_GET['q'] == 'node/add/'. bio_get_type()) {
+    if (($nid = bio_for_user()) && !user_access('administer nodes')) {
+      drupal_goto('node/'. $nid .'/edit');
+    }
+  }
+}
+
+/** 
+ * Implementation of hook_menu().
+ */
+function bio_menu($may_cache) {
+  global $user;
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array(
+      'path'  => 'admin/user/bio',
+      'title' => t('User biographies'),
+      'description' => t('User biographies'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('bio_settings'),
+    );
+  }
+  else {
+    if (variable_get('bio_profile', 0) && (arg(0) == 'user') && (is_numeric(arg(1)))) {
+      $type = bio_get_type();
+      $nid  = bio_for_user(arg(1));
+
+      // Determine access based on whether user has a bio.
+      if ($nid) {
+        $node = node_load($nid);
+        $access = node_access('update', $node);
+      }
+      else {
+        $node = (object) array('type' => $type, 'uid' => arg(1));
+        $access = (($user->uid == arg(1)) && node_access('create', $type)) || user_access('administer nodes');
+      }
+      $items[] = array(
+        'path'  => 'user/'. arg(1) .'/bio',
+        'title' => node_get_types('name', $type),
+        'callback' => 'node_page_edit',
+        'callback arguments' => array($node),
+        'type' => MENU_LOCAL_TASK,
+        'access' => $access,
+      );
+    }
+    elseif (variable_get('bio_profile', 0) && (arg(0) == 'node') && is_numeric(arg(1)) && !arg(2)) {
+      // If we're about to visit a bio node page, but we've got "use bios for profiles" selected,
+      // redirect to the user page.
+      $node = node_load(arg(1));
+      if (user_access('access user profiles') && $node->type == bio_get_type()) {
+        drupal_goto('user/'. $node->uid);
+      }
+    }
+  }
+  return $items;
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function bio_form_alter($form_id, &$form) {
+  if ($form_id == bio_get_type() .'_node_form' && arg(0) == 'user') {
+    // We're editing the bio in the user area... be sure we end up here when we
+    // finish submission, and disallow changing the author.
+    $account = user_load(array('uid' => arg(1)));
+    $form['#redirect'] = "user/$account->uid";
+    if (isset($form['author']['name'])) {
+      $form['author']['name']['#default_value'] = $account->name;
+      $form['author']['name']['#value'] = $account->name;
+      $form['author']['name']['#disabled'] = TRUE;
+      unset($form['author']['name']['#autocomplete_path']);
+      $form['author']['name']['#description'] = t('This field is disabled. You cannot alter the author of this entry from within the user area.');
+    }
+  }
+
+  // Display CCK fields on the user registration form, if they've been
+  // marked as such.
+  if ($form_id == 'user_register' && variable_get('bio_regstration_form', 0) && module_exists('content')) {
+    $widget_types = _content_widget_types();
+    $fields = _bio_get_fields();
+    $default_values = variable_get('bio_regstration_form_fields', array());
+
+    // Create a dummy node to pass along to the cck hooks.
+    $node = new stdClass();
+    $node->type = bio_get_type();
+
+    foreach ($fields as $field_name => $field) {
+      if ($field['required'] || !empty($default_values[$field_name])) {
+        $node_field = content_default_value($node, $field, array());
+      
+        // Figure out what widget function to call.
+        $module = $widget_types[$field['widget']['type']]['module'];
+        $function = $module .'_widget';
+
+        // Get the form field and add it to the form.
+        $cck_field = $function('prepare form values', $node, $field, $node_field);
+        $cck_field = $function('form', $node, $field, $node_field);
+        $form = array_merge($form, $cck_field);
+
+      }
+    }
+
+    // Add custom validate/submit handlers. 
+    $form['#submit']['bio_user_register_submit'] = array();
+    $form['#validate']['bio_user_register_validate'] = array();
+  }
+}
+
+/**
+ * Validate handler for user registration form. Validate CCK fields.
+ */
+function bio_user_register_validate($form_id, $form_values) {
+  // Create a dummy node to pass along to CCK.
+  $node = new stdClass();
+  $node->type = bio_get_type();
+  foreach ($form_values as $field_name => $value) {
+    if (preg_match('/^field_/', $field_name)) {
+      $node->$field_name = $form_values[$field_name];
+    }
+  }
+
+  // Call validation routines on the CCK fields.
+  content_validate($node);
+}
+
+/**
+ * Submit handler for user registration form. Automatically creates a bio node
+ * on registration if any bio fields are set to show on the registration form.
+ */
+function bio_user_register_submit($form_id, $form_values) {
+  // Create bio node for this user.
+  $node = new StdClass;
+  $node->type = bio_get_type();
+  $node->uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s'", $form_values['name']));
+  $node->title = $form_values['name'];
+  $node->name = $form_values['name'];
+  node_object_prepare($node);
+
+  $node_options = variable_get('node_options_'. $node->type, array('status', 'promote'));
+  foreach (array('status', 'promote', 'sticky') as $key) {
+    $node->$key = in_array($key, $node_options);
+  }
+  // Always use the default revision setting.
+  $node->revision = in_array('revision', $node_options);
+  
+  foreach ($form_values as $field_name => $value) {
+    if (preg_match('/^field_/', $field_name)) {
+      $node->$field_name = $form_values[$field_name];
+    }
+  }
+
+  // Create the node.
+  $node = node_submit($node);
+  node_save($node);
+
+  // Give us a nice log message.
+  if ($node->nid) {
+    watchdog('content', t('Bio: added %user bio upon registration.', array('%user' => $node->name)), WATCHDOG_NOTICE, l(t('view'), "node/$node->nid"));
+  }
+}
+
+/**
+ * Implementation of hook_profile_alter().
+ */
+function bio_profile_alter(&$account, &$fields) {
+  // Replace user profile with user bio.
+  if (variable_get('bio_profile_takeover', 0) && $bio = bio_for_user($account->uid)) {
+    $bio = node_load($bio);
+    $typename = node_get_types('name', bio_get_type());
+    foreach ($fields as $key => $val) {
+      if ($key != $typename) {
+        unset($fields[$key]);
+      }
+    }
+    $account->name = $bio->title;
+  }
+}
+
+/** 
+ * Implementation of hook_node_info().
+ */
+function bio_node_info() {
+  if (bio_get_type() == 'bio') {
+    // Create a default bio type that's as simple as possible.
+    return array(
+      'bio' => array(
+        'name' => t('Biography'),
+        'module' => 'node',
+        'has_title' => TRUE,
+        'has_body' => TRUE,
+        'custom' => TRUE,
+        'modified' => TRUE,
+        'locked' => FALSE,
+      ),
+    );
+  }
+}
+
+/** 
+ * Implementation of hook_nodeapi().
+ */
+function bio_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) { 
+  if ($node->type != bio_get_type()) return;
+
+  switch ($op) {
+    case 'validate':
+      // Ensure this user doesn't already have a bio node.
+      $account = user_load(array('name' => $node->name));
+      $nid = bio_for_user($account->uid);
+      if ($nid && ($nid != $node->nid)) {
+        form_set_error('name', t('This user already has a @bio. Edit it <a href="@link">here</a> or assign this entry to another user.', array('@bio' => node_get_types('name', $node), '@link' => url('node/'. $nid .'/edit'))));
+      }
+      break;
+    case 'insert':
+      // Record user's bio in bio table.
+      db_query('INSERT INTO {bio} (nid, uid) VALUES (%d, %d)', $node->nid, $node->uid);
+      break;
+    case 'delete':
+      // Remove the user's entry from the bio table when the user is deleted.
+      db_query('DELETE FROM {bio} where nid = %d', $node->nid);
+      break;
+  }
+}
+
+/** 
+ * Implementation hook_user().
+ */
+function bio_user($op, &$edit, &$account, $category = NULL) {
+  // If there's no bio for this user, nothing to do here.
+  if (!$nid = bio_for_user($account->uid)) {
+    return;
+  }
+
+  switch ($op) {
+    case 'view':
+      // Add bio to main user profile page, if option is enabled and bio is accessible.
+      if (variable_get('bio_profile', 0) && node_access('view', $node = node_load($nid))) {
+        $name = node_get_types('name', bio_get_type());
+        $bio[$name]['bio']['value'] = node_view($node, FALSE, TRUE, FALSE);
+        return $bio;
+      }
+      break;
+    case 'delete':
+      node_delete(bio_for_user($account->uid));
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_link().
+ */
+function bio_link($type, $node = NULL, $teaser = FALSE) { 
+  if ($type == 'node' && $node->type != bio_get_type()) {
+    // Add "View *username*'s biography" link to nodes.
+    $bio_link = variable_get('bio_link', array($node->type => 1));
+    if ($bio_link[$node->type] && ($nid = bio_for_user($node->uid))) {
+      $account = user_load(array('uid' => $node->uid));
+      return array(
+        'bio' => array(
+          'title' => t('by @user', array('@user' => $account->name)),
+          'href'  => 'node/'. $nid,
+          'attributes' => array(
+            'title' => t('View @user\'s @bio.', array('@user' => $account->name, '@bio' => node_get_types('name', bio_get_type()))),
+          ),
+        ),
+      );
+    }
+  } 
+}
+
+/**
+ * Find bio for given user.
+ * 
+ * @param $uid
+ *   User ID.
+ * @return
+ *   Node ID of bio, or FALSE if no bio node was found.
+ */
+function bio_for_user($uid = NULL) {
+  if (is_null($uid)) {
+    global $user;
+    $uid = $user->uid;
+  }
+
+  return db_result(db_query('SELECT nid FROM {bio} WHERE uid = %d', $uid));
+}
+
+/**
+ * Menu callback; administration settings page.
+ */
+function bio_settings() {
+  // Bio node type.
+  $types = array();
+  foreach (node_get_types() as $key => $type) {
+    $types[$key] = $type->name;
+  }
+  $form['bio_nodetype'] = array(
+    '#type' => 'select',
+    '#title' => t('Content type for user biographies'),
+    '#description' => t('The content type for user biographies. Each user may create only one node of this type'),
+    '#options' => $types,
+    '#default_value' => bio_get_type(),
+  );
+
+  // Link to author's bio.
+  $form['bio_link'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Display bio link'),
+    '#description' => t("Display a link to author's bio if it is available."),
+    '#options' => $types,
+    '#default_value' => variable_get('bio_link', $types),
+  );
+
+  // Bio profile options.
+  $form['bio_profile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use bio for user profiles'),
+    '#description' => t('View, edit, and display biography information on the user account page.'),
+    '#default_value' => variable_get('bio_profile', 0),
+  );
+  $form['bio_profile_takeover'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Takeover profile.'),
+    '#description' => t('Display nothing but the bio node on the user profile page.'),
+    '#default_value' => variable_get('bio_profile_takeover', 0),
+  );
+
+  // Show fields on the registration form.
+  if (module_exists('content')) {
+    $form['bio_regstration_form'] = array(
+      '#type' => 'radios',
+      '#title' => t('Show fields on registration form'),
+      '#options' => array(t('Disabled'), t('Enabled')),
+      '#default_value' => variable_get('bio_regstration_form', 0),
+      '#description' => t('Enable this option to display bio fields on the user registration form. This will automatically create a bio record for a user when they register.'),
+    );
+
+    // Determine the options and default values.
+    $fields = _bio_get_fields();
+    $default_values = variable_get('bio_regstration_form_fields', array());
+    foreach ($fields as $field_name => $properties) {
+      $options[$field_name] = check_plain($properties['widget']['label']);
+      // Required fields are always shown on registration form.
+      if ($properties['required'] || !empty($default_values[$field_name])) {
+        $default_values[$field_name] = $field_name;
+      }
+      else {
+        $default_vales[$field_name] = 0;
+      }
+    }
+    // Display list of fields.
+    $form['bio_regstration_form_fields'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Registration form fields'),
+      '#options' => $options,
+      '#default_value' => $default_values,
+      '#description' => t('Fields checked here will be displayed on the user registration form. Required fields are always shown.'),
+      '#theme' => 'bio_registration_fields',
+    );
+  }
+
+  // Strange hack for invalidating Views cache.
+  $add_a_submit = system_settings_form($form);
+  $add_a_submit['#validate']['bio_settings_validate_xxx'] = array();
+  return $add_a_submit;
+}
+
+/**
+ * Theme function for bio registration form options that adds a disabled flag
+ * to required fields.
+ * 
+ * @ingroup themeable
+ */
+function theme_bio_registration_fields($form) {
+  $fields = _bio_get_fields();
+  foreach (element_children($form) as $field_name) {
+    // Disable required fields; they always show up.
+    if ($fields[$field_name]['required']) {
+      $form[$field_name]['#attributes'] = array('disabled' => 'disabled');
+      $form[$field_name]['#value'] = $field_name;
+    }
+  }
+
+  return drupal_render($form);
+}
+
+/**
+ * Invalidate Views cache when bio settings form is submitted.
+ * 
+ * This is required in case the bio node type has changed. We need the _xxx
+ * suffix to keep it from interfering with the #base in system_settings_form().
+ * Also, we do it in the validate phase because submits were interfering with
+ * the #base attribute. Yuck.
+ * 
+ * @todo Less hackish way to do this?
+ */
+function bio_settings_validate_xxx($form_id, $form_values) {
+  if (module_exists('views')) {
+    views_invalidate_cache();
+  }
+}
+
+/**
+ * Retrieve field info for Bio CCK type.
+ */
+function _bio_get_fields() {
+  $bio_nodetype = bio_get_type();
+  $type = content_types($bio_nodetype);
+  return $type['fields'];
+}
+
+/**
+ * Short-hand function to return bio node type.
+ * 
+ * @return $string
+ *   Node type short name currently assigned as the Bio type.
+ */
+function bio_get_type() {
+  return variable_get('bio_nodetype', 'bio');
+}
+
+/*
+ * Views integration for Bio module.
+ * 
+ * Bio module's Views integration works by cloning many features of Views
+ * module's existing node integration. To avoid a large amount of code being
+ * loaded on every page, these functions therefore merely call private
+ * functions in bio_views.inc.
+ */
+
+/**
+ * Implementation of hook_views_table_alter().
+ * 
+ * @see _bio_views_tables_alter()
+ */
+function bio_views_tables_alter(&$tables) {
+  require_once drupal_get_path('module', 'bio') .'/bio_views.inc';
+  return _bio_views_tables_alter($tables);
+}
+
+/**
+ * Copy of views_handler_filter_isnew($op, $filter, $filterinfo, &$query)
+ * 
+ * @see _bio_handler_filter_isnew()
+ */
+function bio_handler_filter_isnew($op, $filter, $filterinfo, &$query) {
+  require_once drupal_get_path('module', 'bio') .'/bio_views.inc';
+  return _bio_handler_filter_isnew($op, $filter, $filterinfo, $query);
+}
+
+/**
+ * Implementation of hook_views_query_alter().
+ * 
+ * @see _bio_views_query_alter()
+ */
+function bio_views_query_alter(&$query, $view, $summary, $level) {
+  require_once drupal_get_path('module', 'bio') .'/bio_views.inc';
+  return _bio_views_query_alter($query, $view, $summary, $level);
+}
+
+/**
+ * Implementation of hook_views_default_views().
+ * 
+ * @see _bio_views_default_views()
+ */
+function bio_views_default_views() {
+  require_once drupal_get_path('module', 'bio') .'/bio_views.inc';
+  return _bio_views_default_views();
+}

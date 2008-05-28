@@ -1,0 +1,287 @@
+<?php
+// $Id: bio.test,v 1.1.2.11 2008/01/28 08:45:37 webchick Exp $
+
+/**
+ * @file
+ * SimpleTests for Bio module.
+ */
+
+/**
+ * Bio test case.
+ */
+class BioTest extends DrupalTestCase {
+
+  /**
+   * User with minimal permissions.
+   */
+  var $basic_user;
+  
+  /**
+   * Administrative user.
+   */
+  var $admin_user;
+  
+  /**
+   * Drupal SimpleTest method: return metadata about the test.
+   */
+  function get_info() {
+    return array(
+      'name'  => t('Bio module tests'),
+      'desc'  => t('Tests functionality of Bio module.'),
+      'group' => t('Bio module'),
+    );
+  }
+
+  /**
+   * SimpleTest core method: code run before each and every test method.
+   */
+  function setUp() {
+    parent::setUp();
+
+    // Set the 'bio' node type as the Bio node type.
+    $this->drupalVariableSet('bio_nodetype', 'bio');
+
+    // Create a basic user with minimal permissions.
+    $permissions = array(
+      'access content',
+      'create bio content',
+      'edit own bio content',
+      'create page content',
+      'create story content',
+      'access user profiles',
+    );
+    $this->basic_user = $this->drupalCreateUserRolePerm($permissions);
+
+    // Create an administrative user with more extensive permissions.
+    $permissions = array(
+      'access content',
+      'administer nodes',
+    );
+    $this->admin_user = $this->drupalCreateUserRolePerm($permissions);
+  }
+
+  /**
+   * SimpleTest core method: code run after each and every test method.
+   */
+  function tearDown() {
+    //
+    
+    parent::tearDown();
+  }
+
+  /**
+   * Perform various tests related to basic adding/editing/deleting of bios.
+   * 
+   * @todo Fill in stub function.
+   */
+  function testBioCrud() {
+    // Create a biography for the basic user.
+    $this->drupalLoginUser($this->basic_user);
+    $uid = $this->basic_user->uid;
+    $node = $this->bioCreateBio();
+
+    // Test bio deletion on user deletion.
+    user_delete(array(), $uid);
+    $this->assertFalse(bio_for_user($uid), t('Checking that bio was deleted when user account was deleted.'));
+  }
+
+  /**
+   * Ensure that basic users may create only one bio for themselves.
+   */
+  function testBioCreateBasicUserBio() {
+    // Create a biography for the basic user.
+    $this->drupalLoginUser($this->basic_user);
+    $node = $this->bioCreateBio();
+
+    // Have user attempt to create another one; confirm they're redirected back
+    // to their existing bio node.
+    $html = $this->drupalGet('node/add/bio');
+    $content = $this->drupalGetContent();
+    $this->assertText($node->title, t('Checking for redirection to existing bio node'));
+    $this->assertWantedRaw("node/$node->nid/edit", t('Ensuring redirection to form'));
+  }
+  
+  /**
+   * Ensure that administrators can create bios for other users.
+   */
+  function testBioCreateAdminUserBio() {
+    // Create a bio for the admin user.
+    $this->drupalLoginUser($this->admin_user);
+    $node = $this->bioCreateBio();
+
+    // Confirm that admin user is NOT redirected to their existing bio.
+    $this->drupalGet('node/add/bio');
+    $this->assertNoText($node->title, t('Checking for clean add form for admin user with bio node'));
+
+    // Create a bio for the basic user.
+    $node = $this->bioCreateBio($this->basic_user);
+    $this->drupalGet("node/$node->nid");
+    $this->assertText($node->body, t('Checking for admin creation of basic user bio'));
+    
+    // Ensure admin user can NOT create two bios for themselves.
+    $this->bioCreateBio();
+    $this->assertText(t('This user already has a Biography.'), t('Checking for block of duplicate bio from admin user'));
+  }
+
+  /**
+   * Ensure that the "Use bio for user profiles" option is working properly.
+   */
+  function testBioProfile() {
+    // Enable setting and login as basic user to test.
+    $this->drupalVariableSet('bio_profile', 1);    
+    $this->drupalLoginUser($this->basic_user);
+    $uid = $this->basic_user->uid;
+
+    // Check to see if link to edit bio shows up in user profile.
+    $this->drupalGet("user/$uid");
+    $this->assertWantedRaw("user/$uid/bio", t('Checking for link to edit bio on user profile'));
+
+    // NOTE: I tried here to test the user/$uid/bio form itself, but I can't.
+    // Bio has a menu access check which fails because $user->uid is me, and
+    // not the fake SimpleTest user $uid. See http://drupal.org/node/214053 for
+    // all the boring, nitty-gritty details...
+    //
+    // Long story short, using the bioCreateBio() method instead.
+    // $edit['title'] = $this->randomName(32);
+    // $edit['body'] = $this->randomName(32);
+    // $this->drupalPostRequest("user/$uid/bio", $edit, t('Submit'));
+    // $this->drupalGet("user/$uid");
+    // $this->assertText($edit['body'], t('Checking for bio content on user profile'));
+
+    // Create a bio for this user.
+    $node = $this->bioCreateBio();
+
+    // Check for bio information on user profile page.
+    $this->drupalGet("user/$uid");
+    $this->assertText($node->body, t('Checking for bio content on user profile'));
+
+    // Try to access bio node directly; should be redirected to profile page.
+    // TODO: This test fails. node/X yields an access denied. :(
+    // Might be related to http://drupal.org/node/214053 as well?
+    // $this->drupalGet("node/$node->nid");
+    // $this->assertText(t('Member for'), t('Checking for bio to profile redirect'));
+
+    // Ensure an access denied error is generated when trying to go to another
+    // user's bio edit page.
+    $permissions = array(
+      'access content',
+      'create bio content',
+      'edit own bio content',
+      'access user profiles',
+    );
+    $this->basic_user2 = $this->drupalCreateUserRolePerm($permissions);
+
+    // In order to login as second user, need to logout as first user.
+    // Keep tabs on http://drupal.org/node/213454 for updates.
+    // TODO: Why doesn't drupalGet() work for this?
+    $this->get(url('logout', NULL, NULL, TRUE));
+
+    $this->drupalLoginUser($this->basic_user2);
+    $this->drupalGet("user/$uid/bio");
+    $this->assertText(t('Access denied'), t("Checking for access denied when basic user tries to edit another user's bio"));
+
+    // As admin, make sure that the name field is not alterable from user/X/bio.
+    $this->get(url('logout', NULL, NULL, TRUE));
+    $this->drupalLoginUser($this->admin_user);
+    $this->drupalPostRequest("user/$uid/bio", array('name' => $this->admin_user->name), t('Submit'));
+    $nid = bio_for_user($this->admin_user->uid);
+    $this->assertFalse($nid, t('Checking for inability to edit author on bio node'));
+
+    // TODO: Check with user who doesn't have access to node.
+  }
+
+  /**
+   * Test "takeover profile" option.
+   */
+  function testBioTakeoverProfile() {
+    // "Use bio as user profile" option is also required.
+    $this->drupalVariableSet('bio_profile', 1);
+    $this->drupalVariableSet('bio_takeover', 1);
+    
+    // Create bio for basic user.
+    $this->drupalLoginUser($this->basic_user);
+    $this->bioCreateBio();
+
+    // Ensure that on user profile, there's no remnants of the 'default'
+    // profile stuff.
+    $this->drupalGet('user');
+    $this->assertNoText(t('Member for'), t('Checking for profile takeover'));
+  }
+
+  /**
+   * Test "bio link" setting.
+   */
+  function testBioLink() {
+    // Enable bio links on stories.
+    $this->drupalVariableSet('bio_link', array('story' => 1));
+
+    // Login as basic user and create bio.
+    $this->drupalLoginUser($this->basic_user);
+    $bio = $this->bioCreateBio();
+
+    // Create a story. Confirm link appears.
+    $edit['title'] = $this->randomName(32);
+    $edit['body'] = $this->randomName(32);
+    $this->drupalPostRequest('node/add/story', $edit, t('Submit'));
+    $node = node_load(array('title' => $edit['title']));
+    $this->drupalGet("node/$node->nid");
+    $this->assertText(t('by @user', array('@user' => $this->basic_user->name)), t('Checking for bio link when it should appear'));
+
+    // Create a page. Confirm link does not appear.
+    $edit['title'] = $this->randomName(32);
+    $edit['body'] = $this->randomName(32);
+    $this->drupalPostRequest('node/add/page', $edit, t('Submit'));
+    $node = node_load(array('title' => $edit['title']));
+    $this->drupalGet("node/$node->nid");
+    $this->assertNoUnwantedRaw(t('by @user', array('@user' => $this->basic_user->name)), t('Checking for bio link when it should not appear'));
+  }
+
+  /**
+   * Perform various tests related to the bio content type.
+   * 
+   * @todo Fill in stub function.
+   */
+  function testBioContentType() {    
+  }
+  
+  /**
+   * Perform various tets related to showing fields on registration form.
+   *
+   * @todo Fill in stub function.
+   */
+  function testBioRegistrationFormFields() {
+  }
+
+  /**
+   * Perform various tets related to Views integration.
+   *
+   * @todo Fill in stub function.
+   */
+  function testBioViewsIntegration() {
+  }
+
+  /**
+   * Perform various tets related to Panels integration.
+   *
+   * @todo Fill in stub function.
+   */
+  function testBioPanelsIntegration() {
+  }
+
+  /**
+   * Create a biography for a given user.
+   * 
+   * @param $uid
+   *   Optional; specify the user for whom to create the bio.
+   */
+  function bioCreateBio($account = NULL) {
+    $edit = array();
+    if ($account) {
+      $edit['name'] = $account->name;
+    }
+    $edit['title'] = $this->randomName(32);
+    $edit['body'] = $this->randomName(32);
+    $this->drupalPostRequest('node/add/bio', $edit, t('Submit'));
+    return node_load(array('title' => $edit['title']));
+  }
+}
