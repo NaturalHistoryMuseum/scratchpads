@@ -72,6 +72,26 @@ function _autotag_search($node){
 }
 
 /**
+ * Implementation of hook_cron
+ * 
+ * This function looks over old node content, and tags it in the same way as if it had been
+ * edited/created after this module was installed.
+ */
+function autotag_cron(){
+  // Get the last node to be updated with cron.
+  $last_nid = variable_get('autotag_last_node',0);
+  $highest_nid = variable_get('autotag_cron_highest_nid',2147483647);
+  $num_to_update = variable_get('autotag_nodes_to_search',50);
+  $results = db_query("SELECT nid FROM {node} WHERE nid > %d AND nid < %d ORDER by nid ASC LIMIT %d", $last_nid, $highest_nid, $num_to_update);
+  while($row = db_fetch_array($results)){
+    $node = node_load($row);
+    _autotag_search($node);
+    node_save($node);
+    $last_nid = $node->nid;
+  }
+  variable_set('autotag_last_node', $last_nid);
+}
+/**
  * Takes a field and term and checks for a match.  Field can be an array, or
  * a single string
  */
@@ -95,46 +115,20 @@ function _autotag_search_field($field, $term, $synonym){
   }
   return false;
 }
-
-/**
- * Return a list of fields to ignore _always_
- */
-function _autotag_fields_to_ignore($content_type){
-  return array_merge(array(
-    'nid',
-    'vid',
-    'status',
-    'type',
-    'created',
-    'comment',
-    'changed',
-    'promote',
-    'sticky',
-    'revision_timestamp',
-    'log',
-    'format',
-    'uid',
-    'name',
-    'picture',
-    'data',
-    'path',
-    'last_comment_timestamp',
-    'last_comment_name',
-    'comment_count',
-    'files',
-    'iid',
-    'taxonomy',
-    'readmore',
-    'content',
-    'links'
-  ),variable_get('autotag_ignorefields_'.$content_type,array()));
-}
 /**
  * Function simply returns an array of fields to search when given a node
  */
 function _autotag_fields_to_search($node){
   $fields = array();
-  $ignore_fields = _autotag_fields_to_ignore();
+  $ignore_fields = array(
+    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links'
+  );
+  $adminset_ignore_fields = variable_get('autotag_selectfields_'.$node->type , array());
+  foreach($adminset_ignore_fields as $field=>$value){
+    if($value !== 0){
+      $ignore_fields[] = $field;
+    }
+  }
   foreach($node as $key=>$value){
     if(!in_array($key, $ignore_fields)){
       $fields[] = $key;
@@ -164,78 +158,62 @@ function autotag_menu($maycache){
 }
 /**
  * Autotag settings page
- *
- * @return Form for the page
  */
 function autotag_admin_settings() {
+  // Get the messages so that they can be set afterwards
+  $messages = drupal_get_messages();
+  // Get all the content types to show on the form
   $content_types = node_get_types('types');
-    $fields = array();
+  $form = array();
+  // Field for setting number of nodes to update on Cron.
+  $options = array();
+  for($i=10;$i<=100;$i+=10){$options[$i]=$i;}
+  for($i=150;$i<=1000;$i+=50){$options[$i]=$i;}
+  $form['autotag_nodes_to_search'] = array(
+    '#title' => t('Number of nodes to update on cron'),
+    '#type' => 'select',
+    '#description' => t('Sets the number of nodes to automatically tag when cron is run.  This allows for content created before the module was installed to be automatically tagged.'),
+    '#default_value' => variable_get('autotag_nodes_to_search',50),
+    '#options' => $options
+  );
   foreach($content_types as $type){
-    $form = content_admin_display_overview_form($type->type);
-    foreach($form['fields'] as $fieldname => $fieldarray){
+    $options = array();
+    $type = $type->type;
+    // Fieldset for each content type
+    $form[$type] = array('#type'=>'fieldset','#title'=>$type,'#collapsible'=>true,'#collapsed'=>true);
+    $newform = content_admin_display_overview_form($type);
+    foreach($newform['fields'] as $fieldname => $fieldarray){
       if($fieldarray['type']['#value'] == 'Text'){
-        $fields[] = $fieldname;
+        $options[$fieldname]=$fieldname;
       }
     }
+    if(function_exists($type.'_form')){
+      $newform = call_user_func($type.'_form');
+      foreach($newform as $field=>$fieldarray){
+        if(in_array('textfield',$fieldarray) || in_array('textarea',$fieldarray)){
+          $options[$field]=$field;
+        }
+      }
+    } else {
+      $options['title']='title';
+      $options['body']='body';
+    }
+    // Checkboxes for this content type
+    $form[$type]['autotag_selectfields_'.$type] = array(
+      '#type' => 'checkboxes',
+      '#title' => t("Fields to ignore in content type '%type'",array('%type'=>$type)),
+      '#description' => t('Uncheck a field if you don\'t want it to be search for taxonomy terms'),
+      '#options'=> $options,
+      '#default_value'=>variable_get('autotag_selectfields_'.$type , array())
+    );
   }
-  print_r($fields);
-  exit;
-  return $form;
-  //print_r($form);exit;
-  /*
-  $content_types = node_get_types('types');
-  foreach($content_types as $node_name => $node){
-    if($node_name == 'page'){
-      
-    print_r(node_form($node));exit;
-    $form[$content] = array(
-      '#type' => 'fieldset',
-      '#title' => $content_title,
-      '#collapsible' => true,
-      '#collapsed' => true
-    );
-    $form[$content]['fields'] = array(
-    
-    );
+  // Clear the messages set by content types with no extra fields
+  drupal_get_messages(null,true);
+  // Reset the old messages
+  foreach($messages as $type=>$messagearray){
+    foreach($messagearray as $message){
+      drupal_set_message($message,$type);
     }
   }
-  */
-  /*
-  $form['hashcash_addorignore'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Add Or Ignore'),
-    '#default_value' => variable_get('hashcash_addorignore', false),
-    '#description' => t('If checked, the box below states the forms that will have hashcash added.<br/>If unchecked the box below states the forms to NOT add hashcash to')
-  );
-  $form['hashcash_form_ids'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Form IDs'),
-    '#default_value' => variable_get('hashcash_form_ids',"user_login\nuser_login_block"),
-    '#description' => t('As stated above, the form IDs to ignore or add hashcash to')
-  );
-  $days = array(1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7);
-  $form['hashcash_expire'] = array(
-    '#type' => 'select',
-    '#title' => t('Expire time (days)'),
-    '#default_value' => variable_get('hashcash_expire',2),
-    '#description' => t('Time after which hashcash values can be repeated'),
-    '#options' => $days
-  );
-  */
   return system_settings_form($form);
 }
-
-/**
- * Quick!
-function autotag_form_alter($form, $form_id){
-  print_r($form);print_r($form_id);exit;
-}
- */
-
-/**
- * Autotag settings page
- * 
- * This allows the user to set:
- * 
- * - Vocabularies to associate with a particular content type
- */
