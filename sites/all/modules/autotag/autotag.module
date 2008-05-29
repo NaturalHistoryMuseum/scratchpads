@@ -3,8 +3,11 @@
 
 /** 
  * @file autotag.module
+ * 
  * Automatically tags nodes with terms depending on the content of textfields.
- * Textfields to use are currently configurable (HOW?).
+ * Textfields to ignore can be set on the modules settings page, along with the 
+ * number of nodes to search on cron.  Once all nodes have been search by cron,
+ * this module shouldn't do anything on a cron run.
  */
 
 /**
@@ -28,6 +31,9 @@ function autotag_nodeapi($node, $op, $a3 = NULL, $a4 = NULL){
 
 /**
  * Following function gets the terms from the database, and does the tagging
+ * 
+ * This takes a node as a parameter, and returns it with the taxonomy altered
+ * accordingly.
  */
 function _autotag_search($node){
   // First get all vocabularies, and see which ones apply to this content type
@@ -38,13 +44,15 @@ function _autotag_search($node){
       $vids[] = $vocabulary->vid;
     }
   }
+
   // Get all the fields to search from this node  
   $fields = _autotag_fields_to_search($node);
+
   // Get total number to search
   $vids_string = implode(",",$vids);
   $result = db_query("SELECT COUNT(*) FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid  WHERE t.vid IN (".$vids_string.")");
   $total_terms = array_pop(db_fetch_array($result));
-  // Search 100 terms at a time (Drupal memory shite)
+  // Search 100 terms at a time (Drupal memory shite) up to the maximum
   for($i=0; $i < $total_terms; $i+=100){
     $results = db_query_range("SELECT vid, t.tid AS tid, lower(t.name) AS name, lower(s.name) AS synonym FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid WHERE vid IN (".$vids_string.")",$i,100);
     while($row = db_fetch_array($results)){
@@ -82,7 +90,14 @@ function autotag_cron(){
   $last_nid = variable_get('autotag_last_node',0);
   $highest_nid = variable_get('autotag_cron_highest_nid',2147483647);
   $num_to_update = variable_get('autotag_nodes_to_search',50);
-  $results = db_query("SELECT nid FROM {node} WHERE nid > %d AND nid < %d ORDER by nid ASC LIMIT %d", $last_nid, $highest_nid, $num_to_update);
+  
+  // If they're all been searched, simly return
+  if($last_nid >= $highest_nid){
+    return;
+  }
+  
+  // Get the nodes and search them
+  $results = db_query("SELECT nid FROM {node} WHERE nid > %d AND nid <= %d ORDER by nid ASC LIMIT %d", $last_nid, $highest_nid, $num_to_update);
   while($row = db_fetch_array($results)){
     $node = node_load($row);
     _autotag_search($node);
@@ -91,9 +106,10 @@ function autotag_cron(){
   }
   variable_set('autotag_last_node', $last_nid);
 }
+
 /**
  * Takes a field and term and checks for a match.  Field can be an array, or
- * a single string
+ * a single string.  If an array, it recurses till it gets a string
  */
 function _autotag_search_field($field, $term, $synonym){
   if(is_array($field) || is_object($field)){
