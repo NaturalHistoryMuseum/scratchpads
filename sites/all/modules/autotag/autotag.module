@@ -185,12 +185,25 @@ function autotag_admin_settings() {
   $options = array();
   for($i=10;$i<=100;$i+=10){$options[$i]=$i;}
   for($i=150;$i<=1000;$i+=50){$options[$i]=$i;}
-  $form['autotag_nodes_to_search'] = array(
+  $form['settings'] = array('#type'=>'fieldset','#title'=>t('Settings'),'#collapsible'=>false);
+  $form['settings']['autotag_nodes_to_search'] = array(
     '#title' => t('Number of nodes to update on cron'),
     '#type' => 'select',
     '#description' => t('Sets the number of nodes to automatically tag when cron is run.  This allows for content created before the module was installed to be automatically tagged.'),
     '#default_value' => variable_get('autotag_nodes_to_search',50),
     '#options' => $options
+  );
+  $form['settings']['autotag_cron_highest_nid'] = array(
+    '#title' => t('Highest nid to autotag'),
+    '#type' => 'textfield',
+    '#description' => t('Sets the highest nid to be automatically tagged.  Set this to the last nid to be created in order to ensure all nodes are autotagged'),
+    '#default_value' => variable_get('autotag_cron_highest_nid',2147483647)
+  );
+  $form['settings']['autotag_last_node'] = array(
+    '#title' => t('Node ID to start cron at'),
+    '#type' => 'textfield',
+    '#description' => t('Sets the lowest nid to be automatically tagged.  Set this to zero in order to ensure all nodes are autotagged.  If this is set to the same value as "Highest nid to autotag", then no autotagging will be performed.'),
+    '#default_value' => variable_get('autotag_last_node',0)
   );
   foreach($content_types as $type){
     $options = array();
