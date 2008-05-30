@@ -246,3 +246,63 @@ function autotag_admin_settings() {
   }
   return system_settings_form($form);
 }
+
+function autotag_node_form_submit($form_id, $form_values){
+  return drupal_get_form('node_form');
+  print_r($form);
+}
+
+function autotag_form_alter($form_id, &$form){
+  // If this is a node form, then carry on
+  if(isset($_POST) && count($_POST)>0){
+    //print_r($form_id);print_r($form);
+    //exit;
+  }
+  if($form['#id'] == 'node-form'){
+    drupal_add_css(drupal_get_path('module','autotag').'/autotag.css');
+    drupal_add_js(drupal_get_path('module','autotag').'/autotag.js');
+    $form['#multistep'] = TRUE;
+    $step = isset($form['#post']['step']) ? (int) $form['#post']['step'] : 1;
+    $form['step'] = array(
+      '#type' => 'hidden',
+      '#value' => $step +1
+    );
+    $form['autotag'] = array();
+    $button_name = t('Submit');
+    if($step<2){
+      $form['#redirect'] = FALSE;
+      $button_name = t('Next');
+      $form['#submit'] = FALSE;
+    } else {
+      // Keep stuff as it is, just add the autotag bollocks to the top      
+      $form['autotag']['#type'] = 'fieldset';
+      $form['autotag']['#title'] = t('Autotag taxonomy terms');
+      $form['autotag']['#collapsed'] = true;
+      $form['autotag']['#collapsible'] = false;
+      $form['autotag']['#weight'] = -100;
+      $form['autotag']['ignoreterms'] = array(
+        '#type' => 'hidden'
+      );
+      $lists = '';
+      foreach($form['#node']->taxonomy as $term){
+        $lists .= '<li class="autotag-dragable">'.$term->name.'</li>';
+      }
+      $form['autotag']['dragndropfields'] = array(
+        '#value' => '<div class="autotag-dnd">
+    <div id="autotag-dnd-left">
+      <ul>
+        '.$lists.'
+      </ul>
+    </div>
+    <div id="autotag-dnd-right">
+      <ul>
+      </ul>
+    </div> 
+  </div>');
+    }
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $button_name
+    );
+  }
+}
