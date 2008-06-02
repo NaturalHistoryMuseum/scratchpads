@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /var/www/html/screenshots-long
+./createScreenshots
+php anotate-screenshots.php | bash
+./createResizes

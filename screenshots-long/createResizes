@@ -1,0 +1,16 @@
+#!/bin/bash
+# Change to the directory with the firefox-screen script and for output
+cd /var/www/html/screenshots-long
+# For each site.
+for i in $( ls -1 /var/www/html/sites |grep -v ^all$|grep -v ^default|grep -v \~|grep -v settings);do
+	echo $i
+	convert $i.annotated.png -resize 280x $i.280x210.annotated.png
+	convert $i.annotated.png -resize 200x $i.200x150.annotated.png
+	convert $i.png -resize 280x $i.280x210.png
+	convert $i.png -resize 200x $i.200x150.png
+	convert -page +4+4 $i.280x210.png -matte \( +clone -background black -shadow 60x4+4+4 \) +swap -background none -mosaic -depth 8 -quality 95 $i.280x210-drop.png
+	convert -page +4+4 $i.280x210.annotated.png -matte \( +clone -background black -shadow 60x4+4+4 \) +swap -background none -mosaic -depth 8 -quality 95 $i.280x210-drop.annotated.png
+	#convert $i.160x120.png -bordercolor white -border 6 -bordercolor grey60 -border 1 -background none -rotate `perl -e 'print rand() * 30 - 15'` -background black \( +clone -shadow 60x4+4+4 \) +swap -background none -flatten -depth 8 -quality 95 $i.200x150-drop.png
+	#convert -caption 'http://'$i'' $i.200x150.png -font Arial -gravity center -bordercolor Lavender -background black -polaroid -0 $i.polaroid.png
+	#convert $i.160x120.png -bordercolor white  -border 6 -bordercolor grey60 -border 1 -bordercolor none  -background  none \( -clone 0  -rotate `perl -e 'print rand() * 30 - 15'` \) \( -clone 0  -rotate `perl -e 'print rand() * 30 - 15'` \) \( -clone 0  -rotate `perl -e 'print rand() * 30 - 15'` \) \( -clone 0  -rotate `perl -e 'print rand() * 30 - 15'` \) -delete 0  -border 100x80  -gravity center -crop 200x160+0+0  +repage  -flatten  -trim +repage -background black \( +clone -shadow 60x4+4+4 \) +swap -background none  -flatten -depth 8  -quality 95   $i.200x150-drop.png
+done
