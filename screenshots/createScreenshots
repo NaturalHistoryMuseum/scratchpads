@@ -2,7 +2,7 @@
 
 # Create an X Virtual Frame Buffer (wait for it to start)
 Xvfb :2 -screen 0 1040x768x24 -fbdir /tmp -nolisten inet6 &
-sleep 10
+sleep 20
 
 # Change to the directory with the firefox-screen script and for output
 cd /var/www/html/screenshots
