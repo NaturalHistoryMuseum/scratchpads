@@ -13,7 +13,7 @@
 // All the small images
 $files = scandir('.');
 foreach($files as $file){
-  if(substr($file,-3)=='jpg' || substr($file,-3)=='png'){
+  if(substr($file,-9)=='small.jpg' || substr($file,-19)=='small.annotated.jpg'){
     ?><img src="/screenshots/<?php echo $file; ?>"/><?php
   }
 }
