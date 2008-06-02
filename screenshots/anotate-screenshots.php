@@ -4,7 +4,7 @@ $convert_string = "convert -background '#0008' -fill white -gravity west -size 1
 $files = scandir('.');
 $databasedetails = parse_ini_file('/var/www/drupal_db_passwords',true);
 foreach($files as $file){
-  if(strpos($file,'.png')>0){
+  if(strpos($file,'.jpg')>0){
     // $file is the start need to connect to a database now, and do some stuff
     $domain = str_replace('-','',array_shift(explode(".", $file)));
     if($domain =="pad"){
@@ -19,7 +19,7 @@ foreach($files as $file){
     $caption = ' Pages: '.$nodes.'\n Users: '.$users.'\n Views: '.$views;
     $file_parts = explode('.',$file);
     array_pop($file_parts);
-    array_push($file_parts,'annotated.png');
+    array_push($file_parts,'annotated.jpg');
     $filenew = implode('.',$file_parts);
     echo sprintf($convert_string,$caption,$file,$filenew)."\n";
   }
