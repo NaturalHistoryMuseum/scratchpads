@@ -5,7 +5,8 @@ Xvfb :2 -screen 0 1040x768x24 -fbdir /tmp -nolisten inet6 &
 sleep 20
 
 # For each site.
-for i in $( ls -1 /var/www/html/sites |grep -v ^all$|grep -v ^default|grep -v \~|grep -v settings);do
+#for i in $( ls -1 /var/www/html/sites |grep -v ^all$|grep -v ^default|grep -v \~|grep -v settings);do
+for i in $( echo "birds-howardandmoore.org");do
 	./firefox-screenshot $i
 	sleep 5
 done
