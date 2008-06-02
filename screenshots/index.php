@@ -11,9 +11,12 @@
 <?php
 
 // All the small images
-echo "Hello";
 $files = scandir('.');
-print_r($files);
+foreach($files as $file){
+  if(substr($file,-3)=='jpg' || substr($file,-3)=='png'){
+    ?><img src="/screenshots/<?php echo $file; ?>"/><?php
+  }
+}
 
 ?>
 </body>
