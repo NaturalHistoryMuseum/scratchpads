@@ -11,7 +11,9 @@
 <?php
 
 // All the small images
-scandir
+echo "Hello";
+$files = scandir('.');
+print_r($files);
 
 ?>
 </body>
