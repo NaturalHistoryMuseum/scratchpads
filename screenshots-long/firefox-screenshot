@@ -1,6 +1,0 @@
-#!/bin/bash
-DISPLAY=:2.0 /root/bin/firefox -width 1038 -height 2000 http://$1 &
-sleep 10
-DISPLAY=:2.0 import -window root $1.png
-convert $1.png -crop 1024x2000+1+1 $1.png
-killall firefox firefox-bin &>/dev/null
