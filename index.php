@@ -14,7 +14,6 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 $return = menu_execute_active_handler();
 
-drupal_set_message('Due to system upgrades, there will be a short down time of the Scratchpad server at 2:00pm BST (13:00 GMT).');
 // Menu status constants are integers; page content is a string.
 if (is_int($return)) {
   switch ($return) {
