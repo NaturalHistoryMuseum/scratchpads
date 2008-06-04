@@ -8,7 +8,6 @@ $(document).ready(function () {
   	hoverClass: 'autotag-dnd-drop-hover',
   	drop: function(ev, ui) {
   		ui.draggable.appendTo("#autotag-dnd-right>ul");
-  		autotag_update_form();
   	}
   });
   $ui('#autotag-dnd-left').droppable({
@@ -17,7 +16,6 @@ $(document).ready(function () {
   	hoverClass: 'autotag-dnd-drop-hover',
   	drop: function(ev, ui) {
   		ui.draggable.appendTo("#autotag-dnd-left>ul");
-  		autotag_update_form();
   	}
   });
   $ui('#autotag-dnd-right>*').droppable({
@@ -26,7 +24,6 @@ $(document).ready(function () {
   	hoverClass: 'autotag-dnd-drop-hover',
   	drop: function(ev, ui) {
   		ui.draggable.appendTo("#autotag-dnd-right>ul");
-  		autotag_update_form();
   	}
   });
   $ui('#autotag-dnd-left>*').droppable({
@@ -35,14 +32,12 @@ $(document).ready(function () {
   	hoverClass: 'autotag-dnd-drop-hover',
   	drop: function(ev, ui) {
   		ui.draggable.appendTo("#autotag-dnd-left>ul");
-  		autotag_update_form();
   	}
   });
   $ui('.autotag-dragable').droppable({
   	accept: ".autotag-dragable",
   	drop: function(ev, ui) {
   		ui.draggable.appendTo($(this).parent());
-  		autotag_update_form();
   	}
   });
 });

@@ -17,14 +17,12 @@
  * checks to see if the node->type is associated with a vocabulary, and if so, it
  * checks to see if any of the vocabulary terms are present in fields in this node.
  */
-function autotag_nodeapi($node, $op, $a3 = NULL, $a4 = NULL){
+function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   switch($op){
     case 'submit':
       $node = _autotag_search($node);
       $node = _autotag_submit($node);
-      break;
-    default:
-      drupal_set_message($op . " *** ".print_r($node,true));
+      break;      
   }
 }
 
@@ -45,13 +43,18 @@ function _autotag_search($node){
   }  
   // Get all the fields to search from this node  
   $fields = _autotag_fields_to_search($node);
+  
+  /*
+   * Following was too bloody slow.
+   *
   // Get total number to search
   $vids_string = implode(",",$vids);
   $result = db_query("SELECT COUNT(*) FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid  WHERE t.vid IN (".$vids_string.")");
   $total_terms = array_pop(db_fetch_array($result));
+  
   // Search 100 terms at a time (Drupal memory shite) up to the maximum
-  for($i=0; $i < $total_terms; $i+=100){
-    $results = db_query_range("SELECT vid, t.tid AS tid, lower(t.name) AS name, lower(s.name) AS synonym FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid WHERE vid IN (".$vids_string.")",$i,100);
+  for($i=0; $i < $total_terms; $i+=1000){
+    $results = db_query_range("SELECT vid, t.tid AS tid, lower(t.name) AS name, lower(s.name) AS synonym FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid WHERE vid IN (".$vids_string.")",$i,1000);
     while($row = db_fetch_array($results)){
       // Is this term to be found anywhere in this node
       foreach($fields as $field){
@@ -73,8 +76,147 @@ function _autotag_search($node){
       }
     }
   }
+  */
+  foreach($fields as $field){
+    // Lets split the fields up by spaces, and search on each word in the term_data table.
+    if(isset($node->$field)){
+      $terms = _autotag_search_field($node->$field, $vids);
+      foreach($terms as $term){
+        $node->taxonomy[$term['vid']][$term['tid']] = $term['tid'];
+      }
+    }
+  }
   return $node;
 }
+/**
+ * I really should combine this function with the one above.  It'll be done in a future release.
+ *
+ * @param unknown_type $form
+ * @return unknown
+ */
+function _autotag_search_form($form){
+  // First get all vocabularies, and see which ones apply to this content type
+  $vocabularies = taxonomy_get_vocabularies();
+  $vids = array();
+  foreach($vocabularies as $vocabulary){
+    if(in_array($form['type']['#value'],$vocabulary->nodes) && $vocabulary->tags == 0){
+      $vids[] = $vocabulary->vid;
+    }
+  }
+  // Get all the fields to search from this node  
+  $fields = _autotag_fields_to_search_post($form['#post'], $form['type']['#value']);
+  /*
+  // Get total number to search
+  $vids_string = implode(",",$vids);
+  $result = db_query("SELECT COUNT(*) FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid  WHERE t.vid IN (".$vids_string.") AND t.tid NOT IN (SELECT tid FROM {autotag} WHERE nid = %d)", $form['nid']['#value']);
+  $total_terms = array_pop(db_fetch_array($result));
+  // Search 100 terms at a time (Drupal memory shite) up to the maximum
+  for($i=0; $i < $total_terms; $i+=100){
+    $results = db_query_range("SELECT vid, t.tid AS tid, lower(t.name) AS name, lower(s.name) AS synonym FROM {term_data} t LEFT JOIN {term_synonym} s ON t.tid = s.tid WHERE vid IN (".$vids_string.") AND t.tid NOT IN (SELECT tid FROM {autotag} WHERE nid = %d)", $form['nid']['#value'],$i,100);
+    while($row = db_fetch_array($results)){
+      // Is this term to be found anywhere in this node
+      foreach($fields as $field){
+        if(isset($form['#post'][$field])){
+          if(_autotag_search_field($form['#post'][$field], $row['name'], $row['synonym'])){
+            if(is_array($form['#post']['taxonomy'][$row['vid']])){
+              if(!in_array($row['tid'],$form['#post']['taxonomy'][$row['vid']])){
+                if(count($form['#post']['taxonomy'][$row['vid']])==1 && $form['#post']['taxonomy'][$row['vid']][0] ==''){
+                  $form['#post']['taxonomy'][$row['vid']] = array();
+                }
+                $form['#post']['taxonomy'][$row['vid']][] = $row['tid'];
+              }
+            }else{
+              $form['#post']['taxonomy'][$row['vid']][] = $row['tid'];
+            }
+          }
+        }
+      }
+    }
+  }
+  */
+  foreach($fields as $field){
+    // Lets split the fields up by spaces, and search on each word in the term_data table.
+    if(isset($form['#post'][$field])){
+      $terms = _autotag_search_field($form['#post'][$field], $vids);
+      foreach($terms as $term){
+        if(!isset($form['#post']['taxonomy'][$term['vid']])){
+          $form['#post']['taxonomy'][$term['vid']] = array();
+          $form['#post']['taxonomy'][$term['vid']][] = $term['tid'];
+        }
+        elseif(!in_array($term['tid'],$form['#post']['taxonomy'][$term['vid']])){
+          $form['#post']['taxonomy'][$term['vid']][] = $term['tid'];
+        }
+      }
+    }
+  }
+  return $form;
+}
+/**
+ * Takes a field and term and checks for a match.  Field can be an array, or
+ * a single string.  If an array, it recurses till it gets a string
+ */
+function _autotag_search_field($field, $vids){
+  $terms=array();
+  if(is_array($field) || is_object($field)){
+    // Field is an array (and likely to be an array of arrays).  Lets
+    // recurse into it and check away
+    foreach($field as $field_part=>$value){
+      $terms = array_merge($terms,_autotag_search_field($value, $vids));
+    }
+  } else {
+    // Field is raw text search it for stuff
+    $words = preg_split("/[\s,]+/",strtolower($field));
+    print_r($words);
+    $results = db_query("SELECT 
+        t.tid, t.vid
+      FROM 
+        term_data t
+      LEFT JOIN term_synonym s ON s.tid = t.tid
+      WHERE(
+        LOWER(t.name) IN ('".implode("','",$words)."') OR 
+        LOWER(s.name) IN ('".implode("','",$words)."'))
+      AND
+        vid IN (".implode(",",$vids).")");
+    while($row=db_fetch_array($results)){
+      $terms[] = array('tid'=>$row['tid'], 'vid'=>$row['vid']);
+    }
+    $total_words = count($words);
+    for($i=0;$i<$total_words-1;$i++){
+      // Now lets search for "pairs" and search on "like".  If any hit, check back on the result against
+      // the original field
+      $sql_array[] = "LOWER(s.name) LIKE '".$words[$i]." ".$words[$i+1]."%' OR LOWER(t.name) LIKE '".$words[$i]." ".$words[$i+1]."%'";
+    }
+    $results = db_query("SELECT t.tid, t.vid FROM term_data t LEFT JOIN term_synonym s ON s.tid = t.tid WHERE ".implode(" OR ",$sql_array));
+    while($row=db_fetch_array($results)){
+      // Get the full term name, and its synonyms, and check back against the field
+    }
+  }
+  return $terms;
+}
+/**
+ * Takes a field and term and checks for a match.  Field can be an array, or
+ * a single string.  If an array, it recurses till it gets a string
+function _autotag_search_field($field, $term, $synonym){
+  if(is_array($field) || is_object($field)){
+    // Field is an array (and likely to be an array of arrays).  Lets
+    // recurse into it and check away
+    foreach($field as $field_part=>$value){
+      if(_autotag_search_field($value, $term, $synonym)){
+        return true;
+      }
+    }
+  } else {
+    // Field is raw text search it for stuff
+    if(strpos(strtolower($field), $term)!== false){
+      return true;
+    }
+    elseif(strpos(strtolower($field), $synonym)!== false){
+      return true;
+    }
+  }
+  return false;
+}
+ */
 
 /**
  * Implementation of hook_cron
@@ -105,30 +247,6 @@ function autotag_cron(){
 }
 
 /**
- * Takes a field and term and checks for a match.  Field can be an array, or
- * a single string.  If an array, it recurses till it gets a string
- */
-function _autotag_search_field($field, $term, $synonym){
-  if(is_array($field) || is_object($field)){
-    // Field is an array (and likely to be an array of arrays).  Lets
-    // recurse into it and check away
-    foreach($field as $field_part=>$value){
-      if(_autotag_search_field($value, $term, $synonym)){
-        return true;
-      }
-    }
-  } else {
-    // Field is raw text search it for stuff
-    if(strpos(strtolower($field), $term)!== false){
-      return true;
-    }
-    elseif(strpos(strtolower($field), $synonym)!== false){
-      return true;
-    }
-  }
-  return false;
-}
-/**
  * Function simply returns an array of fields to search when given a node
  */
 function _autotag_fields_to_search($node){
@@ -143,6 +261,24 @@ function _autotag_fields_to_search($node){
     }
   }
   foreach($node as $key=>$value){
+    if(!in_array($key, $ignore_fields)){
+      $fields[] = $key;
+    }
+  }
+  return $fields;
+}
+function _autotag_fields_to_search_post($post_form, $type){
+  $fields = array();
+  $ignore_fields = array(
+    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links'
+  );
+  $adminset_ignore_fields = variable_get('autotag_selectfields_'.$type, array());
+  foreach($adminset_ignore_fields as $field=>$value){
+    if($value !== 0){
+      $ignore_fields[] = $field;
+    }
+  }
+  foreach($post_form as $key=>$value){
     if(!in_array($key, $ignore_fields)){
       $fields[] = $key;
     }
@@ -244,15 +380,19 @@ function autotag_admin_settings() {
   return system_settings_form($form);
 }
 
-function _autotag_submit(&$node){
+function _autotag_submit($node){
   $hidden_terms = explode("|",$node->hideterms);
+  $values = array();
   foreach($hidden_terms as $term){
     foreach($node->taxonomy as $vid => $taxonomy_vocab){
       if(isset($taxonomy_vocab[$term])){
         unset($node->taxonomy[$vid][$term]);
+        $values[] = "({$node->nid} , $term)";
       }
     }
-  }
+  }  
+  db_query("INSERT INTO {autotag} (nid, tid) VALUES ".implode(",",$values));
+  return $node;
 }
 
 function autotag_form_alter($form_id, &$form){
@@ -273,6 +413,8 @@ function autotag_form_alter($form_id, &$form){
       $button_name = t('Next');
       $form['#submit'] = FALSE;
     } else {
+      $form['submit']['#attributes']['onclick'] = 'autotag_update_form();';
+      $form = _autotag_search_form($form);
       // Keep stuff as it is, just add the autotag bollocks to the top      
       $form['autotag']['#type'] = 'fieldset';
       $form['autotag']['#title'] = t('Autotag taxonomy terms');
@@ -285,11 +427,20 @@ function autotag_form_alter($form_id, &$form){
       );
       $lists = '';
       $vocabularies = taxonomy_get_vocabularies();
-      foreach($form['#node']->taxonomy as $term){
-        $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.$term->name.' ('.$vocabularies[$term->vid]->name.')</li>';
+      foreach($form['#post']['taxonomy'] as $key => $terms){
+        if($key != 'tags'){
+          foreach($terms as $tid){
+            $term = taxonomy_get_term($tid);
+            $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.$term->name.' ('.$vocabularies[$term->vid]->name.')</li>';
+          }
+        }
       }
       if(isset($form['#node']->nid)){
         $ignore_terms = _autotag_get_ignore_terms($form['#node']->nid);
+        //print_r($ignore_terms);exit;
+        foreach($ignore_terms as $term){
+          $ignore_list .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.$term->name.' ('.$vocabularies[$term->vid]->name.')</li>';
+        }
       }
       $form['autotag']['dragndropfields'] = array(
         '#value' => '<div class="autotag-dnd">
@@ -310,11 +461,8 @@ function autotag_form_alter($form_id, &$form){
       $form['autotag']['hideterms'] = array(
         '#type' => 'hidden',
         '#default_value' => '|'
-      );      
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => $button_name
-    );
+      );   
+      $form['submit']['#value'] = $button_name;
   }
 }
 
@@ -325,6 +473,7 @@ function _autotag_get_ignore_terms($nid){
   $results = db_query("SELECT tid FROM {autotag} WHERE nid = %d", $nid);
   $terms = array();
   while($nid = db_fetch_array($results)){
-    
+    $terms[] = taxonomy_get_term($nid['tid']);
   }
+  return $terms;
 }

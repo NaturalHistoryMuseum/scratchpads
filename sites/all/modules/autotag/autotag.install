@@ -9,7 +9,20 @@
  */
 function autotag_install(){
   $hign_nid = array_pop(db_fetch_array(db_query("SELECT id FROM {sequences} WHERE name = 'node_nid'")));
-  variable_set('autotag_cron_highest_nid', $hign_nid);
+  variable_set('autotag_cron_highest_nid', $hign_nid);  
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':    
+      $result = db_query("CREATE TABLE {autotag} (
+                           nid INT(10),
+                           tid INT(10),
+                           CONSTRAINT imagex_primary_key PRIMARY KEY (tid,nid)
+                          );");
+      break;
+    case 'pgsql':
+      $result = false;
+      break;
+  }
 }
 
 function autotag_uninstall(){
