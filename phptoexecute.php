@@ -338,7 +338,7 @@ variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 $vocabs = taxonomy_get_vocabularies();
 foreach($vocabs as $vocab){
   if($vocab->multiple == 1 && $vocab->tags == 0){
-    if($vocab->name != 'Document store' && $vocab->name != 'Image Galleries')
+    if($vocab->name != 'Document Store' && $vocab->name != 'Image Galleries')
       echo "   ".$vocab->name."\n";
   }
 }
