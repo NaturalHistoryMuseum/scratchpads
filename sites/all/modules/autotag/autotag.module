@@ -28,6 +28,8 @@ define('AUTOTAG_LOW_NID','Lowest node ID to autotag');
 define('AUTOTAG_LOW_NID_DESC','Sets the lowest node ID to be automatically tagged.  Set this to zero in order to ensure all nodes are autotagged.  If this is set to the same value as "Highest nid to autotag", then no autotagging will be performed.');
 define('AUTOTAG_IGNORE_FIELDS',"Fields to ignore in content type '%type'");
 define('AUTOTAG_IGNORE_FIELDS_DESC','Uncheck a field if you don\'t want it to be searched for taxonomy terms');
+define('AUTOTAG_ADDITIONAL_TERMS','Additional terms to tag this node with');
+define('AUTOTAG_ADDITIONAL_TERMS_DESC','Terms can be selected from:');
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
@@ -72,6 +74,15 @@ function autotag_cron(){
   variable_set('autotag_last_node', $last_nid);
 }
 
+/**
+ * Implementation of hook_form_alter
+ * 
+ * Changes the form so that it takes place over multiple pages, adding the necesary 
+ * fields to do that.
+ *
+ * @param String $form_id
+ * @param Array $form
+ */
 function autotag_form_alter($form_id, &$form){
   // If this is a node form, then carry on
   if($form['#id'] == 'node-form'){
@@ -102,7 +113,14 @@ function autotag_form_alter($form_id, &$form){
       $form['#redirect'] = FALSE;
       $button_name = t('Next');
       $form['#submit'] = FALSE;
-    } else {
+    } else {      
+      if(isset($form['#node']->taxonomy)){
+        foreach($form['#node']->taxonomy as $term){
+          if(!in_array($term->tid,$form['#post']['taxonomy'][$term->vid])){
+            $form['#post']['taxonomy'][$term->vid][] = $term->tid;
+          }
+        }
+      }
       $form['submit']['#attributes']['onclick'] = 'autotag_update_form();';
       $form = _autotag_search_form($form);
       // Keep stuff as it is, just add the autotag bollocks to the top      
@@ -116,6 +134,7 @@ function autotag_form_alter($form_id, &$form){
         '#type' => 'hidden'
       );
       $lists = '';
+      $ignore_list = '';
       $vocabularies = taxonomy_get_vocabularies();      
       if(isset($form['#node']->nid)){
         $ignore_terms = _autotag_get_ignore_terms($form['#node']->nid);
@@ -148,12 +167,31 @@ function autotag_form_alter($form_id, &$form){
       </ul>
     </div> 
   </div>');
+      $vocabs = _autotag_get_vids_for_type($form['type']['#value'], FALSE);
+      $vocabs_string = '';
+      $concater = '';
+      foreach($vocabs as $vocab){
+        $vocabs_string .= $concater.' '.$vocab->name;
+        $concater = ';';
+      }
+      $form['autotag']['additionaltags'] = array(
+        '#type' => 'textfield',
+        '#title' => t(AUTOTAG_ADDITIONAL_TERMS),
+        '#description' => t(AUTOTAG_ADDITIONAL_TERMS_DESC).$vocabs_string,
+        '#autocomplete_path' => 'autotag/autocomplete/'.$form['type']['#value']
+      );
+      if($lists == '' && $ignore_list == ''){
+        drupal_add_js('$("#edit-submit2").click();</script>','inline','footer');
+      }
     }
-      $form['autotag']['hideterms'] = array(
-        '#type' => 'hidden',
-        '#default_value' => '|'
-      );   
-      $form['submit']['#value'] = $button_name;
+    $form['autotag']['hideterms'] = array(
+      '#type' => 'hidden',
+      '#default_value' => '|'
+    );   
+    $form['submit']['#value'] = $button_name;
+    if($step==2){
+      $form['autotag']['submit2'] = $form['submit'];
+    }
   }
 }
 
@@ -173,10 +211,49 @@ function autotag_menu($maycache){
       'callback arguments' => array('autotag_admin_settings'),
       'access' => user_access('administer site configuration')
     );
+    $items[] = array(
+      'path' => 'autotag/autocomplete',
+      'title' => t('Autocomplete autotag thingumy'),
+      'callback' => 'autotag_autocomplete',
+      'access' => user_access('create node content'),
+      'type' => MENU_CALLBACK    
+    );
   }
   return $items;
 }
 
+/***********************************************************************************
+ * AUTOCOMPLETE FUNCTION
+ ***********************************************************************************/
+function autotag_autocomplete($type, $string){
+  $vids = _autotag_get_vids_for_type($type);
+  /**
+   * The following is taken straight from the taxonomy module, with a small alteration to the SQL
+   */
+  $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+  preg_match_all($regexp, $string, $matches);
+  $array = $matches[1];
+  
+  // Fetch last tag
+  $last_string = trim(array_pop($array));
+  if ($last_string != '') {
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid IN (%s) AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), implode(",",$vids), $last_string, 0, 10);
+  
+    $prefix = count($array) ? implode(', ', $array) .', ' : '';
+  
+    $matches = array();
+    while ($tag = db_fetch_object($result)) {
+      $n = $tag->name;
+      // Commas and quotes in terms are special cases, so encode 'em.
+      if (strpos($tag->name, ',') !== FALSE || strpos($tag->name, '"') !== FALSE) {
+        $n = '"'. str_replace('"', '""', $tag->name) .'"';
+      }
+      $matches[$prefix . $n] = check_plain($tag->name);
+    }
+    print drupal_to_js($matches);
+    exit();
+  }
+}
 /***********************************************************************************
  * SETTINGS PAGE
  ***********************************************************************************/
@@ -262,12 +339,16 @@ function autotag_admin_settings() {
 /**
  * Return an array of vids which apply to a specific node type
  */
-function _autotag_get_vids_for_type($type){
+function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
   foreach($vocabularies as $vocabulary){
     if(in_array($type,$vocabulary->nodes) && $vocabulary->tags == 0 && $vocabulary->multiple == 1){
-      $vids[] = $vocabulary->vid;
+      if($just_vids){
+        $vids[] = $vocabulary->vid;
+      } else {
+        $vids[] = $vocabulary;
+      }
     }
   }
   return $vids;
