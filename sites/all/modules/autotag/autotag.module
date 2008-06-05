@@ -463,7 +463,16 @@ function _autotag_search_field($field, $vids){
   } else {
     // Field is raw text search it for stuff
     $words = preg_split("/[\s,]+/",strtolower($field));
-    $results = db_query("SELECT t.tid, t.vid FROM term_data t LEFT JOIN term_synonym s ON s.tid = t.tid WHERE(LOWER(t.name) IN ('".implode("','",$words)."') OR LOWER(s.name) IN ('".implode("','",$words)."') AND vid IN (".implode(",",$vids).")");
+    $results = db_query("SELECT 
+        t.tid, t.vid
+      FROM 
+        term_data t
+      LEFT JOIN term_synonym s ON s.tid = t.tid
+      WHERE(
+        LOWER(t.name) IN ('".implode("','",$words)."') OR 
+        LOWER(s.name) IN ('".implode("','",$words)."'))
+      AND
+        vid IN (".implode(",",$vids).")");
     while($row=db_fetch_array($results)){
       $terms[] = array('tid'=>$row['tid'], 'vid'=>$row['vid']);
     }
