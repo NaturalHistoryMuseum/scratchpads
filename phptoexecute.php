@@ -332,3 +332,12 @@ variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 //print_r(ispecies_bhl_get_data("canis+latrans", 100));
 //print_r(ispecies_google_scholar_get_data("canis+latrans",100));
 //print_r(ispecies_bhl_get_namebank_titles("canis+latrans"));
+
+// Get a list of the classifications (by site) that will be able to use the autotag
+// module.
+$vocabs = taxonomy_get_vocabularies();
+foreach($vocabs as $vocab){
+  if($vocab->multiple == 1 && $vocab->tags == 0){
+    echo "   ".$vocab->name."\n";
+  }
+}
