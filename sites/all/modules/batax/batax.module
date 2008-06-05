@@ -11,7 +11,8 @@
 /***********************************************************************************
  * TEXT i8n
  ***********************************************************************************/
-define('BATAX_DESCRIPTION','');
+define('BATAX_SETTINGS','Big Taxonomy Autocomplete Settings');
+define('BATAX_SETTINGS_DESC','Allows users to specify which vocabularies should use the autocomplete field');
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
@@ -22,4 +23,23 @@ define('BATAX_DESCRIPTION','');
  */
 function batax_form_alter($form_id, &$form){
   
+}
+/**
+ * Implementation of hook_menu()
+ * 
+ * Only really needed for the settings page, and the autocomplete url
+ */
+function batax_menu($maycache){
+  $items = array();
+  if (!$may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/batax',
+      'title' => t(BATAX_SETTINGS),
+      'description' => t(BATAX_SETTINGS_DESC),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('batax_admin_settings'),
+      'access' => user_access('administer site configuration')
+    );
+  }
+  return $items;
 }
