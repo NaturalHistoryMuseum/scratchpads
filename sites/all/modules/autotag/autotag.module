@@ -463,7 +463,7 @@ function _autotag_search_field($field, $vids){
 function _autotag_fields_to_search($node){
   $fields = array();
   $ignore_fields = array(
-    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links'
+    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links','additionaltags'
   );
   $adminset_ignore_fields = variable_get('autotag_selectfields_'.$node->type , array());
   foreach($adminset_ignore_fields as $field=>$value){
@@ -481,7 +481,7 @@ function _autotag_fields_to_search($node){
 function _autotag_fields_to_search_post($post_form, $type){
   $fields = array();
   $ignore_fields = array(
-    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links'
+    'nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links','additionaltags'
   );
   $adminset_ignore_fields = variable_get('autotag_selectfields_'.$type, array());
   foreach($adminset_ignore_fields as $field=>$value){
@@ -506,6 +506,20 @@ function _autotag_submit($node){
         unset($node->taxonomy[$vid][$term]);
         unset($node->taxonomy[$vid][array_search($term,$node->taxonomy[$vid])]);
         $values[] = "({$node->nid} , $term)";
+      }
+    }
+  }
+  $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+  preg_match_all($regexp, $node->additionaltags, $matches);
+  // Sanity check, ensure the terms are from the right vocab
+  $vids = _autotag_get_vids_for_type($node->type);
+  foreach($matches[1] as $term_name){
+    $terms = taxonomy_get_term_by_name($term_name);
+    foreach($terms as $term){
+      if(in_array($term->vid,$vids)){
+        if(!isset($node->taxonomy[$term->vid][$term->tid])){
+          $node->taxonomy[$term->vid][$term->tid] = $term->tid;
+        }
       }
     }
   }
