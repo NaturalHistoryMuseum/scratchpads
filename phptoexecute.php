@@ -339,6 +339,6 @@ $vocabs = taxonomy_get_vocabularies();
 foreach($vocabs as $vocab){
   if($vocab->multiple == 1 && $vocab->tags == 0){
     if($vocab->name != 'Document Store' && $vocab->name != 'Image Galleries')
-      echo "   ".$vocab->name."\n";
+      echo "   ".$vocab->name."(".implode(",",$vocab->nodes).")\n";
   }
 }
