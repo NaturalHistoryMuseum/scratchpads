@@ -1,4 +1,4 @@
-// $Id: checkboxes.js,v 1.1.2.5 2007/12/31 07:26:53 merlinofchaos Exp $
+// $Id$
 
 Drupal.Panels.Checkboxes = {};
 

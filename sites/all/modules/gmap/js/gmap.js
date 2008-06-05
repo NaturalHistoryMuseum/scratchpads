@@ -1,4 +1,4 @@
-/* $Id: gmap.js,v 1.1.2.25 2008/03/20 22:50:53 bdragon Exp $ */
+/* $Id$ */
 
 // GMap overseer singleton
 Drupal.gmap = new function() {

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: help.php 9 2007-01-06 15:50:46Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

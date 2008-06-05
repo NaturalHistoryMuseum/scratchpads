@@ -1,5 +1,5 @@
 <?php
-// $Id: database.pgsql.inc,v 1.43.2.1 2007/10/19 21:49:26 drumm Exp $
+// $Id$
 
 /**
  * @file

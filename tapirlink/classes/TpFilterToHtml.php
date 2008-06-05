@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpFilterToHtml.php 205 2007-01-30 19:03:35Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4 2006/08/01 14:56:19 syscrusher Exp $
+$Id$
 
 The Links Package is a set of modules that facilitate use of web links
 (URLs) in various content types. Each link is carefully examined to put

@@ -1,5 +1,5 @@
 <?php
-// $Id: views_comment.inc,v 1.4.4.8 2007/05/05 01:00:41 merlinofchaos Exp $
+// $Id$
 
 /**
  * This include file implements views functionality on behalf of comment.module

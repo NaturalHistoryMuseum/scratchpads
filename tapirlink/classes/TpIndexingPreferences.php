@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpIndexingPreferences.php 402 2007-07-10 14:54:39Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

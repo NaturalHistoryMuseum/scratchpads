@@ -2,8 +2,8 @@
  * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
  * and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
  *
- * $LastChangedDate: 2007-03-27 16:29:43 -0500 (Tue, 27 Mar 2007) $
- * $Rev: 1601 $
+ * $LastChangedDate$
+ * $Rev$
  */
 
 jQuery.fn._height = jQuery.fn.height;

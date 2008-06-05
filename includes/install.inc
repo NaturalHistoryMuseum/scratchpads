@@ -1,5 +1,5 @@
 <?php
-// $Id: install.inc,v 1.31.2.2 2007/10/06 22:38:28 drumm Exp $
+// $Id$
 
 define('SCHEMA_UNINSTALLED', -1);
 define('SCHEMA_INSTALLED', 0);

@@ -1,4 +1,4 @@
-// $Id: thickbox.js,v 1.2.4.2 2007/06/21 02:19:44 frjo Exp $
+// $Id$
 
 /*
  * Thickbox 3 - One Box To Rule Them All.

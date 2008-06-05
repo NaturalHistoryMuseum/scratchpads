@@ -1,6 +1,6 @@
 <?php
 
-// $Id: generate-og-users.php,v 1.3 2006/06/11 00:43:25 killes Exp $:
+// $Id$:
 
 /**
  * This script assigns existing users to existing groups.

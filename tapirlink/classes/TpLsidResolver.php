@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpLsidResolver.php 331 2007-04-11 12:51:23Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,5 +1,5 @@
 <?php
-// $Id: bio_views.inc,v 1.1.2.5 2008/01/25 07:33:54 webchick Exp $
+// $Id$
 
 /**
  * @file

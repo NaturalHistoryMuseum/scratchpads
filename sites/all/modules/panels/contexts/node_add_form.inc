@@ -1,5 +1,5 @@
 <?php
-// $Id: node_add_form.inc,v 1.1.2.3 2007/12/22 19:48:52 merlinofchaos Exp $
+// $Id$
 /**
  * @file contexts/node_add_form.inc
  *

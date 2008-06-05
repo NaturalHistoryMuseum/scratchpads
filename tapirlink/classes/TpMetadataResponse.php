@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpMetadataResponse.php 268 2007-02-23 00:58:22Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

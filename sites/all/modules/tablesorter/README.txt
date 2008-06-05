@@ -8,4 +8,4 @@ To add UI javascript, just call
 ui_add_js("droppables");
 UI will take care of the rest for you.
 
-$Id: README.txt,v 1.3 2007/09/02 21:17:01 dmitrig01 Exp $
+$Id$

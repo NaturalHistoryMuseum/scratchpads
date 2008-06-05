@@ -1,5 +1,5 @@
 <?php
-/* $Id: flexinode.inc,v 1.1 2006/07/10 09:22:10 robrechtj Exp $ */
+/* $Id$ */
 
 /**
  * Implementation of hook_node_import_types().

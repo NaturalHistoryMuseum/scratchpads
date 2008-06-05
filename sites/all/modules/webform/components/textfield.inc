@@ -1,5 +1,5 @@
 <?php
-// $Id: textfield.inc,v 1.11.2.7 2008/01/22 03:07:58 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the

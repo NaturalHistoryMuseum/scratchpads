@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1 2005/11/17 02:56:38 vauxia Exp $
+$Id$
 
 INSTALLATION
 	Hopefully, you know the drill by now :)

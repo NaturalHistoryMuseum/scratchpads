@@ -1,5 +1,5 @@
 <?php
-// $Id: hidden.inc,v 1.11.2.3 2008/01/18 06:34:35 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the

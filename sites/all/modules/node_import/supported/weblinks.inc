@@ -1,5 +1,5 @@
 <?php
-// $Id: weblinks.inc,v 1.1.2.1.2.1 2007/05/14 08:31:49 robrechtj Exp $
+// $Id$
 
 /**
  * @file

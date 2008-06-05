@@ -1,4 +1,4 @@
-// $Id: activeselect.js,v 1.18 2007/01/05 15:57:53 jaza Exp $
+// $Id$
 
 /**
  * Attaches the activeselect behaviour to all required fields

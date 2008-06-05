@@ -1,4 +1,4 @@
-// $Id: README.txt,v 1.4.2.2 2007/05/14 16:43:30 ufku Exp $
+// $Id$
 
 IMCE is an image/file uploader and browser that supports personal directories and quota.
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: configurator.php 133 2007-01-16 01:15:48Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

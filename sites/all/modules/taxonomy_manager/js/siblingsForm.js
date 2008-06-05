@@ -1,4 +1,4 @@
-// $Id: siblingsForm.js,v 1.1.2.4 2007/08/18 16:49:05 mh86 Exp $
+// $Id$
 
 /**
  * @file loads next siblings, if only parts of long lists are initially loaded

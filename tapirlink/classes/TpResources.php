@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpResources.php 129 2007-01-16 00:43:57Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

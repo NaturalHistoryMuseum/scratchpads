@@ -1,5 +1,5 @@
 <?php
-// $Id: field.php,v 1.7.2.8 2007/03/01 00:20:35 yched Exp $
+// $Id$
 
 /**
  * @file

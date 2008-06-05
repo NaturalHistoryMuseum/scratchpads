@@ -1,5 +1,5 @@
 <?php
-// $Id: fivestar_comment.inc,v 1.1.2.13 2008/03/30 02:14:17 quicksketch Exp $
+// $Id$
 
 define('FIVESTAR_COMMENT_DISABLED', 0);
 define('FIVESTAR_COMMENT_OPTIONAL', 1);

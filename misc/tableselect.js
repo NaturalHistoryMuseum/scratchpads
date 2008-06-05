@@ -1,4 +1,4 @@
-// $Id: tableselect.js,v 1.1 2006/11/21 08:16:39 unconed Exp $
+// $Id$
 
 Drupal.tableSelect = function() {
   // Keep track of the table, which checkbox is checked and alias the settings.

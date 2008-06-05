@@ -1,5 +1,5 @@
 <?php
-// $Id: user_picture.inc,v 1.1.2.1 2007/12/31 00:54:05 merlinofchaos Exp $
+// $Id$
 /**
  * Callback function to supply a list of content types.
  */

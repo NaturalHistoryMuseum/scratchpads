@@ -1,5 +1,5 @@
 <?php
-// $Id: twocol_bricks.inc,v 1.1.2.2 2007/12/17 22:09:19 merlinofchaos Exp $
+// $Id$
 /**
  * @file twocol_bricks.inc
  *

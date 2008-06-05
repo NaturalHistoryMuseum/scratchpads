@@ -1,5 +1,5 @@
 <?php
-// $Id: image.inc,v 1.17.2.1 2007/12/27 08:31:24 drumm Exp $
+// $Id$
 
 /**
  * Return a list of available toolkits.

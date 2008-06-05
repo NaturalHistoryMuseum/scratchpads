@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpNamespace.php 386 2007-06-06 14:23:33Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

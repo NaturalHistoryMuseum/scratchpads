@@ -1,5 +1,5 @@
 <?php
-// $Id: gmap.php,v 1.1.2.2 2007/12/21 23:18:00 bdragon Exp $
+// $Id$
 
 /**
  * @file

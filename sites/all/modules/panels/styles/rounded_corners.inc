@@ -1,5 +1,5 @@
 <?php
-// $Id: rounded_corners.inc,v 1.1.2.3 2007/12/06 02:35:46 merlinofchaos Exp $
+// $Id$
 /**
  * @file styles/rounded_corners.inc
  * Definition of the 'rounded_corners' panel style.

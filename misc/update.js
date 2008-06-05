@@ -1,4 +1,4 @@
-// $Id: update.js,v 1.10 2006/12/27 14:11:45 unconed Exp $
+// $Id$
 
 if (Drupal.jsEnabled) {
   $(document).ready(function() {

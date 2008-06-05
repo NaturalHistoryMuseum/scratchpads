@@ -15,7 +15,7 @@
 // | Authors: Fabien MARTY <fabien.marty@free.fr> |
 // +----------------------------------------------------------------------+
 //
-// $Id: HTTP_Request.php,v 1.9 2003/07/13 08:27:18 fab Exp $
+// $Id$
 
 require_once 'Cache.php';
 require_once 'HTTP/Request.php';
@@ -56,7 +56,7 @@ define('CACHE_HTTP_REQUEST_RETURN_PEAR_ERROR', 3);
 * ?>
 *
 * @author   Fabien MARTY <fabien.marty@free.fr>
-* @version  $Id: HTTP_Request.php,v 1.9 2003/07/13 08:27:18 fab Exp $
+* @version  $Id$
 * @package  Cache
 */
 

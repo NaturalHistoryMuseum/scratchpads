@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpSqlBuilder.php 427 2007-08-14 23:49:08Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

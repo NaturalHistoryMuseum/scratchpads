@@ -1,5 +1,5 @@
 <?php
-// $Id: pagebreak.inc,v 1.1.2.3 2008/01/18 18:05:33 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the

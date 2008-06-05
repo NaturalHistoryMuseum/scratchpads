@@ -1,5 +1,5 @@
 <?php
-// $Id: node_book_nav.inc,v 1.1.2.4 2007/10/25 22:33:03 merlinofchaos Exp $
+// $Id$
 /**
  * Callback function to supply a list of content types.
  */

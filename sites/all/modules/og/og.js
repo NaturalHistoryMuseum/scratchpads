@@ -1,4 +1,4 @@
-// $Id: og.js,v 1.1.2.8 2008/01/04 02:12:58 weitzman Exp $
+// $Id$
 
 Drupal.ogAttach = function() {
   /* Node authoring form for group content -Disable the public checkbox if no groups are selected in in Audience */

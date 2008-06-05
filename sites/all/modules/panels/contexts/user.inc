@@ -1,5 +1,5 @@
 <?php
-// $Id: user.inc,v 1.1.2.5 2007/12/22 19:48:52 merlinofchaos Exp $
+// $Id$
 /**
  * @file contexts/user.inc
  *

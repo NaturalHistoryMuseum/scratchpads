@@ -1,4 +1,4 @@
-// $Id: progress.js,v 1.14 2006/12/14 14:21:36 dries Exp $
+// $Id$
 
 /**
  * A progressbar object. Initialized with the given id. Must be inserted into

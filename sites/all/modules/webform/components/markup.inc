@@ -1,5 +1,5 @@
 <?php
-// $Id: markup.inc,v 1.3.2.4 2008/01/18 06:34:35 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the

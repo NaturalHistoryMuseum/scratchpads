@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.inc,v 1.6.2.1.2.5 2008/03/07 23:35:43 robrechtj Exp $
+// $Id$
 
 // Note: this file is included both for taxonomy.module and for
 // the wrapper taxonomy.module of category.module. This file

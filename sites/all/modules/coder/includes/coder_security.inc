@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_security.inc,v 1.11.4.1.4.1 2007/08/28 23:21:23 douggreen Exp $
+// $Id$
 
 /** @file
  * This include file implements coder functionality for Drupal Standards

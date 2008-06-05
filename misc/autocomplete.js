@@ -1,4 +1,4 @@
-// $Id: autocomplete.js,v 1.17 2007/01/09 07:31:04 drumm Exp $
+// $Id$
 
 /**
  * Attaches the autocomplete behaviour to all required fields

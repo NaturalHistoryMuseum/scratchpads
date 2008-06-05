@@ -1,4 +1,4 @@
-/* $Id: locpick.js,v 1.1.2.3 2007/03/12 23:12:57 bdragon Exp $ */
+/* $Id$ */
 
 /**
  * Location chooser interface.

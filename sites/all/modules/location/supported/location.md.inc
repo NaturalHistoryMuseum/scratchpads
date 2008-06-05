@@ -1,5 +1,5 @@
 <?php
-// $Id: location.md.inc,v 1.2 2006/03/08 06:53:38 dww Exp $
+// $Id$
 
 // Moldova, Republic of
 

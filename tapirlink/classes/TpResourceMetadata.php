@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpResourceMetadata.php 400 2007-07-10 13:33:58Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

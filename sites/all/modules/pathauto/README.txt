@@ -88,4 +88,4 @@ Current maintainer: Greg Knaddison (greg AT knaddison DOT com)
 **Changes:
 See the CHANGELOG.txt
 
-$Id: README.txt,v 1.10.4.6 2008/01/25 18:22:42 greggles Exp $
+$Id$

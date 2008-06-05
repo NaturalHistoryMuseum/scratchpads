@@ -1,5 +1,5 @@
 <?php
-// $Id: term.inc,v 1.1.2.4 2007/12/22 19:48:52 merlinofchaos Exp $
+// $Id$
 /**
  * @file contexts/term.inc
  *

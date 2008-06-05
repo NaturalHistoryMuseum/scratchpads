@@ -1,5 +1,5 @@
 <?php
-// $Id: location.st.inc,v 1.2 2006/03/08 06:53:39 dww Exp $
+// $Id$
 
 // Sao Tome and Principe
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: unicode.inc,v 1.23.2.2 2007/05/21 01:09:21 drumm Exp $
+// $Id$
 
 /**
  * Indicates an error during check for PHP unicode support.

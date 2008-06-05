@@ -292,4 +292,4 @@ if you attach a (small) file that shows the problem. When you do, mention how
 you configured the type you are trying to import, eg what vocabularies you
 have defined, whether the content type is event- or location-enabled, etc.
 
-$Id: README.txt,v 1.15.2.1.2.2 2007/06/05 08:53:40 robrechtj Exp $
+$Id$

@@ -1,5 +1,5 @@
 <?php 
-// $Id: node_import.api.inc,v 1.8.2.1.2.5 2007/07/03 08:29:35 robrechtj Exp $
+// $Id$
 
 /**
  * @file

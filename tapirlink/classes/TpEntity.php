@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpEntity.php 401 2007-07-10 13:41:58Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

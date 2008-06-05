@@ -1,5 +1,5 @@
 <?php
-// $Id: plugins.inc,v 1.1.2.17 2007/12/18 02:39:17 merlinofchaos Exp $
+// $Id$
 /**
  * @file plugins.inc
  *

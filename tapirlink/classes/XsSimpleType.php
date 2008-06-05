@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsSimpleType.php 81 2007-01-13 00:18:39Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

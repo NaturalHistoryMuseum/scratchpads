@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpTablesForm.php 389 2007-06-06 19:05:28Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -10,7 +10,7 @@
  *
  * @package coders
  * @author Dan Morrison http://coders.co.nz/
- * @version $Id: debug.inc,v 1.8 2006/11/12 06:41:08 dman Exp $ 
+ * @version $Id$ 
  */
 
 

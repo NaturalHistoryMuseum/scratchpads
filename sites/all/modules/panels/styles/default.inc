@@ -1,5 +1,5 @@
 <?php
-// $Id: default.inc,v 1.1.2.3 2007/12/06 02:35:46 merlinofchaos Exp $
+// $Id$
 /**
  * Implementation of hook_panels_style_info().
  */

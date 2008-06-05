@@ -1,4 +1,4 @@
-// $Id: modal_forms.js,v 1.1.2.8 2007/12/31 06:30:17 merlinofchaos Exp $
+// $Id$
 
 Drupal.Panels.Subform = {};
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: views_statistics.inc,v 1.9.2.6 2007/03/06 21:23:27 merlinofchaos Exp $
+// $Id$
 
 /**
  * This include file implements views functionality on behalf of statistics.module

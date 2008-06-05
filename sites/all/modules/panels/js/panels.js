@@ -1,4 +1,4 @@
-// $Id: panels.js,v 1.1.2.1 2007/12/06 16:13:30 merlinofchaos Exp $
+// $Id$
 
 Drupal.Panels = {};
 

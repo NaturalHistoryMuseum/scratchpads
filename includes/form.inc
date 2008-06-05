@@ -1,5 +1,5 @@
 <?php
-// $Id: form.inc,v 1.174.2.13 2007/12/27 08:41:52 drumm Exp $
+// $Id$
 
 /**
  * @defgroup form Form generation

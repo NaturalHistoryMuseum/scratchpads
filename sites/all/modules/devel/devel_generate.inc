@@ -1,5 +1,5 @@
 <?php
-// $Id: devel_generate.inc,v 1.1.2.11 2007/11/08 16:02:02 weitzman Exp $
+// $Id$
 // If not in 'safe mode', increase the maximum execution time:
 if (!ini_get('safe_mode')) {
   set_time_limit(240);

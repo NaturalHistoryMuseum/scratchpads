@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.2.2.4 2007/10/30 11:17:45 fago Exp $
+$Id$
 
 Automatic Nodetitle Module
 ------------------------

@@ -1,5 +1,5 @@
 <?php
-// $Id: fivestar_color.inc,v 1.1.2.5 2008/04/02 04:43:36 quicksketch Exp $
+// $Id$
 
 /**
  * Form callback. Returns the configuration form.

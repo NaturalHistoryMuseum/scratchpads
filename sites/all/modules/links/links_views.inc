@@ -1,6 +1,6 @@
 <?php
 /*
- * $Id: links_views.inc,v 1.2 2006/06/22 03:01:14 syscrusher Exp $
+ * $Id$
  *
  * Author:  Eaton (Drupal.org user #16496)
  *

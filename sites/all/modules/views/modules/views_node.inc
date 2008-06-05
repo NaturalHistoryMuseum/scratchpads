@@ -1,5 +1,5 @@
 <?php
-// $Id: views_node.inc,v 1.30.2.19 2007/07/14 19:30:51 merlinofchaos Exp $
+// $Id$
 
 /**
  * This include file implements views functionality on behalf of node.module

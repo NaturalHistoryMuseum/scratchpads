@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.2.2.3 2007/12/17 19:28:20 sutharsan Exp $
+$Id$
 
 ------------
 Description

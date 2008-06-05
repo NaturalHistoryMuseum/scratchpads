@@ -1,5 +1,5 @@
 <?php
-// $Id: fivestar_field.inc,v 1.1.4.19 2008/03/30 04:30:35 quicksketch Exp $
+// $Id$
 
 /**
  * @file

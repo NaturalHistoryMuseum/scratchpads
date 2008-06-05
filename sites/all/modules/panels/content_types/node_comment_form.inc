@@ -1,5 +1,5 @@
 <?php
-// $Id: node_comment_form.inc,v 1.1.2.6 2007/12/19 20:27:28 merlinofchaos Exp $
+// $Id$
 /**
  * Callback function to supply a list of content types.
  */

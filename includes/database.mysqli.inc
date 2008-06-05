@@ -1,5 +1,5 @@
 <?php
-// $Id: database.mysqli.inc,v 1.32.2.1 2007/10/19 21:49:26 drumm Exp $
+// $Id$
 
 /**
  * @file

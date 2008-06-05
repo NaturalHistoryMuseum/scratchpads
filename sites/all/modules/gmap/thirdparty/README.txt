@@ -1,4 +1,4 @@
-/* $Id: README.txt,v 1.1.2.3 2008/01/05 02:33:21 bdragon Exp $ */
+/* $Id$ */
 
 Third party code.
 Place downloaded third party code in this folder if instructed to by GMap.

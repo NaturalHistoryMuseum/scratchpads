@@ -1,5 +1,5 @@
 <?php
-// $Id: list.inc,v 1.1.2.5 2007/12/06 02:35:46 merlinofchaos Exp $
+// $Id$
 /**
  * @file styles/list.inc
  * Definition of the 'list' panel style.

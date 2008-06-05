@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.inc,v 1.105.2.5 2007/12/17 01:53:52 drumm Exp $
+// $Id$
 
 /**
  * @file

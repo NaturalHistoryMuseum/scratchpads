@@ -1,5 +1,5 @@
 <?php
-/* $Id: gmap_settings_ui.inc,v 1.1.2.19 2007/12/21 23:00:29 bdragon Exp $ */
+/* $Id$ */
 // vim:set ft=php:
 
 /**

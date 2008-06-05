@@ -2,7 +2,7 @@
 /**
  * $Header: /repository/pear/Log/Log/console.php,v 1.23 2006/06/29 07:09:21 jon Exp $
  *
- * @version $Revision: 1.23 $
+ * @version $Revision$
  * @package Log
  */
 

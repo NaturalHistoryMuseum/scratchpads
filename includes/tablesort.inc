@@ -1,5 +1,5 @@
 <?php
-// $Id: tablesort.inc,v 1.43.2.1 2007/06/16 22:29:25 drumm Exp $
+// $Id$
 
 /**
  * @file

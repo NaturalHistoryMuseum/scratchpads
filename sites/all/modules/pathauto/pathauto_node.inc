@@ -1,5 +1,5 @@
 <?php
-// $Id: pathauto_node.inc,v 1.29.4.25 2008/02/03 12:31:32 greggles Exp $
+// $Id$
 
 /*
  * Implementation of hook_pathauto()

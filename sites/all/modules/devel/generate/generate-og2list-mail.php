@@ -1,6 +1,6 @@
 <?php
 
-// $Id: generate-og2list-mail.php,v 1.4 2006/06/27 21:51:29 killes Exp $:
+// $Id$:
 
 /**
  * This script creates bogus mails from existing users to existing groups.

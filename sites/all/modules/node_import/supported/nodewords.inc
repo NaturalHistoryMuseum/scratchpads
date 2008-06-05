@@ -1,5 +1,5 @@
 <?php
-// $Id: nodewords.inc,v 1.2 2006/09/15 12:24:35 robrechtj Exp $
+// $Id$
 
 /**
  * Implementation of hook_node_import_fields().

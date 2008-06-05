@@ -52,5 +52,5 @@ Major modifications by and current maintainer:
 Derek Wright (http://drupal.org/user/46549)
 
 
-$Id: README.txt,v 1.5.2.1 2008/01/24 05:05:41 dww Exp $
+$Id$
 $Name: DRUPAL-5--1-2 $

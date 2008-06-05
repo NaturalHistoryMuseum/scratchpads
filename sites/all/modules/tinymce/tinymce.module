@@ -1,5 +1,5 @@
 <?php
-// $Id: tinymce.module,v 1.92 2007/07/31 14:40:36 kreynen Exp $
+// $Id$
 // A collaborative project by Matt Westgate <drupal at asitis dot org>,
 // Richard Bennett <richard.b@ at ritechnologies dot com> and Jeff Robbins <robbins at jjeff dot com>
 
@@ -31,7 +31,7 @@ function tinymce_help($section) {
       return "node/*\nuser/*\ncomment/*";
     case 'admin/settings/tinymce':
     case 'admin/help#tinymce' :
-      return t('<p style="font-size:x-small">$Revision: 1.92 $ $Date: 2007/07/31 14:40:36 $</p>' .
+      return t('<p style="font-size:x-small">$Revision$ $Date$</p>' .
                '<p>TinyMCE adds what-you-see-is-what-you-get (WYSIWYG) html editing to textareas. This editor can be enabled/disabled without reloading the page by clicking a link below each textarea.</p>
                 <p>Profiles can be defined based on user roles. A TinyMCE profile can define which pages receive this TinyMCE capability, what buttons or themes are enabled for the editor, how the editor is displayed, and a few other editor functions.</p>
                 <p>Lastly, only users with the <code>access tinymce</code> <a href="!url">permission</a> will be able to use TinyMCE.</p>', array('!url' => url('admin/user/access'))

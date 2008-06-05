@@ -17,7 +17,7 @@
 // |          Ian Eure <ieure@php.net>                                    |
 // +----------------------------------------------------------------------+
 //
-// $Id: trifile.php,v 1.1 2004/04/01 07:50:07 chregu Exp $
+// $Id$
 
 require_once 'Cache/Container/file.php';
 

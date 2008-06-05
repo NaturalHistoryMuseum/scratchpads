@@ -1,5 +1,5 @@
 <?php
-/* $Id: gmap_markerinfo.inc,v 1.1.2.2 2007/08/28 20:38:16 bdragon Exp $ */
+/* $Id$ */
 // vim:set ft=php:
 
 /**

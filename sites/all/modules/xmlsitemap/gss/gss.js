@@ -1,4 +1,4 @@
-// $Id: gss.js,v 1.1 2007/11/09 17:56:05 darrenoh Exp $
+// $Id$
 
 var selectedColor = "blue";
 var defaultColor = "black";

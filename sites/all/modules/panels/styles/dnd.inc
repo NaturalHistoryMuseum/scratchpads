@@ -1,5 +1,5 @@
 <?php
-// $Id: dnd.inc,v 1.1.2.1 2007/08/29 22:02:04 merlinofchaos Exp $
+// $Id$
 /**
  * @file styles/dnd.inc
  * Definition of the drag and drop panel style.

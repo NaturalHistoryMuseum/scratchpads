@@ -1,5 +1,5 @@
 <?php
-// $Id: location.inc,v 1.45.2.7 2007/08/02 01:57:25 ankur Exp $
+// $Id$
 
 define('LOCATION_PATH', drupal_get_path('module', 'location'));
 

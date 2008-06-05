@@ -1,5 +1,5 @@
 <?php
-// $Id: update-weblinks-old.php,v 1.3 2006/02/02 04:50:59 syscrusher Exp $
+// $Id$
 
 /**
  * @file

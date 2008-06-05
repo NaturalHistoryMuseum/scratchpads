@@ -1,4 +1,4 @@
-// $Id: textarea.js,v 1.11.2.1 2007/04/18 02:41:19 drumm Exp $
+// $Id$
 
 Drupal.textareaAttach = function() {
   $('textarea.resizable:not(.processed)').each(function() {

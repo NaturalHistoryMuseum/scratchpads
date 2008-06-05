@@ -1,5 +1,5 @@
 <?php
-// $Id: date_pathauto.inc,v 1.1.2.9 2007/07/03 11:06:07 karens Exp $
+// $Id$
 
 /**
  * @file

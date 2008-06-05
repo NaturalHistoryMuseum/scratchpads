@@ -1,5 +1,5 @@
 <?php
-/* $Id: date_api_ical.inc,v 1.6.2.9 2007/10/19 20:10:28 karens Exp $ */
+/* $Id$ */
 /**
  * @file
  * Parse iCal imports and create iCal exports.

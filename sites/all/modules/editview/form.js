@@ -6,7 +6,7 @@
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
  *
- * Revision: $Id: form.js,v 1.1.2.2 2008/01/29 00:21:44 agileware Exp $
+ * Revision: $Id$
  */
 
 /**

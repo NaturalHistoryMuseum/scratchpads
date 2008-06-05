@@ -1,5 +1,5 @@
 <?php
-// $Id: node_add.inc,v 1.1.2.6 2007/12/18 02:39:16 merlinofchaos Exp $
+// $Id$
 /**
  * @file arguments/nid.inc
  *

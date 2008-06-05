@@ -1,5 +1,5 @@
 <?php
-//$Id: date.inc,v 1.27.2.44 2007/12/02 17:36:21 karens Exp $
+//$Id$
 
 /**
  * @file

@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.inc,v 1.2.2.4 2008/01/30 20:43:20 walkah Exp $
+// $Id$
 
 /**
  * @file

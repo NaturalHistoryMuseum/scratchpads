@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpConcept.php 298 2007-04-04 18:01:08Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

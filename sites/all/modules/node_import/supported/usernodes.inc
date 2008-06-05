@@ -1,5 +1,5 @@
 <?php
-// $Id: usernodes.inc,v 1.1.4.1 2008/03/17 13:02:50 robrechtj Exp $
+// $Id$
 
 /**
  * @file

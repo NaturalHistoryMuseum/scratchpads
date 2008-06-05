@@ -1,5 +1,5 @@
 <?php
-// $Id: page_title.inc,v 1.1.2.1 2007/02/06 09:53:34 robrechtj Exp $
+// $Id$
 
 /**
  * @file

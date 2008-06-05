@@ -4,7 +4,7 @@
  * SHOULD BE RUN.  THIS WILL ENSURE THAT ALL FILES WITHIN THE 
  * SUBDIRECTORIES COPIES OF THIS FILE */
 
-// $Id: settings.php,v 1.39 2007/01/14 02:05:15 unconed Exp $
+// $Id$
 
 // SDRycroft 9-5-07
 // Remove out the www from the domain, and then split it, using the first part

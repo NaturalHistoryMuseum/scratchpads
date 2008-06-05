@@ -1,5 +1,5 @@
 <?php
-// $Id: pathauto.inc,v 1.1.2.36 2008/02/19 16:52:27 greggles Exp $
+// $Id$
 
 /**
  * Copied from search.module's PREG_CLASS_SEARCH_EXCLUDE

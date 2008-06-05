@@ -31,7 +31,7 @@
 // +-----------------------------------------------------------------------+
 // | Author: Richard Heyes <richard at php net>                            |
 // +-----------------------------------------------------------------------+
-// $Id: example.php,v 1.9 2004/05/08 17:48:08 richard Exp $
+// $Id$
 /**
 * This example will decode the url given and display its
 * constituent parts.

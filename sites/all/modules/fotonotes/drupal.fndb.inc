@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal.fndb.inc,v 1.1.4.4 2008/04/07 22:53:04 romka Exp $
+// $Id$
 function decode_unicode($str){
   $res = '';
 

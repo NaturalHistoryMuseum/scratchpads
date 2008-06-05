@@ -1,6 +1,6 @@
 <?php 
 /**
- * $Id: model.xml.php 368 2007-05-22 23:39:23Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

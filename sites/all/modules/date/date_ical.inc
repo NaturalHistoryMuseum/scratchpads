@@ -1,5 +1,5 @@
 <?php
-/* $Id: date_ical.inc,v 1.1.2.13 2007/10/26 20:12:58 karens Exp $ */
+/* $Id$ */
 
 /**
  * Turn an array of events into a valid iCalendar file

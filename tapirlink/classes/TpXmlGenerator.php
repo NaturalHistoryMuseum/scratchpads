@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpXmlGenerator.php 424 2007-08-14 12:12:44Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

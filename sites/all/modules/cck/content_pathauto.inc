@@ -1,5 +1,5 @@
 <?php
-// $Id: content_pathauto.inc,v 1.1 2006/08/20 18:28:11 JonBob Exp $
+// $Id$
 
 /**
  * @file

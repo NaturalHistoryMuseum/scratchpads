@@ -15,7 +15,7 @@
 // | Authors: Ulf Wendel <ulf.wendel@phpdoc.de>                           |
 // +----------------------------------------------------------------------+
 //
-// $Id: msession.php,v 1.4 2003/01/04 11:54:46 mj Exp $
+// $Id$
 
 require_once 'Cache/Container.php';
 
@@ -25,7 +25,7 @@ require_once 'Cache/Container.php';
 * WARNING: experimental, untested
 *
 * @author   Ulf Wendel  <ulf.wendel@phpdoc.de>
-* @version  $Id: msession.php,v 1.4 2003/01/04 11:54:46 mj Exp $
+* @version  $Id$
 */
 class Cache_Container_msession extends Cache_Container {
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: votingapi_views.inc,v 1.11.2.5 2007/03/22 12:50:30 eaton Exp $
+// $Id$
 
 function votingapi_views_tables() {
   $vote_tags = _votingapi_views_values($field = 'tag', $table = 'vote');

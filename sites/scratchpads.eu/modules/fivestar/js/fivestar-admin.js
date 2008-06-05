@@ -1,4 +1,4 @@
-// $Id: fivestar-admin.js,v 1.1.2.1 2008/03/28 15:35:05 quicksketch Exp $
+// $Id$
 
 /**
  * Fivestar admin interface enhancments.

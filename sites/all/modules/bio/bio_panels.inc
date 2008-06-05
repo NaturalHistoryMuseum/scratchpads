@@ -1,5 +1,5 @@
 <?php
-// $Id: bio_panels.inc,v 1.1.2.3 2008/01/25 07:33:54 webchick Exp $
+// $Id$
 
 /**
  * @file

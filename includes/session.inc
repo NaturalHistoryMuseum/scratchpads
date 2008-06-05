@@ -1,5 +1,5 @@
 <?php
-// $Id: session.inc,v 1.37.2.2 2007/07/26 19:16:45 drumm Exp $
+// $Id$
 
 /**
  * @file

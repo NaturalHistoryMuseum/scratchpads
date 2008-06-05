@@ -1,4 +1,4 @@
-/* $Id: README.txt,v 1.1 2006/10/13 14:34:50 dman Exp $ */
+/* $Id$ */
 
 Import HTML
 

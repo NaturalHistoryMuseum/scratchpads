@@ -1,4 +1,4 @@
-// $Id: tasks.js,v 1.3 2006/04/05 16:20:27 jakeg Exp $
+// $Id$
 
 function toggletasks() {
   var tasksdrop = document.getElementById('orderby');

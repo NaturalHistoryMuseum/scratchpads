@@ -7,7 +7,7 @@
  * 
  * @package coders
  * @author Dan Morrison http://coders.co.nz/
- * @version $Id: xml-transform.inc,v 1.23.2.1 2007/02/20 12:30:40 dman Exp $
+ * @version $Id$
  */
 
 /*

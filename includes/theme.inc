@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.inc,v 1.337.2.2 2007/05/31 05:52:42 drumm Exp $
+// $Id$
 
 /**
  * @file

@@ -1,5 +1,5 @@
 <?php
-/* $Id: mimemail.inc,v 1.24 2008/02/18 00:43:36 vauxia Exp $ */
+/* $Id$ */
 
 /**
  * @file

@@ -1,5 +1,5 @@
 <?php
-//$Id: date_timezones.inc,v 1.4.2.5 2007/10/11 19:29:30 karens Exp $
+//$Id$
 // a copy of event_timezones.inc to be used when the event module is not enabled
 
 //if (module_exists('event')) return;

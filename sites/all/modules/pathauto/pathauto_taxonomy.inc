@@ -1,5 +1,5 @@
 <?php
-// $Id: pathauto_taxonomy.inc,v 1.20.4.20 2007/12/16 21:57:13 greggles Exp $
+// $Id$
 
 /*
  * Implementation of hook_pathauto() for taxonomy module

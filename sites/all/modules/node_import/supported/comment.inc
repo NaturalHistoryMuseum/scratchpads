@@ -1,5 +1,5 @@
 <?php
-/* $Id: comment.inc,v 1.1.2.1 2008/02/03 10:01:31 robrechtj Exp $ */
+/* $Id$ */
 
 /**
  * Implementation of hook_node_import_fields().

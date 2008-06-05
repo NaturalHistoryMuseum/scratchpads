@@ -30,4 +30,4 @@ Todo:
 For an up to date todo list look at the issue tracker at:
 http://drupal.org/project/issues/webform
 
-$Id: README.txt,v 1.7.2.1 2007/06/11 03:38:38 quicksketch Exp $
+$Id$

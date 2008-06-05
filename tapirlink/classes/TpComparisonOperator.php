@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpComparisonOperator.php 264 2007-02-22 23:46:21Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

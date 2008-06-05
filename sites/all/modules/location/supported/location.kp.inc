@@ -1,5 +1,5 @@
 <?php
-// $Id: location.kp.inc,v 1.2 2006/03/08 06:53:38 dww Exp $
+// $Id$
 
 // Korea, Democratic People's Republic Of (North Korea)
 

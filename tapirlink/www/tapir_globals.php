@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: tapir_globals.php 434 2007-09-09 23:50:56Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 
@@ -508,7 +508,7 @@ define( 'TP_MIN_PHP_VERSION', '4.2.3' );
 
 define( 'TP_VERSION', '0.5' ); 
 
-$revision = '$Revision: 434 $.';
+$revision = '$Revision$.';
 
 $revision_regexp = '/^\$'.'Revision:\s(\d+)\s\$\.$/';
 

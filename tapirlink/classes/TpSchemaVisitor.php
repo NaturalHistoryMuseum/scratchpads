@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpSchemaVisitor.php 257 2007-02-15 14:17:44Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

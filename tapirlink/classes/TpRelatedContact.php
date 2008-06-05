@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpRelatedContact.php 38 2007-01-10 00:23:09Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

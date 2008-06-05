@@ -1,5 +1,5 @@
 <?php
-// $Id: views.inc,v 1.1.2.2 2007/08/27 22:48:27 drewish Exp $
+// $Id$
 
 /**
  * Implementation of hook_views_tables()

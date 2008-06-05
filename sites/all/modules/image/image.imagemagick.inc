@@ -1,5 +1,5 @@
 <?php
-// $Id: image.imagemagick.inc,v 1.3.2.14 2007/10/10 03:47:12 drewish Exp $
+// $Id$
 
 /**
  * Return information about the imagemagick toolkit.

@@ -1,4 +1,4 @@
-/* $Id: align.js,v 1.1.2.6 2007/03/12 23:12:57 bdragon Exp $ */
+/* $Id$ */
 
 /**
  * Alignment widget.

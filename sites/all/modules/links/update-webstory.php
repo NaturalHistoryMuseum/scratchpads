@@ -1,5 +1,5 @@
 <?php
-// $Id: update-webstory.php,v 1.2 2006/02/02 04:50:59 syscrusher Exp $
+// $Id$
 
 /**
  * @file

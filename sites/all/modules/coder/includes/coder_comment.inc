@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_comment.inc,v 1.1.6.2 2007/08/28 23:22:00 douggreen Exp $ 
+// $Id$ 
 
 /** @file
  * This include file implements coder functionality for comments

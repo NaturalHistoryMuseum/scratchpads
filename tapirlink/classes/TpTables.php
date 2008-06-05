@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpTables.php 136 2007-01-16 17:04:11Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

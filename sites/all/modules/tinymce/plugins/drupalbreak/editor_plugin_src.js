@@ -1,7 +1,7 @@
 /**
  * $RCSfile: editor_plugin_src.js,v $
- * $Revision: 1.3 $
- * $Date: 2006/03/27 17:41:43 $
+ * $Revision$
+ * $Date$
  *
  * @author Nathan Haug
  *
@@ -17,7 +17,7 @@ var TinyMCE_drupalbreakPlugin = {
   		author : 'Nathan Haug',
   		authorurl : 'http://www.quicksketch.org',
   		infourl : '',
-  		version : '$Revision: 1.3 $'
+  		version : '$Revision$'
   	};
   },
 

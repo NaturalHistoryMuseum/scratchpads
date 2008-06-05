@@ -1,4 +1,4 @@
-// $Id: activeedit.js,v 1.3.2.5 2008/04/14 16:10:31 nedjo Exp $
+// $Id$
 
 Drupal.behaviors.activeEdit = function (context) {
 

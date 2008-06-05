@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: FixedValueMapping.php 394 2007-06-24 22:03:46Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

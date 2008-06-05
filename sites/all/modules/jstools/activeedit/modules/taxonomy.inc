@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.inc,v 1.2 2007/01/26 22:17:49 nedjo Exp $
+// $Id$
 
 /**
  * Implementation of hook_activeedit_elements().

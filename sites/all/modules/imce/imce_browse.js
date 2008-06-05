@@ -1,4 +1,4 @@
-// $Id: imce_browse.js,v 1.4.2.10 2008/03/27 09:55:45 ufku Exp $
+// $Id$
 $(imceStartBrowser);
 
 imceVar['absURL'] = 0;//absolute URLs

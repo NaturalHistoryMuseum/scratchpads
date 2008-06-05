@@ -1,5 +1,5 @@
 <?php
-// $Id: pager.inc,v 1.59 2006/10/15 19:57:05 dries Exp $
+// $Id$
 
 /**
  * @file

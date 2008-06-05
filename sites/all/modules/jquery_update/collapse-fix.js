@@ -1,4 +1,4 @@
-// $Id: collapse-fix.js,v 1.1 2007/04/26 15:14:38 jjeff Exp $
+// $Id$
 // redefining toggleFieldset for compatibility with later versions of JQuery
 Drupal.toggleFieldset = function(fieldset) {
   if ($(fieldset).is('.collapsed')) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsDeclaration.php 232 2007-02-10 21:29:26Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

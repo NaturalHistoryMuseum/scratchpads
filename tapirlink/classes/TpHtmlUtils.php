@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpHtmlUtils.php 31 2007-01-09 00:13:23Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

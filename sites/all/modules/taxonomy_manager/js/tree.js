@@ -1,4 +1,4 @@
-// $Id: tree.js,v 1.4.2.4 2007/08/19 11:51:13 mh86 Exp $
+// $Id$
 
 /**
  * @files js for collapsible tree view with some helper functions for updating tree structure

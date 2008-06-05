@@ -1,5 +1,5 @@
 <?php
-//$Id: date_admin.inc,v 1.1.2.5 2007/12/27 13:50:53 karens Exp $
+//$Id$
 /**
  * @file
  * Date administration code.

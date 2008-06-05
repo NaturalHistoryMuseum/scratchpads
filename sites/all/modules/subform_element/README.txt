@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1 2007/03/29 16:17:03 fago Exp $
+$Id$
 
 Subform Element Module
 ------------------------

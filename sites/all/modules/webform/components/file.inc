@@ -1,5 +1,5 @@
 <?php
-// $Id: file.inc,v 1.2.2.21 2008/03/22 04:12:27 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this component.
  * Use care naming the form items, as this correlates directly to the database schema.

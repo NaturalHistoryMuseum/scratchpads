@@ -1,5 +1,5 @@
 <?php
-// $Id: date_views.inc,v 1.22.2.28 2007/12/28 02:06:41 karens Exp $
+// $Id$
 
 /**
  * Views filters for Date fields.

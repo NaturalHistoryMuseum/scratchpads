@@ -1,4 +1,4 @@
-// $Id: childForm.js,v 1.2.2.3 2007/08/15 17:10:22 mh86 Exp $
+// $Id$
 
 /**
  *@file generates nested children terms, which are loaded through ahah

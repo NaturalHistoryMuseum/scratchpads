@@ -1,5 +1,5 @@
 <?php
-// $Id: xmlrpcs.inc,v 1.21 2006/07/05 11:45:51 dries Exp $
+// $Id$
 
 /**
  * The main entry point for XML-RPC requests.

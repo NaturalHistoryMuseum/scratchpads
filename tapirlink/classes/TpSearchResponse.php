@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpSearchResponse.php 430 2007-08-15 12:27:28Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

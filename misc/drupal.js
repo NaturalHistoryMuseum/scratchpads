@@ -1,4 +1,4 @@
-// $Id: drupal.js,v 1.29.2.1 2007/07/15 23:07:06 drumm Exp $
+// $Id$
 
 var Drupal = Drupal || {};
 

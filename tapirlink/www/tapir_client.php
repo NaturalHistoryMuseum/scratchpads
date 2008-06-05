@@ -1,6 +1,6 @@
 <?php 
 /**
- * $Id: tapir_client.php 170 2007-01-24 22:26:25Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

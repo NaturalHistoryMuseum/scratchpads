@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpSettingsForm.php 431 2007-09-03 01:23:15Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

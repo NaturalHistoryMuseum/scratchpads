@@ -1,5 +1,5 @@
 <?php
-// $Id: display_edit.inc,v 1.1.2.22 2007/12/31 05:26:50 merlinofchaos Exp $
+// $Id$
 
 /**
  * Main API entry point to edit a panel display.

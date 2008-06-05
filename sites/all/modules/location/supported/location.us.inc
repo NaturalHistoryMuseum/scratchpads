@@ -1,5 +1,5 @@
 <?php
-// $Id: location.us.inc,v 1.16.2.2 2007/08/02 01:57:25 ankur Exp $
+// $Id$
 
 /**
  * Returns a lat/lon pair of the approximate center of the given postal code in the given country

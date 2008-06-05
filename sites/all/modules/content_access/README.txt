@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1.2.1 2007/05/31 11:09:18 fago Exp $
+$Id$
 
 Content Access Module
 -----------------------

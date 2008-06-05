@@ -1,4 +1,4 @@
-/* $Id: README.txt,v 1.3.2.2.4.1 2007/05/26 01:56:44 douggreen Exp $ */
+/* $Id$ */
 
 Developer Module that assists with code review and version upgrade that
 supports a plug-in extensible hook system so contributed modules can

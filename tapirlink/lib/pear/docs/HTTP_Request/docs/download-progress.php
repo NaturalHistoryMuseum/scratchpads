@@ -7,7 +7,7 @@
  * 1) The file should be run in console, not in browser;
  * 2) You should turn output buffering OFF for this to work properly.
  * 
- * $Id: download-progress.php,v 1.1 2003/10/27 10:48:49 avb Exp $
+ * $Id$
  */
 
 require_once 'HTTP/Request.php';

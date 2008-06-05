@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_6x.inc,v 1.5.4.2 2007/08/28 23:22:00 douggreen Exp $
+// $Id$
 
 function this_is_not_a_menu_hook() {
   $items = array();

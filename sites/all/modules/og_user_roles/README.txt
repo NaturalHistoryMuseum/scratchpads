@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1.2.10 2008/01/10 20:01:19 somebodysysop Exp $
+$Id$
 
 DESCRIPTION
 -----------

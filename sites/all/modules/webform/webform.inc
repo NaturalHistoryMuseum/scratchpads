@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.inc,v 1.48.2.22 2008/04/03 03:39:27 quicksketch Exp $
+// $Id$
 
 /**
  * This file includes helper functions for webform.module

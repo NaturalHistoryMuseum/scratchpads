@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.2 2007/01/26 23:09:29 nedjo Exp $
+// $Id$
 
 /**
  * Implementation of hook_comment().

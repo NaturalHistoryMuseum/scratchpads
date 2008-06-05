@@ -1,4 +1,4 @@
-/* $Id: image_nodes.js,v 1.3.2.4.4.24 2008/03/06 14:22:41 snpower Exp $ */
+/* $Id$ */
 
 // Image Node Auto-Format with Auto Image Grouping.
 // Original version by Steve McKenzie.

@@ -1,5 +1,5 @@
 <?php
-// $Id: plugin_reg.php,v 1.11 2006/05/06 20:09:44 m3avrck Exp $
+// $Id$
 
 /**
  * @file

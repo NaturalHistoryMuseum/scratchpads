@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpFilterVisitor.php 6 2007-01-06 01:38:13Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

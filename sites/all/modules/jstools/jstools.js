@@ -1,4 +1,4 @@
-// $Id: jstools.js,v 1.9.2.8 2007/08/08 21:26:07 nedjo Exp $
+// $Id$
 
 Drupal.behaviors = Drupal.behaviors || {};
 

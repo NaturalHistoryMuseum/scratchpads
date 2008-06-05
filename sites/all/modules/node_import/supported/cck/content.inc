@@ -1,5 +1,5 @@
 <?php
-/* $Id: content.inc,v 1.1.2.2.2.6 2008/03/17 13:48:12 robrechtj Exp $ */
+/* $Id$ */
 
 /**
  *  CCK data can be imported into any column of a CCK field.

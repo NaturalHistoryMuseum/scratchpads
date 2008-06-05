@@ -15,7 +15,7 @@
 // | Authors: Sebastian Bergmann <sb@sebastian-bergmann.de>               |
 // +----------------------------------------------------------------------+
 //
-// $Id: Function.php,v 1.6 2003/01/04 11:54:45 mj Exp $
+// $Id$
 
 require_once 'Cache.php';
 
@@ -65,7 +65,7 @@ require_once 'Cache.php';
 * @module       Function_Cache
 * @modulegroup  Function_Cache
 * @package      Cache
-* @version      $Revision: 1.6 $
+* @version      $Revision$
 * @access       public
 */
 class Cache_Function extends Cache {

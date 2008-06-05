@@ -1,4 +1,4 @@
-// $Id: imce_extras.js,v 1.1.2.7 2008/03/15 02:23:54 ufku Exp $
+// $Id$
 $(imceExtrasInit);
 
 function imceExtrasInit() {

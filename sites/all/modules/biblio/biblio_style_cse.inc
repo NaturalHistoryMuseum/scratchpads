@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_style_cse.inc,v 1.2.2.12 2007/12/03 03:08:08 rjerome Exp $
+// $Id$
 /**
  * Get the style information
  *

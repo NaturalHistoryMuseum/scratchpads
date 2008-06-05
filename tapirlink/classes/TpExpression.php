@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpExpression.php 284 2007-03-11 17:32:48Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

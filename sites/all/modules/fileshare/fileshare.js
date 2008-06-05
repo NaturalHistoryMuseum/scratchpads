@@ -1,4 +1,4 @@
-// $Id: fileshare.js,v 1.5.2.2 2007/02/13 08:48:39 jamier Exp $
+// $Id$
 
 /*
  * Since there is no more hasClass function in 

@@ -1,4 +1,4 @@
-/* $Id: address.js,v 1.1.2.9 2007/07/30 19:38:11 bdragon Exp $ */
+/* $Id$ */
 
 /**
  * Address widget and GMap geocoder routines.

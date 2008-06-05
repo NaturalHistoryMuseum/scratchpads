@@ -1,4 +1,4 @@
-// $Id: imce_set_tinymce.js,v 1.1.2.6 2008/03/31 13:28:19 ufku Exp $
+// $Id$
 
 function imceInitiateTinyMCE(cycle) {
   if ("undefined" != typeof(window.tinyMCE)) {

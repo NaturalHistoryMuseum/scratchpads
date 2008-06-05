@@ -17,7 +17,7 @@
 // |          Vinai Kopp <kopp@netzarbeiter.de>                           |
 // +----------------------------------------------------------------------+
 //
-// $Id: Output.php,v 1.6 2003/01/04 11:54:45 mj Exp $
+// $Id$
 
 require_once 'Cache.php';
 

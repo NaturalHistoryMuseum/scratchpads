@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.inc,v 1.146.2.1 2007/06/17 01:50:50 drumm Exp $
+// $Id$
 
 /**
  * @file

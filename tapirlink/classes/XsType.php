@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsType.php 360 2007-05-13 13:11:08Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,5 +1,5 @@
 <?php
-// $Id: panels_page.admin.inc,v 1.1.2.34 2007/12/31 23:41:43 merlinofchaos Exp $
+// $Id$
 /**
  * @file panels_page.admin.inc Administrative screens and functions for panel pages
  */

@@ -1,5 +1,5 @@
 <?php
-// $Id: earth.inc,v 1.4.4.1 2007/03/16 23:52:24 ankur Exp $
+// $Id$
 
 // Trigonometry for calculating geographical distances.
 // All function arguments and return values measure distances in metres

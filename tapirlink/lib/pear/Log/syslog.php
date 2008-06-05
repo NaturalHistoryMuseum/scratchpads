@@ -3,7 +3,7 @@
  * $Header: /repository/pear/Log/Log/syslog.php,v 1.23 2005/02/26 14:48:59 chagenbu Exp $
  * $Horde: horde/lib/Log/syslog.php,v 1.6 2000/06/28 21:36:13 jon Exp $
  *
- * @version $Revision: 1.23 $
+ * @version $Revision$
  * @package Log
  */
 

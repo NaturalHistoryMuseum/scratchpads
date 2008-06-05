@@ -1,5 +1,5 @@
 <?php
-// $Id: term_description.inc,v 1.1.2.7 2007/12/21 03:21:36 merlinofchaos Exp $
+// $Id$
 /**
  * Callback function to supply a list of content types.
  */

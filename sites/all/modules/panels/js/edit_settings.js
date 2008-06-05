@@ -1,4 +1,4 @@
-// $Id: edit_settings.js,v 1.1.2.3 2007/12/06 02:35:45 merlinofchaos Exp $
+// $Id$
 /**
  * @file edit_settings.js 
  *

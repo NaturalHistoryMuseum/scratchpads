@@ -1,4 +1,4 @@
-// $Id: list.js,v 1.1.2.11 2007/12/31 06:35:47 merlinofchaos Exp $
+// $Id$
 
 /**
  * List object

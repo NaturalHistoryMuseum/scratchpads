@@ -2,7 +2,7 @@
  * GMap Markers
  * Jef Poskanzer's Clusterer.js API version
  */
-/* $Id: clusterer_marker.js,v 1.1.2.8 2007/10/01 17:54:21 bdragon Exp $ */
+/* $Id$ */
 
 // Replace to override marker creation
 Drupal.gmap.factory.marker = function(loc,opts) {

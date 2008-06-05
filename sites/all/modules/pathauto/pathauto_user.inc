@@ -1,5 +1,5 @@
 <?php
-// $Id: pathauto_user.inc,v 1.17.4.17 2007/12/16 21:57:13 greggles Exp $
+// $Id$
 
 /**
  * Implementation of hook_pathauto() for user aliases

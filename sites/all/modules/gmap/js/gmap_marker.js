@@ -2,7 +2,7 @@
  * GMap Markers
  * GMap API version -- No manager
  */
-/* $Id: gmap_marker.js,v 1.1.2.24 2007/10/02 20:37:21 bdragon Exp $ */
+/* $Id$ */
 
 // Replace to override marker creation
 Drupal.gmap.factory.marker = function(loc,opts) {

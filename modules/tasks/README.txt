@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1 2006/04/05 16:48:42 jakeg Exp $
+$Id$
 
 Tasks.module by Jake Gordon (jakeg)
 A tasklist module

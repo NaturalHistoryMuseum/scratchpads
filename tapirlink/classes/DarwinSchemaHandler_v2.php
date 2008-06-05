@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: DarwinSchemaHandler_v2.php 344 2007-04-23 09:38:40Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

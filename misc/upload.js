@@ -1,4 +1,4 @@
-// $Id: upload.js,v 1.11 2006/08/31 23:31:25 unconed Exp $
+// $Id$
 
 /**
  * Attaches the upload behaviour to the upload form.

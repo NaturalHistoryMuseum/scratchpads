@@ -3,7 +3,7 @@
  *
  * Required for markers to operate properly.
  */
-/* $Id: icon.js,v 1.1.2.8 2007/10/04 18:11:37 bdragon Exp $ */
+/* $Id$ */
 
 /**
  * Get the GIcon corresponding to a setname / sequence.

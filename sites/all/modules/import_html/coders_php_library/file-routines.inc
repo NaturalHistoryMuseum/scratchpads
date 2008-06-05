@@ -7,7 +7,7 @@
  *
  * @package coders
  * @author Dan Morrison http://coders.co.nz/
- * @version $Id: file-routines.inc,v 1.6 2007/02/12 23:39:56 dman Exp $
+ * @version $Id$
  */
 
 // debug("Initiated built-in library for network requests. This means that some sites may be inaccessible as we can't do referrer-fudging or proxy-hops when leeching.",3);

@@ -1,5 +1,5 @@
 <?php
-// $Id: threecol_25_50_25_stacked.inc,v 1.5.6.6 2007/12/17 22:09:19 merlinofchaos Exp $
+// $Id$
 
 /**
  * implementation of hook_panels_layouts

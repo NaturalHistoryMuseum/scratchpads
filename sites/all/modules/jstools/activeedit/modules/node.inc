@@ -1,5 +1,5 @@
 <?php
-// $Id: node.inc,v 1.1 2007/01/26 22:15:18 nedjo Exp $
+// $Id$
 
 /**
  * Implementation of hook_nodeapi().

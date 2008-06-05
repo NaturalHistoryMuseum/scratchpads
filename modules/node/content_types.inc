@@ -1,5 +1,5 @@
 <?php
-// $Id: content_types.inc,v 1.24.2.3 2007/12/27 09:57:47 drumm Exp $
+// $Id$
 
 /**
  * @file

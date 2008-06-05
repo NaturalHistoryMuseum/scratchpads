@@ -1,5 +1,5 @@
 <?php
-// $Id: custom.inc,v 1.2.6.16 2007/12/18 01:29:27 merlinofchaos Exp $
+// $Id$
 /**
  * Callback function to supply a list of content types.
  */

@@ -1,5 +1,5 @@
 <?php
-// $Id: location.io.inc,v 1.2 2006/03/08 06:53:38 dww Exp $
+// $Id$
 
 // British Indian Ocean Territory
 

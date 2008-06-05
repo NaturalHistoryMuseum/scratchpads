@@ -1,5 +1,5 @@
 <?php
-/* $Id: premium.inc,v 1.1 2007/02/01 11:02:28 robrechtj Exp $ */
+/* $Id$ */
 
 /**
  * Implementation of hook_node_import_fields().

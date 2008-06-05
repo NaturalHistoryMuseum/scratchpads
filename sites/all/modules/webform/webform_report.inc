@@ -1,5 +1,5 @@
 <?php
-// $Id: webform_report.inc,v 1.15.2.11 2008/01/26 00:54:06 quicksketch Exp $
+// $Id$
 
 /**
  * This file includes helper functions for creating reports for webform.module

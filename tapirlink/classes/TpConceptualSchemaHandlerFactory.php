@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpConceptualSchemaHandlerFactory.php 371 2007-05-24 15:06:23Z rogerhyam $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

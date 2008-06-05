@@ -1,5 +1,5 @@
 <?php
-// $Id: book_parent.inc,v 1.1.2.4 2007/11/21 17:14:39 merlinofchaos Exp $
+// $Id$
 /**
  * @file relationships/book_parent.inc
  *

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpConceptMapping.php 186 2007-01-29 12:08:36Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

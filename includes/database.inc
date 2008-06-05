@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.62.2.6 2008/01/07 00:55:44 drumm Exp $
+// $Id$
 
 /**
  * @file

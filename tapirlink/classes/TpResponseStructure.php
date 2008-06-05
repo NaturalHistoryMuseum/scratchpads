@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpResponseStructure.php 429 2007-08-14 23:52:04Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,5 +1,5 @@
 <?php
-// $Id: token_node.inc,v 1.3.2.21 2007/10/28 16:10:41 greggles Exp $
+// $Id$
 
 /**
  * Implementation of hook_token_values()

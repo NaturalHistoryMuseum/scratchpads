@@ -1,5 +1,5 @@
 <?php
-// $Id: index.php,v 1.91 2006/12/12 09:32:18 unconed Exp $
+// $Id$
 
 /**
  * @file

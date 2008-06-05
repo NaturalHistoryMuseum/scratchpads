@@ -1,5 +1,5 @@
 <?php
-// $Id: common.inc,v 1.611.2.14 2007/12/27 09:21:23 drumm Exp $
+// $Id$
 
 /**
  * @file

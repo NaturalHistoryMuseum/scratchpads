@@ -1,5 +1,5 @@
 <?php
-// $Id: token_cck.inc,v 1.1.2.9 2007/10/16 14:37:59 greggles Exp $
+// $Id$
 
 
 // Two helper functions that generate appropriate tokens for CCK-added fields.

@@ -1,5 +1,5 @@
 <?php
-// $Id: content_admin.inc,v 1.28.2.38 2007/08/09 18:58:52 yched Exp $
+// $Id$
 
 /**
  * @file

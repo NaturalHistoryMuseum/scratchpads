@@ -1,4 +1,4 @@
-// $Id: openid.js,v 1.1.2.6 2008/01/30 20:43:20 walkah Exp $
+// $Id$
 
 $(document).ready(
   function() {

@@ -1,6 +1,6 @@
 <?php 
 /**
- * $Id: rss_template.xml.php 352 2007-04-23 12:46:04Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

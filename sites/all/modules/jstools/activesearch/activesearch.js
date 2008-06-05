@@ -1,4 +1,4 @@
-// $Id: activesearch.js,v 1.2.2.8 2008/03/29 13:37:28 nedjo Exp $
+// $Id$
 
 Drupal.settings = Drupal.settings ? Drupal.settings : {};
 Drupal.settings.activesearchCurrentHash = (location.hash.substring(0, 5) == '#keys') ? location.hash.replace('#', '') : '';

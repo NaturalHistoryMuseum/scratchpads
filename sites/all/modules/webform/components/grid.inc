@@ -1,5 +1,5 @@
 <?php
-// $Id: grid.inc,v 1.1.2.4 2008/03/21 20:35:47 quicksketch Exp $
+// $Id$
 /**
  * Create a set of form items to be displayed on the form for editing this component.
  * Use care naming the form items, as this correlates directly to the database schema.

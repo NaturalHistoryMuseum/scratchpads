@@ -1,5 +1,5 @@
 <?PHP
-// $Id: endnote8_export.inc,v 1.6.2.1 2007/03/25 01:51:57 rjerome Exp $
+// $Id$
 function en8_XMLout($result){
   
   $sml = '<?xml version="1.0" encoding="UTF-8"?>';

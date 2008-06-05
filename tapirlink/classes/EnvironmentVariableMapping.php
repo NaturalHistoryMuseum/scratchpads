@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: EnvironmentVariableMapping.php 399 2007-06-25 02:59:07Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

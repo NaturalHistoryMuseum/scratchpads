@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_style_ieee.inc,v 1.1.2.13 2007/12/19 20:06:19 rjerome Exp $
+// $Id$
 // by Jeffrey Dwoskin
 // A style closer to IEEE format
 // see http://standards.ieee.org/guides/style/section7.html#992

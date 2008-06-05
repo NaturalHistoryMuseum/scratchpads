@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1 2006/12/31 01:41:50 eaton Exp $
+$Id$
 
 Description
 ===========

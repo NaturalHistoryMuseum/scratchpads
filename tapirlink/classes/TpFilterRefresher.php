@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpFilterRefresher.php 228 2007-02-07 21:53:09Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

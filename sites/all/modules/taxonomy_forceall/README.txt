@@ -1,4 +1,4 @@
-// $Id: README.txt,v 1.1 2007/03/02 21:32:38 aymerick Exp $
+// $Id$
 
 When activated, the taxonomy_forceall module forces the 'all' parameter to taxonomy URLs.
 

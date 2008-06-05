@@ -1,5 +1,5 @@
 <?php
-// $Id: endnote8_parser.inc,v 1.4.2.9 2007/09/01 01:05:44 rjerome Exp $ 
+// $Id$ 
 
 function en8_startElement($parser, $name, $attrs) 
 {

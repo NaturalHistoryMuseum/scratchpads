@@ -1,5 +1,5 @@
 <?php
-// $Id: nid.inc,v 1.1.2.5 2007/10/25 02:23:19 merlinofchaos Exp $
+// $Id$
 /**
  * @file arguments/nid.inc
  *

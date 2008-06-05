@@ -1,5 +1,5 @@
 <?php
-// $Id: location_upgrade.php,v 1.5 2006/03/08 06:53:37 dww Exp $
+// $Id$
 
 /**
  * @file

@@ -1,4 +1,4 @@
-// $Id: imce_set_fck.js,v 1.1.2.6 2008/03/31 13:28:19 ufku Exp $
+// $Id$
 
 function imceInitiateFCK(cycle) {
   if ("undefined" != typeof(window.FCKeditorAPI)) {

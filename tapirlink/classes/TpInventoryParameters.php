@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpInventoryParameters.php 355 2007-05-09 14:11:16Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpUddiForm.php 134 2007-01-16 01:21:30Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

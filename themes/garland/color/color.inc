@@ -1,5 +1,5 @@
 <?php
-// $Id: color.inc,v 1.2 2006/12/06 16:32:54 dries Exp $
+// $Id$
 
 $info = array(
 

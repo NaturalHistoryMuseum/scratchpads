@@ -1,5 +1,5 @@
 <?php
-// $Id: gmap_polyutil.inc,v 1.1.2.1 2008/04/13 23:51:26 bdragon Exp $
+// $Id$
 
 /**
  * @file

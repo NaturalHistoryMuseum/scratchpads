@@ -1,5 +1,5 @@
 <?php
-// $Id: location.de.inc,v 1.8.4.1 2007/02/25 00:01:50 ankur Exp $
+// $Id$
 
 /**
 * Parameters:

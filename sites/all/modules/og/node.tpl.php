@@ -1,4 +1,4 @@
-<?php // $Id: node.tpl.php,v 1.5.2.2 2006/11/19 13:14:01 weitzman Exp $
+<?php // $Id$
 ?>
 
 <div class="node<?php if ($sticky) { print " sticky"; } ?><?php if (!$status) { print " node-unpublished"; } ?>">

@@ -1,6 +1,6 @@
 <?php
 
-// $Id: views_query.inc,v 1.51.2.11 2007/04/12 15:18:59 merlinofchaos Exp $
+// $Id$
 /*
  * This builds a query for the view.
  */

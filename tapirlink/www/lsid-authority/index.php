@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: index.php 324 2007-04-10 15:24:17Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -26,7 +26,7 @@
  *
  * @package coders
  * @author Dan Morrison http://coders.co.nz/
- * @version $Id: install-htmltidy.inc,v 1.7 2006/08/25 15:43:33 dman Exp $
+ * @version $Id$
  */
 
 /**

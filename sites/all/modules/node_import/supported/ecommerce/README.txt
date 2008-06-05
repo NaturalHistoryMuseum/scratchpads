@@ -64,4 +64,4 @@ behind the scene:
 
 4. In product_node_import_static() we do the same.
 
-$Id: README.txt,v 1.2 2006/09/22 07:21:05 robrechtj Exp $
+$Id$

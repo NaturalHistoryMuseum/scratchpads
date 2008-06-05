@@ -1,6 +1,6 @@
 <?php
 /** @file
- * $Id: links.inc,v 1.20.2.4 2007/04/27 22:12:07 syscrusher Exp $
+ * $Id$
  *
  * links.inc      Utility functions for the links modules
  *

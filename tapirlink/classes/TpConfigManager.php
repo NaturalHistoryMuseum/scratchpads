@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpConfigManager.php 107 2007-01-14 16:45:30Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

@@ -1,4 +1,4 @@
-// $Id: devel.js,v 1.1.2.2 2007/10/21 01:06:35 weitzman Exp $
+// $Id$
 
 /**
   *  @name    jQuery Logging plugin

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpWizardForm.php 128 2007-01-16 00:20:35Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

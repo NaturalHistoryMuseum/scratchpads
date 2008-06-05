@@ -1,5 +1,5 @@
 <?php
-// $Id: book.inc,v 1.1.2.6 2008/03/29 13:37:28 nedjo Exp $
+// $Id$
 
 /**
  * Implementation of hook_activemenu().

@@ -1,4 +1,4 @@
-/* $Id: lightbox2.js,v 1.1.2.16 2008/03/06 15:02:14 snpower Exp $ */
+/* $Id$ */
 if (Drupal.jsEnabled) {
   $(document).ready(function () {
 

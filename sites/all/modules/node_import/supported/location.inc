@@ -1,5 +1,5 @@
 <?php
-// $Id: location.inc,v 1.4.4.2 2008/03/17 13:02:50 robrechtj Exp $
+// $Id$
 
 /**
  * Implementation of hook_node_import_fields().

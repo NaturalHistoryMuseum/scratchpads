@@ -1,4 +1,4 @@
-// $Id: collapse.js,v 1.10 2007/01/11 03:38:31 unconed Exp $
+// $Id$
 
 /**
  * Toggle the visibility of a fieldset using smooth animations

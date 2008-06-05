@@ -1,5 +1,5 @@
 <?php
-// $Id: xmlsitemap.php,v 1.2 2007/11/09 18:44:49 darrenoh Exp $
+// $Id$
 
 /**
  * @addtogroup hooks

@@ -1,7 +1,7 @@
 /**
  * Common marker routines.
  */
-// $Id: marker.js,v 1.1.2.1 2007/09/18 20:43:26 bdragon Exp $
+// $Id$
 
 Drupal.gmap.addHandler('gmap', function(elem) {
   var obj = this;

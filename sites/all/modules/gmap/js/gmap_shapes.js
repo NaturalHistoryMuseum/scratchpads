@@ -2,7 +2,7 @@
  * GMap Shapes
  * GMap API version / Base case
  */
-/* $Id: gmap_shapes.js,v 1.1.2.4 2007/08/24 06:44:57 bdragon Exp $ */
+/* $Id$ */
 
 Drupal.gmap.addHandler('gmap', function(elem) {
   var obj = this;

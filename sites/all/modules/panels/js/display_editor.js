@@ -1,4 +1,4 @@
-// $Id: display_editor.js,v 1.1.2.29 2007/12/11 21:02:35 merlinofchaos Exp $
+// $Id$
 /**
  * @file display_editor.js 
  *

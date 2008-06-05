@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.module,v 1.36.2.170 2008/04/14 18:32:27 rjerome Exp $
+// $Id$
 /**
  *   biblio.module for Drupal
  *
@@ -290,7 +290,7 @@ function biblio_settings() {
       drupal_set_message(t("There are updates available for the Biblio module, please run the update.php script"), 'error');      }
   }
 
-  $version = '$Revision: 1.36.2.170 $ $Date: 2008/04/14 18:32:27 $';
+  $version = '$Revision$ $Date$';
   $version = str_replace('$', '', $version);
   $form['biblio_rev'] = array(
      '#value' => $version,

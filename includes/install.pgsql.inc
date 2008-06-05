@@ -1,5 +1,5 @@
 <?php
-// $Id: install.pgsql.inc,v 1.2 2006/12/27 13:02:34 drumm Exp $
+// $Id$
 
 // PostgreSQL specific install functions
 

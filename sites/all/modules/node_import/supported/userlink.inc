@@ -1,5 +1,5 @@
 <?php
-// $Id: userlink.inc,v 1.1.2.1 2008/03/17 12:24:54 robrechtj Exp $
+// $Id$
 
 /**
  * @file

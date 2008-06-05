@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsComplexType.php 364 2007-05-15 00:59:19Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

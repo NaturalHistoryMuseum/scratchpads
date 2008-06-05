@@ -1,4 +1,4 @@
-// $Id: tasks_view.js,v 1.2 2006/04/05 16:20:27 jakeg Exp $
+// $Id$
 function toggleVisibility(element) {
   st = document.getElementById(element).style;
   if (st) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: google.inc,v 1.1.2.3 2007/08/02 05:28:08 ankur Exp $
+// $Id$
 
 // Returns lower-case of iso codes for countries supported by Google's geocoder
 function google_geocode_country_list() {

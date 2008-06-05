@@ -19,7 +19,7 @@
 	even discarding the suffix. If so, set replace_suffix to true, and tell me the new suffix.
 	replace_suffix = TRUE and new_suffix = '' means discard suffixes altogether (just hrefs, not srcs)
 
-	$Id: rewrite_href_and_src.xsl,v 1.7.2.1 2007/02/20 12:30:40 dman Exp $
+	$Id$
 -->
 
 

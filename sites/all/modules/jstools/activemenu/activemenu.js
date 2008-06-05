@@ -1,4 +1,4 @@
-// $Id: activemenu.js,v 1.19.2.10 2008/04/14 16:10:31 nedjo Exp $
+// $Id$
 
 Drupal.behaviors.activeMenu = function (context) {
   // The elements supported. Each can designate a different uri.

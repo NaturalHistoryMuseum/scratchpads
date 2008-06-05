@@ -1,5 +1,5 @@
 <?php
-/* $Id: node.inc,v 1.11.2.1.2.5 2008/03/17 13:02:50 robrechtj Exp $ */
+/* $Id$ */
 
 /**
  * Implementation of hook_node_import_types().

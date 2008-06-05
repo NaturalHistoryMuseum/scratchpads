@@ -1,5 +1,5 @@
 <?php
-// $Id: install.mysqli.inc,v 1.6 2006/12/27 13:02:34 drumm Exp $
+// $Id$
 
 // MySQLi specific install functions
 

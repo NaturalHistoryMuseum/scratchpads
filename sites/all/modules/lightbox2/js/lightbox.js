@@ -1,4 +1,4 @@
-/* $Id: lightbox.js,v 1.5.2.6.4.23 2008/02/22 16:55:05 snpower Exp $ */
+/* $Id$ */
 
 /**
  * jQuery Lightbox

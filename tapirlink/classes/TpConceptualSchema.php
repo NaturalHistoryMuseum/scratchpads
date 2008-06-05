@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: TpConceptualSchema.php 375 2007-05-25 00:23:47Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

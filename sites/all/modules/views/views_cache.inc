@@ -1,5 +1,5 @@
 <?php
-// $Id: views_cache.inc,v 1.2.2.18 2007/07/14 19:12:02 merlinofchaos Exp $
+// $Id$
 
 // Load all our module 'on behalfs'.
 // Whenever we decide we need this, load our module 'on behalfs'.

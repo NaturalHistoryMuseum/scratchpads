@@ -1,5 +1,5 @@
 <?php
-// $Id: og_views.inc,v 1.12.2.44 2008/01/04 02:13:36 weitzman Exp $
+// $Id$
 /**
  * Implementation of the hook_views_tables()
  */

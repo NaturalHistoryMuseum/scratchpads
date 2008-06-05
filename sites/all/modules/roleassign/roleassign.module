@@ -1,6 +1,6 @@
 <?php
 
-/* $Id: roleassign.module,v 1.17.2.1 2007/02/28 16:35:55 tbarregren Exp $ */
+/* $Id$ */
 
 /* Roleassign - a Drupal module that allows site administrators to
  * further delegate the task of managing user's roles.
@@ -421,7 +421,7 @@ function _roleassign_help_help() {
     </p>
 EOT;
 
-  $version = str_replace(array('$Re'.'vision:', ' $'), array('', ''), '$Revision: 1.17.2.1 $');
-  $year = substr('$Date: 2007/02/28 16:35:55 $', 7, 4);
+  $version = str_replace(array('$Re'.'vision:', ' $'), array('', ''), '$Revision$');
+  $year = substr('$Date$', 7, 4);
 	return t($help, array('!version' => $version, '!year' => $year));
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_format.inc,v 1.1.2.2 2007/08/28 23:21:24 douggreen Exp $
+// $Id$
 
 /**
  * Recursively process .module and .inc files in directory.

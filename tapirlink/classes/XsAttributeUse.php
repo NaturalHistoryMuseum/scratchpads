@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsAttributeUse.php 417 2007-08-06 21:31:04Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

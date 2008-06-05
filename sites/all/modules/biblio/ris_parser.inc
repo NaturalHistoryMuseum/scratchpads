@@ -1,5 +1,5 @@
 <?php
-// $Id: ris_parser.inc,v 1.1.2.6 2007/12/05 15:37:51 rjerome Exp $
+// $Id$
 /** 
  *   Copyright (C) 2006  Ron Jerome
  *

@@ -6,8 +6,8 @@
  * Dual licensed under the MIT (MIT-LICENSE.txt)
  * and GPL (GPL-LICENSE.txt) licenses.
  *
- * $Date: 2008-02-06 00:21:25 -0500 (Wed, 06 Feb 2008) $
- * $Rev: 4663 $
+ * $Date$
+ * $Rev$
  */
 
 // Map over jQuery in case of overwrite
@@ -3424,8 +3424,8 @@ jQuery.fn.offset = function() {
  * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
  * and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
  *
- * $LastChangedDate: 2007-12-20 15:43:48 +0100 (Do, 20 Dez 2007) $
- * $Rev: 4257 $
+ * $LastChangedDate$
+ * $Rev$
  *
  * Version: @VERSION
  *
@@ -5283,7 +5283,7 @@ function num(el, prop) {
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
  *
- * Revision: $Id: jquery.accordion.js 4529 2008-01-24 18:41:30Z joern.zaefferer $
+ * Revision: $Id$
  *
  */
 

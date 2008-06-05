@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: XsModelGroup.php 363 2007-05-15 00:52:40Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

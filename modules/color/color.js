@@ -1,4 +1,4 @@
-// $Id: color.js,v 1.1.2.1 2007/04/18 03:38:58 drumm Exp $
+// $Id$
 
 if (Drupal.jsEnabled) {
   $(document).ready(function () {

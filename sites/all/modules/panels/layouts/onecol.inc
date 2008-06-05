@@ -1,5 +1,5 @@
 <?php
-// $Id: onecol.inc,v 1.1.2.4 2007/12/17 22:09:19 merlinofchaos Exp $
+// $Id$
 /**
  * implementation of hook_panels_layouts
  */

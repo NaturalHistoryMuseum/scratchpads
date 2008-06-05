@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.1.2.2 2007/10/12 15:23:31 linuxbox Exp $
+$Id$
 EasyLink Module README
 
 Credits

@@ -1,4 +1,4 @@
-// $Id: editview.js,v 1.3.2.2 2008/01/29 00:21:44 agileware Exp $
+// $Id$
 
 $(function(){ if (Drupal.jsEnabled) $("form").each(editviewCaptureForm); });
 

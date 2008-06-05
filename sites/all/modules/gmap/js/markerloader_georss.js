@@ -3,7 +3,7 @@
  * GeoRSS markers.
  * This doesn't work at the moment.
  */
-/* $Id: markerloader_georss.js,v 1.1.2.5 2007/10/04 18:47:56 bdragon Exp $ */
+/* $Id$ */
 
 Drupal.gmap.addHandler('gmap', function(elem) {
   var obj = this;

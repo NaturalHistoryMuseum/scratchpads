@@ -1,4 +1,4 @@
-// $Id: fivestar-color.js,v 1.1.2.3 2008/04/15 04:48:01 quicksketch Exp $
+// $Id$
 
 if (Drupal.jsEnabled) {
   $(document).ready(function () {

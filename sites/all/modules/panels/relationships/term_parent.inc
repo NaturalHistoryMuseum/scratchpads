@@ -1,5 +1,5 @@
 <?php
-// $Id: term_parent.inc,v 1.1.2.5 2007/11/21 17:14:39 merlinofchaos Exp $
+// $Id$
 /**
  * @file relationships/term_parent.inc
  *

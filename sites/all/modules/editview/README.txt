@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.4.2.1 2008/01/29 00:21:44 agileware Exp $
+$Id$
 
 The Editview Drupal Module
 

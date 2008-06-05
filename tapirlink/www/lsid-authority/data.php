@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: data.php 315 2007-04-10 12:30:06Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 

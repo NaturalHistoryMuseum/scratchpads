@@ -19,7 +19,7 @@
    * @author     Elmar Pitschke <elmar.pitschke@gmx.de>
    * @copyright  1997-2005 The PHP Group
    * @license    http://www.php.net/license/3_0.txt  PHP License 3.0
-   * @version    CVS: $Id: bibtex.php,v 1.2.2.4 2007/10/26 12:59:58 rjerome Exp $
+   * @version    CVS: $Id$
    * @link       http://pear.php.net/package/Structures_BibTex
    */
 

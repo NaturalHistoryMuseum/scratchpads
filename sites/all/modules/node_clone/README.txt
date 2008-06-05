@@ -1,4 +1,4 @@
-$Id: README.txt,v 1.5.2.3 2007/02/15 03:44:00 pwolanin Exp $
+$Id$
 
 README file for the clone module for Drupal 5.x.
 

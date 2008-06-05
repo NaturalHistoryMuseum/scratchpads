@@ -1,5 +1,5 @@
 <?php
-// $Id: uid.inc,v 1.1.2.1 2007/11/05 22:14:37 merlinofchaos Exp $
+// $Id$
 /**
  * @file arguments/uid.inc
  *

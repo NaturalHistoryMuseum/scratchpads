@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: CnsSchemaHandler_v1.php 434 2007-09-09 23:50:56Z rdg $
+ * $Id$
  * 
  * LICENSE INFORMATION
  * 
