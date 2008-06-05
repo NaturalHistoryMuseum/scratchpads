@@ -1,0 +1,25 @@
+<?php
+/* $Id$*/
+/* $HeadURL$*/
+
+/** 
+ * @file batax.module
+ * 
+ * Allows a user to specify that a taxonomy field should use the
+ * autocomplete text field and not the drop down/select boxes
+ */
+/***********************************************************************************
+ * TEXT i8n
+ ***********************************************************************************/
+define('BATAX_DESCRIPTION','');
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+/**
+ * hook_form_alter()
+ * 
+ * This function does most of the hard work for this module.
+ */
+function batax_form_alter($form_id, &$form){
+  
+}
