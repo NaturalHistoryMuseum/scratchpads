@@ -18,6 +18,16 @@ if (isset($_SERVER['HTTP_HOST'])) {
     $db_url_part = $host_parts[1];
   // Finally remove "-" due to it not working as a table name
   $db_url_part = str_replace("-","",$db_url_part);
+  
+  // Following set for the development server
+  if(substr($_SERVER['HTTP_HOST'],-4)=='.dev'){
+    global $base_url;
+    global $base_path;
+    global $cookie_domain;
+    $cookie_domain = '.dev.'.substr($_SERVER['HTTP_HOST'],0,strlen($_SERVER['HTTP_HOST'])-4);
+    $base_url = 'http://'.substr($cookie_domain,1);
+    $base_path = '';
+  }
 }
 $user_password = parse_ini_file("/var/www/drupal_db_passwords",true);
 ini_set('mysql.default_socket',     '/var/lib/mysql/mysql.sock');

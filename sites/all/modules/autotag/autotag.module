@@ -110,6 +110,7 @@ function autotag_form_alter($form_id, &$form){
   
   // Hide the taxonomy fields -> this can greatly improve the rendering time for a page
   // with a large classification on it.
+//print_r($form);exit;
   foreach($form['taxonomy'] as $key=>$value){
     if(in_array($key,$hide_vids)){
       $form['taxonomy'][$key] = array(
