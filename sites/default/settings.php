@@ -17,15 +17,28 @@ if (isset($_SERVER['HTTP_HOST'])) {
   if (strlen($db_url_part)<4)
     $db_url_part = $host_parts[1];
   // Finally remove "-" due to it not working as a table name
-  $db_url_part = str_replace("-","",$db_url_part);
+  $db_url_part = str_replace("-","",$db_url_part);  
   if($db_url_part == 'monkey'){
     $db_url_part = 'quartz';
+  }
+  // Following set for the development server
+  if(substr($_SERVER['HTTP_HOST'],-4)=='.dev'){
+    global $base_url;
+    global $base_path;
+    global $cookie_domain;
+    $cookie_domain = '.dev.'.substr($_SERVER['HTTP_HOST'],0,strlen($_SERVER['HTTP_HOST'])-4);
+    $base_url = 'http://'.substr($cookie_domain,1);
+    $base_path = '';
   }
 }
 $user_password = parse_ini_file("/var/www/drupal_db_passwords",true);
 ini_set('mysql.default_socket',     '/var/lib/mysql/mysql.sock');
 $db_url = 'mysqli://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
 $db_prefix="";
+
+// Set the User Agent for PHP accessing other sites so that Web admin's know
+// Scratchpads were here
+ini_set('user_agent', 'Scatchpad Bot http://scratchpads.eu/bot');
 // END SDRycroft
 
 // SDRycroft
