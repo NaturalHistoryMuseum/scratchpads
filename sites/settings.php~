@@ -17,7 +17,9 @@ if (isset($_SERVER['HTTP_HOST'])) {
   if (strlen($db_url_part)<4)
     $db_url_part = $host_parts[1];
   // Finally remove "-" due to it not working as a table name
-  $db_url_part = str_replace("-","",$db_url_part);
+  $db_url_part = str_replace("-","",$db_url_part);  
+  if($db_url_part == 'monkey'){
+    $db_url_part = 'quartz';
   
   // Following set for the development server
   if(substr($_SERVER['HTTP_HOST'],-4)=='.dev'){
