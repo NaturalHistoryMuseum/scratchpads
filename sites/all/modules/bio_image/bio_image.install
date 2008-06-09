@@ -189,4 +189,5 @@ function bio_image_uninstall(){
    DELETE FROM {node_group_fields} WHERE group_name = 'bio_image_biblio_group';   
   ";
   db_query($sql);
+  return true;
 }
