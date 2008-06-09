@@ -179,7 +179,7 @@ function autotag_form_alter($form_id, &$form){
     }
     // HTML shit for drag'n'droping
     $form['autotag']['dragndropfields'] = array(
-      '#value' => '<div class="autotag-dnd">
+      '#value' => '<div class="autotag-dnd" id="autotag-container">
   <div id="autotag-dnd-left">
     <h3>'.t(AUTOTAG_TAGGED).'</h3>
     <ul>
