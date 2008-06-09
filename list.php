@@ -78,9 +78,9 @@ else{
     foreach($domain_array as $domain){
       echo $domain['output_before'];
       if($visible_count>=$number_visible){
-        $output .= 'class="listhidden" ';
+        echo 'class="listhidden" ';
       }else{
-        $output .= 'class="listnothidden" ';
+        echo 'class="listnothidden" ';
       }
       echo $domain['output_after'];
       $visible_count ++;
