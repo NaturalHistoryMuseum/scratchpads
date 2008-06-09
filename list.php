@@ -98,7 +98,7 @@ originalimage'.$short_domain.'.src = "http://quartz.nhm.ac.uk/screenshots/'.$dom
 ';
   }
 ?>
-var lastSort = '';
+var lastSort = 'views';
 function mouseOverScreenshots(from,to){
   document.getElementById(from).src = to.src;}
 
