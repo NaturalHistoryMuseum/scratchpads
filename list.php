@@ -74,7 +74,6 @@ else{
       $visible_count ++;
     }
     krsort($domain_array, SORT_NUMERIC);
-    echo "<xmp>";print_r($domain_array);echo "</xmp>";
     $visible_count=0;
     foreach($domain_array as $domain){
       echo $domain['output_before'];
