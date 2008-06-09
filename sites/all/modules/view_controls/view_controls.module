@@ -1018,9 +1018,14 @@ function view_controls_pre_render($form_id, &$form){
       $form['field_taxonomy_'.$form['type']['#value']]['values']['#value'] = $term->name;
     }elseif($form['taxonomy']){
       $form['taxonomy'][$term->vid]['#value'] = array(arg(3));
+    /* For the benefit of the darwincore module
+     * Gah, I hate having customistaions in modules like this */
     }elseif(isset($form['tabs']['taxonomy'])){
       $term = taxonomy_get_term(arg(3));
       $form['tabs']['taxonomy']['taxonomicname']['#value'] = $term->name;
+    }
+    elseif(isset($form['third_stage']['taxonomy'])){
+      $form['third_stage']['taxonomy'][$term->vid]['#value'] = array(arg(3));
     }
   }  
 }
