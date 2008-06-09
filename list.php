@@ -57,13 +57,8 @@ else{
       $views = 0;
       $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
 	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
-      $output = '<div style="float:left;height:270px;width:300px;" ';
-      if($visible_count>=$number_visible){
-        $output .= 'class="listhidden" ';
-      }else{
-        $output .= 'class="listnothidden" ';
-      }
-      $output .= 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+      $output_before = '<div style="float:left;height:270px;width:300px;" ';
+      $output_after = 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
       while(isset($domain_array[$views])){
         $views += 0.1;
       }
@@ -72,14 +67,23 @@ else{
 	      'nodes' => $nodes,
 	      'domain' => $domain,
 	      'users' => $users,
-	      'output' => $output,
+	      'output_before' => $output_before,
+	      'output_after' => $output_after,
 	      'random' => $visible_count
 	    );
       $visible_count ++;
     }
     krsort($domain_array, SORT_NUMERIC);
+    $visible_count=0;
     foreach($domain_array as $domain){
-      echo $domain['output'];
+      echo $domain['output_before'];
+      if($visible_count>=$number_visible){
+        $output .= 'class="listhidden" ';
+      }else{
+        $output .= 'class="listnothidden" ';
+      }
+      echo $domain['output_after'];
+      $visible_count ++;
     }
           ?></div><div class="mainfull"></div>');
 var descimage = new Image;
