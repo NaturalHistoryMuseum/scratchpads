@@ -60,7 +60,7 @@ else{
       $output_before = '<div style="float:left;height:270px;width:300px;" ';
       $output_after = 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
       while(isset($domain_array[$views])){
-        $views += 0.1;
+        $views += 1;
       }
 	    $domain_array[$views] = array(
 	      'views' => $views,
