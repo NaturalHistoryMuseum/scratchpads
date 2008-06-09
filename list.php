@@ -48,6 +48,7 @@ else{
 	  $number_visible = 15;
 	  $visible_count = 0;
 	  shuffle($domains);
+	  $domain_array = array();
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
 	    mysql_select_db($short_domain); // Do I need to do this if I specify a database in the select statement. DUMB!
@@ -56,14 +57,29 @@ else{
       $views = 0;
       $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
 	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
-      echo '<div style="float:left;height:270px;width:300px;" ';
+      $output = '<div style="float:left;height:270px;width:300px;" ';
       if($visible_count>=$number_visible){
-        echo 'class="listhidden" ';
+        $output .= 'class="listhidden" ';
       }else{
-        echo 'class="listnothidden" ';
+        $output .= 'class="listnothidden" ';
       }
-      echo 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+      $output .= 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+      while(isset($domain_array[$views])){
+        $views += 0.1;
+      }
+	    $domain_array[$views] = array(
+	      'views' => $views,
+	      'nodes' => $nodes,
+	      'domain' => $domain,
+	      'users' => $users,
+	      'output' => $output,
+	      'random' => $visible_count
+	    );
       $visible_count ++;
+    }
+    krsort($domain_array, SORT_NUMERIC);
+    foreach($domain_array as $domain){
+      echo $domain['output'];
     }
           ?></div><div class="mainfull"></div>');
 var descimage = new Image;

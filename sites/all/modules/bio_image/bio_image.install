@@ -169,10 +169,6 @@ function bio_image_uninstall(){
   $vocabularies = taxonomy_get_vocabularies();
   foreach($vocabularies as $vocabulary){
     if ($vocabulary->module == 'bio_image'){
-      /*$terms = taxonomy_get_tree($vocabulary->vid);
-      foreach ($terms as $term){
-        taxonomy_del_term($term->tid);      
-      }*/
       taxonomy_del_vocabulary($vocabulary->vid);
     }
   }
@@ -189,5 +185,4 @@ function bio_image_uninstall(){
    DELETE FROM {node_group_fields} WHERE group_name = 'bio_image_biblio_group';   
   ";
   db_query($sql);
-  return true;
 }
