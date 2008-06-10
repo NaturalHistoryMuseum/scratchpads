@@ -8,11 +8,7 @@
  * Allows a user to specify that a taxonomy field should use the
  * autocomplete text field and not the drop down/select boxes
  */
-/***********************************************************************************
- * TEXT i8n
- ***********************************************************************************/
-define('BATAX_SETTINGS','Big Taxonomy Autocomplete Settings');
-define('BATAX_SETTINGS_DESC','Allows users to specify which vocabularies should use the autocomplete field');
+
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
@@ -22,24 +18,76 @@ define('BATAX_SETTINGS_DESC','Allows users to specify which vocabularies should 
  * This function does most of the hard work for this module.
  */
 function batax_form_alter($form_id, &$form){
-  
-}
-/**
- * Implementation of hook_menu()
- * 
- * Only really needed for the settings page, and the autocomplete url
- */
-function batax_menu($maycache){
-  $items = array();
-  if (!$may_cache) {
-    $items[] = array(
-      'path' => 'admin/settings/batax',
-      'title' => t(BATAX_SETTINGS),
-      'description' => t(BATAX_SETTINGS_DESC),
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('batax_admin_settings'),
-      'access' => user_access('administer site configuration')
-    );
+  // Return if this isn't a node form
+  if($form['#id']!='node-form'){return;}
+  // Get the max options
+  // N.B. There is no actual way of setting this value, that is deliberate to keep the module as
+  // simple as possible.  If you'd like to increase this value, try the following sql:
+  // "INSERT INTO variable (name, value) VALUES ('batax_max_options', 100);"
+  $max_options = variable_get('batax_max_options',50);
+  // Have we altered a taxonomy
+  $taxonomy_altered = false;
+  // We've got a node form, lets look at the taxonomy
+  foreach($form['taxonomy'] as $vocabulary => $vocabulary_field){
+    if(is_numeric($vocabulary)){
+      if(isset($vocabulary_field['#type']) && $vocabulary_field['#type'] == 'select'){
+        if(isset($vocabulary_field['#options']) && count($vocabulary_field['#options']) > $max_options){
+          // Hide the original field
+          $form['taxonomy'][$vocabulary] = array('#type'=>'hidden', '#default_value'=>$vocabulary_field['#default_value']);
+          // Lets completely alter this field, making it into an additional autocomplete field
+          unset($vocabulary_field['#options']);
+          unset($vocabulary_field['#size']);
+          unset($vocabulary_field['#theme']);
+          $vocabulary_field['#type'] = 'textfield';
+          $term_names = array();
+          foreach($vocabulary_field['#default_value'] as $tid){
+            $term = taxonomy_get_term($tid);
+            $term_names[] = $term->name;
+          }
+          $vocabulary_field['#default_value'] = implode(", ",$term_names);
+          // We can just use the autocomplete provided by the taxonomy module - it bloody works!
+          $vocabulary_field['#autocomplete_path'] = 'taxonomy/autocomplete/'.$vocabulary;
+          $form['taxonomy'][$vocabulary.'-new'] = $vocabulary_field;
+          // Finally set taxonomy_altered to true so that we can alter the submit function
+          $taxonomy_altered = true;
+        }
+      }      
+    }
   }
-  return $items;
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function batax_nodeapi(&$node, $op, $three, $four){
+  switch($op){
+    case 'submit':
+      foreach($node->taxonomy as $vocabulary => $vocabulary_field){
+        if(substr($vocabulary,-4) == '-new'){
+          $vid = array_shift(explode("-",$vocabulary));
+          $node->taxonomy[$vid] = _split_field($vocabulary_field, $vid);
+        }
+      }
+      break;
+  }
+}
+
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+/**
+ * Simple helper function which returns an array of tids
+ */
+function _split_field($string, $vid){
+  // Add slashes first
+  $string = addslashes($string);
+  $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+  preg_match_all($regexp, $string, $matches);
+  $array = $matches[1];
+  $results = db_query("SELECT tid FROM {term_data} WHERE name IN ('".implode("','",$array)."') AND vid = %d", $vid);
+  $return_array = array();
+  while($row = db_fetch_array($results)){
+    $return_array[$row['tid']] = $row['tid'];
+  }
+  return $return_array;
 }
