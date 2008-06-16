@@ -1,0 +1,161 @@
+<?php
+/* $Id$*/
+/* $HeadURL$*/
+
+/** 
+ * @file leftandright.module
+ * 
+ * Adds a left and right table which is linked to the taxonomy tables that
+ * in turn enables the retrieval of trees to be much quicker.  It's just
+ * magic really
+ */
+
+/***********************************************************************************
+ * TEXT i8n
+ ***********************************************************************************/
+define('LEFTANDRIGHT_UPDATE_PAGE_TITLE','');
+define('LEFTANDRIGHT_UPDATE_PAGE_TITLE_DESC','');
+define('LEFTANDRIGHT_SETTINGS','');
+define('LEFTANDRIGHT_SETTINGS_DESC','');
+define('LEFTANDRIGHT_REBUILDING','Rebuilding the tree for vocabulary:');
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function leftandright_menu($maycache){
+  $items = array();
+  if(!$maycache){ // FIXME  - REMOVE ! AFTER DEVELOPMENT
+    $items[] = array(
+      'path' => 'admin/settings/leftandright',
+      'title' => t(LEFTANDRIGHT_SETTINGS),
+      'description' => t(LEFTANDRIGHT_SETTINGS_DESC),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('leftandright_admin_settings'),
+      'access' => user_access('administer site configuration')
+    );
+    $items[] = array(
+      'path' => 'leftandright/update',
+      'title' => t(LEFTANDRIGHT_UPDATE_PAGE_TITLE),
+      'description' => t(LEFTANDRIGHT_UPDATE_PAGE_TITLE_DESC),
+      'callback' => 'leftandright_rebuild_tree_page',
+      'access' => user_access('administer site configuration')
+    );
+  }
+  return $items;
+}
+
+/**
+ * Alters the categories page to include a link to rebuild the tree for a vocabulary
+ */
+function leftandright_form_alter($form_id, &$form){
+}
+/***********************************************************************************
+ * REBUILD TREE
+ ***********************************************************************************/
+function leftandright_rebuild_tree_page($args){
+  leftandright_rebuild_tree($args);
+  drupal_goto('admin/content/taxonomy');
+}
+function leftandright_rebuild_tree($vid){
+  // Lets load this vocabulary, firstly to make sure it exists, and secondly
+  // so that we know its name
+  $vocabulary = taxonomy_get_vocabulary($vid);
+  if(!$vocabulary){return;}
+  // Check that the vocabulary has terms, if not, just return
+  $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
+  $array_results = db_fetch_array($result);
+  if(!$array_results['c']){
+    drupal_set_message($vocabulary->name.' has no terms');
+    return;
+  }
+  
+  // Get the DB connection shit in the same way as core does
+  global $db_url;  
+  $url = parse_url($db_url);
+  $url['user'] = urldecode($url['user']);
+  if(isset($url['pass'])) {
+    $url['pass'] = urldecode($url['pass']);
+  } else {
+    $url['pass'] = '';}
+  $url['host'] = urldecode($url['host']);
+  $url['path'] = urldecode($url['path']);
+  $url['port'] = $url['port'] ? $url['port'] : 3306;
+  
+  // Calculate the tid to start from (creating a parent if the vocabulary
+  // has multiple roots (forest not tree).
+  $results = db_query("SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
+  $tid;
+  $temporary_root_created = false;
+    
+  if(db_num_rows($results)==1){
+    // Single tree, woot
+    $tid = array_pop(db_fetch_array($results));
+  } else {
+    $temporary_root_created = true;
+    // Either no results (Farp), Or we have a forest.  Lets tree it!
+    // Create new term to be the base of the tree.
+    // Because the term is temporary, we don't use taxonomy_ functions, but instead
+    // use trusty SQL.
+    $tid = db_next_id('{term_data}_tid');
+    // Create term
+    db_query("INSERT INTO {term_data} (tid, vid, name) VALUES (%d , %d , 'TEMPORARY TERM')", $tid, $vid);
+    db_query("INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d , 0)", $tid);
+    // Set parent of current roots as this term
+    $result = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE t.tid = h.tid AND parent =0 AND vid = %d AND t.tid != %d",$vid, $tid);
+    $tids = array();
+    while($row=db_fetch_array($result)){
+      $tids[] = $row['tid'];
+    }
+    db_query("UPDATE {term_hierarchy} SET parent = %d WHERE tid IN (".implode(",",$tids).")",$tid,$tid);
+  }
+  
+  // Create the string which will become the PHP file to execute
+  /**
+   * FIXME - The following doesn't use Drupal's {table_name} shenanigans
+   */  
+  $tmp_php_file_string = '<?php
+mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
+mysql_select_db(\''.substr($url['path'], 1).'\');
+function rebuild_tree($tid, $left) {
+  $right = $left+1;
+  $results = mysql_query("SELECT tid FROM term_hierarchy WHERE parent = $tid");
+  while ($row = mysql_fetch_array($results)){
+    $right = rebuild_tree($row[0], $right);
+  }  
+  echo "($tid , '.$vid.' , $left , $right)";
+  if($left != 1){
+    echo ",";
+  }
+  return $right+1;
+} 
+echo "DELETE FROM leftandright WHERE vid = '.$vid.'; INSERT INTO leftandright (tid, vid, lft, rgt) VALUES ";
+rebuild_tree('.$tid.',1);
+echo ";";';
+  
+  // Add the deletion of the temporary term if required to the PHP file
+  if($temporary_root_created){
+    $tmp_php_file_string .= '
+echo "DELETE FROM leftandright WHERE tid = '.$tid.';DELETE FROM term_data WHERE tid = '.$tid.';DELETE FROM term_hierarchy WHERE tid = '.$tid.';";
+echo "UPDATE term_hierarchy SET parent = 0 WHERE parent = '.$tid.';";';
+  }
+  // Write this out to a temporary file which we'll EXEC!
+  $filepath = file_create_filename('leftandright.php', file_directory_temp());
+  file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
+  
+  // FIXME - TEST FOR WINDOWS HERE, IF WINDOWS, EXECUTE BAT FILE INSTEAD
+  // Lets try to execute the file
+  if($windoze){
+    
+  } else {
+    $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','leftandright').'/landr';
+    // FIXME - Needs port
+    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1);
+    shell_exec("nohup $command > /dev/null & echo $!");
+  }
+  
+  // Finally delete the file
+  sleep(2);
+  file_delete($filepath);
+  
+  // Set message to say that we're doing the rebuild
+  drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.$vocabulary->name);
+}
