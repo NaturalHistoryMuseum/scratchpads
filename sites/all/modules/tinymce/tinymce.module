@@ -327,7 +327,7 @@ function theme_tinymce_theme($init, $textarea_name, $theme_name, $is_running) {
 
   /* Example, add some extra features when using the advanced theme. */
   /* SDRycroft added to allow all tags */
-  
+
   // If $init is available, we can extend it
   if (isset($init)) {
     switch ($theme_name) {
