@@ -335,10 +335,39 @@ variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 
 // Get a list of the classifications (by site) that will be able to use the autotag
 // module.
-$vocabs = taxonomy_get_vocabularies();
+/* $vocabs = taxonomy_get_vocabularies();
 foreach($vocabs as $vocab){
   if($vocab->multiple == 1 && $vocab->tags == 0){
     if($vocab->name != 'Document Store' && $vocab->name != 'Image Galleries')
       echo "   ".$vocab->name." (".implode(", ",$vocab->nodes).")\n";
   }
-}
+}*/
+
+// Just curious as to how taxonomy_get_tree returns its results (nested arrays?)
+
+// Following is an attempt to create a giant SQL query for populating a LFT and RGT table!
+mysql_connect('localhost','root','Oecey9cheehiphohngeiwi8lahH1ohNi');
+mysql_select_db('catlife');
+
+function rebuild_tree($tid, $left) {
+  // the right value of this node is the left value + 1
+  $right = $left+1;
+  
+  // get all children of this node
+  $results = mysql_query("SELECT tid FROM term_hierarchy WHERE parent = $tid");
+  while ($row = mysql_fetch_array($results)){
+    $right = rebuild_tree($row[0], $right);
+  }  
+  // we've got the left value, and now that we've processed
+  // the children of this node we also know the right value
+  echo "($tid , $left , $right)";
+  if($left != 1){
+    echo ",";
+  }
+  // return the right value of this node + 1
+  return $right+1;
+} 
+
+echo "INSERT INTO taxonomy_lft_rgt VALUES ";
+rebuild_tree(2080793,1);
+echo ";";
