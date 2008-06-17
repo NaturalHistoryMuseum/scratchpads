@@ -493,9 +493,11 @@ function _autotag_search_field($field, $vids){
     $total_words = count($words);
     $sql_array = array();
     for($i=0;$i<$total_words-1;$i++){
-      // Now lets search for "pairs" and search on "like".  If any hit, check back on the result against
-      // the original field
-      $sql_array[] = "LOWER(s.name) LIKE '".$words[$i]." ".$words[$i+1]."%' OR LOWER(t.name) LIKE '".$words[$i]."%".$words[$i+1]."%'";
+      if(trim($words[$i])!="" && trim($words[$i+1])!=""){
+        // Now lets search for "pairs" and search on "like".  If any hit, check back on the result against
+        // the original field
+        $sql_array[] = "LOWER(s.name) LIKE '".$words[$i]."%%".$words[$i+1]."%%' OR LOWER(t.name) LIKE '".$words[$i]."%%".$words[$i+1]."%%'";
+      }
     }
     if(count($sql_array)){
       // FIXME FIXME FIXME
