@@ -206,6 +206,8 @@ echo ";";';
 echo "DELETE FROM leftandright WHERE tid = '.$tid.';DELETE FROM term_data WHERE tid = '.$tid.';DELETE FROM term_hierarchy WHERE tid = '.$tid.';";
 echo "UPDATE term_hierarchy SET parent = 0 WHERE parent = '.$tid.';";';
   }
+  $tmp_php_file_string .= '
+echo "UPDATE leftandright l SET lowername = (SELECT LOWER(name) FROM term_data t WHERE l.tid = t.tid);";';
   // Write this out to a temporary file which we'll EXEC!
   $filepath = file_create_filename('leftandright.php', file_directory_temp());
   file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
