@@ -76,6 +76,42 @@ function leftandright_overview_vocabularies() {
   return theme('table', $header, $rows, array('id' => 'taxonomy'));
 }
 /***********************************************************************************
+ * REPLACEMENT FUNCTIONS FOR taxonomy_get_tree
+ ***********************************************************************************/
+function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL){
+  // First we do a count, if the tree is too big, we give a warning.
+  $tree_size = leftandright_get_tree_count($vid, $parent, $max_depth);
+  if($tree_size>1000){
+    watchdog('taxonomy','Tried to get a big tree [taxonomy_get_tree('.$vid.','.$parent.','.$max_depth.')',WATCHDOG_WARNING);
+  }
+  $left = 0;
+  $right = 10000000000;// Is this big enough?
+  if($parent != 0){
+    $results = db_query("SELECT lft,rgt FROM {leftandright} WHERE tid = %d", $parent);
+    $row = db_fetch_array($results);
+    $left = $row['lft'];
+    $right = $row['rgt'];
+  }
+  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d ORDER BY lft", $vid, $left, $right, 0, 1000);
+  $tree = array();
+  while($row = db_fetch_object($results)){
+    $tree[] = $row;
+  }
+  return $tree;
+}
+function leftandright_get_tree_count($vid, $parent = 0, $max_depth = NULL){
+  // Get parent left and right
+  $left = 0;
+  $right = 10000000000;// Is this big enough?
+  if($parent != 0){
+    $results = db_query("SELECT lft,rgt FROM {leftandright} WHERE tid = %d", $parent);
+    $row = db_fetch_array($results);
+    $left = $row['lft'];
+    $right = $row['rgt'];
+  }
+  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d AND lft>=%d AND rgt <=%d", $vid, $left, $right)));
+}
+/***********************************************************************************
  * REBUILD TREE
  ***********************************************************************************/
 function leftandright_rebuild_tree_page($args){
@@ -142,20 +178,26 @@ function leftandright_rebuild_tree($vid){
   $tmp_php_file_string = '<?php
 mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
 mysql_select_db(\''.substr($url['path'], 1).'\');
-function rebuild_tree($tid, $left) {
+function rebuild_tree($tid, $left, $depth) {
   $right = $left+1;
   $results = mysql_query("SELECT tid FROM term_hierarchy WHERE parent = $tid");
   while ($row = mysql_fetch_array($results)){
-    $right = rebuild_tree($row[0], $right);
+    $right = rebuild_tree($row[0], $right, $depth+1);
   }  
-  echo "($tid , '.$vid.' , $left , $right)";
+  echo "($tid , '.$vid.' , $left , $right, $depth)";
   if($left != 1){
     echo ",";
   }
   return $right+1;
 } 
-echo "DELETE FROM leftandright WHERE vid = '.$vid.'; INSERT INTO leftandright (tid, vid, lft, rgt) VALUES ";
-rebuild_tree('.$tid.',1);
+echo "DELETE FROM leftandright WHERE vid = '.$vid.'; INSERT INTO leftandright (tid, vid, lft, rgt, depth) VALUES ";
+rebuild_tree('.$tid.',1, ';
+  if($temporary_root_created){
+    $tmp_php_file_string .= '-1';
+  } else {
+    $tmp_php_file_string .= '0';    
+  }
+  $tmp_php_file_string .= ');
 echo ";";';
   
   // Add the deletion of the temporary term if required to the PHP file
@@ -181,7 +223,7 @@ echo "UPDATE term_hierarchy SET parent = 0 WHERE parent = '.$tid.';";';
   
   // Finally delete the file
   sleep(2);
-  file_delete($filepath);
+  //file_delete($filepath);
   
   // Set message to say that we're doing the rebuild
   drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.$vocabulary->name);

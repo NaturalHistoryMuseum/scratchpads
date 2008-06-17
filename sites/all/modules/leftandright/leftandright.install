@@ -16,6 +16,7 @@ function leftandright_install(){
         rgt DECIMAL(20,10),
         tid INT(10),
         vid INT(10),
+        depth INT(5),
         CONSTRAINT {leftandright}_primary_key PRIMARY KEY (tid),
         CONSTRAINT {leftandright}_unique_lft_tid UNIQUE(lft,vid),
         CONSTRAINT {leftandright}_unique_rgt_tid UNIQUE(rgt,vid)
