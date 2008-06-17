@@ -32,6 +32,11 @@ function leftandright_menu($maycache){
       'callback arguments' => array('leftandright_admin_settings'),
       'access' => user_access('administer site configuration')
     );
+    $items[] = array('path' => 'admin/content/taxonomy/leftandright',
+      'title' => t('Rebuild Tree'),
+      'callback' => 'leftandright_overview_vocabularies',
+      'access' => user_access('administer taxonomy'),
+      'type' => MENU_LOCAL_TASK);
     $items[] = array(
       'path' => 'leftandright/update',
       'title' => t(LEFTANDRIGHT_UPDATE_PAGE_TITLE),
@@ -42,18 +47,40 @@ function leftandright_menu($maycache){
   }
   return $items;
 }
-
+function leftandright_help($section) {
+  switch ($section) {
+    case 'admin/content/taxonomy/leftandright':
+      return '<p>'. t('Click to rebuild a tree.  There is usually no need to rebuild a tree manually, however, if you\'ve been experiencing unusual results from taxonomic queries, then this may help.') .'</p>';
+  }
+}
+/***********************************************************************************
+ * TAXONOMY ADDITIONAL PAGE
+ ***********************************************************************************/
 /**
- * Alters the categories page to include a link to rebuild the tree for a vocabulary
+ * List and manage vocabularies.
  */
-function leftandright_form_alter($form_id, &$form){
+function leftandright_overview_vocabularies() {
+  $vocabularies = taxonomy_get_vocabularies();
+  $rows = array();
+  foreach ($vocabularies as $vocabulary) {
+    $rows[] = array(
+      'name' => check_plain($vocabulary->name),
+      'rebuild' => l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid)
+    );
+  }
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No categories available.'), 'colspan' => '5'));
+  }
+  $header = array(t('Name'),t('Rebuild Tree'));
+
+  return theme('table', $header, $rows, array('id' => 'taxonomy'));
 }
 /***********************************************************************************
  * REBUILD TREE
  ***********************************************************************************/
 function leftandright_rebuild_tree_page($args){
   leftandright_rebuild_tree($args);
-  drupal_goto('admin/content/taxonomy');
+  drupal_goto('admin/content/taxonomy/leftandright');
 }
 function leftandright_rebuild_tree($vid){
   // Lets load this vocabulary, firstly to make sure it exists, and secondly
