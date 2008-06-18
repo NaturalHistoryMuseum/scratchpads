@@ -88,9 +88,9 @@ function leftandright_overview_vocabularies() {
   return theme('table', $header, $rows, array('id' => 'taxonomy'));
 }
 /***********************************************************************************
- * REPLACEMENT FUNCTIONS FOR taxonomy_get_tree
+ * REPLACEMENT FUNCTIONS FOR taxonomy module
  ***********************************************************************************/
-function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL){
+function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0, $count=1000){
   // First we do a count, if the tree is too big, we give a warning.
   $tree_size = leftandright_get_tree_count($vid, $parent, $max_depth);
   if($tree_size>1000){
@@ -103,15 +103,15 @@ function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL){
     $row = db_fetch_array($results);
     $left = $row['lft'];
     $right = $row['rgt'];
-    if(isset($max_depth)){
+    if(isset($max_depth) && $max_depth != NULL){
       $max_depth += $row['depth'];
     }
   }
   $depth_sql = '';
-  if(isset($max_depth)){
-    $depth_sql = 'AND depth<'.$max_depth;// Should this be <= ??? FIXME
+  if(isset($max_depth) && $max_depth != NULL){
+    $depth_sql = 'AND depth<='.$max_depth;
   }
-  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d $depth_sql ORDER BY lft", $vid, $left, $right, 0, 1000);
+  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d $depth_sql ORDER BY lft", $vid, $left, $right, $offset, $count);
   $tree = array();
   while($row = db_fetch_object($results)){
     $tree[] = $row;
@@ -129,6 +129,86 @@ function leftandright_get_tree_count($vid, $parent = 0, $max_depth = NULL){
     $right = $row['rgt'];
   }
   return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d AND lft>=%d AND rgt <=%d", $vid, $left, $right)));
+}
+function leftandright_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC ') {
+  if (count($tids) > 0) {
+    if($depth =='all'){
+      $depth = null;
+    }
+    $leftandrights = array();
+    foreach($tids as $tid){
+      $result = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d",$tid);
+      $row = db_fetch_array($result);
+      $sql = "(lft>=".$row['lft']." AND rgt<=".$row['rgt'];
+      if(isset($depth) && $depth!=null){
+        $sql .= "AND depth<=".$row['depth']+$depth;
+      }
+      $sql .= ")";
+      $leftandrights[] = $sql;
+    }
+    $sql = "SELECT DISTINCT(n.nid), n.sticky, n.title, n.created FROM {node} n, {term_node} t, {leftandright} l WHERE t.nid = n.nid AND l.tid=t.tid AND (".implode(" $operator ",$leftandrights).") ORDER BY ".$order;
+    if ($pager) {
+      $result = pager_query($sql, variable_get('default_nodes_main', 10), 0, $sql_count, $args);
+    }
+    else {
+      $result = db_query_range($sql, $args, 0, variable_get('feed_default_items', 10));
+    }
+  }
+  return $result;  
+}
+/**
+ * Following function is barely changed from the original, but just to make things simpler, it's recreated here.
+ */
+function leftandright_overview_terms($vid){
+  $destination = drupal_get_destination();
+
+  $header = array(t('Name'), t('Operations'));
+  $vocabulary = taxonomy_get_vocabulary($vid);
+  if (!$vocabulary) {
+    return drupal_not_found();
+  }
+
+  drupal_set_title(check_plain($vocabulary->name));
+  $start_from      = $_GET['page'] ? $_GET['page'] : 0;
+  $total_entries   = 0;  // total count for pager
+  $page_increment  = 25; // number of tids per page
+  $displayed_count = 0;  // number of tids shown
+
+  if ($vocabulary->tags) {
+    // We are not calling taxonomy_get_tree because that might fail with a big
+    // number of tags in the freetagging vocabulary.
+    $results = pager_query(db_rewrite_sql('SELECT t.*, h.parent FROM {term_data} t INNER JOIN  {term_hierarchy} h ON t.tid = h.tid WHERE t.vid = %d ORDER BY weight, name', 't', 'tid'), $page_increment, 0, NULL, $vid);
+    while ($term = db_fetch_object($results)) {
+      $rows[] = array(
+        l($term->name, "taxonomy/term/$term->tid"),
+        l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array(), $destination),
+      );
+    }
+  }
+  else {
+    $total_entries = leftandright_get_tree_count($vid);
+    //$tree = taxonomy_get_tree($vocabulary->vid);
+    $tree = leftandright_get_tree($vocabulary->vid, 0,NULL,$start_from*$page_increment,$page_increment);
+    foreach ($tree as $term) {
+      $total_entries++; // we're counting all-totals, not displayed
+      if (($start_from && ($start_from * $page_increment) >= $total_entries) || ($displayed_count == $page_increment)) {
+        continue;
+      }
+      $rows[] = array(str_repeat('--', $term->depth) .' '. l($term->name, "taxonomy/term/$term->tid"), l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array(), $destination));
+      $displayed_count++; // we're counting tids displayed
+    }
+    if (!$total_entries) {
+      $rows[] = array(array('data' => t('No terms available.'), 'colspan' => '2'));
+    }
+    $GLOBALS['pager_page_array'][] = $start_from;
+    $GLOBALS['pager_total'][] = intval($total_entries / $page_increment);
+  }
+  $output .= theme('table', $header, $rows, array('id' => 'taxonomy'));
+  if ($vocabulary->tags || $total_entries >= $page_increment) {
+    $output .= theme('pager', NULL, $page_increment);
+  }
+  return $output;
+  
 }
 /***********************************************************************************
  * REBUILD TREE
