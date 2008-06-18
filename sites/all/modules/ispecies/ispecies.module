@@ -1041,7 +1041,7 @@ function ispecies_wikipedia_get_data($term_name, $limit){
   $xml = file_get_contents($url);
   if($xml){
     $response = new SimpleXMLElement($xml);
-    if(substr($response->page->revision->text,0,9)=='#REDIRECT'){//I'm only checking for one bloody redirect, they can chuff off with more
+    if(strtoupper(substr($response->page->revision->text,0,9))=='#REDIRECT'){//I'm only checking for one bloody redirect, they can chuff off with more
       $text = $response->page->revision->text;
       $term_name = substr($text, strpos($text,'[[')+2,strpos($text,']]')-(strpos($text,'[[')+2));
       $url = 'http://fencedine.myspecies.info/?url='.urlencode($wikipedia_url.ucfirst(strtolower(str_replace(' ','_',$term_name))));
@@ -1049,11 +1049,19 @@ function ispecies_wikipedia_get_data($term_name, $limit){
       $response = new SimpleXMLElement($xml);
     }
     $output_text = _ispecies_get_wiki_text($response->page->revision->text, $term_name);
+    if(strlen(trim($output_text))<10){
+      return array();
+    }
     require_once 'PEAR.php';
     require_once 'Text/Wiki.php';
     if(class_exists('Text_Wiki')){
       $wiki = & Text_Wiki::singleton('Mediawiki');
-      $output_text = $wiki->transform($output_text, 'Plain');
+      $output_text_new = $wiki->transform($output_text, 'Plain');
+      if(strlen($output_text_new)==0){
+        $output_text = t('The Wiki parsing for this page has failed.<br/>').$output_text;
+      } else {
+        $output_text = $output_text_new;
+      }
       // Remove {{ Shite }}
       while(strpos($output_text,'{{')!==false){
         $output_text = preg_replace('/{{[^}]*}}/','',$output_text);
@@ -1074,12 +1082,12 @@ function _ispecies_get_wiki_text($wiki_text, $term){
   $lines = preg_split('/[\n\r]+/',$wiki_text);
   $return_lines = array();
   $reached_line = false;
+  $line_number = 0;
   foreach($lines as $line){
-    //$return_lines[] = substr(trim($line),0,strlen($term)+3).'***'."'''".$term;
     if(substr(trim($line),0,3)=="'''"){
       $reached_line = true;
     }
-    if(substr(trim($line),0,1)=="=" || (substr(trim($line),0,1)=="{" && $reached_line)){
+    if($reached_line && (substr(trim($line),0,1)=="=" || substr(trim($line),0,1)=="{") && substr(trim($line),0,8)!="{{Spoken"){
       return implode("<br/>",$return_lines);
     }
     if($reached_line == true){
@@ -1088,6 +1096,7 @@ function _ispecies_get_wiki_text($wiki_text, $term){
     if(substr(trim($line),0,1)=="}"){
       $reached_line = true;
     }
+    $line_number++;
   }
   return implode("<br/>",$return_lines);
 }
