@@ -53,6 +53,18 @@ function leftandright_help($section) {
       return '<p>'. t('Click to rebuild a tree.  There is usually no need to rebuild a tree manually, however, if you\'ve been experiencing unusual results from taxonomic queries, then this may help.') .'</p>';
   }
 }
+/**
+ * The following function adds the data to the left and right table when a new term is
+ * added to the site, or it alters the data if the parent of a term is changed, or if 
+ * the name itself is changed.
+ *
+ * @param unknown_type $op
+ * @param unknown_type $type
+ * @param unknown_type $array
+ */
+function leftandright_taxonomy($op, $type, $array = NULL){
+  
+}
 /***********************************************************************************
  * TAXONOMY ADDITIONAL PAGE
  ***********************************************************************************/
@@ -87,12 +99,19 @@ function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL){
   $left = 0;
   $right = 10000000000;// Is this big enough?
   if($parent != 0){
-    $results = db_query("SELECT lft,rgt FROM {leftandright} WHERE tid = %d", $parent);
+    $results = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d", $parent);
     $row = db_fetch_array($results);
     $left = $row['lft'];
     $right = $row['rgt'];
+    if(isset($max_depth)){
+      $max_depth += $row['depth'];
+    }
   }
-  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d ORDER BY lft", $vid, $left, $right, 0, 1000);
+  $depth_sql = '';
+  if(isset($max_depth)){
+    $depth_sql = 'AND depth<'.$max_depth;// Should this be <= ??? FIXME
+  }
+  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d $depth_sql ORDER BY lft", $vid, $left, $right, 0, 1000);
   $tree = array();
   while($row = db_fetch_object($results)){
     $tree[] = $row;
@@ -224,8 +243,8 @@ echo "UPDATE leftandright l SET lowername = (SELECT LOWER(name) FROM term_data t
   }
   
   // Finally delete the file
-  sleep(2);
-  //file_delete($filepath);
+  sleep(2); // Not sure if this sleep is necesary, but it seems to be
+  file_delete($filepath);
   
   // Set message to say that we're doing the rebuild
   drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.$vocabulary->name);
