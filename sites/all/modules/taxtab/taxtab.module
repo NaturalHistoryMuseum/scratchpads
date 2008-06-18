@@ -90,10 +90,7 @@ function taxtab_process(){
   if (count($term)>0){
     drupal_goto('taxonomy/term/'.$term[0]->tid);
   }
-  else{
-    drupal_goto('search/node/'.$searchterm);
-  }
-  // Should there be an exit after this? Hmmm, no idea, works without.
+  drupal_goto('search/node/'.$searchterm);
 }
 
 /**
@@ -123,7 +120,12 @@ function taxtab_normal_js(){
  *   The query for which autocompletion should be done.
  */
 function taxtab_autocomplete($string = '') {
-  $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) LIKE LOWER('%s%%') ORDER BY t.name", 't', 'tid'), $string, 0, 15);
+  $results;
+  if(function_exists('leftandright_get_tree')){
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t, {leftandright} l WHERE lowername LIKE LOWER('%s%%') AND l.tid = t.tid ORDER BY t.name", 't', 'tid'), $string, 0, 15);    
+  } else {
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) LIKE LOWER('%s%%') ORDER BY t.name", 't', 'tid'), $string, 0, 15);
+  }
   // Construct response array
   $matches = array();
   while ($tag = db_fetch_object($result)) {
