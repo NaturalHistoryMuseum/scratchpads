@@ -79,6 +79,7 @@ function scratchpadify_form_alter($form_id, &$form) {
   if(substr($_SERVER['HTTP_HOST'],0,16) != 'quartz.nhm.ac.uk' && 
      substr($_SERVER['HTTP_HOST'],0,12) != 'taxonlib.org' && 
      substr($_SERVER['HTTP_HOST'],0,14) != 'scratchpads.eu' &&
+     substr($_SERVER['HTTP_HOST'],0,8) != 'catlife.' &&
     ($form_id == 'user_admin_perm' || 
      substr($form_id,0,12) == 'filter_admin')){
     drupal_set_message('Please change these settings from Quartz ONLY','error');
