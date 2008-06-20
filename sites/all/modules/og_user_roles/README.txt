@@ -104,12 +104,12 @@ usage can be found here: http://drupal.org/node/178874
 
 SETTINGS
 --------
-Only users with role ('administer site configuration') may configure this module.
+Only users with role ('administer og_user_roles') may configure this module.
 
-- Go to administer >> Organic groups user roles:
+- Go to administer >> Organic Groups >> Organic groups user roles:
 
   Assignable roles
-
+  ================
   Check the box next to each role you wish group admins to be able to
   manage.  Make sure you have assigned the appropriate privileges to
   roles selected here. Note that because these will be assignable by
@@ -122,8 +122,33 @@ Only users with role ('administer site configuration') may configure this module
   assigned the role.  When he is outside of that group's context,
   he will no longer have this role.
 
-  Allow group admins to approve new signups
-  
+  Set default basic group (group limited) role for users 
+  who join groups of this type: *Group Type*?
+  ======================================================
+
+  Do you wish to automatically assign a specific "basic group role" to 
+  every new group subscriber at the time he subscribes to a group of 
+  this type: *Group Type*? The role is limited to the group that he is 
+  subscribed to, and only if the group is of the type: *Group Type*.
+  If so, then place a check in this box.
+
+    Role to use as a group type Group role:
+
+  If you wish to assign a role based on the group type *Group Type*, then
+  select the role to assign here.
+
+
+  Allow Group Admins to define Registration Codes for new group 
+  subscribers to moderated groups?
+  =============================================================
+  Allows you to allow Group Administrators to define Registration Codes 
+  to allow users to subscribe to moderated groups without administrator 
+  approval. Your Group Admins must have the "manage registration codes" 
+  permission to use this setting.  See details here: 
+  http://drupal.org/node/217229
+
+  Allow group admins to approve new signups?
+  ==========================================
   If user registration to your site requires administrator approval 
   and you allow users to subscribe to groups at registration, then 
   you can optionally allow the administrator(s) of the group(s) to 
@@ -145,7 +170,7 @@ Only users with role ('administer site configuration') may configure this module
      http://www.drupal.org/project/mimemail
 
   Default Non-Group Role for new users
-
+  ====================================
   If you wish to assign a default site-wide role to every new user that
   signs up to your web-site, place a check in:
 
@@ -157,7 +182,7 @@ Only users with role ('administer site configuration') may configure this module
     "Selectable roles:"
 
   Default Basic Group Role for new group subscribers
-
+  ==================================================
   If you wish to assign a default group specific role to every new subscriber
   to groups on your your web-site, place a check in:
 
@@ -169,7 +194,7 @@ Only users with role ('administer site configuration') may configure this module
     "Selectable roles:"
 
   Allow Group Admins to define Default Basic Group Role for new group subscribers
-
+  ===============================================================================
   Allows you to allow Group Administrators to define a default group role to 
   automatically assign to users who join their groups. The role is specific to 
   the group to which the user is subscribing. That is, the user will only have 
@@ -188,7 +213,7 @@ Only users with role ('administer site configuration') may configure this module
   http://drupal.org/node/177414 for more information.
 
   Default Founder Role for users who create groups
-
+  ================================================
   If you wish to assign a default group specific role to a user who creates
   a group, then place a check in:
 
@@ -199,8 +224,26 @@ Only users with role ('administer site configuration') may configure this module
 
     "Role to use as founder role:"
 
-  Default Group Admin Notification for new subscribers
+  Default Group Role for new group administrator
+  ==============================================
+  Allows you to select a group role to automatically assign to users who 
+  are elevated to group administrator. The role is specific to the group(s) 
+  in which the user is a group administrator. That is, the user will only 
+  have the privileges of the role in the group he is the administrator for.
 
+  If you wish to assign a default group specific role to every user who is
+  newly elevated to group administrator status, then place a check in:
+
+    "Set default group (group limited) administrator role for users who 
+     are elevated to group administrator?"
+
+  and, select the group role to which you want the new group administrator 
+  user assigned from the pulldown:
+
+    "Role to use as group administrator role:"
+
+  Default Group Admin Notification for new subscribers
+  ====================================================
   If you wish to automatically send an email notification to the group
   administrator when a new subscriber is added to a group, then place
   a check in:
@@ -211,7 +254,7 @@ Only users with role ('administer site configuration') may configure this module
   Note that this feature requires mimemail.
 
   Nodes to automatically place into all available groups
-
+  ======================================================
   If you wish to have certain nodes automatically placed into all
   available groups each time they are modified, place the comma
   separated node id numbers into this box:
@@ -222,7 +265,7 @@ Only users with role ('administer site configuration') may configure this module
   Use it only if you need it.
 
   TAC / OG Access Control Integration
-
+  ===================================
   This is a very specialized feature that you should leave unchecked
   by default. We have been working on an access control project
   which allows TAC and OG to work in unison.  Basic details of this
@@ -231,14 +274,11 @@ Only users with role ('administer site configuration') may configure this module
   In order to use this feature, you will need a special patch
   installed: http://groups.drupal.org/node/4026
 
-  Also, to use this feature, you must install the OG Forum
-  module: http://www.drupal.org/project/og_forum
-
   Again, unless you understand this project and know what you are
   doing, please leave this unchecked.
 
   Create Subgroups
-
+  ================
     Allows you to select a group type to use for displaying a
     "Create Subgroup" link on your group menus. Users will need to
     have the "create og_subgroups" permission in order to access this
@@ -256,7 +296,7 @@ Only users with role ('administer site configuration') may configure this module
     Group type to use for subgroup creation:
 
   Clear the Cache?
-
+  ================
     We found that there are some modules which will return 
     "Access denied" message even when OG User Roles returns 
     permissions which allow the user access. This is due to cached 
@@ -281,7 +321,7 @@ Only users with role ('administer site configuration') may configure this module
     to be effective.
 
   Test/Debug
-
+  ==========
   This option allows you to output debug info to a table.  You must first 
   follow these instructions here to create the table: 
   http://drupal.org/node/164038
@@ -296,7 +336,77 @@ Only users with role ('administer site configuration') may configure this module
   testing/debug purposes, and could create a very large output file. 
   This feature also requires that the table og_user_test already exist.) 
 
-  Don't forget to click on "Save configuration" button to save your choices.
+  Group Logo Attributes
+  =====================
+  Group admins can now upload a logo for their group.  
+  See: http://drupal.org/node/256423. 
+  The logo path is entered into "Location of group logo" field in the 
+  group edit page.
+
+  Here you enter the maximimum width and height attributes for Group Logos.
+
+  Maximum width for display of group logo?:
+  Enter the maximim pixel (px) width at which group logos will be displayed
+
+  Maximimum height for display of group logo?:
+  Enter the maximum pixel (px) height at which group logos will be displayed
+  
+  Counter for og_users_roles table:
+  =================================
+  This is the counter for the og_users_roles table. You do not need to set this. 
+  It will update itself. It should NOT be set lower than the number of records 
+  currently in the table.
+ 
+  
+Don't forget to click on "Save configuration" button to save your choices.
+
+See http://drupal.org/node/164038 for more details.
+
+- OG Group Edit Page
+
+  There are also new settings which will appear on the "Edit" page of your groups.
+  
+As a result of this issue: http://drupal.org/node/251790, there are now two settings on the Group Edit Form which can be used to control the create links on the Group Menu:
+
+  Display the Create content link
+  ===============================
+  Do you wish to display the OGR Create content link on this group's menu?
+
+  Remove the default Create links
+  ===============================
+  Do you wish to remove the default OG Create content links on this group's 
+  menu? This will remove all of the default OG "create..." links on the group 
+  navigation menu.
+
+  Disallow Public Posts
+  =====================
+  You can prevent public posts in OG settings by eliminating the "Audience" checkbox. 
+  But, if you do that, then none of your groups will be permitted to make public posts. 
+  And, as long as the "Public" box is available, a user can make his post public.
+
+  What is needed is a way to override the OG settings and disallow Public posts on a 
+  per-group basis. So, if a user intentionally or inadvertently clicks the "Public" box, 
+  the post will return an error.
+  
+  More details here: http://drupal.org/node/247488
+
+  Location of group logo
+  ======================
+  OGR now provides a new Block titled "Group Logo". This block can be placed on 
+  your site to appear whenever a user is in an OG group context.
+
+  You enter the location of this logo here.
+
+  More details here: http://drupal.org/node/256423
+
+  Registration code for new subscribers to this group
+  ===================================================
+  If, in OGR Settings, you place a check in the option:
+  "Allow Group Admins to define Registration Codes for new group subscribers to 
+  moderated groups", then this setting fieldgroup option will appear on the 
+  "Edit" page of each of your groups.  Configuration details here: 
+  http://drupal.org/node/217229
+
 
 USAGE
 -----
@@ -371,3 +481,12 @@ and Angela Byron of CivicSpace Labs Sponsored by Raven Brooks of BuyBlue.org
 
 This version was modified from their original version.
 
+The initial code cleanup (bringing code more or less into Drupal coding standards) 
+was performed by user "frjo": http://drupal.org/node/156939
+
+Code for registration code functionality inspired by "Registration Code" module
+by Drupal user "colan". That module owes it's original code to Drupal user
+"nevets".
+
+Original "Multiple Node Access logic patch" developed 
+by "agentrickard": http://drupal.org/node/196922
