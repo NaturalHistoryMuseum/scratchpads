@@ -128,3 +128,22 @@ function hook_node_import_postprocess(&$node, $preview, $error) {
   // inform a third-party module of the fact that the node was imported.
   return;
 }
+
+/**
+ * Allows a module to react to the completed set of node imports.
+ *
+ * After all the nodes have been created or an attempt to create them has failed
+ * node_import_complete fires this hook so other modules can react on it.
+ *
+ * @param $type
+ *   A string containing the node type currently being processed.
+ * @return
+ *   Nothing.
+ */
+function hook_node_import_complete($type) {
+  // This hook is not used for actually importing the node (as are the other
+  // hooks), but rather to inform a third-party module of the fact that all
+  // nodes have been imported.
+  return;
+}
+

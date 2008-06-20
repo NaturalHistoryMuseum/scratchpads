@@ -38,6 +38,16 @@ function upload_node_import_prepare(&$node, $preview) {
   return $errors;
 }
 
+// Add mime_content_type() function if it does not exist.
+if (!function_exists('mime_content_type')) {
+  function mime_content_type($filename) {
+    $finfo = finfo_open(FILEINFO_MIME);
+    $mimetype = finfo_file($finfo, $filename);
+    finfo_close($finfo);
+    return $mimetype;
+  }
+}
+
 /**
  * Implementation of hook_node_import_postprocess().
  */

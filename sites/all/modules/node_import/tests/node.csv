@@ -3,7 +3,7 @@
 This tests the normal node options such as user and the workflow options.
 
 This test assumes that:
-1. there is a user called 'robrechtj',
+1. there is a user called 'robrechtj' (with email robrechtj@example.org)",
 2. there is no user called 'jacques',
 3. there is a user with uid = '2',
 4. there is no user with uid = '3'.",,,,,,,
@@ -21,3 +21,5 @@ This test assumes that:
 "node test 12", "should create a node with promoted option set and others should be default",,,1
 "unique title?","should create the node"
 "unique title?","should not create the node if unique title option is set"
+"node test 15", "should create a node with the user identified by an email","robrechtj@example.org"
+"node test 16", "should not create a node with the user identified by an email","jacques@example.org"

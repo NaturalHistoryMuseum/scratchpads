@@ -148,10 +148,9 @@ function node_import_userreference($name) {
 
   if (!isset($uids[$name])) {
     $uids[$name] = NULL;
-    if (is_numeric($name) && intval($name) > 0 && ($user = user_load(array('uid' => intval($name))))) {
-      $uids[$name] = $user->uid;
-    }
-    else if (($user = user_load(array('name' => $name)))) {
+    if ((is_numeric($name) && intval($name) > 0 && ($user = user_load(array('uid' => intval($name))))) ||
+        ($user = user_load(array('name' => $name))) ||
+        ($user = user_load(array('mail' => $name)))) {
       $uids[$name] = $user->uid;
     }
   }

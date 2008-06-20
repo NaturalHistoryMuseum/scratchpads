@@ -1,4 +1,4 @@
-<?php 
+<?php
 // $Id$
 
 /**
@@ -39,6 +39,20 @@ function node_import_menu($may_cache) {
       'callback' => 'node_import_page',
       'access' => user_access('import nodes'),
     );
+    $links[] = array(
+      'path' => 'admin/content/node_import/add',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'title' => t('New import'),
+    );
+    $links[] = array(
+      'path' => 'admin/content/node_import/settings',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+      'title' => t('Settings'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'node_import_settings',
+      'access' => user_access('import nodes'),
+    );
   }
   return $links;
 }
@@ -47,7 +61,29 @@ function node_import_menu($may_cache) {
  * Implementation of hook_perm().
  */
 function node_import_perm() {
-  return array('import nodes');  
+  return array('import nodes');
+}
+
+/**
+ * Menu callback: settings page.
+ */
+function node_import_settings() {
+  $form = array();
+  $form['node_import_csv_separator'] = array(
+    '#type' => 'textfield',
+    '#size' => 6,
+    '#title' => t('Field separator symbol'),
+    '#description' => t('Enter the symbol that separates fields in your CSV files. Default: comma [,].'),
+    '#default_value' => variable_get('node_import_csv_separator', ','),
+  );
+  $form['node_import_csv_qualifier'] = array(
+    '#type' => 'textfield',
+    '#size' => 6,
+    '#title' => t('Text qualifier symbol'),
+    '#description' => t('Enter the symbol that wraps text fields in your CSV files. Default: double-quotation marks ["].'),
+    '#default_value' => variable_get('node_import_csv_qualifier', '"'),
+  );
+  return system_settings_form($form);
 }
 
 /**
@@ -55,7 +91,7 @@ function node_import_perm() {
  */
 function node_import_page() {
   // Include the API.
-  include_once(drupal_get_path('module', 'node_import') . '/node_import.api.inc');
+  include_once('./'. drupal_get_path('module', 'node_import') .'/node_import.api.inc');
 
   // Load hooks for supported modules.
   node_import_load_supported();
@@ -499,15 +535,16 @@ function _node_import_errors($edit) {
       // quotes inside cells, we need to write this ourselves.
       // Based on: http://www.php.net/manual/en/function.fputcsv.php
 
-      $quote = '"';
-      $delimiter = ',';
+      $quote = variable_get('node_import_csv_qualifier', '"');
+      $delimiter = variable_get('node_import_csv_separator', ',');
+      $escape = variable_get('node_import_csv_escape', '\\');
 
       foreach ($edit['errors'] as $row) {
         $str = '';
         $write_delimiter = FALSE;
 
         foreach ($row as $cell) {
-          $cell = str_replace($quote, $quote.$quote, $cell);
+          $cell = str_replace($quote, $escape . $quote, $cell);
           if ($write_delimiter) {
             $str .= $delimiter;
           }
@@ -521,7 +558,7 @@ function _node_import_errors($edit) {
 
     case '_node_import_tsv_get_row':
       header('Content-Type: text/tab-separated-values');
-      header('Content-Disposition: attachment; filename="rejected-'. $edit['filename'] . '"');
+      header('Content-Disposition: attachment; filename="rejected-'. $edit['filename'] .'"');
 
       // To be correct and pedantic about this format, we would
       // need to check the number of columns of each row as the
@@ -531,7 +568,7 @@ function _node_import_errors($edit) {
       // See: http://www.iana.org/assignments/media-types/text/tab-separated-values
 
       foreach ($edit['errors'] as $row) {
-        print implode("\t", $row) . "\n";
+        print implode(variable_get('node_import_tsv_separator', "\t"), $row) ."\n";
       }
       break;
   }
@@ -543,7 +580,7 @@ function _node_import_errors_validate($op, &$edit) {
 
 /**
  * Import and create nodes.
- * 
+ *
  * @param string $filepath
  *   Full path to the file to import.
  * @param string $type
@@ -569,8 +606,7 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
   }
   if ($match && !$preview) {
     db_query("DELETE FROM {node_import_mappings} WHERE type = '%s' AND csv_headers = '%s'", $type, serialize($header));
-    db_query("INSERT INTO {node_import_mappings} (type, csv_headers, mapping) VALUES ('%s', '%s', '%s')",
-             $type, serialize($header), serialize($match));
+    db_query("INSERT INTO {node_import_mappings} (type, csv_headers, mapping) VALUES ('%s', '%s', '%s')", $type, serialize($header), serialize($match));
   }
 
   $j = 0;
@@ -589,15 +625,15 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
                                   (array)$global);
     }
 
-    // Assign the mapped fields to the $node.    
+    // Assign the mapped fields to the $node.
     foreach ($row as $i => $value) {
       if (!empty($match[$i])) {
         $fieldname = $match[$i];
         $node->$fieldname = $value;
       }
       if ($match[$i] == 'name' && $type == 'node_import') {
-        if (($account = user_load(array('name' => $value))) ||
-            (is_numeric($value) && ($account = user_load(array('uid' => $value))))) {
+        if (($uid = node_import_userreference($value))) {
+          $account = user_load(array('uid' => $uid));
           $node->uid = $account->uid;
           $node->name = $account->name;
         }
@@ -611,7 +647,7 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
     // as: module_invoke_all('node_import_prepare', $node, $preview > 0);
     // but unfortunately module_invoke_all passes all argumens by value.
     foreach (module_list() as $module_name) {
-      $function = $module_name . '_node_import_prepare';
+      $function = $module_name .'_node_import_prepare';
       if (function_exists($function)) {
         $errors = array_merge((array)$errors, (array)$function($node, $preview > 0));
       }
@@ -654,17 +690,20 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
     // Now we have either imported the node or not. Report it to interested
     // modules.
     foreach (module_list() as $module_name) {
-      $function = $module_name . '_node_import_postprocess';
+      $function = $module_name .'_node_import_postprocess';
       if (function_exists($function)) {
-        $output .= $function($node, $preview > 0, count($errors) > 0); 
+        $output .= $function($node, $preview > 0, count($errors) > 0);
       }
     }
 
-    //clean up
+    // Clean up
     unset($node);
     unset($errors);
   }
   $get_row('');
+
+  // Tell interested modules we have completed the import.
+  module_invoke_all('node_import_complete', $type);
 
   if (!$preview) {
     if (count($error_rows)) {
@@ -783,7 +822,7 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
   $length = variable_get('node_import_csv_size', 10000);
   $delimiter = variable_get('node_import_csv_separator', ',');
   $qualifier = variable_get('node_import_csv_qualifier', '"');
-  $qualifierEscape = variable_get('node_import_csv_escape', '\\');
+  $escape = variable_get('node_import_csv_escape', '\\');
 
   $fields = array();
 
@@ -796,16 +835,33 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
   }
 
   while (strlen($str) > 0) {
-    if ($str{0} == $delimiter) $str = substr($str, 1);
-    if ($str{0} == $qualifier) {
+    $str = ltrim($str);
+
+    if ($str[0] == $delimiter) {
+      $str = ltrim(substr($str, 1));
+    }
+
+    if ($str[0] == $qualifier) {
+      $inside = TRUE;
       $value = '';
-      for ($i = 1; $i < strlen($str); $i++) {
-        if (($str{$i} == $qualifier) && ($str{$i-1} != $qualifierEscape)) {
-          $str = substr($str, (strlen($value) + 2));
-          $value = str_replace(($qualifierEscape.$qualifier), $qualifier, $value);
-          break;
+      while ($inside) {
+        for ($i = 1; $i < strlen($str); $i++) {
+          if (($str[$i] == $qualifier) && ($str[$i - 1] != $escape)) {
+            $str = substr($str, (strlen($value) + 2));
+            $value = str_replace(($escape . $qualifier), $qualifier, $value);
+            $inside = FALSE;
+            break;
+          }
+          $value .= $str{$i};
         }
-        $value .= $str{$i};
+        if ($inside) {
+          if (feof($handle)) {
+            $inside = FALSE; // End of file reached.
+          }
+          else {
+            $str = "\n" . fgets($handle, $length); // We need to read more data, multiline field.
+          }
+        }
       }
     }
     else {
@@ -813,6 +869,7 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
       $value = ($end !== false) ? substr($str, 0, $end) : $str;
       $str = substr($str, strlen($value));
     }
+
     $fields[] = $value;
   }
 
