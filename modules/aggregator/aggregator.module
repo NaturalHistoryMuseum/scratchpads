@@ -1349,7 +1349,7 @@ function theme_aggregator_block_item($item, $feed = 0) {
   }
 
   // Display the external link to the item.
-  $output .= '<a href="'. check_url($item->link) .'">'. strip_tags($item->title) ."</a>\n";
+  $output .= '<a href="'. check_url($item->link) .'">'. check_plain($item->title) ."</a>\n";
 
   return $output;
 }
