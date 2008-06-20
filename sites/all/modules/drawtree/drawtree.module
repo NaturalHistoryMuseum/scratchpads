@@ -1,0 +1,90 @@
+<?php
+/* $Id$*/
+/* $HeadURL$*/
+
+/** 
+ * @file drawtree.module
+ * 
+ * This module creates a "Tree" content type which can be used for displaying trees
+ * in entered into the site in the "newick" format.
+ */
+
+/***********************************************************************************
+ * TEXT i8n
+ ***********************************************************************************/
+
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function drawtree_node_info() {
+  return array(
+    'drawtree' => array(
+      'name' => t('Tree'),
+      'module' => 'drawtree',
+      'description' => t("This is a simple node type which allows a user to enter trees in the Newick format"),
+    )
+  );
+}
+/**
+ * Implementation of hook_access().
+ */
+function drawtree_access($op, $node) {
+  global $user;
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create node content');
+  }
+  // Users who create a node may edit or delete it later, assuming they have the
+  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('edit own node content') && ($user->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+}
+/**
+ * Implementation of hook_form().
+ *
+ * Now it's time to describe the form for collecting the information
+ * specific to this node type. This hook requires us to return an array with
+ * a sub array containing information for each element in the form.
+ */
+function drawtree_form(&$node) {
+  $type = node_get_types('type', $node);
+
+  // We need to define form elements for the node's title and body.
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5
+  );
+  // We want the body and filter elements to be adjacent. We could try doing
+  // this by setting their weights, but another module might add elements to the
+  // form with the same weights and end up between ours. By putting them into a
+  // sub-array together, we're able force them to be rendered together.
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => check_plain($type->body_label),
+    '#default_value' => $node->body,
+    '#required' => FALSE
+  );
+  $form['body_filter']['filter'] = filter_form($node->format);
+
+  // Now we define the form elements specific to our node type.
+  $form['color'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Color'),
+    '#default_value' => $node->color
+  );
+  $form['quantity'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Quantity'),
+    '#default_value' => $node->quantity,
+    '#size' => 10,
+    '#maxlength' => 10
+  );
+
+  return $form;
+}

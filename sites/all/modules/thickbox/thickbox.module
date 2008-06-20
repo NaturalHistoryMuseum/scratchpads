@@ -23,10 +23,10 @@ function thickbox_admin_settings() {
     '#description' => t('Automatically activate Thickbox for all image nodes (requires the image module).'),
   );
   if (module_exists('image')) {
-    $options = array('original' => t('original'));
-    $sizes = _image_get_sizes();
-    foreach ($sizes as $size) {
-      $options[$size['label']] = $size['label'];
+    $options = array();
+    $sizes = image_get_sizes();
+    foreach ($sizes as $label => $size) {
+      $options[$label] = $size['label'];
     }
     $form['thickbox_options']['thickbox_derivative'] = array(
       '#type' => 'select',
@@ -170,10 +170,7 @@ function thickbox_field_formatter_info() {
  * Implementation of hook_field_formatter().
  */
 function thickbox_field_formatter($field, $item, $formatter) {
-  if (module_exists('imagefield') && module_exists('imagecache')) {
-    if (empty($item['fid'])) {
-      return '';
-    }
+  if (module_exists('imagefield') && module_exists('imagecache') && !empty($item['fid'])) {
     $file = _imagefield_file_load($item['fid']);
     if (strpos($formatter, 'thickbox][') !== false) {
       list($null, $namespace) = explode('][', $formatter, 2);
@@ -189,9 +186,11 @@ function thickbox_field_formatter($field, $item, $formatter) {
  * Implementation of theme_imagefield_image_imagecache_thickbox().
  */
 function theme_imagefield_image_imagecache_thickbox($namespace, $field, $path, $alt = '', $title = '', $attributes = NULL) {
-  $attributes = drupal_attributes($attributes);
-  $imagecache_path = file_create_url(file_directory_path() .'/imagecache/'. $namespace .'/'. $path);
-  $image = '<img src="'. $imagecache_path .'" alt="'. check_plain($alt) .'" '. $attributes .' />';
+  if (!empty($path)) {
+    $attributes = drupal_attributes($attributes);
+    $imagecache_path = file_create_url(file_directory_path() .'/imagecache/'. $namespace .'/'. $path);
+    $image = '<img src="'. $imagecache_path .'" alt="'. check_plain($alt) .'" '. $attributes .' />';
 
-  return l($image, file_create_url($path), array('title' => $title, 'class' => 'thickbox', 'rel' => $field['type_name']), NULL, NULL, FALSE, TRUE);
+    return l($image, file_create_url($path), array('title' => $title, 'class' => 'thickbox', 'rel' => $field['type_name']), NULL, NULL, FALSE, TRUE);
+  }
 }

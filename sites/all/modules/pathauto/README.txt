@@ -3,11 +3,6 @@ They contain answers to many common questions.
 If you are developing for this module, the API.txt may be interesting.
 If you are upgrading, check the CHANGELOG.txt for major changes.
 
-**Version Compatibility:
-As of Version 5.x-2.x of Pathauto, you must use PHP4.4.x or PHP5.1.x 
-or above.  Pathauto5.x-2.x has improvements for localization which 
-require the use of new constructs only available in those versions.
-
 **Description:
 The Pathauto module provides support functions for other modules to 
 automatically generate aliases based on appropriate criteria, with a 
@@ -17,7 +12,6 @@ Implementations are provided for core content types: nodes, taxonomy
 terms, users, blogs, and events.
 
 **Benefits:
-
 Besides making the page address more reflective of its content than
 "node/138", it's important to know that modern search engines give 
 heavy weight to search terms which appear in a page's URL. By 
@@ -25,12 +19,10 @@ automatically using keywords based directly on the page content in the URL,
 relevant search engine hits for your page can be significantly
 enhanced.
 
-
 **Installation AND Upgrades:
 See the INSTALL.txt - especially step 4.
 
 **Notices:
-
 Pathauto just adds url aliases to nodes and taxonomy terms. Because it's an 
 alias, the standard Drupal url (for example node/123 or taxonomy/term/1) will 
 still function as normal.  If you have external links to your site pointing to 
@@ -57,15 +49,17 @@ those won't get replaced with their corresponding aliases. Use instead
 See http://api.drupal.org/api/HEAD/function/url and 
 http://api.drupal.org/api/HEAD/function/l for more information.
 
-Bulk Updates May Destroy Existing Aliases:
-Bulk Updates may not work if your site has a large number of items to alias 
-and/or if your server is particularly slow. If you are concerned about this 
-problem you should backup your database (particularly the url_alias table) prior
-to executing the Bulk Update. If you are interested in helping speed up this 
-operation look at the Pathauto issue queue - 
-http://drupal.org/project/issues/pathauto - and specifically at the issues 
-http://drupal.org/node/76172 and http://drupal.org/node/67665 You can help 
-provide ideas, code, and testing in those issues to make pathauto better.
+** Disabling Pathauto for a specific node type (or taxonomy)
+When the pattern for a node type is left blank, the default pattern will be 
+used. But if the default pattern is also blank, Pathauto will be disabled 
+for that node type.
+
+** Bulk Updates Must be Run Multiple Times:
+As of 5.x-2.x Pathauto now performs bulk updates in a manner which is more 
+likely to succeed on large sites.  The drawback is that it needs to be run 
+multiple times.  If you want to reduce the number of times that you need to run 
+Pathauto you can increase the "Maximum number of objects to alias in a bulk 
+update:" setting under General Settings.  
 
 **WYSIWYG Conflicts - FCKEditor, TinyMCE, etc.
 If you use a WYSIWYG editor, please disable it for the Pathauto admin page.  

@@ -37,7 +37,7 @@ function TB_drupal_rewrite(context, group) {
      * ATTENTION: Until the derivate Bug (http://drupal.org/node/125610) is fixed,
      * the script should allways use the original picture ("true || ").
      */
-    if (thickbox_derivative == "original") {
+    if (thickbox_derivative == "_original") {
       var href = img.attr("src").replace(".thumbnail", "");
     }
     else {

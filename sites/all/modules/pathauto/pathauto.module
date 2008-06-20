@@ -381,7 +381,7 @@ function pathauto_admin_settings_validate($form_id, $form_values) {
     if ($details['value'] == $separator) {
       $action = $form_values['pathauto_punctuation_'. $name];
       if ($action == 0) {
-        drupal_set_message(t('You have configured the @name to be the separator and to be removed when encountered in strings.  This can cause problems with your patterns and especially with the catpath and termpath patterns.', array('@name' => $details['name'])), 'error');
+        drupal_set_message(t('You have configured the @name to be the separator and to be removed when encountered in strings.  This can cause problems with your patterns and especially with the catpath and termpath patterns. You should probably set the action for @name to be "replace by separator"', array('@name' => $details['name'])), 'error');
       }
     }
   }
@@ -396,8 +396,8 @@ function pathauto_token_values($type, $object = NULL) {
       _pathauto_include();
       switch ($type) {
         case 'node':
-          $vid = db_result(db_query("SELECT t.vid FROM {term_node} r INNER JOIN {term_data} t ON r.tid = t.tid INNER JOIN {vocabulary} v ON t.vid = v.vid WHERE r.nid = %d ORDER BY v.weight, t.weight, t.name LIMIT 1", $object->nid));
-          $category = db_fetch_object(db_query("SELECT t.tid, t.name FROM {term_data} t INNER JOIN {term_node} r ON r.tid = t.tid WHERE t.vid = %d AND r.nid = %d ORDER BY weight LIMIT 1", $vid, $object->nid));
+          $vid = db_result(db_query_range("SELECT t.vid FROM {term_node} r INNER JOIN {term_data} t ON r.tid = t.tid INNER JOIN {vocabulary} v ON t.vid = v.vid WHERE r.nid = %d ORDER BY v.weight, t.weight, t.name", $object->nid, 0, 1));
+          $category = db_fetch_object(db_query_range("SELECT t.tid, t.name FROM {term_data} t INNER JOIN {term_node} r ON r.tid = t.tid WHERE t.vid = %d AND r.nid = %d ORDER BY weight", $vid, $object->nid, 0, 1));
           $category->vid = $vid;
           // In the realm of nodes these are terms, in the realm of Taxonomy, cats
           $label = 'term';
@@ -551,7 +551,7 @@ function pathauto_admin_delete_submit($form_id, $form_values) {
 
 function pathauto_path_alias_types() {
   $objects = array('user/' => t('users'), 'node/' => t('content'));
-  if (module_exists('blogs')) {
+  if (module_exists('blog')) {
     $objects['blog/'] = t('user blogs');
   }
   if (module_exists('taxonomy')) {
@@ -560,7 +560,9 @@ function pathauto_path_alias_types() {
   if (module_exists('taxonomy')) {
     $objects['user/%/track'] = t('user trackers');
   }
-
+  if (module_exists('forum')) {
+    $objects['forum/%'] = t('forums');
+  }
 
   return $objects;
 }
@@ -584,9 +586,8 @@ function pathauto_nodeapi(&$node, $op, $teaser, $page) {
         }
         // Only do work if there's a pattern
         if ($pattern) {
-          // If the box is checked we should alias it
-          // If the box is not checked, but the user doesn't have the perms on the box we should alias it
-          if ($node->pathauto_perform_alias || !user_access('create url aliases')) {
+          // Only create an alias if the checkbox was not provided or if the checkbox was provided and is checked
+          if (!isset($node->pathauto_perform_alias) || $node->pathauto_perform_alias) {
             $placeholders = pathauto_get_placeholders('node', $node);
             $src = "node/$node->nid";
             $alias = pathauto_create_alias('node', $op, $placeholders, $src, $node->nid, $node->type);
@@ -594,8 +595,8 @@ function pathauto_nodeapi(&$node, $op, $teaser, $page) {
         }
         break;
       case 'delete':
-        path_set_alias('$node/'. $node->nid);
-        path_set_alias('$node/'. $node->nid .'/feed');
+        path_set_alias('node/'. $node->nid);
+        path_set_alias('node/'. $node->nid .'/feed');
         break;
       default:
         break;
@@ -638,11 +639,11 @@ function pathauto_form_alter($formid, &$form) {
 }
 
 /**
-* Implementation of hook_node_operations().
-*/
+ * Implementation of hook_node_operations().
+ */
 function pathauto_node_operations() {
   $operations = array(
-    'publish' => array(
+    'update_alias' => array(
       'label' => t('Update path alias'),
       'callback' => 'pathauto_node_operations_update',
     ),
@@ -651,8 +652,8 @@ function pathauto_node_operations() {
 }
 
 /**
-* Callback function for updating node aliases.
-*/
+ * Callback function for updating node aliases.
+ */
 function pathauto_node_operations_update($nodes) {
   foreach ($nodes as $nid) {
     $node = node_load($nid);

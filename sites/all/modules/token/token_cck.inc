@@ -222,7 +222,7 @@ if (module_exists('imagefield')) {
 
 
 
-if (module_exists('date')) {
+if (module_exists('date') && !function_exists('date_token_list')) {
   function date_token_list($type = 'all') {
     if ($type == 'field' || $type == 'all') {
       $tokens = array();
