@@ -419,11 +419,14 @@ function mollom_node_admin_overview_submit($form_id, $form_values) {
  * XML-RPC data from the comment submission form's $form_values ...
  */
 function mollom_data_contact_mail_page($form_values) {
+  global $user;
+
   $data = array(
       'post_title'  => $form_values['subject'],
       'post_body'   => $form_values['message'],
       'author_name' => $form_values['name'] ? $form_values['name'] : $user->name,
       'author_mail' => $form_values['mail'] ? $form_values['mail'] : $user->mail,
+      'author_id'   => $user->uid > 0 ? $user->uid : NULL,
       'author_ip'   => _mollom_ip_address(),
       );
   
@@ -435,13 +438,14 @@ function mollom_data_contact_mail_page($form_values) {
  * XML-RPC data from the comment submission form's $form_values ...
  */
 function mollom_data_contact_mail_user($form_values) {
-  global $base_url, $user;
+  global $user;
 
   $data = array(
       'post_title'  => $form_values['subject'],
       'post_body'   => $form_values['message'],
       'author_name' => $form_values['name'] ? $form_values['name'] : $user->name,
       'author_mail' => $form_values['mail'] ? $form_values['mail'] : $user->mail,
+      'author_id'   => $user->uid > 0 ? $user->uid : NULL,
       'author_ip'   => _mollom_ip_address(),
       );
   
@@ -461,6 +465,7 @@ function mollom_data_comment_form($form_values) {
       'author_name' => $form_values['name'] ? $form_values['name'] : $user->name,
       'author_mail' => $form_values['mail'] ? $form_values['mail'] : $user->mail,
       'author_url'  => $form_values['homepage'],
+      'author_id'   => $user->uid > 0 ? $user->uid : NULL,
       'author_ip'   => $form_values['cid'] ? '' : _mollom_ip_address(),
       );
 
@@ -485,6 +490,7 @@ function mollom_data_node_form($form_values) {
       'author_name' => $form_values['name'] ? $form_values['name'] : $user->name,
       'author_mail' => $form_values['mail'] ? $form_values['mail'] : $user->mail,
       'author_url'  => $form_values['homepage'],
+      'author_id'   => $user->uid > 0 ? $user->uid : NULL,
       'author_ip'   => $form_values['nid'] ? '' : _mollom_ip_address(),
       );
 
@@ -661,10 +667,10 @@ function mollom_admin_settings() {
     $form['server']['mollom_fallback'] = array(
         '#type' => 'radios',
         '#title' => t('Fallback strategy'),
-        '#default_value' => variable_get('mollom_fallback', MOLLOM_STATUS_BLOCK), // we default to treating everything as inappropriate
+        '#default_value' => variable_get('mollom_fallback', MOLLOM_FALLBACK_BLOCK ), // we default to treating everything as inappropriate
         '#options' => array(
-          MOLLOM_STATUS_BLOCK => t('Block all submissions on the protected forms until the server problems are resolved'),
-          MOLLOM_STATUS_ACCEPT => t('Leave all forms unprotected and accept all submissions') 
+          MOLLOM_FALLBACK_BLOCK  => t('Block all submissions on the protected forms until the server problems are resolved'),
+          MOLLOM_FALLBACK_ACCEPT => t('Leave all forms unprotected and accept all submissions') 
          ),
         '#description' => t('In the event that Mollom stopped servicing your requests, i.e. because a certain usage quota was reached, your Drupal site will use the configured fallback strategy.  You can choose to blindly accept all submissions without spam checking, or you can choose to block all submissions until this problem is resolved.')
         );
@@ -696,14 +702,12 @@ function mollom_admin_settings() {
 }
 
 function _mollom_fallback() {
-  $spam = variable_get("mollom_fallback", MOLLOM_FALLBACK_BLOCK);
-  if ($spam == MOLLOM_FALLBACK_BLOCK) {
+  $fallback = variable_get("mollom_fallback", MOLLOM_FALLBACK_BLOCK);
+  if ($fallback == MOLLOM_FALLBACK_BLOCK) {
     form_set_error('mollom', t("The spam filter that is installed on this site is currently not available. Per the site's policy, we are unable to accept new submissions until that problem is resolved. Please try resubmitting the form in a couple minutes."));
   }
       
-  if (xmlrpc_errno()) {
-    watchdog('mollom', t('Problem with spam filter: @errno - %error_msg', array('@errno' => xmlrpc_errno(), '%error_msg' => xmlrpc_error_msg())), WATCHDOG_ERROR);
-  }
+  watchdog('mollom', t('Mollom was unavailable (error: @errno - %error_msg)', array('@errno' => xmlrpc_errno(), '%error_msg' => xmlrpc_error_msg())), WATCHDOG_ERROR);
 }
 
 function mollom_protect_form_analysis(&$form, $data) {
@@ -731,6 +735,7 @@ function mollom_protect_form_analysis(&$form, $data) {
           if (is_bool($result)) {
             if ($result) { 
               $GLOBALS['mollom_response']['spam'] = MOLLOM_ANALYSIS_HAM;
+              $GLOBALS['mollom_response']['session_id'] = $_POST['session-id'];
               watchdog('mollom', t('Correct CAPTCHA: %message', array('%message' => $data['post_body'])));
             }
             else {
@@ -766,9 +771,13 @@ function mollom_protect_form_captcha(&$form, $data) {
 
         if (!$result) {  
           form_set_error('captcha', t('The entered CAPTCHA solution is not correct. We generated a new CAPTCHA so please try again.'));
-          
+          watchdog('mollom', 'Incorrect CAPTCHA');
+ 
           // Generate a new CAPTCHA:
           $GLOBALS['mollom_captcha'] = mollom('mollom.getImageCaptcha', array('author_ip' => _mollom_ip_address()));
+        }
+        else {
+          watchdog('mollom', 'Correct CAPTCHA');
         }
       }
       else {
@@ -850,17 +859,17 @@ function mollom_captcha_prerender($form_id, &$form) {
 function _mollom_verify_key() {
   $status = mollom('mollom.verifyKey');
 
-  $message = 'We contacted the Mollom servers to verify your keys';
+  $message = t('We contacted the Mollom servers to verify your keys');
 
   if (xmlrpc_errno()) {
-    drupal_set_message(t("$message: %error (ERROR)", array('%error' => xmlrpc_error_msg())), 'error');
+    drupal_set_message(t('@message: %error (ERROR)', array('@message' => $message, '%error' => xmlrpc_error_msg())), 'error');
   }
   else {
     if ($status) {
-      drupal_set_message(t("$message: the Mollom services are operating correctly. We are now blocking spam."));
+      drupal_set_message(t('@message: the Mollom services are operating correctly. We are now blocking spam.', array('@message' => $message)));
     }
     else {
-      drupal_set_message(t("$message: your keys do not exist or are no longer valid. Please visit the user settings page on the Mollom website again: <a href=\"http://mollom.com/user\">http://mollom.com/user</a>."), 'error');
+      drupal_set_message(t('@message: your keys do not exist or are no longer valid. Please visit the user settings page on the Mollom website again: <a href="@mollom-user">@mollom-user</a>.', array('@message' => $message, '@mollom-user' => 'http://mollom.com/user')), 'error');
     }
   }
 }
@@ -928,8 +937,14 @@ function mollom($method, $data = array()) {
     }
   }
 
+  // If none of the servers worked, activate the fallback mechanism:
+  _mollom_fallback();
+  
   // If everything failed, we reset the server list to force Mollom to request a new list:
   variable_set('mollom_servers', array());
+
+  // Report this error:
+  watchdog('mollom', t('No Mollom servers could be reached or all servers returned an error -- the server list was emptied.'), WATCHDOG_ERROR);  
 }
 
 /**
@@ -958,19 +973,23 @@ function _mollom_authentication() {
   // Generate a timestamp according to the dateTime format (http://www.w3.org/TR/xmlschema-2/#dateTime):
   $time = gmdate("Y-m-d\TH:i:s.\\0\\0\\0O", time());
 
+  // Generate a random number:
+  $nonce = md5(mt_rand());
+
   // Calculate a HMAC-SHA1 according to RFC2104 (http://www.ietf.org/rfc/rfc2104.txt):
-  $hash =  base64_encode(
-      pack("H*", sha1((str_pad($private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
-      pack("H*", sha1((str_pad($private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x36), 64))) . 
-      $time))))
-    );
+  $hash = base64_encode(
+    pack("H*", sha1((str_pad($private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x5c), 64))) .
+    pack("H*", sha1((str_pad($private_key, 64, chr(0x00)) ^ (str_repeat(chr(0x36), 64))) .
+    $time . ':' . $nonce . ':' . $private_key))))
+  );
 
   // Store everything in an array. Elsewhere in the code, we'll add the
   // actual data before we pass it onto the XML-RPC library:
   $data['public_key'] = $public_key;
   $data['time'] = $time;
   $data['hash'] = $hash;
-
+  $data['nonce'] = $nonce;
+  
   return $data;
 }
 
