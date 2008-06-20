@@ -1,13 +1,14 @@
+/* $Id$ */
+
 /**
  * GMap Markers
  * GMap API version -- No manager
  */
-/* $Id$ */
 
 // Replace to override marker creation
 Drupal.gmap.factory.marker = function(loc,opts) {
   return new GMarker(loc,opts);
-}
+};
 
 Drupal.gmap.addHandler('gmap', function(elem) {
   var obj = this;
@@ -23,7 +24,7 @@ Drupal.gmap.addHandler('gmap', function(elem) {
       else {
         obj.bounds.extend(marker.marker.getPoint());
       }
-      obj.map.setCenter(obj.bounds.getCenter(),obj.map.getBoundsZoomLevel(obj.bounds));
+      obj.map.setCenter(obj.bounds.getCenter(), Math.min(obj.map.getBoundsZoomLevel(obj.bounds), obj.vars.maxzoom));
     }
   });
 

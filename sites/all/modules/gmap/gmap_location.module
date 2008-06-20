@@ -1,6 +1,5 @@
 <?php
-/* $Id$ */
-// vim:set ft=php:
+// $Id$
 
 /**
  * @file
@@ -19,7 +18,7 @@ function gmap_location_perm() {
 /**
  * Get the user map variable defaults.
  */
-function _gmap_location_user_map_defaults(){
+function _gmap_location_user_map_defaults() {
   return array(
     'macro' => '[gmap |id=usermap|center=40,0|zoom=3|width=100%|height=400px]',
     'header' => 'This map illustrates the extent of users of this website. Each marker indicates a user that has entered their locations.',
@@ -98,25 +97,56 @@ function gmap_location_user_page() {
   $map['markermode'] = $usermap['markermode'];
 
   // Find the highest rid, if available, for each user with a location.
-  $result = db_query("
-    SELECT
-      u.name, MAX(r.rid) as role, l.eid as uid, l.latitude, l.longitude
-    FROM
-      {users} u
-    INNER JOIN
-      {location} l
-      ON
-        u.uid = l.eid
-    LEFT JOIN
-      {users_roles} r
-      ON
-        l.eid = r.uid
-    WHERE
-      l.type = '%s'
+
+  // Location 3.x on Drupal 5.
+  if (function_exists('location_newapi')) {
+    $result = db_query("
+      SELECT
+        u.name, MAX(r.rid) as role, i.uid, l.latitude, l.longitude
+      FROM
+        {users} u
+      INNER JOIN
+        {location_instance} i
+        ON
+          u.uid = i.uid
+      INNER JOIN
+        {location} l
+        ON
+          i.lid = l.lid
+      LEFT JOIN
+        {users_roles} r
+        ON
+          i.uid = r.uid
+      WHERE
+        u.status = 1
       AND
-      (l.latitude != 0 OR l.longitude != 0)
-    GROUP BY
-      l.eid", 'user');
+        (l.latitude != 0 OR l.longitude != 0)
+      GROUP BY
+        i.uid");
+  }
+  else {
+    $result = db_query("
+      SELECT
+        u.name, MAX(r.rid) as role, l.eid as uid, l.latitude, l.longitude
+      FROM
+        {users} u
+      INNER JOIN
+        {location} l
+        ON
+          u.uid = l.eid
+      LEFT JOIN
+        {users_roles} r
+        ON
+          l.eid = r.uid
+      WHERE
+        l.type = '%s'
+      AND
+        u.status = 1
+      AND
+        (l.latitude != 0 OR l.longitude != 0)
+      GROUP BY
+        l.eid", 'user');
+  }
 
   while ($row = db_fetch_object($result)) {
     // Determine marker type to show.
@@ -125,6 +155,8 @@ function gmap_location_user_page() {
       $marker = $markertypes[$row->role];
     }
 
+    // Users with the 'user locations' permission are allowed to see who
+    // each marker represents.
     if (user_access('user locations')) {
       if ($mode == 1) {
         $newmarker['rmt'] = $row->uid;
@@ -138,11 +170,11 @@ function gmap_location_user_page() {
       $newmarker['opts']['title'] = check_plain($row->name);
     }
     else {
-      $newmarker['latitude']= $row->latitude;
-      $newmarker['longitude']= $row->longitude;
+      $newmarker['latitude'] = $row->latitude;
+      $newmarker['longitude'] = $row->longitude;
       $newmarker['markername'] = $marker;
     }
-    $map['markers'][]=$newmarker;
+    $map['markers'][] = $newmarker;
   }
 
 // @@@ Move to gmap_addons.
@@ -166,13 +198,6 @@ function gmap_location_user_page() {
     }
   }
 */
-
-  $element = array(
-    '#type' => 'gmap',
-    '#map' => $thismap['id'],
-    '#settings' => $thismap,
-  );
-  $output .= theme('gmap', $element);
 
   return theme('gmap_location_user_page',
     $usermap['header'],
@@ -246,9 +271,11 @@ function gmap_location_node_page($nid = NULL) {
       INNER JOIN {location_instance} i
         ON n.vid = i.vid
       INNER JOIN {location} l
-        ON l.lid = l.lid
+        ON l.lid = i.lid
       $marker_sql2
       WHERE
+        n.status = 1
+      AND
         (l.latitude != 0 OR l.longitude != 0)
       ". $add_sql), 'node', $nid);
   }
@@ -261,6 +288,8 @@ function gmap_location_node_page($nid = NULL) {
       $marker_sql2
       WHERE
         l.type = '%s'
+      AND
+        n.status = 1
       AND
         (l.latitude != 0 OR l.longitude != 0)
       ". $add_sql), 'node', $nid);
@@ -376,18 +405,6 @@ function gmap_location_node_point() {
 }
 
 /**
- * For OG nodes, we are passing a nid/uid pair.
- */
-function theme_og_gmapnodelabel($node, $opt) {
-  if (is_numeric($opt) && $account = user_load(array('uid' => $opt))) {
-    $output = theme('user_picture', $account);
-    $output .= theme('username', $account);
-    echo $output;
-    exit();
-  }
-}
-
-/**
  * Theme function for displaying the node page.
  */
 function theme_gmap_location_node_page($count, $header, $map, $footer) {
@@ -411,26 +428,27 @@ function gmap_location_admin_settings() {
     '#options' => array(1 => 'Enabled', 0 => 'Disabled'),
   );
 
-  /////////////// @@@ User location stuff to move later
-  $form['userloc'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Location settings for users'),
-  );
-  $form['userloc']['gmap_user'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Profile map'),
-    '#default_value' => variable_get('gmap_user', TRUE),
-    '#description' => t('Let users set/edit their location in their profile.'),
-  );
-  $form['userloc']['gmap_user_profile_category'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Profile category title'),
-    '#default_value' => variable_get('gmap_user_profile_category', "Location map"),
-    '#size' => 50,
-    '#maxlength' => 50,
-    '#description' => t('Let users set/edit their location in their profile.'),
-  );
-  /////////////// @@@ END User location stuff to move later
+  // Location 3.x manages user settings by itself.
+  if (!function_exists('location_newapi')) {
+    $form['userloc'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Location settings for users'),
+    );
+    $form['userloc']['gmap_user'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Profile map'),
+      '#default_value' => variable_get('gmap_user', TRUE),
+      '#description' => t('Let users set/edit their location in their profile.'),
+    );
+    $form['userloc']['gmap_user_profile_category'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Profile category title'),
+      '#default_value' => variable_get('gmap_user_profile_category', "Location map"),
+      '#size' => 50,
+      '#maxlength' => 50,
+      '#description' => t('Let users set/edit their location in their profile.'),
+    );
+  }
 
   $form['user'] = array(
     '#type' => 'fieldset',
@@ -593,7 +611,7 @@ function gmap_location_block($op = 'list', $delta = 0, $edit = array()) {
           '#default_value' => variable_get('gmap_location_block_macro', '[gmap |id=block0 |zoom=10 |width=100% |height=200px |control=Small |type=Map |behavior=+notype] '),
         );
 
-        $ntypes=node_get_types();
+        $ntypes = node_get_types();
         foreach ($ntypes as $key => $value) {
           if (variable_get('location_maxnum_'. $key, 0)) {
             $form['gmap_location_block_macro_'. $key] = array(
@@ -664,13 +682,6 @@ function gmap_location_block($op = 'list', $delta = 0, $edit = array()) {
   }
 }
 
-function _gmap_location_getlatlon($node) {
-  if (isset($node->location['latitude']) && isset($node->location['longitude'])) {
-    return $node->location;
-  }
-  return false;
-}
-
 function gmap_location_block_view($nid) {
   $block = array();
   $node = node_load($nid);
@@ -719,8 +730,18 @@ function gmap_location_author_block_view($nid) {
   $block = array();
   $node = node_load($nid);
   if (variable_get('gmap_location_author_block_'. $node->type, FALSE)) {
-    $result = db_fetch_array(db_query("SELECT latitude, longitude FROM {location} WHERE eid = %d AND type = 'user'", $node->uid));
+    if (function_exists('location_newapi')) {
+      $result = db_fetch_array(db_query("SELECT latitude, longitude FROM {location} l INNER JOIN {location_instance} i ON l.lid = i.lid WHERE i.uid = %d", $node->uid));
+    }
+    else {
+      $result = db_fetch_array(db_query("SELECT latitude, longitude FROM {location} WHERE eid = %d AND type = 'user'", $node->uid));
+    }
     if (!$result) {
+      // Location not set at all.
+      return;
+    }
+    if (empty($result['latitude']) && empty($result['longitude'])) {
+      // Coordinates not set.
       return;
     }
     $macro = variable_get('gmap_location_block_macro_'. $node->type, FALSE);
@@ -748,32 +769,33 @@ function gmap_location_author_block_view($nid) {
   return $block;
 }
 
-function gmap_location_map_add_node($basemap, $node, $label='') {
-  $location = _gmap_location_getlatlon($node);
-  if (empty($basemap['markers'])) {
-    $thismap['markers']=array();
-  }
-  $newmarker['latitude'] = $location['latitude'];
-  $newmarker['longitude'] = $location['longitude'];
-  $newmarker['markername'] = variable_get('gmap_node_marker_'. $node->type, '');
-  $newmarker['label'] = $label;
-  $basemap['markers'][] = $newmarker;
-  $basemap['latitude'] = $location['latitude'];
-  $basemap['longitude'] = $location['longitude'];
-  return $basemap;
-}
-
 //Any module can create a default theme for the display of nodes of the node type by
 //creating a function theme_hook_gmapnodelabel a theme could then further specify it
 //by creating a mytheme_nodetype_gmapnodelabel or could simply create a default
 //node type by creating a mytheme_gmapnodelabel
-
 function theme_image_gmapnodelabel($n) {
   $out = '<a href="'. url('node/'. $n->nid) .'">'. check_plain($n->title) .'</a> <br>';
   $out .= image_display($n, 'thumbnail');
   return $out;
 }
 
+// @@@ This is not thoroughly tested for 5.x yet!
+/**
+ * Theme an Organic Groups node info window.
+ */
+function theme_og_gmapnodelabel($node, $opt) {
+  if (is_numeric($opt) && $account = user_load(array('uid' => $opt))) {
+    $output = theme('user_picture', $account);
+    $output .= theme('username', $account);
+    echo $output;
+    exit();
+  }
+}
+
+/**
+ * Theme a node info window.
+ * @ingroup themable
+ */
 function theme_gmapnodelabel($n) {
   // Allow a module (where the module name matches the node type name)
   // to define a custom display for the google map label.
@@ -905,8 +927,10 @@ function gmap_location_node_type($op, $info) {
       $temp[$info->type] = 'drupal';
       break;
     case 'update':
-      $temp[$info->type] = $temp[$info->old_type];
-      unset($temp[$info->old_type]);
+      if (!empty($info->old_type) && $info->old_type != $info->type) {
+        $temp[$info->type] = $temp[$info->old_type];
+        unset($temp[$info->old_type]);
+      }
       break;
   }
   variable_set('gmap_node_markers', $temp);

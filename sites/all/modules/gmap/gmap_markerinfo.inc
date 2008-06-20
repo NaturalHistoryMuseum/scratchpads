@@ -1,6 +1,5 @@
 <?php
-/* $Id$ */
-// vim:set ft=php:
+// $Id$
 
 /**
  * @file
@@ -15,34 +14,6 @@
  */
 function _gmap_get_icondata() {
   $icons = array();
-
-  $shortnames = array(
-    'name' => 'n',
-    'sequence' => 's',
-    'anchorX' => 'ax',
-    'anchorY' => 'ay',
-    'infoX' => 'ix',
-    'infoY' => 'iy',
-    'shadow' => 'si',
-    'printImage' => 'pi',
-    'mozPrintImage' => 'mpi',
-    'printShadow' => 'ps',
-    'transparent' => 'tr',
-  );
-
-  $order = array(
-    'name',
-    'sequence',
-    'anchorX',
-    'anchorY',
-    'infoX',
-    'infoY',
-    'shadow',
-    'printImage',
-    'mozPrintImage',
-    'printShadow',
-    'transparent',
-  );
 
   $imagetypes = array(
     'shadow',
@@ -79,7 +50,7 @@ function _gmap_get_icondata() {
       'h' => array(),
       'i' => array(), // Sets of sets
     );
-    
+
     // Part 1: Collect image names
     $filenames = array();
     foreach ($path_inis as $ini) {
@@ -108,7 +79,7 @@ function _gmap_get_icondata() {
     $icons[$path]['tempf'] = $filenames;
   }
   unset($filenames);
-  
+
   // Part 2: Assign ids, get width and height
   foreach ($icons as $path => $v) {
     $counter = 0;
@@ -128,7 +99,7 @@ function _gmap_get_icondata() {
     _gmap_compress_array($icons[$path]['w']);
     _gmap_compress_array($icons[$path]['h']);
   }
-  
+
   // Part 3: Main ini parsing
   // Per directory...
   foreach ($inis as $path => $path_inis) {
@@ -153,7 +124,7 @@ function _gmap_get_icondata() {
         // Setup key for compression
         $ini[$k]['key'] = $k;
       }
-      
+
       $mv = array();
       $iv = array();
       if (isset($ini['defaults'])) {
@@ -176,7 +147,7 @@ function _gmap_get_icondata() {
         _gmap_compress_icon_def($mv),
         _gmap_compress_icon_def($iv),
       );
-      
+
     }
   }
   foreach ($icons as $path => $v) {
@@ -197,13 +168,19 @@ function _gmap_compress_icon_def($iconset) {
     'infoX', 'infoY', 'shadow', 'printImage', 'mozPrintImage',
     'printShadow', 'transparent',
   );
+  $ints = array(3 => TRUE, 4 => TRUE, 5 => TRUE, 6 => TRUE);
   $nulls = array('', '', array(), 0, 0, 0, 0, '', '', '', '', '', );
 
   $a = array();
-  for ($c0=0; $c0<count($order); $c0++) {
+  for ($c0 = 0; $c0<count($order); $c0++) {
     $a[$c0] = array();
     for ($c1=0; $c1<count($iconset); $c1++) {
-      $a[$c0][$c1] = isset($iconset[$c1][$order[$c0]]) ? $iconset[$c1][$order[$c0]] : $nulls[$c0];
+      $temp = isset($iconset[$c1][$order[$c0]]) ? $iconset[$c1][$order[$c0]] : $nulls[$c0];
+      // Ensure that numeric quantities are encoded as ints, not strings.
+      if ($ints[$c0]) {
+        $temp = (int)$temp;
+      }
+      $a[$c0][$c1] = $temp;
     }
     _gmap_compress_array($a[$c0]);
   }
@@ -260,7 +237,7 @@ function _gmap_get_marker_titles() {
     $inis[] = $data;
   }
   unset($inifiles);
-  
+
   $titles = array();
   foreach ($inis as $ini => $inidata) {
     foreach ($inidata as $k => $v) {

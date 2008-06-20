@@ -1,6 +1,5 @@
 <?php
-/* $Id$ */
-// vim:set ft=php:
+// $Id$
 
 /**
  * @file
@@ -14,14 +13,13 @@ function _gmap_admin_settings() {
   $form['initialization'] = array(
     '#type' => 'fieldset',
     '#title' => t('Google Map Initialize'),
-    '#description' => t('Note about Drupal 5 version: Shaded out controls are controls for unfinished features that existed in the 4.7 version.'),
   );
   if (!module_exists('keys_api')) {
     $form['initialization']['googlemap_api_key'] = array(
-      '#type' => 'textfield', 
-      '#title' => t('Google map API key'),
-      '#default_value' => variable_get('googlemap_api_key', ''), 
-      '#size' => 50, 
+      '#type' => 'textfield',
+      '#title' => t('Google Maps API Key'),
+      '#default_value' => variable_get('googlemap_api_key', ''),
+      '#size' => 50,
       '#maxlength' => 255,
       '#description' => t('Your personal Googlemaps API key.  You must get this for each separate website at <a href="http://www.google.com/apis/maps/">Google Map API website</a>.'),
     );
@@ -29,26 +27,11 @@ function _gmap_admin_settings() {
   else {
     $form['initialization']['googlemap_api_key'] = array(
       '#type' => 'item',
-      '#title' => t('Google map API key'),
+      '#title' => t('Google Maps API Key'),
       '#description' => t('Your personal Googlemaps API key.  You must get this for each separate website at <a href="http://www.google.com/apis/maps/">Google Map API website</a>.'),
       '#value' => t("Managed by <a href='@url'>keys api</a>.", array('@url' => url('admin/settings/keys'))),
     );
   }
-  $form['initialization']['gmap_method'] = array(
-    '#type' => 'select',
-    '#disabled' => TRUE,
-    '#title' => t('Google map method'),
-    '#options' => array('Static' => t('Static'), 'Dynamic' => t('Dynamic'), 'None' => t('None')),
-    '#default_value' => GMAP_LOAD_METHOD,
-    '#description' => t('How is the Google Map initialization script run:<br /><strong>Static</strong> - Loaded on every page, <br /><strong>Dynamic</strong> - Initialization script runs only on pages with google maps, but all pages with the gmap filter will not be cached. <br /><strong>None</strong> - Google map initialization script must be loaded some other way.'),
-  );
-  $form['initialization']['gmap_wms'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable wms features'),
-    '#disabled' => TRUE, //@@@
-    '#default_value' => GMAP_WMS,
-    '#description' => t('Enables the wms features.  This allows you to use overlays that are defined using wms.  The wms-gs.js (or other acceptable version) must be installed in the gmap directory.'),
-  );
   $form['initialization']['gmap_load_zoom_plugin'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable mousewheel zooming'),
@@ -81,7 +64,16 @@ function _gmap_admin_settings() {
       ),
     ),
   );
-  
+
+  // Allow previewable behaviors to affect the preview map.
+  $m = array();
+  $behaviors = module_invoke_all('gmap', 'behaviors', $m);
+  foreach ($behaviors as $k => $v) {
+    if (isset($v['previewable']) && $v['previewable']) {
+      $form['gmap_default']['map']['#settings']['behavior'][$k] = $defaults['behavior'][$k];
+    }
+  }
+
   $form['gmap_default']['width'] = array(
     '#type' => 'gmap_dimension',
     '#title' => t('Default width'),
@@ -117,30 +109,103 @@ function _gmap_admin_settings() {
     '#description' => t('The default zoom level of a Google map.'),
   );
   gmap_widget_setup($form['gmap_default']['zoom'], 'zoom', 'settings_default_map');
+  $form['gmap_default']['maxzoom'] = array(
+    '#type' => 'select',
+    '#title' => t('Maximum initial zoom'),
+    '#default_value' => $defaults['maxzoom'],
+    '#options' => drupal_map_assoc(range(0, 17)),
+    '#description' => t('The maximum initial zoom (affects things such as the zoom of the node location block.)'),
+  );
+  // This one isn't a gmap widget.
+
+  $form['gmap_default']['styles']['line_default'] = array(
+    '#type' => 'gmap_style',
+    '#gmap_style_type' => 'line',
+    '#title' => t('Line default style'),
+    '#description' => t('Lines without a specific style defined will fall back to this style'),
+    '#default_value' => $defaults['styles']['line_default'],
+  );
+  $form['gmap_default']['styles']['poly_default'] = array(
+    '#type' => 'gmap_style',
+    '#gmap_style_type' => 'poly',
+    '#title' => t('Polygon default style'),
+    '#description' => t('Polygons without a specific style defined will fall back to this style'),
+    '#default_value' => $defaults['styles']['poly_default'],
+  );
 
   $form['gmap_default']['controltype'] = array(
     '#type' => 'select',
-    '#title' => t('Default control type'), 
+    '#title' => t('Default control type'),
     '#options' => array('None' => t('None'), 'Small' => t('Small'), 'Large' => t('Large')),
     '#default_value' => $defaults['controltype'],
   );
   gmap_widget_setup($form['gmap_default']['controltype'], 'controltype', 'settings_default_map');
 
-  $form['gmap_default']['maptype'] = array(
+  $form['gmap_default']['mtc'] = array(
+    '#type' => 'select',
+    '#title' => t('Map Type Control'),
+    '#options' => array(
+      'none' => t('None'),
+      'standard' => t('Standard (GMapTypeControl)'),
+      'hier' => t('Hierarchical (GHierarchicalMapTypeControl)'),
+      'menu' => t('Dropdown (GMenuMapTypeControl)'),
+    ),
+    '#default_value' => $defaults['mtc'],
+  );
+
+  $form['gmap_default']['baselayers'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Enabled map types ("base layers")'),
+  );
+
+  $baselayers = array();
+
+  foreach (module_implements('gmap') as $module) {
+    call_user_func_array($module .'_gmap', array('baselayers', &$baselayers));
+  }
+
+  $options = array();
+  foreach ($baselayers as $name => $layers) {
+    $options[$name] = array();
+    foreach ($layers as $k => $v) {
+      // @@@TODO: Only show the enabled ones?
+      $options[$name][$k] = $v['title'];
+    }
+  }
+
+  $form['gmap_default']['baselayers']['maptype'] = array(
     '#type' => 'select',
     '#title' => t('Default map type'),
     '#default_value' => $defaults['maptype'],
-    '#options' => array('Map' => t('Map'), 'Satellite' => t('Satellite'), 'Hybrid' => t('Hybrid')),
+    '#options' => $options,
   );
-  gmap_widget_setup($form['gmap_default']['maptype'], 'maptype', 'settings_default_map');
+  gmap_widget_setup($form['gmap_default']['baselayers']['maptype'], 'maptype', 'settings_default_map');
+
+  foreach ($baselayers as $name => $layers) {
+    $form['gmap_default']['baselayers'][$name] = array(
+      '#type' => 'fieldset',
+      '#title' => $name,
+    );
+    foreach ($layers as $key => $layer) {
+      $form['gmap_default']['baselayers'][$name][$key] = array(
+        '#type' => 'checkbox',
+        '#title' => $layer['title'],
+        '#parents' => array('gmap_default', 'baselayers', $key),
+
+        '#description' => $layer['help'],
+        '#default_value' => isset($defaults['baselayers'][$key]) ? $defaults['baselayers'][$key] : $layer['default'],
+      );
+    }
+  }
 
   $form['gmap_default']['behavior'] = array(
     '#type' => 'fieldset',
     '#title' => t('Map Behavior flags'),
     '#tree' => TRUE,
-    '#description' => t('Behavior flags modify how a map behaves. Grayed out flags are not settable here, but may be set on a map by map basis via code or a macro.'),
+    '#description' => t('Behavior flags modify how a map behaves. Grayed out flags are not settable here, but may be set on a map by map basis via code or a macro. Changes to behaviors will not affect the preview map shown above until changes are saved.'),
   );
-  $behaviors = module_invoke_all('gmap', 'behaviors');
+  $m = array();
+  $behaviors = module_invoke_all('gmap', 'behaviors', $m);
   foreach ($behaviors as $k => $v) {
     $form['gmap_default']['behavior'][$k] = array(
       '#type' => 'checkbox',
@@ -229,7 +294,7 @@ function _gmap_admin_settings() {
     '#tree' => FALSE,
     '#required' => TRUE,
     '#options' => array(
-      'gmap' => t('No manager (use addOverlay directly)'),
+      'gmap' => t('No manager (use GMap API directly)'),
       'gmarkermanager' => t("Google's GMarkerManager"),
       'clusterer' => t("Jef Poskanzer's Clusterer"),
     ),
@@ -339,17 +404,5 @@ function _gmap_admin_settings() {
     '#default_value' => $opts['clusterer']['max_lines'],
   );
 
-  $form['location'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Location settings'),
-  );
-  $form['location']['gmap_location_map'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Default location map'),
-    '#default_value' => variable_get('gmap_location_map', '[gmap|id=locmap|center=40,0|zoom=3|width=100%|height=400px]'),
-    '#size' => 50,
-    '#maxlength' => 500,
-    '#description' => t('The gmap macro for the map to be used in the location.module for setting latitude and longitude.'),
-  );
   return system_settings_form($form);
 }
