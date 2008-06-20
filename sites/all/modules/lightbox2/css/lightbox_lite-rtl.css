@@ -6,19 +6,23 @@
   border-right: 2px solid #666;
   min-width: 240px;
 }
+
 #lightboxDetails {
   font-size: 1.2em;
   padding-top: 0.6em;
   min-width: 240px;
 }
+
 #lightboxCaption {
   float: right;
   font: 0.9em black;
 }
+
 #keyboardMsg {
   float: left;
   font: 0.9em black;
 }
+
 #closeButton {
   top: 5px;
   right: 5px;
@@ -28,6 +32,7 @@
   z-index: 200;
   background: url(../images/close_lite.gif) no-repeat;
 }
+
 #loadingImage {
   position: absolute;
   top: 30%;
@@ -41,19 +46,24 @@
   height: 22px;
   z-index: 150;
 }
+
 #lightbox img {
   border: none;
   clear: both;
 }
+
 #overlay img {
   border: none;
 }
+
 #overlay {
   background-image: url(../images/overlay.png);
 }
+
 * html #overlay {
   background-color: #333;
   back\ground-color: transparent;
   background-image: url(../images/blank.gif);
   filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../images/overlay.png", sizingMethod="scale");
 }
+

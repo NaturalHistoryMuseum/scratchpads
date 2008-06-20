@@ -13,9 +13,11 @@
   text-align: center;
   line-height: 0;
 }
+
 #lightbox a img {
   border: none;
 }
+
 #outerImageContainer {
   position: relative;
   background-color: #fff;
@@ -23,10 +25,13 @@
   height: 250px;
   margin: 0 auto;
   min-width: 240px;
+  overflow: hidden;
 }
-#imageContainer {
+
+#imageContainer, #frameContainer, #videoContainer {
   padding: 10px;
 }
+
 #loading {
   position: absolute;
   top: 40%;
@@ -37,36 +42,45 @@
   text-align: center;
   line-height: 0;
 }
+
 #hoverNav {
   z-index: 10;
 }
+
 #imageData>#hoverNav {
   left: 0;
 }
+
 #hoverNav a {
   outline: none;
 }
+
 #prevLink, #nextLink {
   width: 45px;
   height: 45px;
   display: block;
 }
+
 #prevLink {
   left: 0;
   float: left;
-  background: url(../images/prev.gif) left 15% no-repeat;
+  background: url(../images/prev_alt.gif) left 15% no-repeat;
 }
+
 #nextLink {
   right: 0;
   float: right;
-  background: url(../images/next.gif) left 15% no-repeat;
+  background: url(../images/next_alt.gif) right 15% no-repeat;
 }
+
 #prevLink:hover, #prevLink:visited:hover {
-  background: url(../images/prev_hover.gif) left 15% no-repeat;
+  background-position: right 15%;
 }
+
 #nextLink:hover, #nextLink:visited:hover {
-  background: url(../images/next_hover.gif) right 15% no-repeat;
+  background-position: left 15%;
 }
+
 #imageDataContainer {
   font: 10px Verdana, Helvetica, sans-serif;
   background-color: #fff;
@@ -74,26 +88,32 @@
   line-height: 1.4em;
   min-width: 240px;
 }
+
 #imageData {
   padding: 0 10px;
 }
+
 #imageData #imageDetails {
   width: 70%;
   margin-right: auto;
   margin-left: auto;
   text-align: center;
 }
+
 #imageData #caption {
   font-weight: bold;
 }
+
 #imageData #numberDisplay {
   display: block;
   padding-bottom: 1.0em;
 }
+
 #imageData #node_link_text {
   display: block;
   padding-bottom: 1.0em;
 }
+
 #overlay {
   position: absolute;
   top: 0;
@@ -106,6 +126,7 @@
   -moz-opacity: 0.6;
   opacity: 0.6;
 }
+
 .clearfix:after {
   content: ".";
   display: block;
@@ -113,36 +134,42 @@
   clear: both;
   visibility: hidden;
 }
+
 * html>body .clearfix {
   display: inline;
   width: 100%;
 }
+
 * html .clearfix {
   /* Hides from IE-mac \*/
   height: 1%;
   /* End hide from IE-mac */
 }
 
+
 /* Image location mod */
 #bottomNavClose {
   display: block;
   z-index: 200;
-  background: url(../images/close.gif) right no-repeat;
+  background: url(../images/close.gif) left no-repeat;
   position: absolute;
   top: 5px;
   right: 5px;
   height: 26px;
   width: 26px;
 }
+
 #bottomNavClose:hover {
-  background: url(../images/close_hover.gif) right no-repeat;
+  background-position: right;
 }
+
 #loadingLink {
   display: block;
   background: url(../images/loading.gif) no-repeat;
   width: 32px;
   height: 32px;
 }
+
 #bottomNavZoom {
   display: block;
   background: url(../images/expand.gif) no-repeat;
@@ -152,6 +179,7 @@
   bottom: 25px;
   right: 5px;
 }
+
 #bottomNavZoomOut {
   display: block;
   background: url(../images/contract.gif) no-repeat;
@@ -160,4 +188,28 @@
   position: absolute;
   bottom: 25px;
   right: 5px;
+}
+
+#lightshowPlay {
+  background: url(../images/play.png) no-repeat;
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 5px;
+  height: 20px;
+  width: 20px;
+}
+
+#lightshowPause {
+  background: url(../images/pause.png) no-repeat;
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 5px;
+  height: 20px;
+  width: 20px;
+}
+
+.lightbox_hide_image {
+  display: none;
 }
