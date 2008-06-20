@@ -159,8 +159,7 @@ function _tinytax_list_blocks(){
  */
 function tinytax_taxonomy($op, $type, $vocabulary){
   if($op=='delete' && $type =='vocabulary'){
-    $sql = "DELETE FROM blocks WHERE module='tinytax' AND delta='tinytax-".$vocabulary['vid']."'";
-    db_query($sql);
+    db_query("DELETE FROM {blocks} WHERE module='tinytax' AND delta='%s'","tinytax-".$vocabulary['vid']);
   }
 }
 
