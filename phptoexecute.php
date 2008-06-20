@@ -374,4 +374,5 @@ rebuild_tree(2080793,1);
 echo ";";*/
 
 // Take all sites offline
-variable_set('site_offline',1);
+echo "Taking site offline";
+variable_set('site_offline',true);
