@@ -374,5 +374,6 @@ rebuild_tree(2080793,1);
 echo ";";*/
 
 // Take all sites offline
-echo "Taking site offline";
-variable_set('site_offline',true);
+echo "Rebuild perms and bringing site oline";
+node_access_rebuild();
+variable_set('site_offline',0);
