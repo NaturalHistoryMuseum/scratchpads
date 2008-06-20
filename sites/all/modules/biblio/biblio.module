@@ -94,47 +94,28 @@ function biblio_node_info() {
 function biblio_access($op, $node="") {
   global $user;
 
-  if ($op == 'create') {
-    // Only users with permission to do so may create this node type.
-    return user_access('create biblio');
-  }
-  if ($op == 'import') {
-    // Only users with permission to do so may import entries from file.
-    return user_access('import from file');
-  }
-  if ($op == 'export') {
-    // Only users with permission to do so may export entries from file.
-    return user_access('show export links');
-  }
-  if ($op == 'download') {
-    // Only users with permission to do so may export entries from file.
-    return user_access('show download links');
-  }
-  // Users who create a node may edit or delete it later, assuming they have the
-  // necessary permissions.
-  if ($op == 'update' || $op == 'delete') {
-    if ( user_access('edit own biblio entries') && ($user->uid == $node->uid)) {
-      return true;
-    }
-    else if  (user_access('edit all biblio entries')) {
-      return true;
-    }
-    else{
-      return false;
-    }
-  }
-  if ($op == 'view') {
-    if (variable_get('biblio_view_only_own', 0) ) {
-       if (  $user->uid == $node->uid ) {
-         return true;
-       }
-       else{
-         return false;
-       }
-    }
-    else{
-       return true;
-    }
+  switch ($op){
+    case 'create':
+      return user_access('create biblio');
+    case 'import':
+      return user_access('import from file');
+    case 'export':
+      return user_access('show export links');
+    case 'download':
+      return user_access('show download links');
+    case 'update':
+    case 'delete':
+      if (user_access('edit all biblio entries') || (user_access('edit own biblio entries') && ($user->uid == $node->uid))) 
+      {
+        return TRUE;
+      }
+      break;
+    case 'view':
+      if (variable_get('biblio_view_only_own', 0) && $user->uid != $node->uid) {
+        return false;
+      }
+      break;
+    default:
   }
 }
 
@@ -202,17 +183,26 @@ function biblio_user($type, &$edit, &$user, $category = NULL) {
   }
 
   if ($type == 'validate' && $category == 'account') {
-  //  return _user_edit_validate(arg(1), $edit);
+
+    if( ( $edit['biblio_profile_uid'] == 'lastname' ||  
+          $edit['biblio_profile_uid'] ==  'uid_lastname' ) &&
+          $edit['biblio_lastname'] == '' )
+    {
+        $message = t('You did not supply a value in the "My last name" field of the "My publications" section.');
+        form_set_error('category', $message);
+    } 
+    
   }
 
   if ($type == 'submit' && $category == 'account') {
-
-  //  return _user_edit_submit(arg(1), $edit);
+    return ;
+  }
+  
+  if ($type == 'delete' ) {
+    return ;
   }
 
-  if ($type == 'categories') {
-  //  return array(array('name' => 'account', 'title' => t('Account settings'), 'weight' => 1));
-  }
+  return ;
 }
 /*
  * This functin is used by both the admin/settings/biblio page and user profile page
@@ -234,7 +224,7 @@ function _biblio_get_user_profile_form(&$form, $user=false){
       '#description' => ($user) ? t('Selecting this will create a listing of your publications on your profile page') : t('This sets the site wide default, users may change this in their profile')
     );
     if($user){
-        $form['profile']['biblio_show_profile']['#default_value'] = ( (isset($user->biblio_show_profile) ) ? $user->biblio_show_profile : 0) ;
+        $form['profile']['biblio_show_profile']['#default_value'] = ( (isset($user->biblio_show_profile) ) ? $user->biblio_show_profile : variable_get('biblio_show_profile', '0')) ;
     }else{
         $form['profile']['biblio_show_profile']['#default_value'] = variable_get('biblio_show_profile', '0') ;
    }
@@ -246,7 +236,7 @@ function _biblio_get_user_profile_form(&$form, $user=false){
       '#description' => ($user) ? t('Selecting this will create a listing of your publications on a separate tab on your profile page') : t('This sets the site wide default, users may change this in their profile')
     );
     if($user){
-        $form['profile']['biblio_show_profile_tab']['#default_value'] = ( (isset($user->biblio_show_profile_tab) ) ? $user->biblio_show_profile_tab : 0) ;
+        $form['profile']['biblio_show_profile_tab']['#default_value'] = ( (isset($user->biblio_show_profile_tab) ) ? $user->biblio_show_profile_tab : variable_get('biblio_show_profile_tab', '0')) ;
     }else{
         $form['profile']['biblio_show_profile_tab']['#default_value'] = variable_get('biblio_show_profile_tab', '0') ;
    }
@@ -273,7 +263,7 @@ function _biblio_get_user_profile_form(&$form, $user=false){
       '#type' => 'radios',
       '#title' => t('Select publications by'),
       '#default_value' => (isset($user->biblio_profile_uid) ) ? $user->biblio_profile_uid : variable_get('biblio_profile_uid', 'uid'),
-      '#options' => array('uid' => t('User ID'), 'lastname' => ($user)?t('My last name'):t('Last name'), 'uid_lastname' => t('Both')),
+      '#options' => array('uid' => t('User ID'), 'lastname' => ($user)?t('My last name'):t('Last name'), 'uid_lastname' => t('Both (Last name & User ID)')),
       '#description' => t('This defines the criteria used to select which publications will be listed on the users profile page'),
     );
 }
@@ -1194,7 +1184,7 @@ function biblio_form_types_edit() {
     $form['configured_flds'][$key]['name'] = array('#type'=>'markup', '#value'=>$fld['name'],'#weight'=>$fld['weight']);
     $form['configured_flds'][$key]['title'] = array('#type'=>'textfield','#default_value' => $fld['title'],'#size'=>15,'#weight'=>$fld['weight']);
     $form['configured_flds'][$key]['weight'] = array('#type'=>'textfield','#default_value' => $fld['weight'],'#size'=>2,'#weight'=>$fld['weight']);
-    $form['configured_flds'][$key]['hint'] = array('#type'=>'textfield','#default_value' => $fld['hint'],'#size'=>10,'#weight'=>$fld['weight']);
+    $form['configured_flds'][$key]['hint'] = array('#type'=>'textfield','#default_value' => $fld['hint'],'#size'=>10, '#maxlength'  => 255, '#weight'=>$fld['weight']);
     //if (!$tid) {
     //  $form['configured_flds'][$key]['hint']['#type']= 'markup';
     //  $form['configured_flds'][$key]['title']['#type']= 'markup';
@@ -1829,7 +1819,7 @@ function biblio_citekey_generate($node)
  $prefix = variable_get('biblio_citekey_prefix', '');
  $primary_field = variable_get('biblio_citekey_field1', 'nid');
  $secondary_field = variable_get('biblio_citekey_field2', 'nid');
- $citekey = (!empty($node->$primary_field))?$node->$primary_field:(!empty($node->$secondary_field))?$node->$secondary_field:$node->nid;
+ $citekey = (!empty($node->$primary_field))?$node->$primary_field:(!empty($node->$secondary_field)?$node->$secondary_field:$node->nid);
  return $prefix.$citekey;
 }
 
@@ -2088,9 +2078,9 @@ function biblio_show_results($result, $attrib = array("sort" => 'year', 'order' 
   if (!$inline) {
     // Add some links to the top of the page to change the sorting/ordering...
     if ( biblio_access('export')) {
-      $content .= '<div class="biblio_export">'.t('Export @count results', array('@count' => $pager_total_items[0])).':['.l("Tagged","$base/export/tagged"). ']['.l("XML","$base/export/xml"). ']['.l("BibTex","$base/export/bib").']</div>';
+      $content .= '<div class="biblio_record_count">'.t('Found @count results', array('@count' => $pager_total_items[0])).'</div><div class="biblio_export"> Export:['.l("Tagged","$base/export/tagged"). ']['.l("XML","$base/export/xml"). ']['.l("BibTex","$base/export/bib").']</div>';
     }else{
-      $content .= '<div class="biblio_export">'.t('Found @count results', array('@count' => $pager_total_items[0])) .'</div><br />';
+      $content .= '<div class="biblio_record_count">'.t('Found @count results', array('@count' => $pager_total_items[0])) .'</div><br />';
     }
     if (user_access('show sort links')) {
       $sort_attr = array("title"=>t("Click a second time to reverse the sort order"));
@@ -3017,6 +3007,12 @@ function _biblio_author_links($author,$base='biblio',$inline=false) {
   }
 
   $html = "";
+  $etal = '';
+  if (strpos($author, 'et al.')) {
+    $author = str_replace('et al.', "", $author);
+    $etal = 'et al.';
+  }  
+
   $author_array = explode(";", $author);
 
   foreach($author_array as $auth) {
@@ -3032,7 +3028,7 @@ function _biblio_author_links($author,$base='biblio',$inline=false) {
 
     $html .= l(trim($auth), "$base/author/" . trim($lastname) . $inline,$attrib, $query );
   }
-  return $html;
+  return $html." $etal";
 }
 function biblio_author_index_shutdown() {
   global  $biblio_last_nid;
@@ -3119,6 +3115,16 @@ function _biblio_keyword_links($keywords,$base='biblio') {
 
 function _biblio_parse_authors($authors) {
 $and = array(" and ", " And ", " AND ");
+$etal = "";
+$author_array = array();
+if (strpos($authors, 'et al')) {
+  if (strpos($authors, 'et al.')) {
+    $authors = str_replace('et al.', "", $authors);
+  }else{
+    $authors = str_replace('et al', "", $authors);  
+  }
+  $etal = 'et al.';
+}
 $authors = str_replace($and, "; ", $authors); // change the word "and" to a comma
 $authors = str_replace(" ,", ",", $authors); // fix some potential typos
 $authors = str_replace(",,", ",", $authors); // ditto
@@ -3126,11 +3132,12 @@ $authors = str_replace(",,", ",", $authors); // ditto
 $chunks = explode(";", $authors); // split the authors on the semicolon
 $num_chunks = count($chunks);
 
-  for($i = 0;  $i < count($chunks);  $i++) {
-    $suffix = _biblio_get_suffix($chunks[$i]); // get and strip out the suffix
-    $prefix = _biblio_get_prefix($chunks[$i]); // get and strip out the prefix
-    if (strstr($chunks[$i], ",")) { // we probably have lastname first
-      $subchunks = explode(",", trim($chunks[$i]));
+  foreach ($chunks as $chunk) {
+    if (strlen(trim($chunk))){
+    $suffix = _biblio_get_suffix($chunk); // get and strip out the suffix
+    $prefix = _biblio_get_prefix($chunk); // get and strip out the prefix
+    if (strstr($chunk, ",")) { // we probably have lastname first
+      $subchunks = explode(",", trim($chunk));
       $lastname = $subchunks[0];
       $subchunks = explode(" ", trim($subchunks[1]));
       $initials = "";
@@ -3142,7 +3149,7 @@ $num_chunks = count($chunks);
         }
       }
     } else { // we have some form of firstname first (Fistname I. Lastname)
-      $subchunks = explode(" ", trim($chunks[$i]));
+      $subchunks = explode(" ", trim($chunk));
       $lastname = end($subchunks);
       $initials = "";
       for ($j = 0;
@@ -3155,10 +3162,11 @@ $num_chunks = count($chunks);
         }
       }
     }
-    $chunks[$i] = trim($prefix . $lastname . ', ' . $initials . ' ' . $suffix);
+    $author_array[] = trim($prefix . $lastname . ', ' . $initials . ' ' . $suffix);
+   }
   }
 
-  return implode("; ", $chunks);
+  return implode("; ", $author_array)." $etal";
 }
 
 function _biblio_get_suffix(&$name) {
@@ -3796,4 +3804,42 @@ function _biblio_get_user_pubs($user,$profile=''){
     }
   return $pubs;
 
+}
+
+/**
+ * Implementation of hook_token_list() for og specific tokens
+ */
+function biblio_token_list($type = 'all') {
+  if ($type == 'node') {
+    $tokens['node']['biblio_year']          = t("Biblio: Publication year");
+    $tokens['node']['biblio_authors']      = t("Biblio: Authors");
+    $tokens['node']['biblio_type_id']      = t("Biblio: Type ID (e.g.: 100)");
+    $tokens['node']['biblio_type']      = t("Biblio: Type Name (e.g.: book)");
+    return $tokens;
+  }
+}
+
+/**
+ * Implementation of hook_token_values() for og specific tokens
+ */
+function biblio_token_values($type, $object = NULL) {
+  switch ($type) {
+    case 'node':
+      if ($object->type == "biblio") {
+        $type = db_result(db_query('SELECT name FROM {biblio_types} as t WHERE t.tid = %d',$object -> biblio_type));
+        #$title = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $gid));
+        $values['biblio_year'] = check_plain($object -> biblio_year);
+        $values['biblio_authors'] = check_plain($object -> biblio_authors);
+        $values['biblio_type_id'] = check_plain($object -> biblio_type);
+        $values['biblio_type'] = check_plain($type);
+        return $values;
+      }
+      break;  
+  }
+
+  // No group info found. Return defaults.
+  $values['biblio_year'] = '';
+  $values['biblio_authors'] = '';
+  $values['biblio_type'] = '';
+  return $values;
 }

@@ -90,13 +90,13 @@ function biblio_install() {
 
       $result[] = db_query("CREATE TABLE {biblio_fields} (
         `fid` int(11) NOT NULL default '0',
-        `name` varchar(100) NOT NULL default '',
-        `title` varchar(100) NOT NULL default '',
+        `name` varchar(128) NOT NULL default '',
+        `title` varchar(128) NOT NULL default '',
         `common` tinyint(1) NOT NULL default '0',
-        `type` varchar(100) NOT NULL default '',
+        `type` varchar(128) NOT NULL default '',
         `size` int(11) NOT NULL default '0',
         `maxsize` int(11) NOT NULL default '0',
-        `hint` varchar(100) default '',
+        `hint` varchar(255) default '',
         `required` tinyint(1) NOT NULL default '0',
         `autocomplete` tinyint(1) NOT NULL default '0',
         `visible` tinyint(4) NOT NULL default '0',
@@ -690,5 +690,13 @@ $result = array();
 
   return $result;  
 }
-       
+
+function biblio_update_27(){
+  $result = array();
+  
+  $result[] = update_sql("ALTER TABLE {biblio_fields}  MODIFY hint varchar(255);");
+  
+  return $result;
+}
+   
 

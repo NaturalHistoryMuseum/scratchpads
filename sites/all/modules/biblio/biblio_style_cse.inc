@@ -46,11 +46,11 @@ function biblio_style_cse($node, $base='biblio', $inline=false){
         case 8: 
         case 9:
         default:
-          if (isset($node->biblio_year)) {
+          if (!empty($node->biblio_year)) {
             $output .= check_plain($node->biblio_year).".&nbsp;&nbsp;" ;
           }
           $output .= '<span class="biblio-title">' ;
-          $link = ((variable_get('biblio_link_title_url', 0) && isset($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
+          $link = ((variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
           $attrib = (variable_get('biblio_links_target_new_window',null)) ? array('target'=>'_blank') : null;
           $output .= l($node->title, $link, $attrib); 
           $output .= ". </span> \n";
@@ -69,4 +69,3 @@ function biblio_style_cse($node, $base='biblio', $inline=false){
   return $output;
 
 }
-?>

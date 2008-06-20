@@ -443,5 +443,3 @@ global  $node_array,$node_id, $element, $contributors,   $dates, $urls;
     }
  }
 }
-
-?>

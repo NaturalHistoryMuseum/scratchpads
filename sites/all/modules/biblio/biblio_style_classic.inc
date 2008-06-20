@@ -32,8 +32,8 @@ function biblio_style_classic($node, $base='biblio', $inline=false){
     $authors = $node->biblio_authors;
   } 
   $output .=  '<span class="biblio-title">';
-  $link = ((variable_get('biblio_link_title_url', 0) && isset($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
-  $attrib = (variable_get('biblio_links_target_new_window',null) && variable_get('biblio_link_title_url', 0) && isset($node->biblio_url) ) ? array('target'=>'_blank') : null;
+  $link = ((variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
+  $attrib = (variable_get('biblio_links_target_new_window',null) && variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url) ) ? array('target'=>'_blank') : null;
   $output .= l($node->title, $link, $attrib); 
   $output .= "</span>, \n";
   $output .=  '<span class="biblio-authors">' . _biblio_author_links($authors,$base,$inline) . "</span> \n";
@@ -47,10 +47,9 @@ function biblio_style_classic($node, $base='biblio', $inline=false){
 
   if ($node->biblio_place_published) $output .= ', ' . check_plain($node->biblio_place_published);
   if ($node->biblio_pages) $output .= ', p.' . check_plain($node->biblio_pages);
-  if (isset($node->biblio_year)) {
+  if (!empty($node->biblio_year)) {
     $output .= ', (' . check_plain($node->biblio_year) . ")\n";
   }
 
   return $output;
 } 
-?>

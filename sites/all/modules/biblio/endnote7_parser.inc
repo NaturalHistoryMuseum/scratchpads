@@ -225,5 +225,3 @@ function en7_parse(&$tags,&$node_array,$node)
     }  
   }
 }
-
-?>

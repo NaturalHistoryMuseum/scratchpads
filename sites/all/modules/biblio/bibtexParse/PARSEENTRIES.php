@@ -135,6 +135,7 @@ class PARSEENTRIES
 {
 	function PARSEENTRIES()
 	{
+        require_once(drupal_get_path('module', 'biblio') . '/bibtexParse/transtab_latex_unicode.inc.php');
 		$this->preamble = $this->strings = $this->undefinedStrings = $this->entries = array();
 		$this->count = 0;
 		$this->fieldExtract = TRUE;
@@ -154,13 +155,28 @@ class PARSEENTRIES
 // Load a bibtex string to parse it
 	function loadBibtexString($bibtex_string)
 	{
-		if(is_string($bibtex_string))
+		if(is_string($bibtex_string)) {
+            $bibtex_string = $this->searchReplaceText($this->transtab_latex_unicode, $bibtex_string, false);
 			$this->bibtexString = explode("\n",$bibtex_string);
-		else
+        } else {
 			$this->bibtexString = $bibtex_string;
+        }
 		$this->parseFile = FALSE;
 		$this->currentLine = 0;
 	}
+    function searchReplaceText($searchReplaceActionsArray, $sourceString, $includesSearchPatternDelimiters=FALSE)
+    {
+      // apply the search & replace actions defined in '$searchReplaceActionsArray' to the text passed in '$sourceString':
+      foreach ($searchReplaceActionsArray as $searchString => $replaceString)
+      {
+        if (!$includesSearchPatternDelimiters)
+          $searchString = "/" . $searchString . "/"; // add search pattern delimiters
+        if (preg_match($searchString, $sourceString))
+          $sourceString = preg_replace($searchString, $replaceString, $sourceString);
+      }
+      return $sourceString;
+    }
+
 // Set strings macro
 	function loadStringMacro($macro_array)
 	{
@@ -562,7 +578,7 @@ class PARSEENTRIES
            break;
         }
         if (!empty($entry['author'])){
-        	 $node_array[$node_id]['biblio_authors'] = $entry['author'];
+        	 $node_array[$node_id]['biblio_authors'] = preg_replace("/\s(and|&)\s/i", "; ", $entry['author']);
         }
 /*
           $creator = new PARSECREATORS();
@@ -612,5 +628,5 @@ class PARSEENTRIES
    }
 
 }
-?>
+
 

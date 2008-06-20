@@ -40,7 +40,7 @@ function biblio_style_ieee($node, $base='biblio', $inline=false){
 
           if ($node->biblio_secondary_title) {
             $output .=  '<span class="biblio-title">&quot;';
-            $link = ((variable_get('biblio_link_title_url', 0) && isset($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
+            $link = ((variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) ? $node->biblio_url : ($inline ? "$base/viewinline/$node->nid":"node/$node->nid" ) ) ;
             $attrib = (variable_get('biblio_links_target_new_window',null)) ? array('target'=>'_blank') : null;
             $output .= l($node->title, $link, $attrib); 
             $output .= "&quot;, </span> \n";
@@ -71,7 +71,7 @@ function biblio_style_ieee($node, $base='biblio', $inline=false){
           // for non-books, should also include month of publication (e.g. "Mar. 2006") -- use date instead of year if available
           if ($node->biblio_date) {
             $output .= ', ' . check_plain($node->biblio_date);
-          } elseif (isset($node->biblio_year)) {
+          } elseif (!empty($node->biblio_year)) {
             $output .= ', ' . check_plain($node->biblio_year) . '&nbsp;&nbsp;' ;
           }
 
