@@ -57,7 +57,7 @@ function _image_imagemagick_check_path($path, $attach_error_to = FALSE) {
   }
   if ($attach_error_to) {
     if ($open_basedir = ini_get('open_basedir')) {
-      form_set_error($attach_error_to, t("No file %file could be found. PHP's <a href='!open-basedir'>open_basedir</a> security resriction is set to %open-basedir, which may be interfearing with the attempts to locate ImageMagick.", array('%file' => $path, '%open-basedir' => $open_basedir, '!info-link' => url('http://php.net/features.safe-mode#ini.open-basedir') )));
+      form_set_error($attach_error_to, t("No file %file could be found. PHP's <a href='!open-basedir'>open_basedir</a> security resriction is set to %open-basedir, which may be interfering with the attempts to locate ImageMagick.", array('%file' => $path, '%open-basedir' => $open_basedir, '!info-link' => url('http://php.net/features.safe-mode#ini.open-basedir') )));
     }
     else {
       form_set_error($attach_error_to, t('The specified ImageMagic path %file does not exist.', array('%file' => $path)));
@@ -114,7 +114,7 @@ function image_imagemagick_rotate($source, $dest, $degrees, $bg_color = 0x000000
  * Crop an image to the specified dimensions.
  */
 function image_imagemagick_crop($source, $dest, $x, $y, $width, $height) {
-  $args = array('crop' => '-crop '. (int) $width .'x'. (int) $height .'+'. (int) $x .'+'. (int) $y);
+  $args = array('crop' => '-crop '. (int) $width .'x'. (int) $height .'+'. (int) $x .'+'. (int) $y .'!');
   $args = _image_imagemagick_alter_invoke('crop', $source, $args);
   return _image_imagemagick_convert($source, $dest, $args);
 }
@@ -123,11 +123,6 @@ function image_imagemagick_crop($source, $dest, $x, $y, $width, $height) {
  * Calls the convert executable with the specified filter.
  */
 function _image_imagemagick_convert($source, $dest, $args) {
-  $dest_orig = $dest;
-  if(isset($args['convertto'])){
-    $dest = $args['convertto'].':'.$dest;
-    unset($args['convertto']);
-  }
   $command = implode(' ', array(
     preg_replace("/[^A-Za-z0-9\!\.\-\+\_\/\040]/", '', implode(' ', $args)),
     escapeshellarg($source),
@@ -137,7 +132,7 @@ function _image_imagemagick_convert($source, $dest, $args) {
   if (0 != _image_imagemagick_convert_exec($command, $output, $errors)) {
     return FALSE;
   }
-  return file_exists($dest_orig);
+  return file_exists($dest);
 }
 
 function _image_imagemagick_convert_exec($command_args, &$output, &$errors) {
@@ -152,7 +147,7 @@ function _image_imagemagick_convert_exec($command_args, &$output, &$errors) {
     // http://us3.php.net/manual/en/function.exec.php#56599
     // Use /D to run the command from PHP's current working directory so the
     // file paths don't have to be absolute.
-    $convert_path = 'start "window title" /D'. getcwd() .' /b '. escapeshellarg($convert_path);
+    $convert_path = 'start "window title" /D'. escapeshellarg(getcwd()) .' /B '. escapeshellarg($convert_path);
   }
 
   $descriptors = array(

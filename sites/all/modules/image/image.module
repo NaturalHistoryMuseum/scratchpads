@@ -924,6 +924,10 @@ function _image_build_derivatives(&$node, $temp = FALSE) {
       drupal_set_message(t('Unable to create scaled %label image', array('%label' => $size['label'])), 'error');
       return FALSE;
     }
+
+    // Set standard file permissions for webserver-generated files
+    @chmod($destination, 0664);
+
     $node->images[$key] = $destination;
     module_invoke_all('image_alter', $node, $destination, $key);
   }
