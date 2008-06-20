@@ -122,8 +122,13 @@ function _split_field($string, $vid){
   $string = addslashes($string);
   $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
   preg_match_all($regexp, $string, $matches);
-  $array = $matches[1];
-  $results = db_query("SELECT tid FROM {term_data} WHERE name IN ('".implode("','",$array)."') AND vid = %d", $vid);
+  $string_array = $matches[1];
+  $place_holder = array();
+  foreach($string_array as $dontmatter){
+    $place_holder[] = "'%s'";
+  }
+  $string_array[] = $vid;
+  $results = db_query("SELECT tid FROM {term_data} WHERE name IN (".implode(",",$place_holder).") AND vid = %d", $string_array);
   $return_array = array();
   while($row = db_fetch_array($results)){
     $return_array[$row['tid']] = $row['tid'];
