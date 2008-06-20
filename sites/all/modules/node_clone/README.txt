@@ -13,7 +13,7 @@ Users with the "clone node" permission can utilize this functionality. A new
 tab will appear on node pages with the word "clone".  The -2.x branch of this
 module works by pre-populating the node form, rather than immediately saving
 a copy of the original node to the database.  Thus, your node will not be
-saved until you hit "Sumit" (just like if you went to node/add/x).
+saved until you hit "Submit" (just like if you went to node/add/x).
 
 This module makes reasonable checks on access permissions.  A user cannot clone 
 a node unless they can use the input format of that node, and unless they have
@@ -32,7 +32,14 @@ attempting to use it on a live site.
 To install this module, copy the folder with the .info and .module files to the 
 /sites/all/modules  OR /modules directory of your Drupal installation and enable
 it at /admin/build/modules.  A new permission is available, but there are no 
-changes to the database structure.
+changes to the database structure. On the settings page you may choose
+node types to be omitted from the cloning mechanism - no users will be able
+to try to clone a node of an omitted type.
+
+To install this module, copy the folder with all the files to the
+/sites/all/modules  OR /sites/default/modules directory of your Drupal 
+installation and enable it at /admin/build/modules.  Two new permissions are 
+available, but there are no changes to the database structure.
 
 Note: this module originally derived from code posted by Steve Ringwood 
 (nevets@drupal) at http://drupal.org/node/73381#comment-137714

@@ -1,5 +1,6 @@
 <?php
 // $Id$
+// $Name: DRUPAL-5--2-4 $
 
 /**
  * Implementation of hook_help().
@@ -17,7 +18,7 @@ function clone_help($section) {
 * Implementation of hook_perm().
 */
 function clone_perm() {
-  return array('clone node');
+  return array('clone node', 'clone own nodes');
 }
 
 /**
@@ -26,27 +27,27 @@ function clone_perm() {
 function clone_menu($may_cache) {
   $items = array();
 
-  if ($may_cache) {  
+  if ($may_cache) {
     $items[] = array(
        'path' => 'admin/settings/clone',
        'title' => t('Clone module'),
        'description' => t('Allows users to clone (copy then edit) an existing node.'),
        'callback' => 'drupal_get_form',
        'callback arguments' => 'clone_settings',
-       'access' => user_access('administer site configuration'), 
+       'access' => user_access('administer site configuration'),
       );
   }
-  else { 
+  else {
     if (arg(0) == 'node' && is_numeric(arg(1))){
        $node = node_load(arg(1));
        if ($node->nid) {
          $items[] = array(
-           'path' => 'node/'. $node->nid.'/clone', 
+           'path' => 'node/'. $node->nid.'/clone',
            'title' => t('Clone'),
            'callback' => 'clone_node',
            'callback arguments' => $node->nid,
            'access' => clone_access($node) ,
-           'type' => MENU_LOCAL_TASK, 'weight' => 5,); 
+           'type' => MENU_LOCAL_TASK, 'weight' => 5,);
        }
     }
   }
@@ -55,8 +56,11 @@ function clone_menu($may_cache) {
 }
 
 function clone_access($node) {
-  $access = (user_access('clone node') && clone_is_permitted($node->type) &&
-    filter_access($node->format) && node_access('create',$node->type));
+  global $user;
+  // Check basic permissions first.
+  $access = (user_access('clone node') || ($user->uid && ($node->uid == $user->uid) && user_access('clone own nodes')));
+  // Check additional conditions
+  $access = $access && (clone_is_permitted($node->type) && filter_access($node->format) && node_access('create', $node->type));
   // Let other modules alter this - for exmple to only allow some users
   // to clone specific nodes or types.
   foreach (module_implements('clone_access_alter') as $module) {
@@ -82,25 +86,25 @@ function clone_settings() {
 
   $form['publishing'] = array(
     '#type' => 'fieldset',
-    '#title' => '<b>'.t('Should the publishing options ( e.g. published, promoted, etc) be reset to the defaults?').'</b>',
+    '#title' => t('Should the publishing options ( e.g. published, promoted, etc) be reset to the defaults?'),
   );
   $types = node_get_types('names');
- 
+
   foreach ($types as $type => $name) {
     $form['publishing']['clone_reset_'. $type] = array(
       '#type' => 'checkbox',
       '#title' => t('@s: reset publishing options when cloned', array('@s' => $name)),
       '#default_value' => variable_get('clone_reset_'. $type, FALSE),
-    );    
+    );
   }
   // Need the variable default key to be something that's never a valid node type.
-  $types = array_merge( array('!' => "<". t("none") .">"), $types); 
+  $types = array_merge( array('!' => "<". t("none") .">"), $types);
   $form['clone_omitted'] = array(
-    '#type' => 'select', 
-    '#title' => t('Omitted content types'), 
-    '#default_value' => variable_get('clone_omitted', array('!')), 
-    '#options' => $types, 
-    '#description' => t('Select any node types which should <em>never</em> be cloned. Typically you should will want to select here all node types for which cloning fails (e.g. image nodes).'), 
+    '#type' => 'select',
+    '#title' => t('Omitted content types'),
+    '#default_value' => variable_get('clone_omitted', array('!')),
+    '#options' => $types,
+    '#description' => t('Select any node types which should <em>never</em> be cloned. Typically you should will want to select here all node types for which cloning fails (e.g. image nodes).'),
     '#multiple' => TRUE
   );
 
@@ -135,39 +139,42 @@ function clone_node_type($op, $type_obj) {
 /**
  *  Clones a node - prepopulate a node editing form
  */
-function clone_node($nid)
-{
+function clone_node($nid) {
   if (is_numeric($nid)) {
     global $user;
-    
+
     $node = node_load($nid);
     if (isset($node->nid) && clone_is_permitted($node->type)) {
-      // Let other modules do special fixing up.
-      foreach (module_implements('clone_node_alter') as $module) {
-        $function = $module .'_clone_node_alter';
-        $function($node, "prepopulate");
-      }
+      $original_node = drupal_clone($node);
+
       $node->nid = NULL;
+      $node->vid = NULL;
       $node->name = $user->name;
       $node->uid = $user->uid;
-      $node->created = NULL;   
+      $node->created = NULL;
       $node->menu = NULL;
       $node->path = NULL;
       $node->files = array();
       $node->title = t('Clone of !title', array('!title' => $node->title));
       drupal_set_title(check_plain($node->title));
-      
+
       if (variable_get('clone_reset_'. $node->type, FALSE)) {
         $node_options = variable_get('node_options_'. $node->type, array('status', 'promote'));
         // fill in the default values
         foreach (array('status', 'moderate', 'promote', 'sticky', 'revision') as $key) {
           $node->$key = in_array($key, $node_options);
-        } 
+        }
       }
       if (empty($_POST['op'])) {
         drupal_set_message(t('This clone will not be saved to the database until you submit.'));
       }
-      return  drupal_get_form($node->type .'_node_form', $node); 
+      // Let other modules do special fixing up.
+      // The function signature is: hook_clone_node_alter(&$node, $original_node, $method)
+      foreach (module_implements('clone_node_alter') as $module) {
+        $function = $module .'_clone_node_alter';
+        $function($node, $original_node, "prepopulate");
+      }
+      return  drupal_get_form($node->type .'_node_form', $node);
     }
   }
 }
