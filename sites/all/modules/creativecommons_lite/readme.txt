@@ -23,6 +23,7 @@ Attribution Non-commercial
 Attribution No Derivatives
 Attribution Share Alike
 Attribution
+All Rights Reserved
 
 
 INSTALLATION
