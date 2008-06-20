@@ -346,6 +346,7 @@ foreach($vocabs as $vocab){
 // Just curious as to how taxonomy_get_tree returns its results (nested arrays?)
 
 // Following is an attempt to create a giant SQL query for populating a LFT and RGT table!
+/*
 mysql_connect('localhost','root','Oecey9cheehiphohngeiwi8lahH1ohNi');
 mysql_select_db('catlife');
 
@@ -370,4 +371,7 @@ function rebuild_tree($tid, $left) {
 
 echo "INSERT INTO taxonomy_lft_rgt VALUES ";
 rebuild_tree(2080793,1);
-echo ";";
+echo ";";*/
+
+// Take all sites offline
+variable_set('site_offline',1);
