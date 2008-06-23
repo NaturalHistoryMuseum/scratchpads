@@ -5,7 +5,7 @@
  * @file
  * Administrative page for handling updates from one Drupal version to another.
  *
- * Point your browser to "http://www.example.com/updateone.php" and follow the
+ * Point your browser to "http://www.example.com/update.php" and follow the
  * instructions.
  *
  * If you are not logged in as administrator, you will need to modify the access
@@ -489,7 +489,7 @@ function update_progress_page_nojs() {
     // Error handling: if PHP dies, it will output whatever is in the output
     // buffer, followed by the error message.
     ob_start();
-    $fallback = '<p class="error">An unrecoverable error has occurred. You can find the error message below. It is advised to copy it to the clipboard for reference. Please continue to the <a href="updateone.php?op=error">update summary</a>.</p>';
+    $fallback = '<p class="error">An unrecoverable error has occurred. You can find the error message below. It is advised to copy it to the clipboard for reference. Please continue to the <a href="update.php?op=error">update summary</a>.</p>';
     print theme('maintenance_page', $fallback, FALSE, TRUE);
 
     list($percentage, $message) = update_do_updates();
@@ -506,7 +506,7 @@ function update_progress_page_nojs() {
     $message = 'Starting updates';
   }
 
-  drupal_set_html_head('<meta http-equiv="Refresh" content="0; URL=updateone.php?op='. $new_op .'">');
+  drupal_set_html_head('<meta http-equiv="Refresh" content="0; URL=update.php?op='. $new_op .'">');
   $output = theme('progress_bar', $percentage, $message);
   $output .= '<p>Updating your site will take a few seconds.</p>';
 
@@ -517,7 +517,7 @@ function update_progress_page_nojs() {
 
 function update_finished_page($success) {
   drupal_set_title('Drupal database update');
-  // NOTE: we can't use l() here because the URL would point to 'updateone.php?q=admin'.
+  // NOTE: we can't use l() here because the URL would point to 'update.php?q=admin'.
   $links[] = '<a href="'. base_path() .'">main page</a>';
   $links[] = '<a href="'. base_path() .'?q=admin">administration pages</a>';
 
@@ -531,7 +531,7 @@ function update_finished_page($success) {
   }
 
   if ($GLOBALS['access_check'] == FALSE) {
-    $output .= "<p><strong>Reminder: don't forget to set the <code>\$access_check</code> value at the top of <code>updateone.php</code> back to <code>TRUE</code>.</strong></p>";
+    $output .= "<p><strong>Reminder: don't forget to set the <code>\$access_check</code> value at the top of <code>update.php</code> back to <code>TRUE</code>.</strong></p>";
   }
 
   $output .= theme('item_list', $links);
@@ -571,7 +571,7 @@ function update_info_page() {
   $output = "<ol>\n";
   $output .= "<li>Use this script to <strong>upgrade an existing Drupal installation</strong>. You don't need this script when installing Drupal from scratch.</li>";
   $output .= "<li>Before doing anything, backup your database. This process will change your database and its values, and some things might get lost.</li>\n";
-  $output .= "<li>Update your Drupal sources, check the notes below and <a href=\"updateone.php?op=selection\">run the database upgrade script</a>. Don't upgrade your database twice as it may cause problems.</li>\n";
+  $output .= "<li>Update your Drupal sources, check the notes below and <a href=\"update.php?op=selection\">run the database upgrade script</a>. Don't upgrade your database twice as it may cause problems.</li>\n";
   $output .= "<li>Go through the various administration pages to change the existing and new settings to your liking.</li>\n";
   $output .= "</ol>";
   $output .= '<p>For more help, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.</p>';
@@ -580,11 +580,11 @@ function update_info_page() {
 
 function update_access_denied_page() {
   drupal_set_title('Access denied');
-  return '<p>Access denied. You are not authorized to access this page. Please log in as the admin user (the first user you created). If you cannot log in, you will have to edit <code>updateone.php</code> to bypass this access check. To do this:</p>
+  return '<p>Access denied. You are not authorized to access this page. Please log in as the admin user (the first user you created). If you cannot log in, you will have to edit <code>update.php</code> to bypass this access check. To do this:</p>
 <ol>
- <li>With a text editor find the updateone.php file on your system. It should be in the main Drupal directory that you installed all the files into.</li>
- <li>There is a line near top of updateone.php that says <code>$access_check = TRUE;</code>. Change it to <code>$access_check = FALSE;</code>.</li>
- <li>As soon as the script is done, you must change the updateone.php script back to its original form to <code>$access_check = TRUE;</code>.</li>
+ <li>With a text editor find the update.php file on your system. It should be in the main Drupal directory that you installed all the files into.</li>
+ <li>There is a line near top of update.php that says <code>$access_check = TRUE;</code>. Change it to <code>$access_check = FALSE;</code>.</li>
+ <li>As soon as the script is done, you must change the update.php script back to its original form to <code>$access_check = TRUE;</code>.</li>
  <li>To avoid having this problem in future, remember to log in to your website as the admin user (the user you first created) before you backup your database at the beginning of the update process.</li>
 </ol>';
 }
