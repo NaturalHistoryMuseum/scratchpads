@@ -402,6 +402,7 @@ $results = db_query("SELECT nid FROM {content_access}");
 while($row = db_fetch_array($results)){
   // Ignore 785 (Scratchpads taskguide).
   if($row['nid'] != 785){
-    echo $row['nid']."\n";
+    $node = node_load($row['nid']);
+    echo $row['nid'].": ".$node->title."\n";
   }
 }
