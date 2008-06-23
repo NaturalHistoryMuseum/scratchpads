@@ -400,5 +400,8 @@ while($row = db_fetch_array($results)){
 // Better way of doing above - count rows in "content_access" table
 $results = db_query("SELECT nid FROM {content_access}");
 while($row = db_fetch_array($results)){
-  echo $row['nid']."\n";
+  // Ignore 785 (Scratchpads taskguide).
+  if($row['nid'] != 785){
+    echo $row['nid']."\n";
+  }
 }
