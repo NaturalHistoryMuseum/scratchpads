@@ -376,10 +376,10 @@ echo ";";*/
 // Take all sites offline
 /* echo "Rebuild perms and bringing site oline";
 node_access_rebuild();
-variable_set('site_offline',0);*/
+variable_set('site_offline',0); */
 
 // Check which nodes are fucked
-$results = db_query('SELECT nid FROM node WHERE nid NOT IN (SELECT nid FROM node_access)');
+/*$results = db_query('SELECT nid FROM node WHERE nid NOT IN (SELECT nid FROM node_access)');
 while($row = db_fetch_array($results)){
 	$nid = $row['nid'];
 	echo "$nid ";
@@ -390,4 +390,10 @@ while($row = db_fetch_array($results)){
 		(%d , 5 , 'content_access_rid' , 0 , 1 , 1),
 		(%d , 6 , 'content_access_rid' , 0 , 1 , 1)", $nid , $nid , $nid , $nid , $nid);
 	
+}*/
+
+// Check who is using content_access - we may pull it
+$results = db_query("SELECT realm, grant_view, grant_update, grant_delete FROM node_access UNION SELECT realm, grant_view, grant_update, grant_delete FROM node_access");
+while($row = db_fetch_array($results)){
+  echo $row['realm']." ".$row['grant_view']." ".$row['grant_update']." ".$row['grant_delete']."\n";
 }
