@@ -398,5 +398,7 @@ while($row = db_fetch_array($results)){
   echo $row['realm']." ".$row['grant_view']." ".$row['grant_update']." ".$row['grant_delete']."\n";
 }*/
 // Better way of doing above - count rows in "content_access" table
-$results = db_query("SELECT COUNT(*) FROM {content_access}");
-echo array_pop(db_fetch_array($results));
+$results = db_query("SELECT nid FROM {content_access}");
+while($row = db_fetch_array($results)){
+  echo $row['nid']."\n";
+}
