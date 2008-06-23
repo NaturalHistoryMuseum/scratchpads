@@ -393,7 +393,10 @@ while($row = db_fetch_array($results)){
 }*/
 
 // Check who is using content_access - we may pull it
-$results = db_query("SELECT realm, grant_view, grant_update, grant_delete FROM node_access UNION SELECT realm, grant_view, grant_update, grant_delete FROM node_access");
+/* $results = db_query("SELECT realm, grant_view, grant_update, grant_delete FROM node_access UNION SELECT realm, grant_view, grant_update, grant_delete FROM node_access");
 while($row = db_fetch_array($results)){
   echo $row['realm']." ".$row['grant_view']." ".$row['grant_update']." ".$row['grant_delete']."\n";
-}
+}*/
+// Better way of doing above - count rows in "content_access" table
+$results = db_query("SELECT COUNT(*) FROM {content_access}");
+echo array_pop(db_fetch_array($results));
