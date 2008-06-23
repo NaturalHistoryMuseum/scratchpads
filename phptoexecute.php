@@ -374,6 +374,20 @@ rebuild_tree(2080793,1);
 echo ";";*/
 
 // Take all sites offline
-echo "Rebuild perms and bringing site oline";
+/* echo "Rebuild perms and bringing site oline";
 node_access_rebuild();
-variable_set('site_offline',0);
+variable_set('site_offline',0);*/
+
+// Check which nodes are fucked
+$results = db_query('SELECT nid FROM node WHERE nid NOT IN (SELECT nid FROM node_access)');
+while($row = db_fetch_array($results)){
+	$nid = $row['nid'];
+	echo "$nid ";
+	db_query("INSERT INTO node_access (nid,gid,realm,grant_view,grant_update,grant_delete) VALUES 
+		(%d , 0 , 'all' , 1 , 0 , 0),
+		(%d , 2 , 'content_access_author' , 0 , 1 , 1),
+		(%d , 4 , 'content_access_rid' , 0 , 1 , 1),
+		(%d , 5 , 'content_access_rid' , 0 , 1 , 1),
+		(%d , 6 , 'content_access_rid' , 0 , 1 , 1)", $nid , $nid , $nid , $nid , $nid);
+	
+}
