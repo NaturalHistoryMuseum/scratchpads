@@ -1,0 +1,28 @@
+<?php
+/**
+ * This file helps with the install of the autotag module.  All it does is sets the highest node ID for 
+ * nodes which cron will search.  Cron eventually becomes unnecessary for this module.
+ */
+/**
+ * Implementation of hook_install
+ */
+function autotag_install(){
+  switch ($GLOBALS['db_type']){
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE {tree} (
+        vid INT(10),
+        tree LONGTEXT,
+        publication INT(10),
+        CONSTRAINT {tree}_primary_key PRIMARY KEY (vid)
+      )");
+      break;
+    case 'pgsql':
+      drupal_set_message('PostgreSQL not supported please write the SQL necesary and post it to this module\'s author', 'error');
+      break;
+  }
+}
+
+function autotag_uninstall(){
+  db_query("DROP TABLE {tree}");
+}
