@@ -44,10 +44,6 @@ define('AUTOTAG_SUBMIT2_TEXT','Once finished reviewing the taxonomy terms, simpl
  */
 function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   switch($op){
-    case 'submit':
-      $node = _autotag_search($node);
-      $node = _autotag_submit($node);
-      break;
     case 'insert':
       _autotag_update_table($node->nid, explode("|",$node->hideterms));
       break;
@@ -483,9 +479,14 @@ function _autotag_search_field($field, $vids){
     $words = preg_split("/[^A-Za-z0-9]+/",strtolower($field));
     $results;
     $words_placeholder = array();
-    foreach($words as $doesntmatter){
-      $words_placeholder[] = "'%s'";
+    $new_words = array();
+    foreach($words as $word){
+      if(trim($word)!=''){
+        $words_placeholder[] = "'%s'";
+        $new_words[] = $word;
+      }
     }
+    $words = $new_words;
     // Because I'm sending words as an array, I've also got to do vids in the same way
     $vids_placeholder = array();
     foreach($vids as $doesntmatter){
