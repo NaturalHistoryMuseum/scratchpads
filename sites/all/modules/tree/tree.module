@@ -42,7 +42,7 @@ function tree_form(&$node) {
     '#type' => 'textarea',
     '#title' => t('Nexus or Newick data'),
     '#default_value' => $node->tree,
-    '#required' => FALSE
+    '#required' => TRUE
   );
   $form['body_filter']['body'] = array(
     '#type' => 'textarea',
@@ -51,6 +51,18 @@ function tree_form(&$node) {
     '#required' => FALSE
   );
   $form['body_filter']['filter'] = filter_form($node->format);
+  $options = array();
+  $results = db_query("SELECT r.title, r.nid FROM {node_revisions} r,{node} n WHERE r.vid = n.vid AND type = 'biblio'");
+  while($row = db_fetch_array($results)){
+    $options[$row['nid']] = $row['title'];
+  }
+  $form['publication'] = array(
+    '#type' => 'select',
+    '#default_value' => $node->publication,
+    '#size' => 10,
+    '#description' => t('A publication associated with this tree'),
+    '#options' => $options
+  );
   return $form;
 }
 function tree_update($node) {
@@ -65,6 +77,12 @@ function tree_update($node) {
   /* Small bug here given that we need to link to the images directory */
   symlink($_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','tree').'/images',$_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid.'/images');
   file_delete($filepath);
+  db_query("DELETE FROM {tree} WHERE vid = %d", $node->vid);
+  db_query("INSERT INTO {tree} (vid,tree,publication) VALUES (%d, '%s', %d)", $node->vid, $node->tree, $node->publication);
+}
+function tree_load($node){
+  $additions = db_fetch_object(db_query('SELECT tree, publication FROM {tree} WHERE vid = %d', $node->vid));
+  return $additions;  
 }
 function tree_insert($node) {
   tree_update($node);
@@ -82,19 +100,29 @@ function tree_nodeapi(&$node, $op, $three, $four){
     }
     rmdir($dir);
   }
+  if($op =='delete revision' && $node->type =='tree'){
+    db_query("DELETE FROM {node_revisions} WHERE vid=%d",$node->vid);
+  }
 }
 function tree_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   drupal_add_css(drupal_get_path('module','tree').'/tree.css','module','screen');
   drupal_add_js(drupal_get_path('module','tree').'/tree.js');
   drupal_add_js(drupal_get_path('module','tree').'/tree.js');
-  $node->content['tree']['#value'] = '<div style="position:relative;height:425px;width:425px;">
+  $node->content['tree']['#value'] = '<div class="tree-tree"><div style="position:relative;height:425px;width:425px;">
         <!-- enclose the widget -->
         <script type="text/javascript" src="/'.file_directory_path().'/tree-'.$node->nid.'/tree.widget.js"></script>
 		<script type="text/javascript">
 			tvwAdjustViewer();
 		</script>
-    </div>';
+    </div></div>';
+  if($node->publication){
+    $publication = node_load($node->publication);
+    $node->content['publication'] = array(
+      '#value' => '<div class="tree-publication">'.node_view($publication, TRUE).'</div>',
+      '#weight' => 10
+    );
+  }
   return $node;
 }
 function theme_tree_order_info($node) {
