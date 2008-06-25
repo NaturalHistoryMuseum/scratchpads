@@ -228,7 +228,8 @@ function _tinytax_view_blocks($delta){
  * 
  * Calculates which terms have content associated with them (and also
  * the parent nodes)  This enabled a user to browse quickly to content.
- */
+ * 
+ * FOLLOWING WAS REMOVED FOR PERFORMANCE REASONS
 function _terms_used($vid){
   $results = db_query("SELECT DISTINCT tid FROM {term_node} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d)",$vid);
   $terms = array();
@@ -243,12 +244,14 @@ function _terms_used($vid){
   }
   return $terms;
 }
+ */
 
 /**
  * Theme taxonomy_block_item_list
  */
 function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
-  $used_terms = _terms_used($vid);
+  //$used_terms = _terms_used($vid);
+  $used_terms = array();
   $num_parents = count($parents);
   $num_children = count($children);
   $return_string = '';
