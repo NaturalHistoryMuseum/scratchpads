@@ -88,6 +88,22 @@ function leftandright_overview_vocabularies() {
   return theme('table', $header, $rows, array('id' => 'taxonomy'));
 }
 /***********************************************************************************
+ * ADDITIONAL leftandright FUNCTIONS FOR OTHER MODULES!
+ ***********************************************************************************/
+/**
+ * Following function returns TRUE if this term or one of its descendants
+ * has been used to tag a node, FALSE if not.
+ */
+function leftandright_descendant_used($tid){
+  //return false;
+  $result = db_query("SELECT COUNT(*) FROM {term_node} WHERE tid IN (SELECT tid FROM {leftandright} WHERE lft>=(SELECT lft FROM leftandright WHERE tid=%d) AND rgt<=(SELECT rgt FROM leftandright WHERE tid=%d))",$tid,$tid);
+  if(array_pop(db_fetch_array($result))){
+    return true;
+  } else {
+    return false;
+  }
+}
+/***********************************************************************************
  * REPLACEMENT FUNCTIONS FOR taxonomy module
  ***********************************************************************************/
 function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0, $count=1000){
