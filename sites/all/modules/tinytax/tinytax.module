@@ -250,8 +250,6 @@ function _terms_used($vid){
  * Theme taxonomy_block_item_list
  */
 function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
-  //$used_terms = _terms_used($vid);
-  $used_terms = array();
   $num_parents = count($parents);
   $num_children = count($children);
   $return_string = '';
@@ -271,7 +269,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
         $return_string .= ' tinytaxlast';
       }
     }
-    $return_string .= _theme_tinytax_term_list_link($parent, $vid, $used_terms);
+    $return_string .= _theme_tinytax_term_list_link($parent, $vid);
   }
   if ($num_children){
     $return_string .='<div class="tinytaxlast tinytax tinytaxnode">';
@@ -285,7 +283,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
       elseif ($num_parents){
         $return_string .= ' tinytaxlast';
       }
-      $return_string .= _theme_tinytax_term_list_link($child, $vid, $used_terms);
+      $return_string .= _theme_tinytax_term_list_link($child, $vid);
     }
     $return_string .='</div>';
   }
@@ -294,11 +292,14 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
   }
   return $return_string;
 }
-function _theme_tinytax_term_list_link($term, $vid, $used_terms){
+function _theme_tinytax_term_list_link($term, $vid){
   $class = 'tinytaxlink';
-  if(in_array($term->tid,$used_terms)){
-    $class .= 'used';
-  }  
+  // if this term has a child which is used!
+  if(function_exists('leftandright_descendant_used')){
+    if(leftandright_descendant_used($term->tid)){
+      $class .= 'used';      
+    }
+  }
   $return_string = '">'.
   l(
     $term->name,
