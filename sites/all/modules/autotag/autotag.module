@@ -165,7 +165,7 @@ function autotag_form_alter($form_id, &$form){
     if(isset($form['#node']->nid)){
       $ignore_terms = _autotag_get_ignore_terms($form['#node']->nid);
       foreach($ignore_terms as $term){
-        $ignore_list .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.$term->name.' ('.$vocabularies[$term->vid]->name.')</li>';
+        $ignore_list .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
       }
     }
     foreach($form['#post']['taxonomy'] as $key => $terms){
@@ -177,7 +177,7 @@ function autotag_form_alter($form_id, &$form){
         $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
         while($term=db_fetch_object($results)){
           if(!in_array($term,$ignore_terms)){
-            $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.$term->name.' ('.$vocabularies[$term->vid]->name.')</li>';
+            $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
           }
         }
       }
@@ -204,7 +204,7 @@ function autotag_form_alter($form_id, &$form){
     $vocabs_string = '';
     $concater = '';
     foreach($vocabs as $vocab){
-      $vocabs_string .= $concater.' '.$vocab->name;
+      $vocabs_string .= $concater.' '.check_plain($vocab->name);
       $concater = ';';
     }
     $form['autotag']['additionaltags'] = array(
