@@ -52,7 +52,7 @@ function tree_form(&$node) {
   );
   $form['body_filter']['filter'] = filter_form($node->format);
   $options = array();
-  $results = db_query("SELECT r.title, r.nid FROM {node_revisions} r,{node} n WHERE r.vid = n.vid AND type = 'biblio'");
+  $results = db_query("SELECT SUBSTR(r.title,0,100) title, r.nid FROM {node_revisions} r,{node} n WHERE r.vid = n.vid AND type = 'biblio'");
   while($row = db_fetch_array($results)){
     $options[$row['nid']] = $row['title'];
   }
@@ -119,7 +119,7 @@ function tree_view($node, $teaser = FALSE, $page = FALSE) {
   if($node->publication){
     $publication = node_load($node->publication);
     $node->content['publication'] = array(
-      '#value' => '<div class="tree-publication">'.node_view($publication, TRUE).'</div>',
+      '#value' => '<div class="tree-publication">'.node_view($publication, TRUE, FALSE, FALSE).'</div>',
       '#weight' => 10
     );
   }
