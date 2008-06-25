@@ -6,7 +6,7 @@
 /**
  * Implementation of hook_install
  */
-function autotag_install(){
+function tree_install(){
   switch ($GLOBALS['db_type']){
     case 'mysql':
     case 'mysqli':
@@ -23,6 +23,6 @@ function autotag_install(){
   }
 }
 
-function autotag_uninstall(){
+function tree_uninstall(){
   db_query("DROP TABLE {tree}");
 }
