@@ -335,13 +335,13 @@ variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 
 // Get a list of the classifications (by site) that will be able to use the autotag
 // module.
-/* $vocabs = taxonomy_get_vocabularies();
+$vocabs = taxonomy_get_vocabularies();
 foreach($vocabs as $vocab){
   if($vocab->multiple == 1 && $vocab->tags == 0){
     if($vocab->name != 'Document Store' && $vocab->name != 'Image Galleries')
       echo "   ".$vocab->name." (".implode(", ",$vocab->nodes).")\n";
   }
-}*/
+}
 
 // Just curious as to how taxonomy_get_tree returns its results (nested arrays?)
 
@@ -398,11 +398,11 @@ while($row = db_fetch_array($results)){
   echo $row['realm']." ".$row['grant_view']." ".$row['grant_update']." ".$row['grant_delete']."\n";
 }*/
 // Better way of doing above - count rows in "content_access" table
-$results = db_query("SELECT nid FROM {content_access}");
+/*$results = db_query("SELECT nid FROM {content_access}");
 while($row = db_fetch_array($results)){
   // Ignore 785 (Scratchpads taskguide).
   if($row['nid'] != 785){
     $node = node_load($row['nid']);
     echo $row['nid'].": ".$node->title."\n";
   }
-}
+}*/
