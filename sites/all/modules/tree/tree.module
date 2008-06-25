@@ -1,6 +1,9 @@
 <?php
 // $Id:$
 
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
 function tree_node_info() {
   return array(
     'tree' => array(
@@ -10,13 +13,6 @@ function tree_node_info() {
     )
   );
 }
-
-/**
- * Implementation of hook_access
- *
- * Node modules may implement node_access() to determine the operations
- * users may perform on nodes. This example uses a very common access pattern.
- */
 function tree_access($op, $node) {
   global $user;
 
@@ -33,18 +29,8 @@ function tree_access($op, $node) {
     }
   }
 }
-
-/**
- * Implementation of hook_form
- *
- * Now it's time to describe the form for collecting the information
- * specific to this node type. This hook requires us to return an array with
- * a sub array containing information for each element in the form.
- */
 function tree_form(&$node) {
   $type = node_get_types('type', $node);
-
-  // We need to define form elements for the node's title and body.
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => check_plain($type->title_label),
@@ -52,29 +38,25 @@ function tree_form(&$node) {
     '#default_value' => $node->title,
     '#weight' => -5
   );
-  // We want the body and filter elements to be adjacent. We could try doing
-  // this by setting their weights, but another module might add elements to the
-  // form with the same weights and end up between ours. By putting them into a
-  // sub-array together, we're able force them to be rendered together.
-  $form['body'] = array(
+  $form['tree'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Nexus or Newick data'),
+    '#default_value' => $node->tree,
+    '#required' => FALSE
+  );
+  $form['body_filter']['body'] = array(
     '#type' => 'textarea',
     '#title' => check_plain($type->body_label),
     '#default_value' => $node->body,
     '#required' => FALSE
   );
+  $form['body_filter']['filter'] = filter_form($node->format);
   return $form;
 }
-
-/**
- * Implementation of hook_update
- *
- * As an existing node is being updated in the database, we need to do our own
- * database updates.
- */
 function tree_update($node) {
   // Executes the "tvwidget" program on a temp file which will give us the output shit!
   $filepath = file_create_filename('tree', file_directory_temp());
-  file_save_data($node->body, $filepath, FILE_EXISTS_REPLACE);
+  file_save_data($node->tree, $filepath, FILE_EXISTS_REPLACE);
   // Execute the magic tvwidget and save the shit
   $path = $_SERVER['DOCUMENT_ROOT'].'/'.file_directory_path().'/tree-'.$node->nid;
   file_check_directory($path, true);
@@ -84,16 +66,9 @@ function tree_update($node) {
   symlink($_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','tree').'/images',$_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid.'/images');
   file_delete($filepath);
 }
-/**
- * Implementation of hook_insert
- *
- * As a new node is being inserted into the database, we need to do our own
- * database inserts.
- */
 function tree_insert($node) {
   tree_update($node);
 }
-
 function tree_nodeapi(&$node, $op, $three, $four){
   if($op =='delete' && $node->type == 'tree'){
     // Get a list of the files in the directory, delete them, then delete the directory
@@ -108,18 +83,12 @@ function tree_nodeapi(&$node, $op, $three, $four){
     rmdir($dir);
   }
 }
-/**
- * Implementation of hook_view
- *
- * This is a typical implementation that simply runs the node text through
- * the output filters.
- */
 function tree_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   drupal_add_css(drupal_get_path('module','tree').'/tree.css','module','screen');
   drupal_add_js(drupal_get_path('module','tree').'/tree.js');
   drupal_add_js(drupal_get_path('module','tree').'/tree.js');
-  $node->content['body']['#value'] = '<div style="position:relative;height:425px;width:425px;">
+  $node->content['tree']['#value'] = '<div style="position:relative;height:425px;width:425px;">
         <!-- enclose the widget -->
         <script type="text/javascript" src="/'.file_directory_path().'/tree-'.$node->nid.'/tree.widget.js"></script>
 		<script type="text/javascript">
@@ -128,15 +97,6 @@ function tree_view($node, $teaser = FALSE, $page = FALSE) {
     </div>';
   return $node;
 }
-
-/**
- * A custom theme function.
- *
- * By using this function to format our node-specific information, themes
- * can override this presentation if they wish. We also wrap the default
- * presentation in a CSS class that is prefixed by the module name. This
- * way, style sheets can modify the output without requiring theme code.
- */
 function theme_tree_order_info($node) {
   $output = '<div class="tree_order_info">';
   $output .= t('The order is for %quantity %color items.', array('%quantity' => check_plain($node->quantity), '%color' => check_plain($node->color)));
