@@ -78,7 +78,7 @@ function tree_update($node) {
   // Execute the magic tvwidget and save the shit
   $path = $_SERVER['DOCUMENT_ROOT'].'/'.file_directory_path().'/tree-'.$node->nid;
   file_check_directory($path, true);
-  $exec_string = $_SERVER['DOCUMENT_ROOT'].'/'.drupal_get_path('module','tree').'/tvwidget -o '.$path.' -b '.base_path().file_directory_path().'/tree-'.$node->nid.' -r '.base_path().file_directory_path().'/tree-'.$node->nid.' '.$filepath;
+  $exec_string = 'cd '.$_SERVER['DOCUMENT_ROOT'].'/'.drupal_get_path('module','tree').' && ./tvwidget -s 3 -o '.$path.' -b '.base_path().file_directory_path().'/tree-'.$node->nid.' -r '.base_path().file_directory_path().'/tree-'.$node->nid.' '.$filepath;
   exec($exec_string);
   /* Small bug here given that we need to link to the images directory */
   symlink($_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','tree').'/images',$_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid.'/images');
@@ -96,8 +96,16 @@ function tree_insert($node) {
 
 function tree_nodeapi(&$node, $op, $three, $four){
   if($op =='delete' && $node->type == 'tree'){
-    echo "HERE";exit;
-    file_delete($_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid);
+    // Get a list of the files in the directory, delete them, then delete the directory
+    $dir = $_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid;
+    $files = scandir($dir);
+    foreach($files as $filename){
+      if($filename =='.' || $filename =='..'){
+        continue;
+      }
+      unlink($dir.'/'.$filename);
+    }
+    rmdir($dir);
   }
 }
 /**
