@@ -27,6 +27,10 @@ function batax_form_alter($form_id, &$form){
     unset($form['parent']['#theme']);
     unset($form['parent']['#size']);
     unset($form['parent']['#multiple']);
+    $form['parent-old'] = array(
+      '#type'=>'hidden',
+      '#value'=>$form['parent']['#default_value']
+    );
     $form['parent-new'] = $form['parent'];
     $form['parent']['#type'] = 'hidden';
     $form['parent-new']['#type'] = 'textfield';
@@ -89,6 +93,9 @@ function batax_taxonomy($op, $type, $array = NULL){
   if($type=='term' && $op != 'delete'){
     // I think I need to set the parent, doesn't look like I can simply alter the form_values
     $parents = _split_field($array['parent-new'],$array['vid']);
+    if(count(array_intersect($array['parent-old'],$parents))){
+      $parents = array_intersect($array['parent-old'],$parents);
+    }
     db_query('DELETE FROM {term_hierarchy} WHERE tid = %d', $array['tid']);
     if (!isset($parents) || empty($parents)) {
       $parents = array(0);
