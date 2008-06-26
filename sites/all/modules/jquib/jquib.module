@@ -1,0 +1,14 @@
+<?php
+// $Id$
+
+/**
+ * Add Namespaces JQuery UI library to this page as $ui
+ */
+function jquery_ui_backport_add() {
+  static $done;
+  if (!isset($done)) {
+    $path = drupal_get_path('module', 'jquib') . '/jquib.js';
+    drupal_add_js($path);
+    $done = TRUE;
+  }
+}

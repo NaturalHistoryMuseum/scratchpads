@@ -1,0 +1,54 @@
+<?PHP
+// $Id$
+
+function oai2_install(){
+    $result = array();
+    
+    switch ($GLOBALS['db_type']) {
+      case 'mysql':
+      case 'mysqli':
+          
+        $result[] = db_query ("CREATE TABLE {oai2_metadata_formats} (
+                              `name` varchar(100) NOT NULL default '',
+                              `metadata_prefix` varchar(100) NOT NULL default '',
+                              `schema` varchar(255) NOT NULL default '',
+                              `metadata_namespace` varchar(255) NOT NULL default '',
+                              `record_prefix` varchar(100) NOT NULL default '',
+                              `record_namespace` varchar(255) NOT NULL default '',
+                              PRIMARY KEY  (`name`)
+                              ) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
+        
+        $result[] = db_query("INSERT INTO {oai2_metadata_formats} (`name`,`metadata_prefix`,`schema`,`metadata_namespace`,`record_prefix`,`record_namespace`) VALUES 
+                              ('oai_dc','oai_dc','http://www.openarchives.org/OAI/2.0/oai_dc.xsd','http://www.openarchives.org/OAI/2.0/oai_dc/','dc','http://purl.org/dc/elements/1.1/');
+                              ;");
+  
+        $result[] = db_query("CREATE TABLE {oai2_tokens} (
+                            `id` bigint(20) NOT NULL default '0',
+                            `deliveredrecords` int(11) NOT NULL default '0',
+                            `extquery` varchar(255) default '',
+                            `queryargs` varchar(255) default '',
+                            `metadata_prefix` varchar(255) default '',
+                            `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+                            PRIMARY KEY  (`id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8;");
+          
+        break;
+     
+      case 'pgsql':
+        break;
+    }
+    
+    if (count($result) == count(array_filter($result))) {
+    	drupal_set_message(t('The oai2 module has successfully added its tables to the database.'));
+    }
+    else {
+    	drupal_set_message(t('Drupal was unable to install the database tables for the oai2 module.'), 'error');
+    }
+  
+
+}
+function oai2_uninstall(){
+
+  db_query("DROP TABLE {oai2_metadata_formats} ");
+  db_query("DROP TABLE {oai2_tokens} ");
+ 
+}

@@ -1,0 +1,1489 @@
+<?php
+// $Id$
+
+
+/**
+ * @file
+ * Enables the use of lightbox2 which places images above your current page,
+ * not within. This frees you from the constraints of the layout, particularly
+ * column widths.
+ *
+ * This module is for Drupal 5.x only.
+ *
+ * Module by: Mark Ashmead
+ * Mailto: bugzie@gmail.com
+ * Co-maintainer: Stella Power (http://drupal.org/user/66894)
+ *
+ * Image Node Support: Steve McKenzie
+ *
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function lightbox2_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Enables Lightbox2 for Drupal');
+
+    case 'admin/help#lightbox2':
+      return t('<h3>Overview</h3>
+      <p align="justify">Lightbox2 JS is a simple, unobtrusive script used to overlay images on the current page. It\'s a snap to setup and works on all modern browsers. The module comes with a Lightbox2 Lite option which does not use the jQuery libraries; it is therefore less likely to conflict with anything else.</p>
+      <p align="justify">Places images above your current page, not within. This frees you from the constraints of the layout, particularly column widths. Keeps users on the same page. Clicking to view an image and then having to click the back button to return to your site is bad for continuity (and no fun!).</p>
+<h3>Features</h3>
+The version 2 module has several benefits over the plain Lightbox module.  Note, not all of these features are available when the "Lightbox2 Lite" option is enabled.
+<ul>
+<li>Image Sets: group related images and navigate through them with ease - ideal for your image galleries.</li>
+<li>Slideshow Capability: automatically transition between grouped images, includes play/pause and previous and next buttons.</li>
+<li>HTML Content Support: ability to show websites or other HTML content in a lightbox.</li>
+<li>Video Content Support: ability to show videos in a lightbox.</li>
+<li>Visual Effects: fancy pre-loader and transition when you click on the image.</li>
+<li>Keyboard Shortcuts: useful <a href="http://drupal.org/node/249827">keyboard shortcuts</a> for switching between images, toggling play / pause, etc.</li>
+<li>Zoom Capability: larger images are reduced in size so they fit snugly inside the browser window.  A zoom button can then be clicked on to see it in its original size.</li>
+<li>Automatic Image Detection: configurable automatic re-formatting of
+image thumbnails, so there is no need to add \'rel="lightbox"\' to each
+image link on your site.  <a
+href="http://drupal.org/project/image">Image</a>, <a
+href="http://drupal.org/project/inline">Inline</a>, <a
+href="http://drupal.org/project/flickr">Flickr</a>, <a
+href="http://drupal.org/project/img_assist">Image Assist</a> and <a
+href="http://drupal.org/project/imagefield">CCK Imagefield</a> modules are all
+supported.  It\'s also possible to configure a custom list of image classes
+which should trigger the lightbox functionality.</li>
+<li><a href="http://drupal.org/project/imagecache">Imagecache</a> Support: adds a Lightbox2 field formatter for <a href="http://drupal.org/project/imagefield">CCK imagefields</a> for your custom <a href="http://drupal.org/project/views">views</a>.</li>
+<li>Image Page Link: a link to the image node can be provided within the lightbox itself.</li>
+<li>Page Exclusion Capability: exclude certain pages on your site from having the lightbox2 functionality.</li>
+<li>Gallery 2 Support: support for Gallery 2 images via the <a href="http://drupal.org/project/gallery">Gallery</a> module (beta).</li>
+</ul>
+      <p align="justify"><h3>Usage</h3></p>
+      <h5 style="text-decoration: underline;">Adding a Basic Lightbox</h5>
+      <p>Add rel=&quot;lightbox&quot; attribute to any link tag to activate the lightbox. For example: </p>
+      <p>&lt;a href=&quot;image-1.jpg&quot; rel=&quot;lightbox&quot; title=&quot;my caption&quot;&gt;image #1&lt;/a&gt;</p>
+      <p>Optional: Use the title attribute if you want to show a caption.</p>
+<h5 style="text-decoration: underline;">Grouping Images</h5>
+   <p>If you have a set of related images that you would like to group, follow
+   step one but additionally include a group name between square brackets in the
+   rel attribute. For example:</p><p>&lt;a href="images/image-1.jpg"
+   rel="lightbox[roadtrip]"&gt;image #1&lt;/a&gt;<br />
+&lt;a href="images/image-2.jpg" rel="lightbox[roadtrip]"&gt;image
+#2&lt;/a&gt;<br />
+&lt;a href="images/image-3.jpg" rel="lightbox[roadtrip]"&gt;image
+#3&lt;/a&gt;<br /></p>
+<p>No limits to the number of image sets per page or how many images are allowed
+in each set.</p>
+
+<p>If you have a set of images that you would like to group together in a lightbox, but only wish for one of these images to be visible on your page, you can assign the "lightbox_hide_image" class to hide the additional images.  For example:</p>
+
+<p>&lt;a href="images/image-1.jpg" rel="lightbox[roadtrip]"&gt;image #1&lt;/a&gt;<br />
+&lt;a href="images/image-2.jpg" rel="lightbox[roadtrip]" class="lightbox_hide_image"&gt;image #2&lt;/a&gt;<br />
+&lt;a href="images/image-3.jpg" rel="lightbox[roadtrip]" class="lightbox_hide_image"&gt;image #3&lt;/a&gt;</p>
+
+<h5 style="text-decoration: underline;">Slideshow</h5>
+<p>This is very similar to the grouping functionality described above.  The only difference is that "rel" attribute should be set to "lightshow" instead of "lightbox".  Using the same example as above, we could launch the images in a slideshow by doing:</p>
+
+<p>&lt;a href="images/image-1.jpg" rel="lightshow[roadtrip]"&gt;image #1&lt;/a&gt;<br />
+&lt;a href="images/image-2.jpg" rel="lightshow[roadtrip]"&gt;image #2&lt;/a&gt;<br />
+&lt;a href="images/image-3.jpg" rel="lightshow[roadtrip]"&gt;image #3&lt;/a&gt;</p>
+
+<h5 style="text-decoration: underline;">Video Content</h5>
+<p>
+It\'s possible to show video content in the lightbox.  In this case the "rel" attribute should be set to <code>lightvideo</code>.  It\'s not possible to group videos but it is possible to control the size of the lightbox by setting the \'width\' and \'height\' properties.  The properties can be configured like <code>lightvideo[width:300px; height: 200px;]</code>.  The properties should all be of the format "property: value;" - note the closing semi-colon.  If no properties are set, then the default width and height of 400px will be used.  See below for more detailed examples.</p>
+
+<p>Basic example:<br />
+<code>
+&lt;a href="http://video.google.com/videoplay?docid=1811233136844420765" rel="lightvideo"&gt;Google video example - default size&lt;/a&gt;<br />
+</code></p>
+
+<p>Controlling lightbox size example:<br />
+<code>
+&lt;a href="http://video.google.com/videoplay?docid=1811233136844420765" rel="lightvideo[width:400px; height:300px;]"&gt;Google video example - custom size&lt;/a&gt;<br />
+</code></p>
+
+<p>Supported Video Formats<br />
+asx, wmv, mov and swf videos should all be supported.  A number of video providers are also supported, for example YouTube and Google Video.  For full details on how to integrate these with lightbox, please see the online documentation.</p>
+
+<h5 style="text-decoration: underline;">HTML Content</h5>
+<p>It\'s possible to show webpage content in the lightbox, using iframes.  In this case the "rel" attribute should be set to <code>lightframe</code>.  Again it\'s possible to group the items, (e.g. <code>lightframe[search]</code>) but in addition to that, it\'s possible to control some of the iframe properties.  It\'s possible to set the \'width\', \'height\' and \'scrolling\' properties of the iframe.  The properties are separated from the group name by a <code>|</code>, for example <code>lightframe[search|width:100px;]</code>.  If no grouping is being used, then the <code>|</code> is still used and the format would be <code>lightframe[|width:100px;]</code>.  The properties should all be of the format "property: value;" - note the closing semi-colon.  If no iframe properties are set, then the default width and height of 400px will be used.  See below for more detailed examples.</p>
+
+<p>Basic example:<br />
+<code>
+&lt;a href="http://www.google.com" rel="lightframe"&gt;Search google&lt;/a&gt;
+</code></p>
+
+<p>Grouped example:<br />
+<code>
+&lt;a href="http://www.google.com" rel="lightframe[search]"&gt;Search google&lt;/a&gt;<br />
+&lt;a href="http://www.yahoo.com" rel="lightframe[search]"&gt;Search yahoo&lt;/a&gt;
+</code></p>
+
+<p>Controlling iframe property example:<br />
+<code>
+&lt;a href="http://www.google.com" rel="lightframe[|width:400px; height:300px; scrolling: auto;]"&gt;Search google&lt;/a&gt;
+</code></p>
+
+<p>Controlling iframe property when grouped example:<br />
+<code>
+&lt;a href="http://www.google.com" rel="lightframe[search|width:400px; height:300px; scrolling: auto;]"&gt;Search google&lt;/a&gt;<br />
+&lt;a href="http://www.yahoo.com" rel="lightframe[search|width:400px; height:300px;]"&gt;Search yahoo&lt;/a&gt;
+</code></p>
+
+<h3>Keyboard Shortcuts</h3>
+<table border=0>
+<tr><td>Close Lightbox</td><td>x</td></tr>
+<tr><td></td><td>o</td></tr>
+<tr><td></td><td>c</td></tr>
+<tr><td></td><td>ESC</td></tr>
+
+<tr><td>Previous Image</td><td>p</td></tr>
+<tr><td></td><td>Left Arrow</td></tr>
+
+<tr><td>Next Image</td><td>n</td></tr>
+<tr><td></td><td>Right Arrow</td></tr>
+
+<tr><td>Toggle Zoom</td><td>z (not available in slideshow)</td></tr>
+
+<tr><td>Toggle Play / Pause</td><td>Spacebar (slideshow only)</td></tr>
+</table>
+
+<p>Not all of the keyboard shortcuts work in the Opera browser, for example "z" for toggling the zoom and "spacebar" for toggling play / pause in slideshows.  This can be overcome by updating your shortcut settings in the Opera preferences editor.</p>
+
+');
+    break;
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function lightbox2_perm() {
+  return array('administer lightbox2');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function lightbox2_menu($may_cache) {
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array('path' => 'admin/settings/lightbox2',
+      'title' => t('Lightbox2'),
+      'callback' => 'lightbox2_settings_page',
+      'access' => user_access('administer lightbox2'),
+      'description' => t('Allows the user to configure the lightbox2 settings'),
+    );
+    $items[] = array('path' => 'admin/settings/lightbox2/general',
+      'title' => t('General'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('lightbox2_general_settings_form'),
+      'access' => user_access('administer lightbox2'),
+      'description' => t('Allows the user to configure the lightbox2 settings'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => 0,
+    );
+    $items[] = array('path' => 'admin/settings/lightbox2/slideshow',
+      'title' => t('Slideshow'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('lightbox2_slideshow_settings_form'),
+      'access' => user_access('administer lightbox2'),
+      'description' => t('Allows the user to configure the lightbox2 slideshow functionality.'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+    );
+    $items[] = array('path' => 'admin/settings/lightbox2/html_content',
+      'title' => t('HTML Content'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('lightbox2_iframe_settings_form'),
+      'access' => user_access('administer lightbox2'),
+      'description' => t('Allows the user to configure the lightbox2 HTML content functionality.'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 2,
+    );
+    $items[] = array('path' => 'admin/settings/lightbox2/automatic',
+      'title' => t('Automatic image handling'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('lightbox2_auto_image_handling_settings_form'),
+      'access' => user_access('administer lightbox2'),
+      'description' => t('Allows the user to configure the lightbox2 automatic image handling settings'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 3,
+    );
+    if (module_exists('emfield') && module_exists('video_cck')) {
+      $items[] = array(
+        'path' => 'video-cck/lightbox2',
+        'callback' => 'lightbox2_video_cck',
+        'access' => user_access('access content'),
+        'type' => MENU_CALLBACK,
+        );
+    }
+  }
+  else {
+    if (lightbox2_exclude_these_paths() != 1) {
+      lightbox2_add_files();
+    }
+  }
+
+  return $items;
+}
+
+
+/**
+ * The default lightbox2 settings page.
+ */
+function lightbox2_settings_page($op = NULL) {
+  $output .= drupal_get_form('lightbox2_general_settings_form');
+  return $output;
+}
+
+/**
+ * General configuration form for controlling the lightbox behaviour.
+ */
+function lightbox2_general_settings_form() {
+
+  // Add the javascript which disables / enables form elements.
+  drupal_add_js(drupal_get_path('module', 'lightbox2') .'/js/lightbox2.js', 'module');
+
+  // Enable translation of default strings for potx.
+  $default_strings = array(t('View Image Details'), t('Image !current of !total'), t('Page !current of !total'));
+
+  // Define Lightbox2 Lite fieldset.
+  /* ------------------------------- */
+  $use_lite = variable_get('lightbox2_lite', FALSE);
+  $form['lightbox2_lite_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Lightbox2 Lite'),
+    '#collapsible' => TRUE,
+    '#collapsed' => !$use_lite,
+  );
+
+  // Add checkbox for Lightbox2 Lite.
+  $form['lightbox2_lite_options']['lightbox2_lite'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use Lightbox2 Lite'),
+    '#description' => t('Checking this box will enable Lightbox2 Lite and will disable all of the automatic image URL re-formatting features.  It also disables all grouping features.'),
+    '#default_value' => $use_lite,
+  );
+
+
+  // Add checkbox for alternative layout.
+  $form['lightbox2_use_alt_layout'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use Alternative Layout'),
+    '#description' => t('Enabling this option alters the layout of the lightbox elements. In the alternative layout the navigational links appear under the image with the caption text, instead of being overlayed on the image itself.  This doesn\'t apply when using Lightbox Lite.'),
+    '#default_value' => variable_get('lightbox2_use_alt_layout', FALSE),
+  );
+
+  // Add checkbox for force navigation display.
+  $form['lightbox2_force_show_nav'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Force visibility of navigation links'),
+    '#description' => t('When viewing grouped images using the default layout, the navigational links to the next and previous images are only displayed when you hover over the image.  Checking this box forces these links to be displayed all the time.'),
+    '#default_value' => variable_get('lightbox2_force_show_nav', FALSE),
+  );
+
+  // Add text box for image count for grouping.
+  $form['lightbox2_image_count_str'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Image Count Text'),
+    '#description' => t('This text is used to display the image count underneath the image in the lightbox when image grouping is enabled.  Use !current as a placeholder for the number of the current image and !total for the total number of images in the group.  For example, "Image !current of !total".'),
+    '#default_value' => variable_get('lightbox2_image_count_str', 'Image !current of !total'),
+  );
+
+  // Add text box for page count for grouping.
+  $form['lightbox2_page_count_str'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Page Count Text'),
+    '#description' => t('This text is used to display the page count underneath HTML content displayed in the lightbox when using groups.  Use !current as a placeholder for the number of the current page and !total for the total number of pages in the group.  For example, "Page !current of !total".'),
+    '#default_value' => variable_get('lightbox2_page_count_str', 'Page !current of !total'),
+  );
+
+  // Add checkbox for zoom image.
+  $form['lightbox2_disable_zoom'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable Zoom Feature'),
+    '#description' => t('By default, when the image being displayed in the lightbox is larger than the browser window, it is resized to fit within the window and a zoom button is provided for users who wish to view the image in its original size.  Checking this box will disable this feature and all images will be displayed without any resizing.'),
+    '#default_value' => variable_get('lightbox2_disable_zoom', FALSE),
+  );
+
+  // Add textarea for urls without lightbox.
+  $form['lightbox2_disable_these_urls'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Disable LightBox for these urls'),
+    '#description' => t('List the urls where the lightbox should be disabled, e.g. "node/add/page".  Use &lt;front&gt; to match the front page.  Put each url on a separate line. You can use the % character as a wildcard.'),
+    '#default_value' => variable_get('lightbox2_disable_these_urls', ''),
+  );
+
+
+  // Define cck settings fieldset.
+  /* ---------------------------------- */
+  if ((module_exists('emfield') && module_exists('image_ncck')) || (module_exists('imagefield') && module_exists('imagecache'))) {
+    $form['lightbox2_cck_options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('CCK Display Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $cck_options = array(
+      0 => t('No Grouping'),
+      1 => t('Group by Field Name'),
+      2 => t('Group by Node Id'),
+      3 => t('Group by Field Name and Node Id'),
+    );
+
+    // Add checkbox for emfield image_ncck grouping.
+    if (module_exists('emfield') && module_exists('image_ncck')) {
+      $form['lightbox2_cck_options']['lightbox2_image_ncck_group_node_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Select Emfield Image Grouping in Views'),
+        '#description' => t('By default, emfield images in views are grouped by the field name they appear in the view in.  You can override that grouping here.'),
+        '#options' => $cck_options,
+        '#default_value' => variable_get('lightbox2_image_ncck_group_node_id', 1),
+      );
+    }
+
+    // Add checkbox for imagefield grouping.
+    if (module_exists('imagefield') && module_exists('imagecache')) {
+      $form['lightbox2_cck_options']['lightbox2_imagefield_group_node_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Select Imagefield Grouping in Views'),
+        '#description' => t('By default, imagefields in views are grouped by the field name they appear in the view in.  You can override that grouping here.'),
+        '#options' => $cck_options,
+        '#default_value' => variable_get('lightbox2_imagefield_group_node_id', 1),
+      );
+    }
+  }
+
+
+  // Define advanced settings fieldset.
+  /* ---------------------------------- */
+  $form['lightbox2_advanced_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Add checkbox for overlay opacity.
+  for ($i = 0; $i < 10; $i++) {
+    $opacity_options["0.$i"] = "0.$i";
+  }
+  $opacity_options["1.0"] = "1.0";
+  $form['lightbox2_advanced_options']['lightbox2_overlay_opacity'] = array(
+    '#type' => 'select',
+    '#title' => t('Overlay Opacity'),
+    '#options' => $opacity_options,
+    '#description' => t('The overlay opacity setting determines how visible the background page is behind the lightbox.  The opacity value can range from 0.0 to 1.0 where 0.0 is 100% transparent and 1.0 is 100% opaque.'),
+    '#default_value' => variable_get('lightbox2_overlay_opacity', '0.6'),
+  );
+
+  // Allow users to decide where javascript should be loaded - header or footer.
+  // Header is recommended so user can click on images before page has finished
+  // loading, but footer is needed for sites in IE which use SWFObject.
+  $form['lightbox2_advanced_options']['lightbox2_js_location'] = array(
+    '#type' => 'select',
+    '#title' => t('Location of Javscript'),
+    '#options' => array('header' => t('Header'), 'footer' => t('Footer')),
+    '#description' => t('By default, the lightbox javascript files are loaded in the HTML header.  However, for sites using SWFObject to load their Flash content, the footer setting is recommended to prevent "Operation Aborted" errors in IE.  If using the footer setting, please note that not all themes correctly implement the footer region and may require a small change.'),
+    '#default_value' => variable_get('lightbox2_js_location', 'header'),
+  );
+
+
+  return system_settings_form($form);
+}
+
+/**
+ * Configuration form for controlling the slideshow behaviour.
+ */
+function lightbox2_slideshow_settings_form() {
+
+  // Add the javascript which disables / enables form elements.
+  drupal_add_js(drupal_get_path('module', 'lightbox2') .'/js/lightbox2.js', 'module');
+
+  // Set up a hidden variable.
+  $form['lightbox2_lite'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('lightbox2_lite', FALSE),
+  );
+
+
+  // Add text box for slideshow interval.
+  $form['lightbox2_slideshow_interval'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Interval Seconds'),
+    '#description' => t('The slideshow interval is the length of time in seconds an image is visible before the slideshow shows the next image.'),
+    '#default_value' => variable_get('lightbox2_slideshow_interval', 5),
+    '#size' => 20,
+  );
+
+  // Add checkbox for slideshow automatic exit.
+  $form['lightbox2_slideshow_automatic_exit'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Automatically Exit Slideshow'),
+    '#description' => t('When enabled the lightbox will automatically close after displaying the last image.'),
+    '#default_value' => variable_get('lightbox2_slideshow_automatic_exit', TRUE),
+  );
+
+  // Add checkbox for showing hte play / pause button.
+  $form['lightbox2_slideshow_show_play_pause'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show Play / Pause Button'),
+    '#description' => t('When enabled, a play / pause button will be shown in the slideshow allowing the user more control over their viewing experience.'),
+    '#default_value' => variable_get('lightbox2_slideshow_show_play_pause', TRUE),
+  );
+
+  // Add checkbox for "pausing on next click".
+  $form['lightbox2_slideshow_pause_on_next_click'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Pause Slideshow on "Next Image" Click'),
+    '#description' => t('When enabled the slideshow is automatically paused, and the following image shown, when the "Next" button is clicked.'),
+    '#default_value' => variable_get('lightbox2_slideshow_pause_on_next_click', FALSE),
+  );
+
+  // Add checkbox for "pausing on prev click".
+  $form['lightbox2_slideshow_pause_on_prev_click'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Pause Slideshow on "Previous Image" Click'),
+    '#description' => t('When enabled the slideshow is automatically paused, and the previous image shown, when the "Previous" button is clicked.'),
+    '#default_value' => variable_get('lightbox2_slideshow_pause_on_previous_click', TRUE),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Validation function for the slideshow configuration form.
+ *
+ * Ensure that the slideshow interval submitted is numeric.
+ */
+function lightbox2_slideshow_settings_form_validate($form_id, $form_values) {
+  if (!is_numeric($form_values['lightbox2_slideshow_interval'])) {
+    form_set_error('lightbox2_slideshow_interval', t('The "interval seconds" value must be numeric.'));
+  }
+}
+
+/**
+ * Configuration form for controlling the iframe behaviour.
+ */
+function lightbox2_iframe_settings_form() {
+
+  // Add the javascript which disables / enables form elements.
+  drupal_add_js(drupal_get_path('module', 'lightbox2') .'/js/lightbox2.js', 'module');
+
+  // Set up a hidden variable.
+  $form['lightbox2_lite'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('lightbox2_lite', FALSE),
+  );
+
+
+  // Add text box for iframe width.
+  $form['lightbox2_default_frame_width'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default Width'),
+    '#description' => t('The default width of the iframe in pixels.'),
+    '#default_value' => variable_get('lightbox2_default_frame_width', 600),
+    '#size' => 20,
+  );
+
+  // Add text box for iframe height.
+  $form['lightbox2_default_frame_height'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default Height'),
+    '#description' => t('The default height of the iframe in pixels.'),
+    '#default_value' => variable_get('lightbox2_default_frame_height', 400),
+    '#size' => 20,
+  );
+
+  // Add option for iframe border.
+  $form['lightbox2_frame_border'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Border'),
+    '#description' => t('Enable iframe border.  You can modify the border style in your theme\'s css file using the iframe\'s id "lightboxFrame".'),
+    '#default_value' => variable_get('lightbox2_frame_border', 1),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Validation function for the iframe configuration form.
+ *
+ * Ensure that the iframe width and height submitted are numeric.
+ */
+function lightbox2_iframe_settings_form_validate($form_id, $form_values) {
+  if (!is_numeric($form_values['lightbox2_default_frame_width'])) {
+    form_set_error('lightbox2_slideshow_interval', t('The "default width" value must be numeric.'));
+  }
+  if (!is_numeric($form_values['lightbox2_default_frame_height'])) {
+    form_set_error('lightbox2_slideshow_interval', t('The "default height" value must be numeric.'));
+  }
+}
+
+
+/**
+ * Configuration form the automatic image handling functionality.
+ */
+function lightbox2_auto_image_handling_settings_form() {
+
+  // Add the javascript which disables / enables form elements.
+  drupal_add_js(drupal_get_path('module', 'lightbox2') .'/js/lightbox2.js', 'module');
+
+  // Set up a hidden variable.
+  $form['lightbox2_lite'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('lightbox2_lite', FALSE),
+  );
+
+  $automatic_options = array(
+    0 => t('Disabled'),
+    1 => t('Lightbox'),
+    2 => t('Lightbox grouped'),
+    3 => t('Slideshow'),
+    4 => t('HTML Content'),
+    5 => t('HTML Content grouped'),
+  );
+
+  // Set image node options help text.
+  $form['image_node_options'] = array(
+    '#value' => t('These options allow automatic URL re-formatting of images.  This removes the need for you to add \'rel="lightbox"\' to each image link throughout your site.  You can select which image sizes will trigger the lightbox and configure a list of image CSS classes which should also have their URLs automatically re-formatted.  This feature is not available when using Lightbox2 Lite.'),
+  );
+
+  // Define image nodes settings fieldset.
+  /* ------------------------------------- */
+  $form['lightbox2_image_node_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Image node settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  // Add checkbox for image nodes.
+  $form['lightbox2_image_node_options']['lightbox2_image_node'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic handler for Image Nodes'),
+    '#options' => $automatic_options,
+    '#description' => t('Choose how URLs for image nodes will be automatically handled.'),
+    '#default_value' => variable_get('lightbox2_image_node', 2),
+  );
+
+  // Add drop-down for list of available image sizes.
+  if (module_exists('image')) {
+    $sizes = _image_get_sizes();
+    foreach ($sizes as $size_key => $size) {
+      if ($size_key == 'original' || $size_key == '_original') {
+        $size_key = '';
+      }
+      $size_options[$size_key] = $size['label'];
+    }
+    $form['lightbox2_image_node_options']['lightbox2_display_image_size'] = array(
+      '#type' => 'select',
+      '#title' => t('Lightbox image display size'),
+      '#options' => $size_options,
+      '#default_value' => variable_get('lightbox2_display_image_size', ''),
+      '#description' => t('Select which image size will be loaded in the lightbox.  This only applies to images uploaded with the Image module.'),
+    );
+
+    $form['lightbox2_image_node_options']['lightbox2_trigger_image_size'] = array(
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#title' => t('Image trigger size'),
+      '#options' => $size_options,
+      '#default_value' => variable_get('lightbox2_trigger_image_size', array('thumbnail')),
+      '#description' => t('Select which image size, when clicked on, will automatically trigger the lightbox.  This only applies to images uploaded with the Image module.'),
+    );
+
+  }
+
+  // Add checkbox for disabling lightbox for gallery lists.
+  $form['lightbox2_image_node_options']['lightbox2_disable_nested_galleries'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable Lightbox for Gallery Lists'),
+    '#description' => t('Checking this box will disable the lightbox for images in gallery lists.  This means it is possible to open a gallery by clicking on the teaser image, but the lightbox will still appear when viewing images within the gallery.  This only applies to image galleries created with the "image gallery" module.'),
+    '#default_value' => variable_get('lightbox2_disable_nested_galleries', TRUE),
+  );
+
+  // Add checkbox for flickr image support.
+  $form['lightbox2_flickr'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic handler for Flickr images'),
+    '#options' => $automatic_options,
+    '#description' => t('Choose how URLs for Flickr images will be automatically handled.'),
+    '#default_value' => variable_get('lightbox2_flickr', 2),
+  );
+
+  // Add checkbox for gallery2 block image support.
+  $form['lightbox2_gallery2_blocks'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic handler for Gallery2 block images'),
+    '#options' => $automatic_options,
+    '#description' => t('Choose how URLs for images, contained within Gallery2 image blocks, will be automatically handled.'),
+    '#default_value' => variable_get('lightbox2_gallery2_blocks', 2),
+  );
+
+
+  // Add checkbox for inline image support.
+  $form['lightbox2_inline'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic handler for Inline images'),
+    '#options' => $automatic_options,
+    '#description' => t('Choose how URLs for Inline images will be automatically handled.'),
+    '#default_value' => variable_get('lightbox2_inline', 2),
+  );
+
+  // Add checkbox for image assist custom size images.
+  $form['lightbox2_image_assist_custom'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatic handler for Image Assist custom size images'),
+    '#options' => $automatic_options,
+    '#description' => t('Choose how URLs for custom size images, displayed by the Image Assist module, will be automatically handled.'),
+    '#default_value' => variable_get('lightbox2_image_assist_custom', 2),
+  );
+
+  // Add text box for custom trigger classes.
+  $form['lightbox2_custom_trigger_classes'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Custom image trigger classes'),
+    '#description' => t('List the image classes which should trigger the lightbox when clicked on.  Put each class on a separate line.'),
+    '#default_value' => variable_get('lightbox2_custom_trigger_classes', ''),
+  );
+
+  // Add text box for link text to node.
+  $form['lightbox2_node_link_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Text for Image Page Link'),
+    '#description' => t('This is the text that will appear as the link to the image page underneath the image in the lightbox.'),
+    '#default_value' => variable_get('lightbox2_node_link_text', 'View Image Details'),
+  );
+
+  // Add checkbox for node link target.
+  $form['lightbox2_node_link_target'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Open Image Page in New Window'),
+    '#description' => t('This controls whether the link to the image page underneath the image is opened in a new window or the current window.'),
+    '#default_value' => variable_get('lightbox2_node_link_target', FALSE),
+    '#return_value' => '_blank',
+  );
+
+  // Add checkbox for disabling lightbox for acidfree gallery lists.
+  if (module_exists("acidfree")) {
+    $form['lightbox2_disable_nested_acidfree_galleries'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Disable Lightbox for Acidfree Gallery Lists'),
+      '#description' => t('Checking this box will disable the lightbox for images in gallery lists.  This means it is possible to open a gallery by clicking on the teaser image, but the lightbox will still appear when viewing images within the gallery.  This only applies to image galleries created with the "acidfree" module.'),
+      '#default_value' => variable_get('lightbox2_disable_nested_acidfree_galleries', TRUE),
+    );
+  }
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implementation of hook_filter_tips().
+ */
+function lightbox2_filter_tips($delta, $format, $long = FALSE) {
+  if ($delta == 0) {
+    if (!$long) {
+      return t('Image links with \'rel="lightbox"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+    }
+    else {
+      $output = '<p>'. t('To add a lightbox to your images, add rel="lightbox" attribute to any link tag to activate the lightbox. For example:') .'</p>';
+      $output .= '<p>'. t('<code>&lt;a href="image-1.jpg" rel="lightbox" title="my caption"&gt;image #1&lt;/a&gt;</code>') .'</p>';
+      $output .= '<p>'. t('The title attribute in the link tag is optional. The addition of this attribute enables the display of a caption with the image displayed in the lightbox.') .'</p>';
+      $output .= '<p>'. t('If you have a set of related images that you would like to group, then you will need to include a group name between square brackets in the rel attribute. For example:') .'</p>';
+      $output .= '<p>'. t('<code>&lt;a href="image-1.jpg" rel="lightbox[roadtrip]"&gt;image #1&lt;/a&gt;<br /> &lt;a href="image-2.jpg" rel="lightbox[roadtrip]"&gt;image #2&lt;/a&gt;<br /> &lt;a href="image-3.jpg" rel="lightbox[roadtrip]"&gt;image #3&lt;/a&gt;<br /> </code>') .'</p>';
+      $output .= '<p>'. t('There are no limits to the number of image sets per page or how many images are allowed in each set.') .'</p>';
+      $output .= '<p>'. t('If you wish to turn the caption into a link, format your caption in the following way:') .'</p>';
+      $output .= '<p>'. t('<code>&lt;a href="image-1.jpg" rel="lightbox" title=\'&lt;a href="http://www.yourlink.com"&gt;View Image Details&lt;/a&gt;\'&gt;image #1&lt;/a&gt;</code>') .'</p>';
+      return $output;
+    }
+  }
+  else if ($delta == 1) {
+    return t('Image links from G2 are formatted for use with Lightbox2');
+  }
+  else if ($delta == 2) {
+    if (!$long) {
+      return t('Image links with \'rel="lightshow"\' in the &lt;a&gt; tag will appear in a Lightbox slideshow when clicked on.');
+    }
+    else {
+      $output = '<p>'. t('To add a lightbox slideshow to your images, add rel="lightshow[slideshowname]" attribute to any link tag to activate the slideshow. For example:') .'</p>';
+      $output .= '<p>'. t('<code>&lt;a href="image-1.jpg" rel="lightshow[show1]"&gt;image #1&lt;/a&gt;<br /> &lt;a href="image-2.jpg" rel="lightshow[show1]"&gt;image #2&lt;/a&gt;<br /> &lt;a href="image-3.jpg" rel="lightshow[show1]"&gt;image #3&lt;/a&gt;<br /> </code>') .'</p>';
+      $output .= '<p>'. t('The title attribute in the link tag is optional. The addition of this attribute enables the display of a caption with the image displayed in the lightbox.') .'</p>';
+      $output .= '<p>'. t('There are no limits to the number of slideshow image sets per page or how many images are allowed in each slideshow.') .'</p>';
+      $output .= '<p>'. t('If you wish to turn the caption into a link, format your caption in the following way:') .'</p>';
+      $output .= '<p>'. t('<code>&lt;a href="image-1.jpg" rel="lightshow[show1]" title=\'&lt;a href="http://www.yourlink.com"&gt;View Image Details&lt;/a&gt;\'&gt;image #1&lt;/a&gt;</code>') .'</p>';
+      return $output;
+    }
+  }
+  else if ($delta == 3) {
+    if (!$long) {
+      return t('Links to HTML content with \'rel="lightframe"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+    }
+    else {
+      $output = '<p>'. t('It\'s possible to show webpage content in the lightbox, using iframes.  In this case the "rel" attribute should be set to "lightframe".  Again it\'s possible to group the images, (e.g. <code>lightframe[search]</code>) but in addition to that, it\'s possible to control some of the iframe properties.  It\'s possible to set the "width", "height" and "scrolling" properties of the iframe.  The properties are separated from the group name by a <code>|</code>, for example <code>lightframe[search|width:100px;]</code>.  If no grouping is being used, then the <code>|</code> is still used and the format would be <code>lightframe[|width:100px;]</code>.  The properties should all be of the format "property: value;" - note the closing semi-colon.  If no iframe properties are set, then the default width and height of 400px will be used.  See below for more detailed examples.') .'</p>';
+      $output .= '<p>'. t('Basic example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://www.google.com&quot; rel=&quot;lightframe&quot;&gt;Search google&lt;/a&gt;</code>') .'</p>';
+      $output .= '<p>'. t('Grouped example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://www.google.com&quot; rel=&quot;lightframe[search]&quot;&gt;Search google&lt;/a&gt;<br />&lt;a href=&quot;http://www.yahoo.com&quot; rel=&quot;lightframe[search]&quot;&gt;Search yahoo&lt;/a&gt;</code>') .'</p>';
+
+      $output .= '<p>'. t('Controlling iframe property example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://www.google.com&quot; rel=&quot;lightframe[|width:400px; height:300px; scrolling: auto;]&quot;&gt;Search google&lt;/a&gt;</code>') .'</p>';
+      $output .= '<p>'. t('Controlling iframe property when grouped example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://www.google.com&quot; rel=&quot;lightframe[search|width:400px; height:300px; scrolling: auto;]&quot;&gt;Search google&lt;/a&gt;<br />&lt;a href=&quot;http://www.yahoo.com&quot; rel=&quot;lightframe[search|width:400px; height:300px;]&quot;&gt;Search yahoo&lt;/a&gt;</code>') .'</p>';
+
+      return $output;
+    }
+  }
+  else if ($delta == 4) {
+    if (!$long) {
+      return t('Links to video content with \'rel="lightvideo"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+    }
+    else {
+      $output = '<p>'. t('It\'s possible to show video content in the lightbox.  In this case the "rel" attribute should be set to <code>lightvideo</code>.  It\'s not possible to group videos but it is possible to control the size of the lightbox by setting the "width" and "height" properties.  The properties can be configured like <code>lightvideo[width:300px; height: 200px;]</code>.  The properties should all be of the format "property: value;" - note the closing semi-colon.  If no properties are set, then the default width and height of 400px will be used.  See below for more detailed examples.') .'</p>';
+      $output .= '<p>'. t('Basic example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://video.google.com/videoplay?docid=1811233136844420765&quot; rel=&quot;lightvideo&quot;&gt;Google video example - default size&lt;/a&gt;</code>') .'</p>';
+      $output .= '<p>'. t('Controlling lightbox size example:') .'<br />';
+      $output .= t('<code>&lt;a href=&quot;http://video.google.com/videoplay?docid=1811233136844420765&quot; rel=&quot;lightvideo[width:400px; height:300px;]&quot;&gt;Google video example - custom size&lt;/a&gt;</code>') .'</p>';
+      $output .= '<p>'. t('Supported video formats include asx, wmv, mov and swf.  A number of online video providers are also supported, including YouTube and Google Video.  For a full list of the current supported video providers please see the documentation on drupal.org.') .'</p>';
+      return $output;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_filter().
+ */
+function lightbox2_filter($op, $delta = 0, $format = -1, $text = '') {
+  switch ($op) {
+    case 'list':
+      return array(
+        0 => t('Lightbox filter'),
+        1 => t('Lightbox G2 filter'),
+        2 => t('Lightbox slideshow filter'),
+        3 => t('Lightbox iframe filter'),
+        4 => t('Lightbox video filter'),
+      );
+
+    case 'description':
+      if ($delta == 0) {
+        return t('Image links with \'rel="lightbox"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+      }
+      else if ($delta == 1) {
+        return t('Turns g2_filter links into Lightbox2 appropriate links');
+      }
+      else if ($delta == 2) {
+        return t('Image links with \'rel="lightshow"\' in the &lt;a&gt; tag will appear in a Lightbox slideshow when clicked on.');
+      }
+      else if ($delta == 3) {
+        return t('Links to HTML content with \'rel="lightframe"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+      }
+      else if ($delta == 4) {
+        return t('Links to video content with \'rel="lightvideo"\' in the &lt;a&gt; tag will appear in a Lightbox when clicked on.');
+      }
+
+    case 'process':
+      if ($delta == 1) {
+        $text = ' '. $text .' ';
+        $text = preg_replace('/ShowItem/', 'DownloadItem', $text);
+        $text = preg_replace('/src="/', 'rel="lightbox" src="', $text);
+        $text = drupal_substr($text, 1, -1);
+      }
+      return $text;
+
+    default:
+      return $text;
+  }
+}
+
+/**
+ * Provide links to the CSS stylesheet and JS file associated with
+ * this module.
+ */
+function lightbox2_add_files() {
+  static $already_added = FALSE;
+  if ($already_added) {
+    return; // Don't add the javascript and CSS multiple times.
+  }
+  $already_added = TRUE;
+
+  // Load required js and css files.
+  $path = drupal_get_path('module', 'lightbox2');
+
+  // Initialise some variables.
+  $inline_image_handler = variable_get('lightbox2_inline', 2);
+  $flickr_image_handler = variable_get('lightbox2_flickr', 2);
+  $gallery2_block_handler = variable_get('lightbox2_gallery2_blocks', 2);
+  $image_assist_handler = variable_get('lightbox2_image_assist_custom', 2);
+  $image_node_handler = variable_get('lightbox2_image_node', 2);
+
+  // Set the list of image classes to format urls for.
+  $image_node_sizes = '';
+  $trigger_lightbox_classes = '';
+  $trigger_lightbox_group_classes = '';
+  $trigger_slideshow_classes = '';
+  $trigger_lightframe_classes = '';
+  $trigger_lightframe_group_classes = '';
+
+  // Inline module images.
+  switch ($inline_image_handler) {
+    case 1:
+      $trigger_lightbox_classes .= 'img.inline,';
+      break;
+    case 2:
+      $trigger_lightbox_group_classes .= 'img.inline,';
+      break;
+    case 3:
+      $trigger_slideshow_classes .= 'img.inline,';
+      break;
+    case 4:
+      $trigger_lightframe_classes .= 'img.inline,';
+      break;
+    case 5:
+      $trigger_lightframe_group_classes .= 'img.inline,';
+      break;
+  }
+
+  // Flickr images.
+  switch ($flickr_image_handler) {
+    case 1:
+      $trigger_lightbox_classes .= 'img.flickr-photo-img,img.flickr-photoset-img,';
+      break;
+    case 2:
+      $trigger_lightbox_group_classes .= 'img.flickr-photo-img,img.flickr-photoset-img,';
+      break;
+    case 3:
+      $trigger_slideshow_classes .= 'img.flickr-photo-img,img.flickr-photoset-img,';
+      break;
+    case 4:
+      $trigger_lightframe_classes .= 'img.flickr-photo-img,img.flickr-photoset-img,';
+      break;
+    case 5:
+      $trigger_lightframe_group_classes .= 'img.flickr-photo-img,img.flickr-photoset-img,';
+      break;
+  }
+
+  // Gallery2 block images.
+  switch ($gallery2_block_handler) {
+    case 1:
+      $trigger_lightbox_classes .= 'img.ImageFrame_image,img.ImageFrame_none,';
+      break;
+    case 2:
+      $trigger_lightbox_group_classes .= 'img.ImageFrame_image,img.ImageFrame_none,';
+      break;
+    case 3:
+      $trigger_slideshow_classes .= 'img.ImageFrame_image,img.ImageFrame_none,';
+      break;
+    case 4:
+      $trigger_lightframe_classes .= 'img.ImageFrame_image,img.ImageFrame_none,';
+      break;
+    case 5:
+      $trigger_lightframe_group_classes .= 'img.ImageFrame_image,img.ImageFrame_none,';
+      break;
+  }
+
+  // Image Assist custom size images.
+  switch ($image_assist_handler) {
+    case 1:
+      $trigger_lightbox_classes .= 'img.image-img_assist_custom,';
+      break;
+    case 2:
+      $trigger_lightbox_group_classes .= 'img.image-img_assist_custom,';
+      break;
+    case 3:
+      $trigger_slideshow_classes .= 'img.image-img_assist_custom,';
+      break;
+    case 4:
+      $trigger_lightframe_classes .= 'img.image-img_assist_custom,';
+      break;
+    case 5:
+      $trigger_lightframe_group_classes .= 'img.image-img_assist_custom,';
+      break;
+  }
+
+  // Image nodes.
+  if ($image_node_handler) {
+    $trigger_sizes = variable_get('lightbox2_trigger_image_size', array('thumbnail'));
+    foreach ($trigger_sizes as $size) {
+      $triggers = "img.$size, img.image-$size,";
+      if (empty($size)) {
+        $triggers = "img._original, img.image-_original,";
+      }
+      else {
+        $image_node_sizes .= "\.$size|";
+      }
+      switch ($image_node_handler) {
+        case 1:
+          $trigger_lightbox_classes .= $triggers;
+          break;
+        case 2:
+          $trigger_lightbox_group_classes .= $triggers;
+          break;
+        case 3:
+          $trigger_slideshow_classes .= $triggers;
+          break;
+        case 4:
+          $trigger_lightframe_classes .= $triggers;
+          break;
+        case 5:
+          $trigger_lightframe_group_classes .= $triggers;
+          break;
+      }
+    }
+  }
+
+  // Custom images.
+  $custom_triggers = variable_get('lightbox2_custom_trigger_classes', '');
+  $custom_trigger_classes = '';
+  if (!empty($custom_triggers)) {
+    $trigger_classes = preg_split("/(\r\n|\n)/", $custom_triggers);
+    foreach ($trigger_classes as $class) {
+      if (!empty($class)) {
+        $custom_trigger_classes .= "img.$class,";
+      }
+    }
+  }
+  $trigger_lightbox_classes = rtrim($trigger_lightbox_classes, ",");
+  $trigger_lightbox_group_classes = rtrim($trigger_lightbox_group_classes, ",");
+  $trigger_slideshow_classes = rtrim($trigger_slideshow_classes, ",");
+  $trigger_lightframe_classes = rtrim($trigger_lightframe_classes, ",");
+  $trigger_lightframe_group_classes = rtrim($trigger_lightframe_group_classes, ",");
+  $custom_trigger_classes = rtrim($custom_trigger_classes, ",");
+  $image_node_sizes = '('. rtrim($image_node_sizes, "|") .')';
+
+  // Find out if we're using a RTL language.
+  $rtl = FALSE;
+  if (module_exists('i18n') && module_invoke('i18n', 'language_rtl')) {
+    $rtl = TRUE;
+  }
+
+  // Load the javascript settings.
+  $js_settings = array(
+    'rtl' => $rtl,
+    'file_path' => base_path() .'(\w\w/)'. file_directory_path(),
+    'base_path' => base_path(),
+    'default_image' => base_path() . $path .'/images/brokenimage.jpg',
+    'overlay_opacity' => variable_get('lightbox2_overlay_opacity', '0.6'),
+    'use_alt_layout' => variable_get('lightbox2_use_alt_layout', FALSE),
+    'disable_zoom' => variable_get('lightbox2_disable_zoom', FALSE),
+    'force_show_nav' => variable_get('lightbox2_force_show_nav', FALSE),
+    'node_link_text' => check_plain(variable_get('lightbox2_node_link_text', 'View Image Details')),
+    'node_link_target' => variable_get('lightbox2_node_link_target', FALSE),
+    'image_count' => check_plain(variable_get('lightbox2_image_count_str', 'Image !current of !total')),
+    'page_count' => check_plain(variable_get('lightbox2_page_count_str', 'Page !current of !total')),
+    'lite_press_x_close' => t('press !x to close', array('!x' => '<a href="#" onclick="hideLightbox(); return FALSE;"><kbd>x</kbd></a>')),
+    // Automatic image handling settings.
+    'display_image_size' => variable_get('lightbox2_display_image_size', ''),
+    'image_node_sizes' => $image_node_sizes,
+    'trigger_lightbox_classes' => $trigger_lightbox_classes,
+    'trigger_lightbox_group_classes' => $trigger_lightbox_group_classes,
+    'trigger_slideshow_classes' => $trigger_slideshow_classes,
+    'trigger_lightframe_classes' => $trigger_lightframe_classes,
+    'trigger_lightframe_group_classes' => $trigger_lightframe_group_classes,
+    'custom_trigger_classes' => $custom_trigger_classes,
+    'disable_for_gallery_lists' => variable_get('lightbox2_disable_nested_galleries', TRUE),
+    'disable_for_acidfree_gallery_lists' => variable_get('lightbox2_disable_nested_acidfree_galleries', TRUE),
+    // Slideshow settings.
+    'slideshow_interval' => variable_get('lightbox2_slideshow_interval', 5) * 1000,
+    'slideshow_automatic_exit' => variable_get('lightbox2_slideshow_automatic_exit', TRUE),
+    'show_play_pause' => variable_get('lightbox2_slideshow_show_play_pause', TRUE),
+    'pause_on_next_click' => variable_get('lightbox2_slideshow_pause_on_next_click', FALSE),
+    'pause_on_previous_click' => variable_get('lightbox2_slideshow_pause_on_previous_click', TRUE),
+    // Iframe settings.
+    'iframe_width' => variable_get('lightbox2_default_frame_width', 600),
+    'iframe_height' => variable_get('lightbox2_default_frame_height', 400),
+    'iframe_border' => variable_get('lightbox2_frame_border', 1),
+  );
+  drupal_add_js(array('lightbox2' => $js_settings), 'setting');
+
+  // Check where we should load the javascript files - header or footer.
+  $js_location = variable_get('lightbox2_js_location', 'header');
+
+  // Lightbox2 Plus.
+  if (!variable_get('lightbox2_lite', FALSE)) {
+    $css = $path .'/css/lightbox.css';
+    if (module_exists('i18n') && module_invoke('i18n', 'language_rtl')) {
+      $css = $path .'/css/lightbox-rtl.css';
+    }
+    if (variable_get('lightbox2_use_alt_layout', FALSE)) {
+      // No need for rtl version, everything is centred.
+      $css = $path .'/css/lightbox_alt.css';
+    }
+    drupal_add_css($css);
+
+    // Check to see if any automatic image handling options are enabled.
+    if ($image_node_handler || $flickr_image_handler || $gallery2_block_handler || $inline_image_handler || $image_assist_handler || $custom_triggers != '') {
+      drupal_add_js($path .'/js/auto_image_handling.js', 'module', $js_location);
+    }
+    drupal_add_js($path .'/js/lightbox_video.js', 'module', $js_location);
+    drupal_add_js($path .'/js/lightbox.js', 'module', $js_location);
+
+  }
+  // Lightbox Lite.
+  else {
+    $css = $path .'/css/lightbox_lite.css';
+    if (module_exists('i18n') && module_invoke('i18n', 'language_rtl')) {
+      $css = $path .'/css/lightbox_lite-rtl.css';
+    }
+    drupal_add_css($css);
+    drupal_add_js($path .'/js/lightbox_lite.js', 'module', $js_location);
+  }
+}
+
+/**
+ * Implementation of hook_field_formatter_info().
+ *
+ * Add certain lightbox+imagecache formatters to CCK image fields if the
+ * imagefield.module and the imagecache.module exist.  Add additional formatters
+ * if emfield, image_ncck and/or video_cck modules exist.
+ */
+function lightbox2_field_formatter_info() {
+  $formatter = array();
+  if (module_exists('imagefield') && module_exists('imagecache')) {
+    $rules = array();
+    if (function_exists('imagecache_presets')) {
+      $presets = imagecache_presets();
+      foreach ($presets as $preset_id => $preset_info) {
+        $rules[$preset_id] = $preset_info['presetname'];
+      }
+    }
+    else {
+      $rules = _imagecache_get_presets();
+    }
+    $formatters['lightframe2][original][node'] = array(
+      'label' => 'Lightbox2 iframe: original->node page',
+      'field types' => array('image'),
+    );
+    foreach ($rules as $ruleid => $view_rule) {
+      $formatters['lightbox2][original]['. $view_rule] = array(
+        'label' => 'Lightbox2: original->'. $view_rule,
+        'field types' => array('image'),
+      );
+      $formatters['lightbox2]['. $view_rule .'][original'] = array(
+        'label' => 'Lightbox2: '. $view_rule .'->original',
+        'field types' => array('image'),
+      );
+      $formatters['lightshow2][original]['. $view_rule] = array(
+        'label' => 'Lightbox2 slideshow: original->'. $view_rule,
+        'field types' => array('image'),
+      );
+      $formatters['lightshow2]['. $view_rule .'][original'] = array(
+        'label' => 'Lightbox2 slideshow: '. $view_rule .'->original',
+        'field types' => array('image'),
+      );
+      foreach ($rules as $rid => $lightbox_rule) {
+        $formatters['lightbox2]['. $view_rule .']['. $lightbox_rule] = array(
+          'label' => 'Lightbox2: '. $view_rule .'->'. $lightbox_rule,
+          'field types' => array('image'),
+        );
+        $formatters['lightshow2]['. $view_rule .']['. $lightbox_rule] = array(
+          'label' => 'Lightbox2 slideshow: '. $view_rule .'->'. $lightbox_rule,
+          'field types' => array('image'),
+        );
+        $formatters['lightframe2]['. $view_rule .'][node'] = array(
+          'label' => 'Lightbox2 iframe: '. $view_rule .'->node page',
+          'field types' => array('image'),
+        );
+      }
+    }
+  }
+  if (module_exists('emfield') && module_exists('image_ncck')) {
+    $formatters['lightbox2][image_ncck'] = array(
+      'label' => t('Lightbox2: Image Thumbnail -> Original'),
+      'field types' => array('image_ncck'),
+    );
+    $formatters['lightshow2][image_ncck'] = array(
+      'label' => t('Lightbox2 slideshow: Image Thumbnail -> Original'),
+      'field types' => array('image_ncck'),
+    );
+    $formatters['lightframe2][image_ncck'] = array(
+      'label' => t('Lightbox2 iframe: Image Thumbnail -> Content'),
+      'field types' => array('image_ncck'),
+    );
+  }
+  if (module_exists('emfield') && module_exists('video_cck')) {
+    $formatters['lightvideo'] = array(
+      'label' => t('Lightbox2: Image Thumbnail -> Full Size Video'),
+      'field types' => array('video_cck'),
+    );
+  }
+
+  return $formatters;
+}
+
+/**
+ * Implementation of hook_field_formatter().
+ */
+function lightbox2_field_formatter($field, $item, $formatter, $node) {
+
+  // Emfield video fields.
+  if ($formatter == 'lightvideo') {
+    if (module_exists('emfield') && module_exists('video_cck') && $formatter == 'lightvideo') {
+      $formatter = 'video_cck';
+      return module_invoke('emfield', 'emfield_field_formatter', $field, $item, $formatter, $node, 'lightbox2');
+    }
+  }
+
+  // Image fields - emfield or imagecache + imagefield.
+  else if (strpos($formatter, 'lightbox2][') !== FALSE || strpos($formatter, 'lightshow2][') !== FALSE || strpos($formatter, 'lightframe2][') !== FALSE) {
+    list($lightbox_type, $view_preset, $lightbox_preset) = explode('][', $formatter, 3);
+
+    // Emfield image field.
+    if ($view_preset == 'image_ncck' && module_exists('emfield') && module_exists('image_ncck')) {
+      $formatter = $view_preset;
+      $field['lightbox_type'] = $lightbox_type;
+      return module_invoke('emfield', 'emfield_field_formatter', $field, $item, $formatter, $node, 'lightbox2');
+    }
+
+
+    // Imagecache + imagefield image.
+    else if (module_exists('imagefield') && module_exists('imagecache')) {
+      return lightbox2_imagefield_image_imagecache($field, $item, $formatter, $node, $view_preset, $lightbox_preset);
+    }
+  }
+}
+
+/**
+ * Function to set up the data needed for
+ * theme_imagefield_image_imagecache_lightbox2().
+ *
+ * @param $field
+ *   The field the action is being performed on.
+ * @param $item
+ *   An array, keyed by column, of the data stored for this item in this field.
+ * @param $formatter
+ *   The formatter to use for the field.
+ * @param $node
+ *   The node object.
+ * @param $view_preset
+ *   The imagecache preset to be displayed on the node or in the view.
+ * @param $lightbox_preset
+ *   The imagecache preset to be displayed in the lightbox.
+ */
+function lightbox2_imagefield_image_imagecache($field, $item, $formatter, $node, $view_preset, $lightbox_preset) {
+  if (isset($item['filepath'])) {
+    $filepath = &$item['filepath'];
+  }
+  else if (!empty($item['fid'])) {
+    $file = _imagefield_file_load($item['fid']);
+    $filepath = &$file['filepath'];
+  }
+  else {
+    return '';
+  }
+  if (lightbox2_exclude_these_paths() != 1) {
+    lightbox2_add_files();
+  }
+
+  $item = array_merge($item, (array)$file);
+  $item['filepath'] = $filepath;
+  $item['lightbox_preset'] = $lightbox_preset;
+
+  $rules = array();
+  if (function_exists('imagecache_presets')) {
+    $presets = imagecache_presets();
+    foreach ($presets as $preset_id => $preset_info) {
+      $rules[$preset_id] = $preset_info['presetname'];
+    }
+  }
+  else {
+    $rules = _imagecache_get_presets();
+  }
+  if ($view_preset == 'original' || in_array($view_preset, (array) $rules)) {
+    $rel = 'lightbox';
+    if (strpos($formatter, 'lightshow2][') !== FALSE) {
+      $rel = 'lightshow';
+    }
+    else if (strpos($formatter, 'lightframe2][') !== FALSE) {
+      $rel = 'lightframe';
+    }
+    return theme('imagefield_image_imagecache_lightbox2', $view_preset, $field, $item, $node, $rel);
+  }
+
+}
+
+/**
+ * Generate the HTML output for imagefield + imagecache images so they can be
+ * opened in a lightbox by clicking on the image on the node page or in a view.
+ *
+ * @param $view_preset
+ *   The imagecache preset to be displayed on the node or in the view.
+ * @param $field
+ *   The field the action is being performed on.
+ * @param $item
+ *   An array, keyed by column, of the data stored for this item in this field.
+ * @param $node
+ *   The node object.
+ * @param $rel
+ *   The type of lightbox to open: lightbox, lightshow or lightframe.
+ */
+function theme_imagefield_image_imagecache_lightbox2($view_preset, $field, $item, $node, $rel = 'lightbox') {
+
+  if ($rel == 'lightframe' && arg(0) == 'node' && arg(1) == $node->nid) {
+    $rel = 'lightbox';
+    $item['lightbox_preset'] = 'original';
+  }
+  $orig_rel = $rel;
+  $imagefield_grouping = variable_get('lightbox2_imagefield_group_node_id', 1);
+  if ($imagefield_grouping == 1) {
+    $rel = $rel .'['. $field['field_name'] .']';
+  }
+  else if ($imagefield_grouping == 2 && !empty($item['nid'])) {
+    $rel = $rel .'['. $item['nid'] .']';
+  }
+  else if ($imagefield_grouping == 3 && !empty($item['nid'])) {
+    $rel = $rel .'['. $field['field_name'] . $item['nid'] .']';
+  }
+
+  $node_link = '';
+  $attributes = array();
+  if (!empty($item['nid'])) {
+    $target = variable_get('lightbox2_node_link_target', FALSE);
+    if (!empty($target)) {
+      $attributes = array('target' => $target);
+    }
+    $node_link_text = variable_get('lightbox2_node_link_text', 'View Image Details');
+    if (!empty($node_link_text)) {
+      $node_link .= '<br /><br />'. l($node_link_text, 'node/'. $item['nid'], $attributes);
+    }
+  }
+
+  if ($orig_rel == 'lightframe') {
+    $frame_width = variable_get('lightbox2_default_frame_width', 600);
+    $frame_height = variable_get('lightbox2_default_frame_height', 400);
+    $frame_size = 'width:'. $frame_width .'px; height:'. $frame_height .'px;';
+    $rel = preg_replace('/\]$/', "|$frame_size]", $rel);
+  }
+  $link_attributes = array(
+    'rel' => $rel,
+    'title' => $item['title'] . $node_link,
+  );
+
+  if ($view_preset == 'original') {
+    $image = theme('lightbox2_image', $item['filepath'], $item['alt'], $item['title'], $attributes);
+  }
+  else {
+    $image = theme('imagecache', $view_preset, $item['filepath'], $item['alt'], $item['title'], $attributes);
+  }
+  if ($item['lightbox_preset'] == 'node') {
+    $output = l($image, 'node/'. $node->nid, $link_attributes, NULL, NULL, FALSE, TRUE);
+  }
+  else if ($item['lightbox_preset'] == 'original') {
+    $output = l($image, file_create_url($item['filepath']), $link_attributes, NULL, NULL, FALSE, TRUE);
+  }
+  else {
+    $output = l($image, lightbox2_imagecache_create_url($item['lightbox_preset'], $item['filepath']), $link_attributes, NULL, NULL, FALSE, TRUE);
+  }
+
+  return $output;
+}
+
+/**
+ * Generate the HTML output to open embedded cck videos in a lightbox.
+ *
+ * @param $field
+ *   The field the action is being performed on.
+ * @param $item
+ *   An array, keyed by column, of the data stored for this item in this field.
+ * @param $formatter
+ *   The formatter to use for the field.
+ * @param $node
+ *   The node object.
+ * @param $options
+ *   Array of options available, including the width and height of the video
+ *   thumbnail.
+ */
+function theme_lightbox2_video_cck($field, $item, $formatter, $node, $options = array()) {
+
+  $thumbnail = theme('video_cck_video_thumbnail', $field, $item, 'video_thumbnail', $node, true, $options);
+
+  $destination = 'video-cck/lightbox2/'. $node->nid .'/'. $field['widget']['video_width'] .'/'. $field['widget']['video_height'] .'/'. $field['field_name'] .'/'. $item['provider'] .'/'. $item['value'];
+  $width = $field['widget']['video_width'] + 20;
+  $height = $field['widget']['video_height'] + 20;
+  if (isset($_SERVER['HTTP_USER_AGENT']) && (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false)) {
+    $width = $field['widget']['video_width'] + 40;
+    $height = $field['widget']['video_height'] + 40;
+  }
+  $rel = 'lightframe[|width:'. $width .'px; height:'. $height .'px; overflow:visible;]';
+
+  $output = l($thumbnail, $destination, array('title' => $title, 'rel' => $rel, 'class' => $field['type_name']), NULL, NULL, FALSE, TRUE);
+  return $output;
+}
+
+/**
+ * Configures settings and outputs the video.
+ *
+ * @param nid
+ *   The node id.
+ * @param width
+ *   The lightbox video width.
+ * @param height
+ *   The lightbox video height.
+ * @param field_name
+ *   The name of the cck field the video is contained in.
+ * @param provider
+ *   The name of the 3rd party video provider.
+ * @param id
+ *   The video id.
+ */
+function lightbox2_video_cck($nid, $width, $height, $field_name, $provider, $id) {
+  $field = array();
+  $field['widget']['video_width'] = $width;
+  $field['widget']['video_height'] = $height;
+  $field['widget']['video_autoplay'] = 1;
+  $field['field_name'] = $field_name;
+  $node = node_load($nid);
+  $items = $node->$field_name;
+  foreach ($items as $item) {
+    if ($item['provider'] == $provider && $item['value'] == $id) {
+      break;
+    }
+  }
+  print theme('video_cck_video_video', $field, $item, 'video_video', $node);
+}
+
+/**
+ * Generate the HTML output to open embedded cck images in a lightbox.
+ *
+ * @param $field
+ *   The field the action is being performed on.
+ * @param $item
+ *   An array, keyed by column, of the data stored for this item in this field.
+ * @param $formatter
+ *   The formatter to use for the field.
+ * @param $node
+ *   The node object.
+ * @param $options
+ *   Array of options available.  Not used in this theme function but required
+ *   by the invoked emfield function.
+ */
+function theme_lightbox2_image_ncck($field, $item, $formatter, $node, $options = array()) {
+  if ($item['value'] && $item['provider']) {
+    $rel = 'lightbox';
+    if ($field['lightbox_type'] == 'lightshow2') {
+      $rel = 'lightshow';
+    }
+    else if ($field['lightbox_type'] == 'lightframe2') {
+      $rel = 'lightframe';
+    }
+    if ($rel == 'lightframe' && arg(0) == 'node' && arg(1) == $node->nid) {
+      $rel = 'lightbox';
+    }
+    $orig_rel = $rel;
+    $image_grouping = variable_get('lightbox2_image_ncck_group_node_id', 1);
+    if ($image_grouping == 1) {
+      $rel = $rel .'['. $field['field_name'] .']';
+    }
+    else if ($image_grouping == 2 && !empty($node->nid)) {
+      $rel = $rel .'['. $node->nid .']';
+    }
+    else if ($image_grouping == 3 && !empty($node->nid)) {
+      $rel = $rel .'['. $field['field_name'] . $node->nid .']';
+    }
+
+    $code = $item['value'];
+    $width = $field['widget']['thumbnail_width'] === '' ? variable_get('image_ncck_default_full_width', IMAGE_NCCK_DEFAULT_FULL_WIDTH) : $field['widget']['thumbnail_width'];
+    $height = $field['widget']['thumbnail_height'] === '' ? variable_get('image_ncck_default_full_height', IMAGE_NCCK_DEFAULT_FULL_HEIGHT) : $field['widget']['thumbnail_height'];
+    $link = $field['widget']['thumbnail_link'] ? $field['widget']['thumbnail_link'] : variable_get('image_ncck_default_thumbnail_link', IMAGE_NCCK_DEFAULT_THUMBNAIL_LINK);
+    if ($link == IMAGE_NCCK_LINK_CONTENT) {
+      $link = 'node/'. $node->nid;
+    }
+    else if ($link == IMAGE_NCCK_LINK_PROVIDER) {
+      $link = module_invoke('emfield', 'include_invoke', 'image_ncck', $item['provider'], 'embedded_link', $code, $item['data']);
+    }
+    else {
+      $link = NULL;
+    }
+    $attributes = array();
+    $target = variable_get('lightbox2_node_link_target', FALSE);
+    if (!empty($target)) {
+      $attributes = array('target' => $target);
+    }
+    $node_link_text = variable_get('lightbox2_node_link_text', 'View Image Details');
+    if (!empty($node_link_text) && !empty($link)) {
+      $node_link = '<br /><br />'. l($node_link_text, $link, $attributes);
+    }
+
+    $title = module_invoke('emfield', 'include_invoke', 'image_ncck', $item['provider'], 'image_title', $code, $item['data']);
+
+    $url = module_invoke('emfield', 'include_invoke', 'image_ncck', $item['provider'], 'image_url', $code, $width, $height, $formatter, $field, $item, $node);
+    $image = theme('image', $url, $title, $title, $attributes, false);
+
+    if ($orig_rel != 'lightframe') {
+      $link_attributes = array(
+        'rel' => $rel,
+        'title' => $title . $node_link,
+      );
+      $full_width = $field['widget']['full_width'] === '' ? variable_get('image_ncck_default_full_width', IMAGE_NCCK_DEFAULT_FULL_WIDTH) : $field['widget']['full_width'];
+      $full_height = $field['widget']['full_height'] === '' ? variable_get('image_ncck_default_full_height', IMAGE_NCCK_DEFAULT_FULL_HEIGHT) : $field['widget']['full_height'];
+      $full_image_url = module_invoke('emfield', 'include_invoke', 'image_ncck', $item['provider'], 'image_url', $code, $full_width, $full_height, $formatter, $field, $item, $node);
+      $output = l($image, $full_image_url, $link_attributes, NULL, NULL, FALSE, TRUE);
+    }
+    else {
+      $frame_width = variable_get('lightbox2_default_frame_width', 600);
+      $frame_height = variable_get('lightbox2_default_frame_height', 400);
+      $frame_size = 'width:'. $frame_width .'px; height:'. $frame_height .'px;';
+      $rel = preg_replace('/\]$/', "|$frame_size]", $rel);
+      $link_attributes = array(
+        'rel' => $rel,
+        'title' => $title . $node_link,
+      );
+      $output = l($image, $link, $link_attributes, NULL, NULL, FALSE, TRUE);
+    }
+  }
+  return $output;
+
+}
+
+/**
+ * Return TRUE if current path is disabled for lightbox according to
+ * lightbox2_disable_these_urls.
+ */
+function lightbox2_exclude_these_paths() {
+  // Use lightbox if this url is not excluded.
+  $disabled_urls = variable_get('lightbox2_disable_these_urls', '');
+
+  if (!empty($disabled_urls)) {
+    $urls = explode("\n", $disabled_urls);
+
+    foreach ($urls as $url) {
+      $url = rtrim($url);
+      if ($url == "<front>") {
+        $url = "";
+      }
+      $url = preg_replace('/%/', '.*?', preg_quote($url, '/'));
+      $pattern = '/^'. $url .'$/';
+      if (preg_match($pattern, $_REQUEST['q'])) {
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Theme function for displaying the lightbox2 trigger image in an imagefield.
+ */
+function theme_lightbox2_image($path, $alt = '', $title = '', $attributes = NULL) {
+  $attributes = drupal_attributes($attributes);
+  $image = '<img src="'. file_create_url($path) .'" alt="'.  check_plain($alt) .'" title="'. check_plain($title) .'" '. $attributes .' />';
+  return $image;
+}
+
+/**
+ * Implementation of the imagecache_create_url() function for integration with
+ * imagecache module versions prior to imagecache 2.
+ */
+function lightbox2_imagecache_create_url($preset, $filepath) {
+  if (function_exists('imagecache_create_url')) {
+    return imagecache_create_url($preset, $filepath);
+  }
+  else {
+    $dirpath = file_directory_path();
+    $dirlen = drupal_strlen($dirpath);
+    if (drupal_substr($filepath, 0, $dirlen + 1) == $dirpath .'/') {
+      $filepath = drupal_substr($filepath, $dirlen + 1);
+    }
+    return file_create_url(file_directory_path() .'/imagecache/'. $preset .'/'. $filepath);
+  }
+}

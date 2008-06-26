@@ -1,0 +1,1009 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Biblio Drupal\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Robert Alessi <alessi@robertalessi.net>\n"
+"Language-Team: Français <fr@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: French\n"
+"X-Poedit-Country: FRANCE\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: biblio_style_apa.inc:50
+#: biblio_style_classic.inc:49
+#: biblio_style_cse.inc:50
+#: biblio.module:980;1317;1573;1745
+msgid "In Press"
+msgstr "Sous presse"
+
+#: biblio_style_ieee.inc:73
+msgid "(In Press)"
+msgstr "(Sous presse)"
+
+#: biblio.module:35
+msgid "General: "
+msgstr "Général:"
+
+#: biblio.module:36
+msgid "By default, the "
+msgstr "Par défaut, la"
+
+#: biblio.module:37
+msgid " page will list all of the entries in the database sorted by Year in descending order. If you wish to sort by \"Title\" or \"Type\",  you may do so by clicking on the appropriate links at the top of the page.  To reverse the sort order, simply click the link a second time."
+msgstr " page listera toutes les entrées dans la base de données triées par année de la plus récente à la plus ancienne. Si vous souhaitez faire le tri par \"Titre\" ou par \"Type\", vous pouvez le faire en cliquant sur les liens appropriés en haut de la page. Pour inverser l'ordre de tri, cliquez simplement sur le lien une deuxième fois."
+
+#: biblio.module:38
+msgid "Filtering Search Results:"
+msgstr "Résultat de la recherche après application des filtres:"
+
+#: biblio.module:39
+msgid "If you wish to filter the results, click on the \"Filter\" tab at the top of the page.  To add a filter, click the radio button to the left of the filter type you wish to apply, then select the filter criteria from the drop down list on the right, then click the filter button."
+msgstr "Si vous souhaitez filtrer les résultats, cliquez sur l'onglet \"Filtrer\" en haut de la page. Pour ajouter un filtre, cliquez sur le bouton radio à la gauche du type de filtre que vous souhaitez appliquer, puis choisissez le critère de filtrage  dans la liste déroulante de droite, et cliquez enfin sur le bouton de filtrage."
+
+#: biblio.module:41
+msgid "It is possible to create complex filters by returning to the "
+msgstr "Il est possible de créer des filtres complexes en retournant au "
+
+#: biblio.module:42;47
+msgid "\"Filter\""
+msgstr "\"Filtre\""
+
+#: biblio.module:43
+msgid " tab and adding additional filters.  Simply follow the steps outlined above and press the \"Refine\" button."
+msgstr " onglet et ajouter des filtres supplémentaires. Suivez simplement les étapes indiquées plus haut et cliquez sur le bouton \"Affiner\""
+
+#: biblio.module:44
+msgid "All filters can be removed by clicking the "
+msgstr "Tous les filtres peuvent être enlevés en cliquant sur le bouton "
+
+#: biblio.module:45
+msgid "\"Clear All Filters\""
+msgstr "\"Ôter tous les filtres\""
+
+#: biblio.module:46
+msgid "link at the top of the result page, or on the "
+msgstr "lien en haut de la page des résultats, ou sur "
+
+#: biblio.module:48
+msgid " tab they can be removed one at a time using the "
+msgstr "onglets peuvent être ôtés un par un en utilisant le "
+
+#: biblio.module:48
+msgid "\"Undo\""
+msgstr "\"Annuler\""
+
+#: biblio.module:49
+msgid " button, or you can remove them all using the "
+msgstr "bouton, ou bien vous pouvez les ôter tous en utilisant le "
+
+#: biblio.module:49
+msgid "\"Clear All\""
+msgstr "\"Tout enlever\""
+
+#: biblio.module:50
+msgid " button."
+msgstr " bouton."
+
+#: biblio.module:51
+msgid "You may also construct URLs which filter.  For example, /biblio/year/2005 will show all of the entries for 2005.  /biblio/year/2005/author/smith will show all of entries from 2005 for smith."
+msgstr "Vous pouvez aussi construire des URL qui font office de filtre. Par exemple, /biblio/year/2005 montrera toutes les entrées pour 2005. /biblio/year/2005/author/smith montrera toutes les entrées pour 2005 dont l'auteur est smith."
+
+#: biblio.module:52
+msgid "Exporting Search Results:"
+msgstr "Exporter les résultats de la recherche:"
+
+#: biblio.module:53
+msgid "Assuming this option has been enabled by the administrator, you can export search results directly into EndNote.  The link at the top of the result page will export all of the search results, and the links on individual entries will export the information related to that single entry."
+msgstr "Si cette option a été activée par l'administrateur, vous pouvez exporter les résultats de la recherche directement dans EndNote. Le lien en haut de la page de résultats exportera tous les résultats de la recherche, et les liens sur chaque entrée exporteront les informations relatives à cette entrée."
+
+#: biblio.module:54
+msgid "The information is exported in EndNote \"Tagged\" format similar to this..."
+msgstr "L'information est exportée dans le format \"Tagged\" de EndNote, comme ici..."
+
+#: biblio.module:55
+msgid ""
+"\n"
+"              %0  Book\n"
+"              %A  John Smith \n"
+"              %D  1959\n"
+"              %T  The Works of John Smith\n"
+"              ..."
+msgstr ""
+"\n"
+"              %0  Livre\n"
+"              %A  John Smith\n"
+"              %D  1959\n"
+"              %T  L'Œuvre de John Smith\n"
+"              ..."
+
+#: biblio.module:62
+msgid "Clicking on one of the export links should cause your browser to ask you whether you want to Open, or Save To Disk, the file endnote.enw.  If you choose to open it, Endnote should start and ask you which library you would like store the results in.  Alternatively, you can save the file to disk and manually import it into EndNote."
+msgstr "Si vous cliquez sur l'un des liens d'exportation, votre navigateur devrait vous demander si vous souhaitez \"Ouvrir\" le fichier ou bien \"Sauvegarder sous\" le fichier endnote.enw. Si vous choisissez de l'ouvrir, Endnote devrait se lancer et vous demander dans quel catalogue vous souhaitez enregistrer les résultats. Vous pouvez aussi sauvegarder le fichier sur votre disque et importer les résultats manuellement dans EndNote."
+
+#: biblio.module:83
+msgid "Manages a list of scholarly papers on your site"
+msgstr "Gère une liste d'ouvrages académiques sur votre site"
+
+#: biblio.module:86
+msgid "This allows you to add a bibliographic entry to the database"
+msgstr "Cela vous permet d'ajouter une entrée de bibliographie dans la base de données"
+
+#: biblio.module:92;0
+msgid "biblio"
+msgstr "biblio"
+
+#: biblio.module:94
+msgid "Maintains list of bibliographies"
+msgstr "Gère des listes de bibliographies"
+
+#: biblio.module:166
+msgid "edit this entry"
+msgstr "editer cette entrée"
+
+#: biblio.module:191
+msgid "Base URL"
+msgstr "URL de base"
+
+#: biblio.module:194
+msgid "This sets the base URL used to access the biblio module (e.g. /biblio )."
+msgstr "Cela fixe l'URL de base par laquelle on pourra accéder au module biblio (ex. /biblio)."
+
+#: biblio.module:198
+msgid "Number of results per page."
+msgstr "Nombre de résultats par page."
+
+#: biblio.module:202
+msgid "This sets the number of results that will be displayed per page."
+msgstr "Cela fixe le nombre de résultats qui seront affichés sur chaque page."
+
+#: biblio.module:206
+msgid "Restrict users such that they can only view their own biblio entries"
+msgstr "N'autorise les utilisateurs qu'à afficher leurs propres entrées bibliographiques"
+
+#: biblio.module:209
+msgid "This option restricts the users capability to view biblio entries.  They will only be able to see the entries which they have created and own."
+msgstr "Cette option limite les autorisations des utilisateurs à visualiser les entrées bibliographiques. Ils ne pourront visualiser que les entrées qu'ils ont créées et dont ils sont propriétaires."
+
+#: biblio.module:214
+msgid "Block settings"
+msgstr "Paramètres des blocs"
+
+#: biblio.module:219
+msgid "Title for the \"New Publications\" block"
+msgstr "Titre pour le bloc \"Nouvelles publications\""
+
+#: biblio.module:227
+msgid "Number of results in the \"New Publications\" block"
+msgstr "Nombre de résultats dans le bloc \"Nouvelles publications\""
+
+#: biblio.module:231
+msgid "This sets the number of results that will be displayed in the \"New Publications\" block."
+msgstr "Cela fixe le nombre de résultats qui seront montrés dans le bloc \"Nouvelles publications\"."
+
+#: biblio.module:235
+msgid "Order by"
+msgstr "Trier par"
+
+#: biblio.module:237
+msgid "Date Created"
+msgstr "Date de création"
+
+#: biblio.module:237
+msgid "Year Published"
+msgstr "Année de publication"
+
+#: biblio.module:244;248;252
+msgid "Footnotes"
+msgstr "Notes de bas de page"
+
+#: biblio.module:248;252
+msgid "Depends on"
+msgstr "Dépend de"
+
+#: biblio.module:248
+msgid "disabled"
+msgstr "désactivé"
+
+#: biblio.module:252
+msgid "enabled"
+msgstr "activé"
+
+#: biblio.module:258
+msgid "Integration with the footnotes module"
+msgstr "Intégration avec le module footnotes"
+
+#: biblio.module:262
+msgid "This will convert &lt;bib&gt; tags into &lt;fn&gt; tags.  This will cause intermingled &lt;bib&gt; and &lt;fn&gt; tags to be sequentially numbered.  For this to work, you must put the &lt;bib&gt; filter ahead of the &lt;fn&gt; filter in the filter chain.  If this option is not set, &lt;bib&gt; and &lt;fn&gt; tags will be handled separately."
+msgstr "Cela convertira les balises &lt;bib&gt; en des balises &lt;fn&gt;. De cette façon, les balises entremêlées &lt;bib&gt; et &lt;fn&gt; seront numérotées séquentiellement. Pour que cela fonctionne, vous devez placer le filtre &lt;bib&gt; avant le filtre &lt;fn&gt; dans la chaîne des filtres. Si cette option n'est pas paramétrée, les balises &lt;bib&gt; et &lt;fn&gt; seront traitées de manière séparée."
+
+#: biblio.module:268;1586
+msgid "Keywords"
+msgstr "Mots clés"
+
+#: biblio.module:273
+msgid "Keyword separator"
+msgstr "Séparateur des mots clés"
+
+#: biblio.module:276
+msgid "Enter the character which will be used to separate multiple keywords in the keyword field"
+msgstr "Entrez le caractère qui servira à séparer les mots clés dans la chaîne des mots clés"
+
+#: biblio.module:282
+msgid "OpenURL"
+msgstr "OpenURL"
+
+#: biblio.module:283
+msgid "You can set an <a href=\"http://en.wikipedia.org/wiki/OpenURL\">openurl</a> link here"
+msgstr "Vous pouvez paramétrer un lien <a href=\"http://en.wikipedia.org/wiki/OpenURL\">openurl</a> ici"
+
+#: biblio.module:287
+msgid "OpenURL Base URL"
+msgstr "URL de base pour OpenURL"
+
+#: biblio.module:290
+msgid "This sets your institution's base <a href=\"http://en.wikipedia.org/wiki/OpenURL\">OpenURL</a> gateway, which is used to generate OpenURL links. To implement a \"Universal\" OpenURL system, try using OCLC's <a href=\"http://www.oclc.org/productworks/urlresolver.htm\">OpenURL Resolver Registry</a> gateway: <a href=\"http://worldcatlibraries.org/registry/gateway\">http://worldcatlibraries.org/registry/gateway</a>"
+msgstr "Cela paramètre pour votre institution la passerelle de base <a href=\"http://en.wikipedia.org/wiki/OpenURL\">OpenURL</a> qui sera utilisée pour générer les liens OpenURL. Pour implémenter un système OpenURL \"Universel\", essayez d'utiliser la passerelle <a href=\"http://www.oclc.org/productworks/urlresolver.htm\">OpenURL Resolver Registry</a> de l'OCLC: <a href=\"http://worldcatlibraries.org/registry/gateway\">http://worldcatlibraries.org/registry/gateway</a>."
+
+#: biblio.module:294
+msgid "OpenURL Image"
+msgstr "Image OpenURL"
+
+#: biblio.module:297
+msgid "Enter a path to your image here, this image will be used as button which when clicked will find the entry via the OpenURL link"
+msgstr "Entrez le chemin d'accès vers votre image ici. Cette image sera utilisée comme bouton cliquable dont l'effet sera de trouver l'entrée par un lien de type OpenURL."
+
+#: biblio.module:303
+msgid "Sorting"
+msgstr "Trier"
+
+#: biblio.module:304
+msgid "You can set the default sorting and ordering for the /biblio page here."
+msgstr "Vous pouvez paramétrer l'odre de tri par défaut sur la page /biblio ici."
+
+#: biblio.module:308;1685
+msgid "Sort by"
+msgstr "Trier par"
+
+#: biblio.module:310;316;1011;1692
+msgid "Author"
+msgstr "Auteur"
+
+#: biblio.module:310;316;1229;1690
+msgid "Title"
+msgstr "Titre"
+
+#: biblio.module:310;316;1012;1691
+msgid "Type"
+msgstr "Type"
+
+#: biblio.module:310;316;1014;1689
+msgid "Year"
+msgstr "Année"
+
+#: biblio.module:314
+msgid "Show sort links"
+msgstr "Montrer les liens de tri"
+
+#: biblio.module:317
+msgid "You turn the sorting links at the top of the /biblio page here."
+msgstr "Vous placez les liens de tri en haut de la page /biblio ici."
+
+#: biblio.module:321
+msgid "Order"
+msgstr "Ordre"
+
+#: biblio.module:323
+msgid "Descending"
+msgstr "Décroissant"
+
+#: biblio.module:323
+msgid "Ascending"
+msgstr "Croissant"
+
+#: biblio.module:329
+msgid "Styling"
+msgstr "Style"
+
+#: biblio.module:330
+msgid "You can set the default style for the /biblio page here."
+msgstr "Vous pouvez paramétrer le style par défaut de la page /biblio ici."
+
+#: biblio.module:334
+msgid "Normalize author names when displaying biblio records"
+msgstr "Normalise les noms d'auteur dans l'affichage des enregistrements bibliographiques"
+
+#: biblio.module:337
+msgid "Tries (doesn't always work) to reformat author names so that they are displayed in the format \"Lastname, Initials\" e.g. Smith, J.S. (Note: This setting does not modify the entry in the database, it only reformats it's presentation. This option can be turned off at any time to diplay the oringal format.)"
+msgstr "Ne fonctionne pas toujours: essaie de reformater les noms d'auteur de façon à les afficher dans le format \"Nom, Initiales\", comme dans Smith, J.S. (NB: ce paramètre ne modifie pas l'entrée dans la base de données; il ne fait que reformater sa présentation. Cette option peut être désactivée à tout moment pour revenir au format original.)"
+
+#: biblio.module:340
+msgid "Links open in new browser"
+msgstr "Le lien s'ouvre sur une nouvelle page"
+
+#: biblio.module:343
+msgid "This causes related URLs to open in a new browser window"
+msgstr "Cela provoque l'ouverture des URL dans une nouvelle fenêtre de votre navigateur."
+
+#: biblio.module:346
+msgid "Node Layout"
+msgstr "Node Layout"
+
+#: biblio.module:348
+msgid "Original"
+msgstr "Original"
+
+#: biblio.module:348
+msgid "Only Fulltext if available"
+msgstr "Seulement texte seul si disponible"
+
+#: biblio.module:348
+msgid "Tabular"
+msgstr "Tableau"
+
+#: biblio.module:349
+msgid "This alters the layout of the \"node\" (full) view."
+msgstr "Cela modifie la présentation de la \"node\" en mode \"visualiser tout\"."
+
+#: biblio.module:353
+msgid "Annotations"
+msgstr "Annotations"
+
+#: biblio.module:355;407
+msgid "none"
+msgstr "néant"
+
+#: biblio.module:355
+msgid "notes"
+msgstr "notes"
+
+#: biblio.module:355
+msgid "custom1"
+msgstr "personnalisé1"
+
+#: biblio.module:355
+msgid "custom2"
+msgstr "personnalisé2"
+
+#: biblio.module:355
+msgid "custom3"
+msgstr "personnalisé3"
+
+#: biblio.module:355
+msgid "custom4"
+msgstr "personnalisé4"
+
+#: biblio.module:355
+msgid "custom5"
+msgstr "personnalisé5"
+
+#: biblio.module:355
+msgid "custom6"
+msgstr "personnalisé6"
+
+#: biblio.module:355
+msgid "custom7"
+msgstr "personnalisé7"
+
+#: biblio.module:356
+msgid "Select a field from which an annotation will be displayed below biblo entry in \"short\" listings"
+msgstr "Choisissez le champ à partir duquel l'annotation sera montrée sous l'entrée bibliographique en mode \"liste sommaire\"."
+
+#: biblio.module:362
+msgid "Style"
+msgstr "Style"
+
+#: biblio.module:365
+msgid "This alters the layout of the \"list\" (short) view."
+msgstr "Cela modifie la présentation de la liste en mode \"liste sommaire\"."
+
+#: biblio.module:371
+msgid "Syndication"
+msgstr "Syndication"
+
+#: biblio.module:372
+msgid "You can set the RSS defaults here."
+msgstr "Vous pouvez paramétrer les flux RSS par défaut ici."
+
+#: biblio.module:376
+msgid "Allow RSS feeds of new biblio entries"
+msgstr "Autorise les flux RSS sur les nouvelles entrées de bibliographie"
+
+#: biblio.module:379
+msgid "This will create an rss feed of the 10 most recent biblio entries. It will be available at /biblio/rss.xml"
+msgstr "Cela créera un flux RSS pour les 10 entrées bibliographiques les plus récentes. Il sera disponible à l'adresse /biblio/rss.xml"
+
+#: biblio.module:383
+msgid "Number of items in the RSS feed."
+msgstr "Nombre d'éléments dans le flux RSS."
+
+#: biblio.module:387
+msgid "Limits the number of items in the /biblio/rss.xml feed to this number."
+msgstr "Limite le nombre d'éléments dans le flux /biblio/rss.xml à ce nombre."
+
+#: biblio.module:394
+msgid "Taxonomy"
+msgstr "Catégories"
+
+#: biblio.module:395
+msgid "You can set the Taxonomy defaults here."
+msgstr "Vous pouvez fixer les paramètres de catégorie par défaut ici."
+
+#: biblio.module:399
+msgid "Use keywords from biblio entries as taxonomy \"free tags\""
+msgstr "Utiliser les mots clés des entrées de bibliographie comme des éléments de catégorie en \"étiquetage libre\"."
+
+#: biblio.module:402
+msgid "This option allows user to add keywords (free tags) to describe their documents. These keywords will be registered as taxonomy."
+msgstr "Cette option permet aux utilisateurs d'ajouter des mots clés en \"étiquetage libre\" pour décrire leurs documents. Ces mots clés seront enregistrés en tant que catégorie."
+
+#: biblio.module:418
+msgid "Vocabulary"
+msgstr "Vocabulaire"
+
+#: biblio.module:421
+msgid "Select vocabulary (category) to use for free tags."
+msgstr "Choisissez le vocabulaire (catégorie) à utiliser pour l'étiquetage \"libre\""
+
+#: biblio.module:475
+msgid "bibliography"
+msgstr "bibliographie"
+
+#: biblio.module:478
+msgid "Biblio settings"
+msgstr "Paramètres de Biblio"
+
+#: biblio.module:479
+msgid "Configure default behavior of the biblio module."
+msgstr "Configuration du comportement par défaut du module biblio"
+
+#: biblio.module:481
+msgid "Preferences"
+msgstr "Préférences"
+
+#: biblio.module:483
+msgid "File Import"
+msgstr "Importation de fichier"
+
+#: biblio.module:486
+msgid "Type Customization"
+msgstr "Personalisation des types"
+
+#: biblio.module:489
+msgid "Field Defaults"
+msgstr "Paramètres des champs"
+
+#: biblio.module:501;657
+msgid "Add New Type"
+msgstr "Ajouter un nouveau type"
+
+#: biblio.module:504
+msgid "Reset all types to defaults "
+msgstr "Réinitialiser tous les types aux paramètres par défaut"
+
+#: biblio.module:514
+msgid "Autocomplete "
+msgstr "Autocomplétion"
+
+#: biblio.module:524
+msgid "List"
+msgstr "Liste"
+
+#: biblio.module:526;1055;1098
+msgid "Filter"
+msgstr "Filtre"
+
+#: biblio.module:534
+msgid "Help"
+msgstr "Aide"
+
+#: biblio.module:567
+msgid "RSS feed"
+msgstr "flux RSS"
+
+#: biblio.module:576;655
+msgid "Type Name"
+msgstr "Nom du type"
+
+#: biblio.module:582
+msgid "Description"
+msgstr "Description"
+
+#: biblio.module:587
+msgid "Create New Type"
+msgstr "Créer un nouveau type"
+
+#: biblio.module:627
+msgid "Are you sure you want to delete the custom biblio type:  %title ? "
+msgstr "Êtes-vous sûr de vouloir supprimer le type personnalisé: %title ? "
+
+#: biblio.module:628
+msgid "This action cannot be undone."
+msgstr "Cette action est irréversible."
+
+#: biblio.module:629
+msgid "Delete"
+msgstr "Supprimer"
+
+#: biblio.module:629;670
+msgid "Cancel"
+msgstr "Annuler"
+
+#: biblio.module:650;652
+msgid "edit"
+msgstr "éditer"
+
+#: biblio.module:650
+msgid "hide"
+msgstr "cacher"
+
+#: biblio.module:650
+msgid "show"
+msgstr "montrer"
+
+#: biblio.module:652
+msgid "delete"
+msgstr "supprimer"
+
+#: biblio.module:655
+msgid "Type Id"
+msgstr "Type Id"
+
+#: biblio.module:655
+msgid "Operations"
+msgstr "Opérations"
+
+#: biblio.module:658
+msgid "Reset all types to defaults"
+msgstr "Réinitialiser tous les types aux paramètres par défaut."
+
+#: biblio.module:667
+msgid "Are you sure you want to reset ALL the field definitions to the defaults? "
+msgstr "Êtes-vous sûr de vouloir réinitialiser TOUTES les définitions des champs aux définitions par défaut?"
+
+#: biblio.module:669
+msgid "This action will reset any and all field customizations to the defaults, and cannot be undone!"
+msgstr "Cette action réinitialisera toutes les personnalisations aux paramètres par défaut. Elle est irréversible!"
+
+#: biblio.module:670;1058;1119
+msgid "Reset"
+msgstr "Réinitialiser"
+
+#: biblio.module:692;1219
+msgid "Publication Type"
+msgstr "Type de publication"
+
+#: biblio.module:709
+msgid "Click Here"
+msgstr "Cliquez ici"
+
+#: biblio.module:734;1284;1591
+msgid "Full Text"
+msgstr "Texte complet"
+
+#: biblio.module:739;1673
+msgid "Export"
+msgstr "Exporter"
+
+#: biblio.module:740;1606
+msgid "Tagged"
+msgstr "Tagged"
+
+#: biblio.module:741;1607
+msgid "XML"
+msgstr "XML"
+
+#: biblio.module:742;1608;2188
+msgid "BibTex"
+msgstr "BibTeX"
+
+#: biblio.module:826
+msgid "Save"
+msgstr "Sauvegarder"
+
+#: biblio.module:849
+msgid "!oid"
+msgstr "!oid"
+
+#: biblio.module:863;865
+msgid "Field Name"
+msgstr "Nom du champ"
+
+#: biblio.module:863;865
+msgid "Default Title"
+msgstr "Titre par défaut"
+
+#: biblio.module:863;865
+msgid "Hint"
+msgstr "Suggestion"
+
+#: biblio.module:863;865
+msgid "Required"
+msgstr "Obligatoire"
+
+#: biblio.module:863;865
+msgid "Weight"
+msgstr "Poids"
+
+#: biblio.module:863
+msgid "Action"
+msgstr "Action"
+
+#: biblio.module:865
+msgid "Common"
+msgstr "Commun"
+
+#: biblio.module:865
+msgid "Auto Complete"
+msgstr "Autocomplétion"
+
+#: biblio.module:941
+msgid "The changes have been saved."
+msgstr "Les changements ont été sauvegardés."
+
+#: biblio.module:981
+msgid "!year"
+msgstr "!year"
+
+#: biblio.module:982;997;1214;1667
+msgid "!name"
+msgstr "!name"
+
+#: biblio.module:1005
+msgid "Term"
+msgstr "Terme"
+
+#: biblio.module:1027
+msgid "Show only items where"
+msgstr "Montrer seulement les éléments où "
+
+#: biblio.module:1055;1099
+msgid "Refine"
+msgstr "Affiner"
+
+#: biblio.module:1057;1116
+msgid "Undo"
+msgstr "Annuler"
+
+#: biblio.module:1073
+msgid "and"
+msgstr "et"
+
+#: biblio.module:1073
+msgid "where"
+msgstr "où"
+
+#: biblio.module:1079
+msgid "is"
+msgstr "est"
+
+#: biblio.module:1180;1251
+msgid "!title"
+msgstr "!title"
+
+#: biblio.module:1189
+msgid "Separate key words with a "
+msgstr "Séparer les mots clés avec un "
+
+#: biblio.module:1189
+msgid " character"
+msgstr " caractère"
+
+#: biblio.module:1287
+msgid "You may enter a full text or HTML version of the publication here."
+msgstr "Vous pouvez entrer ici une version de la publication en texte seul ou en HTML."
+
+#: biblio.module:1303
+msgid "You must select the type of publication"
+msgstr "Vous devez choisir un type de publication"
+
+#: biblio.module:1307
+msgid "You must supply at least one author name"
+msgstr "Vous devez fournir au moins un nom d'auteur."
+
+#: biblio.module:1314
+msgid "You must supply the year of publication"
+msgstr "Vous devez fournir l'année de la publication."
+
+#: biblio.module:1320
+msgid "Year of Publication must be a number between 1 and "
+msgstr "L'année de publication doit être un nombre compris entre 1 et "
+
+#: biblio.module:1407
+msgid "Sorry, citekey: "
+msgstr "Désolé. Clé de citation: "
+
+#: biblio.module:1407;2794
+msgid " not found"
+msgstr "non trouvé(e)"
+
+#: biblio.module:1464
+msgid "Home"
+msgstr "Accueil"
+
+#: biblio.module:1464
+msgid "!base"
+msgstr "!base"
+
+#: biblio.module:1479
+msgid "Most recent publications"
+msgstr "Publications récentes"
+
+#: biblio.module:1507
+msgid "New Publications"
+msgstr "Nouvelles publications"
+
+#: biblio.module:1543
+msgid "Authors"
+msgstr "Auteurs"
+
+#: biblio.module:1544
+msgid "Source"
+msgstr "Source"
+
+#: biblio.module:1553
+msgid "Volume "
+msgstr "Volume"
+
+#: biblio.module:1557
+msgid "Issue "
+msgstr "Fascicule"
+
+#: biblio.module:1561
+msgid "Number "
+msgstr "Numéro"
+
+#: biblio.module:1578
+msgid "ISBN"
+msgstr "ISBN"
+
+#: biblio.module:1579
+msgid "Call Number"
+msgstr "Call Number"
+
+#: biblio.module:1580
+msgid "Accession Number"
+msgstr "Accession Number"
+
+#: biblio.module:1581
+msgid "Other Number"
+msgstr "Autre nombre"
+
+#: biblio.module:1584
+msgid "URL"
+msgstr "URL"
+
+#: biblio.module:1587
+msgid "Abstract"
+msgstr "Résumé"
+
+#: biblio.module:1589
+msgid "Notes"
+msgstr "Notes"
+
+#: biblio.module:1673
+msgid "results"
+msgstr "resultats"
+
+#: biblio.module:1675
+msgid "Found "
+msgstr "Trouvé(s)"
+
+#: biblio.module:1675
+msgid " results"
+msgstr " résultats"
+
+#: biblio.module:1678
+msgid "Click a second time to reverse the sort order"
+msgstr "Cliquez une nouvelle fois pour inverser l'ordre de tri"
+
+#: biblio.module:1699
+msgid "Filters"
+msgstr "Filtres"
+
+#: biblio.module:1708
+msgid "Taxonomy Term"
+msgstr "Taxonomy Term"
+
+#: biblio.module:1713
+msgid "<em> and</em> <strong>%a</strong> is <strong>%b</strong>"
+msgstr "<em> et</em> <strong>%a</strong> est <strong>%b</strong>"
+
+#: biblio.module:1713
+msgid "<strong>%a</strong> is <strong>%b</strong>"
+msgstr "<strong>%a</strong> est <strong>%b</strong>"
+
+#: biblio.module:1715
+msgid "Clear All Filters"
+msgstr "Réinitialiser tous les filtres"
+
+#: biblio.module:1755
+msgid "No items found"
+msgstr "Aucun élément n'a été trouvé."
+
+#: biblio.module:1757
+msgid "Modify"
+msgstr "Modifier"
+
+#: biblio.module:1758
+msgid "remove"
+msgstr "ôter"
+
+#: biblio.module:2180
+msgid "Import file"
+msgstr "Importer un fichier"
+
+#: biblio.module:2186
+msgid "File Type"
+msgstr "Type de fichier"
+
+#: biblio.module:2188
+msgid "EndNote Tagged"
+msgstr "Étiqueté avec EndNote"
+
+#: biblio.module:2188
+msgid "RIS"
+msgstr "RIS"
+
+#: biblio.module:2188
+msgid "EndNote 7 XML"
+msgstr "EndNote 7 XML"
+
+#: biblio.module:2188
+msgid "EndNote 8+ XML"
+msgstr "EndNote 8+ XML"
+
+#: biblio.module:2198
+msgid "Taxonomy Settings"
+msgstr "Paramètres de taxonomie"
+
+#: biblio.module:2199
+msgid "Here you may select terms to be assigned to imported records (if any vocabularies are assigned to the biblio node type)"
+msgstr "Vous pouvez ici choisir les termes que vous voulez assigner aux enregistrements importés (dans le cas où des termes de taxonomie sont assignés au type de contenu \"biblio\")"
+
+#: biblio.module:2206
+msgid "Select taxonomy term to assigned to imported entries"
+msgstr "Choisissez le terme de taxonomie à assigner aux entrées importées"
+
+#: biblio.module:2209
+msgid "There are currently no vocabularies assigned to the biblio node type, please go the the "
+msgstr "Il n'y a actuellement aucun vocabulaire assigné au type de contenu \"biblio\"; veuillez aller à "
+
+#: biblio.module:2209
+msgid "admin/taxonomy"
+msgstr "admin/taxonomy"
+
+#: biblio.module:2209
+msgid " page to fix this"
+msgstr "page pour réparer cela"
+
+#: biblio.module:2215
+msgid "Keywords will be added to the"
+msgstr "Les mots clés seront ajoutés à "
+
+#: biblio.module:2215
+msgid "vocabulary as specified in the Taxonomy section of the "
+msgstr "vocabulaire tel qu'il est spécifié dans la section Taxonomie de "
+
+#: biblio.module:2215;2217
+msgid "admin/settings/biblio"
+msgstr "admin/settings/biblio"
+
+#: biblio.module:2215;2217
+msgid " page."
+msgstr "page."
+
+#: biblio.module:2217
+msgid "Keywords will"
+msgstr "Les mots clés seront "
+
+#: biblio.module:2217
+msgid "NOT"
+msgstr "NON"
+
+#: biblio.module:2217
+msgid "be added to the vocabulary as specified in the Taxonomy section of the "
+msgstr "ajoutés au vocabulaire tels que cela est spécifié dans la section Taxonomie de "
+
+#: biblio.module:2224;2244;2251
+msgid "Import"
+msgstr "Importer"
+
+#: biblio.module:2242
+msgid "You must provide a file name"
+msgstr "Vous devez fournir un nom de fichier"
+
+#: biblio.module:2245
+msgid "You must select a file type"
+msgstr "Vous devez choisir un type de fichier"
+
+#: biblio.module:2255
+msgid " was uploaded"
+msgstr " a été envoyé"
+
+#: biblio.module:2271
+msgid "File was NOT successfully uploaded"
+msgstr "Le fichier n'a pas été téléchargé avec succès"
+
+#: biblio.module:2391
+msgid "Succesfully imported "
+msgstr "Importation réussie"
+
+#: biblio.module:2391
+msgid " entries."
+msgstr " entrées."
+
+#: biblio.module:2794
+msgid "Citekey: "
+msgstr "Clé de citation: "
+
+#: biblio.module:2812
+msgid "You can cite references directly into texts with <code>&lt;bib&gt;citekey&lt;/bib&gt;</code>. This will be replaced with a running number (the publication reference) and the publication referenced by the citekey within the &lt;bib&gt; tags will be print to the bottom of the page (the reference)."
+msgstr "Vous pouvez citer les références directement dans des textes avec <code>&lt;bib&gt;clé_de_citation&lt;/bib&gt;</code>. Cela sera remplacé par un nombre réel (la référence de la publication) et la publication référencée sous la clé de citation dans la balise &lt;bib&gt; sera montrée au bas de la page (la référence)."
+
+#: biblio.module:2815;2850
+msgid "Use &lt;bib&gt;...&lt;/bib&gt; to insert automatically numbered references."
+msgstr "Utilisez &lt;bib&gt;...&lt;/bib&gt; pour insérer des références automatiquement."
+
+#: biblio.module:2833
+msgid "References &lt;bib&gt;"
+msgstr "Références &lt;bibliographiques&gt;"
+
+#: biblio.module:2908
+msgid "References"
+msgstr "Références"
+
+#: biblio.module:2966
+msgid "Find It Via OpenURL!"
+msgstr "Trouvez cela par OpenURL!"
+
+#: biblio.module:151
+msgid "create biblio"
+msgstr "Créer une entrée de bibliographie"
+
+#: biblio.module:151
+msgid "edit all biblio entries"
+msgstr "éditer toutes les entrées bibliographiques"
+
+#: biblio.module:151
+msgid "edit own biblio entries"
+msgstr "editer les entrées bibliographiques personnelles"
+
+#: biblio.module:151
+msgid "import from file"
+msgstr "importer à partir d'un fichier"
+
+#: biblio.module:151
+msgid "show export links"
+msgstr "montrer les liens d'exportation"
+
+#: biblio.module:151
+msgid "show filter tab"
+msgstr "montrer l'onglet des filtres"
+
+#: biblio.module:151
+msgid "show sort links"
+msgstr "montrer les liens de tri"
+
+#: biblio.module:151
+msgid "view full text"
+msgstr "voir en version texte"
+
+#: biblio.install:234
+msgid "The biblio module has successfully added its tables to the database."
+msgstr "Le module biblio a ajouté avec succès ses tables à la base de données."
+
+#: biblio.install:237
+msgid "Drupal was unable to install the database tables for the biblio module."
+msgstr "Drupal n'a pas pu installer les tables du module biblio dans la base de données."
+
+#: biblio.info:0
+msgid "Biblio"
+msgstr "Biblio"
+
+#: biblio.info:0
+msgid "Maintains biblographic lists."
+msgstr "Gère des bibliographies."
+

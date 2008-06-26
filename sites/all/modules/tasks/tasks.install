@@ -1,0 +1,33 @@
+<?php
+// $Id$
+
+// Create the database table on install (MySQL only for now)
+function tasks_install() {
+  if ($GLOBALS['db_type'] == 'mysqli' || $GLOBALS['db_type'] == 'mysql') {
+    drupal_set_message("Creating required tasks.module MySQL tables for first install");
+    db_query("CREATE TABLE {tasks} (
+      nid int(10) unsigned NOT NULL default '0',
+      task_parent int(10) unsigned NOT NULL default '0',
+      assigned_to int(10) unsigned NOT NULL default '0',
+      order_by float unsigned NOT NULL default '0',
+      completed date NOT NULL default '0000-00-00',
+      PRIMARY KEY (nid)
+    ) TYPE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 */;");
+  }
+}
+
+function tasks_uninstall() {
+  db_query('DROP TABLE {tasks}');
+}
+
+function tasks_update_1() {
+  $ret[] = update_sql("UPDATE {permission} SET perm = REPLACE(perm, 'edit own task', 'edit own tasks') WHERE perm LIKE '%edit own task%'");
+  $ret[] = update_sql("UPDATE {permission} SET perm = REPLACE(perm, 'create task', 'create tasks') WHERE perm LIKE '%create task%'");
+  return $ret;
+}
+
+function tasks_update_2() {
+  $items = array();
+  $items[] = update_sql("ALTER TABLE {tasks} CHANGE parent task_parent int(10) unsigned NOT NULL default '0'");
+  return $items;
+}

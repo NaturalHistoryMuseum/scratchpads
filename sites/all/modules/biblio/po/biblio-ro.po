@@ -1,0 +1,923 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural = (n!=1);\n"
+"Project-Id-Version: Biblio-ro\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2007-10-10 10:26+0200\n"
+"Last-Translator: Andrei Băutu <abautu@anmb.ro>\n"
+"Language-Team: Andrei Băutu <abautu@anmb.ro>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Romanian\n"
+"X-Poedit-Country: ROMANIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-KeywordsList: t\n"
+"X-Poedit-Basepath: D:\\ANMB\\Site - lucru\\biblio\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: biblio.module:35
+msgid "General:"
+msgstr "General:"
+
+#: biblio.module:36
+msgid "By default, the !url page will list all of the entries in the database sorted by Year in descending order. If you wish to sort by \"Title\" or \"Type\",  you may do so by clicking on the appropriate links at the top of the page.  To reverse the sort order, simply click the link a second time."
+msgstr "În mod implicit, pagina de la adresa !url va lista toate intrările biblio din baza de date sortate descrescător după an. Dacă doriţi, puteţi sorta după \"Titlu\" sau \"Tip\"  folosind legăturile din partea superioară a paginii. Pentru a inversa ordinea de sortare, daţi clic din nou pe aceeaşi legătură."
+
+#: biblio.module:37
+msgid "Filtering Search Results:"
+msgstr "Filtrează rezultatele căutării:"
+
+#: biblio.module:38
+msgid "If you wish to filter the results, click on the \"Filter\" tab at the top of the page.  To add a filter, click the radio button to the left of the filter type you wish to apply, then select the filter criteria from the drop down list on the right, then click the filter button."
+msgstr "Dacă doriţi să filtraţi rezultatele, daţi clic pe secţiunea \"Filtru\" din partea superioară a paginii. Pentru a adăuga un filtru, activaţi butonul radio din stânga filtrului, selectaţi criteriul de filtrare din lista derulantă şi daţi clic pe butonul de filtrare."
+
+#: biblio.module:39
+msgid "It is possible to create complex filters by returning to the <i>Filter</i> tab and adding additional filters.  Simply follow the steps outlined above and press the \"Refine\" button."
+msgstr "Puteţi crea filtre complexe prin adăugarea de filtre adiţionale în secţiunea <i>Filtru</i>. Urmaţi paşi anteriori şi apăsaţi butonul \"Rafinează\"."
+
+#: biblio.module:40
+msgid "All filters can be removed by clicking the <i>Clear All Filters</i> link at the top of the result page, or on the <i>Filter</i> tab they can be removed one at a time using the <i>Undo</i> button, or you can remove them all using the <i>Clear All</i> button."
+msgstr "Filtrele pot fi eliminate complet prin acţionarea legăturii <i>Şterge filtrele</i> din partea superioară a paginii de căutare, sau în secţiunea <i>Filtru</i> pot fi eliminate pe rând folosind butonul <i>Anulează</i>,  sau toate deodată folosind butonul <i>Şterge tot</i>."
+
+#: biblio.module:41
+msgid "You may also construct URLs which filter.  For example, /biblio/year/2005 will show all of the entries for 2005.  /biblio/year/2005/author/smith will show all of entries from 2005 for smith."
+msgstr "Puteţi construi URL-uri pentru filtrare. De exemplu, /biblio/year/2005 will va afişa intrările din 2005. /biblio/year/2005/author/smith va afişa intrările din 2005 ale lui smith."
+
+#: biblio.module:42
+msgid "Exporting Search Results:"
+msgstr "Exportă rezultatele căutării"
+
+#: biblio.module:43
+msgid "Assuming this option has been enabled by the administrator, you can export search results directly into EndNote.  The link at the top of the result page will export all of the search results, and the links on individual entries will export the information related to that single entry."
+msgstr "Dacă opţiunea a fost activată de administrator, puteţi exporta rezultatele căutării în EndNote. Legătura din partea superioară a paginii va exporta toate rezultatele căutării, şi legăturile individuale vor exporta informaţia  intrărilor corespunzătoare."
+
+#: biblio.module:44
+msgid "The information is exported in EndNote \"Tagged\" format similar to this..."
+msgstr "Informaţia exportată cu marcaje EndNote \"Tagged\" arată astfel..."
+
+#: biblio.module:45
+msgid ""
+"\n"
+"              %0  Book\n"
+"              %A  John Smith \n"
+"              %D  1959\n"
+"              %T  The Works of John Smith\n"
+"              ..."
+msgstr ""
+"\n"
+"              %0  Book\n"
+"              %A  John Smith \n"
+"              %D  1959\n"
+"              %T  The Works of John Smith\n"
+"              ..."
+
+#: biblio.module:52
+msgid "Clicking on one of the export links should cause your browser to ask you whether you want to Open, or Save To Disk, the file endnote.enw.  If you choose to open it, Endnote should start and ask you which library you would like store the results in.  Alternatively, you can save the file to disk and manually import it into EndNote."
+msgstr "Dând clic pe una dintre legăturile de export, browserul vă va întreba dacă să deschidă sau să salveze pe disc fişierul endnote.enw. Dacă alegeţi să-l deschideţi, programul Endnote va porni şi veţi fi întrebaţi în ce bibliotecă să salveze rezultatele. Alternativ, puteţi salva fişierul pe disc şi să-l importaţi manual în EndNote."
+
+#: biblio.module:73
+msgid "Manages a list of scholarly papers on your site"
+msgstr "Gestionează o listă de lucrări academice pe sit"
+
+#: biblio.module:76
+msgid "This allows you to add a bibliographic entry to the database"
+msgstr "Acesta permite adăugarea de referinţe bibliografice în baza de date"
+
+#: biblio.module:82
+msgid "biblio"
+msgstr "biblio"
+
+#: biblio.module:84
+msgid "Maintains list of bibliographies"
+msgstr "Menţine o listă bibliografică"
+
+#: biblio.module:156
+msgid "edit this entry"
+msgstr "editează această intrare"
+
+#: biblio.module:181
+msgid "Base URL"
+msgstr "Adresa URL"
+
+#: biblio.module:184
+msgid "This sets the base URL used to access the biblio module (e.g. /biblio )."
+msgstr "Setează adresa URL de bază folosită pentru accesarea modului biblio (e.g. /biblio)."
+
+#: biblio.module:188
+msgid "Number of results per page."
+msgstr "Numărul de rezultate pe pagină"
+
+#: biblio.module:192
+msgid "This sets the number of results that will be displayed per page."
+msgstr "Setează numărul de rezultate afişate pe pagină."
+
+#: biblio.module:196
+msgid "Restrict users such that they can only view their own biblio entries"
+msgstr "Utilizatorii pot să vadă doar intrările biblio proprii"
+
+#: biblio.module:199
+msgid "This option restricts the users capability to view biblio entries.  They will only be able to see the entries which they have created and own."
+msgstr "Această opţiune limitează vizualizarea intrărilor biblio de către utilizatori. Utilizatorii vor vedea doar intrările care le aparţin."
+
+#: biblio.module:204
+msgid "Block settings"
+msgstr "Opţiuni bloc"
+
+#: biblio.module:209
+msgid "Title for the \"New Publications\" block"
+msgstr "Titlul blocului \"Publicaţii noi\""
+
+#: biblio.module:217
+msgid "Number of results in the \"New Publications\" block"
+msgstr "Numărul de intrări în blocul \"Publicaţii noi\""
+
+#: biblio.module:221
+msgid "This sets the number of results that will be displayed in the \"New Publications\" block."
+msgstr "Setează numărul de rezultate afişate în blocul \"Publicaţii noi\"."
+
+#: biblio.module:225
+msgid "Order by"
+msgstr "Sortare după"
+
+#: biblio.module:227
+msgid "Date Created"
+msgstr "Data creării"
+
+#: biblio.module:227
+msgid "Year Published"
+msgstr "Anul publicării"
+
+#: biblio.module:234
+#: biblio.module:238
+#: biblio.module:242
+msgid "Footnotes"
+msgstr "Footnotes"
+
+#: biblio.module:235
+msgid "You can integrate with the !url module here."
+msgstr "Puteti integra modulul !url."
+
+#: biblio.module:238
+#: biblio.module:242
+msgid "Depends on"
+msgstr "Depinde de:"
+
+#: biblio.module:238
+msgid "disabled"
+msgstr "dezactivat"
+
+#: biblio.module:242
+msgid "enabled"
+msgstr "activat"
+
+#: biblio.module:248
+msgid "Integration with the footnotes module"
+msgstr "Integrare cu modulul footnotes"
+
+#: biblio.module:252
+msgid "This will convert &lt;bib&gt; tags into &lt;fn&gt; tags.  This will cause intermingled &lt;bib&gt; and &lt;fn&gt; tags to be sequentially numbered.  For this to work, you must put the &lt;bib&gt; filter ahead of the &lt;fn&gt; filter in the filter chain.  If this option is not set, &lt;bib&gt; and &lt;fn&gt; tags will be handled separately."
+msgstr "Aceasta va transforma marcaje &lt;bib&gt; în marcaje &lt;fn&gt;. Aceasta va permite marcajelor &lt;bib&gt; şi &lt;fn&gt; imbricate să fie numerotate secvenţial. Pentru a lucra corect, trebuie să puneţi filtrul &lt;bib&gt; înaintea filtrului &lt;fn&gt;. Dacă acestă opţiune este dezactivată, marcajele &lt;bib&gt; şi &lt;fn&gt; vor fi numerotate separat."
+
+#: biblio.module:258
+#: biblio.module:1578
+msgid "Keywords"
+msgstr "Cuvinte cheie"
+
+#: biblio.module:263
+msgid "Keyword separator"
+msgstr "Separator cuvinte cheie"
+
+#: biblio.module:266
+msgid "Enter the character which will be used to separate multiple keywords in the keyword field"
+msgstr "Introduceţi caracterul folosit pentru separarea cuvintelor cheie"
+
+#: biblio.module:272
+msgid "OpenURL"
+msgstr "OpenURL"
+
+#: biblio.module:273
+msgid "You can set an <a href=\"http://en.wikipedia.org/wiki/OpenURL\">openurl</a> link here"
+msgstr "Puteţi seta o legătură <a href=\"http://en.wikipedia.org/wiki/OpenURL\">openurl</a>"
+
+#: biblio.module:277
+msgid "OpenURL Base URL"
+msgstr "Adresa OpenURL"
+
+#: biblio.module:280
+msgid "This sets your institution's base <a href=\"http://en.wikipedia.org/wiki/OpenURL\">OpenURL</a> gateway, which is used to generate OpenURL links. To implement a \"Universal\" OpenURL system, try using OCLC's <a href=\"http://www.oclc.org/productworks/urlresolver.htm\">OpenURL Resolver Registry</a> gateway: <a href=\"http://worldcatlibraries.org/registry/gateway\">http://worldcatlibraries.org/registry/gateway</a>"
+msgstr "Setări pentru adresa <a href=\"http://en.wikipedia.org/wiki/OpenURL\">OpenURL</a> de bază a instituţiei dumneavoastră, folosită pentru generarea legăturilor OpenURL. Pentru a implementa un sistem OpenURL \"Universal\", încercaţi <a href=\"http://www.oclc.org/productworks/urlresolver.htm\">OpenURL Resolver Registry</a> al OCLC: <a href=\"http://worldcatlibraries.org/registry/gateway\">http://worldcatlibraries.org/registry/gateway</a>"
+
+#: biblio.module:284
+msgid "OpenURL Image"
+msgstr "Imagine OpenURL"
+
+#: biblio.module:287
+msgid "Enter a path to your image here, this image will be used as button which when clicked will find the entry via the OpenURL link"
+msgstr "Introduceţi calea către imaginea care va fi folosită ca buton de căutare a intrării prin legătură OpenURL. "
+
+#: biblio.module:293
+msgid "Sorting"
+msgstr "Sortare"
+
+#: biblio.module:294
+msgid "You can set the default sorting and ordering for the /biblio page here."
+msgstr "Puteţi seta ordinea implicită de sortare şi ordonare pentru pagina /biblio."
+
+#: biblio.module:298
+#: biblio.module:1677
+msgid "Sort by"
+msgstr "Sortate după"
+
+#: biblio.module:300
+#: biblio.module:306
+#: biblio.module:1001
+#: biblio.module:1684
+msgid "Author"
+msgstr "Autor"
+
+#: biblio.module:300
+#: biblio.module:306
+#: biblio.module:1219
+#: biblio.module:1682
+msgid "Title"
+msgstr "Titlu"
+
+#: biblio.module:300
+#: biblio.module:306
+#: biblio.module:1002
+#: biblio.module:1683
+msgid "Type"
+msgstr "Tip"
+
+#: biblio.module:300
+#: biblio.module:306
+#: biblio.module:1004
+#: biblio.module:1681
+msgid "Year"
+msgstr "An"
+
+#: biblio.module:304
+msgid "Show sort links"
+msgstr "Afişează legături pentru sortare"
+
+#: biblio.module:307
+msgid "You turn the sorting links at the top of the /biblio page here."
+msgstr "Puteţi seta legăturile pentru sortare din partea superioară a pagini /biblio."
+
+#: biblio.module:311
+msgid "Order"
+msgstr "Ordine"
+
+#: biblio.module:313
+msgid "Descending"
+msgstr "Descendent"
+
+#: biblio.module:313
+msgid "Ascending"
+msgstr "Ascendent"
+
+#: biblio.module:319
+msgid "Styling"
+msgstr "Stilizare"
+
+#: biblio.module:320
+msgid "You can set the default style for the /biblio page here."
+msgstr "Setează stilul implicit al paginii /biblio."
+
+#: biblio.module:324
+msgid "Normalize author names when displaying biblio records"
+msgstr "Normalizează numele autorilor la afişare"
+
+#: biblio.module:327
+msgid "Tries (doesn't always work) to reformat author names so that they are displayed in the format \"Lastname, Initials\" e.g. Smith, J.S. (Note: This setting does not modify the entry in the database, it only reformats it's presentation. This option can be turned off at any time to diplay the oringal format.)"
+msgstr "Încearcă (nu merge întotdeauna) să reformateze numele autorilor astfel încât să fie afişate ca \"Nume, Iniţiale\" e.g. Smith, J.S. (Notă: Această opţiune nu modifică intrarea în baza de date, doar schimbă modul de afişare. Această opţiune poate fi dezactivată în orice moment pentru a afişa informaţia originală.)"
+
+#: biblio.module:330
+msgid "Links open in new browser"
+msgstr "Deschide legături în fereastră nouă"
+
+#: biblio.module:333
+msgid "This causes related URLs to open in a new browser window"
+msgstr "URL-urile referite vor fi deschise într-o fereastră nouă a browserului"
+
+#: biblio.module:336
+msgid "Node Layout"
+msgstr "Format pagină"
+
+#: biblio.module:338
+msgid "Original"
+msgstr "Original"
+
+#: biblio.module:338
+msgid "Only Fulltext if available"
+msgstr "Doar Text complet este disponibil"
+
+#: biblio.module:338
+msgid "Tabular"
+msgstr "Tabelar"
+
+#: biblio.module:339
+msgid "This alters the layout of the \"node\" (full) view."
+msgstr "Setează modul de afişare al nodului."
+
+#: biblio.module:343
+msgid "Annotations"
+msgstr "Adnotări"
+
+#: biblio.module:345
+#: biblio.module:397
+msgid "none"
+msgstr "nimic"
+
+#: biblio.module:345
+msgid "notes"
+msgstr "note"
+
+#: biblio.module:345
+msgid "custom1"
+msgstr "personal1"
+
+#: biblio.module:345
+msgid "custom2"
+msgstr "personal2"
+
+#: biblio.module:345
+msgid "custom3"
+msgstr "personal3"
+
+#: biblio.module:345
+msgid "custom4"
+msgstr "personal4"
+
+#: biblio.module:345
+msgid "custom5"
+msgstr "personal5"
+
+#: biblio.module:345
+msgid "custom6"
+msgstr "personal6"
+
+#: biblio.module:345
+msgid "custom7"
+msgstr "personal7"
+
+#: biblio.module:346
+msgid "Select a field from which an annotation will be displayed below biblo entry in \"short\" listings"
+msgstr "Selectaţi un câmp din care se afişează o adnotare sub intrarea biblio în lista scurtă"
+
+#: biblio.module:352
+msgid "Style"
+msgstr "Stil"
+
+#: biblio.module:355
+msgid "This alters the layout of the \"list\" (short) view."
+msgstr "Setează modul de afişare al listei scurte."
+
+#: biblio.module:361
+msgid "Syndication"
+msgstr "Sindicare"
+
+#: biblio.module:362
+msgid "You can set the RSS defaults here."
+msgstr "Puteţi configura resursele RSS."
+
+#: biblio.module:366
+msgid "Allow RSS feeds of new biblio entries"
+msgstr "Permite furnizarea de resurse RSS cu intrările biblio noi"
+
+#: biblio.module:369
+msgid "This will create an rss feed of the 10 most recent biblio entries. It will be available at /biblio/rss.xml"
+msgstr "Va fi creată o resursă RSS cu cele mai recente 10 intrări biblio, accesibilă prin /biblio/rss.xml"
+
+#: biblio.module:373
+msgid "Number of items in the RSS feed."
+msgstr "Numărul implicit de elemente incluse într-un flux."
+
+#: biblio.module:377
+msgid "Limits the number of items in the /biblio/rss.xml feed to this number."
+msgstr "Limitează numărul de intrări în resursa /biblio/rss.xml."
+
+#: biblio.module:384
+msgid "Taxonomy"
+msgstr "Taxonomie"
+
+#: biblio.module:385
+msgid "You can set the Taxonomy defaults here."
+msgstr "Puteţi seta valorile implicite pentru taxonomie."
+
+#: biblio.module:389
+msgid "Use keywords from biblio entries as taxonomy \"free tags\""
+msgstr "Foloseşte cuvintele cheie din intrările biblio ca taxonomie \"marcare liberă\""
+
+#: biblio.module:392
+msgid "This option allows user to add keywords (free tags) to describe their documents. These keywords will be registered as taxonomy."
+msgstr "Această opţiune permite utilizatorilor să adauge cuvinte cheie (marcare liberă) pentru a-şi descrie documentele. Cuvintele cheie vor fi înregistrate într-o taxonomie."
+
+#: biblio.module:408
+msgid "Vocabulary"
+msgstr "Vocabular"
+
+#: biblio.module:411
+msgid "Select vocabulary (category) to use for free tags."
+msgstr "Selectaţi vocabularul (categoria) folosită pentru marcare liberă."
+
+#: biblio.module:465
+msgid "Bibliography"
+msgstr "Bibliografie"
+
+#: biblio.module:468
+msgid "Biblio settings"
+msgstr "Setări Biblio"
+
+#: biblio.module:469
+msgid "Configure default behavior of the biblio module."
+msgstr "Setări implicite ale modulului biblio."
+
+#: biblio.module:471
+msgid "Preferences"
+msgstr "Preferinţe"
+
+#: biblio.module:473
+msgid "File Import"
+msgstr "Import de fişiere "
+
+#: biblio.module:476
+msgid "Type Customization"
+msgstr "Particularizare tip"
+
+#: biblio.module:479
+msgid "Field Defaults"
+msgstr "Predefinit câmp"
+
+#: biblio.module:491
+#: biblio.module:647
+msgid "Add New Type"
+msgstr "Adaugă un tip nou"
+
+#: biblio.module:494
+#: biblio.module:648
+msgid "Reset all types to defaults"
+msgstr "Resetează toate tipurile"
+
+#: biblio.module:504
+#: biblio.module:855
+msgid "Autocomplete"
+msgstr "Autocompletare"
+
+#: biblio.module:514
+msgid "List"
+msgstr "Lista"
+
+#: biblio.module:516
+#: biblio.module:1045
+#: biblio.module:1088
+msgid "Filter"
+msgstr "Filtru"
+
+#: biblio.module:524
+msgid "Help"
+msgstr "Ajutor"
+
+#: biblio.module:557
+msgid "RSS feed"
+msgstr "resurse RSS"
+
+#: biblio.module:566
+#: biblio.module:645
+msgid "Type Name"
+msgstr "Nume tip"
+
+#: biblio.module:572
+msgid "Description"
+msgstr "Descriere"
+
+#: biblio.module:577
+msgid "Create New Type"
+msgstr "Crează un tip nou"
+
+#: biblio.module:612
+msgid "There are @count biblio entries of this type, you should change the type of these entries before proceeding otherwise they will be deleted"
+msgstr "Există @count intrări biblio de acest tip; trebuie să schimbaţi tipul acestor intrări înainte de a continua, altfel vor fi şterse"
+
+#: biblio.module:617
+msgid "Are you sure you want to delete the custom biblio type:  %title ? "
+msgstr "Sigur doriţi să ştergeţi tipul biblio:  %title ? "
+
+#: biblio.module:618
+msgid "This action cannot be undone."
+msgstr "Această acţiune nu are cale de întoarcere."
+
+#: biblio.module:619
+msgid "Delete"
+msgstr "Şterge"
+
+#: biblio.module:619
+#: biblio.module:660
+msgid "Cancel"
+msgstr "Renunţă"
+
+#: biblio.module:640
+#: biblio.module:642
+msgid "edit"
+msgstr "modifică"
+
+#: biblio.module:640
+msgid "hide"
+msgstr "ascunde"
+
+#: biblio.module:640
+msgid "show"
+msgstr "afişează"
+
+#: biblio.module:642
+msgid "delete"
+msgstr "şterge"
+
+#: biblio.module:645
+msgid "Type Id"
+msgstr "Identificator tip"
+
+#: biblio.module:645
+msgid "Operations"
+msgstr "Operaţiuni"
+
+#: biblio.module:657
+msgid "Are you sure you want to reset ALL the field definitions to the defaults? "
+msgstr "Sigur doriţi să resetaţi TOATE definiţiile câmpurilor?"
+
+#: biblio.module:659
+msgid "This action will reset any and all field customizations to the defaults, and cannot be undone!"
+msgstr "Această acţiune va reseta toate particularizările câmpurilor şi nu poate fi anulată!"
+
+#: biblio.module:660
+#: biblio.module:1048
+#: biblio.module:1109
+msgid "Reset"
+msgstr "Resetează"
+
+#: biblio.module:682
+#: biblio.module:1209
+msgid "Publication Type"
+msgstr "Tip publicaţie"
+
+#: biblio.module:699
+msgid "Click Here"
+msgstr "Clic aici"
+
+#: biblio.module:724
+#: biblio.module:1274
+#: biblio.module:1583
+msgid "Full Text"
+msgstr "Text întreg"
+
+#: biblio.module:729
+msgid "Export"
+msgstr "Exportă"
+
+#: biblio.module:730
+#: biblio.module:1598
+msgid "Tagged"
+msgstr "Tagged"
+
+#: biblio.module:731
+#: biblio.module:1599
+msgid "XML"
+msgstr "XML"
+
+#: biblio.module:732
+#: biblio.module:1600
+#: biblio.module:2179
+msgid "BibTex"
+msgstr "BibTex"
+
+#: biblio.module:816
+msgid "Save"
+msgstr "Salvează"
+
+#: biblio.module:853
+#: biblio.module:855
+msgid "Field Name"
+msgstr "Nume câmp"
+
+#: biblio.module:853
+#: biblio.module:855
+msgid "Default Title"
+msgstr "Titlul implicit"
+
+#: biblio.module:853
+#: biblio.module:855
+msgid "Hint"
+msgstr "Sfat"
+
+#: biblio.module:853
+#: biblio.module:855
+msgid "Required"
+msgstr "Necesar"
+
+#: biblio.module:853
+#: biblio.module:855
+msgid "Weight"
+msgstr "Greutate"
+
+#: biblio.module:853
+msgid "Action"
+msgstr "Acţiune"
+
+#: biblio.module:855
+msgid "Common"
+msgstr "Comun"
+
+#: biblio.module:882
+msgid "Other available fields"
+msgstr "Alte câmpuri disponibile"
+
+#: biblio.module:931
+msgid "The changes have been saved."
+msgstr "Modificările au fost salvate."
+
+#: biblio.module:970
+#: biblio.module:1307
+#: biblio.module:1565
+#: biblio.module:1737
+#: biblio_style_apa.inc:50
+#: biblio_style_classic.inc:49
+#: biblio_style_cse.inc:50
+#: biblio_style_ieee.inc:73
+msgid "In Press"
+msgstr "În curs de apariţie"
+
+#: biblio.module:995
+msgid "Term"
+msgstr "Termen"
+
+#: biblio.module:1017
+msgid "Show only items where"
+msgstr "Afişează numai articolele unde"
+
+#: biblio.module:1045
+#: biblio.module:1089
+msgid "Refine"
+msgstr "Rafinează"
+
+#: biblio.module:1047
+#: biblio.module:1106
+msgid "Undo"
+msgstr "Anulează"
+
+#: biblio.module:1063
+msgid "and"
+msgstr "şi"
+
+#: biblio.module:1063
+msgid "where"
+msgstr "unde"
+
+#: biblio.module:1069
+msgid "is"
+msgstr "este"
+
+#: biblio.module:1179
+msgid "Separate key words with a <b>!sep</b> character"
+msgstr "Separaţi cuvintele cheie prin caracterul <b>!sep</b>"
+
+#: biblio.module:1277
+msgid "You may enter a full text or HTML version of the publication here."
+msgstr "Aici puteţi introduce textul complet sau versiunea HTML a publicării."
+
+#: biblio.module:1293
+msgid "You must select the type of publication"
+msgstr "Trebuie să selectaţi un tip de publicaţie"
+
+#: biblio.module:1297
+msgid "You must supply at least one author name"
+msgstr "Trebuie să introduceţi macăr un autor"
+
+#: biblio.module:1304
+msgid "You must supply the year of publication"
+msgstr "Trebuie să introduceţi anul publicării"
+
+#: biblio.module:1311
+msgid "Year of Publication must be a number between 1 and @thisyear"
+msgstr "Anul publicării trebuie să fie între 1 şi @thisyear"
+
+#: biblio.module:1399
+msgid "Sorry, citekey @cite not found"
+msgstr "Ne pare rău, cheia @cite nu a fost găsită"
+
+#: biblio.module:1456
+msgid "Home"
+msgstr "Acasă"
+
+#: biblio.module:1471
+msgid "Most recent publications"
+msgstr "Cel mai recente publicaţii"
+
+#: biblio.module:1499
+msgid "New Publications"
+msgstr "Publicaţii noi"
+
+#: biblio.module:1535
+msgid "Authors"
+msgstr "Autori"
+
+#: biblio.module:1536
+msgid "Source"
+msgstr "Sursă"
+
+#: biblio.module:1545
+msgid "Volume "
+msgstr "Volum "
+
+#: biblio.module:1549
+msgid "Issue "
+msgstr "Număr "
+
+#: biblio.module:1553
+msgid "Number "
+msgstr "Număr"
+
+#: biblio.module:1570
+msgid "ISBN"
+msgstr "ISBN"
+
+#: biblio.module:1571
+msgid "Call Number"
+msgstr "Număr de apel"
+
+#: biblio.module:1572
+msgid "Accession Number"
+msgstr "Număr de acces"
+
+#: biblio.module:1573
+msgid "Other Number"
+msgstr "Alt număr"
+
+#: biblio.module:1576
+msgid "URL"
+msgstr "URL"
+
+#: biblio.module:1579
+msgid "Abstract"
+msgstr "Abstract"
+
+#: biblio.module:1581
+msgid "Notes"
+msgstr "Note"
+
+#: biblio.module:1665
+msgid "Export @count results"
+msgstr "Export @count rezultate"
+
+#: biblio.module:1667
+msgid "Found @count results"
+msgstr "Am găsit @count rezultate"
+
+#: biblio.module:1670
+msgid "Click a second time to reverse the sort order"
+msgstr "Daţi clic din nou pentru a inversa ordinea sortării"
+
+#: biblio.module:1691
+msgid "Filters"
+msgstr "Filtre"
+
+#: biblio.module:1700
+msgid "Taxonomy Term"
+msgstr "Termen taxonomie"
+
+#: biblio.module:1705
+msgid "<em> and</em> <strong>%a</strong> is <strong>%b</strong>"
+msgstr "<em> şi </em> <strong>%a</strong> este <strong>%b</strong>"
+
+#: biblio.module:1705
+msgid "<strong>%a</strong> is <strong>%b</strong>"
+msgstr "<strong>%a</strong> este <strong>%b</strong>"
+
+#: biblio.module:1707
+msgid "Clear All Filters"
+msgstr "Şterge filtrele"
+
+#: biblio.module:1747
+msgid "No items found"
+msgstr "Nu am găsit intrări."
+
+#: biblio.module:1749
+msgid "!modify_link or !remove_link your filters and try again."
+msgstr "!modify_link sau !remove_link filtrele şi încercaţi din nou."
+
+#: biblio.module:1749
+msgid "Modify"
+msgstr "Modificăţi"
+
+#: biblio.module:1749
+msgid "remove"
+msgstr "ştergeţi"
+
+#: biblio.module:2171
+msgid "Import file"
+msgstr "Importă fişier"
+
+#: biblio.module:2177
+msgid "File Type"
+msgstr "Tip fişier"
+
+#: biblio.module:2179
+msgid "EndNote Tagged"
+msgstr "Marcaj EndNote"
+
+#: biblio.module:2179
+msgid "RIS"
+msgstr "RIS"
+
+#: biblio.module:2179
+msgid "EndNote 7 XML"
+msgstr "EndNote 7 XML"
+
+#: biblio.module:2179
+msgid "EndNote 8+ XML"
+msgstr "EndNote 8+ XML"
+
+#: biblio.module:2189
+msgid "Taxonomy Settings"
+msgstr "Setări taxonomie"
+
+#: biblio.module:2190
+msgid "Here you may select terms to be assigned to imported records (if any vocabularies are assigned to the biblio node type)"
+msgstr "Puteţi selecta termenii asociaţi înregistrărilor importate (dacă sunt vocabulare asociate tipului biblio)"
+
+#: biblio.module:2197
+msgid "Select taxonomy term to assigned to imported entries"
+msgstr "Selectaţi termenul de taxonomie asociat intrărilor importate"
+
+#: biblio.module:2200
+msgid "There are currently no vocabularies assigned to the biblio node type, please go the the !url page to fix this"
+msgstr "Nu sunt asociate vocabulare pentru acest tip biblio, accesaţi pagina !url pentru a corecta această situaţie."
+
+#: biblio.module:2200
+msgid "admin/taxonomy"
+msgstr "admin/taxonomy"
+
+#: biblio.module:2206
+msgid "Keywords will be added to the <b>@name</b> vocabulary as specified in the Taxonomy section of the !url page."
+msgstr "Cuvintele cheie vor fi adăugate la vocabularul <b>@name</b> specificat în secţiunea Taxonomie de pe pagina !url."
+
+#: biblio.module:2206
+#: biblio.module:2208
+msgid "admin/settings/biblio"
+msgstr "admin/settings/biblio"
+
+#: biblio.module:2208
+msgid "Keywords will <b>NOT</b> be added to the vocabulary as specified in the Taxonomy section of the !url page."
+msgstr "Cuvintele cheie <b>NU</b> vor fi adăugate la vocabular cum a fost specificat în secţiune Taxonomi de pe pagina !url."
+
+#: biblio.module:2215
+#: biblio.module:2235
+#: biblio.module:2242
+msgid "Import"
+msgstr "Importă"
+
+#: biblio.module:2233
+msgid "You must provide a file name"
+msgstr "Trebuie să specificaţi un nume de fişier"
+
+#: biblio.module:2236
+msgid "You must select a file type"
+msgstr "Trebuie să selectaţi un tip de fişier"
+
+#: biblio.module:2246
+msgid "@file was uploaded"
+msgstr "@file a fost încărcat"
+
+#: biblio.module:2262
+msgid "File was NOT successfully uploaded"
+msgstr "Fişierul NU s-a încărcat corect"
+
+#: biblio.module:2382
+msgid "Succesfully imported @count entries."
+msgstr "Am importat @count intrări."
+
+#: biblio.module:2785
+msgid "Citekey @cite not found"
+msgstr "Cheia @cite nu a fost găsită"
+
+#: biblio.module:2803
+msgid "You can cite references directly into texts with <code>&lt;bib&gt;citekey&lt;/bib&gt;</code>. This will be replaced with a running number (the publication reference) and the publication referenced by the citekey within the &lt;bib&gt; tags will be print to the bottom of the page (the reference)."
+msgstr "Puteţi cita referinţe direct în text cu <code>&lt;bib&gt;cheie&lt;/bib&gt;</code>. Aceasta va fi înlocuită cu un număr (referinţa publicaţiei) şi de publicaţia referită de cheie din marcajul &lt;bib&gt; va fi afişată la sfârşitul paginii (referinţă)."
+
+#: biblio.module:2806
+#: biblio.module:2841
+msgid "Use &lt;bib&gt;...&lt;/bib&gt; to insert automatically numbered references."
+msgstr "Folosiţi &lt;bib&gt;...&lt;/bib&gt; pentru a insera o referinţă autonumerotată."
+
+#: biblio.module:2824
+msgid "References &lt;bib&gt;"
+msgstr "Referinţe &lt;bib&gt;"
+
+#: biblio.module:2899
+msgid "References"
+msgstr "Referinţe"
+
+#: biblio.module:2957
+msgid "Find It Via OpenURL!"
+msgstr "Caută prin OpenURL!"
+

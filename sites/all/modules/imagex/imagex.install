@@ -1,0 +1,59 @@
+<?php
+// $Id$
+
+/**
+ * Installing and updating imagex.module.
+ */
+function imagex_install() {
+  // Increase the module's weight so that it is executed after location.
+  db_query("UPDATE {system} SET weight = 20 WHERE name = 'imagex'");
+  
+  // Create the database to link images with users.  
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':    
+      $result = db_query("CREATE TABLE {imagex} (
+                           uid INT(10),
+                           nid INT(10),
+                           CONSTRAINT imagex_primary_key PRIMARY KEY (uid,nid)
+                          );");
+      break;
+    case 'pgsql':
+      $result = false;
+      break;
+  }
+  
+  // Create an image gallery called Library (unless one already exists).
+  $tree = taxonomy_get_tree(_image_gallery_get_vid());
+  $library_present = false;
+  $vid = 0;
+  foreach ($tree as $branch){
+    if($branch->name == 'Library'){
+      $library_present = true;
+      break;
+    }
+    $vid = $branch->vid;
+  }
+  if (!$library_present && $vid>0){
+    image_gallery_admin_form($edit = array(
+        'vid' => $vid,
+        'name' => 'Library',
+        'description' => 'Default image gallery',
+        'weight' => 0
+      )
+    );
+  }
+  if ($result){    
+  	drupal_set_message(t('Imagex installed'));
+  }
+  else{    
+  	drupal_set_message(t('I\'m sorry Dave, I\'m afraid I can\'t do that. Imagex installation failed'), 'error');
+  }
+}
+
+/**
+ * Kick that loser to touch.
+ */
+function imagex_uninstall() {
+  db_query("DROP TABLE {imagex};");// If this fails, then it's probably because imagex isn't present.
+}

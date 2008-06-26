@@ -1,0 +1,22 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function mollom_install() {
+  db_query("CREATE TABLE {mollom} (
+    did varchar(255) NOT NULL default '',
+    session varchar(255) NOT NULL default '',
+    quality varchar(255) NOT NULL default '',
+    PRIMARY KEY (did),
+    INDEX (session)
+  );");
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function mollom_uninstall() {
+  db_query('DROP TABLE {mollom}');
+}

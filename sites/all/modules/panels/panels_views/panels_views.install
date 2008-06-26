@@ -1,0 +1,38 @@
+<?php
+// $Id: panels_views.install,v 1.1.2.8 2008/05/27 20:21:15 sdboyer Exp $
+
+
+/**
+ * Implementation of hook_install().
+ */
+function panels_views_install() {
+  // This is a poor man's schema implementation ala Drupal 6.
+
+  // The documentation says this shouldn't be necessary but sometimes the
+  // .module file is not actually loaded at this time, so we have to load it.
+  if (!function_exists('panels_views_pane_fields')) {
+    require_once drupal_get_path('module', 'panels_views') . '/panels_views.module';
+  }
+
+  $fields = panels_views_pane_fields();
+  $sql = "";
+  foreach ($fields as $field => $data) {
+    if ($sql) {
+      $sql .= ', ';
+    }
+    // offset is a reserved word in postgres, needs to be quoted
+    if ($field == "offset" && $GLOBALS['db_type'] == 'pgsql') {
+      $field = '"offset"';
+    }
+    $sql .= $field . ' ' . $data['definition'];
+  }
+  db_query("CREATE TABLE {panels_views} ($sql) /*!40100 DEFAULT CHARACTER SET utf8 */");
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function panels_views_uninstall() {
+  db_query("DROP TABLE {panels_views}");
+}
+

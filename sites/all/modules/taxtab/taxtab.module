@@ -1,0 +1,139 @@
+<?php
+/* $Id$ */
+
+/** 
+ * @file taxtab.module
+ * Provides a block for displaying a taxonomy allowing users to easily browse by their classifications
+ */
+
+/**
+ * Implementation of hook_form_alter()
+ */
+function taxtab_form_alter($form_id, &$form){
+  if ('search_block_form' == $form_id) {
+    $form['tabs'] = _taxtab_tabs(true);
+    unset($form['basic']['#title']);
+    
+    // This doesn't seem logical placing this here, but hey ho!
+    drupal_add_js(drupal_get_path('module','taxtab').'/taxtab.js');
+    // This may not be included already, so lets ensure it is.
+    drupal_add_js('misc/autocomplete.js');
+  }
+}
+
+/**
+ * Implementation of hook_menu, for the callbacks!
+ */
+function taxtab_menu(){
+  $items = array();
+  $items[] = array(
+    'path' => 'taxtab/normal',
+    'title' => t('search tab'),
+    'access' => user_access('search content'),
+    'type' => MENU_CALLBACK,
+    'callback' => 'taxtab_normal_js');
+  $items[] = array(
+    'path' => 'taxtab/taxonomy',
+    'access' => true, 
+    'title' => t('search tab'),
+    'callback' => 'taxtab_taxonomy_js',
+    'type' => MENU_CALLBACK);  
+  $items[] = array(
+    'path' => 'taxtab/autocomplete',
+    'title' => t('Autocomplete taxtab query'),
+    'callback' => 'taxtab_autocomplete',
+    'access' => user_access('access content'),
+    'type' => MENU_CALLBACK);
+  $items[] = array(
+    'path' => 'taxtab/process',
+    'title' => t('Process form entry'),
+    'callback' => 'taxtab_process',
+    'access' => user_access('access content'),
+    'type' => MENU_CALLBACK);
+  return $items;  
+}
+/**
+ * Simple helper function to ensure no repetition!
+ *
+ */
+function _taxtab_tabs($taxonomy=false){
+  $value = '<div class="taxtab">';
+  if ($taxonomy){ $value .= '<b>'; }
+  $value .= l("Simple",'taxtab/normal',array('class'=>'taxtablink')).' | ';
+  if ($taxonomy){ $value .= '</b>';}
+  else {$value .= '<b>';}
+  $value .= l("Taxonomy",'taxtab/taxonomy',array('class'=>'taxtablink'));
+  if (!$taxonomy){$value .= '</b>';}
+  $value .= '</div>';
+  return array(
+    '#value' => $value,
+    '#weight' => -10000
+  );
+}
+
+function taxtab_create_form(){
+  $form = drupal_retrieve_form('search_form');
+  $form['basic']['tabs'] = _taxtab_tabs(false);
+  $form['basic']['inline']['keys']['#autocomplete_path'] = 'taxtab/autocomplete';
+  $form['basic']['inline']['keys']['#size'] = 15;
+  $form['#action']='/taxtab/process';
+  unset($form['basic']['#title']);
+  return $form;
+}
+
+/**
+ * Implementation of hook_form_validate()
+ */
+function taxtab_process(){
+  $searchterm = addslashes($_POST['keys']);// FIXME, not so keen on this.
+  $term = taxonomy_get_term_by_name($searchterm);
+  if (count($term)>0){
+    drupal_goto('taxonomy/term/'.$term[0]->tid);
+  }
+  drupal_goto('search/node/'.$searchterm);
+}
+
+/**
+ * Callback for taxtab/taxonomy
+ */
+function taxtab_taxonomy_js(){
+  print drupal_to_js(array('html' => drupal_get_form('taxtab_create_form')));
+  exit();
+}
+
+/**
+ * Callback for taxtab/normal
+ */
+function taxtab_normal_js(){
+  print drupal_to_js(array('html' => drupal_get_form('search_block_form')));
+  exit();
+}
+
+/**
+ * Menu callback to autocomplete a query.
+ * 
+ * This function is taken directly from tql.module, but changed slightly to suit our needs.
+ * - Remove $vid
+ * - Removed %% from search to ensure matches are added as typed i.e bar doesn't match foobar.
+ *
+ * @param $string
+ *   The query for which autocompletion should be done.
+ */
+function taxtab_autocomplete($string = '') {
+  $results;
+  if(function_exists('leftandright_get_tree')){
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t, {leftandright} l WHERE lowername LIKE LOWER('%s%%') AND l.tid = t.tid ORDER BY t.name", 't', 'tid'), $string, 0, 15);    
+  } else {
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) LIKE LOWER('%s%%') ORDER BY t.name", 't', 'tid'), $string, 0, 15);
+  }
+  // Construct response array
+  $matches = array();
+  while ($tag = db_fetch_object($result)) {
+    $name = $tag->name;
+    // Array key is for textfield, array value for display
+    $matches[$prefix . $name] = check_plain($tag->name);
+  }
+  // Return matches as javascript array
+  print(drupal_to_js($matches));
+  exit();
+}

@@ -1,0 +1,33 @@
+<?PHP
+// $Id$
+function bio_taxonomy_install() {
+  $result = array();
+  
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':  
+      $result[]= db_query("CREATE TABLE taxonomy_bio (
+        `tid` int(10) NOT NULL default '0',
+        `nid` int(10) NOT NULL default '0',
+       PRIMARY KEY  (`tid`),
+        KEY `nid` (`nid`))"); 
+      $result[]= db_query("ALTER TABLE `vocabulary` ADD `biological` TINYINT( 3 ) UNSIGNED NOT NULL DEFAULT '0'");
+    $result[]= db_query("ALTER TABLE `vocabulary` ADD INDEX ( `biological` );");        
+      break;   
+    case 'pgsql':
+      break;
+  }
+  
+  if ($result) {
+    drupal_set_message(t('Biological Taxonomy module - INSTALLED!'));
+  }
+  else {
+  drupal_set_message(t('Biological Taxonomy module - <a href="mailto:s.rycroft@nhm.ac.uk">ERROR ERROR ERROR</a>.'), 'error');
+  }
+}
+
+function bio_taxonomy_uninstall(){
+  db_query("DROP TABLE {taxonomy_bio} ");
+  db_query("ALTER TABLE {vocabulary} DROP `biological`;");
+  drupal_set_message(t('Biological Taxonomy module - REMOVED!'));
+}

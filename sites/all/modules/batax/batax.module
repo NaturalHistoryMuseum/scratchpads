@@ -1,0 +1,144 @@
+<?php
+/* $Id$*/
+/* $HeadURL$*/
+
+/** 
+ * @file batax.module
+ * 
+ * Allows a user to specify that a taxonomy field should use the
+ * autocomplete text field and not the drop down/select boxes
+ */
+
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+/**
+ * hook_form_alter()
+ * 
+ * This function does most of the hard work for this module.
+ */
+function batax_form_alter($form_id, &$form){
+  // Return if this isn't a node form
+  if($form['#id']!='node-form'  && $form_id != 'taxonomy_form_term'){return;}
+  if($form_id == 'taxonomy_form_term'){
+    $this_term = taxonomy_get_term($form['tid']['#value']);
+    $parent = taxonomy_get_term($form['parent']['#default_value'][0]);
+    unset($form['parent']['#options']);
+    unset($form['parent']['#theme']);
+    unset($form['parent']['#size']);
+    unset($form['parent']['#multiple']);
+    $form['parent-old'] = array(
+      '#type'=>'hidden',
+      '#value'=>$form['parent']['#default_value']
+    );
+    $form['parent-new'] = $form['parent'];
+    $form['parent']['#type'] = 'hidden';
+    $form['parent-new']['#type'] = 'textfield';
+    $form['parent-new']['#default_value'] = $parent->name;
+    $form['parent-new']['#autocomplete_path'] = 'taxonomy/autocomplete/'.$this_term->vid;
+  } else {
+    // Get the max options
+    // N.B. There is no actual way of setting this value, that is deliberate to keep the module as
+    // simple as possible.  If you'd like to increase this value, try the following sql:
+    // "INSERT INTO variable (name, value) VALUES ('batax_max_options', 100);"
+    $max_options = variable_get('batax_max_options',50);
+    // We've got a node form, lets look at the taxonomy
+    foreach($form['taxonomy'] as $vocabulary => $vocabulary_field){
+      if(is_numeric($vocabulary)){
+        if(isset($vocabulary_field['#type']) && $vocabulary_field['#type'] == 'select'){
+          if(isset($vocabulary_field['#options']) && count($vocabulary_field['#options']) > $max_options){
+            // Hide the original field
+            $form['taxonomy'][$vocabulary] = array('#type'=>'hidden', '#default_value'=>$vocabulary_field['#default_value']);
+            // Lets completely alter this field, making it into an additional autocomplete field
+            unset($vocabulary_field['#options']);
+            unset($vocabulary_field['#size']);
+            unset($vocabulary_field['#theme']);
+            $vocabulary_field['#type'] = 'textfield';
+            $term_names = array();
+            foreach($vocabulary_field['#default_value'] as $tid){
+              $term = taxonomy_get_term($tid);
+              $term_names[] = $term->name;
+            }
+            $vocabulary_field['#default_value'] = implode(", ",$term_names);
+            // We can just use the autocomplete provided by the taxonomy module - it bloody works!
+            $vocabulary_field['#autocomplete_path'] = 'taxonomy/autocomplete/'.$vocabulary;
+            $form['taxonomy'][$vocabulary.'-new'] = $vocabulary_field;
+          }
+        }      
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function batax_nodeapi(&$node, $op, $three, $four){
+  switch($op){
+    case 'submit':
+      foreach($node->taxonomy as $vocabulary => $vocabulary_field){
+        if(substr($vocabulary,-4) == '-new'){
+          $vid = array_shift(explode("-",$vocabulary));
+          $node->taxonomy[$vid] = _split_field($vocabulary_field, $vid);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_taxonomy
+ */
+function batax_taxonomy($op, $type, $array = NULL){
+  if($type=='term' && $op != 'delete'){
+    // I think I need to set the parent, doesn't look like I can simply alter the form_values
+    $parents = _split_field($array['parent-new'],$array['vid']);
+    if(count(array_intersect($array['parent-old'],$parents))){
+      $parents = array_intersect($array['parent-old'],$parents);
+    }
+    db_query('DELETE FROM {term_hierarchy} WHERE tid = %d', $array['tid']);
+    if (!isset($parents) || empty($parents)) {
+      $parents = array(0);
+    }
+    if (is_array($parents)) {
+      foreach ($parents as $parent) {
+        if (is_array($parent)) {
+          foreach ($parent as $tid) {
+            db_query('INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d, %d)', $array['tid'], $tid);
+          }
+        }
+        else {
+          db_query('INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d, %d)', $array['tid'], $parent);
+        }
+      }
+    }
+    else {
+      db_query('INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d, %d)', $array['tid'], $parents);
+    }
+  }
+}
+
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+/**
+ * Simple helper function which returns an array of tids
+ */
+function _split_field($string, $vid){
+  // Add slashes first
+  $string = addslashes($string);
+  $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+  preg_match_all($regexp, $string, $matches);
+  $string_array = $matches[1];
+  $place_holder = array();
+  foreach($string_array as $dontmatter){
+    $place_holder[] = "'%s'";
+  }
+  $string_array[] = $vid;
+  $results = db_query("SELECT tid FROM {term_data} WHERE name IN (".implode(",",$place_holder).") AND vid = %d", $string_array);
+  $return_array = array();
+  while($row = db_fetch_array($results)){
+    $return_array[$row['tid']] = $row['tid'];
+  }
+  return $return_array;
+}

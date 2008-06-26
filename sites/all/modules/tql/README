@@ -1,0 +1,54 @@
+Taxonomy query language (tql)
+-----------------------------
+
+The taxonomy query language module implements a plugin for 
+the 'search' and 'views' module. It provides a new tab
+'Taxonomy' in the Drupal search and a new Views filter.
+
+Use
+---
+
+If you have the 'tql' module and the search module enabled,
+a 'Taxonomy' tab appears in the search where you can enter
+a search query. 
+
+If you have the 'tql' module and 'Views' enabled, a new
+filter 'Taxonomy: Query' is available which can be used
+to enter a query. It works best if it is exposed so users
+can enter their own query.
+
+Language capabilities
+---------------------
+
+The query language can combine query terms with different
+operators: AND, OR, XOR and NOT. The operator AND can be
+omited as it is the default if two terms are listed without
+operator. The operator NOT can be abbreviated with a dash in
+front of the term, i.e. '-term'. Brackets can be used to
+form more complex queries. The following are example queries
+and their verbose equivalents:
+
+term1 term2                <=> term1 and term2
+term1 or -term2            <=> term1 or not term2
+term1 xor -(term2 -term3)  <=> term1 xor not (term2 and not term3)
+
+Building the lexer and parser
+-----------------------------
+
+The module is shipped with a built lexer and parser and you dont
+need to build it yourself. If you to build it yourself you need 
+the following PEAR packages:
+
+PEAR: http://pear.php.net/package/PEAR
+PHP_LexerGenerator: http://pear.php.net/package/PHP_LexerGenerator
+PHP_ParserGenerator: http://pear.php.net/package/PHP_ParserGenerator
+
+Install PEAR and put the lexer and parser generators into a directory 
+'PHP' inside the directory 'ast'. Then change to the 'ast' directory 
+and call 'make' to build the lexer and parser.
+
+
+Authors:
+mtn: Query language parser
+rötzi: Drupal integration
+

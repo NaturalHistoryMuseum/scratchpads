@@ -1,0 +1,41 @@
+<?php
+// $Id$
+
+/**
+ * Installing of the hashcash module
+ */
+function hashcash_install() {
+  // Create the database to link images with users.  
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':    
+      $result = db_query("CREATE TABLE {hashcash} (
+                           hashcash VARCHAR(255),
+                           hcdate VARCHAR(6),
+                          CONSTRAINT hashcash_pk PRIMARY KEY(hashcash)                          
+                          );");
+      //Doesn't matter if the following fails
+      db_query("CREATE INDEX hashcash_date_index ON {hashcash} (hcdate)");
+      db_query("CREATE INDEX hashcash_hashcash_index ON {hashcash} (hashcash)");
+      break;
+    case 'pgsql':
+      $result = false;
+      break;
+  }
+  if ($result){    
+  	drupal_set_message(t('hashcash installed'));
+  }
+  else{    
+  	drupal_set_message(t('Postgres not currently supported for hashcash'), 'error');
+  }
+}
+
+/**
+ * Kick that loser to touch.
+ */
+function hashcash_uninstall() {
+  db_query("DROP TABLE {hashcash};");
+  variable_del('hashcash_expire');
+  variable_del('hashcash_form_ids');
+  variable_del('hashcash_addorignore');
+}

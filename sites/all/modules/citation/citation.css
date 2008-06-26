@@ -1,0 +1,72 @@
+#citation .item-list ul, #citation .item-list li{
+	list-style: none;
+	margin: 2px 0;
+}
+
+#citation .loading{
+	text-align: center;
+	padding: 20px 0;
+}
+
+div#citation-created{
+	margin: 10px 20px 10px 50px;
+}
+
+div#citation-created h2{
+	margin-top: 25px;
+}
+
+div#citation-created a{
+	display: block;
+	margin: 20px 0;
+	padding: 10px;
+	border: 1px solid #999;
+	font-size: 1.2em;
+}
+
+div#citation-created p{
+	height: 100px;
+	border: 1px solid #ccc;
+	overflow-y: scroll;
+}
+
+form#citation-email-form{
+	text-align: center;
+	margin: 30px 70px 0 70px;
+}
+
+form#citation-email-form div.form-item{
+	float: left;
+	width: 300px;
+}
+
+form#citation-email-form div.form-item #edit-mail{
+	width: 150px;
+}
+
+form#citation-email-form #edit-submit{
+position: relative;
+top: 10px;
+}
+
+form#citation-email-form div.form-item label{
+	display: inline;
+}
+
+form#citation-references-form #edit-submit{
+	margin-left: 10px;
+}
+
+#cited-page form#citation-references-form #edit-submit{
+	display: none;
+}
+
+.citation-error{
+	border: 1px solid red;
+}
+
+form#citation-email-form .sending-citation{
+	padding-top: 20px;
+	text-align: center;
+	clear: both;
+}

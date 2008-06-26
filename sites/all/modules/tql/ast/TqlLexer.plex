@@ -1,0 +1,98 @@
+<?php
+class TqlLexer
+{
+    private $data;
+    private $N;
+    public $token;
+    public $value;
+    public $node;
+    private $line;
+    private $state = 1;
+
+    function __construct($data)
+    {
+        $this->data = $data;
+        $this->N = 0;
+        $this->line = 1;
+    }
+
+    function init(&$node)
+    {
+        $node->value = $this->value;
+        $node->type = $this->token;
+        $node->column = $this->N;
+        $node->line = $this->line;
+        return $node;
+    }
+
+/*!lex2php
+%input $this->data
+%counter $this->N
+%token $this->token
+%value $this->value
+%line $this->line
+not = /\b[nN][oO][tT]\b|-/
+xor = /\b[xX][oO][rR]\b/
+and = /\b[aA][nN][dD]\b/
+or  = /\b[oO][rR]\b/
+quote = /"/
+whitespace = /\s/
+string = /[^"\s()]+/
+string_in_quote = /[^"]+/
+other = /./
+*/
+/*!lex2php
+%statename START
+not {
+  $this->token = TqlParser::TK_NOT;
+  $this->node = $this->init(new TqlNot());
+}
+and {
+  $this->token = TqlParser::TK_AND;
+  $this->node = $this->init(new TqlAnd());
+}
+or {
+  $this->token = TqlParser::TK_OR;
+  $this->node = $this->init(new TqlOr());
+}
+xor {
+  $this->token = TqlParser::TK_XOR;
+  $this->node = $this->init(new TqlXor());
+}
+"(" {
+  $this->token = TqlParser::TK_LPAREN;
+  $this->node = $this->init(new TqlNode());
+}
+")" {
+  $this->token = TqlParser::TK_RPAREN;
+  $this->node = $this->init(new TqlNode());
+}
+quote {
+  $this->token = TqlParser::TK_QUOTE;
+  $this->node = $this->init(new TqlNode());
+  $this->yybegin(self::IN_QUOTE);
+}
+string {
+  $this->token = TqlParser::TK_IDENTIFIER;
+  $this->node = $this->init(new TqlIdentifier());
+}
+whitespace {
+  return false;
+}
+other {
+  return false;
+}
+*/
+/*!lex2php
+%statename IN_QUOTE
+quote {
+  $this->token = TqlParser::TK_QUOTE;
+  $this->node = $this->init(new TqlNode());
+  $this->yybegin(self::START);
+}
+string_in_quote {
+  $this->token = TqlParser::TK_IDENTIFIER;
+  $this->node = $this->init(new TqlIdentifier());
+}
+*/
+}

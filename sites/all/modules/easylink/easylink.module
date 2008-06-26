@@ -1,0 +1,196 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_help().
+ */
+function easylink_help($section) {
+  switch ($section) {
+    case 'admin/help#easylink';
+      return t('Enables users easily add links within TinyMCE.');
+    case 'admin/settings/easylink':
+      return t('Here you can configure the view easylink uses to provide the list of nodes within TinyMCE.  To change the configuration of the view visit the Views <a href="!url" >configuration page</a>.', array('!url' => url('admin/build/views')));
+  }
+}
+
+function easylink_menu($may_cache) {
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'easylink/load',
+      'title' => t('EasyLink'),
+      'callback' => 'easylink_loader',
+      'access' => user_access('access tinymce'),
+      'type' => MENU_CALLBACK);
+
+    $items[] = array(
+      'path' => 'admin/settings/easylink',
+      'title' => t('EasyLink'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('easylink_admin_settings'),
+      'access' => user_access('administer tinymce'),
+      'description' => t('Change the view Easylink uses to display nodes to the user'),
+      'type' => MENU_NORMAL_ITEM);
+  } else {
+    $path = drupal_get_path('module', 'easylink');
+
+    // the base url here is used for popup windows
+    $js_base_url  = "\n<script type=\"text/javascript\"><!--\n";
+    $js_base_url .= "  var BASE_URL = \"" . base_path() . "\";\n";
+    $js_base_url .= "--></script>\n";
+    drupal_set_html_head($js_base_url);
+
+  }
+  return $items;
+}
+
+
+/**
+ * Print the main easylink interface
+ */
+function easylink_loader() {
+
+  $editor = arg(2) ? arg(2) : 'textarea';
+
+  $title = t('EasyLink');
+  $bp = base_path();
+  $output  = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN">' . "\n";
+  $output .= "<html>\n";
+  $output .= "<head>\n";
+  $output .= "<title>EasyLink</title>\n";
+  $output .= '<style type="text/css" media="all">@import "'.$bp.'misc/drupal.css";</style>';
+  $output .= '<style type="text/css" media="all">@import "'.$bp.path_to_theme().'/style.css";</style>';
+  $output .= '<style type="text/css">#pager {text-align: left; }</style>';
+  $output .= "\n<script type=\"text/javascript\"><!--\n";
+  $output .= "  var BASE_URL = \"" . base_path() . "\";\n";
+  $output .= "--></script>\n";
+
+  $path = drupal_get_path('module', 'easylink');
+  $tinymce_path = drupal_get_path('module', 'tinymce');
+  $tinymce_js = base_path() . $tinymce_path . '/tinymce/jscripts/tiny_mce/tiny_mce_popup.js';
+  $easylink_js = base_path() . $tinymce_path . '/tinymce/jscripts/tiny_mce/plugins/easylink/jscripts/easylink.js';
+
+  $output .= "<script type=\"text/javascript\" src=\"$tinymce_js\"></script>\n"; // splitting the tag helps Dreamweaver color coding
+  $output .= "<script type=\"text/javascript\" src=\"$easylink_js\"></script>\n";
+
+  $output .= "</head>\n\n";
+  $output .= '<html><div id="content"><div id="main"><div class="mw1">';
+
+  // Load view
+  $myview = views_get_view(variable_get('easylink_view', 'easylink'));
+  // Override url to support views filters
+  $myview->url = "easylink/load";
+  // Build view
+  $view_text = views_build_view('embed', $myview, FALSE, TRUE, $myview->nodes_per_page);
+
+  // Add javascript onClick action to insert link except on pager links
+  $view_text = preg_replace_callback('/<a href=".*">/i', "check_pager", $view_text);
+  $output .= '<div class="easylink">' . $view_text . '</div>';
+  $output .= "</div></div></div></html>\n";
+  
+  print $output;
+}
+
+// Check if link is a pager link or not.  Only replace non-pager links
+function check_pager($matches){
+  foreach ($matches as $match){
+    if (preg_match('/.*\?page=/', $match)||preg_match('/.*\?sort=/', $match)){
+      return $match;
+    } else {
+      // Reg-ex fix from Jose San Martin
+      $search = '/<a href="(.*?)"[^>]*>/i';
+      $replace = '<a href="javascript:void(0);" onClick="addLink(\'$1\')">'; 
+      return preg_replace($search, $replace, $match);
+    }
+  }
+}
+
+// Implementation of hook_settings()
+function easylink_admin_settings() {
+  $result = db_query("SELECT name, description FROM {view_view}");
+  while ($view = db_fetch_object($result)) {
+    $views[$view->name] = $view->name . ': ' . $view->description;
+  }
+
+  views_load_cache();
+  $default_views = _views_get_default_views();
+  $views_status = variable_get('views_defaults', array());
+  foreach ($default_views as $view) {
+    if (!$views[$view->name] &&
+      ($views_status[$view->name] == 'enabled' || (!$views_status[$view->name] && !$view->disabled))) {
+      $views[$view->name] = check_plain($view->name);
+    }
+  }
+
+  ksort($views);
+  $current_view = variable_get('easylink_view', 'easylink');
+
+  $form['easylink_view'] = array(
+    '#type' => 'select',
+    '#options' => $views,
+    '#title' => t('Choose a view to use with easylink'),
+    '#default_value' => $current_view,
+  );
+
+  return system_settings_form($form);
+}
+
+function easylink_views_default_views(){
+  $view = new stdClass();
+  $view->name = 'easylink';
+  $view->url = 'easylink';
+  $view->description = 'The basic easylink view shows all pages belonging to the current user';
+  $view->access = array (
+  0 => '2',
+);
+  $view->view_args_php = '';
+  $view->page = TRUE;
+  $view->page_title = 'EasyLink';
+  $view->page_header = '';
+  $view->page_header_format = '3';  $view->page_footer = '';
+  $view->page_footer_format = '3';
+  $view->page_empty = '';
+  $view->page_empty_format = '3';
+  $view->page_type = 'table';
+  $view->url = 'easylink';
+  $view->use_pager = TRUE;
+  $view->nodes_per_page = '50';
+  $view->sort = array (
+  );
+  $view->argument = array (
+  );
+  $view->field = array (
+    array (
+      'tablename' => 'node',
+      'field' => 'title',
+      'label' => 'Page Title',
+      'handler' => 'views_handler_field_nodelink_with_mark',
+      'sortable' => '1',
+      'defaultsort' => 'ASC',
+      'options' => 'link',
+    ),
+  );
+  $view->filter = array (
+    array (
+      'tablename' => 'node',
+      'field' => 'type',
+      'operator' => 'OR',
+      'options' => '',
+      'value' => array (
+  0 => 'page',
+),
+    ),
+    array (
+      'tablename' => 'node',
+      'field' => 'currentuid',
+      'operator' => '=',
+      'options' => '',
+      'value' => '***CURRENT_USER***',
+    ),
+  );
+  $view->exposed_filter = array (
+  );
+  $view->requires = array(node);
+  $views[$view->name] = $view;
+  return $views;
+}

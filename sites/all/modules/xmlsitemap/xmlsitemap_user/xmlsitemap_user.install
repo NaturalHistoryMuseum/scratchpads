@@ -1,0 +1,105 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function xmlsitemap_user_install() {           
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE {xmlsitemap_user} (
+        uid int,
+        pid int,
+        last_changed int(11),
+        previously_changed int(11),
+        priority_override float,
+        PRIMARY KEY (uid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      db_query("CREATE TABLE {xmlsitemap_user_role} (
+        rid int,
+        priority float NOT NULL DEFAULT 0,
+        PRIMARY KEY (rid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+    case 'pgsql':
+      db_query("CREATE TABLE {xmlsitemap_user} (
+        uid integer,
+        pid integer,
+        last_changed integer,
+        previously_changed integer,
+        priority_override real,
+        PRIMARY KEY (uid)
+      );");
+      db_query("CREATE TABLE {xmlsitemap_user_role} (
+        rid integer,
+        priority real NOT NULL DEFAULT 0,
+        PRIMARY KEY (rid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function xmlsitemap_user_enable() {
+  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
+  if ($weight !== FALSE) {
+    db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_user'", ++$weight);
+  }
+  db_query("
+    INSERT INTO {xmlsitemap_user} (uid, last_changed, pid)
+    SELECT u.uid, u.created, ua.pid FROM {users} u
+    LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)
+    LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
+    WHERE u.uid <> 0 AND xu.uid IS NULL
+  ", time());
+  db_query("
+    INSERT INTO {xmlsitemap_user_role} (rid)
+    SELECT r.rid FROM {role} r
+    LEFT JOIN {xmlsitemap_user_role} xur ON xur.rid = r.rid
+    WHERE r.rid > 2 AND xur.rid IS NULL
+  ");
+  xmlsitemap_update_sitemap();
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function xmlsitemap_user_disable() {
+  xmlsitemap_update_sitemap();
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function xmlsitemap_user_uninstall() {
+  db_query("DROP TABLE {xmlsitemap_user}");
+  db_query("DROP TABLE {xmlsitemap_user_role}");
+}
+
+/**
+ * Implementation of hook_update_N().
+ * Add missing URL aliases.
+ */
+function xmlsitemap_user_update_1() {
+  $ret = array(update_sql("UPDATE {xmlsitemap_user} SET pid = NULL WHERE pid = 0"));
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("
+        UPDATE {xmlsitemap_user} xu, {url_alias} ua SET xu.pid = ua.pid
+        WHERE xu.pid IS NULL AND ua.src = CONCAT('user/', xu.uid)
+      ");
+      break;
+    case 'pgsql':
+      $ret[] = update_sql("
+        UPDATE {xmlsitemap_user} SET pid = {url_alias}.pid FROM {url_alias}
+        WHERE {xmlsitemap_user}.pid IS NULL AND ua.src = CONCAT('user/', {xmlsitemap_user}.uid)
+      ");
+      break;
+  }
+  return $ret;
+}
+

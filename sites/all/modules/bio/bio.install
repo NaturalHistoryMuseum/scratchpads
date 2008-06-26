@@ -1,0 +1,118 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Installation file for Bio module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function bio_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE {bio} (
+        nid int unsigned NOT NULL default '0',
+        uid int unsigned NOT NULL default '0',
+        PRIMARY KEY (nid, uid)
+      ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+      break;
+    case 'pgsql':
+      db_query("CREATE TABLE {bio} (
+        nid int_unsigned NOT NULL default '0',
+        uid int_unsigned NOT NULL default '0',
+        PRIMARY KEY (nid, uid)
+      )");
+      break;
+  }
+}
+
+/**
+ * @defgroup bio-updates-legacy Bio updates for versions prior to 5.x-1.x
+ * @{
+ */
+
+/**
+ * 4.7.x -> 5.x upgrade.
+ */
+function bio_update_1() {
+  $ret = array();
+
+  // Copy per-node type link settings into different format.
+  $bio_link = array();
+  foreach (node_get_types() as $key => $type) {
+    $bio_link[$key] = variable_get('bio_'. $key, 0) ? $key : 0;
+  }
+  variable_set('bio_link', $bio_link);
+
+  // Keep permissions while using a node type handled by the node module.
+  $ret[] = update_sql("DELETE FROM {variable} WHERE name LIKE 'bio%%'");
+
+  // Purge old settings.
+  $ret[] = update_sql("UPDATE {permission} SET perm = REPLACE(perm, 'create biography', 'add bio, edit own bio')");
+
+  return $ret;
+}
+
+/**
+ * @} End of "defgroup bio-updates-legacy"
+ */
+
+/**
+ * @defgroup bio-updates-5.x-1.x Bio updates for 5.x-1.x
+ * @{
+ */
+
+/**
+ * Creates and populates a table to hold uid/nid combination.
+ *
+ * Workaround for node_user's annoying behaviour of anonymizing bio nodes
+ * which prevents us from deleting them. 
+ */
+function bio_update_5100() {
+  $ret = array();
+
+  // Create bio table.
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("CREATE TABLE {bio} (
+        nid int unsigned NOT NULL default '0',
+        uid int unsigned NOT NULL default '0',
+        PRIMARY KEY (nid, uid)
+      ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+      break;
+    case 'pgsql':
+      $ret[] = update_sql("CREATE TABLE {bio} (
+        nid int_unsigned NOT NULL default '0',
+        uid int_unsigned NOT NULL default '0',
+        PRIMARY KEY (nid, uid)
+      )");
+      break;
+  }
+
+  // Populate table.
+  $type = db_escape_string(variable_get('bio_nodetype', 'bio'));
+  $ret[] = update_sql("INSERT INTO {bio} SELECT nid, uid FROM {node} WHERE type = '$type' AND uid != 0");
+
+  return $ret;
+}
+
+/**
+ * @} End of "defgroup bio-updates-5.x-1.x"
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function bio_uninstall() {
+  db_query('DROP TABLE {bio}');
+  variable_del('bio_nodetype');
+  variable_del('bio_link');
+  variable_del('bio_profile');
+  variable_del('bio_profile_takeover');
+  variable_del('bio_regstration_form');
+  variable_del('bio_regstration_form_fields');
+}

@@ -1,0 +1,80 @@
+<?php
+/* $Id$ */
+
+/** 
+ * @file rollout.module
+ * "Rolls out" modules to multiple sites.
+ */
+
+/**
+ * Implementation of hook_xmlrpc()
+ */
+function rollout_server_xmlrpc(){
+  return array(
+    'rollout_server.install'=>'rollout_server_install',
+    'rollout_server.uninstall'=>'rollout_server_uninstall',
+    'rollout_server.settings'=>'rollout_server_settings');
+}
+
+function rollout_server_settings($form_id, $form_values){
+  // We want to ensure that only LOCALHOST is allowed here.
+  if ($_SERVER['REMOTE_ADDR']!=$_SERVER['SERVER_ADDR']){ // FIXME - Better security required
+    return false;
+  }
+  $form_submits = call_user_func($form_id);
+  $form_submits = array_keys($form['#submit']);
+  if (count($form_submits)>0){
+    foreach ($form as $form_submit_method){
+      call_user_func($form_submit_method, $form_id, $form_values);
+    }
+  }
+  else {
+    if (function_exists($form_id.'_submit')){
+      call_user_func($form_id.'_submit',$form_id, $form_values);
+    }
+    else {
+      system_settings_form_submit($form_id, $form_values);
+    }
+  }
+  // As with below the above functions do not offer feedback, so we 
+  // assume that they're successful! - SHITE
+  return true;
+}
+
+function rollout_server_install($form_id, $form_values){
+  // Does the installing/disabling
+  // We want to ensure that only LOCALHOST is allowed here.
+  // FIXME - Better security required
+  if(gethostbyname($_SERVER['SERVER_NAME']) != $_SERVER['REMOTE_ADDR']){
+    return false;
+  }
+  system_modules();
+  module_rebuild_cache();
+  if (!system_modules_submit($form_id, $form_values)){
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+function rollout_server_uninstall($form_id, $form_values){
+  // Does the uninstalling
+  // We want to ensure that only LOCALHOST is allowed here.
+  if ($_SERVER['REMOTE_ADDR']!=$_SERVER['SERVER_ADDR']){ // FIXME - Better security required
+    return false;
+  }
+  // Following taken directly from system.module
+  // ---------------------------------------------
+  // Make sure the install API is available.
+  include_once './includes/install.inc';
+
+  // Call the uninstall routine for each selected module.
+  foreach (array_filter($form_values['uninstall']) as $module => $value) {
+    drupal_uninstall_module($module);
+  }
+  // ---------------------------------------------
+  // Sadly no feedback is given by Drupal on the above uninstall method, so
+  // we simply assume everything has worked. YAY!
+  return true;
+}

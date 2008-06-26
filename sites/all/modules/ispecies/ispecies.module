@@ -1,0 +1,1633 @@
+<?php
+
+define(MAX_IMAGE_WIDTH, 95);
+define(MAX_IMAGE_HEIGHT, 95);
+
+/**
+ * Implementation of hook_menu()
+ */
+function ispecies_menu($may_cache){
+	
+	if ($may_cache) {
+
+		$items[]= array (
+	    'path' => 'ispecies/ajax_callback',
+	    'callback' => 'ispecies_ajax_callback',	
+	    'access' => user_access('access content'),
+	    'type' => MENU_CALLBACK,
+	   );
+	
+		$items[] = array(
+	      'path' => 'bhl_viewer', 
+	      'callback' => 'ispecies_bhl_viewer',
+	      'access' => user_access('access content'),
+				'title' => 'Biodiversity Heritage Library',
+	      'type' => MENU_CALLBACK,
+	   );
+
+	}else{
+		
+		$path = drupal_get_path('module', 'ispecies');
+		
+		// we want to access the tid so define the var
+		drupal_add_js("var tid = '".arg(2)."';", 'inline');
+		drupal_add_js($path.'/ispecies.js');
+		drupal_add_css($path.'/ispecies.css', 'module', 'all', false);
+		
+	}
+	
+	return $items;
+	
+}	
+
+/**
+ * Define all the ispecies
+ */
+function ispecies_ispecies(){
+	
+	return array(
+		
+		'yahoo' => array(
+			'title' => t('Yahoo images'),
+			'callback' => 'ispecies_yahoo_get_data',
+			'default_num' => 6
+			),
+      
+    'flickr' => array(
+      'title' => t('Flickr images'),
+      'callback' => 'ispecies_flickr_get_data',
+      'default_num' => 20
+      ),
+      
+    'webimages' => array(
+      'title' => t('Web Images'),
+      'callback' => 'ispecies_webimages_get_data',
+      'default_num' => 20
+    ),
+		
+		'gbif_map' => array(
+			'title' => t('GBIF Map'),
+			'callback' => 'ispecies_gbif_map_get_data',
+			'default_num' => 1
+			),
+		'wikipedia' => array(
+		  'title' => t('Wikipedia'),
+		  'callback' => 'ispecies_wikipedia_get_data',
+		  'default_num' => 1
+		),
+		'bhl' => array(
+			'title' => t('Biodiversity Heritage Library'),
+			'callback' => 'ispecies_bhl_get_data',
+			'default_num' => 20
+			),
+		
+		'google_scholar' => array(
+			'title' => t('Google scholar'),
+			'callback' => 'ispecies_google_scholar_get_data',
+			'default_num' => 20
+			),
+			
+		'ncbi' => array(
+			'title' => t('NCBI'),
+			'callback' => 'ispecies_ncbi_get_data',
+			'default_num' => 20
+			),
+		
+	);
+	
+}
+
+/**
+ * Implementation of hook_node_info
+ */
+function ispecies_node_info() {
+  
+return array(
+    'ispecies' => array(
+      'name' => t('iSpecies Cache'),
+      'module' => 'ispecies',
+      'description' => t('Cached iSpecies content.'),
+			'locked'=>true,
+    )
+  );
+
+}
+
+/**
+ * Implementation of hook_form()
+ */
+function ispecies_form(&$node, &$param) {
+	
+	$type = node_get_types('type', $node);
+
+	  // We need to define form elements for the node's title and body.
+	  $form['title'] = array(
+	    '#type' => 'textfield',
+	    '#title' => check_plain($type->title_label),
+	    '#required' => TRUE,
+	    '#default_value' => $node->title,
+	    '#weight' => -5
+	  );
+	
+	  $form['body'] = array(
+	    '#type' => 'textarea',
+	    '#title' => check_plain($type->body_label),
+	    '#default_value' => $node->body,
+	    '#required' => FALSE
+	  );
+
+	  $form['object_url'] = array(
+	    '#type' => 'textfield',
+	    '#default_value' => $node->object_url,
+			'#title' => t('Object url')
+	  );
+
+	  $form['page_url'] = array(
+	    '#type' => 'textfield',
+	    '#default_value' => $node->page_url,
+			'#title' => t('Page URL')
+	  );
+
+return $form;
+
+}
+
+
+/**
+ * Implementation of hook_update()
+ */
+function ispecies_update($node){
+  if ($node->revision){
+    ispecies_insert($node);
+  }
+  else {
+		db_query("UPDATE {ispecies} SET object_url = '%s', page_url = '%s'  WHERE vid = %d", $node->object_url, $node->page_url, $node->vid);
+  }
+}
+
+/**
+ * Implementation of hook_insert($node)
+ */
+function ispecies_insert($node){
+	
+	db_query("INSERT INTO {ispecies} (vid, nid, object_url, page_url) VALUES (%d, %d,'%s','%s')", $node->vid, $node->nid, $node->object_url, $node->page_url);
+	
+}
+
+/**
+ * Implementation of hook_delete
+ */
+function ispecies_delete($node) {
+
+  db_query('DELETE FROM {ispecies} WHERE nid = %d', $node->nid);
+
+}
+
+/**
+ * Implementation of hook_load
+ */
+function ispecies_load($node) {
+	
+  $additions = db_fetch_object(db_query('SELECT object_url, page_url FROM {ispecies} WHERE vid = %d', $node->vid));
+  return $additions;
+
+}
+
+/**
+ * Implementation of hook_view
+ */
+function ispecies_view($node, $teaser = FALSE, $page = FALSE) {
+
+  $node = node_prepare($node, $teaser);
+
+  return $node;
+}
+
+
+
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function ispecies_nodeapi(&$node, $op, $teaser, $page) {
+
+  switch ($op) {
+    case 'delete revision':
+      db_query('DELETE FROM {ispecies} WHERE vid = %d', $node->vid);
+    break;
+  }
+}
+
+
+/**
+ * Implementation of hook_views_style_plugins()
+ */
+function ispecies_views_style_plugins() {
+  
+	return array(
+
+		'ispecies' => array(
+			'name' => t('View controls: iSpecies'),
+			'theme' => 'ispecies_view_list',
+			'weight' => -12,
+			'view_control' => true
+		),
+
+	);
+		
+}
+
+
+/**
+ * implementation of views_default_views
+ */
+function ispecies_views_default_views(){
+	
+	$ispecies = ispecies_ispecies();
+	
+	foreach($ispecies as $name => $args){
+
+		  $view = new stdClass();
+		  $view->name = $name;
+		  $view->description = 'iSpecies: '.$args['title'];
+		  $view->access = array (
+			);
+		  $view->view_args_php = '';
+		  $view->page = TRUE;
+		  $view->page_title = $args['title'];
+		  $view->page_header = '';
+		  $view->page_header_format = '3';
+		  $view->page_footer = '';
+		  $view->page_footer_format = '3';
+		  $view->page_empty = '';
+		  $view->page_empty_format = '3';
+		  $view->page_type = array_shift(array_keys(ispecies_views_style_plugins()));
+		  $view->url = '';
+		  $view->use_pager = FALSE;
+		  $view->nodes_per_page = $args['default_num'];
+		  $view->sort = array (
+		  );
+		  $view->argument = array (
+		    array (
+		      'type' => 'taxid',
+		      'argdefault' => '7',
+		      'title' => '',
+		      'options' => '',
+		      'wildcard' => '',
+		      'wildcard_substitution' => '',
+		    ),
+		  );
+
+		  $view->field = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'body',
+		      'label' => '',
+		      'handler' => 'views_handler_field_body',
+		    ),
+		  );
+		
+		  $view->filter = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'type',
+		      'operator' => 'OR',
+		      'options' => '',
+		      'value' => array (
+					  0 => 'ispecies',
+					),
+		    ),
+		  );
+		
+		  $view->exposed_filter = array (
+		  );
+		  $view->requires = array();
+		  
+		  $views[$view->name] = $view;
+
+		
+	}
+	
+	return $views;
+	
+}
+
+/**
+ * Implementation of default_panel_views
+ * Define all the isepecies views as panel views 
+ */
+function ispecies_default_panel_views(){
+	
+	$ispecies = ispecies_ispecies();
+	
+	foreach($ispecies as $name => $args){
+	
+		$panel_view = new stdClass();
+	  $panel_view->pvid = 'new';
+	  $panel_view->view = $name;
+	  $panel_view->name = $name;
+	  $panel_view->description = 'iSpecies: '.$args['title'];
+	  $panel_view->title = $args['title'];
+	  $panel_view->category = 'Views';
+	  $panel_view->category_weight = '-1';
+	  $panel_view->view_type = 'page';
+	  $panel_view->use_pager = '0';
+	  $panel_view->pager_id = '0';
+	  $panel_view->nodes_per_page = $args['default_num'];
+	  $panel_view->offset = '0';
+	  $panel_view->link_to_view = '0';
+	  $panel_view->more_link = '0';
+	  $panel_view->feed_icons = '0';
+	  $panel_view->url_override = '0';
+	  $panel_view->url = '';
+	  $panel_view->url_from_panel = '0';
+	  $panel_view->arguments = '0';
+	  $panel_view->contexts = array (
+	    0 => 
+	    array (
+	      'type' => 'context',
+	      'context' => 'any',
+	      'panel' => '0',
+	      'fixed' => '',
+	      'label' => 'Taxonomy: Term ID',
+	    ),
+	  );
+	  $panel_view->allow_type = '0';
+	  $panel_view->allow_nodes_per_page = '0';
+	  $panel_view->allow_offset = '0';
+	  $panel_view->allow_use_pager = '0';
+	  $panel_view->allow_link_to_view = '0';
+	  $panel_view->allow_more_link = '0';
+	  $panel_view->allow_feed_icons = '0';
+	  $panel_view->allow_url_override = '0';
+	  $panel_view->allow_url_from_panel = '0';
+	
+	$panel_views[$name] = $panel_view;
+	
+	}
+	
+	return $panel_views;
+
+}
+
+
+function ispecies_views_tables(){
+
+  $tables['ispecies'] = array(
+    'name' => 'ispecies',
+    'join' => array(
+      'type' => 'inner',
+      'left' => array(
+        'table' => 'node',
+        'field' => 'nid',
+      ),
+      'right' => array(
+        'field' => 'nid'
+      )      
+    ),
+    'fields' => array(
+      'citation' => array('name' => t('iSpecies: Citation')),
+      'url' => array('name' => t('iSpecies: URL')),
+    )
+  );
+
+  return $tables;
+
+}
+
+
+
+/**
+ * Tweak the view query so if there's no positioning, nothing is displayed
+ */
+function ispecies_views_query_alter($query, &$view, $summary, $level){
+
+	$plugins = ispecies_views_style_plugins();
+	
+	if($plugins[$view->type]){
+		
+		if(arg(1) == 'configure'){
+			
+			//We only ever want to return nodes with positioning even when configuring
+			$query->add_where("(%s.%s = '%s' AND %s.%s = %s)");	
+			$query->where_args[] = 'view_controls_position';
+			$query->where_args[] = 'view_name';
+			$query->where_args[] = $view->name;
+			$query->where_args[] = 'view_controls_position';
+			$query->where_args[] = 'tid';
+			$query->where_args[] = $view->tid;
+			
+		}else{
+
+			$args = array('view_name'=>$view->name);
+
+			$view->tid = view_controls_get_view_tid($view);
+
+			if($view->tid){
+				$args['tid'] = $view->tid;
+			}else{
+				$args['tid'] = 0;
+			}
+
+			// does this view have positioning?
+			$count_positionining = view_controls_count_positions($args);
+			if(!$count_positionining){
+					$query->add_where("%s.%s = 0");	
+					$query->where_args[] = 'node';
+					$query->where_args[] = 'nid';					
+			}	
+		}		
+	}
+	
+	return $query;
+	
+}	
+
+
+function ispecies_form_alter($form_id, &$form) {
+
+	switch ($form_id){
+		
+		case 'view_controls_configure_form':
+		
+			$view = views_get_view($form['view_name']['#value']);
+		
+			$ispecies = ispecies_ispecies();
+			
+				//if this is an ispecies view, convert the form
+				if($ispecies[$view->name]){
+
+					$form = ispecies_configure_form($view, $form);
+					
+				}
+
+		break;
+	
+	}
+	
+	return $form;
+	
+}
+
+/**
+ * Convert the form to the ispecies form
+ */
+function ispecies_configure_form($view, $form){
+
+	$form['#base'] = 'ispecies_configure_form';
+	// view controls ajax submission uses the form_id to locate submision function, so add it here
+	$form['form_id']['#value'] = 'ispecies_configure_form';
+
+	$args = array(
+		'tid' => $form['tid']['#value'],
+		'view_name' => $form['view_name']['#value']
+	);
+
+	// does this view have positioning?
+	$count_positioning = view_controls_count_positions($args);
+		
+	$ispecies = ispecies_ispecies();
+
+	$func = $ispecies[$view->name]['callback'];
+
+	$term = taxonomy_get_term($args['tid']);
+
+	if($count_positioning){ // this view has been locked and has nodes so get the nodes
+			
+		// get all the nodes (including hidden ones)
+		$internal = views_build_view('items', $view, array($args['tid']));
+
+	}
+
+	// if you get 20, some might already be in the view, so get 20 + count positioning
+	$limit = $count_positioning + variable_get('view_controls_limit_'.$args['view_name'], 50) + view_control_get_num_nodes_in_view($view);
+	
+	$external = $func(urlencode(strtolower($term->name)), $limit);	
+		
+	if(is_array($internal['items'])){
+
+		$items = $internal['items'] + $external;	
+		
+	}else{
+
+		$items = $external;
+	
+	}	
+
+	$hidden_nodes = view_controls_get_visibility($args);
+	
+	($count_positionining ? $num_nodes = $count_positionining : $num_nodes = view_control_get_num_nodes_in_view($view));
+	
+	$count = 0;
+
+	$sections = array(
+
+		'visible' => array(
+			'title' => t('Nodes being displayed'),
+			'items' => array(),
+			),
+
+		'hidden' => array(
+			'title' => t('Hidden nodes'),
+			'items' => array(),
+			),
+
+	);
+
+	foreach($sections as $id => $section){
+
+		$form[$id] = array(
+			'#type' => 'fieldset',
+			'#prefix' => '<div class="view-control-column" id="'.$id.'"><h3>'.$section['title'].'</h3>',
+			'#suffix' => '</div>',
+			'#weight' => $x++,
+		);
+
+	}
+	
+
+	
+	foreach($items as $object_url => $item){
+		
+		// count is the number of external nodes - once limit has been reached, exit loop
+		if($count == 20){
+			break;
+		}
+		
+			
+		$prefix = '';
+		
+		if($item->nid){
+			$identifier = $item->nid;
+		}else{
+			
+			// if there's no body (destroyed if a node), continue
+			if(!$item->body){
+				continue;
+			}
+			
+			$identifier = 'external_'.$count;
+				
+			// we need to store the body and citation in the form so they can be used to create the ispecies node
+			
+			$form['body']['body_'.$count] = array(
+				'#type' => 'hidden',
+				'#value' => $item->body
+			);
+			
+			$form['page_url']['page_url_'.$count] = array(
+				'#type' => 'hidden',
+				'#value' => $item->page_url
+			);
+			
+			$form['object_url']['object_url_'.$count] = array(
+				'#type' => 'hidden',
+				'#value' => $object_url
+			);
+			
+		}
+		
+			
+		if($hidden_nodes[$item->nid]){
+			
+			$section = 'hidden';
+			$id = 'hidden['.$item->nid.']';
+			
+		}elseif($item->nid){
+			
+			$section = 'visible';
+			$id = 'visible['.$identifier.']';
+			
+			$node = node_load($item->nid);
+
+			// If the node has been retrieved externally again, unset it
+			if($items[$node->object_url]){			
+			unset($items[$node->object_url]->body);
+			}
+			
+		}else{
+			
+			$section = 'hidden';
+			$id = 'outside['.$identifier.']';
+			$count++;
+			
+		}
+		
+			
+		$sections[$section]['items'][] = $id;
+			
+		if(count($sections[$section]['items']) == 1){ // first item in list or table		
+				$prefix = '<ul class="view-control-form-ul">';
+		}
+		
+		$theme_func = view_controls_get_theme_function($view);
+		
+		$fields = _views_get_fields();
+		
+		$form[$section][$id] = array(
+		'#type' => 'hidden',
+		'#value' => $identifier,
+		'#prefix' => $prefix.'<li id="view-control-'.($item->nid ? $item->nid : $count).'">'.$theme_func($view, $item, $fields),
+		'#suffix' => '</li>',
+		);	
+	
+	}
+	
+	foreach($sections as $id => $section){
+	
+		if(count($section['items'])){
+	
+			// get last id in the hidden_nids array
+			$last_item = array_pop($section['items']);
+	
+			$form[$id][$last_item]['#suffix'].= '</ul>';
+	
+		}else{
+	
+			if($id == 'visible'){
+				$empty_text = t('<p>Drop items here to lock them into place - once locked you can change the order and hide / add items.</p><p>Leave empty for the items to be dynamically generated from external source.</p>');
+			}else{
+				$empty_text = t('');
+			}
+	
+			$form[$id]['empty'] = array(
+			'#value' =>	'<ul class="view-control-form-ul"><li class="dummy-empty">'.$empty_text.'</li></ul>',
+			);
+	
+		}
+	
+	}
+	
+	$form['#suffix'] = '<script type="text/javascript">ispecies_set_update("'.$view->name.'");</script>';	
+	
+	$form['#submit'] = array('ispecies_configure_form_submit' => array());	
+	return $form;
+	
+}	
+
+
+
+/**
+ * Form submission - based on view_controls_configure_form submit
+ */
+function ispecies_configure_form_submit($form_id, $form_values){
+
+	$args = array(
+		'view_name' => $form_values['view_name'],
+	);
+	
+	$args['tid'] = intval($form_values['tid']);
+	
+	//delete any existing hidden nodes	
+	view_controls_delete_visibility($args);
+	
+	//delete existing positions
+	view_controls_delete_positions($args);
+	
+	//if there's hidden nodes, insert them into the hidden nodes table 
+	if(count($_POST['hidden'])){
+		
+		foreach($_POST['hidden'] as $hidden_node){
+			
+			// we don't care if the users wants to hide anything - if there's visible (locked) nodes, they won't be displayed anyway
+			// so just delete iSpecies cache (positioning already deleted)
+
+			if(is_numeric($hidden_node)){ //we only care if it's a nid - urls won't be displayed anyway, once the view is locked
+				node_delete($hidden_node);
+			}
+			
+		}
+		
+	}
+	
+	//loop through the $_POST['visible'] array - the order these are in is the order they should be displayed
+	
+	$count_visible = count($_POST['visible']);
+	
+		$x = 0;
+
+		foreach($_POST['visible'] as $visible_node){
+		
+			$position = $count_visible - $x;
+			$args['position'] = $position;
+			
+			//if its a nid, just insert it. If it's a url we need to create a node
+			
+			if(is_numeric($visible_node)){
+			
+				$args['nid'] = intval($visible_node);	
+				
+			}else{ // create the node
+
+				$id = str_replace('external_','',$visible_node);
+				
+				$node = new stdClass();
+				$node->title = urldecode($visible_node);
+				$node->body = $_POST['body_'.$id];
+				$node->object_url = $_POST['object_url_'.$id];
+				$node->page_url = $_POST['page_url_'.$id];
+				$node->type = 'ispecies';
+				$node->status = 1;
+				
+				// add the taxonomy data
+				
+				$term = taxonomy_get_term($args['tid']);
+				
+				$node->vid = $term->vid;
+				
+				$node->taxonomy = array(
+					$term->tid => $term
+				);
+				
+				node_save($node);
+				$args['nid'] = $node->nid;
+				
+			}
+					
+			view_controls_insert_position($args);
+			$x++;
+			
+		}
+		
+	// clear the cache so anon users will see the changes
+	cache_clear_all('*', 'cache_page', true);
+	cache_clear_all('*', 'cache_views', true);
+	
+	//clear all messages - hide creation of nodes
+	drupal_get_messages();
+	
+	if(!$form_values['thickbox']){
+		drupal_set_message(t('View has been updated.'));
+	}	
+	
+}
+
+/**
+ * Ajax callback;
+ * Print data from an external data source
+ */
+function ispecies_ajax_callback(){
+	
+	if($_POST['view_name'] && $_POST['tid']){
+
+	$ispecies = ispecies_ispecies();
+
+	$func = $ispecies[$_POST['view_name']]['callback'];
+
+	$term = taxonomy_get_term($_POST['tid']);
+
+	$view = views_get_view($_POST['view_name']);
+	
+		if($term->name){
+		
+		$items = $func(urlencode(strtolower($term->name)), $view->nodes_per_page);	
+
+			if (!($func = theme_get_function("ispecies_view_list_".$_POST['view_name']))) {
+		    $func = theme_get_function('ispecies_view_list');
+		  }
+
+		$output = $func($view, $items);
+		
+			if(!$output){
+				$output = '<div class="empty-text"><p>There is no matching content for <em>'.$term->name.'.</em></p></div>';
+			}else{
+
+				foreach($items as $item){
+					$references[] = $item->page_url;
+				}
+				
+			}
+
+				
+		}
+
+	}else{
+		
+		$output = '<div class="empty-text"><p>'.t('Sorry, retrieving external content failed.').'</p></div>';
+		
+	}
+
+	//removed array unique here - check this is ok
+	$json = array(
+		'output' => $output,
+		'view_name' => $_POST['view_name'],
+		'references' => $references,
+	);
+
+	print ispecies_json_encode($json);
+	exit;
+	
+}
+
+function ispecies_json_encode($json){
+	
+	return json_encode($json);
+	
+}
+
+/**
+ * Implementation of hook_view_control_reset
+ */
+function ispecies_view_control_reset($args){
+	
+	$positions = view_controls_get_positions($args);
+	
+	foreach($positions as $nid =>$position){
+		
+		$node = node_load($nid);
+		
+		if($node->type == 'ispecies'){
+			node_delete($nid);
+		}
+		
+	}
+	
+}
+
+/***********************************************************************************************
+ 																		external data calls 
+************************************************************************************************/
+
+
+/**
+ * @return array of items
+ * Each item is an $item object, key is unique to the item (use URL where possible to prevent duplication)
+ * $item->body The HTML to display
+ * $item->page_url The URL of the source page - used for citations 
+ */
+
+
+function ispecies_ncbi_get_data($term_name, $limit){
+
+	$items = array();
+	$db = 'taxonomy';
+
+	$esearch_request = 'http://fencedine.myspecies.info/?url='.urlencode('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db='.$db.'&term='.$term_name.'&retmax='.$limit);
+
+	$esearch_xml = file_get_contents($esearch_request);
+  if($esearch_xml){
+	  $esearch_results = new SimpleXMLElement($esearch_xml);
+  }
+
+	if($esearch_results){
+
+		if($esearch_results->IdList->Id){	
+
+			foreach($esearch_results->IdList->Id as $id){
+
+			$efetch_request = 'http://fencedine.myspecies.info/?url='.urlencode('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db='.$db.'&retmode=xml&id='.$id);
+
+			$sequence_xml = file_get_contents($efetch_request);
+
+				if($sequence_xml){
+
+					$item = new stdClass();
+
+					$sequence = new SimpleXMLElement($sequence_xml);
+					$sequence_data = (array) $sequence->DocSum;
+				
+					$name = $sequence_data['Item'][2];
+
+						//add the common name
+						if(is_string($sequence_data['Item'][3])){
+							$name .= ' ['.$sequence_data['Item'][3].']';
+						}elseif(count($esearch_results->IdList->Id) > 1){ //if there's no common name and more than one item we need to differentiate
+							$name .= ' ['.$sequence_data['Item'][1].']';
+						}
+				
+					($sequence_data['Item'][4] ? $tid = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id='.$sequence_data['Item'][4].'&lvl=3&p=mapview&p=has_linkout&p=blast_url&p=genome_blast&lin=f&keep=1&srchmode=1&unlock">'.$sequence_data['Item'][4].'</a>' : $tid = '');
+					($sequence_data['Item'][5] ? $nucleotide = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=nucleotide&cmd=Search&dopt=DocSum&term=txid'.$sequence_data['Item'][4].'%5BOrganism%3Aexp%5D">'.$sequence_data['Item'][5].'</a>' : $nucleotide = '');
+					($sequence_data['Item'][6] ? $protein = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=protein&cmd=Search&dopt=DocSum&term=txid'.$sequence_data['Item'][4].'%5BOrganism%3Aexp%5D">'.$sequence_data['Item'][6].'</a>' : $protein = '');
+				
+					$item->body .= sprintf('<table id="ncbi-sequence">
+					<tr><th colspan="2">%s</th></tr>
+					<tr><td>Taxonomy ID:</td><td>%s</td></tr>
+					<tr><td>Nucleotide sequences:</td><td>%s</td></tr>
+					<tr><td>Protein sequences:</td><td>%s</td></tr>
+					</table>',$name, $tid, $nucleotide, $protein);
+						
+				}
+	
+				$elink_request = 'http://fencedine.myspecies.info/?url='.urlencode('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=taxonomy&db=all&id='.$id.'&cmd=llinks');
+		
+				$elink_request_xml = file_get_contents($elink_request);
+	
+					if($elink_request_xml){
+									
+						$elinks = new SimpleXMLElement($elink_request_xml);
+					
+						$item->body .= '<h3>External links</h3><ul id="elinks" />';
+									
+						foreach($elinks->LinkSet->IdUrlList->IdUrlSet->ObjUrl as $link){
+									
+							
+							
+									if($link->LinkName){
+									
+											if($link->Provider->NameAbbr == 'taxresource'){
+											
+												$name = 'GBIF bookmark: '. $link->LinkName; 
+											
+											}else{
+									
+												$name = $link->Provider->NameAbbr .': '. $link->LinkName; 
+											
+											}
+									
+									
+										$title = $link->Provider->Name.': '. $link->LinkName; 
+									
+									}else{
+									
+										$name = $link->Provider->Name;
+										$title = $name;
+									
+									}
+					
+									
+						$item->body .= sprintf('<li><a href="%s" title="%s" />%s</a></li>',$link->Url, $title, $name);
+						
+						}
+					
+						$item->body .= '</ul>';
+									
+					
+									
+					}
+			
+			$item->page_url = 'http://eutils.ncbi.nlm.nih.gov/';
+			$items[strval($id)] = $item;
+			
+			} //end of foreach $id	
+		}	
+	}
+
+return $items;
+
+}
+
+
+function ispecies_google_scholar_get_data($term_name, $limit){
+
+	$items = array();
+
+	$request = 'http://fencedine.myspecies.info/?url='.urlencode('http://darwin.zoology.gla.ac.uk/cgi-bin/gsaJSON.cgi?q='.$term_name);
+	$json_str = file_get_contents($request);
+	$json_str = substr($json_str,strpos($json_str,'gs_results'));
+	$json_obj = json_decode($json_str);
+
+	//the json string returned includes a functon call which we do not want
+	$json_str = str_replace('gs_results({', '{', $json_str);
+	$json_str = str_replace('})', '}', $json_str);
+
+	$json_obj = json_decode(strval($json_str));
+
+	$counter = 0;
+
+	if(is_array($json_obj->Result)){
+
+		foreach($json_obj->Result as $key => $result){
+
+			$counter++;
+
+			$item = new stdClass();
+			$item->body = sprintf('<a target="_blank" href="%s" title="%s">%s</a>',$result->link, $result->title, $result->title);
+			$item->page_url = 'http://scholar.google.co.uk/scholar?q='.$term_name;	
+			$items[strval($result->link)] = $item;
+
+				if($counter >= $limit){
+					break;
+				}
+
+		}
+		
+	}
+
+	return $items;
+
+}
+
+
+function ispecies_gbif_map_get_data($term_name, $limit){
+
+	$items = array();
+	
+	$item = new stdClass();
+			
+	$request = 'http://fencedine.myspecies.info/?url='.urlencode('http://data.gbif.org/species/taxonName/ajax/returnType/concept/view/ajaxMapUrls/provider/1/?query='.$term_name);
+	$xml_response = file_get_contents($request);
+	
+	if($xml_response){
+	
+		$response = new SimpleXMLElement($xml_response);
+
+		$item->body = sprintf('<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/%s" alt="%s" />',$response->taxon->url,$term_name);
+		$item->page_url = 'http://data.gbif.org/species/'.$response->taxon->key;
+	
+		$items[strval($response->taxon->url)] = $item;
+
+		return $items;
+
+	}
+
+}
+
+function ispecies_wikipedia_get_data($term_name, $limit){
+  $wikipedia_url = 'http://en.wikipedia.org/wiki/Special:Export/';
+  
+  $items = array();
+  ini_set('user_agent', 'Scatchpad Bot http://scratchpads.eu/bot');
+  $url = 'http://fencedine.myspecies.info/?url='.urlencode($wikipedia_url.ucfirst(strtolower(str_replace(' ','_',str_replace('+','_',$term_name)))));
+  $xml = file_get_contents($url);
+  if($xml){
+    $response = new SimpleXMLElement($xml);
+    if(strtoupper(substr($response->page->revision->text,0,9))=='#REDIRECT'){//I'm only checking for one bloody redirect, they can chuff off with more
+      $text = $response->page->revision->text;
+      $term_name = substr($text, strpos($text,'[[')+2,strpos($text,']]')-(strpos($text,'[[')+2));
+      $url = 'http://fencedine.myspecies.info/?url='.urlencode($wikipedia_url.ucfirst(strtolower(str_replace(' ','_',$term_name))));
+      $xml = file_get_contents($url);
+      $response = new SimpleXMLElement($xml);
+    }
+    $output_text = _ispecies_get_wiki_text($response->page->revision->text, $term_name);
+    if(strlen(trim($output_text))<10){
+      return array();
+    }
+    require_once 'PEAR.php';
+    require_once 'Text/Wiki.php';
+    if(class_exists('Text_Wiki')){
+      $wiki = & Text_Wiki::singleton('Mediawiki');
+      $output_text_new = $wiki->transform($output_text, 'Plain');
+      if(strlen($output_text_new)==0){
+        $output_text = t('The Wiki parsing for this page has failed.<br/>').$output_text;
+      } else {
+        $output_text = $output_text_new;
+      }
+      // Remove {{ Shite }}
+      while(strpos($output_text,'{{')!==false){
+        $output_text = preg_replace('/{{[^}]*}}/','',$output_text);
+      }
+    }
+    if(strlen(trim($output_text))<10){
+      return array();
+    }
+    $item->body = '<div><p style="padding: 0px 5px;text-align: justify">'.$output_text.'</p></div>';
+    $item->page_url = 'http://en.wikipedia.org/wiki/'.ucfirst(strtolower(str_replace(' ','_',$term_name)));
+    $items[$response->page->revision->id.':'.$url] = $item;
+  }
+  return $items;
+}
+
+function _ispecies_get_wiki_text($wiki_text, $term){
+  // Look for the first line with three apostrophes, followed by the term name
+  $lines = preg_split('/[\n\r]+/',$wiki_text);
+  $return_lines = array();
+  $reached_line = false;
+  $line_number = 0;
+  foreach($lines as $line){
+    if(substr(trim($line),0,3)=="'''"){
+      $reached_line = true;
+    }
+    if($reached_line && (substr(trim($line),0,1)=="=" || substr(trim($line),0,1)=="{") && substr(trim($line),0,8)!="{{Spoken"){
+      return implode("<br/>",$return_lines);
+    }
+    if($reached_line == true){
+      $return_lines[] = $line;
+    }
+    if(substr(trim($line),0,1)=="}"){
+      $reached_line = true;
+    }
+    $line_number++;
+  }
+  return implode("<br/>",$return_lines);
+}
+
+function ispecies_webimages_get_data($term_name, $limit){
+  // Limit is pretty much ignored here. Oh well
+  return array_merge(ispecies_flickr_get_data($term_name,$limit),ispecies_yahoo_get_data($term_name,$limit));  
+}
+
+function ispecies_flickr_get_data($term_name, $limit){
+  if($limit > 100){
+    $limit = 100;
+  }
+  $items = array();
+  $url = 'http://fencedine.myspecies.info/?url='.urlencode('http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page='.$limit.'&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&text='.$term_name);
+  $results = unserialize(file_get_contents($url));
+  if ($results['photos']['total']>0){
+    $photos = $results['photos']['photo'];
+    foreach($photos as $photo){
+      $item = new stdClass();
+      $photo_url = 'http://static.flickr.com/'.$photo['server'].'/'.$photo['id'].'_'.$photo['secret'];
+      $item->body = '<div class="panel-grid-image"><a class="lightbox" rel="lightbox[flickr]" href="'.$photo_url.'.jpg"><img src="'.$photo_url.'_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>';		
+      $item->page_url = 'http://www.flickr.com/photos/'.$photo['owner'].'/'.$photo['id'];
+			$items['http://www.flickr.com/photos/'.$photo['owner'].'/'.$photo['id']] = $item;
+    }
+  }
+  return $items;
+}
+
+
+function ispecies_yahoo_get_data($term_name, $limit){
+	
+	// yahoo maximum number of images
+	if($limit > 20){
+		$limit = 20;
+	}
+	
+	$items = array();	
+	
+	$request = 'http://fencedine.myspecies.info/?url='.urlencode('http://search.yahooapis.com/ImageSearchService/V1/imageSearch?appid=oKvSo97V34Fj_xvmgvJCiVFF6sRd60NyUSxNJ5jijiuSKaAV3Hf_IoFiouBDm_c&query='.$term_name.'&results='.$limit.'&output=php');
+	$response = file_get_contents($request);
+	
+	$images = unserialize($response);
+	$count = 0;
+
+	if(is_array($images)){
+		
+			$output.= '<div class="yahoo-images clearfix">';
+		
+		foreach($images['ResultSet']['Result'] as $image){
+		
+		$count++;
+			
+			$x = $image['Thumbnail']['Width'];
+			$y = $image['Thumbnail']['Height'];
+			
+			// use width for scaling
+			if ($x > MAX_IMAGE_WIDTH)
+			{
+				
+				$oversize = $x - MAX_IMAGE_WIDTH;
+							
+			    // find proportion of orginal size
+			    $m = $oversize/$x;
+				// make y propportional
+				$y = round($y - ($y * $m));
+			
+			    // set x side to max
+			    $x = MAX_IMAGE_WIDTH;
+
+			}
+			
+			if ($y > MAX_IMAGE_HEIGHT)
+			{
+				
+				$oversize = $y - MAX_IMAGE_HEIGHT;
+							
+			    // find proportion of orginal size
+			    $m = $oversize/$y;
+				// make y propportional
+				$x = round($x - ($x * $m));
+			
+			    // set x side to max
+			    $y = MAX_IMAGE_HEIGHT;
+
+			}			
+			
+			$item = new stdClass();
+			
+			$item->body = sprintf('<div class="panel-grid-image"><a class="lightbox" rel="lightbox[yahoo]" href="%s"><img src="%s" width="%s" height="%s" alt="%s" title="%s" /></a></div>',$image['ClickUrl'],$image['Thumbnail']['Url'],$x,$y, $image['Title'], $image['Title']);		
+			
+			$item->page_url = $image['RefererUrl'];
+			
+			$items[$image['ClickUrl']] = $item;
+			
+		}
+	
+	}
+	
+	return $items;
+	
+}
+
+
+function ispecies_bhl_get_namebank_titles($term_name){
+	
+	$titles = array();
+	
+	$request = 'http://fencedine.myspecies.info/?url='.urlencode('http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameSearch&name='.$term_name);
+	
+	$namebank_ids_xml = file_get_contents($request);
+	
+	if($namebank_ids_xml){
+	
+	$namebank_ids = new SimpleXMLElement($namebank_ids_xml);
+	
+		foreach($namebank_ids->NameResult->Name as $data){
+	
+	
+			if(strtolower($data->NameConfirmed) == str_replace("+"," ",strtolower($term_name))){	
+	
+				$detail_request = 'http://fencedine.myspecies.info/?url='.urlencode('http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameGetDetail&nameBankID='.$data->NameBankID.'&format=xml');
+				$namebank_details_xml = file_get_contents($detail_request);
+				$namebank_details = new SimpleXMLElement($namebank_details_xml);
+			
+				foreach($namebank_details->NameResult->Titles->Title as $title){
+
+					// no content so don't add
+					if(!$title->Items->Item){
+						continue;
+					}
+				
+					//convert the titleID to numeric
+					$title_id = intval($title->TitleID);
+				
+						// if the publication has already been added, just add the items
+						if($titles[$title_id]){
+						
+							$titles[$title_id]['items'][] = $title->Items;
+						
+						}else{ //else add some publication details - expand here for more publication data if nec.
+						
+							// convert to an array - numerical key causing error
+							$title_array = (array) $title->PublicationTitle;
+							$title_url = (array) $title->TitleUrl;
+						
+							$titles[$title_id] = array(
+								'title' => $title_array[0],
+								'items' => array($title->Items),
+								'title_url' => $title_url[0],
+							);	
+						
+						}
+					
+				}				
+		
+			}
+			
+		}	
+	}
+	
+	return $titles;		
+	
+}
+
+function ispecies_bhl_get_data($term_name, $limit){
+	
+	$items = array();
+	
+	$titles = ispecies_bhl_get_namebank_titles($term_name);
+	
+	$count_titles = count($titles);
+	
+	if($count_titles){
+
+		// loop through all the titles		
+		$counter = 0;
+		
+		foreach($titles as $title){
+			
+			if($counter >= $limit){
+				break;
+			}
+			
+			$publication_title = $title['title'];
+			$pages = array();
+			
+			if(count($title['items']) > 1){ // there are more than one items for the publication
+				
+				$page_counter = 0;
+				
+				// loop through all the items
+				foreach($title['items'] as $title_item){
+				
+					foreach($title_item->Item->Pages->Page as $page){
+					
+						$item_id = intval($title_item->ItemID);
+						$page_number = intval($page->Number);
+					
+						(intval($item->Item->VolumeInfo) ? $volume_info = 'Vol. '.$title_item->Item->VolumeInfo : $volume_info = $title_item->Item->VolumeInfo);
+					
+						$viewer_url = str_replace('http://', '/bhl_viewer/', $page->ImageUrl);
+					
+						$pages[$page_number] = sprintf('<li><a class="thickbox" href="%s&width=380&height=420" title="%s %s of %s">%s %s%s</a> </li>',
+						$viewer_url,
+						$page->Prefix,
+						$page->Number,
+						$publication_title,
+						$page->Prefix,
+						$page->Number,
+						(strlen($volume_info) > 0 ? ' ('.$volume_info.')' : '')
+						);
+						
+						$page_counter++;
+					
+					}
+					
+					ksort($pages);
+				
+					$title_items[$item_id] = implode('', $pages);
+				
+				}
+				
+				ksort($title_items);
+				
+				$page_output = implode('', $title_items);
+				
+			}else{
+	
+
+				foreach($title['items'][0]->Item->Pages->Page as $page){
+					
+					$viewer_url = str_replace('http://', '/bhl_viewer/', $page->ImageUrl);
+					
+					$pages[intval($page->Number)] = sprintf('<li><a class="thickbox" href="%s&width=810&height=620" title="%s %s of %s">%s %s</a> </li>',
+					$viewer_url,
+					$page->Prefix,
+					$page->Number,
+					$publication_title,
+					$page->Prefix,
+					$page->Number								
+					);
+					
+				}
+				
+				$page_counter = count($pages);
+
+				ksort($pages);
+				
+				$page_output = implode('', $pages);
+				
+			}
+			
+			$number_of_pages = format_plural($page_counter, '@count page', '@count pages');
+
+				if($number_of_pages){
+				
+					$item = new stdClass();
+
+					$item->body = sprintf('<a href="%s" title="%s">%s (%s)</a>',
+					$title['title_url'],
+					$publication_title,
+					$publication_title,
+					$number_of_pages
+					);
+
+					$item->body .= '<ul class="bhl-pages">'.$page_output.'</ul>';
+
+					$stripped_term_name = str_replace(' ', '_', $term_name);
+
+					$item->page_url = 'http://www.biodiversitylibrary.org/name/'.$stripped_term_name;
+
+					if(!$items[$title['title_url']]){
+						
+						$items[$title['title_url']] = $item;
+						$counter++;						
+					
+					}
+					
+				}
+			
+		}
+			
+	}
+	
+	return $items;
+	
+}
+
+/**
+ * Thickbox display breaks bhl view layout - but not if we use an inline iframe 
+ */
+function ispecies_bhl_viewer(){
+	
+	$url = str_replace('/bhl_viewer/', 'http://', request_uri());
+	
+	$link_url = l($url,$url);
+	
+	print '<iframe hspace="0" frameborder="0" id="TB_iframeContent" style="width: 800px; height: 600px;" align="center" src="'.$url.'">'.$link_url.'</iframe>';
+	
+	exit;
+	
+}
+
+
+
+/***********************************************************************************************
+ 																		theme functions 
+************************************************************************************************/
+
+/**
+ * If there's no content for the view (the positions haven't been locked in) output out the loading image
+ * The ajax call is added to the class ajax_widget 
+ */
+
+function theme_ispecies_controls_page_empty($view){
+	
+	return theme_ispecies_page_empty($view);
+	
+}
+
+function theme_ispecies_page_empty($view){
+
+	$tid = view_controls_get_view_tid($view);
+	
+	$loading_image = drupal_get_path('module', 'ispecies').'/extras/loading.gif';
+	$output = '<div id="'.$view->name.'" class="ispecies"><img onload="init_ispecies(\''.$view->name.'\');" class="loading" width="32" height="32" alt="Loading data..." src="/'.$loading_image.'" /></div>';
+	return $output;
+	
+}
+
+
+/**
+ * Display the nodes of a view as a list.
+ */
+function theme_ispecies_view_list($view, $nodes, $type = null) {
+
+	views_load_cache();
+	
+  $fields = _views_get_fields();
+	$func = view_controls_get_theme_function($view);
+
+	if($func){
+		
+		foreach($nodes as $node){
+
+			$items[] = $func($view, $node, $fields);
+
+		}
+		
+	}
+
+  if ($items) {
+	
+		$output = '<div id="view-control-'.$view->name.'">';
+		$output .= theme('item_list', $items);
+		$output .= '</div>';
+    
+		return $output;
+
+  }
+
+}
+
+/**
+ * Get an individual list item
+ */
+function theme_ispecies_view_list_item($view, $node, $fields){
+
+
+	if($node->body){
+		
+		$item = $node->body;
+		
+	}else{
+		
+		foreach ($view->field as $field) {
+
+			if (!isset($fields[$field['id']]['visible']) && $fields[$field['id']]['visible'] !== FALSE) {
+
+				if ($field['label']) {
+				$item .= "<div class='view-label ". views_css_safe('view-label-'. $field['queryname']) ."'>" . $field['label'] . "</div>";
+				}
+
+			$item .= "<div class='view-field ". views_css_safe('view-data-'. $field['queryname']) ."'>" . views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view) . "</div>";
+
+			}
+
+		}
+		
+	}	
+		
+	return '<div class="view-item '. views_css_safe('view-item-'. $view->name) .'">'.$item.'</div>';
+	
+}
+
+
+function theme_citation_reference_yahoo($items, $view, $tid){
+
+	$themed_items = array();
+	
+	if(count($items)){
+		
+		$term = taxonomy_get_term($tid);
+		
+		$yahoo = l('Yahoo','http://images.search.yahoo.com/search/images?p='.$term->name.'&y=Search', array('target'=>'_blank'));
+
+		$link_number = 1;
+		foreach($items as $item){
+
+			if(is_numeric($item->nid)){
+				$node = node_load($item->nid);
+				$item = $node->page_url;
+			}
+			
+			if($item){
+				
+				$html_urls .= $conj.l($link_number, $item);
+				$link_number++;
+				$plain_urls .= $conj.$item;
+				$conj = ', ';
+				
+			}
+
+		}
+		
+		if($html_urls){
+		
+			$themed_items['yahoo'] = array(
+				'html' =>  $yahoo.' ('.$html_urls.')',
+				'plain' => 'Yahoo ('.$plain_urls.')'
+			);
+			
+		}
+		
+	}
+
+	return $themed_items;
+
+}
+
+function theme_citation_reference_flickr($items, $view, $tid){
+	$themed_items = array();
+	if(count($items)){
+		$term = taxonomy_get_term($tid);
+		$flickr = l('Flickr','http://flickr.com/search/?q='.$term->name, array('target'=>'_blank'));
+		$link_number = 1;
+		foreach($items as $item){
+			if(is_numeric($item->nid)){
+				$node = node_load($item->nid);
+				$item = $node->page_url;
+			}
+			if($item){
+				$html_urls .= $conj.l($link_number, $item);
+				$link_number++;
+				$plain_urls .= $conj.$item;
+				$conj = ', ';
+			}
+		}
+		if($html_urls){
+			$themed_items['flickr'] = array(
+				'html' =>  $flickr.' ('.$html_urls.')',
+				'plain' => 'Flickr ('.$plain_urls.')'
+			);
+		}
+	}
+	return $themed_items;
+}
+
+function theme_citation_reference_webimages($items, $view, $tid){
+	$themed_items = array();
+	if(count($items)){
+		$term = taxonomy_get_term($tid);
+		$webimages = l('Flickr','http://flickr.com/search/?q='.$term->name, array('target'=>'_blank')). ', '. l('Yahoo','http://images.search.yahoo.com/search/images?p='.$term->name.'&y=Search', array('target'=>'_blank'));
+		foreach($items as $item){
+			if(is_numeric($item->nid)){
+				$node = node_load($item->nid);
+				$item = $node->page_url;
+			}
+			if($item){
+				$html_urls .= $conj.l($item, $item);
+				$plain_urls .= $conj.$item;
+				$conj = ', ';
+			}
+		}
+		if($html_urls){
+			$themed_items['webimages'] = array(
+				'html' =>  $webimages.' ('.$html_urls.')',
+				'plain' => 'Flickr & Yahoo ('.$plain_urls.')'
+			);
+		}
+	}
+	return $themed_items;
+}
+
+function theme_citation_reference_gbif_map($items, $view, $tid){
+
+	$themed_items = array();
+
+	if(count($items)){
+	
+		$themed_items['gbif'] = array(
+				'html' => l('GBIF', $items[0], array('target'=>'_blank')),
+				'plain' => 'GBIF'
+		);
+		
+	}
+	
+	return $themed_items;
+	
+}
+
+function theme_citation_reference_ispecies($items, $view, $tid){
+
+	$themed_items = array();
+
+	if(count($items)){
+
+		$themed_items[$view->name] = array(
+				'html' => l($view->page_title, $items[0], array('target'=>'_blank')),
+				'plain' => $view->page_title
+		);
+	
+	}
+	
+	return $themed_items;
+	
+}
+
+
+
+
+
+

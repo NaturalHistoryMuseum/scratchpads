@@ -1,0 +1,184 @@
+# Hebrew translation of Drupal (tasks.module)
+# Copyright Amnon Levav <amnon@levavie.com>
+# Generated from file: tasks.module,v 1.5 2006/04/05 16:48:42 jakeg
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2006-07-27 02:42-0400\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: Amnon Levav <amnon@levavie.com>\n"
+"Language-Team: Hebrew <amnon@levavie.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+#: tasks.module:8
+msgid "A module to make task nodes."
+msgstr "רכיב המאפשר ליצור פריטי תוכן שהם משימות."
+
+#: tasks.module:10
+msgid "This is an task type with a few fields."
+msgstr "זהו סוג של משימה עם כמה שדות."
+
+#: tasks.module:17;48
+msgid "task"
+msgstr "משימה"
+
+#: tasks.module:53;89;301
+msgid "Tasks"
+msgstr "משימות"
+
+#: tasks.module:68;429
+msgid "Tasklist"
+msgstr "רשימת משימות"
+
+#: tasks.module:74
+msgid "Colour"
+msgstr "צבע"
+
+#: tasks.module:76
+msgid ""
+"This will be the colour this user's tasks will appear in. Hexdecimal or "
+"recognized colour name (e.g. #eee or just 'blue')"
+msgstr "זה יהיה הצבע שבו ייצבעו המשימות של משתמש זה. מספר הקסדצימלי או שם בצע מזוהה (כגון #eee או פשוט 'blue')."
+
+#: tasks.module:100
+msgid "-- MASTER TASKLIST --"
+msgstr "-- רשימת משימות ראשית --"
+
+#: tasks.module:105
+msgid "NO PARENT - THIS IS THE MASTER TASKLIST"
+msgstr "אין אב - זוהי רשימת המשימות הראשית"
+
+#: tasks.module:112
+msgid "Parent Tasklist"
+msgstr "רשימת אב"
+
+#: tasks.module:128
+msgid "Task Name"
+msgstr "שם המשימה"
+
+#: tasks.module:135
+msgid "About this task"
+msgstr "אודות משימה זו"
+
+#: tasks.module:146
+msgid "-- Unassigned --"
+msgstr "-- לא משוייכת --"
+
+#: tasks.module:153
+msgid "Assign to user"
+msgstr "שייך לחבר האתר"
+
+#: tasks.module:160
+msgid "Completed?"
+msgstr "הושלמה?"
+
+#: tasks.module:167
+msgid "Date Completed"
+msgstr "תאריך השלמה"
+
+#: tasks.module:183
+msgid "*************** NO CHANGE ***************"
+msgstr "*************** ללא שינוי ***************"
+
+#: tasks.module:189
+msgid "*** bottom of list ***"
+msgstr "*** תחתית הרשימה ***"
+
+#: tasks.module:193
+msgid "Place in tasklist above"
+msgstr "מקם ברשימת המשימות מעל"
+
+#: tasks.module:230
+msgid "add new sub-task"
+msgstr "הוסף משימת בן"
+
+#: tasks.module:231
+msgid "Add a new task to this task list"
+msgstr "הוסף משימה חדשה לרשימת המשימות הזו"
+
+#: tasks.module:309
+msgid "Task <b>%task</b> has been moved <b>up</b> the tasklist."
+msgstr "המשימה <b>%task</b> הועברה במעלה רשימת המשימות."
+
+#: tasks.module:313
+msgid "Task <b>%task</b> has been moved <b>down</b> the tasklist."
+msgstr "המשימה <b>%task</b> הועברה במורד רשימת המשימות."
+
+#: tasks.module:351
+msgid "Showing %num_rows tasks. Filter"
+msgstr "מציג %num_rows משימות. סנן"
+
+#: tasks.module:353
+msgid "Incomplete Tasks"
+msgstr "משימות שטרם הושלמו"
+
+#: tasks.module:353
+msgid "Complete Tasks"
+msgstr "משימות שהושלמו"
+
+#: tasks.module:353
+msgid "All Tasks"
+msgstr "כל המשימות"
+
+#: tasks.module:374
+msgid "Expand"
+msgstr "הרחב"
+
+#: tasks.module:374
+msgid "Up"
+msgstr "למעלה"
+
+#: tasks.module:374
+msgid "Down"
+msgstr "למטה"
+
+#: tasks.module:385
+msgid "Assigned"
+msgstr "באחריות"
+
+#: tasks.module:385
+msgid "Task"
+msgstr "משימה"
+
+#: tasks.module:385
+msgid "Complete?"
+msgstr "הסתיים?"
+
+#: tasks.module:385
+msgid "Edit"
+msgstr "עריכה"
+
+#: tasks.module:417
+msgid ""
+"WARNING: more than one master tasklists. Please delete all but one nodes of "
+"type tasks where parent = 0"
+msgstr "אזהרה: יש יותר מרשימת משימות ראשית אחת. בבקשה למחוק את כל פריטי התוכן מסוג משימה שאביהם הוא אפס."
+
+#: tasks.module:428
+msgid "<p>There are no tasks yet, so creating a top-level tasklist.</p>"
+msgstr "<p>עדיין אין משימות, כך שנוצרת רשימת משימות ראשית.</p>"
+
+#: tasks.module:23
+msgid "create task"
+msgstr "יצירת משימה"
+
+#: tasks.module:23
+msgid "edit own task"
+msgstr "עריכת משימות עצמית"
+
+#: tasks.module:23
+msgid "edit all tasks"
+msgstr "עריכת כל המשימות"
+
+#: tasks.module:23
+msgid "access tasks main page"
+msgstr "גישה לעמוד המשימות הראשי"
+
+#: tasks.module:0
+msgid "tasks"
+msgstr "משימות"
