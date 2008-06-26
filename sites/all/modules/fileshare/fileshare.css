@@ -1,5 +1,9 @@
 /* $Id$ */
 
+/**
+ * Icons based on or taken from Agua Icons by David Lanham
+ */
+
 /* fileshare styles */
 div#fs {
   padding: 10px 0 20px 0;
@@ -22,6 +26,7 @@ div#fs {
     right: 3.2em;
     font-style: normal;
     font-size: 0.8em;
+    line-height: 2.4em;
     }
   div#fs b {
     position: absolute;
@@ -29,14 +34,14 @@ div#fs {
     font-weight: normal;
     font-size: 0.8em;
     color: #999;
+    line-height: 2.4em;
     }
   div#fs div.fs_row {
-    xclear: right;
-    padding: 2px 10px;
+    padding: 1px 10px;
     }
   div#fs div.fs_row:hover {
     background-color: #FFC;
-    padding: 1px 9px;
+    padding: 0px 9px;
     border: 1px solid #e0e095;
     }
   div#fs a.fs_closed, a.fs_open, a.fs_file, div.fs_file {
@@ -47,23 +52,42 @@ div#fs {
     overflow: hidden;
     }
   div#fs a.fs_closed {
-    background: url(folder.gif) left no-repeat;
+    background: url(images/folder.gif) left no-repeat;
     }
   div#fs a.fs_open {
-    background: url(folder_open.gif) left no-repeat;
+    background: url(images/folder_open.gif) left no-repeat;
     }
   div#fs a.fs_file, div#fs div.fs_file {
-    background: url(file.gif) left no-repeat;
+    background: url(images/file.gif) left no-repeat;
+    }
+  div#fs a.fs_doc {
+    background: url(images/file-doc.gif) left no-repeat;
+    }
+  div#fs a.fs_xls {
+    background: url(images/file-xls.gif) left no-repeat;
+    }
+  div#fs a.fs_pdf {
+    background: url(images/file-pdf.gif) left no-repeat;
+    }
+  div#fs a.fs_zip {
+    background: url(images/file-zip.gif) left no-repeat;
     }
   div#fs a.fs_delete {
     position: absolute;
     right: 10px;
-    background: url(delete.gif) no-repeat center right;
+    background: url(images/delete.gif) no-repeat center right;
     width: 13px;
-    height: 18px;
+    height: 1.8em;
     text-decoration: none;
     }
-
+  div#fs a.fs_download {
+    position: absolute;
+    right: 30px;
+    background: url(images/download.gif) no-repeat center right;
+    width: 13px;
+    height: 1.8em;
+    text-decoration: none;
+    }
 
 /* fix spacing in K2 theme */
 .primary .item .itemtext div {

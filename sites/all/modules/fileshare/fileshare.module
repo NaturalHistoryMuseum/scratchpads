@@ -18,6 +18,46 @@
  */
 
 /**
+ * Implementation of hook_help().
+ *
+ * Throughout Drupal, hook_help() is used to display help text at the top of
+ * pages. Some other parts of Drupal pages get explanatory text from these hooks
+ * as well. We use it here to provide a description of the module on the
+ * module administration page.
+ */
+function fileshare_help($section) {
+  switch ($section) {
+    case 'admin/help#fileshare':
+      $output = '<p>'. t('The Fileshare module is used to create 
+       pages that allow browsing, uploading, 
+       downloading and deleting files from the server.').'</p>';
+      $output .= t('<p>You can:</p>
+    <ul>
+    <li>Post a Fileshare at <a href="%node-add-fileshare">
+     create content &gt;&gt; fileshare</a>.</li>
+    <li>Configure Fileshares at <a href="%admin-node-configure-types"> 
+     administer &gt;&gt; content &gt;&gt; configure types &gt;&gt; 
+    fileshare configure</a>.</li>
+    </ul>
+    ', array('%node-add-fileshare' => url('node/add/fileshare'), 
+     '%admin-node-configure-types' => url('admin/node/configure/types')));
+      $output .= '<p>'. t('This module was created by Jamie Ruderman for Marmot Mountain LLC, 
+       and was based on directions posted at drupal.org <a href="%tutorial">
+       How to create your own simple node type (Drupal 4.7)</a>', 
+       array('%tutorial' => 'http://www.drupal.org/node/40684')) .'</p>';
+      return $output;
+    case 'admin/modules#description':
+      return t('Enables the creation of pages to display, browse, upload and delete files.');
+    case 'node/add#fileshare':
+      return t('Create a Fileshare page.');
+  }
+}
+
+function fileshare_init() {
+  include './'.drupal_get_path('module', 'fileshare').'/zip.inc';
+}
+
+/**
  * Implementation of hook_node_info().
  *
  * This is a required node hook. This function describes the nodes provided by
@@ -27,7 +67,7 @@
  * when inserting the node).
  */
 function fileshare_node_info() {
-  return array('fileshare' => array('name' => t('fileshare'), 'module' => 'fileshare', 'description' => 'Create a Fileshare page.'));
+  return array('fileshare' => array('name' => t('fileshare'), 'base' => 'fileshare'));
 }
 
 /**
@@ -107,7 +147,6 @@ function fileshare_menu($may_cache) {
       'callback arguments' => array('node' => $node)
     );
   }
-  // The default download function doesn't let the download of the files that aren't in the 'files' table.
   $items[] = array(
     'path' => 'fileshare/files/'.arg(2),
     'access' => user_access('download files'),
@@ -346,12 +385,8 @@ function fileshare_load($node) {
 function fileshare_view(&$node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   $order_info = theme('fileshare_order_info', $node);
-  if ($teaser) {
-    $node->content['teaser']['#value'] .= $order_info; 
-  } elseif ($page) {
-    $node->content['body']['#value'] .= $order_info;
-  }
-  return $node;
+  $node->body .= $order_info;
+  $node->teaser .= $order_info; 
 }
 
 /**
@@ -367,24 +402,23 @@ function theme_fileshare_order_info($node) {
   $output .= '<noscript><div class="messages error"><strong>You have no Javascript!</strong>
     You must use a Javascript enabled browser.</div></noscript>';
   $output .= '<div id="fs">';
-  $output .= drupal_get_form('_fsform', $node);
+  $output .= _fileshare_fsform($node);
   $output .= '</div>';
   if (_tf($node->_modify) && (user_access('modify files') || (user_access('manage own fileshares') && ($user->uid == $node->uid)))) {
-    $output .= drupal_get_form('_uploadform',$node);
+    $output .= _fileshare_uploadform($node);
   } else {
-    $output .= '<div id="-uploadform"></div>'; // so we don't get .js errors on load
+    $output .= '<div id="_uploadform"></div>'; // so we don't get .js errors on load
   }
   $modulepath = drupal_get_path('module', 'fileshare');
   drupal_add_js($modulepath.'/fileshare.js');
-  // drupal_add_js('fileshare.js','module', 'header', FALSE, FALSE);
-  drupal_add_css($modulepath.'/fileshare.css');
+  theme_add_style($modulepath.'/fileshare.css');
   return $output;
 }
 
 /**
  * File upload form on view node
  */
-function _uploadform($node) {
+function _fileshare_uploadform($node) { 
   $form['#attributes'] = array(
     'enctype' => 'multipart/form-data', 
     'class' => 'node-form',
@@ -397,12 +431,17 @@ function _uploadform($node) {
     '#collapsed' => TRUE,
     '#description' => t('The "target" folder will receive file uploads, or may be deleted.')
     );
+  // Read all availale target directories
+  $directory = _recursive_readdir($node->_basepath, $node->_filepath);
+  $options = array($node->_filepath => '/');
+  foreach ($directory as $name => $file) {
+      $options[$file] = str_replace($node->_filepath, '', $file);
+  }
   $form['file']['targetdir'] = array(
     '#type' => 'select',
     '#title' => t('Select a target folder'),
-    '#options' => array(),
+    '#options' => $options,
     '#description' => t('Choose from the list of opened folders. This menu will update to reflect the folders shown above.'),
-    '#DANGEROUS_SKIP_CHECK' => TRUE,
     );
   $form['file']['filename'] = array(
     '#type' => 'file',
@@ -419,21 +458,22 @@ function _uploadform($node) {
     '#description' => t('Enter the folder name you wish to create. New folders will appear in the selected target.'),
     );
   $form['file']['create'] = array('#type' => 'submit', '#value' => t('New folder'));
-  $form['file']['root'] = array('#type' => 'hidden', '#value' => $node->_basepath.$node->_filepath);
+  $form['file']['root'] = array('#type' => 'hidden', '#value' => $node->_filepath);
   $form['file']['nid'] = array('#type' => 'hidden', '#value' => $node->nid);
-  return $form;
+  $output = drupal_get_form('_uploadform', $form);
+  return $output;
 }
 
 /**
  * File upload form validation
  * Checks to ensure file was selected for upload
- * Called by drupal_get_form in _uploadform()
+ * Called by drupal_get_form in _fileshare_uploadform()
  */
 function _uploadform_validate($form_id, $form_values) {
   switch ($_POST['op']) {
     case t('Upload'):
-      $upload = $_FILES['files']['name']['filename'];
-      $error = $_FILES['files']['error']['filename'];
+      $upload = $_FILES['edit']['name']['filename'];
+      $error = $_FILES['edit']['error']['filename'];
       if ($error > 0) {
         $errors = array(
           1 => "The uploaded file exceeds the ".ini_get('upload_max_filesize')." maximum file size.",
@@ -468,8 +508,8 @@ function _uploadform_validate($form_id, $form_values) {
 }
 
 /**
- * Saves the file submitted in _uploadform()
- * Called by drupal_get_form in _uploadform()
+ * Saves the file submitted in _fileshare_uploadform()
+ * Called by drupal_get_form in _fileshare_uploadform()
  */
 function _uploadform_submit($form_id, $form_values) { 
   switch ($_POST['op']) {
@@ -477,21 +517,26 @@ function _uploadform_submit($form_id, $form_values) {
       // Get file upload info object
       $file = file_check_upload('filename');
       $file->filename = _sanitize_filename($file->filename);
+      $node = node_load($form_values['nid']);
+      
+      // ensure that you are only deleting files from the file directory and build path from node
+      $uploadfile = $node->_basepath.trim(str_replace('../', '', $form_values['targetdir'].'/'.$file->filename),".");
+      
       // Could not use file_save_upload() as it uses the system file directory for it's checks
       // @todo: implement better error checking - rewrite file_save_upload and it's dependant functions
-      if (@copy($file->filepath, $form_values['targetdir'].'/'.$file->filename)) {
-        chmod($form_values['targetdir'].'/'.$file->filename, 0664);
+      if (@copy($file->filepath, $uploadfile)) {
+        chmod($uploadfile, 0664);
         drupal_set_message('The file: <strong>"'.$file->filename.'"</strong> uploaded successfully!');
-        $node = node_load($form_values['nid']);
         watchdog('fileshare', check_plain($file->filename.' uploaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
       } else {
         drupal_set_message('Upload failed. Please check your filename.','error');
       }
       break;
     case t('New folder'):
-      $targetdir = $form_values['targetdir'].'/'._sanitize_filename($form_values['dirname']);
+      $node = node_load($form_values['nid']);
+      $targetdir = $node->_basepath.str_replace('../', '', $form_values['targetdir']).'/'._sanitize_filename($form_values['dirname']);
       if (!file_check_directory($targetdir,TRUE,'targetdir')) {
-        drupal_set_message('There was a problem creating: <strong>"'.$targetdir.'"</strong>.','error');
+        drupal_set_message('There was a problem creating: <strong>"'.$targetdir.'"</strong>. <em>Please check your file permissions.</em>','error');
       }
       break;
   }
@@ -501,14 +546,15 @@ function _uploadform_submit($form_id, $form_values) {
  * Sets up the form for the JAH handler 
  * to handle file and folder deletes.
  */
-function _fsform($node) {
+function _fileshare_fsform($node) {
   $form['deletefile'] = array('#type' => 'hidden');
   $form['nid'] = array('#type' => 'hidden', '#value' => $node->nid);
   // Javascript handler start settings
   $form['div'] = array('#value' => 
     '<div id="startFileShare" name="'.url('fileshare/handler/'.$node->nid).'"></div>'
     );
-  return $form;
+  $output = drupal_get_form('_fsform', $form);
+  return $output;
 }
 
 /**
@@ -561,8 +607,8 @@ function _recursive_rmdir($filepath) {
       }
     }
   }
-  closedir($handle);
   rmdir($filepath); // delete directory
+  closedir($handle);
   return TRUE;
 }
 
@@ -572,7 +618,7 @@ function _recursive_rmdir($filepath) {
  * and shortened to 50 characters.
  */
 function _sanitize_filename($name) {
-  $special_chars = array("?","[","]","/","\\","=","+","<",">",":",";",",");
+  $special_chars = array("?","[","]","/","\\","=","+","<",">",":",";",",","'");
   $name = str_replace($special_chars,"",$name);
   $name = str_replace(' ','_',$name);
   $name = trim($name,".");
@@ -607,7 +653,7 @@ function _tf($tf) {
 /**
  * RECURSIVE READ DIRECTORY
  * for AJAX file browsing
- * Called by _fsform()
+ * Called by _fileshare_fsform()
  */
 function _fileshare_handler($node) {
   global $user;
@@ -629,14 +675,20 @@ function _fileshare_handler($node) {
       if (is_dir($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])) {
         $output .= '<div class="fs_row">'."\n";
         $output .= '<div class="fs_data">'."\n";
+        // download and compress directories
+        if ($download && @function_exists('gzcompress')) {
+          $output .= '<a href="'.url('fileshare/files/'.$node->nid.$dir.'/'.$file[$x]).'" title="'.t('Compress and download this folder.').'" class="fs_download">'
+            ."&nbsp;</a>\n";
+        }
+        // allow deletion if modify was checked and access permissions are met
         if ($modify) { 
           $output .= '<a href="javascript:submitDelete(\''
-            .$dir.'/'.$file[$x].'\');" alt="delete file" class="fs_delete">'
+            .addslashes($dir.'/'.$file[$x]).'\');" title="'.t('Delete this folder.').'" class="fs_delete">'
             ."&nbsp;</a>\n";
         }
         $output .= "</div>\n";
         $output .= '<a href="javascript:;" onclick="fileshare_folder(this,\''.$pre.$tag.'\');" ';
-        $output .= 'alt="'.$node->_basepath.$node->_filepath.$dir.'/'.$file[$x].'" ';
+        $output .= 'alt="'.$node->_filepath.$dir.'/'.$file[$x].'" ';
         $output .= 'name="'.url('fileshare/handler/'.$node->nid
           ,'dir='.$dir.'/'.$file[$x]
           .'&pre='.$pre.$tag).'" ';
@@ -651,21 +703,24 @@ function _fileshare_handler($node) {
         $output .= '<div class="fs_data">'."\n";
         $output .= '<b>'.date("j/n/y",filemtime($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])).'</b>';
         $output .= '<i>'._resize_bytes(filesize($node->_basepath.$node->_filepath.$dir.'/'.$file[$x])).'</i>';
-          // allow deletion if modify was checked and access permissions are met
+        // allow deletion if modify was checked and access permissions are met
         if ($modify) { 
           $output .= '<a href="javascript:submitDelete(\''
-            .$dir.'/'.$file[$x].'\');" alt="delete file" class="fs_delete">'
+            .addslashes($dir.'/'.$file[$x]).'\');" title="'.t('Delete this file.').'" class="fs_delete">'
             ."&nbsp;</a>\n";
         }
         $output .= "</div>\n";
-      if ($download) {
+        // check for file extension to display alt doc icon
+        $exts = array('doc','xls','pdf','zip');
+        $ext = in_array(substr($file[$x],-3),$exts) ? 'fs_'.substr($file[$x],-3).' ' : NULL;
+        if ($download) {
           if ($node->_method) { 
-            $output .= '<a href="'.url('fileshare/files/'.$node->nid.$dir.'/'.$file[$x]).'" class="fs_file">'."\n"; // _method is private
+            $output .= '<a href="'.url('fileshare/files/'.$node->nid.$dir.'/'.$file[$x]).'" class="'.$ext.'fs_file">'."\n"; // _method is private
           } else { 
-            $output .= '<a href="'.base_path().$node->_basepath.$node->_filepath.$dir.'/'.$file[$x].'" class="fs_file">'."\n"; // _method is public
+            $output .= '<a href="'.base_path().$node->_basepath.$node->_filepath.$dir.'/'.$file[$x].'" class="'.$ext.'fs_file">'."\n"; // _method is public
           }
         } else {
-          $output .= '<div class="fs_file">';
+          $output .= '<div class="'.$ext.'fs_file">';
         }
         if (_tf($node->_thumbs) == 1) { // check to for display of image previews (1 == true)
           $preview = $node->_basepath.$node->_filepath.'/_previews/'.substr($file[$x],0,-3);
@@ -715,21 +770,18 @@ function _fileshare_download($node) {
     $argspath = implode('/', $args);
     $fullpath = $node->_basepath.$node->_filepath.'/'.$argspath;
     
-    if (file_exists($fullpath)) {
-      $filename = basename($fullpath);
-      $filetype = mime_content_type($fullpath);
-      $filesize = filesize($fullpath);
-
-      $name = mime_header_encode($filename);
-      $type = mime_header_encode($filetype);
-
-      watchdog('fileshare', check_plain($filename.' downloaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
-      $headers = array (
-        'Content-Type: '. $type .'; name='. $name,
-        'Content-Length: '. $filesize,
-        'Content-Disposition: '. $disposition .'; filename='. $name
-      );
-      _fileshare_transfer($fullpath, $headers);
+    if (is_dir($fullpath)) {
+      ini_set('display_errors', TRUE);
+      if (_fileshare_zip_transfer($fullpath) != FALSE) {
+        watchdog('fileshare', check_plain(basename($fullpath).'.zip downloaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
+        return;
+      } else {
+        // go back
+        header('Location:'.$_SERVER['HTTP_REFERER']);
+      }
+    } else if (file_exists($fullpath)) {
+      _fileshare_transfer($fullpath);
+      watchdog('fileshare', check_plain(basename($fullpath).' downloaded from '.$node->title), WATCHDOG_NOTICE, l(t('view'), 'node/'.$node->nid));
       return;
     } else { 
       return drupal_not_found();
@@ -746,16 +798,24 @@ function _fileshare_download($node) {
  * @param $source File to transfer.
  * @param $headers An array of http headers to send along with file.
  */
-function _fileshare_transfer($source, $headers) {
-  ob_end_clean();
-  $data = '';
+function _fileshare_transfer($source) {
+  // sanitize filename on download so that spaces don't truncate the file name.
+  $filename = _sanitize_filename(basename($source));
+  $filetype = mime_content_type($source);
+  $filesize = filesize($source);
 
-  // Transfer file in 1024 byte chunks to save memory usage.
+  $name = mime_header_encode($filename);
+  $type = mime_header_encode($filetype);
+
+  $headers = array (
+    'Content-Type: '. $type .'; name='. $name,
+    'Content-Length: '. $filesize,
+    'Content-Disposition: attachment; filename='. $name,
+    'Cache-Control: ',
+    'Pragma: '
+  );
+  ob_end_clean();
   if ($fd = fopen($source, 'rb')) {
-    while (!feof($fd)) {
-      $data .= fread($fd, 1024);
-    }
-    fclose($fd);
     foreach ($headers as $header) {
       // To prevent HTTP header injection, we delete new lines that are
       // not followed by a space or a tab.
@@ -763,11 +823,15 @@ function _fileshare_transfer($source, $headers) {
       $header = preg_replace('/\r?\n(?!\t| )/', '', $header);
       header($header);
     }
-    print $data;
+    // Transfer file in 1024 byte chunks to save memory usage.
+    while (!feof($fd)) {
+      print fread($fd, 1024);
+    }
+    fclose($fd);
   } else {
     drupal_not_found();
   }
-  exit();
+  return TRUE;
 }
 
 /**
@@ -782,3 +846,108 @@ if (!function_exists ("mime_content_type")) {
     return "application/octet-stream";
   }
 }
+
+/**
+ * Zip and transfer a directory of files
+ * taken from Michael M's post http://drupal.org/node/83253
+ *
+ * @param $source Directory to zip and download
+ * @return FALSE on failure
+ */
+function _fileshare_zip_transfer($source) {
+  ini_set('display_errors', TRUE);
+  ini_set('memory_limit', '500M');
+  set_time_limit(600);
+  $size_limit = 50000000; //50MB
+  
+  ob_end_clean();
+  $to_zip = _recursive_readfiles($source);
+  $dir_size = $to_zip['size'];
+  unset($to_zip['size']);
+  if ($dir_size > $size_limit) { // greater than 50MB
+    drupal_set_message('Sorry, '.basename($source).' is '._resize_bytes($dir_size).'. Greater than the '._resize_bytes($size_limit).' file limit.');
+    return FALSE;
+  } else {
+    $zip = new zipfile();
+    foreach ($to_zip as $path) {
+      // the second parameter specifies the filename in the zip
+      $data = file_get_contents($path);
+      //$data_len += strlen($data);
+      $zip->addFile($data, str_replace($source, '', $path));
+    }
+    $filename = _sanitize_filename(basename($source)).'.zip';
+    $filetype = mime_content_type($source);
+    $filesize = $data_len*1.25;
+
+    $name = mime_header_encode($filename);
+    $headers = array (
+      'Content-Type: application/x-zip; name='. $name,
+      //'Content-Length: '. $dir_size, // this needs to be exact to work...
+      'Content-Disposition: attachment; filename='. $name
+    );
+    foreach ($headers as $header) {
+      // To prevent HTTP header injection, we delete new lines that are
+      // not followed by a space or a tab.
+      // See http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+      $header = preg_replace('/\r?\n(?!\t| )/', '', $header);
+      header($header);
+    }
+    print $zip->file();
+    return TRUE;
+  }
+}
+
+/**
+ * Recursively reads a directory for file paths
+ *
+ * @param $filepath directory to read
+ * @return $file_array an array of file paths
+ *         $file_array['size'] contains totaly directory size
+ */
+function _recursive_readfiles($filepath) {
+  $file_array = array();
+  // Read directory
+  $handle = opendir($filepath);
+  while (false !== ($file = readdir($handle))) {
+    if ($file != "." && $file != "..") {
+      if (is_dir($filepath.'/'.$file)) {
+        //recursive read directory and append array values
+        $return_array = _recursive_readfiles($filepath.'/'.$file);
+        $file_array['size'] += $return_array['size'];
+        unset($return_array['size']);
+        $file_array = array_merge($file_array, $return_array);
+      } else {
+        $file_array['size'] += filesize($filepath.'/'.$file);
+        $file_array[] = $filepath.'/'.$file;
+      }
+    }
+  }
+  closedir($handle);
+  return $file_array;
+}
+
+/**
+ * Recursively reads a directory for directory paths
+ *
+ * @param $filepath directory to read
+ * @return $dir_array an array of file paths
+ */
+function _recursive_readdir($basepath, $filepath) {
+  $dir_array = array();
+  // Read directory
+  $handle = opendir($basepath.$filepath);
+  while (false !== ($file = readdir($handle))) {
+    if ($file != "." && $file != ".." && $file != "_previews") {
+      if (is_dir($basepath.$filepath.'/'.$file)) {
+        $dir_array[] = $filepath.'/'.$file;
+        //recursive read directory and append array values
+        $return_array = _recursive_readdir($basepath, $filepath.'/'.$file);
+        $dir_array = array_merge($dir_array, $return_array);
+      } 
+    }
+  }
+  closedir($handle);
+  return $dir_array;
+}
+
+?>
