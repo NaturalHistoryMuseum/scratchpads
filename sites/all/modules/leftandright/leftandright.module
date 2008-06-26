@@ -56,14 +56,72 @@ function leftandright_help($section) {
 /**
  * The following function adds the data to the left and right table when a new term is
  * added to the site, or it alters the data if the parent of a term is changed, or if 
- * the name itself is changed.
- *
- * @param unknown_type $op
- * @param unknown_type $type
- * @param unknown_type $array
+ * the name itself is changed.  etc
  */
 function leftandright_taxonomy($op, $type, $array = NULL){
-  
+  if($type=='term'){
+    switch($op){
+      case 'delete':
+        // Easy, just delete the term from leftandright!
+        db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
+        break;
+      case 'update':
+        // Delete then insert - easy!
+        if(function_exists('_split_field')){
+          $parents = _split_field($array['parent-new'],$array['vid']);
+          if(count(array_intersect($array['parent-old'],$parents))){
+            $array['parent'] = array_intersect($array['parent-old'],$parents);
+          } else {
+            $array['parent'] = $parents;
+          }
+        }
+        db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
+      case 'insert':
+        // Lets shove the stuff into leftandright.  Tricky bit here is getting the right
+        // values
+        // If the term has multiple parents, it gets multiple entries in the table.  Will this work?
+        foreach($array['parent'] as $parent){
+          // Get the parent info, get direct descendants, and see if there are gaps
+          $result = db_query('SELECT lft,rgt,depth FROM {leftandright} WHERE tid=%d', $parent);
+          $parent = db_fetch_array($result);
+          $result = db_query('SELECT lft,rgt FROM {leftandright} WHERE lft>%d AND rgt<%d AND depth=%d ORDER BY lft',$parent['lft'],$parent['rgt'],$parent['depth']+1);
+          $sibling_lefts = array();
+          $sibling_rights = array();
+          while($row = db_fetch_array($result)){
+            $sibling_lefts[] = $row['lft'];
+            $sibling_rights[] = $row['rgt'];
+          }
+          $lft = false;
+          $rgt = false;
+          for($i=$parent['lft']+1; $i<$parent['rgt']-1; $i++){
+            if(!in_array($i,$sibling_lefts) && !in_array($i,$sibling_rights)){
+              // We've found a gap!
+              $lft = $i;
+              $rgt = $i+1;
+              break;
+            }
+          }
+          // if lft and rgt are both false, then we need decimal values
+          if(!$lft){
+            // If there are siblings, then place this term between the parent and the first sibling
+            if(count($sibling_lefts)){
+              $max_right = array_shift($sibling_lefts);
+            } else {
+              // Else we can place this evenly between the parents
+              $max_right = $parent['rgt'];
+            }
+            $diff = round(($max_right - $parent['lft'])/3,10);
+            if($diff < 0.000001){
+              // Farp, the tree needs rebuilding - give an error message
+              drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.', array('!url' => url("leftandright/update/".$array['vid'], NULL, NULL, TRUE))),'error');
+            }
+            $lft = $parent['lft']+$diff;
+            $rgt = $lft + $diff;
+          }
+          db_query("INSERT INTO {leftandright} (lft,rgt,tid,vid,depth,lowername) VALUES (%f,%f,%d,%d,%d,LOWER('%s'))",$lft,$rgt,$array['tid'],$array['vid'],$parent['depth']+1,$array['name']);
+        }
+    }
+  }
 }
 /***********************************************************************************
  * TAXONOMY ADDITIONAL PAGE
@@ -335,12 +393,13 @@ echo "UPDATE leftandright l SET lowername = (SELECT LOWER(name) FROM term_data t
     $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','leftandright').'/landr';
     // FIXME - Needs port
     $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1);
-    shell_exec("nohup $command > /dev/null & echo $!");
+    $pid = shell_exec("nohup $command > /dev/null & echo $!");
+    variable_set('leftandright_rebuild_pids',array_merge(variable_get('leftandright_rebuild_pids',array()),array($pid=>$pid)));
   }
   
   // Finally delete the file
   sleep(2); // Not sure if this sleep is necesary, but it seems to be
-  file_delete($filepath);
+  //file_delete($filepath);
   
   // Set message to say that we're doing the rebuild
   drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.$vocabulary->name);

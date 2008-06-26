@@ -25,7 +25,7 @@ function leftandright_install(){
       $results[] = db_query("CREATE INDEX {leftandright}_index_lft ON {leftandright} (lft)");
       $results[] = db_query("CREATE INDEX {leftandright}_index_rgt ON {leftandright} (rgt)");
       $results[] = db_query("CREATE INDEX {leftandright}_index_vid ON {leftandright} (vid)");
-      $results[] = db_query("CREATE FULLTEXT INDEX {leftandright}_ft_index_lowername ON {leftandright} (lowername)");
+      // $results[] = db_query("CREATE FULLTEXT INDEX {leftandright}_ft_index_lowername ON {leftandright} (lowername)"); // Not sure if this is needed/used
       $results[] = db_query("CREATE INDEX {leftandright}_index_lowername ON {leftandright} (lowername)");
       break;
     case 'pgsql':
