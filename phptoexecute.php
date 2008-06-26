@@ -335,13 +335,13 @@ variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 
 // Get a list of the classifications (by site) that will be able to use the autotag
 // module.
-$vocabs = taxonomy_get_vocabularies();
+/* $vocabs = taxonomy_get_vocabularies();
 foreach($vocabs as $vocab){
   if($vocab->multiple == 1 && $vocab->tags == 0){
     if($vocab->name != 'Document Store' && $vocab->name != 'Image Galleries')
       echo "   ".$vocab->name." (".implode(", ",$vocab->nodes).")\n";
   }
-}
+}*/
 
 // Just curious as to how taxonomy_get_tree returns its results (nested arrays?)
 
@@ -406,3 +406,9 @@ while($row = db_fetch_array($results)){
     echo $row['nid'].": ".$node->title."\n";
   }
 }*/
+
+// Get a list of users from MNHN
+$results = db_query("SELECT name, mail FROM users WHERE mail LIKE '%%@mnhn.fr%%'");
+while($row = db_fetch_array($results)){
+  print_r($row); 
+}
