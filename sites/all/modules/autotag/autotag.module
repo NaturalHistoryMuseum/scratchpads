@@ -44,6 +44,11 @@ define('AUTOTAG_SUBMIT2_TEXT','Once finished reviewing the taxonomy terms, simpl
  */
 function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   switch($op){
+    case 'submit':
+      _autotag_search($node);
+      _autotag_submit($node);
+      break;
+    case 'update':
     case 'insert':
       _autotag_update_table($node->nid, explode("|",$node->hideterms));
       break;
