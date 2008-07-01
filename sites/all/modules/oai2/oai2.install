@@ -52,3 +52,8 @@ function oai2_uninstall(){
   db_query("DROP TABLE {oai2_tokens} ");
  
 }
+function oai2_update_1() {
+  $result = array();
+  $result[] = update_sql("ALTER TABLE {oai2_tokens} MODIFY id VARCHAR(13) NOT NULL DEFAULT 0");
+  return $result;
+}

@@ -84,19 +84,21 @@ $error = null;
               xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
               http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">'."\n";
 
-      $datetime = gmstrftime('%Y-%m-%dT%T');
-      $responseDate = $datetime.'Z';
+      $responseDate = gmstrftime('%Y-%m-%dT%TZ');
+     // $responseDate = $datetime .'Z';
       $xml .= ' <responseDate>'.$responseDate."</responseDate>\n";
   
-    if (isset($_GET)) {
+    if (!empty($_GET)) {
     	$args = $_GET;
     	$getarr = explode('&', $_SERVER['QUERY_STRING']);
     	if (count($getarr) != count($args)) {
     		 $error .= oai2_oai_error( 'sameArgument');
     	}
-    } elseif (isset($_POST)) {
+    } 
+    if (!empty($_POST)) {
     	$args = $_POST;
-    } else {
+    } 
+    if (!count($args)) {
      	 $error .= oai2_oai_error( 'badRequestMethod', $_SERVER['REQUEST_METHOD']);
     }
       
@@ -108,45 +110,54 @@ $error = null;
          $reqattr .= ' '.$key.'="'.htmlspecialchars(stripslashes($val)).'"';
      	}
     }
-    $xml .= ' <request'. $reqattr.'>'.$base_url.'/'.$_GET['q']."</request>\n";
-    
+    //$xml .= ' <request'. $reqattr.'>'.$base_url.'/'.$_GET['q']."</request>\n";
     if (isset($args['verb']) && !$error) {
     	switch ($args['verb']) {
     		
     		case 'GetRecord':
-    			unset($args['verb']);
-    			$xml .= oai2_get_record($args);
-          break;  
+              $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
+    		  unset($args['verb']);
+    		  $xml .= oai2_get_record($args);
+              break;  
     		case 'Identify':
     			$compress = false;
+ 			    $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
     			unset($args['verb']);
     			$xml .= oai2_identify( $args);
     			break;
-    		case 'ListIdentifiers':
+    		case "ListIdentifiers":
+ 			  $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
     		  unset($args['verb']);
     		  $xml .= oai2_list_id_rec($args);
-    			break;  
+    		  break;  
     		case 'ListMetadataFormats':
+ 			    $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
     		  unset($args['verb']);
     		  $xml .= oai2_list_metadata_formats($args);
     			break;  
     		case 'ListRecords':
+ 			    $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
     		  unset($args['verb']);
     		  $xml .= oai2_list_id_rec($args, true);
     			break;
     		case 'ListSets':
+ 			    $xml .= ' <request  verb="'.$args['verb'].'">'.$base_url.'/'.$_GET['q']."</request>\n";
     		  unset($args['verb']);
     		  $xml .= oai2_list_sets( $args);
     			break;
     		default:
     			// we never use compression with errors
     			$compress = false;
-    			$error .= oai2_oai_error( 'badVerb', $args['verb']);
+  			    $xml .= ' <request>'.$base_url.'/'.$_GET['q']."</request>\n";
+   			$error .= oai2_oai_error( 'badVerb', $args['verb']);
     			
     	} /*switch */
     
-    } else {
-    	 $error .= oai2_oai_error('noVerb');
+    } elseif (!$error) {
+    	$error .= oai2_oai_error('noVerb');
+    } elseif ($error) {
+  	  $xml .= ' <request>'.$base_url.'/'.$_GET['q']."</request>\n";
+      
     }
   
      if ($compress && !$error) {
@@ -186,8 +197,8 @@ global $error;
 
     $result = db_query("SELECT min(changed) as date FROM {node} as n  where n.type='biblio' ");
     $datestamp = db_fetch_object($result);
-    $earliestDatestamp = date("Y-m-d\TH:i:s\Z",$datestamp->date);
-    
+    $earliestDatestamp = gmstrftime('%Y-%m-%dT%TZ',$datestamp->date);
+   
     $indent = 2;
 
     $output .= " <Identify>\n";
@@ -481,7 +492,7 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
   			if (!isset($resumptionToken)) {
   				$resumptionToken = $val;
   			} else {
-  				$error .= oai2_oai_error('badArgument', $key, $val);
+ 				$error .= oai2_oai_error('badArgument', $key, $val);
   				return false;
   			}
   			break;
@@ -498,7 +509,7 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
   		$error .=  oai2_oai_error( 'exclusiveArgument');
   		return false;
   	} else {
-        $result = db_query("SELECT * FROM {oai2_tokens} WHERE id=%d ",$resumptionToken);
+        $result = db_query("SELECT * FROM {oai2_tokens} WHERE id='%s' ",$resumptionToken);
         if (db_num_rows($result)) {
         $token = db_fetch_object($result);
   			$deliveredrecords = $token->deliveredrecords;
@@ -521,7 +532,7 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
   	}
   
   	if (isset($args['from'])) {
-  		if (!_checkDateFormat($from)) {
+  		if (!$fromgran = _checkDateFormat($from)) {
   			$error .= oai2_oai_error('badGranularity', 'from', $from);
   			return false;
   		}
@@ -530,7 +541,7 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
   	}
   
     if (isset($args['until'])) {
-  	  if (!_checkDateFormat($until)) {
+  	  if (!$untilgran = _checkDateFormat($until)) {
   	   $error .= oai2_oai_error('badGranularity', 'until', $until);
        return false; 
   	  }
@@ -543,7 +554,10 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
    	    $query_args[] = $set;
   	} 
   }
-  
+  if((isset($fromgran) && isset($untilgran)) && ($fromgran != $untilgran) ) {
+  	   $error .= oai2_oai_error('badGranularity', 'mismatched Granularity', $until);
+       return false; 
+  }  
   if ($listrec){ // list records...
   $query = "SELECT * FROM {node} n 
                 left join {biblio} b  on n.vid=b.vid
@@ -566,7 +580,6 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
  	$maxresult = db_query($query_count, $query_args); 
  	$num_rows = array_pop(db_fetch_array($maxresult));
 	$result = db_query_range($query, $query_args,$deliveredrecords,$MAXIDS); 
-
   if (db_num_rows($result)) {
     $output .= ($listrec)?" <ListRecords>\n":" <ListIdentifiers>\n";
     
@@ -576,7 +589,7 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
     	$qargs = implode("#",$query_args);
     	$thendeliveredrecords = (int)$deliveredrecords + $MAXIDS;
     	$query = "INSERT INTO {oai2_tokens} (id,deliveredrecords,extquery,queryargs)
-                       VALUES (%d,%d,'%s','%s')";
+                       VALUES ('%s',%d,'%s','%s')";
       db_query($query,$token,$thendeliveredrecords,$extquery,$qargs);
       
       $restoken .= '<resumptionToken expirationDate="'.$expirationdatetime.'" '.
@@ -600,7 +613,8 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
       $record = db_fetch_object($result);
       
     	$identifier = $oaiprefix.$record->nid; 
-    	$datestamp = date("Y-m-d\TH:i:s\Z",$record->changed); 
+//    	$datestamp = date("Y-m-d\TH:i:s\Z",$record->changed); 
+	  $datestamp = gmstrftime('%Y-%m-%dT%TZ',$record->changed);
     
 //    	if (isset($record[$SQL['deleted']]) && ($record[$SQL['deleted']] == 'true') && 
 //    		($deletedRecord == 'transient' || $deletedRecord == 'persistent')) {
@@ -620,9 +634,9 @@ $expirationdatetime = gmstrftime('%Y-%m-%dT%TZ', time()+$tokenValid);
       if ($listrec){  // list records...
         $output .= '   <metadata>'."\n";
         $prefix = 'oai_dc';
-        $result = db_query("SELECT * FROM {oai2_metadata_formats} WHERE name='%s' ",$prefix);
-        if (db_num_rows($result)) {
-          $format = db_fetch_object($result);
+        $result2 = db_query("SELECT * FROM {oai2_metadata_formats} WHERE name='%s' ",$prefix);
+        if (db_num_rows($result2)) {
+          $format = db_fetch_object($result2);
           $output .= " <$prefix";
           if ($format->record_prefix){
             $output .= ":$format->record_prefix ";
@@ -718,9 +732,8 @@ global $error;
   $output .= "  <GetRecord>\n";
 
 	$identifier = $oaiprefix.$record->nid;
-
-	$datestamp = date("Y-m-d\TH:i:s\Z\Z",$record->changed);
- 
+//	$datestamp = date("Y-m-d\TH:i:s\Z",$record->changed);
+	$datestamp = gmstrftime('%Y-%m-%dT%TZ',$record->changed);
 //	if (isset($record[$SQL['deleted']]) && ($record[$SQL['deleted']] == 'true') && 
 //	  ($deletedRecord == 'transient' || $deletedRecord == 'persistent')) {
 //    $status_deleted = TRUE;
@@ -813,33 +826,36 @@ $output .= xmlrecord($record['dc_rights'], 'dc:rights', '', $indent);
 }
 
 function _get_token() {
-   list($usec, $sec) = explode(" ", microtime());
-   return floor($usec*10000) + $sec*10000;
+   //list($usec, $sec) = explode(" ", microtime());
+   return  uniqid(); //(int)$sec + floor($usec*1000);//+ ;floor($usec*10000)
 }
 
 function _checkDateFormat($date) {
 
-	global $granularity;
+//	global $granularity;
 	global $message;
-
-    if ($granularity == 'YYYY-MM-DDThh:mm:ssZ') {
-		$checkstr = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$';
-	} else {
-		$checkstr = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}$)';
-	}
-	if (ereg($checkstr, $date, $regs)) {
+ // $granularity = variable_get('granularity', 'YYYY-MM-DDThh:mm:ssZ');
+//  if ($granularity == 'YYYY-MM-DDThh:mm:ssZ') {
+		$checkstr1 = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$';
+//	} else {
+		$checkstr2 = '([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}$)';
+//	}
+	if (ereg($checkstr1, $date, $regs)) {
 		if (checkdate($regs[2], $regs[3], $regs[1])) {	
 			return 1;
 		}
-		else {
+  } elseif (ereg($checkstr2, $date, $regs)) {
+		if (checkdate($regs[2], $regs[3], $regs[1])) {	
+			return 2;
+		}
+	}	else {
 			$message = "Invalid Date: $date is not a valid date.";
 			return 0;
-		}
-    }
-    else {
-	    $message = "Invalid Date Format: $date does not comply to the date format $granularity.";
-	    return 0;
-    }
+	}
+//    else {
+//	    $message = "Invalid Date Format: $date does not comply to the date format $granularity.";
+//	    return 0;
+ //   }
 }
 
 
@@ -849,29 +865,29 @@ global $compress;
 
 	switch ($code) {
 		case 'badArgument' :
-			$text = "The argument '$argument' (value='$value') included in the request is not valid.";
+			$text = "The argument $argument (value=$value) included in the request is not valid.";
 			break;
 
 		case 'badGranularity' :
-			$text = "The value '$value' of the argument '$argument' is not valid.";
+			$text = "The value $value of the argument '$argument' is not valid.";
 			$code = 'badArgument';
 			break;
 
 		case 'badResumptionToken' :
-			$text = "The resumptionToken '$value' does not exist or has already expired.";
+			$text = "The resumptionToken $value does not exist or has already expired.";
 			break;
 
 		case 'badRequestMethod' :
-			$text = "The request method '$argument' is unknown.";
+			$text = "The request method $argument is unknown.";
 			$code = 'badVerb';
 			break;
 
 		case 'badVerb' :
-			$text = "The verb '$argument' provided in the request is illegal.";
+			$text = "The verb $argument provided in the request is illegal.";
 			break;
 
 		case 'cannotDisseminateFormat' :
-			$text = "The metadata format '$value' given by $argument is not supported by this repository.";
+			$text = "The metadata format $value given by $argument is not supported by this repository.";
 			break;
 
 		case 'exclusiveArgument' :
@@ -880,11 +896,11 @@ global $compress;
 			break;
 
 		case 'idDoesNotExist' :
-			$text = "The value '$value' of the identifier is illegal for this repository.";
+			$text = "The value $value of the identifier is illegal for this repository.";
 			break;
 
 		case 'missingArgument' :
-			$text = "The required argument '$argument' is missing in the request.";
+			$text = "The required argument $argument is missing in the request.";
 			$code = 'badArgument';
 			break;
 
@@ -916,7 +932,7 @@ global $compress;
 			break;
 
 		default:
-			$text = "Unknown error: code: '$code', argument: '$argument', value: '$value'";
+			$text = "Unknown error: code: $code, argument: $argument, value: $value";
 			$code = 'badArgument';
 	}
 
