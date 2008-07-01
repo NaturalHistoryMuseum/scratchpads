@@ -2,7 +2,14 @@
 // $Id$
 
 /**
- * Implementation of hook_pathauto() for user aliases
+ * @file
+ * Hook implementations for user module integration.
+ *
+ * @ingroup pathauto
+ */
+
+/**
+ * Implementation of hook_pathauto() for user aliases.
  */
 function user_pathauto($op) {
   switch ($op) {
@@ -31,7 +38,7 @@ function user_pathauto($op) {
 }
 
 /**
- * Implementation of hook_pathauto() for blog aliases
+ * Implementation of hook_pathauto() for blog aliases.
  */
 function blog_pathauto($op) {
   switch ($op) {
@@ -56,7 +63,7 @@ function blog_pathauto($op) {
 }
 
 /**
- * Implementation of hook_pathauto() for user-tracker aliases
+ * Implementation of hook_pathauto() for user-tracker aliases.
  */
 function tracker_pathauto($op) {
   switch ($op) {
@@ -81,35 +88,34 @@ function tracker_pathauto($op) {
 }
 
 /**
- * Bulk generate aliases for all users without aliases
+ * Bulk generate aliases for all users without aliases.
  */
 function user_pathauto_bulkupdate() {
   $query = "SELECT uid, name, src, dst FROM {users} LEFT JOIN {url_alias} ON CONCAT('user/', CAST(uid AS CHAR)) = src WHERE uid > 0 AND src IS NULL";
   $result = db_query_range($query, 0, variable_get('pathauto_max_bulk_update', 50));
-  
+
   $count = 0;
   $placeholders = array();
   while ($user = db_fetch_object($result)) {
-    $placeholders = pathauto_get_placeholders('user', $user);        
+    $placeholders = pathauto_get_placeholders('user', $user);
     $src = 'user/'. $user->uid;
     if ($alias = pathauto_create_alias('user', 'bulkupdate', $placeholders, $src, $user->uid)) {
       $count++;
     }
   }
-  
+
   drupal_set_message(format_plural($count,
-    "Bulk generation of users completed, one alias generated.",
-    "Bulk generation of users completed, @count aliases generated."));
+    'Bulk generation of users completed, one alias generated.',
+    'Bulk generation of users completed, @count aliases generated.'));
 }
 
-
 /**
- * Bulk generate aliases for all blogs without aliases 
+ * Bulk generate aliases for all blogs without aliases.
  */
 function blog_pathauto_bulkupdate() {
   $query = "SELECT uid, name, src, dst FROM {users} LEFT JOIN {url_alias} ON CONCAT('blog/', CAST(uid AS CHAR)) = src WHERE uid > 0 AND src IS NULL";
   $result = db_query_range($query, 0, variable_get('pathauto_max_bulk_update', 50));
-  
+
   $count = 0;
   $placeholders = array();
   while ($user = db_fetch_object($result)) {
@@ -119,21 +125,21 @@ function blog_pathauto_bulkupdate() {
       $count++;
     }
   }
-  
+
   drupal_set_message(format_plural($count,
-    "Bulk generation of user blogs completed, one alias generated.",
-    "Bulk generation of user blogs completed, @count aliases generated."));
+    'Bulk generation of user blogs completed, one alias generated.',
+    'Bulk generation of user blogs completed, @count aliases generated.'));
 }
 
 /**
- * Bulk generate aliases for user trackers without aliases 
+ * Bulk generate aliases for user trackers without aliases.
  */
 function tracker_pathauto_bulkupdate() {
   // We do the double CONCAT because Pgsql8.1 doesn't support more than three arguments to CONCAT
   // Hopefully some day we can remove that.
-  $query = "SELECT uid, name, src, dst FROM {users} LEFT JOIN {url_alias} ON  CONCAT(CONCAT('user/', CAST(uid AS CHAR)), '/track') = src WHERE uid > 0 AND src IS NULL";
+  $query = "SELECT uid, name, src, dst FROM {users} LEFT JOIN {url_alias} ON CONCAT(CONCAT('user/', CAST(uid AS CHAR)), '/track') = src WHERE uid > 0 AND src IS NULL";
   $result = db_query_range($query, 0, variable_get('pathauto_max_bulk_update', 50));
-  
+
   $count = 0;
   $placeholders = array();
   while ($user = db_fetch_object($result)) {
@@ -143,8 +149,8 @@ function tracker_pathauto_bulkupdate() {
       $count++;
     }
   }
-  
+
   drupal_set_message(format_plural($count,
-    "Bulk generation of user tracker pages completed, one alias generated.",
-    "Bulk generation of user tracker pages completed, @count aliases generated."));
+    'Bulk generation of user tracker pages completed, one alias generated.',
+    'Bulk generation of user tracker pages completed, @count aliases generated.'));
 }

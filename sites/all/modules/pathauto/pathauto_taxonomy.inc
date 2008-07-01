@@ -1,8 +1,15 @@
 <?php
 // $Id$
 
-/*
- * Implementation of hook_pathauto() for taxonomy module
+/**
+ * @file
+ * Hook implementations for taxonomy module integration.
+ *
+ * @ingroup pathauto
+ */
+
+/**
+ * Implementation of hook_pathauto() for taxonomy module.
  */
 function taxonomy_pathauto($op) {
   switch ($op) {
@@ -44,37 +51,60 @@ function taxonomy_pathauto($op) {
 }
 
 /**
- * Generate aliases for all categories without aliases
- * 
- */ 
+ * Generate aliases for all categories without aliases.
+ */
 function taxonomy_pathauto_bulkupdate() {
-  $forum_vid = variable_get('forum_nav_vocabulary', '');
-  $query = "SELECT tid, vid, name, src, dst FROM {term_data} LEFT JOIN {url_alias} ON CONCAT('taxonomy/term/', CAST(tid AS CHAR)) = src WHERE src IS NULL AND vid != %d";
-  $result = db_query_range($query, $forum_vid, 0, variable_get('pathauto_max_bulk_update', 50));
-  
+  // From all node types, only attempt to update those with patterns
+  $pattern_vids = array();
+  foreach (taxonomy_get_vocabularies() as $vid => $info) {
+    $pattern = trim(variable_get('pathauto_taxonomy_'. $vid .'_pattern', ''));
+
+    // If it's not set, check the default
+    // TODO - if there's a default we shouldn't do this crazy where statement because all vocabs get aliases
+    // TODO - special casing to exclude the forum vid (and the images vid and...?)
+    if (empty($pattern)) {
+      $pattern = trim(variable_get('pathauto_taxonomy_pattern', ''));
+    }
+    if (!empty($pattern)) {
+      $pattern_vids[] = $vid;
+      if (empty($vid_where)) {
+        $vid_where = " AND (vid = '%s' ";
+      }
+      else {
+        $vid_where .= " OR vid = '%s'";
+      }
+    }
+  }
+  $vid_where .= ')';
+
+  // Exclude the forums and join all the args into one array so they can be passed to db_query
+  $forum_vid[] = variable_get('forum_nav_vocabulary', '');
+  $query_args = array_merge($forum_vid, $pattern_vids);
+  $query = "SELECT tid, vid, name, src, dst FROM {term_data} LEFT JOIN {url_alias} ON CONCAT('taxonomy/term/', CAST(tid AS CHAR)) = src WHERE src IS NULL AND vid <> %d ". $vid_where;
+  $result = db_query_range($query, $query_args, 0, variable_get('pathauto_max_bulk_update', 50));
+
   $count = 0;
   $placeholders = array();
   while ($category = db_fetch_object($result)) {
     $count += _taxonomy_pathauto_alias($category, 'bulkupdate');
   }
-  
+
   drupal_set_message(format_plural($count,
-    "Bulk generation of terms completed, one alias generated.",
-    "Bulk generation of terms completed, @count aliases generated."));
+    'Bulk generation of terms completed, one alias generated.',
+    'Bulk generation of terms completed, @count aliases generated.'));
 }
 
 /**
- * 
- * Function to create aliases for taxonomy objects
- * 
- * @param object $category a taxonomy object
- * 
+ * Create aliases for taxonomy objects.
+ *
+ * @param $category
+ *   A taxonomy object.
  */
 function _taxonomy_pathauto_alias($category, $op) {
   $count = 0;
 
-  $placeholders = pathauto_get_placeholders('taxonomy', $category);    
-  
+  $placeholders = pathauto_get_placeholders('taxonomy', $category);
+
   $forum_vid = variable_get('forum_nav_vocabulary', '');
   // If we're in a forum vocabulary, also create a forum container, forum, or forum topic alias.
   if (module_exists('forum') && $forum_vid == (int)$category->vid) {
@@ -84,7 +114,7 @@ function _taxonomy_pathauto_alias($category, $op) {
     }
   }
   else {
-    $src = 'taxonomy/term/'. $category->tid;
+    $src = taxonomy_term_path($category->tid);
     if ($alias = pathauto_create_alias('taxonomy', $op, $placeholders, $src, $category->tid, $category->vid)) {
       $count++;
     }
@@ -92,9 +122,8 @@ function _taxonomy_pathauto_alias($category, $op) {
   return $count;
 }
 
-
-/*
- * Implementation of hook_pathauto() for forum module
+/**
+ * Implementation of hook_pathauto() for forum module.
  */
 function forum_pathauto($op) {
   switch ($op) {
@@ -122,9 +151,8 @@ function forum_pathauto($op) {
   }
 }
 
-
 /**
- *  Generate aliases for all forums and forum containers without aliases
+ * Generate aliases for all forums and forum containers without aliases.
  */
 function forum_pathauto_bulkupdate() {
   $forum_vid = variable_get('forum_nav_vocabulary', '');
@@ -138,6 +166,6 @@ function forum_pathauto_bulkupdate() {
   }
 
   drupal_set_message(format_plural($count,
-    "Bulk update of forums and forum containers completed, one alias generated.",
-    "Bulk update of forums and forum containers completed, @count aliases generated."));
+    'Bulk update of forums and forum containers completed, one alias generated.',
+    'Bulk update of forums and forum containers completed, @count aliases generated.'));
 }

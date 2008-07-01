@@ -2,13 +2,12 @@
 // $Id$
 
 /**
+ * @file
+ * Install, update, and uninstall functions for Pathauto.
  *
- * @file Provides install, updated, and uninstall functions for pathauto.
- * 
+ * @ingroup pathauto
  */
 
- 
- 
 /**
  * Implementation of hook_install().
  */
@@ -23,7 +22,8 @@ function pathauto_install() {
     variable_set('pathauto_taxonomy_2_pattern', '');
     variable_set('pathauto_taxonomy_1_pattern', '');
   }
-  else { // Node and user are required so we don't have to check
+  else {
+    // Node and user are required so we don't have to check
     variable_set('pathauto_modulelist', array('node', 'user'));
   }
   // Set the rest of the pathauto default variables
@@ -38,14 +38,14 @@ function pathauto_install() {
   variable_set('pathauto_node_page_pattern', '');
   variable_set('pathauto_node_pattern', 'content/[title-raw]');
   variable_set('pathauto_node_story_pattern', '');
-  variable_set("pathauto_punctuation_quotes", 0);
+  variable_set('pathauto_punctuation_quotes', 0);
   variable_set('pathauto_separator', '-');
   variable_set('pathauto_update_action', '2');
   variable_set('pathauto_user_bulkupdate', FALSE);
   variable_set('pathauto_user_pattern', 'users/[user-raw]');
   variable_set('pathauto_user_supportsfeeds', NULL);
   variable_set('pathauto_verbose', FALSE);
-  
+
   // Make sure we "replace hyphen with separator" by default
   variable_set('pathauto_punctuation_hyphen', 1); // 1 is replace
 
@@ -56,7 +56,7 @@ function pathauto_install() {
   switch ($GLOBALS['db_type']) {
     case 'pgsql':
       // Using pgsql<8.x?  Help at http://drupal.org/node/195044
-      db_query("ALTER TABLE {variable} ALTER name TYPE varchar(128)");
+      db_query('ALTER TABLE {variable} ALTER name TYPE varchar(128)');
       break;
     case 'mysql':
     case 'mysqli':
@@ -66,59 +66,30 @@ function pathauto_install() {
 
   // Clear the cache to get these to take effect.
   cache_clear_all();
-
-  // Create a table so that we can track which items we keep 
-  // And eventually to improve join performance
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-        db_query("CREATE TABLE {url_alias_extra} (
-        pid int unsigned NOT NULL default 0,
-        dst varchar(128) NOT NULL default '',
-        entity_type varchar(20) default NULL,
-        entity_id int(10) unsigned default NULL,
-        created_by varchar(20) default NULL,
-        PRIMARY KEY (pid),
-        UNIQUE KEY dst (dst)
-      ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
-        break;
-    case 'pgsql':
-      db_query("CREATE TABLE {url_alias_extra} (
-        pid int_unsigned NOT NULL default 0,
-        dst varchar(128) NOT NULL default '',
-        entity_type varchar(20) default NULL,
-        entity_id int4 default NULL,
-        created_by varchar(20) default NULL,
-        PRIMARY KEY (pid),
-        UNIQUE (dst)
-      )");
-      break;
-  }
-  
 }
- 
+
 /**
  * Implementation of hook_uninstall().
  */
 function pathauto_uninstall() {
-  // Delete all the pathauto variables and then clear the variable cache  
+  // Delete all the pathauto variables and then clear the variable cache
   db_query("DELETE FROM {variable} WHERE name LIKE 'pathauto_%'");
   cache_clear_all('variables', 'cache');
 }
 
 /**
- * Set the weight a little heavier to allow taxonomy to do its work
- *
+ * Set the weight a little heavier to allow taxonomy to do its work.
  */
 function pathauto_update_1() {
-  $items = array();
-  $items[] = update_sql("UPDATE {system} SET weight = 1 WHERE name = 'pathauto'");
-  return $items;
+  $ret = array();
+  $ret[] = update_sql("UPDATE {system} SET weight = 1 WHERE name = 'pathauto'");
+  return $ret;
 }
 
 /**
  * Increase the maximum length of variable names from 48 to 128.
- * Copied from DRUPAL-6 sytem_update_6002 per http://drupal.org/node/66795
+ *
+ * Copied from DRUPAL-6 system_update_6002 per http://drupal.org/node/66795
  */
 function pathauto_update_2() {
   $ret = array();
@@ -135,63 +106,49 @@ function pathauto_update_2() {
 }
 
 /**
- * Delete the pathauto_node_supportsfeeds
- *
+ * Delete the pathauto_node_supportsfeeds.
  */
 function pathauto_update_3() {
   // Do nothing, this update was a mistake
-  $items = array();
-  return $items;
+  return array();
 }
 
 /**
- * New style naming for the punctuation chars
- *
+ * New style naming for the punctuation chars.
  */
 function pathauto_update_4() {
-  $quotes = variable_get('pathauto_quotes', 0);
-  variable_set("pathauto_punctuation_quotes", $quotes);
+  variable_set('pathauto_punctuation_quotes', variable_get('pathauto_quotes', 0));
   variable_del('pathauto_quotes');
-  $items = array();
-  return $items;
+  return array();
 }
 
 /**
- * Create a table so that we can track which items we keep 
+ * Create a table so that we can track which items we keep
  * And eventually to improve join performance
  */
 function pathauto_update_5() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("CREATE TABLE {url_alias_extra} (
-          pid int unsigned NOT NULL default 0,
-          dst varchar(128) NOT NULL default '',
-          entity_type varchar(20) default NULL,
-          entity_id int(10) unsigned default NULL,
-          created_by varchar(20) default NULL,
-          PRIMARY KEY (pid)
-        ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
-      break;
-    case 'pgsql':
-    $ret[] = update_sql("CREATE TABLE {url_alias_extra} (
-        pid int_unsigned NOT NULL default 0,
-        dst varchar(128) NOT NULL default '',
-        entity_type varchar(20) default NULL,
-        entity_id int4 default NULL,
-        created_by varchar(20) default NULL,
-        PRIMARY KEY (pid)
-      )");
-  }
+  // Note: no longer done...see http://drupal.org/node/248031
+  return array();
+}
+
+/**
+ * Remove some variables that are no longer used.
+ */
+function pathauto_update_6() {
+  $ret = array();
+  // Delete some unused variables
+  $ret[] = update_sql("DELETE FROM {variable} WHERE name LIKE 'pathauto_%_supportsfeeds'");
+  cache_clear_all('variables', 'cache');
   return $ret;
 }
 
 /**
- *  Remove some variables that are no longer used
+ * Remove the url_alias_extra table which wasn't used.
  */
-function pathauto_update_6() {
-  // Delete some unused variables
-  db_query("DELETE FROM {variable} WHERE name LIKE 'pathauto_%_supportsfeeds'");
-  cache_clear_all('variables', 'cache');
-  return array();
+function pathauto_update_7() {
+  $ret = array();
+  if (db_table_exists('url_alias_extra')) {
+    $ret[] = update_sql('DROP TABLE {url_alias_extra}');
+  }
+  return $ret;
 }

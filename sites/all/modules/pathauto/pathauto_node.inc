@@ -1,8 +1,15 @@
 <?php
 // $Id$
 
-/*
- * Implementation of hook_pathauto()
+/**
+ * @file
+ * Hook implementations for node module integration.
+ *
+ * @ingroup pathauto
+ */
+
+/**
+ * Implementation of hook_pathauto().
  */
 function node_pathauto($op) {
   switch ($op) {
@@ -25,10 +32,9 @@ function node_pathauto($op) {
         }
       }
       $settings['supportsfeeds'] = 'feed';
-      $nodetypes = node_get_types();
-      foreach ($nodetypes as $ntype => $nodetype) {
-        $fieldlabel = t('Pattern for all @node_type paths', array('@node_type' => $nodetype->name));
-        $settings['patternitems'][$ntype] = $fieldlabel;
+      foreach (node_get_types('names') as $node_type => $node_name) {
+        $fieldlabel = t('Pattern for all @node_type paths', array('@node_type' => $node_name));
+        $settings['patternitems'][$node_type] = $fieldlabel;
       }
       return (object) $settings;
     default:
@@ -37,10 +43,9 @@ function node_pathauto($op) {
 }
 
 /**
- * Generate aliases for all nodes without aliases. 
+ * Generate aliases for all nodes without aliases.
  */
 function node_pathauto_bulkupdate() {
-
   // From all node types, only attempt to update those with patterns
   $pattern_types = array();
   $type_where = '';
@@ -86,6 +91,6 @@ function node_pathauto_bulkupdate() {
   }
 
   drupal_set_message(format_plural($count,
-    "Bulk generation of nodes completed, one alias generated.",
-    "Bulk generation of nodes completed, @count aliases generated."));
+    'Bulk generation of nodes completed, one alias generated.',
+    'Bulk generation of nodes completed, @count aliases generated.'));
 }

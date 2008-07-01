@@ -2,19 +2,26 @@
 // $Id$
 
 /**
- * Copied from search.module's PREG_CLASS_SEARCH_EXCLUDE
- * 
- * Matches Unicode character classes to exclude from the search index.
+ * @file
+ * Miscellaneous functions for Pathauto.
+ *
+ * @ingroup pathauto
+ */
+
+/**
+ * Matches Unicode character classes.
  *
  * See: http://www.unicode.org/Public/UNIDATA/UCD.html#General_Category_Values
  *
  * The index only contains the following character classes:
- * Lu     Letter, Uppercase
- * Ll     Letter, Lowercase
- * Lt     Letter, Titlecase
- * Lo     Letter, Other
- * Nd     Number, Decimal Digit
- * No     Number, Other
+ *   Lu  Letter, Uppercase
+ *   Ll  Letter, Lowercase
+ *   Lt  Letter, Titlecase
+ *   Lo  Letter, Other
+ *   Nd  Number, Decimal Digit
+ *   No  Number, Other
+ *
+ * Copied from search.module's PREG_CLASS_SEARCH_EXCLUDE.
  */
 define('PREG_CLASS_ALNUM',
 '\x{0}-\x{2f}\x{3a}-\x{40}\x{5b}-\x{60}\x{7b}-\x{bf}\x{d7}\x{f7}\x{2b0}-'.
@@ -45,23 +52,26 @@ define('PREG_CLASS_ALNUM',
 '\x{fdfc}-\x{fe6b}\x{feff}-\x{ff0f}\x{ff1a}-\x{ff20}\x{ff3b}-\x{ff40}\x{ff5b}-'.
 '\x{ff65}\x{ff70}\x{ff9e}\x{ff9f}\x{ffe0}-\x{fffd}');
 
-
 /**
- * Check to see if there is already an alias pointing to a different item
- * 
- * @param string $alias
- *   A string alias (i.e. dst)
- * @param string $src
- *   A string that is the internal path
- * 
+ * Check to see if there is already an alias pointing to a different item.
  *
+ * @param $alias
+ *   A string alias (i.e. dst).
+ * @param $src
+ *   A string that is the internal path.
+ * @return
+ *   TRUE if an alias exists, FALSE if not.
  */
 function _pathauto_alias_exists($alias, $src) {
   $alias_pid = db_result(db_query("SELECT pid FROM {url_alias} WHERE dst = '%s' AND src <> '%s'", $alias, $src, 0, 1));
-  if (db_table_exists('path_redirect')) {
+  if (function_exists('path_redirect_delete')) { 
+    // Delete from path_redirect the exact same alias to the same node. 
+    path_redirect_delete($alias, $src); 
+
+    // If there still is this alias used in path_redirect, then create a different alias
     $redirect_rid = db_result(db_query_range("SELECT rid FROM {path_redirect} WHERE path = '%s'", $alias, 0, 1));
   }
-  if ($alias_pid || $redirect_rid) {
+  if ($alias_pid || !empty($redirect_rid)) {
     return TRUE;
   }
   else {
@@ -70,11 +80,14 @@ function _pathauto_alias_exists($alias, $src) {
 }
 
 /**
- * Returns old alias and pid if there is already an alias pointing to a different item
- * 
- * @param string $src
- *   A string that is the internal path
- * 
+ * Returns old alias and pid if there is already an alias
+ * pointing to a different item.
+ *
+ * @param $src
+ *   A string that is the internal path.
+ * @return
+ *   An array with the keys "pid" and "old_alias" containing
+ *   the "pid" and old "alias", respectively, of the old alias.
  */
 function _pathauto_existing_alias_data($src) {
   $output = array(
@@ -103,19 +116,23 @@ function _pathauto_existing_alias_data($src) {
 }
 
 /**
- * Clean up a string value provided by a module, resulting in a
- * string containing only alphanumerics and separators
+ * Clean up a string value provided by a module.
+ *
+ * Resulting string contains only alphanumerics and separators.
+ *
  * @param $string
  *   A string to clean.
- * 
+ * @param $clean_slash
+ *   Whether to clean slashes from the given string.
+ * @return
+ *   The cleaned string.
  */
 function pathauto_cleanstring($string, $clean_slash = TRUE) {
   // Default words to ignore
   $ignore_words = array(
-    "a", "an", "as", "at", "before", "but", "by", "for", "from",
-    "is", "in", "into", "like", "of", "off", "on", "onto", "per",
-    "since", "than", "the", "this", "that", "to", "up", "via",
-    "with"
+    'a', 'an', 'as', 'at', 'before', 'but', 'by', 'for', 'from', 'is', 'in',
+    'into', 'like', 'of', 'off', 'on', 'onto', 'per', 'since', 'than', 'the',
+    'this', 'that', 'to', 'up', 'via', 'with',
   );
 
   // Replace or drop punctuation based on user settings
@@ -123,7 +140,7 @@ function pathauto_cleanstring($string, $clean_slash = TRUE) {
   $output = $string;
   $punctuation = pathauto_punctuation_chars();
   foreach ($punctuation as $name => $details) {
-    $action = variable_get("pathauto_punctuation_". $name, 0);
+    $action = variable_get('pathauto_punctuation_'. $name, 0);
     // 2 is the action for "do nothing" with the punctuation
     if ($action != 2) {
       // Slightly tricky inline if which either replaces with the separator or nothing
@@ -137,57 +154,55 @@ function pathauto_cleanstring($string, $clean_slash = TRUE) {
   }
 
   // Optionally remove accents and transliterate
-  if (variable_get('pathauto_transliterate', FALSE)) { 
-
+  if (variable_get('pathauto_transliterate', FALSE)) {
     static $i18n_loaded = false;
     static $translations = array();
+
     if (!$i18n_loaded) {
       $path = drupal_get_path('module', 'pathauto');
       if (is_file($path .'/i18n-ascii.txt')) {
-        $translations = parse_ini_file($path. '/i18n-ascii.txt');
+        $translations = parse_ini_file($path .'/i18n-ascii.txt');
       }
       $i18n_loaded = true;
     }
-  
+
     $output = strtr($output, $translations);
   }
 
   // Reduce to the subset of ASCII96 letters and numbers
-  if (variable_get('pathauto_reduce_ascii', FALSE)) { 
+  if (variable_get('pathauto_reduce_ascii', FALSE)) {
     $pattern = '/[^a-zA-Z0-9\/]+/ ';
     $output = preg_replace($pattern, $separator, $output);
   }
 
   // Get rid of words that are on the ignore list
-  $ignore_re = "\b". preg_replace("/,/", "\b|\b", variable_get('pathauto_ignore_words', $ignore_words)) ."\b";
+  $ignore_re = '\b'. preg_replace('/,/', '\b|\b', variable_get('pathauto_ignore_words', $ignore_words)) .'\b';
 
-  if (function_exists('mb_ereg_replace')) {
-    $output = mb_ereg_replace("/$ignore_re/i", "", $output);
+  if (function_exists('mb_eregi_replace')) {
+    $output = mb_eregi_replace($ignore_re, '', $output);
   }
   else {
-    $output = preg_replace("/$ignore_re/i", "", $output);
+    $output = preg_replace("/$ignore_re/i", '', $output);
   }
 
   // Always replace whitespace with the separator.
-  $output = preg_replace("/\s+/", $separator, $output);
+  $output = preg_replace('/\s+/', $separator, $output);
 
-  // In preparation for pattern matching, 
-  // escape the separator if and only if it is not alphanumeric)
+  // In preparation for pattern matching,
+  // escape the separator if and only if it is not alphanumeric.
   if (isset($separator)) {
     if (preg_match('/^[^'. PREG_CLASS_ALNUM .']+$/uD', $separator)) {
       $seppattern = $separator;
-    } 
+    }
     else {
       $seppattern = '\\'. $separator;
     }
     // Trim any leading or trailing separators (note the need to
-    $output = preg_replace("/^$seppattern+|$seppattern+$/", "", $output);
+    $output = preg_replace("/^$seppattern+|$seppattern+$/", '', $output);
 
     // Replace multiple separators with a single one
     $output = preg_replace("/$seppattern+/", "$separator", $output);
-
   }
-
 
   // Enforce the maximum component length
   $maxlength = min(variable_get('pathauto_max_component_length', 100), 128);
@@ -197,45 +212,43 @@ function pathauto_cleanstring($string, $clean_slash = TRUE) {
 }
 
 /**
- * Apply patterns to create an alias
+ * Apply patterns to create an alias.
  *
  * @param $module
- *   The name of your module (e.g., 'node')
+ *   The name of your module (e.g., 'node').
  * @param $op
- *   Operation being performed on the content being aliased ('insert',
- *   'update', or 'bulkupdate')
+ *   Operation being performed on the content being aliased
+ *   ('insert', 'update', or 'bulkupdate').
  * @param $placeholders
  *   An array whose keys consist of the translated placeholders
  *   which appear in patterns (e.g., t('[title]')) and values are the
- *   actual values to be substituted into the pattern (e.g., $node->title)
+ *   actual values to be substituted into the pattern (e.g., $node->title).
  * @param $src
- *   The "real" URI of the content to be aliased (e.g., "node/$node->nid")
+ *   The "real" URI of the content to be aliased (e.g., "node/$node->nid").
  * @param $type
- *   For modules which provided patternitems in hook_pathauto(),
- *   the relevant identifier for the specific item to be aliased (e.g.,
- *   $node->type)
+ *   For modules which provided pattern items in hook_pathauto(),
+ *   the relevant identifier for the specific item to be aliased
+ *   (e.g., $node->type).
  * @return
- *   The alias that was created
+ *   The alias that was created.
  */
 function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $type = NULL) {
   if (($op != 'bulkupdate') and variable_get('pathauto_verbose', FALSE) && user_access('notify of path changes')) {
     $verbose = TRUE;
-  } 
+  }
   else {
     $verbose = FALSE;
   }
 
   // Retrieve and apply the pattern for this content type
-  $pattern = '';
-  if ($type) {
-    $pattern = variable_get('pathauto_'. $module .'_'. $type .'_pattern', '');
+  if (!empty($type)) {
+    $pattern = trim(variable_get('pathauto_'. $module .'_'. $type .'_pattern', ''));
   }
-  if (!trim($pattern)) {
-    $pattern = variable_get('pathauto_'. $module .'_pattern', '');
+  if (empty($pattern)) {
+    $pattern = trim(variable_get('pathauto_'. $module .'_pattern', ''));
   }
-  
   // No pattern? Do nothing (otherwise we may blow away existing aliases...)
-  if (!trim($pattern)) {
+  if (empty($pattern)) {
     return '';
   }
 
@@ -250,7 +263,7 @@ function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $t
       $src = $term_path;
     }
   }
-  
+
   // Special handling when updating an item which is already aliased.
   $pid = NULL;
   $old_alias = NULL;
@@ -273,10 +286,10 @@ function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $t
   }
 
   // Two or more slashes should be collapsed into one
-  $alias = preg_replace("/\/+/", "/", $alias);
-  
+  $alias = preg_replace('/\/+/', '/', $alias);
+
   // Trim any leading or trailing slashes
-  $alias = preg_replace("/^\/|\/+$/", "", $alias);
+  $alias = preg_replace('/^\/|\/+$/', '', $alias);
 
   $maxlength = min(variable_get('pathauto_max_length', 100), 128);
   $alias = drupal_substr($alias, 0, $maxlength);
@@ -284,11 +297,17 @@ function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $t
   // If the alias already exists, generate a new, hopefully unique, variant
   $separator = variable_get('pathauto_separator', '-');
   if (_pathauto_alias_exists($alias, $src)) {
+    $original_alias = $alias;
     for ($i = 0; _pathauto_alias_exists(drupal_substr($alias, 0, $maxlength - strlen($i)) . $separator . $i, $src); $i++) {
     }
     // Make room for the sequence number
-    $alias = drupal_substr($alias, 0, $maxlength - strlen($i));
+    $alias = drupal_substr($alias, 0, $maxlength - drupal_strlen($i));
     $alias = $alias . $separator . $i;
+    // If verbose is on, alert the user why this happened
+    if ($verbose) {
+      drupal_set_message(t('The automatically generated alias %original_alias conflicted with an existing alias. Alias changed to %alias.',
+        array('%original_alias' => $original_alias, '%alias' => $alias)));
+    }
   }
 
   // If $pid is NULL, a new alias is created - otherwise, the existing
@@ -297,12 +316,12 @@ function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $t
 
   // Also create a related feed alias if requested, and if supported
   // by the module
-  if (strlen(variable_get('pathauto_'. $module .'_applytofeeds', ''))) {
+  if (drupal_strlen(variable_get('pathauto_'. $module .'_applytofeeds', ''))) {
     $feedappend = variable_get('pathauto_'. $module .'_applytofeeds', '');
-    
+
     // For forums and taxonomies, the src doesn't always form the base of the rss feed (ie. image galleries)
     if ($module == 'taxonomy' || $module == 'forum') {
-      $update_data = _pathauto_existing_alias_data("taxonomy/term/$entity_id/$feedappend"); 
+      $update_data = _pathauto_existing_alias_data("taxonomy/term/$entity_id/$feedappend");
       _pathauto_set_alias("taxonomy/term/$entity_id/$feedappend", "$alias/feed", $module, $entity_id, $update_data['pid'], $verbose, $update_data['old_alias']);
     }
     else {
@@ -315,12 +334,12 @@ function pathauto_create_alias($module, $op, $placeholders, $src, $entity_id, $t
 }
 
 /**
- * Verifies if the given path is a valid menu callback.
+ * Verify if the given path is a valid menu callback.
+ *
  * Taken from menu_execute_active_handler().
  *
  * @param $path
  *   A string containing a relative path.
- *
  * @return
  *   TRUE if the path already exists.
  */
@@ -329,38 +348,37 @@ function _pathauto_path_is_callback($path) {
   if (is_null($menu)) {
     $menu = menu_get_menu();
   }
-  
+
   // Determine the menu item containing the callback.
-  return isset($menu["callbacks"][$path]);
+  return isset($menu['callbacks'][$path]);
 }
 
 /**
- * Private function for pathauto to create an alias
- * 
+ * Private function for Pathauto to create an alias.
+ *
  * @param $src
- *   The internal path 
+ *   The internal path.
  * @param $dst
- *   The visible externally used path. 
+ *   The visible externally used path.
  * @param $pid
  *   If the item is currently aliased, the pid for that item.
  * @param $verbose
- *   If the admin has enabled verbose, should be TRUE.  Else FALSE or NULL.
+ *   If the admin has enabled verbose, should be TRUE. Else FALSE or NULL.
  * @param $old_alias
  *   If the item is currently aliased, the existing alias for that item.
- * 
  */
 function _pathauto_set_alias($src, $dst, $entity_type, $entity_id, $pid = NULL, $verbose = FALSE, $old_alias = NULL) {
   // Alert users that an existing callback cannot be overridden automatically
   if (_pathauto_path_is_callback($dst)) {
-    if ($verbose and user_access('notify of path changes')) {
+    if ($verbose && user_access('notify of path changes')) {
       drupal_set_message(t('Ignoring alias %dst due to existing path conflict.', array('%dst' => $dst)));
     }
     return;
   }
   // Alert users if they are trying to create an alias that is the same as the internal path
-  else if ($src == $dst) {
-    if ($verbose and user_access('notify of path changes')) {
-      drupal_set_message(t('Ignoring alias %dst  because it is the same as the internal path.', array('%dst' => $dst)));
+  if ($src == $dst) {
+    if ($verbose && user_access('notify of path changes')) {
+      drupal_set_message(t('Ignoring alias %dst because it is the same as the internal path.', array('%dst' => $dst)));
     }
     return;
   }
@@ -370,16 +388,16 @@ function _pathauto_set_alias($src, $dst, $entity_type, $entity_id, $pid = NULL, 
     path_set_alias($src, $dst, $pid);
 
     if (variable_get('pathauto_update_action', 2) == 3 && function_exists('path_redirect_save')) {
-      if (isset($old_alias) && strlen($old_alias)) {
+      if (!empty($old_alias)) {
         $save['path'] = $old_alias;
         $save['redirect'] = $src;
         $save['type'] = 301; //moved permanently
         path_redirect_save($save);
-        $redirect = TRUE; 
+        $redirect = TRUE;
       }
     }
-    if ($verbose and user_access('notify of path changes')) {
-      if (isset($redirect) && $redirect) {
+    if ($verbose && user_access('notify of path changes')) {
+      if (!empty($redirect)) {
         drupal_set_message(t('Created new alias %dst for %src, replacing %old_alias. %old_alias now redirects to %dst', array('%dst' => $dst, '%src' => $src, '%old_alias' => $old_alias)));
       }
       elseif ($pid) {
@@ -393,14 +411,13 @@ function _pathauto_set_alias($src, $dst, $entity_type, $entity_id, $pid = NULL, 
 }
 
 /**
- * Generalized function to get tokens across all Pathauto types
- * 
+ * Generalized function to get tokens across all Pathauto types.
+ *
  * @param $object
  *   A user, node, or category object.
- * 
  * @return
- *   tokens for that object formatted in the way that Pathauto expects to see them.
- *  
+ *   Tokens for that object formatted in the way that
+ *   Pathauto expects to see them.
  */
 function pathauto_get_placeholders($type, $object) {
   if (function_exists('token_get_values')) {
@@ -415,67 +432,71 @@ function pathauto_get_placeholders($type, $object) {
 }
 
 /**
- * Cleans tokens so they are URL friendly
- * 
- * @param $values
- *   An array of token values that need to be "cleaned" for use in the URL 
- * 
+ * Clean tokens so they are URL friendly.
+ *
+ * @param $full
+ *   An array of token values that need to be "cleaned" for use in the URL.
+ * @return
+ *   An array of the cleaned tokens.
  */
 function pathauto_clean_token_values($full) {
   foreach ($full->values as $key => $value) {
-    
     // If it's a "path" or "url friendly" token don't remove the "/" character
-    if (substr($full->tokens[$key], -4, 4) === 'path' || substr($full->tokens[$key], -8, 8) === 'path-raw' || substr($full->tokens[$key], -5, 5) === 'alias') {
+    if (drupal_substr($full->tokens[$key], -4, 4) === 'path' || drupal_substr($full->tokens[$key], -8, 8) === 'path-raw' || drupal_substr($full->tokens[$key], -5, 5) === 'alias') {
       $full->values[$key] = pathauto_cleanstring($value, FALSE);
     }
     else {
       $full->values[$key] = pathauto_cleanstring($value);
     }
-
   }
   return $full->values;
 }
 
 /**
- * Returns an array of arrays for punctuation values keyed by a name
- *   including the value and a textual description
- *   Can and should be expanded to include "all" non text punctuation values
- * 
+ * Return an array of arrays for punctuation values.
+ *
+ * Returns an array of arrays for punctuation values keyed by a name, including
+ * the value and a textual description.
+ * Can and should be expanded to include "all" non text punctuation values.
+ *
+ * @return
+ *   An array of arrays for punctuation values keyed by a name, including the
+ *   value and a textual description.
  */
 function pathauto_punctuation_chars() {
   $punctuation = array();
 
-  // Handle " ' , . - _ : ; | { { } ] + = * & % $ � # @ ! ~ ( ) ? < > \
+  // Handle " ' ` , . - _ : ; | { [ } ] + = * & % ^ $ # @ ! ~ ( ) ? < > \
   $punctuation['double_quotes']      = array('value' => '"', 'name' => t('Double quotes "'));
   $punctuation['quotes']             = array('value' => "'", 'name' => t("Single quotes (apostrophe) '"));
-  $punctuation['backtick']           = array('value' => "`", 'name' => t("Back tick `"));
-  $punctuation['comma']              = array('value' => ",", 'name' => t('Comma ,'));
-  $punctuation['period']             = array('value' => ".", 'name' => t('Period .'));
-  $punctuation['hyphen']             = array('value' => "-", 'name' => t('Hyphen -'));
-  $punctuation['underscore']         = array('value' => "_", 'name' => t('Underscore _'));
-  $punctuation['colon']              = array('value' => ":", 'name' => t('Colon :'));
-  $punctuation['semicolon']          = array('value' => ";", 'name' => t('Semicolon ;'));
-  $punctuation['pipe']               = array('value' => "|", 'name' => t('Pipe |'));
-  $punctuation['left_curly']         = array('value' => "{", 'name' => t('Left curly bracket {'));
-  $punctuation['left_square']        = array('value' => "[", 'name' => t('Left square bracket ['));
-  $punctuation['right_curly']        = array('value' => "}", 'name' => t('Right curly bracket }'));
-  $punctuation['right_square']       = array('value' => "]", 'name' => t('Right square bracket ]'));
-  $punctuation['plus']               = array('value' => "+", 'name' => t('Plus +'));
-  $punctuation['equal']              = array('value' => "=", 'name' => t('Equal ='));
-  $punctuation['asterisk']           = array('value' => "*", 'name' => t('Asterisk *'));
-  $punctuation['ampersand']          = array('value' => "&", 'name' => t('Ampersand &'));
-  $punctuation['percent']            = array('value' => "%", 'name' => t('Percent %'));
-  $punctuation['caret']              = array('value' => "^", 'name' => t('Caret ^'));
-  $punctuation['dollar']             = array('value' => "$", 'name' => t('Dollar $'));
-  $punctuation['hash']               = array('value' => "#", 'name' => t('Hash #'));
-  $punctuation['at']                 = array('value' => "@", 'name' => t('At @'));
-  $punctuation['exclamation']        = array('value' => "!", 'name' => t('Exclamation !'));
-  $punctuation['tilde']              = array('value' => "~", 'name' => t('Tilde ~'));
-  $punctuation['left_parenthesis']   = array('value' => "(", 'name' => t('Left parenthesis ('));
-  $punctuation['right_parenthesis']  = array('value' => ")", 'name' => t('right parenthesis )'));
-  $punctuation['question_mark']      = array('value' => "?", 'name' => t('Question mark ?'));
-  $punctuation['less_than']          = array('value' => "<", 'name' => t('Less than <'));
-  $punctuation['greater_than']       = array('value' => ">", 'name' => t('Greater than >'));
+  $punctuation['backtick']           = array('value' => '`', 'name' => t('Back tick `'));
+  $punctuation['comma']              = array('value' => ',', 'name' => t('Comma ,'));
+  $punctuation['period']             = array('value' => '.', 'name' => t('Period .'));
+  $punctuation['hyphen']             = array('value' => '-', 'name' => t('Hyphen -'));
+  $punctuation['underscore']         = array('value' => '_', 'name' => t('Underscore _'));
+  $punctuation['colon']              = array('value' => ':', 'name' => t('Colon :'));
+  $punctuation['semicolon']          = array('value' => ';', 'name' => t('Semicolon ;'));
+  $punctuation['pipe']               = array('value' => '|', 'name' => t('Pipe |'));
+  $punctuation['left_curly']         = array('value' => '{', 'name' => t('Left curly bracket {'));
+  $punctuation['left_square']        = array('value' => '[', 'name' => t('Left square bracket ['));
+  $punctuation['right_curly']        = array('value' => '}', 'name' => t('Right curly bracket }'));
+  $punctuation['right_square']       = array('value' => ']', 'name' => t('Right square bracket ]'));
+  $punctuation['plus']               = array('value' => '+', 'name' => t('Plus +'));
+  $punctuation['equal']              = array('value' => '=', 'name' => t('Equal ='));
+  $punctuation['asterisk']           = array('value' => '*', 'name' => t('Asterisk *'));
+  $punctuation['ampersand']          = array('value' => '&', 'name' => t('Ampersand &'));
+  $punctuation['percent']            = array('value' => '%', 'name' => t('Percent %'));
+  $punctuation['caret']              = array('value' => '^', 'name' => t('Caret ^'));
+  $punctuation['dollar']             = array('value' => '$', 'name' => t('Dollar $'));
+  $punctuation['hash']               = array('value' => '#', 'name' => t('Hash #'));
+  $punctuation['at']                 = array('value' => '@', 'name' => t('At @'));
+  $punctuation['exclamation']        = array('value' => '!', 'name' => t('Exclamation !'));
+  $punctuation['tilde']              = array('value' => '~', 'name' => t('Tilde ~'));
+  $punctuation['left_parenthesis']   = array('value' => '(', 'name' => t('Left parenthesis ('));
+  $punctuation['right_parenthesis']  = array('value' => ')', 'name' => t('right parenthesis )'));
+  $punctuation['question_mark']      = array('value' => '?', 'name' => t('Question mark ?'));
+  $punctuation['less_than']          = array('value' => '<', 'name' => t('Less than <'));
+  $punctuation['greater_than']       = array('value' => '>', 'name' => t('Greater than >'));
   $punctuation['back_slash']         = array('value' => '\\', 'name' => t('Back slash \\'));
 
   return $punctuation;
