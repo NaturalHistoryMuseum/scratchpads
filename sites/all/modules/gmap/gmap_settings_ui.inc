@@ -136,7 +136,7 @@ function _gmap_admin_settings() {
   $form['gmap_default']['controltype'] = array(
     '#type' => 'select',
     '#title' => t('Default control type'),
-    '#options' => array('None' => t('None'), 'Small' => t('Small'), 'Large' => t('Large')),
+    '#options' => array('None' => t('None'), 'Micro' => t('Micro'), 'Small' => t('Small'), 'Large' => t('Large')),
     '#default_value' => $defaults['controltype'],
   );
   gmap_widget_setup($form['gmap_default']['controltype'], 'controltype', 'settings_default_map');
@@ -175,6 +175,8 @@ function _gmap_admin_settings() {
 
   $form['gmap_default']['baselayers']['maptype'] = array(
     '#type' => 'select',
+    '#tree' => FALSE,
+    '#parents' => array('gmap_default', 'maptype'),
     '#title' => t('Default map type'),
     '#default_value' => $defaults['maptype'],
     '#options' => $options,
@@ -404,5 +406,25 @@ function _gmap_admin_settings() {
     '#default_value' => $opts['clusterer']['max_lines'],
   );
 
+  $form['#validate']['gmap_admin_settings_validate'] = array();
+
   return system_settings_form($form);
+}
+
+function gmap_admin_settings_validate($form_id, $form_values, $form) {
+  $found = FALSE;
+  foreach ($form_values['gmap_default']['baselayers'] as $l) {
+    if ($l) {
+      $found = TRUE;
+      break;
+    }
+  }
+  if (!$found) {
+    form_set_error('gmap_default][baselayers', t('You must select at least one baselayer!'));
+  }
+
+  // Check that the default map type is sane.
+  if (!$form_values['gmap_default']['baselayers'][$form_values['gmap_default']['maptype']]) {
+    form_error($form['gmap_default']['baselayers']['maptype'], t('The default map type must be an enabled baselayer!'));
+  }
 }

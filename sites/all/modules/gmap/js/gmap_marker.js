@@ -15,17 +15,6 @@ Drupal.gmap.addHandler('gmap', function(elem) {
 
   obj.bind('addmarker',function(marker) {
     obj.map.addOverlay(marker.marker);
-    if (obj.vars.behavior.autozoom) {
-      // Init bounds if needed.
-      // @@@ Unify bounds between markers and shapes? I really don't think this belongs here.
-      if (!obj.bounds) {
-        obj.bounds = new GLatLngBounds(marker.marker.getPoint(), marker.marker.getPoint());
-      }
-      else {
-        obj.bounds.extend(marker.marker.getPoint());
-      }
-      obj.map.setCenter(obj.bounds.getCenter(), Math.min(obj.map.getBoundsZoomLevel(obj.bounds), obj.vars.maxzoom));
-    }
   });
 
   obj.bind('delmarker',function(marker) {
@@ -35,9 +24,5 @@ Drupal.gmap.addHandler('gmap', function(elem) {
   obj.bind('clearmarkers',function() {
     // @@@ Maybe don't nuke ALL overlays?
     obj.map.clearOverlays();
-    // Reset bounds if autozooming
-    if (obj.vars.behavior.autozoom) {
-      obj.bounds = null;
-    }
   });
 });

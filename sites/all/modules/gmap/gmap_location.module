@@ -332,32 +332,56 @@ function gmap_location_node_page($nid = NULL) {
 
   // Special cases for single node view.
   if (is_numeric($nid) && $node = node_load($nid)) {
-    if (user_access('user locations') && $node->type == 'og') {
-      // An OG is displayed as a map of the users who belong to the group.
 
+    // Organic groups. Group nodes are displayed as a map of the users who belong to the group.
+    if (user_access('user locations') && function_exists('og_is_group_type') && og_is_group_type($node->type)) {
       $rolemarkers = variable_get('gmap_role_markers', array());
 
       $map['markers'] = array(); // Reset markers.
-      $result = db_query("
-        SELECT
-          MAX(r.rid) as role, l.eid as uid, l.latitude, l.longitude
-        FROM
-          {og_uid} o
-        INNER JOIN {location} l
-          ON o.uid = l.eid
-        LEFT JOIN {users_roles} r
-          ON l.eid = r.uid
-        WHERE
-          o.nid = %d
-        AND
-          o.is_active >= 1
-        AND
-          l.type = '%s'
-        AND
-          (l.latitude != 0 OR l.longitude != 0)
-        GROUP BY
-          o.uid", $nid, 'user');
 
+      // Location 3.x on Drupal 5.
+      if (function_exists('location_newapi')) {
+        $result = db_query("
+          SELECT
+            MAX(r.rid) as role, i.uid, l.latitude, l.longitude
+          FROM
+            {og_uid} o
+          INNER JOIN {location_instance} i
+            ON i.uid = o.uid
+          INNER JOIN {location} l
+            ON l.lid = i.lid
+          LEFT JOIN {users_roles} r
+            ON i.uid = r.uid
+          WHERE
+            o.nid = %d
+          AND
+            o.is_active >= 1
+          AND
+            (l.latitude != 0 OR l.longitude != 0)
+          GROUP BY
+            o.uid", $nid, 'user');
+      }
+      else {
+        $result = db_query("
+          SELECT
+            MAX(r.rid) as role, l.eid as uid, l.latitude, l.longitude
+          FROM
+            {og_uid} o
+          INNER JOIN {location} l
+            ON o.uid = l.eid
+          LEFT JOIN {users_roles} r
+            ON l.eid = r.uid
+          WHERE
+            o.nid = %d
+          AND
+            o.is_active >= 1
+          AND
+            l.type = '%s'
+          AND
+            (l.latitude != 0 OR l.longitude != 0)
+          GROUP BY
+            o.uid", $nid, 'user');
+      }
       while ($row = db_fetch_object($result)) {
         $newmarker = array();
         $newmarker['rmt'] = $nid .'/'. $row->uid;
@@ -408,7 +432,14 @@ function gmap_location_node_point() {
  * Theme function for displaying the node page.
  */
 function theme_gmap_location_node_page($count, $header, $map, $footer) {
-  $output = "<p>$header</p>\n<p>$map</p>\n<p>$footer</p>";
+  $output = '';
+  if ($header) {
+    $output .= "<p>$header</p>";
+  }
+  $output .= $map;
+  if ($footer) {
+    $output .= "<p>$footer</p>";
+  }
   return $output;
 }
 
@@ -460,7 +491,7 @@ function gmap_location_admin_settings() {
 
   $form['user']['gmap_user_map'] = array(
     '#type' => 'fieldset',
-    '#title' => t('User Map (<em>map/users</em>)'),
+    '#title' => t('User Map (<em>map/user</em>)'),
     '#tree' => TRUE,
   );
   $form['user']['gmap_user_map']['macro'] = array(
@@ -474,7 +505,7 @@ function gmap_location_admin_settings() {
   $form['user']['gmap_user_map']['header'] = array(
     '#type' => 'textarea',
     '#title' => t('Page header'),
-    '#description' => t('Text at the top of the user map.', array('@url' => url('map/users'))),
+    '#description' => t('Text at the top of the user map.', array('@url' => url('map/user'))),
     '#default_value' => $temp['header'],
     '#cols' => 50,
     '#rows' => 6,
@@ -714,6 +745,8 @@ function gmap_location_block_view($nid) {
         $macro = variable_get('gmap_location_block_macro', '[gmap |id=block0 |zoom=10 |width=100% |height=200px |control=Small |type=Map |behavior=+autozoom,+notype] ');
       }
       $map = gmap_parse_macro($macro);
+      $map['latitude'] = $markers[0]['latitude'];
+      $map['longitude'] = $markers[0]['longitude'];
       $map['markers'] = $markers;
       // @@@
       $map['behavior']['autozoom'] = true;
