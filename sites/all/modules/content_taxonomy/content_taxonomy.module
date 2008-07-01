@@ -172,6 +172,7 @@ function content_taxonomy_field_formatter_info() {
  * Implemenation of hook_field_formatter
  */
 function content_taxonomy_field_formatter($field, $item, $formatter, $node) {
+  $terms = array();
   if ($node->in_preview) {
     if (is_array($item)) {
       foreach ($item as $key => $tid) {
@@ -189,7 +190,9 @@ function content_taxonomy_field_formatter($field, $item, $formatter, $node) {
       if (!is_object($term) && $key == 'value' && is_numeric($term) && $term != 0) {
         $term = taxonomy_get_term($term);
       }
-      $output .= l($term->name, taxonomy_term_path($term), array('rel' => 'tag', 'title' => $term->description)) ." <br />";
+      if (!empty($term->name)) {
+        $terms[] = l($term->name, taxonomy_term_path($term), array('rel' => 'tag', 'title' => $term->description));
+      }
     }
   }
   else {
@@ -197,10 +200,12 @@ function content_taxonomy_field_formatter($field, $item, $formatter, $node) {
       if (!is_object($term) && $key == 'value' && is_numeric($term) && $term != 0) {
         $term = taxonomy_get_term($term);
       }
-      $output .= check_plain($term->name) ." <br />";
+      if (!empty($term->name)) {
+        $terms []= check_plain($term->name);
+      }
     }
   }
-  return $output;
+  return implode('<br />', $terms);
 }
 
 /**
