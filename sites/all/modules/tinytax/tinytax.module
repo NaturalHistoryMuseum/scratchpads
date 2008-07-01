@@ -99,7 +99,7 @@ function tinytax_autocomplete($string = ''){
 function _tinytax_get_vocabulary_name($vid){
   // Add in a function here to set the name as a variable
   $vocab = taxonomy_get_vocabulary($vid);
-  return $vocab->name;
+  return check_plain($vocab->name);
 }
 
 /**
@@ -146,7 +146,7 @@ function _tinytax_list_blocks(){
   $vocabularies = array_values(taxonomy_get_vocabularies()); // Paranoia setting in (no need for array_values).
   $blocks = array();
   foreach ($vocabularies as $vocabulary){
-    $blocks['tinytax-'.$vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array('@vocabulary'=>$vocabulary->name));
+    $blocks['tinytax-'.$vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array('@vocabulary'=>check_plain($vocabulary->name)));
   }
   return $blocks;
 }
@@ -169,7 +169,7 @@ function tinytax_taxonomy($op, $type, $vocabulary){
 function _tinytax_view_blocks($delta){
   $delta = substr($delta,8);
   $vocabulary = taxonomy_get_vocabulary($delta);
-  $block['subject'] = t($vocabulary->name);
+  $block['subject'] = check_plain($vocabulary->name);
   // Lets try and create some list!
   $children = array();
   $parents = array();
