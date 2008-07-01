@@ -28,19 +28,24 @@
   overflow: hidden;
 }
 
-#imageContainer, #frameContainer, #videoContainer {
+#imageContainer, #frameContainer, #modalContainer {
   padding: 10px;
 }
 
+#modalContainer {
+  line-height: 1em;
+  overflow: auto;
+}
+
 #loading {
-  position: absolute;
-  top: 40%;
-  left: 45%;
-  *left: 0%;
   height: 25%;
   width: 100%;
   text-align: center;
   line-height: 0;
+  position: absolute;
+  top: 40%;
+  left: 45%;
+  *left: 0%;
 }
 
 #hoverNav {
@@ -124,6 +129,7 @@
   background-color: #000;
   filter:alpha(opacity=60);
   -moz-opacity: 0.6;
+  -khtml-opacity: 0.6;
   opacity: 0.6;
 }
 
@@ -153,8 +159,8 @@
   z-index: 200;
   background: url(../images/close.gif) left no-repeat;
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 0px;
+  right: 0px;
   height: 26px;
   width: 26px;
 }

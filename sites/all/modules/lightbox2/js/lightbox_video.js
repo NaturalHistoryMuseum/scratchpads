@@ -1,4 +1,4 @@
-/* $Id: lightbox_video.js,v 1.1.2.4 2008/05/09 10:47:07 snpower Exp $ */
+/* $Id: lightbox_video.js,v 1.1.2.5 2008/06/20 13:57:18 snpower Exp $ */
 
 /**
  * Lightbox video
@@ -34,13 +34,13 @@ var Lightvideo = {
     }
     else if (href.match(/\.mov/i)) {
       if (navigator.plugins && navigator.plugins.length) {
-        Lightbox.videoHTML ='<object id="qtboxMovie" type="video/quicktime" codebase="http://www.apple.com/qtactivex/qtplugin.cab" data="'+href+'" width="'+Lightbox.videoWidth+'" height="'+Lightbox.videoHeight+'"><param name="src" value="'+href+'" /><param name="scale" value="aspect" /><param name="controller" value="true" /><param name="autoplay" value="true" /><param name="bgcolor" value="#000000" /><param name="enablejavascript" value="true" /></object>';
+        Lightbox.modalHTML ='<object id="qtboxMovie" type="video/quicktime" codebase="http://www.apple.com/qtactivex/qtplugin.cab" data="'+href+'" width="'+Lightbox.modalWidth+'" height="'+Lightbox.modalHeight+'"><param name="src" value="'+href+'" /><param name="scale" value="aspect" /><param name="controller" value="true" /><param name="autoplay" value="true" /><param name="bgcolor" value="#000000" /><param name="enablejavascript" value="true" /></object>';
       } else {
-        Lightbox.videoHTML = '<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" codebase="http://www.apple.com/qtactivex/qtplugin.cab" width="'+Lightbox.videoWidth+'" height="'+Lightbox.videoHeight+'" id="qtboxMovie"><param name="src" value="'+href+'" /><param name="scale" value="aspect" /><param name="controller" value="true" /><param name="autoplay" value="true" /><param name="bgcolor" value="#000000" /><param name="enablejavascript" value="true" /></object>';
+        Lightbox.modalHTML = '<object classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" codebase="http://www.apple.com/qtactivex/qtplugin.cab" width="'+Lightbox.modalWidth+'" height="'+Lightbox.modalHeight+'" id="qtboxMovie"><param name="src" value="'+href+'" /><param name="scale" value="aspect" /><param name="controller" value="true" /><param name="autoplay" value="true" /><param name="bgcolor" value="#000000" /><param name="enablejavascript" value="true" /></object>';
       }
     }
     else if (href.match(/\.wmv/i) || href.match(/\.asx/i)) {
-      Lightbox.videoHTML = '<object NAME="Player" WIDTH="'+Lightbox.videoWidth+'" HEIGHT="'+Lightbox.videoHeight+'" align="left" hspace="0" type="application/x-oleobject" CLASSID="CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6"><param NAME="URL" VALUE="'+href+'"><param><param NAME="AUTOSTART" VALUE="false"></param><param name="showControls" value="true"></param><embed WIDTH="'+Lightbox.videoWidth+'" HEIGHT="'+Lightbox.videoHeight+'" align="left" hspace="0" SRC="'+href+'" TYPE="application/x-oleobject" AUTOSTART="false"></embed></object>';
+      Lightbox.modalHTML = '<object NAME="Player" WIDTH="'+Lightbox.modalWidth+'" HEIGHT="'+Lightbox.modalHeight+'" align="left" hspace="0" type="application/x-oleobject" CLASSID="CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6"><param NAME="URL" VALUE="'+href+'"><param><param NAME="AUTOSTART" VALUE="false"></param><param name="showControls" value="true"></param><embed WIDTH="'+Lightbox.modalWidth+'" HEIGHT="'+Lightbox.modalHeight+'" align="left" hspace="0" SRC="'+href+'" TYPE="application/x-oleobject" AUTOSTART="false"></embed></object>';
     }
     else {
       Lightbox.videoId = href;
@@ -56,12 +56,12 @@ var Lightvideo = {
       flashvars = variables;
     }
 
-    Lightbox.videoHTML = '<embed type="application/x-shockwave-flash" ' +
+    Lightbox.modalHTML = '<embed type="application/x-shockwave-flash" ' +
       'src="' + href + '" ' +
       'id="' + id + '" name="' + id + '" ' + bgcolor + ' ' +
       'quality="high" wmode="transparent" ' + flashvars + ' ' +
-      'height="' + Lightbox.videoHeight + '" ' +
-      'width="' + Lightbox.videoWidth + ' ' +
+      'height="' + Lightbox.modalHeight + '" ' +
+      'width="' + Lightbox.modalWidth + ' ' +
       '">';
   },
 

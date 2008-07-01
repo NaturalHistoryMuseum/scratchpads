@@ -218,6 +218,7 @@ function showLightbox(objLink) {
   objOverlay.style.height = (arrayPageSize[1] + 'px');
   objOverlay.style.display = 'block';
   objOverlay.style.opacity = settings.overlay_opacity;
+  objOverlay.style.backgroundColor = settings.overlay_color;
 
   // preload image
   imgPreload = new Image();

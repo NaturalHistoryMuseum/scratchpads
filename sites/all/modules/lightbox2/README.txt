@@ -9,6 +9,7 @@ CONTENTS OF THIS FILE
     - Slideshow
     - Video
     - HTML Content Support
+    - Inline Content Support
     - Turning the Image Caption into a Link
   * Keyboard Shortcuts
   * Known Issues
@@ -62,9 +63,11 @@ No Grouping
 ===========
 Add rel="lightbox" attribute to any link tag to activate the lightbox.
 For example:
-<a href="images/image-1.jpg" rel="lightbox" title="my caption">image #1</a>
+<a href="images/image-1.jpg" rel="lightbox">image #1</a>
+<a href="images/image-1.jpg" rel="lightbox[][my caption]">image #1</a>
 
-Optional: Use the title attribute if you want to show a caption.
+Optional: To show a caption either use the title attribute or put in the second
+set of [] of the rel attribute.
 
 With Grouping
 ==============
@@ -73,8 +76,8 @@ one but additionally include a group name between square brackets in the rel
 attribute. For example:
 
 <a href="images/image-1.jpg" rel="lightbox[roadtrip]">image #1</a>
-<a href="images/image-2.jpg" rel="lightbox[roadtrip]">image #2</a>
-<a href="images/image-3.jpg" rel="lightbox[roadtrip]">image #3</a>
+<a href="images/image-2.jpg" rel="lightbox[roadtrip][caption 2]">image #2</a>
+<a href="images/image-3.jpg" rel="lightbox[roadtrip][caption 3]">image #3</a>
 
 No limits to the number of image sets per page or how many images are allowed
 in each set. Go nuts!
@@ -96,8 +99,8 @@ difference is that "rel" attribute should be set to "lightshow" instead of
 slideshow by doing:
 
 <a href="images/image-1.jpg" rel="lightshow[roadtrip]">image #1</a>
-<a href="images/image-2.jpg" rel="lightshow[roadtrip]">image #2</a>
-<a href="images/image-3.jpg" rel="lightshow[roadtrip]">image #3</a>
+<a href="images/image-2.jpg" rel="lightshow[roadtrip][caption 2]">image #2</a>
+<a href="images/image-3.jpg" rel="lightshow[roadtrip][caption 3]">image #3</a>
 
 Video
 =====
@@ -105,8 +108,9 @@ It's possible to show video content in the lightbox.  In this case the "rel"
 attribute should be set to "lightvideo".  It's not possible to group
 videos but it is possible to control the size of the lightbox by setting the
 'width' and 'height' properties.  The properties can be configured like
-"lightvideo[width:300px; height: 200px;]".  The properties should all
-be of the format "property: value;" - note the closing semi-colon.  If no
+"lightvideo[width:300px; height: 200px;]" and
+"lightvideo[width:300px; height: 200px;][my caption]".  The properties should
+all be of the format "property: value;" - note the closing semi-colon.  If no
 properties are set, then the default width and height of 400px will be used.
 See below for more detailed examples.
 
@@ -114,10 +118,14 @@ Basic example:
 <a href="http://video.google.com/videoplay?docid=1811233136844420765"
 rel="lightvideo">Google video example - default size</a>
 
+Basic example with caption:
+<a href="http://video.google.com/videoplay?docid=1811233136844420765"
+rel="lightvideo[][my caption]">Google video example - default size</a>
+
 Controlling lightbox size example:
 <a href="http://video.google.com/videoplay?docid=1811233136844420765"
-rel="lightvideo[width:400px; height:300px;]">Google video example - custom
-size</a>
+rel="lightvideo[width:400px; height:300px;][my caption]">Google video example -
+custom size</a>
 
 Supported Video Formats
 asx, wmv, mov and swf videos should all be supported.  A number of video
@@ -129,29 +137,68 @@ HTML Content Support
 ====================
 It's possible to show webpage content in the lightbox, using iframes.  In this
 case the "rel" attribute should be set to "lightframe".  Again it's possible to
-group the images, (e.g. "lightframe[search]") but in addition to that, it's
+group the content, (e.g. "lightframe[search]") but in addition to that, it's
 possible to control some of the iframe properties.  It's possible to set the
 'width', 'height' and 'scrolling' properties of the iframe.  The properties are
 separated from the group name by a '|', for example
-"lightframe[search|width:100px;]".  If no grouping is being used, then the '|'
-is still used and the format would be "lightframe[|width:100px;]".  The
-properties should all be of the format "property: value;" - note the closing
+"lightframe[search|width:100px;]" and
+"lightframe[search|width:100px;][my caption]".  If no grouping is being used,
+then the '|' is still used and the format would be "lightframe[|width:100px;]".
+The properties should all be of the format "property: value;" - note the closing
 semi-colon.  If no iframe properties are set, then the default width and height
 of 400px will be used. See below for more detailed examples.
 
 Basic example:
 <a href="http://www.google.com" rel="lightframe">Search google</a>
 
+Basic example with caption:
+<a href="http://www.google.com" rel="lightframe[][my caption]">Search google</a>
+
 Grouped example:
 <a href="http://www.google.com" rel="lightframe[search]">Search google</a>
-<a href="http://www.yahoo.com" rel="lightframe[search]">Search yahoo</a>
+<a href="http://www.yahoo.com" rel="lightframe[search][Search Yahoo]">Search yahoo</a>
 
 Controlling iframe property example:
 <a href="http://www.google.com" rel="lightframe[|width:400px; height:300px; scrolling: auto;]">Search google</a>
 
 Controlling iframe property when grouped example:
-<a href="http://www.google.com" rel="lightframe[search|width:400px; height:300px; scrolling: auto;]">Search google</a>
+<a href="http://www.google.com" rel="lightframe[search|width:400px; height:300px; scrolling: auto;][Search Google]">Search google</a>
 <a href="http://www.yahoo.com" rel="lightframe[search|width:400px; height:300px;]">Search yahoo</a>
+<a href="http://www.yahoo.com" rel="lightframe[search|width:400px; height:300px;][Search Yahoo]">Search yahoo</a>
+
+Inline Content Support
+=======================
+It's possible to show HTML snippets in the lightbox, that is on the same domain.
+In this case the "rel" attribute should be set to "lightmodal".  Again it's
+possible to group the content, (e.g. "lightmodal[search]") but in addition to
+that, it's possible to control some of the inline / modal properties.  It's
+possible to set the 'width', 'height' and 'scrolling' properties of the inline
+content.  The properties are separated from the group name by a '|', for example
+"lightmodal[search|width:100px;]" and
+"lightmodal[search|width:100px;][my caption]".  If no grouping is being used,
+then the '|' is still used and the format would be "lightmodal[|width:100px;]".
+The properties should all be of the format "property: value;" - note the closing
+semi-colon.  If no properties are set, then the default width and height of
+400px will be used. See below for more detailed examples.
+
+Basic example:
+<a href="search.php" rel="lightmodal">Search</a>
+
+Basic example with caption:
+<a href="search.php" rel="lightmodal[][my caption]">Search</a>
+
+Grouped example:
+<a href="search.php" rel="lightmodal[search]">Search</a>
+<a href="search.php?status=1" rel="lightmodal[search][published]">Search published content</a>
+
+Controlling modal property example:
+<a href="search.php" rel="lightmodal[|width:400px; height:300px; scrolling: auto;]">Search</a>
+
+Controlling modal property when grouped example:
+<a href="search.php" rel="lightmodal[search|width:400px; height:300px; scrolling: auto;]">Search</a>
+<a href="search.php?status=1" rel="lightmodal[search|width:400px; height:300px;][Search published]">Search published content</a>
+<a href="search.php?status=0" rel="lightmodal[search|width:400px; height:300px;][Search Unpublished]">Search unpublished content</a>
+
 
 
 Turning the Image Caption into a Link
@@ -159,8 +206,10 @@ Turning the Image Caption into a Link
 If you wish to turn the caption into a link, format your caption in the
 following way:
 
-<a href="images/image-1.jpg" rel="lightbox" title='<a href="http://www.yourlink.com">Clicky Visit Link</a>'>image #1</a>
+<a href="images/image-1.jpg" rel="lightbox[][&lt;a href=\"http://www.yourlink.com\"&gt;Clicky Visit Link&lt;/a&gt;'>image #1</a>
 
+Note, the < and > characters have been changed to their HTML entities, and the "
+have been escaped.
 
 KEYBOARD SHORTCUTS
 ------------------
