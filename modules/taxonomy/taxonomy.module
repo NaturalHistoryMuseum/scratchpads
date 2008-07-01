@@ -1237,7 +1237,7 @@ function theme_taxonomy_term_select($element) {
  * @return
  *   A resource identifier pointing to the query results.
  */
-function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC ') {
+function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC') {
   if(function_exists('leftandright_select_nodes')){
     return leftandright_select_nodes($tids, $operator, $depth, $pager, $order);
   }
