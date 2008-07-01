@@ -59,7 +59,7 @@ function batax_form_alter($form_id, &$form){
               $term = taxonomy_get_term($tid);
               $term_names[] = $term->name;
             }
-            $vocabulary_field['#default_value'] = implode(", ",$term_names);
+            $vocabulary_field['#default_value'] = check_plain(implode(", ",$term_names));
             // We can just use the autocomplete provided by the taxonomy module - it bloody works!
             $vocabulary_field['#autocomplete_path'] = 'taxonomy/autocomplete/'.$vocabulary;
             $form['taxonomy'][$vocabulary.'-new'] = $vocabulary_field;
