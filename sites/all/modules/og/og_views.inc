@@ -1,14 +1,17 @@
 <?php
-// $Id: og_views.inc 525 2008-06-05 12:10:19Z simor $
+// $Id: og_views.inc,v 1.12.2.54 2008/05/08 19:49:26 weitzman Exp $
 /**
  * Implementation of the hook_views_tables()
  */
  
 function og_views_tables() {
-  $types = variable_get('og_node_types', array('og'));
   $languages = module_invoke('locale', 'supported_languages', FALSE, TRUE);
-  foreach ($types as $type) {
-    $type_options[$type] = node_get_types('name', $type);
+  $group_post_type_options = $group_type_options = array();
+  foreach (og_get_types('group') as $type) {
+    $group_type_options[$type] = node_get_types('name', $type);
+  }
+  foreach (og_get_types('group_post') as $type) {
+    $group_post_type_options[$type] = node_get_types('name', $type);
   }
   
   return array(
@@ -28,9 +31,9 @@ function og_views_tables() {
           'name' => t('OG: Group: Description'),
         ),
         'count' => array(
-          'name' => t('OG: Group: Subscriber Count'),
+          'name' => t('OG: Group: Members Count'),
           'handler' => 'og_handler_field_count',
-          'help' => t('Number of subscribers for a group. Excludes subscriptions which are pending approval.'),
+          'help' => t('Number of members for a group. Excludes memberships which are pending approval.'),
           'sortable' => FALSE,
           'notafield' => TRUE,
         ),
@@ -42,7 +45,7 @@ function og_views_tables() {
           'help' => t('Number of published posts in a group. Can be restricted by node type using the <em>Option</em> dropdown.'),
           'option' => array(
             '#type' => 'select',
-            '#options' => array_merge(array('all' => t('All')), node_get_types('names')),
+            '#options' => array_merge(array('all' => t('All')), $group_post_type_options),
             '#default_value' => 'all',
             // View will not save with #multiple, for some reason. Help.
             // '#multiple' => TRUE,
@@ -66,20 +69,20 @@ function og_views_tables() {
           'name' => t('OG: Group: Selective'),
         ),
         'private' => array(
-          'name' => t('OG: Group: Selective'),
+          'name' => t('OG: Group: Private'),
         ),
         'subscribe' => array(
-          'name' => t('OG: Group: Subscribe Link'),
+          'name' => t('OG: Group: Join Link'),
           'handler' => 'og_handler_field_subscribe',
           'addlfields' => array('selective'),
           'sortable' => FALSE,
           'notafield' => TRUE,
-          'help' => t('Displays a links for subscribing to a group when a user is not already a member.'),
+          'help' => t('Displays a links for joining a group when a user is not already a member.'),
         ),
         'notification' => array(
           'name' => t('OG: Group: Notification'),
           'handler' => 'og_handler_field_yesempty',
-          'help' => t('Displays <em>yes</em> if group automatically sends email notifications to subscribers'),
+          'help' => t('Displays <em>yes</em> if group automatically sends email notifications to members'),
         ),
         'language' => array(
           'name' => t('OG: Group: Language'),
@@ -109,7 +112,7 @@ function og_views_tables() {
           'operator' => 'views_handler_operator_or',
           'list-type' => 'list',
           'list' => array(OG_OPEN => t('Open'), OG_MODERATED => t('Moderated'), OG_INVITE_ONLY => t('Invite Only'), OG_CLOSED => t('Closed')),
-          'help' => t('The group preference which determines how subscriptions requests are managed (moderated, invite only, etc.).'),
+          'help' => t('The group preference which determines how membership requests are managed (moderated, invite only, etc.).'),
         ),
         'language' => array(
           'name' => t('OG: Group: Language'),
@@ -153,7 +156,7 @@ function og_views_tables() {
         ),
         'gtype' => array(
           'name' => t('OG: Post in specified group type'),
-          'list' => variable_get('og_node_types', array('og')),
+          'list' => $group_type_options,
           'list-type' => 'list',
           'operator' => 'views_handler_operator_or',
           'value-type' => 'array',
@@ -226,16 +229,16 @@ function og_views_tables() {
           'name' => t('OG: Subscription email'),
           'handler' => 'og_handler_field_yesempty',
           'sortable' => false,
-          'help' => t('Does subscriber receive email notifications for a group.'),
+          'help' => t('Does member receive email notifications for a group.'),
         ),
         'managelink' => array(
-          'name' => t('OG: Manage subscription link'),
+          'name' => t('OG: Manage membership link'),
           'handler' => 'og_handler_field_managelink',
           'sortable' => FALSE,
           'notafield' => TRUE,
         ),
         'is_admin' => array(
-          'name' => t('OG: Is subscriber an admin in a group'),
+          'name' => t('OG: Is member an admin in a group'),
           'handler' => 'og_handler_field_yesempty',
           'sortable' => FALSE,
         ),
@@ -243,11 +246,11 @@ function og_views_tables() {
       'filters' => array(
         'currentuidsimple' => array(
           'field' => 'uid',
-          'name' => t('OG: Group in User Subbed Groups'),
+          'name' => t('OG: Group in User\'s Groups'),
           'operator' => 'views_handler_operator_eqneq',
           'list' => 'views_handler_filter_usercurrent',
           'list-type' => 'select',
-          'help' => t('Groups are filtered to where current user is a member .'),
+          'help' => t('Groups are filtered to where current user is a member.'),
         ),
       ),            
     ),
@@ -293,7 +296,7 @@ function og_views_tables() {
         'og_type_selector' => array(
           'field' => 'type',
           'name' => t('OG: node type (selector)'),
-          'list' => $type_options,
+          'list' => $group_type_options,
           'list-type' => 'list',
           'operator' => 'views_handler_operator_or',
           'value-type' => 'array',
@@ -327,7 +330,7 @@ function og_views_arguments() {
         '#type' => 'select',
         '#options' => 'views_handler_operator_like',
       ),
-      'help' => t('Filter for the one or more organic groups. Groups should be specified by name, or part of a name. Use the <em>Option</e> field to specify how to match the supplied name.'),
+      'help' => t('Filter for the one or more organic groups. Groups should be specified by name, or part of a name. Use the <em>Option</em> field to specify how to match the supplied name.'),
       )
     );
   return $args;
@@ -399,7 +402,7 @@ function og_handler_argument_group_name_like($op, &$query, $argtype, $arg = '') 
 // helper function. restrict to unaffiliated posts.
 // function og_handler_unaffiliated(&$query) {
 //   list($types, $in) = og_get_sql_args();
-//   $query->add_where("node.type NOT IN ($in)", $types);
+//   $query->add_where("node.type NOT $in", $types);
 //   
 //   $query->ensure_table('og_ancestry');
 //   $query->add_where('og_ancestry.group_nid IS NULL');
@@ -474,7 +477,7 @@ function og_views_default_views() {
     array (
       'tablename' => 'node',
       'field' => 'title',
-      'label' => 'Group',
+      'label' => 'Title',
       'handler' => 'views_handler_field_nodelink_with_mark',
       'sortable' => '1',
       'options' => 'link',
@@ -519,7 +522,7 @@ function og_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(og_node_data, node, users, og_uid_node);
+  $view->requires = array('og_node_data', 'node', 'users', 'og_uid_node');
   $views[$view->name] = $view;
 
 // OG_UNREAD VIEW
@@ -578,7 +581,7 @@ function og_views_default_views() {
     array (
       'tablename' => 'node',
       'field' => 'title',
-      'label' => 'Group',
+      'label' => 'Title',
       'handler' => 'views_handler_field_nodelink_with_mark',
       'sortable' => '1',
       'options' => 'link',
@@ -632,7 +635,7 @@ function og_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(og_node_data, node, users, node_comment_statistics, og_uid_node, history);
+  $view->requires = array('og_node_data', 'node', 'users', 'node_comment_statistics', 'og_uid_node', 'history');
   $views[$view->name] = $view;
 
   
@@ -641,6 +644,7 @@ function og_views_default_views() {
   $view = new stdClass();
   $view->name = 'og_ghp_ron';
   $view->description = 'OG: Group home page - River of news. Default';
+  $view->page = TRUE;
   $view->page_type = 'teaser';
   $view->access = array ();
   $view->view_args_php = '';
@@ -759,7 +763,7 @@ function og_views_default_views() {
     array (
       'tablename' => 'og',
       'field' => 'count',
-      'label' => 'Subscribers',
+      'label' => 'Members',
     ),
     array (
       'tablename' => 'og_uid',
@@ -797,7 +801,7 @@ function og_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(node, users, og, og_uid, og_views);
+  $view->requires = array('node', 'users', 'og', 'og_uid', 'og_views');
   $views[$view->name] = $view;
 
   
@@ -858,7 +862,7 @@ function og_views_default_views() {
     array (
       'tablename' => 'og',
       'field' => 'count',
-      'label' => 'Subscribers',
+      'label' => 'Members',
     ),
     array (
       'tablename' => 'og',
@@ -868,7 +872,7 @@ function og_views_default_views() {
     array (
       'tablename' => 'og',
       'field' => 'subscribe',
-      'label' => 'Subscribe',
+      'label' => 'Join',
     ),
   );
   $view->filter = array (
@@ -912,7 +916,7 @@ function og_views_default_views() {
       'single' => '0',
     ),
   );
-  $view->requires = array(node, users, og, og_views);
+  $view->requires = array('node', 'users', 'og', 'og_views');
   $views[$view->name] = $view;
   
   
@@ -1017,7 +1021,7 @@ function og_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(node_comment_statistics, node, users, og_node_data);
+  $view->requires = array('node_comment_statistics', 'node', 'users', 'og_node_data');
   $views[$view->name] = $view;
 
   
@@ -1087,7 +1091,7 @@ function og_views_default_views() {
       'single' => '1',
     ),
   );
-  $view->requires = array(node, temp_search_results);
+  $view->requires = array('node', 'temp_search_results');
   $views[$view->name] = $view;
   
   // group comments_recent. add a filter to comments_recent from views_comment.inc. also remove a Field: timestamp
@@ -1160,9 +1164,90 @@ function og_views_default_views() {
   );
   $view->exposed_filter = array (
   );
-  $view->requires = array(comments, node_comment_statistics, og_ancestry);
+  $view->requires = array('comments', 'node_comment_statistics', 'og_ancestry');
   $views[$view->name] = $view;
-    
+  
+  // og_recent_type_term. used for og_panels
+  $view = new stdClass();
+  $view->name = 'og_recent_type_term';
+  $view->description = 'Recent posts for current term filtered by node type and/or taxonomy term';
+  $view->access = array (
+);
+  $view->view_args_php = '';
+  $view->page = TRUE;
+  $view->page_title = '';
+  $view->page_header = '';
+  $view->page_header_format = '1';
+  $view->page_footer = '';
+  $view->page_footer_format = '1';
+  $view->page_empty = '';
+  $view->page_empty_format = '1';
+  $view->page_type = 'list';
+  $view->url = '';
+  $view->use_pager = TRUE;
+  $view->nodes_per_page = '10';
+  $view->sort = array (
+    array (
+      'tablename' => 'node',
+      'field' => 'sticky',
+      'sortorder' => 'DESC',
+      'options' => '',
+    ),
+    array (
+      'tablename' => 'node',
+      'field' => 'created',
+      'sortorder' => 'DESC',
+      'options' => 'normal',
+    ),
+  );
+  $view->argument = array (
+    array (
+      'type' => 'nodetype',
+      'argdefault' => '2',
+      'title' => '%1',
+      'options' => '',
+      'wildcard' => '*',
+      'wildcard_substitution' => 'all',
+    ),
+    array (
+      'type' => 'taxletter',
+      'argdefault' => '2',
+      'title' => '%1 - %2',
+      'options' => '',
+      'wildcard' => '',
+      'wildcard_substitution' => '',
+    ),
+  );
+  $view->field = array (
+    array (
+      'tablename' => 'node',
+      'field' => 'title',
+      'label' => '',
+      'handler' => 'views_handler_field_nodelink_with_mark',
+      'options' => 'link',
+    ),
+  );
+  $view->filter = array (
+    array (
+      'tablename' => 'node',
+      'field' => 'status',
+      'operator' => '=',
+      'options' => '',
+      'value' => '1',
+    ),
+    array (
+      'tablename' => 'og_ancestry',
+      'field' => 'picg',
+      'operator' => '=',
+      'options' => '',
+      'value' => '***CURRENT_GID***',
+    ),
+  );
+  $view->exposed_filter = array (
+  );
+  $view->requires = array('node', 'og_ancestry');
+  $views[$view->name] = $view;
+      
   return $views;
 }
 
@@ -1195,7 +1280,8 @@ function og_handler_post_count($fieldinfo, $fielddata, $value, $data) {
     $where = " AND n.type = '%s'";
   };
   // the $where at end is harmless even when not used.
-  $cnt = db_result(db_query(db_rewrite_sql("SELECT COUNT(*) FROM {node} n INNER JOIN {og_ancestry} oga ON n.nid = oga.nid WHERE n.status = 1 AND oga.group_nid = %d $where"), $data->nid, $fielddata['options'] ));
+  // we specify COUNT(n.nid) instead of COUNT(*) so that dupe nids are omitted.
+  $cnt = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {og_ancestry} oga ON n.nid = oga.nid WHERE n.status = 1 AND oga.group_nid = %d $where"), $data->nid, $fielddata['options'] ));
   return $cnt;
 }
 
@@ -1205,7 +1291,7 @@ function og_handler_post_count($fieldinfo, $fielddata, $value, $data) {
 function og_handler_post_count_new($fieldinfo, $fielddata, $value, $data) {
   global $user;
 
-  $cnt = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {node} n INNER JOIN {og_ancestry} oga ON n.nid = oga.nid LEFT JOIN history h ON n.nid=h.nid AND h.uid = %d WHERE n.status = 1 AND oga.group_nid = %d AND h.timestamp IS NULL AND n.created > %d'), $user->uid, $data->nid, NODE_NEW_LIMIT));
+  $cnt = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {node} n INNER JOIN {og_ancestry} oga ON n.nid = oga.nid LEFT JOIN {history} h ON n.nid=h.nid AND h.uid = %d WHERE n.status = 1 AND oga.group_nid = %d AND h.timestamp IS NULL AND n.created > %d'), $user->uid, $data->nid, NODE_NEW_LIMIT));
   if ($cnt) {
     if ($fielddata['options'] == 'normal') {
       return $cnt;
@@ -1228,7 +1314,7 @@ function og_handler_field_subscribe($fieldinfo, $fielddata, $value, $data) {
       case OG_INVITE_ONLY:
         return '<em>'. t('Invite only'). '</em>';
       default:
-        return l(t('subscribe'), "og/subscribe/$data->nid", array('rel' => 'nofollow'), drupal_get_destination());  
+        return og_subscribe_link($data);
     }
   }
 }
@@ -1255,7 +1341,7 @@ function og_handler_field_nodelink($fieldinfo, $fielddata, $value, $data) {
 }
 
 function og_handler_field_managelink($fieldinfo, $fielddata, $value, $data) {
-  return l(t('my subscription'), "og/manage/$data->nid", NULL, drupal_get_destination());
+  return l(t('my membership'), "og/manage/$data->nid", NULL, drupal_get_destination());
 }
 
 function og_handler_field_yesempty($fieldinfo, $fielddata, $value, $data) {
@@ -1268,7 +1354,7 @@ function og_handler_filter_gid($op, $filter, $filterinfo, &$query) {
 
 function og_handler_filter_og_type($op, $filter, $filterinfo, &$query) {
   list($types, $in) = og_get_sql_args();
-  $query->add_where("node.type IN ($in)", $types);
+  $query->add_where("node.type $in", $types);
 }
 
 function og_handler_filter_post_og_type($op, $filter, $filterinfo, &$query) {
