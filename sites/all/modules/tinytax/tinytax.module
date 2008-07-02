@@ -300,16 +300,28 @@ function _theme_tinytax_term_list_link($term, $vid){
       $class .= 'used';      
     }
   }
-  $return_string = '">'.
-  l(
-    $term->name,
-    'taxonomy/term/'.$term->tid,
-    array(
-      'class'=>$class,
-      'title'=> t('Click to see the descendants of this name'),
-      'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
-    )
-  );
+  $return_string = '">';
+  if (substr($term->tid,0,3)!='vid'){
+    $return_string .= l(
+      $term->name,
+      'taxonomy/term/'.$term->tid,
+      array(
+        'class'=>$class,
+        'title'=> t('Click to see the descendants of this name'),
+        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
+      )
+    );
+  } else {
+    $return_string .= l(
+      $term->name,
+      '',
+      array(
+        'class'=>$class,
+        'title'=> t('Click to see the descendants of this name'),
+        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
+      )
+    );
+  }
   $num_children = 0;
   if(variable_get('tinytax-'.$vid.'-showchildren',1)){
     $num_children = count(taxonomy_get_children($term->tid, $vid));
