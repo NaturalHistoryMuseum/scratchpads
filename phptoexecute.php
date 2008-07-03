@@ -398,7 +398,7 @@ while($row = db_fetch_array($results)){
   echo $row['realm']." ".$row['grant_view']." ".$row['grant_update']." ".$row['grant_delete']."\n";
 }*/
 // Better way of doing above - count rows in "content_access" table
-/*$results = db_query("SELECT nid FROM {content_access}");
+/* $results = db_query("SELECT nid FROM {content_access}");
 while($row = db_fetch_array($results)){
   // Ignore 785 (Scratchpads taskguide).
   if($row['nid'] != 785){
@@ -406,9 +406,13 @@ while($row = db_fetch_array($results)){
     echo $row['nid'].": ".$node->title."\n";
   }
 }*/
+$results = db_query("SELECT DISTINCT settings FROM {content_access} WHERE nid != 785");
+while($row = db_fetch_array($results)){
+  print_r(unserialize($row['settings']));
+}
 
 // Get a list of users from MNHN
-$results = db_query("SELECT name, mail FROM users WHERE mail LIKE '%%@mnhn.fr%%'");
+/* $results = db_query("SELECT name, mail FROM users WHERE mail LIKE '%%@mnhn.fr%%'");
 while($row = db_fetch_array($results)){
   print_r($row); 
-}
+} */
