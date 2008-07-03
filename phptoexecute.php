@@ -405,14 +405,25 @@ while($row = db_fetch_array($results)){
     $node = node_load($row['nid']);
     echo $row['nid'].": ".$node->title."\n";
   }
-}*/
+}
 $results = db_query("SELECT DISTINCT settings FROM {content_access} WHERE nid != 785");
 while($row = db_fetch_array($results)){
   print_r(unserialize($row['settings']));
-}
+}*/
 
 // Get a list of users from MNHN
 /* $results = db_query("SELECT name, mail FROM users WHERE mail LIKE '%%@mnhn.fr%%'");
 while($row = db_fetch_array($results)){
   print_r($row); 
 } */
+
+// Which content has <script> tags in it
+$results = db_query("SELECT nid, title FROM {node_revisions} WHERE LOWER(body) LIKE '%<script%'");
+while($row = db_fetch_array($results)){
+  echo $row['nid'].": ".$row['title']."\n";
+}
+// And which comments
+$results = db_query("SELECT nid, subject FROM {comments} WHERE LOWER(comment) LIKE '%<script%'");
+while($row = db_fetch_array($results)){
+  echo $row['nid']." comment: ".$row['title']."\n";
+}
