@@ -418,7 +418,7 @@ while($row = db_fetch_array($results)){
 } */
 
 // Which content has <script> tags in it
-$results = db_query("SELECT nid, title FROM {node_revisions} WHERE LOWER(body) LIKE '%<script%'");
+$results = db_query("SELECT nid, title FROM {node_revisions} r,{node} n WHERE LOWER(body) LIKE '%<script%' AND n.nid=r.nid AND n.vid=r.vid");
 while($row = db_fetch_array($results)){
   echo $row['nid'].": ".$row['title']."\n";
 }
