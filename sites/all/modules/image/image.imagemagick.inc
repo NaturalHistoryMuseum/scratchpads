@@ -123,6 +123,11 @@ function image_imagemagick_crop($source, $dest, $x, $y, $width, $height) {
  * Calls the convert executable with the specified filter.
  */
 function _image_imagemagick_convert($source, $dest, $args) {
+  $dest_orig = $dest;
+  if(isset($args['convertto'])){
+    $dest = $args['convertto'].':'.$dest;
+    unset($args['convertto']);
+  }
   $command = implode(' ', array(
     preg_replace("/[^A-Za-z0-9\!\.\-\+\_\/\040]/", '', implode(' ', $args)),
     escapeshellarg($source),
@@ -132,7 +137,7 @@ function _image_imagemagick_convert($source, $dest, $args) {
   if (0 != _image_imagemagick_convert_exec($command, $output, $errors)) {
     return FALSE;
   }
-  return file_exists($dest);
+  return file_exists($dest_orig);
 }
 
 function _image_imagemagick_convert_exec($command_args, &$output, &$errors) {
@@ -147,7 +152,7 @@ function _image_imagemagick_convert_exec($command_args, &$output, &$errors) {
     // http://us3.php.net/manual/en/function.exec.php#56599
     // Use /D to run the command from PHP's current working directory so the
     // file paths don't have to be absolute.
-    $convert_path = 'start "window title" /D'. escapeshellarg(getcwd()) .' /B '. escapeshellarg($convert_path);
+    $convert_path = 'start "window title" /D'. getcwd() .' /b '. escapeshellarg($convert_path);
   }
 
   $descriptors = array(
