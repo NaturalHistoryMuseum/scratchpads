@@ -86,7 +86,7 @@ function taxtab_create_form(){
  */
 function taxtab_process(){
   if(arg(2)!=''){
-    $searchterm = arg(2);
+    $searchterm = addslashes(str_replace("_"," ",arg(2)));
   } else {
     $searchterm = addslashes($_POST['keys']);// FIXME, not so keen on this.
   }
