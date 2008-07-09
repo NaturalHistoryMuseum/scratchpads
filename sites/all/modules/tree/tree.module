@@ -111,11 +111,11 @@ function tree_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   drupal_add_css(drupal_get_path('module','tree').'/tree.css','module','screen');
   drupal_add_js(drupal_get_path('module','tree').'/tree.js');
-  drupal_add_js(drupal_get_path('module','tree').'/tree.js');
   $node->content['tree']['#value'] = '<div class="tree-tree"><div style="position:relative;height:425px;width:425px;">
         <!-- enclose the widget -->
-        <script type="text/javascript" src="/'.file_directory_path().'/tree-'.$node->nid.'/tree.widget.js"></script>
+        <script type="text/javascript" src="'.base_path().file_directory_path().'/tree-'.$node->nid.'/tree.widget.js"></script>
 		<script type="text/javascript">
+		  taxtabprocess = "'.url('taxtab/process').'";
 			tvwAdjustViewer();
 		</script>
     </div></div>';
