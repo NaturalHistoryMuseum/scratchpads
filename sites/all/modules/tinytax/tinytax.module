@@ -308,7 +308,7 @@ function _theme_tinytax_term_list_link($term, $vid){
       array(
         'class'=>$class,
         'title'=> t('Click to see the descendants of this name'),
-        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
+        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;"
       )
     );
   } else {
@@ -318,7 +318,7 @@ function _theme_tinytax_term_list_link($term, $vid){
       array(
         'class'=>$class,
         'title'=> t('Click to see the descendants of this name'),
-        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid,null,null,true)."');return false;"
+        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;"
       )
     );
   }
