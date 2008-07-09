@@ -85,7 +85,11 @@ function taxtab_create_form(){
  * Implementation of hook_form_validate()
  */
 function taxtab_process(){
-  $searchterm = addslashes($_POST['keys']);// FIXME, not so keen on this.
+  if(arg(2)!=''){
+    $searchterm = arg(2);
+  } else {
+    $searchterm = addslashes($_POST['keys']);// FIXME, not so keen on this.
+  }
   $term = taxonomy_get_term_by_name($searchterm);
   if (count($term)>0){
     drupal_goto('taxonomy/term/'.$term[0]->tid);
