@@ -83,6 +83,62 @@ function nhm_panels_block($op = 'list', $delta = 0, $edit = array()) {
  * implementation of views_default_views
  */
 function nhm_panels_views_default_views(){
+  
+		//tree panel
+
+	  $view = new stdClass();
+	  $view->name = 'tree';
+	  $view->description = '';
+	  $view->access = array (
+	);
+	  $view->view_args_php = '';
+	  $view->page = TRUE;
+	  $view->page_title = 'Tree';
+	  $view->page_header = '';
+	  $view->page_header_format = '1';
+	  $view->page_footer = '';
+	  $view->page_footer_format = '1';
+	  $view->page_empty = '';
+	  $view->page_empty_format = '1';
+	  $view->page_type = 'control_list';
+	  $view->url = '';
+	  $view->use_pager = FALSE;
+	  $view->nodes_per_page = '10';
+	  $view->sort = array (
+	  );
+	  $view->argument = array (
+	    array (
+	      'type' => 'taxid',
+	      'argdefault' => '7',
+	      'title' => '',
+	      'options' => '',
+	      'wildcard' => '',
+	      'wildcard_substitution' => '',
+	    ),
+	  );
+	  $view->field = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'body',
+	      'label' => '',
+	      'handler' => 'views_handler_field_body',
+	    ),
+	  );
+	  $view->filter = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'type',
+	      'operator' => 'OR',
+	      'options' => '',
+	      'value' => array (
+	  0 => 'tree',
+	),
+	    ),
+	  );
+	  $view->exposed_filter = array (
+	  );
+	  $view->requires = array(node);
+	  $views[$view->name] = $view;
 
 		//description panel
 
