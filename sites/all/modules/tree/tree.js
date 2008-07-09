@@ -14,7 +14,8 @@ var floatThumbHeight = 0.0;
 // Determine browser and version.
 
 function tvwDoTaxonDisplay(taxon){
-  location.href='/taxtab/process'.taxon;
+  alert('here');return false;
+  location.href='/taxtab/process/'.taxon;
 }
 
 function Browser() {
