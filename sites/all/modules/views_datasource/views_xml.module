@@ -1,0 +1,205 @@
+<?php
+//$Id: views_xml.module,v 1.1.2.1 2008/06/02 20:25:26 allisterbeharry Exp $
+/**
+ * @file
+ * views_xml.module - provides Views plugin for rendering node content as XML.
+ */
+/**
+ *  Implementation of hook_views_style_plugins
+ */
+function views_xml_views_style_plugins() {
+  return array(
+    'views_xml_raw' => array(
+      'name' => t('Views XML: Raw XML data document'),
+      'theme' => 'views_xml_raw',
+      'needs_table_header' => TRUE,
+      'needs_fields' => TRUE,
+      'even_empty' => TRUE,
+    ),
+    'views_xml_opml' => array(
+      'name' => t('Views XML: OPML XML data document'),
+      'theme' => 'views_xml_opml',
+      'needs_table_header' => TRUE,
+      'needs_fields' => TRUE,
+      'even_empty' => TRUE,
+    ),
+  );
+}
+  
+/*
+ * Implementation of hook_views_arguments to add the XML
+ * and OPML argument selectors.
+ * @returns array of view arguments
+ */ 
+function views_xml_views_arguments() {
+  $arguments = array(
+    'xml_raw' => array(
+      'name' => t('Views XML: raw XML data document selector'),
+      'handler' => 'views_xml_views_handler',
+      'option' => 'string',
+      'help' => t('This argument specifies a Raw XML data document selector; it will only provide a method for rendering the current view as raw XML.'),
+    ),
+    'xml_opml' => array(
+      'name' => t('Views XML: OPML XML data document selector'),
+      'handler' => 'views_xml_views_handler',
+      'option' => 'string',
+      'help' => t('This argument specifies a OPML XML data document selector; it will only provide a method for rendering the current view as OPML.'),
+    ),
+  );
+  return $arguments;
+}
+
+/**
+ * handler for our own raw-XML or OPML or structured-XML argument handler
+ */
+function views_xml_views_handler($op, &$query, $argtype, $arg='') {
+  if ($op == 'filter') {
+    views_xml_views_argument('argument', $GLOBALS['current_view'], $arg);
+  }
+}
+
+/**
+ * argument hook that will display the XML document or display export icons.
+ */
+function views_xml_views_argument($op, &$view, $arg) {
+  if ($op == 'argument' && ($arg == 'xml_raw' || $arg == 'xml_opml')) {
+    $view->page_type = 'views_'. $arg;
+  }
+  else if ($op == 'post_view' && $view->build_type != 'block') {
+    $args = views_post_view_make_args($view, $arg, $arg);
+    $url = views_get_url($view, $args);
+    $title = views_get_title($view, 'page', $args);
+    $links = array();
+    
+      if ($arg == 'xml_opml') {
+        if (($image = theme('image', drupal_get_path('module', 'views_xml') .'/opml32x32.png', t('OPML'), t('Show @title as OPML.', array('@title' => $title))))) {
+          $links[] = l($image, $url, array('class' => 'xml-icon'), $url_filter, NULL, FALSE, TRUE);
+        return implode('&nbsp;&nbsp;', $links);
+        }
+      }
+      else if ($arg == 'xml_raw') {
+        if (($image = theme('image', drupal_get_path('module', 'views_xml') .'/xml32x36.png', t('Raw XML'), t('Show @title as raw XML', array('@title' => $title))))) {
+          $links[] = l($image, $url, array('class' => 'xml-icon'), $url_filter, NULL, FALSE, TRUE);
+        return implode('&nbsp;&nbsp;', $links);
+        }
+      }
+      else if ($arg == 'xml_structured') {
+        if (($image = theme('image', drupal_get_path('module', 'views_xml') .'/xml64x64.png', t('Structured XML'), t('Show @title as structured XML', array('@title' => $title))))) {
+          $links[] = l($image, $url, array('class' => 'xml-icon'), $url_filter, NULL, FALSE, TRUE);
+        return implode('&nbsp;&nbsp;', $links);
+        }   
+      }
+    }
+    
+}
+
+/*
+ * describes how to theme a raw XML view
+ */
+function theme_views_xml_raw($view, $nodes, $type) {
+  views_xml_raw_render($view->vid, $nodes, $type);
+}
+
+/*
+ * describes how to theme a OPML view
+ */
+function theme_views_xml_opml($view, $nodes, $type) {
+  views_xml_opml_render($view->vid, $nodes, $type);
+}
+
+/**
+ * post view to display the render icons
+ */
+function views_xml_views_post_view($view, $items, $output) {
+  $links = '';
+  foreach ($view->argument as $id => $argument) {
+    if ($argument['type'] == 'xml_raw' || $argument['type'] == 'xml_opml') {
+      $links .= views_xml_views_argument('post_view', $view, $argument['type'], '');
+    }
+  }
+  return $links;
+}
+ 
+function views_xml_raw_render($vid, $nodes, $type) {
+	$view = views_load_view($vid);
+  $result = views_build_view('items', $view);
+  $fields = _views_get_fields();
+  
+  $xw = new xmlWriter();
+  $xw->openMemory();
+  $xw->startDocument('1.0','UTF-8');
+  $xw->startElement('nodes'); 
+  foreach ($nodes as $node) {
+    $xw->startElement ('node');
+    foreach ($view->field as $field) {
+      if ($fields[$field['id']]['visible'] !== false) {
+        $label = $field['label'] ? $field['label'] : $fields[$field['fullname']]['name'];
+        $label = preg_replace('/\W/', '', $label); // atrip any non-word character
+        //print_r($label);exit;
+    	  $value = $field;
+        $value = views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view);
+        $value = preg_replace('/<.*?>/', '', $value); // strip html tags
+        $value = str_replace(array("\r", "\n", ','), ' ', $value); // strip line breaks and commas
+        $value = str_replace('"', '""', $value); // escape " characters
+        $value = decode_entities($value);
+        $xw->writeAttribute($label, $value);
+      }
+    }
+    $xw->endElement(); //node
+  }
+  $xw->endElement(); //nodes
+  $xw->endDocument;
+  
+  drupal_set_header('Content-Type: text/xml');
+  //drupal_set_header('Content-Disposition: attachment; filename="view-'. $view->name .'.csv"');
+  print $xw->outputMemory(true); 
+  module_invoke_all('exit');
+  exit;
+}
+
+function views_xml_opml_render($vid, $nodes, $type) {
+	global $user;
+  $view = views_load_view($vid);
+  $result = views_build_view('items', $view);
+  $fields = _views_get_fields();
+  
+  $xw = new xmlWriter();
+  $xw->openMemory();
+  $xw->startDocument('1.0','UTF-8');
+  $xw->startElement('opml');$xw->writeAttribute('version', '1.0');
+  $xw->startElement('head'); //<opml version="1.0"><head>
+  $xw->writeElement('title', variable_get('site_name', 'drupal').'-'.$view->name);//<opml version="1.0"><head><title>..</title> 
+  $xw->writeElement('ownerName', $user->name);//<opml version="1.0"><head><ownerName>..</ownerName>
+  $xw->writeElement('ownerEmail', $user->mail);//<opml version="1.0"><head><ownerName>..</ownerName>
+  $xw->endElement(); //head
+  $xw->writeElement('dateCreated', gmstrftime('%Y-%m-%d %H:%M:%S', time()));//<opml version="1.0"><head><dateCreated>..</dateCreated>
+  foreach ($nodes as $node) {
+    $xw->startElement ('outline');
+    $field_count = 0;
+    foreach ($view->field as $field) {
+      if ($fields[$field['id']]['visible'] !== false) {
+      	$field_count++;
+        $label = $field['label'] ? $field['label'] : $fields[$field['fullname']]['name'];
+        $label = preg_replace('/\W/', '', $label); // atrip any non-word character
+        $value = $field;
+        $value = views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view);
+        $value = preg_replace('/<.*?>/', '', $value); // strip html tags
+        $value = str_replace(array("\r", "\n", ','), ' ', $value); // strip line breaks and commas
+        $value = str_replace('"', '', $value); // remove quote characters
+        $value = decode_entities($value);
+        $xw->writeAttribute($field_count == 1 ? 'text' : $label, $value);
+      }
+    }
+    $xw->endElement(); //outline
+  }
+  $xw->endElement(); //opml
+  $xw->endDocument;
+  
+  drupal_set_header('Content-Type: text/xml');
+  //drupal_set_header('Content-Disposition: attachment; filename="view-'. $view->name .'.csv"');
+  print $xw->outputMemory(true); 
+  module_invoke_all('exit');
+  exit;
+}
+  
+
