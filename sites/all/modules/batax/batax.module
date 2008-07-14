@@ -43,28 +43,30 @@ function batax_form_alter($form_id, &$form){
     // "INSERT INTO variable (name, value) VALUES ('batax_max_options', 100);"
     $max_options = variable_get('batax_max_options',50);
     // We've got a node form, lets look at the taxonomy
-    foreach($form['taxonomy'] as $vocabulary => $vocabulary_field){
-      if(is_numeric($vocabulary)){
-        if(isset($vocabulary_field['#type']) && $vocabulary_field['#type'] == 'select'){
-          if(isset($vocabulary_field['#options']) && count($vocabulary_field['#options']) > $max_options){
-            // Hide the original field
-            $form['taxonomy'][$vocabulary] = array('#type'=>'hidden', '#default_value'=>$vocabulary_field['#default_value']);
-            // Lets completely alter this field, making it into an additional autocomplete field
-            unset($vocabulary_field['#options']);
-            unset($vocabulary_field['#size']);
-            unset($vocabulary_field['#theme']);
-            $vocabulary_field['#type'] = 'textfield';
-            $term_names = array();
-            foreach($vocabulary_field['#default_value'] as $tid){
-              $term = taxonomy_get_term($tid);
-              $term_names[] = $term->name;
+    if(is_array($form['taxonomy'])){
+      foreach($form['taxonomy'] as $vocabulary => $vocabulary_field){
+        if(is_numeric($vocabulary)){
+          if(isset($vocabulary_field['#type']) && $vocabulary_field['#type'] == 'select'){
+            if(isset($vocabulary_field['#options']) && count($vocabulary_field['#options']) > $max_options){
+              // Hide the original field
+              $form['taxonomy'][$vocabulary] = array('#type'=>'hidden', '#default_value'=>'');
+              // Lets completely alter this field, making it into an additional autocomplete field
+              unset($vocabulary_field['#options']);
+              unset($vocabulary_field['#size']);
+              unset($vocabulary_field['#theme']);
+              $vocabulary_field['#type'] = 'textfield';
+              $term_names = array();
+              foreach($vocabulary_field['#default_value'] as $tid){
+                $term = taxonomy_get_term($tid);
+                $term_names[] = $term->name;
+              }
+              $vocabulary_field['#default_value'] = check_plain(implode(", ",$term_names));
+              // We can just use the autocomplete provided by the taxonomy module - it bloody works!
+              $vocabulary_field['#autocomplete_path'] = 'taxonomy/autocomplete/'.$vocabulary;
+              $form['taxonomy'][$vocabulary.'-new'] = $vocabulary_field;
             }
-            $vocabulary_field['#default_value'] = check_plain(implode(", ",$term_names));
-            // We can just use the autocomplete provided by the taxonomy module - it bloody works!
-            $vocabulary_field['#autocomplete_path'] = 'taxonomy/autocomplete/'.$vocabulary;
-            $form['taxonomy'][$vocabulary.'-new'] = $vocabulary_field;
-          }
-        }      
+          }      
+        }
       }
     }
   }
