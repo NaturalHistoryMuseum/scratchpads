@@ -18,5 +18,6 @@ function mollom_install() {
  * Implementation of hook_uninstall().
  */
 function mollom_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name LIKE 'mollom_%'");
   db_query('DROP TABLE {mollom}');
 }

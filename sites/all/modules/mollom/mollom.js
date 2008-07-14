@@ -20,6 +20,7 @@ function getAudioCaptcha() {
      // Add an onclick-event handler for the new link:
      $('a#image-captcha').click(getImageCaptcha);
    });
+   return false;
 }
 
 function getImageCaptcha() {
@@ -36,5 +37,6 @@ function getImageCaptcha() {
      // Add an onclick-event handler for the new link:
      $('a#audio-captcha').click(getAudioCaptcha);
    });
+   return false;
 }
 
