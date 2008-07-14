@@ -895,7 +895,7 @@ function user_auth_help_links() {
 
 
 
-function user_login($msg = '') {
+function user_login() {
   global $user;
 
   // If we are already logged on, go to the user page instead.
@@ -904,9 +904,6 @@ function user_login($msg = '') {
   }
 
   // Display login form:
-  if ($msg) {
-    $form['message'] = array('#value' => '<p>'. check_plain($msg) .'</p>');
-  }
   $form['name'] = array('#type' => 'textfield',
     '#title' => t('Username'),
     '#size' => 60,
@@ -1007,9 +1004,15 @@ function user_authenticate($name, $pass) {
         if ($server) {
           $name .= '@'. $server;
         }
-        $user = user_load(array('name' => $name));
-        if (!$user->uid) { // Register this new user.
-          $userinfo = array('name' => $name, 'pass' => user_password(), 'init' => $name, 'status' => 1);
+        $registered_user = user_load(array('name' => $name));
+        if (!$registered_user->uid) { // Register this new user.
+          $userinfo = array(
+            'name' => $name, 
+            'pass' => user_password(), 
+            'init' => $name, 
+            'status' => 1, 
+            'access' => time(),
+          );
           if ($server) {
             $userinfo["authname_$module"] = $name;
           }
