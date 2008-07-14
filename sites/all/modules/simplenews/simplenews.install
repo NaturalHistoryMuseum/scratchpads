@@ -183,6 +183,8 @@ function simplenews_update_5000() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {simplenews_subscriptions} ADD INDEX mail (mail);");
+      break;
     case 'pgsql':
       $ret[] = update_sql('CREATE INDEX {simplenews_subscriptions}_mail_idx ON {simplenews_subscriptions} (mail)');
       break;
@@ -198,8 +200,10 @@ function simplenews_update_5001() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-    case 'pgsql':
       $ret[] = update_sql("ALTER TABLE {simplenews_newsletters} ADD vid int(10) NOT NULL default '0'");
+      break;
+    case 'pgsql':
+      $ret[] = update_sql("ALTER TABLE {simplenews_newsletters} ADD vid int NOT NULL default '0'");
       break;
   }
   return $ret;

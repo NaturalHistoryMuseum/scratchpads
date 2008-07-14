@@ -199,7 +199,7 @@ function simplenews_menu($may_cache) {
     );
   }
   else {
-    drupal_add_css(drupal_get_path('module', 'simplenews') .'/simplenews.css', 'module', 'all', FALSE);
+    drupal_add_css(drupal_get_path('module', 'simplenews') .'/simplenews.css', 'module', 'all', TRUE);
   
     if (arg(0) == 'admin' && arg(1) == 'content' && arg(2) == 'newsletters' && arg(3) == 'settings') {
       $tree = taxonomy_get_tree(variable_get('simplenews_vid', ''));
@@ -463,7 +463,13 @@ function simplenews_delete($node) {
  * Implementation of hook_load().
  */
 function simplenews_load($node) {
-  return db_fetch_object(db_query('SELECT * FROM {simplenews_newsletters} WHERE nid = %d', $node->nid));
+  $newsletter = db_fetch_object(db_query('SELECT * FROM {simplenews_newsletters} WHERE nid = %d', $node->nid));
+  // Newsletter vid is stored in simplenews->vid.
+  // This will prevent overwrite of node->vid.
+  // A better solution would be a node->simplenews with all newsletter data.
+  $newsletter->simplenews_vid = $newsletter->vid;
+  unset($newsletter->vid);
+  return $newsletter;
 }
 
 /**
@@ -593,6 +599,7 @@ function simplenews_user($op, &$edit, &$account, $category = NULL) {
     case 'view':
       global $user;
       if ($user->uid == $account->uid || user_access('administer users')) {
+        $items = array();
         $tree = taxonomy_get_tree(variable_get('simplenews_vid', ''));
         foreach ($tree as $newsletter) {
           if (db_num_rows(db_query('SELECT s.uid FROM {simplenews_subscriptions} s INNER JOIN {simplenews_snid_tid} t ON s.snid = t.snid WHERE s.uid = %d AND t.tid = %d', $account->uid, $newsletter->tid))) {
@@ -605,10 +612,14 @@ function simplenews_user($op, &$edit, &$account, $category = NULL) {
         else {
           $subscriptions = t('Currently no subscriptions');
         }
-        $items[] = array('class' => 'item',
-          'title' => t('Current subscriptions'),
-          'value' => $subscriptions,
-        );
+        // When a user has no permission to subscribe and is not subscribed
+        // we do not display the 'no subscriptions' message.
+        if (user_access('subscribe to newsletters') || $subscriptions != t('Currently no subscriptions')) {
+          $items[] = array('class' => 'item',
+            'title' => t('Current subscriptions'),
+            'value' => $subscriptions,
+          );
+        }
         if (user_access('subscribe to newsletters')) {
           $items[] = array('class' => 'item',
             'title' => t('Manage subscriptions'),
@@ -708,7 +719,7 @@ function _simplenews_block($tid) {
   $block['tid'] = $tid;
   $block['message'] = check_plain(variable_get('simplenews_block_m_'. $tid, t('Stay informed on our latest news!')));
   if (user_access('subscribe to newsletters')) {
-    $block['form'] = drupal_get_form('simplenews_block_form', $tid);
+    $block['form'] = drupal_get_form('simplenews_block_form_'. $tid);
     $block['subscription-link'] = l(t('Manage my subscriptions'), 'newsletter/subscriptions'); 
   }
   if (user_access('view links in block') || user_access('administer newsletters')) {
@@ -748,6 +759,21 @@ function theme_simplenews_block($block) {
   return $output;
 }
 
+/**
+ * Implementation of hook_forms
+ *
+ * All form blocks are build using simplenews_block_form().
+ * hook_forms() is required to provide unique form id for each block form.
+ */
+function simplenews_forms() {
+  foreach (taxonomy_get_tree(variable_get('simplenews_vid', '')) as $newsletter) {
+    $forms['simplenews_block_form_'. $newsletter->tid] = array(
+      'callback' => 'simplenews_block_form',
+      'callback arguments' => array($newsletter->tid),
+    );
+  }
+  return $forms;
+}
 /**
  * Helper function for API functions; loads a user or creates a dummy anonymous
  * user with uid = 0 and $mail equal to the input param.
@@ -1069,7 +1095,10 @@ function simplenews_block_form($tid) {
     );
   }
 
+  // All block forms use the same validate and submit function.
+  // 'tid' carries the tid for processing of the right newsletter issue term.
   $form['tid'] = array('#type' => 'value', '#value' => $tid);
+  $form['#base'] = 'simplenews_block_form';
   $form['submit'] = array('#type' => 'submit', '#value' => isset($submit_text) ? $submit_text : t('Submit'));
   return $form;
 }
@@ -1145,14 +1174,21 @@ function simplenews_node_prepare($nid, $vid, $tid) {
 
 /**
  * Helper function to set from name and e-mail for a mail object.
+ *
+ * Newsletter specific from name and address are set by admin. They default
+ * to Simplenews general from name and address. Which on their turn default
+ * to site name and from email address.
+ *
+ * @param object &$mail simplenews mail object.
+ * @param integer $tid newsletter term id
  */
 function simplenews_set_from(&$mail, $tid = NULL) {
   $address_default = variable_get('site_mail', ini_get('sendmail_from'));
   $name_default = variable_get('site_name', 'drupal');
 
   if (isset($tid)) {
-    $mail->from_address = variable_get('simplenews_from_address_'. $tid, $address_default);
-    $mail->from_name = variable_get('simplenews_from_name_'. $tid, $name_default);
+    $mail->from_address = variable_get('simplenews_from_address_'. $tid, variable_get('simplenews_from_address', $address_default));
+    $mail->from_name = variable_get('simplenews_from_name_'. $tid, variable_get('simplenews_from_name', $name_default));
   }
   else {
     $mail->from_address = variable_get('simplenews_from_address', $address_default);
@@ -1341,23 +1377,44 @@ function simplenews_mail_send($mail) {
       $plain_text_body = NULL;
     }
 
+    if (variable_get('simplenews_debug', FALSE)) {
+      watchdog('simplenews', t('Outgoing email via mimemail.<br />Subject: %subject<br />Recipient: %to', array('%to' => $mail->to, '%subject' => $mail->subject)), WATCHDOG_NOTICE);
+    }
     return mimemail($from, $mail->to, $mail->subject, $mail->body, $plain_text_only, $headers, $plain_text_body);
   }
   else {
+    if (variable_get('simplenews_debug', FALSE)) {
+      watchdog('simplenews', t('Outgoing email.<br />Subject: %subject<br />Recipient: %to', array('%to' => $mail->to, '%subject' => $mail->subject)), WATCHDOG_NOTICE);
+    }
     return drupal_mail('simplenews-send-mail', $mail->to, $mail->subject, $mail->body, $from_email, $headers);
   }
 }
 
 /**
-* Other module-specific functions
-*/
+ * Convert html text to plain text.
+ *
+ * Conversion of html tags, special characters and anchor and image tags.
+ * URLs in anchor and image tags are converted to absolute URLs and, depending
+ * on admin setting, placed in-line or at the bottom of the email.
+ *
+ * @param string $txt
+ *    html text string
+ * @param boolean $inline
+ *    TRUE = anchor and image tags are converted in-line;
+ *    FALSE = anchor and image tags are converted and placed at the bottom of the message.
+ * @return string
+ *    converted plain text string
+ */
 function simplenews_html_to_text($txt, $inline) {
-  $pattern = '@(<a href="(.\S+?)"[^>]*>(.+?)</a>)@ei';
+  $pattern = '@(<a[^>]+?href="(.\S+?)"[^>]*>(.+?)</a>)|(<img[^>]+?src="([^"]*)"[^>]*?>)@ei';
   if ($inline) {
-    $txt = preg_replace($pattern, "_simplenews_mail_uri('\\2', '\\3')", $txt);
+    $txt = preg_replace($pattern, "_simplenews_mail_uri('\\2\\5', '\\3')", $txt);
   }
   else {
-    $txt = preg_replace($pattern, "'\\3 ['. _simplenews_mail_urls('\\2') .']'", $txt);
+    // Converted 'a' and 'img' URLs are converted by and stored in _simplenews_mail_urls().
+    $txt = preg_replace($pattern, "'\\3 ['. _simplenews_mail_urls('\\2\\5') .']'", $txt);
+    // Retreive array of URLs from _simplenews_mail_urls() and format them 
+    // as a list at the end of the message.
     $urls = _simplenews_mail_urls();
     if (count($urls)) {
       $txt .= "\n";
@@ -1366,6 +1423,7 @@ function simplenews_html_to_text($txt, $inline) {
         $txt .= '['. ($i + 1) .'] '. $urls[$i] ."\n";
       }
     }
+    // Empty the the stored list of URLs.
     _simplenews_mail_urls(0, TRUE);
   }
 
@@ -1377,6 +1435,16 @@ function simplenews_html_to_text($txt, $inline) {
   return wordwrap($txt, 80);
 }
 
+/**
+ * Format URL and link text for in-line display in plain text message.
+ *
+ * @param string $href
+ *    Absolute URL
+ * @param string $link
+ *    Link text
+ * @retun string
+ *    Formatted URL with link text. Format 'url_text [ link_text ]'
+ */
 function _simplenews_mail_uri($href, $link) {
   $href = _simplenews_mail_url($href);
   if ($href == $link) {
@@ -1388,6 +1456,17 @@ function _simplenews_mail_uri($href, $link) {
   return $output;
 }
 
+/**
+ * Convert URL to absolute URL
+ *
+ * Strings containing ':/' are regarded absolute and not converted.
+ * Any 'mailto:' is stripped from the text.
+ * 
+ * @param string $url
+ *   URL to be converted
+ * @return string
+ *   Absolute url
+ */
 function _simplenews_mail_url($url) {
   if (preg_match('@://@', $url)) {
     return $url;
@@ -1400,6 +1479,17 @@ function _simplenews_mail_url($url) {
   }
 }
 
+/**
+ * Collect and store URLs
+ *
+ * @param string $url
+ *   URL to be converted to absolute and stored
+ * @param boolean $refresh
+ *   TRUE: URL storage is cleared.
+ * @return mixed
+ *   if param $url is URL to be converted: Number of URLs currently stored.
+ *   if param $url is empty: Keyed array of converted URLs.
+ */
 function _simplenews_mail_urls($url = 0, $refresh = FALSE) {
   static $urls = array();
   if($refresh) {
@@ -1431,7 +1521,7 @@ function _simplenews_define_search() {
         '!</?p[^>]*>!i',                              // <p>
         "/<br[^>]*>\n?/i",                            // <br>
         '!</?(b|strong)[^>]*>!i',                     // <b> and <strong>
-        '!</?(em|i)[^>]*>!i',                         // <em> and <i>
+        '!</?(em|i)[^>\w]*>!i',                       // <em> and <i>
         '/(<ul[^>]*>|<\/ul>)/i',                      // <ul> and </ul>
         '/(<ol[^>]*>|<\/ol>)/i',                      // <ol> and </ol>
         '/(<dl[^>]*>|<\/dl>)/i',                      // <dl> and </dl>
@@ -1845,9 +1935,9 @@ function simplenews_subscription_list_form() {
   $form['options']['operation'] = array(
     '#type' => 'select', 
     '#options' => array (
-      'activate' => 'Activate',
-      'inactivate' => 'Inactivate',
-      'delete' => 'Delete',
+      'activate' => t('Activate'),
+      'inactivate' => t('Inactivate'),
+      'delete' => t('Delete'),
     ),  
     '#default_value' => 'activate');
   $form['options']['submit'] = array(
@@ -2161,14 +2251,14 @@ function simplenews_admin_settings($tid = NULL) {
       '#title' => t('From name'),
       '#size' => 60,
       '#maxlength' => 128,
-      '#default_value' => variable_get('simplenews_from_name_'. $term->tid, $name_default),
+      '#default_value' => variable_get('simplenews_from_name_'. $term->tid, variable_get('simplenews_from_name', $name_default)),
     );
     $form['simplenews_sender_information']['simplenews_from_address_'. $term->tid] = array('#type' => 'textfield',
       '#title' => t('From e-mail address'),
       '#size' => 60,
       '#maxlength' => 128,
       '#required' => TRUE,
-      '#default_value' => variable_get('simplenews_from_address_'. $term->tid, $address_default),
+      '#default_value' => variable_get('simplenews_from_address_'. $term->tid, variable_get('simplenews_from_address', $address_default)),
     );
     $form['simplenews_hyperlinks'] = array('#type' => 'fieldset',
       '#title' => t('HTML to text conversion'),
@@ -2178,7 +2268,7 @@ function simplenews_admin_settings($tid = NULL) {
     );
     $form['simplenews_hyperlinks']['simplenews_hyperlinks_'. $term->tid] = array('#type' => 'radios',
       '#title' => t('Hyperlink conversion'),
-      '#options' => array(t('Append hyperlinks as a numbered reference list'), t('Display hyperlinks inline with the text')),
+      '#options' => array(t('Append hyperlinks and links to images as a numbered reference list'), t('Display hyperlinks and links to image inline with the text')),
       '#default_value' => variable_get('simplenews_hyperlinks_'. $term->tid, 1),
     );
   }
@@ -2248,34 +2338,6 @@ function simplenews_admin_settings($tid = NULL) {
       '#required' => TRUE,
       '#default_value' => variable_get('simplenews_from_address', $address_default),
     );
-    $form['simplenews_init_send'] = array('#type' => 'fieldset',
-      '#title' => t('Initial send time'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t('Sets the maximum time in seconds during which newsletters are sent. If not all recipients have been mailed within this time, sending is further handled as a cronjob.').' <br /> '.t('The highest value in the dropdown list is based on max_execution_time in your php.ini file. Note that if not all previous newsletters have been sent to all recipients yet, these are sent first.'),
-    );
-    $max_time = array(0, 1, 2, 3, 4);
-    for ($i = 5; $i < ini_get('max_execution_time'); $i=$i+5) {
-      $max_time[] = $i;
-    }
-    $form['simplenews_init_send']['simplenews_time'] = array('#type' => 'select',
-      '#title' => t('Seconds'),
-      '#options' => drupal_map_assoc($max_time),
-      '#default_value' => variable_get('simplenews_time', 2),
-    );
-    $form['simplenews_cron_throttle'] = array('#type' => 'fieldset',
-      '#title' => t('Cron throttle'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t('Sets the numbers of newsletters sent per cron run. Failure to send will also be counted.'),
-    );
-    $throttle = drupal_map_assoc(array(10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000));
-    $throttle[999999] = t('Unlimited');
-    $form['simplenews_cron_throttle']['simplenews_throttle'] = array('#type' => 'select',
-      '#title' => t('Number of mails'),
-      '#options' => $throttle,
-      '#default_value' => variable_get('simplenews_throttle', 20),
-    );
     $form['simplenews_subscription'] = array(
       '#type' => 'fieldset',
       '#title' => t('Subscription options'),
@@ -2287,6 +2349,36 @@ function simplenews_admin_settings($tid = NULL) {
       '#title' => t('Synchronize with account'),
       '#default_value' => variable_get('simplenews_sync_account', FALSE),
       '#description' => t('When checked subscriptions will be synchronized with site accounts. When accounts are deteted, subscriptions with the same email address will be removed. When site accounts are blocked/unblocked, subscriptions will be deactivated/activated. When not checked subscriptions will be unchanged when associated accounts are deleted or blocked.'),
+    );
+    $form['simplenews_mail_backend'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Mail backend'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $max_time = array(0, 1, 2, 3, 4);
+    for ($i = 5; $i < ini_get('max_execution_time'); $i=$i+5) {
+      $max_time[] = $i;
+    }
+    $form['simplenews_mail_backend']['simplenews_time'] = array('#type' => 'select',
+      '#title' => t('Initial send time'),
+      '#options' => drupal_map_assoc($max_time),
+      '#default_value' => variable_get('simplenews_time', 2),
+      '#description' => t('Sets the maximum time in seconds during which newsletters are sent. If not all recipients have been mailed within this time, sending is further handled as a cronjob.').' <br /> '.t('The highest value in the dropdown list is based on max_execution_time in your php.ini file. Note that if not all previous newsletters have been sent to all recipients yet, these are sent first.'),
+    );
+    $throttle = drupal_map_assoc(array(1, 10, 20, 30, 40, 50, 100, 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000));
+    $throttle[999999] = t('Unlimited');
+    $form['simplenews_mail_backend']['simplenews_throttle'] = array('#type' => 'select',
+      '#title' => t('Cron throttle'),
+      '#options' => $throttle,
+      '#default_value' => variable_get('simplenews_throttle', 20),
+      '#description' => t('Sets the numbers of newsletters sent per cron run. Failure to send will also be counted.'),
+    );
+    $form['simplenews_mail_backend']['simplenews_debug'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Log emails'),
+      '#default_value' => variable_get('simplenews_debug', FALSE),
+      '#description' => t('When checked all outgoing simplenews emails are logged in the system log. A logged email does not guarantee that it is send or will be delivered. It only indicates that a message is send to the PHP mail() function. No status information is available of delivery by the PHP mail() function.'),
     );
   }
   return system_settings_form($form);
