@@ -155,6 +155,21 @@ function clone_node($nid) {
       $node->menu = NULL;
       $node->path = NULL;
       $node->files = array();
+      // Remove CCK file and image attachements
+      if (module_exists('imagefield') || module_exists('filefield')) {
+        $content_type = module_invoke('content', 'types', $node->type);
+        // Find all the fields that are files or images.
+        foreach ($content_type['fields'] as $data) {
+          if (($data['type'] == 'file') || ($data['type'] == 'image')) {
+            $key = $data['field_name'];
+            // Remove any attached files as with $node->files
+            if (isset($node->$key)) {
+              $node->$key = array(); 
+            }
+          }
+        }
+      }
+      // Add indicator text to the title.
       $node->title = t('Clone of !title', array('!title' => $node->title));
       drupal_set_title(check_plain($node->title));
 
