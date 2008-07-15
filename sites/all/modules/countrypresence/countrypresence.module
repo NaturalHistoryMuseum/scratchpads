@@ -40,10 +40,11 @@ function countrypresence_menu($may_cache) {
     'title' => t('CountryPresnce callback'),
     'callback' => 'countrypresnce_googlemapcreator',
     'type' => MENU_CALLBACK);
+    /*
   $items[] = array('path'  =>  'admin/content/countrypresence/import',
     'title'  =>  t('Import'),
     'access'  =>  user_access('create countrypresence content')||user_access('administer nodes'),
-    'callback'  =>  'countrypresence_import');
+    'callback'  =>  'countrypresence_import');*/
   return $items;
 }
 
