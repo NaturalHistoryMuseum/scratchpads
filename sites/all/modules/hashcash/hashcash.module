@@ -62,7 +62,9 @@ function hashcash_menu($maycache){
     
     // Add the hashcash javascript library to the header of the page
     // This is done here, as it may not be possible to add the JS during hook_form_alter
-    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
+    if(!user_access('submit form without hashcash')){
+      drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
+    }
   }
   return $items;
 }
