@@ -30,70 +30,63 @@ function scratchy_page($content, $show_blocks = TRUE) {
   // Get blocks before so that they can alter the header (JavaScript, Stylesheets etc.)
   $blocks_right = theme_blocks('right');
   $blocks_bottom = theme_blocks('bottom');
-  echo '<?';
-?>xml version="1.0" encoding="UTF-8"?>
+  $output = '<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html 
      PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="<?php echo $language;?>" xml:lang="<?php echo $language?>">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="'.$language.'" xml:lang="'.$language.'">
 <head>
-<title><?php echo $title ? strip_tags($title)." | ". variable_get("site_name", "Drupal") : variable_get("site_name", "Drupal") ." | ". variable_get("site_slogan", ""); ?></title>
-<?php
-if(function_exists('jquery_ui_backport_add')){
-  jquery_ui_backport_add();
-}
-drupal_add_css(drupal_get_path('theme','scratchy').'/print.css','theme','print',FALSE);
-drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
-echo drupal_get_html_head();
-echo drupal_get_css();
-echo drupal_get_js();
-?>
-<!--[if lte IE 6]>
-  <script type="text/javascript" src="<?php echo url(drupal_get_path('theme','scratchy').'/supersleight/supersleight-min.js'); ?>"></script>
+<title>';
+  $output .= $title ? strip_tags($title)." | ". variable_get("site_name", "Drupal") : variable_get("site_name", "Drupal") ." | ". variable_get("site_slogan", "");
+  $output .='</title>';
+  if(function_exists('jquery_ui_backport_add')){
+    jquery_ui_backport_add();
+  }
+  drupal_add_css(drupal_get_path('theme','scratchy').'/print.css','theme','print',FALSE);
+  drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
+  $output .= drupal_get_html_head();
+  $output .= drupal_get_css();
+  $output .= drupal_get_js();
+  $output .= '<!--[if lte IE 6]>
+  <script type="text/javascript" src="'.url(drupal_get_path('theme','scratchy').'/supersleight/supersleight-min.js').'"></script>
 <![endif]-->
 </head>
   <body>
-    <div class="header">
-<?php
+    <div class="header">';
   if ($logo = theme_get_setting('logo')) {
-    ?><a href="<?php echo base_path(); ?>" title="<?php echo t('Home'); ?>"><img src="<?php echo $logo; ?>" alt="<?php echo t('Home');?>"/></a><?php
+    $output .= '<a href="'.base_path().'" title="'.t('Home').'"><img src="'.$logo.'" alt="'.t('Home').'"/></a>';
   }else{
-    ?><h1>No Logo Defined</h1><?php
+    $output .= '<h1>No Logo Defined</h1>';
   }
   if(theme_get_setting('toggle_search')){
     // Search box. Shove at the very top right.
-    ?><div id="searchbox"><?php echo drupal_get_form('search_theme_form'); ?></div><?php
+    $output .='<div id="searchbox">'.drupal_get_form('search_theme_form').'</div>';
   }if ($breadcrumbs = drupal_get_breadcrumb()){
     array_shift($breadcrumbs);
     if($breadcrumbs){
-      ?><div id="breadcrumbs"><?php echo theme('breadcrumb',$breadcrumbs); ?></div><?php
+      $output .= '<div id="breadcrumbs">'.theme('breadcrumb',$breadcrumbs).'</div>';
     }
   }
-  ?></div><?php
+  $output .='</div>';
   $primary_links = theme('primarylinks', menu_primary_links(), array('class' => 'links'));
   if (isset($primary_links) || isset($secondary_links)) {
-    ?><div class="navlinks"><?php
+    $output .='<div class="navlinks">';
     if (isset($primary_links)) {
-      echo $primary_links;
+      $output .=$primary_links;
     }
-    ?></div><?php
+    $output .='</div>';
   }
 
-  ?><div id="iecentral"><div id="content"><div id="main<?php 
+  $output .='<div id="iecentral"><div id="content"><div id="main'; 
   if (!$show_blocks || empty($blocks_right)) {
-    echo "-wide";
+    $output .='-wide';
   }
-  ?>"><?php
-  echo theme('help').theme('status_messages');
+  $output .='">'.theme('help').theme('status_messages');
   if (drupal_is_front_page()) {
     if(theme_get_setting('toggle_mission')){
       $mission = theme_get_setting('mission');
       if($mission){
-        ?>
-<style type="text/css">
-
-</style>
-<div class="cornerbox teaserbox mission">
+        $output .='<div class="cornerbox teaserbox mission">
   <div class="boxtop">
   <div class="bc ctr"></div>
   <div class="bc ctl"></div>
@@ -102,7 +95,7 @@ echo drupal_get_js();
   <div class="padding">
     <div class="teaserboxpadding1">
       <div class="teaserboxpadding2" id="missioninnerbox" style="background-color:black;">
-        <?php echo $mission; ?>
+        '. $mission .'
       </div>
     </div>
     <div class="break"></div>
@@ -112,25 +105,23 @@ echo drupal_get_js();
     <div class="bc cbr"></div>
     <div class="bc cbl"></div>
   </div>
-</div><?php
+</div>';
       }
     }
   }
   
   if ($tabs = theme('menu_local_tasks')) {
-    echo $tabs;
+    $output .= $tabs;
   }
-?>
-<!-- begin content -->
-<?php echo $content; ?>
+  $output .='<!-- begin content -->
+'.$content .'
 <!-- end content -->
-</div>
-<?php
+</div>';
   if ($show_blocks && !empty($blocks_right)) {
-    ?><div id="sidebar-right"><div>
-  <?php echo $blocks_right;?></div></div><?php
+    $output .='<div id="sidebar-right"><div>
+'.$blocks_right.'</div></div>';
   }
-  ?><div class="mainfull"></div><div id="footer"><div align="center" style="padding: 20px"><a 
+  $output .='<div class="mainfull"></div><div id="footer"><div align="center" style="padding: 20px"><a 
 href="http://e-taxonomy.eu/"><img src="/sites/all/images/edit_small.png" 
 alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="/sites/all/images/scratchpads.png"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
@@ -145,21 +136,19 @@ style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding
 <script type="text/javascript">
 _uacct = "UA-2428547-2";
 urchinTracker();
-</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div><?php
+</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div>';
   if ($footer = variable_get('site_footer', '')) {
-    echo $footer;
+    $output .= $footer;
   }
-  ?></div></div></div><?php
+  $output .='</div></div></div>';
   if ($show_blocks && !empty($blocks_bottom)){
-    ?>
-<div class="bottom">
-  <?php echo $blocks_bottom; ?>
-</div>
-    <?php
-  }?>
-  </body>
-</html>  
-<?php
+    $output .= '<div class="bottom">
+'.$blocks_bottom.'
+</div>';
+  }
+  $output .='</body>
+</html>';
+  return $output;
 }
 
 /* Forum stuff */
@@ -313,7 +302,7 @@ function scratchy_menu_local_tasks($args1, $args2){
 
 function scratchy_help() {
   if ($help = menu_get_active_help()) {
-    ?><div class="help"><?php echo $help;?></div><hr/><?php
+    return '<div class="help">'.$help.'</div><hr/>';
   }
 }
 
