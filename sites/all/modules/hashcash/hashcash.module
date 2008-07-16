@@ -90,7 +90,7 @@ function hashcash_form_alter($form_id, &$form){
     // Looks like we're adding the hashcash.
     
     // Add the hashcash javascript library to the header of the page
-    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
+    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js','module','header',FALSE,FALSE);
     
     // Cookie domain is added to hashcash to prevent same hashcash being used on multiple sites
     global $cookie_domain;
