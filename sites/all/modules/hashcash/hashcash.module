@@ -129,6 +129,10 @@ function hashcash_validate($node, $form_values){
         $hashcash_parts[3]!=$_SERVER['REMOTE_ADDR'] ||
         $hashcash_parts[4]!=$cookie_domain ||
         !(isset($hashcash_parts[5]) && strlen($hashcash_parts[5])>10)){
+      if(!isset($hashcash_parts[5])){
+        $hashcash_parts[5] = 'NOT SET';
+      }
+      watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form_values['form_id'].' - '.$hashcash_parts[3].':'.$_SERVER['REMOTE_ADDR'].' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
       form_set_error('hashcash',t('Your hashcash string is not valid. Are you a spammer?'));
     } else {
       // Everything fine so far, final check.
