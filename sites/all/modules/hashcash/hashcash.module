@@ -59,6 +59,10 @@ function hashcash_menu($maycache){
       'callback arguments' => array('hashcash_admin_settings'),
       'access' => user_access('administer site configuration')
     );
+    
+    // Add the hashcash javascript library to the header of the page
+    // This is done here, as it may not be possible to add the JS during hook_form_alter
+    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
   }
   return $items;
 }
@@ -88,10 +92,7 @@ function hashcash_form_alter($form_id, &$form){
   if (($hc_addorignore && in_array($form_id,$hc_form_ids)) || 
       (!$hc_addorignore && !in_array($form_id,$hc_form_ids))){
     // Looks like we're adding the hashcash.
-    
-    // Add the hashcash javascript library to the header of the page
-    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js','module','header',FALSE,FALSE);
-    
+            
     // Cookie domain is added to hashcash to prevent same hashcash being used on multiple sites
     global $cookie_domain;
     
