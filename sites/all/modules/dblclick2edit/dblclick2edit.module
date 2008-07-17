@@ -35,13 +35,8 @@ function dblclick2edit_menu($may_cache) {
   if (!$may_cache) {
     
 		if (user_access('double click')) {
-      
-			$path = drupal_get_path('module', 'dblclick2edit');
-
-      drupal_add_js($path.'/dblclick2edit.js');
-			drupal_add_css($path.'/dblclick2edit.css');
-
-    }
+			drupal_add_js(drupal_get_path('module', 'dblclick2edit').'/dblclick2edit.js');
+		}
 
 		$items[]= array (
 	      'path' => 'dblclick2edit',
