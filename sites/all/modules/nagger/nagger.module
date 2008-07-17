@@ -18,33 +18,35 @@ function nagger_node_access_records($node) {
     return;
   }
   $set_access = false;
-  foreach($node->nagger as $nag){
-    if(in_array(1,$nag)){
-      $set_access = true;
+  if(isset($node->nagger) && is_array($node->nagger)){
+    foreach($node->nagger as $nag){
+      if(in_array(1,$nag)){
+        $set_access = true;
+      }
     }
-  }
-  if ($set_access){
-    $role_ids = array_keys(user_roles());
-    $grants = array();
-    foreach($role_ids as $role_id){
+    if ($set_access){
+      $role_ids = array_keys(user_roles());
+      $grants = array();
+      foreach($role_ids as $role_id){
+        $grants[] = array(
+          'realm' => 'nagger', 
+          'gid' => $role_id,
+          'grant_view' => $node->nagger[$role_id]['view'],
+          'grant_update' => $node->nagger[$role_id]['update'], 
+          'grant_delete' => $node->nagger[$role_id]['delete'],
+          'priority' => 0,
+        );
+      }
       $grants[] = array(
-        'realm' => 'nagger', 
-        'gid' => $role_id,
-        'grant_view' => $node->nagger[$role_id]['view'],
-        'grant_update' => $node->nagger[$role_id]['update'], 
-        'grant_delete' => $node->nagger[$role_id]['delete'],
-        'priority' => 0,
+        'realm' => 'nagger_author',
+        'gid' => $node->uid,
+        'grant_view' => true,
+        'grant_update' => true,
+        'grant_delete' => true,
+        'priority' => 0
       );
+      return $grants;
     }
-    $grants[] = array(
-      'realm' => 'nagger_author',
-      'gid' => $node->uid,
-      'grant_view' => true,
-      'grant_update' => true,
-      'grant_delete' => true,
-      'priority' => 0
-    );
-    return $grants;
   }
 }
 

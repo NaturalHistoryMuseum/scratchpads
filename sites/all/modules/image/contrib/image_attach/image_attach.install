@@ -65,3 +65,23 @@ function image_attach_update_2() {
   }
   return $ret;
 }
+
+/**
+ * Prepare for multi-attach
+ */
+function image_attach_update_3() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysqli':
+    case 'mysql':
+      $ret[] = update_sql("ALTER TABLE {image_attach} DROP KEY iid");
+      $ret[] = update_sql("ALTER TABLE {image_attach} DROP PRIMARY KEY");
+      $ret[] = update_sql("ALTER TABLE {image_attach} ADD PRIMARY KEY (nid, iid)");
+      break;
+
+    case 'pgsql':
+#TODO
+      break;
+  }
+  return $ret;
+}
