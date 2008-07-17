@@ -836,6 +836,7 @@ function filter_form($value = FILTER_FORMAT_DEFAULT, $weight = NULL, $parents = 
     }
   }
   else {
+    // SDRycroft CHANGED TO HIDE THE FILTER FORMATS
     // Only one format available: use a hidden form item and only show tips.
     $format = array_shift($formats);
     $form[$format->format] = array('#type' => 'value', '#value' => $format->format, '#parents' => $parents);
@@ -844,8 +845,13 @@ function filter_form($value = FILTER_FORMAT_DEFAULT, $weight = NULL, $parents = 
       '#title' => t('Formatting guidelines'),
       '#value' => theme('filter_tips', $tips, FALSE, $extra),
     );
+    $form['format']['#type'] = 'fieldset';
+    $form['format']['#collapsed'] = true;
+    $form['format']['#collapsible'] = true;
+    $form['format']['#title'] = t('Formatting guidelines');
   }
-  $form[] = array('#value' => $extra);
+  $form['format'][] = array('#value' => $extra);
+  // END SDRYCROFT CHANGES
   return $form;
 }
 
