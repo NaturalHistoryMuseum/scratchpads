@@ -87,7 +87,8 @@ function nagger_form_alter($form_id, &$form) {
       '#weight'=>100,
       '#tree' => 1,
       '#type' => 'fieldset',
-      '#title'=>t('EDIT BELOW ONLY IF THIS NODE HASN\'T BEEN ADDED TO A GROUP')
+      '#title'=>t('Access by role'),
+      '#description'=>t('Edit below, only if this node hasn\'t been added to a group. Leave the boxes unchecked to use the default access permissions')
     );
     $form['og_nodeapi']['visible']['nagger']['beforetable'] = array(
       '#value' => '<table class="nagger"><thead><tr><th>'.t('Role').'</th><th>'.t('View').'</th><th>'.t('Edit').'</th><th>'.t('Delete').'</th></tr></thead><tbody>'
