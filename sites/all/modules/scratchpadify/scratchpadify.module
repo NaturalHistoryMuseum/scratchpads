@@ -120,7 +120,7 @@ function scratchpadify_form_alter($form_id, &$form) {
         '#weight' => 100,
         '#collapsible' => true
       );
-      $form['advanced']['og_nodeapi']['#title'] = t('Groups &amp; Access Control');
+      $form['og_nodeapi']['#title'] = t('Groups &amp; Access Control');
       $form['advanced']['path'] = $form['path'];
       unset($form['path']);
       $form['advanced']['menu'] = $form['menu'];
