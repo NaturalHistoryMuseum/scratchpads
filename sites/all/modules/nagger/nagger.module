@@ -74,12 +74,12 @@ function nagger_disable() {
 function nagger_form_alter($form_id, &$form) {  
   if ($form['#id'] == 'node-form') {
     global $user;
-    if($form['#node']->uid != $user->uid){
+    /*if($form['#node']->uid != $user->uid){
       $form['og_nodeapi']['visible']['nagger'] = array(
         '#value' => '<p>'.t('Only the node author can change access permissions for this node').'</p>'
       );
       return;
-    }
+    }*/
     drupal_add_css(drupal_get_path('module','nagger').'/nagger.css');
     $roles = user_roles();
     $roles_ids = array_keys($roles);
@@ -138,10 +138,18 @@ function nagger_node_validate($form, &$form_state){
  * Implementation of hook_nodeapi
  */
 function nagger_nodeapi(&$node, $op, $arg = 0) {
-  if($op=='load'){
-    $result = db_query("SELECT * FROM {node_access} WHERE nid = %d AND realm = 'nagger'", $node->nid );
-    while($row = db_fetch_object($result)){
-      $node->nagger[$row->gid] = array('view' => $row->grant_view, 'update' => $row->grant_update, 'delete' => $row->grant_delete);
-    }
+  switch ($op) {
+    case 'load':
+      $result = db_fetch_object(db_query('SELECT * FROM {nagger} WHERE nid = %d', $node->nid));
+      $node->nagger = unserialize($result->settings);
+      break;
+    case 'delete':
+      db_query('DELETE FROM {nagger} WHERE nid = %d', $node->nid);
+      break;
+    case 'update':
+      db_query('DELETE FROM {nagger} WHERE nid = %d', $node->nid);      
+    case 'insert':
+      db_query("INSERT INTO {nagger} (nid, settings) VALUES (%d, '%s')", $node->nid, serialize($node->nagger));
+      break;
   }
 }

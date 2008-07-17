@@ -418,7 +418,7 @@ while($row = db_fetch_array($results)){
 } */
 
 // Which content has <script> tags in it
-$results = db_query("SELECT n.nid, r.title FROM {node_revisions} r,{node} n WHERE LOWER(body) LIKE '%<script%' AND n.nid=r.nid AND n.vid=r.vid");
+/*$results = db_query("SELECT n.nid, r.title FROM {node_revisions} r,{node} n WHERE LOWER(body) LIKE '%<script%' AND n.nid=r.nid AND n.vid=r.vid");
 while($row = db_fetch_array($results)){
   echo $row['nid'].": ".$row['title']."\n";
 }
@@ -426,4 +426,33 @@ while($row = db_fetch_array($results)){
 $results = db_query("SELECT nid, subject FROM {comments} WHERE LOWER(comment) LIKE '%<script%'");
 while($row = db_fetch_array($results)){
   echo $row['nid']." comment: ".$row['title']."\n";
+}*/
+
+// Get the content_access settings, and convert them to nagger node_access settings
+$results = db_query("SELECT * FROM {content_access}");
+while($row = db_fetch_object($results)){
+  // Lets only restrict access if this node isn't in a group
+  $nagger = array();
+  if(!array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {og_ancestry} WHERE nid = %d" , $row->nid)))){
+    $content_access = unserialize($row->settings);
+    foreach(array(1,2,3,4,5) as $role){
+      if(in_array($role, $content_access['view']) || in_array($role, $content_access['update']) || in_array($role, $content_access['delete'])){
+        db_query("INSERT INTO {node_access} (nid,gid,realm,grant_view,grant_update,grant_delete) VALUES (%d,%d,'nagger',%d,%d,%d)", $row->nid,$role,in_array($role, $content_access['view']),in_array($role, $content_access['update']),in_array($role, $content_access['delete']));
+        $nagger[$role]['view'] = in_array($role, $content_access['view']);
+        $nagger[$role]['update'] = in_array($role, $content_access['update']);
+        $nagger[$role]['delete'] = in_array($role, $content_access['delete']);
+      }
+    }
+    // Finally, add the author, and delete the all realms
+    db_query("DELETE FROM {node_access} WHERE realm = 'all' AND nid = %d",$row->nid);
+    $node = node_load($row->nid);
+    db_query("INSERT INTO {node_access} (nid,gid,realm,grant_view,grant_update,grant_delete) VALUES (%d,%d,'nagger_author',1,1,1)", $node->nid, $node->uid);
+    // Last but not least, enter the values into the nagger table
+    db_query("INSERT INTO {nagger} (nid,settings) VALUES (%d,'%s')",$node->nid, serialize($nagger));
+    echo $node->nid."\n";
+  }
 }
+// Disable ACL AND content_access
+db_query("UPDATE {system} SET status = 0 WHERE name = 'acl' OR name = 'content_access'");
+// Finally rebuild the permissions
+node_access_rebuild();
