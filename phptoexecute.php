@@ -429,7 +429,7 @@ while($row = db_fetch_array($results)){
 }*/
 
 // Get the content_access settings, and convert them to nagger node_access settings
-$results = db_query("SELECT * FROM {content_access}");
+/* $results = db_query("SELECT * FROM {content_access}");
 while($row = db_fetch_object($results)){
   // Lets only restrict access if this node isn't in a group
   $nagger = array();
@@ -455,4 +455,4 @@ while($row = db_fetch_object($results)){
 // Disable ACL AND content_access
 db_query("UPDATE {system} SET status = 0 WHERE name = 'acl' OR name = 'content_access'");
 // Finally rebuild the permissions
-node_access_rebuild();
+node_access_rebuild();*/
