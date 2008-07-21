@@ -8,18 +8,17 @@
 
 /**
  * Implemenation of fook_menu
+ */
 function scratchpadify_menu($may_cache){
-  if(!$may_cache){
-    // I hate cacheing, it annoys me!
-    $items[] = array(
-      'path' => 'admin/build/themes',
-      'title' => t('Gone'),
-      'callback' => 'drupal_not_found',
-      'type' => MENU_CALLBACK
-    );
-    return $items;
+  $items = array();
+  if($may_cache){
+    // Here we're simply deleting any sessions that are older than 24 hours.  We do this 
+    // under the cache portion of the site to try and restrict the number of times that
+    // this is pointlessly executed
+    db_query("DELETE FROM {sessions} WHERE timestamp < %d",(time()-86400) );
   }
-}*/
+  return $items;
+}
  
 /**
  * Implementation of hook_filter
