@@ -151,12 +151,6 @@ function image_gallery_page($type = NULL, $tid = 0) {
       $galleries[$i]->latest = node_load(array('nid' => $nid));
     }
   }
-  
-  if($_SERVER['REMOTE_ADDR'] == '78.86.121.121'){
-    print_r($galleries);
-    print_r($descendant_tids);
-    exit;
-  }
 
   $images = array();
   if ($tid) {
