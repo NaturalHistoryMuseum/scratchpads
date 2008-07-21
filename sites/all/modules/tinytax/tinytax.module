@@ -331,7 +331,7 @@ function _theme_tinytax_term_list_link($term, $vid){
   }
   if (substr($term->tid,0,3)!='vid'){
     $return_string .= l(
-      '<img src="'.url(drupal_get_path('module','tinytax')).'/images/plus.png'.'"/>',
+      '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.png'.'"/>',
       'taxonomy/term/'.$term->tid,
       array(
         'title'=> t('Click to see all content tagged with this name')
