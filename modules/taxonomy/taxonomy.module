@@ -992,7 +992,7 @@ function taxonomy_get_children($tid, $vid = 0, $key = 'tid') {
  */
 function taxonomy_get_tree($vid, $parent = 0, $depth = -1, $max_depth = NULL) {
   if(function_exists('leftandright_get_tree')){
-    return leftandright_get_tree($vid, $parent, $max_depth = NULL);
+    return leftandright_get_tree($vid, $parent, $max_depth);
   }
   static $children, $parents, $terms;
 
