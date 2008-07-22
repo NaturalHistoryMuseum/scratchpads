@@ -93,8 +93,6 @@ function leftandright_taxonomy($op, $type, $array = NULL){
           // Get the parent info, get direct descendants, and see if there are gaps
           $result = db_query('SELECT lft,rgt,depth FROM {leftandright} WHERE tid=%d', $parent);
           $parent = db_fetch_array($result);
-          //print_r($array);
-          //print_r($parent);exit;
           $result = db_query('SELECT lft,rgt FROM {leftandright} WHERE lft>%d AND rgt<%d AND depth=%d ORDER BY lft',$parent['lft'],$parent['rgt'],$parent['depth']+1);
           $sibling_lefts = array();
           $sibling_rights = array();
@@ -214,16 +212,22 @@ function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0
     $left = $row['lft'];
     $right = $row['rgt'];
     if(isset($max_depth) && $max_depth != NULL){
-      $max_depth += $row['depth'];
+      $max_depth += $row['depth']+1;
     }
   }
+  $params = array($vid, $left, $right);
   $depth_sql = '';
   if(isset($max_depth) && $max_depth != NULL){
-    $depth_sql = 'AND depth<='.$max_depth;
+    $depth_sql = 'AND depth<%d';
+    $params[] = $max_depth;
   }
-  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>=%d AND rgt <=%d $depth_sql ORDER BY lft", $vid, $left, $right, $offset, $count);
+  $results = db_query_range("SELECT t.tid,t.*,l.depth,parent FROM {term_data} t, {leftandright} l, {term_hierarchy} h WHERE t.tid = l.tid AND h.tid=t.tid AND t.vid = %d AND lft>%d AND rgt <%d $depth_sql ORDER BY lft", $params, $offset, $count);
   $tree = array();
+  $last_term = false;
   while($row = db_fetch_object($results)){
+    if(!$last_term){
+      
+    }
     $tree[] = $row;
   }
   return $tree;
@@ -389,7 +393,7 @@ mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$
 mysql_select_db(\''.substr($url['path'], 1).'\');
 function rebuild_tree($tid, $left, $depth) {
   $right = $left+1;
-  $results = mysql_query("SELECT tid FROM '.db_prefix_tables('{term_hierarchy}').' WHERE parent = $tid");
+  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC");
   while ($row = mysql_fetch_array($results)){
     $right = rebuild_tree($row[0], $right, $depth+1);
   }  
