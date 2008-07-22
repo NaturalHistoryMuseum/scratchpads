@@ -64,6 +64,9 @@ function leftandright_taxonomy($op, $type, $array = NULL){
       case 'delete':
         // Easy, just delete the term from leftandright!
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
+        // FIXME - We should be reducing the depth of all the child
+        // terms of this tid (Children of a deleted parent become children
+        // of a grandparent).
         break;
       case 'update':
         // Delete then insert - easy!
@@ -88,6 +91,10 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         }
         // Lets shove the stuff into leftandright.  Tricky bit here is getting the right
         // values
+        // If the term is a root term we handle this completely differently
+        if($array['parent'] == array(0=>0)){
+          //$result = 
+        }
         // If the term has multiple parents, it gets multiple entries in the table.  Will this work?
         foreach($array['parent'] as $parent){
           // Get the parent info, get direct descendants, and see if there are gaps
@@ -153,6 +160,13 @@ function leftandright_taxonomy($op, $type, $array = NULL){
             $lft = $rgt - $diff;
           }
           db_query("INSERT INTO {leftandright} (lft,rgt,tid,vid,depth,lowername) VALUES (%f,%f,%d,%d,%d,LOWER('%s'))",$lft,$rgt,$array['tid'],$array['vid'],$parent['depth']+1,$array['name']);
+        }
+        // Check to see if the tree has a small number of terms (less than 1000), if so, rebuild
+        if(leftandright_get_tree_count($array['vid'],0)<1000){
+          leftandright_rebuild_tree($array['vid']);
+        } else {
+          // Else we give a message warning that things may not be as expected
+          drupal_set_message(t('If you have terms with different weights in your vocabulary, you may need to <a href="@rebuild">rebuild</a> your tree.', array('@rebuild' => url('leftandright/update/'.$array['vid']))));
         }
     }
   }
