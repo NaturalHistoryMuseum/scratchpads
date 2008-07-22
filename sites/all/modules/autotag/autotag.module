@@ -188,17 +188,19 @@ function autotag_form_alter($form_id, &$form){
     } else {
       $ignore_terms = array();
     }
-    foreach($form['#post']['taxonomy'] as $key => $terms){
-      if($key != 'tags'){
-        $place_holders = array();
-        foreach($terms as $doesntmatter){
-          $place_holders[] = '%d';
-        }
-        if(count($place_holders)){
-          $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
-          while($term=db_fetch_object($results)){
-            if(!in_array($term,$ignore_terms)){
-              $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
+    if(is_array($form['#post']['taxonomy'])){
+      foreach($form['#post']['taxonomy'] as $key => $terms){
+        if($key != 'tags'){
+          $place_holders = array();
+          foreach($terms as $doesntmatter){
+            $place_holders[] = '%d';
+          }
+          if(count($place_holders)){
+            $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
+            while($term=db_fetch_object($results)){
+              if(!in_array($term,$ignore_terms)){
+                $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
+              }
             }
           }
         }
