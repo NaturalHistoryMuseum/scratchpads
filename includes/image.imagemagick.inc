@@ -1,1 +1,1 @@
-../sites/all/modules/image/image.imagemagick.inc
+/var/www/html/sites/all/modules/image/image.imagemagick.inc

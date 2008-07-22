@@ -190,7 +190,7 @@ function leftandright_overview_vocabularies() {
  */
 function leftandright_descendant_used($tid){
   //return false;
-  $result = db_query("SELECT COUNT(*) FROM {term_node} WHERE tid IN (SELECT tid FROM {leftandright} WHERE lft>=(SELECT lft FROM leftandright WHERE tid=%d) AND rgt<=(SELECT rgt FROM leftandright WHERE tid=%d))",$tid,$tid);
+  $result = db_query("SELECT COUNT(*) FROM {term_node} WHERE tid IN (SELECT tid FROM {leftandright} WHERE lft>=(SELECT lft FROM {leftandright} WHERE tid=%d) AND rgt<=(SELECT rgt FROM {leftandright} WHERE tid=%d))",$tid,$tid);
   if(array_pop(db_fetch_array($result))){
     return true;
   } else {
@@ -336,7 +336,7 @@ function leftandright_rebuild_tree($vid){
   $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
   $array_results = db_fetch_array($result);
   if(!$array_results['c']){
-    drupal_set_message($vocabulary->name.' has no terms');
+    drupal_set_message(check_plain($vocabulary->name).' has no terms');
     return;
   }
   
@@ -389,7 +389,7 @@ mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$
 mysql_select_db(\''.substr($url['path'], 1).'\');
 function rebuild_tree($tid, $left, $depth) {
   $right = $left+1;
-  $results = mysql_query("SELECT tid FROM term_hierarchy WHERE parent = $tid");
+  $results = mysql_query("SELECT tid FROM '.db_prefix_tables('{term_hierarchy}').' WHERE parent = $tid");
   while ($row = mysql_fetch_array($results)){
     $right = rebuild_tree($row[0], $right, $depth+1);
   }  
@@ -399,7 +399,7 @@ function rebuild_tree($tid, $left, $depth) {
   }
   return $right+1;
 } 
-echo "DELETE FROM leftandright WHERE vid = '.$vid.'; INSERT INTO leftandright (tid, vid, lft, rgt, depth) VALUES ";
+echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{leftandright}').' (tid, vid, lft, rgt, depth) VALUES ";
 rebuild_tree('.$tid.',1, ';
   if($temporary_root_created){
     $tmp_php_file_string .= '-1';
@@ -412,11 +412,11 @@ echo ";";';
   // Add the deletion of the temporary term if required to the PHP file
   if($temporary_root_created){
     $tmp_php_file_string .= '
-echo "DELETE FROM leftandright WHERE tid = '.$tid.';DELETE FROM term_data WHERE tid = '.$tid.';DELETE FROM term_hierarchy WHERE tid = '.$tid.';";
-echo "UPDATE term_hierarchy SET parent = 0 WHERE parent = '.$tid.';";';
+echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_data}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_hierarchy}').' WHERE tid = '.$tid.';";
+echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
   }
   $tmp_php_file_string .= '
-echo "UPDATE leftandright l SET lowername = (SELECT LOWER(name) FROM term_data t WHERE l.tid = t.tid);";';
+echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";';
   // Write this out to a temporary file which we'll EXEC!
   $filepath = file_create_filename('leftandright.php', file_directory_temp());
   file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
@@ -438,5 +438,5 @@ echo "UPDATE leftandright l SET lowername = (SELECT LOWER(name) FROM term_data t
   file_delete($filepath);
   
   // Set message to say that we're doing the rebuild
-  drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.$vocabulary->name);
+  drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.check_plain($vocabulary->name));
 }
