@@ -16,6 +16,52 @@ function scratchpadify_menu($may_cache){
     // under the cache portion of the site to try and restrict the number of times that
     // this is pointlessly executed
     db_query("DELETE FROM {sessions} WHERE timestamp < %d",(time()-86400) );
+    foreach(array(
+      'admin/settings/thickbox',
+      'admin/settings/admin',
+      'admin/settings/citation',
+      'admin/settings/clean-urls',
+      'admin/settings/clone',
+      'admin/settings/contemplate',
+      'admin/settings/error-reporting',
+      'admin/settings/file-system',
+      'admin/settings/uploads',
+      'admin/settings/hashcash',
+      'admin/settings/image_attach',
+      'admin/settings/image_import',
+      'admin/settings/image-toolkit',
+      'admin/settings/imce',
+      'admin/settings/lightbox2',
+      'admin/settings/mimemail',
+      'admin/settings/mollom',
+      'admin/settings/imagex',
+      'admin/settings/performance',
+      'admin/settings/quote',
+      'admin/settings/search_attachments',
+      'admin/settings/sitemenu',
+      'admin/settings/tabs',
+      'admin/settings/taxonomy-breadcrumb',
+      'admin/settings/tinymce',
+      'admin/settings/userplus',
+      'admin/settings/view_controls',
+      'admin/settings/webform',
+      'admin/logs/settings',
+      'admin/logs/job_queue',
+      'admin/user/roles',
+      'admin/user/roleassign',
+      'admin/content/date',
+      'admin/content/templates',
+      'admin/build/modules',
+      'admin/og/og_user_roles'
+      ) as $path){
+      // Delete the following menu items to stop folk from meddling
+      $items[] = array(
+        'path' => $path,
+        'title' => t('Gone'),
+        'callback' => 'drupal_not_found',
+        'type' => MENU_CALLBACK
+      );
+    }
   }
   return $items;
 }
