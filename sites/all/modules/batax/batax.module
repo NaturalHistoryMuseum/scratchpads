@@ -42,9 +42,6 @@ function batax_form_alter($form_id, &$form){
     $form['parent-new']['#autocomplete_path'] = 'batax/autocomplete/'.$this_term->vid;
   } else {
     // Get the max options
-    // N.B. There is no actual way of setting this value, that is deliberate to keep the module as
-    // simple as possible.  If you'd like to increase this value, try the following sql:
-    // "INSERT INTO variable (name, value) VALUES ('batax_max_options', 100);"
     $max_options = variable_get('batax_max_options',50);
     // We've got a node form, lets look at the taxonomy
     if(is_array($form['taxonomy'])){
@@ -188,7 +185,7 @@ function batax_autocomplete($vid, $string = '') {
       $parents = taxonomy_get_parents_all($tag->tid);
       // Commas and quotes in terms are special cases, so encode 'em.
       if (strpos($tag->name, ',') !== FALSE || strpos($tag->name, '"') !== FALSE) {
-        $n = '"'. str_replace('"', '""', $tag->name) .'"';
+        $n = '"'. str_replace('"', '""', check_plain($tag->name)) .'"';
       }
       if(count($parents)>1){
         $parent_array = array();
