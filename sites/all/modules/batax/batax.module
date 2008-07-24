@@ -22,7 +22,11 @@ function batax_form_alter($form_id, &$form){
   if($form['#id']!='node-form'  && $form_id != 'taxonomy_form_term'){return;}
   if($form_id == 'taxonomy_form_term'){
     $this_term = taxonomy_get_term($form['tid']['#value']);
-    $parent = taxonomy_get_term($form['parent']['#default_value'][0]);
+    $parents = array();
+    foreach($form['parent']['#default_value'] as $parent_tid){
+      $term = taxonomy_get_term($parent_tid);
+      $parents[] = $term->name.":".$term->tid;
+    }
     unset($form['parent']['#options']);
     unset($form['parent']['#theme']);
     unset($form['parent']['#size']);
@@ -34,7 +38,7 @@ function batax_form_alter($form_id, &$form){
     $form['parent-new'] = $form['parent'];
     $form['parent']['#type'] = 'hidden';
     $form['parent-new']['#type'] = 'textfield';
-    $form['parent-new']['#default_value'] = check_plain($parent->name).":".$parent->tid;
+    $form['parent-new']['#default_value'] = check_plain(implode(", ",$parents));
     $form['parent-new']['#autocomplete_path'] = 'batax/autocomplete/'.$this_term->vid;
   } else {
     // Get the max options
