@@ -17,7 +17,7 @@ function subform_element_elements() {
     '#extra_form' => array(),
     '#redirect' => false,
     '#arguments' => array(),
-    '#data_separation' => TRUE,
+    '#data_separation' => FALSE,
   );
   return $type;
 }
@@ -39,12 +39,7 @@ function subform_element_build_subform($form_element, &$form_values) {
     //separate the data in $_POST
     $subform['#process']['subform_element_separate_data_prepare'] = array();
     $subform['#pre_render'][] = 'subform_element_separate_data';
-  }
-
-  //if the form has been submitted, set the form_id to the subform's id
-  if (isset($form_element['#post']) && isset($form_element['#post']['form_id'])) {
-    $subform['#post'] = $form_element['#data_separation'] ? $_POST[$form_id] : $form_element['#post'];
-    $subform['#post']['form_id'] = $form_id;
+    $subform['#data_separation'] = TRUE;
   }
 
   subform_element_call('drupal_prepare_form', $form_id, $subform);
@@ -129,6 +124,7 @@ function subform_element_call($function, $form_id, &$form) {
     $saved_globals[$form_id]['form_values'] = array();
     $saved_globals[$form_id]['form_submitted'] = FALSE;
     $saved_globals[$form_id]['form_button_counter'] = array(0, 0);
+    $saved_globals[$form_id]['before_post_form_id'] = $_POST ? $_POST['form_id'] : NULL;
   }
 
   array_push($saved_globals[$form_id]['before'], array($form_values, $form_submitted, $form_button_counter));
@@ -137,9 +133,21 @@ function subform_element_call($function, $form_id, &$form) {
   $form_values = $saved_globals[$form_id]['form_values'];
   $form_submitted = $saved_globals[$form_id]['form_submitted'];
   $form_button_counter = $saved_globals[$form_id]['form_button_counter'];
+  if ($_POST) {
+    if ($form['#data_separation']) {
+      $saved_post = &$_POST;
+      $_POST = &$_POST[$form_id];
+    }
+    $_POST['form_id'] = $form_id;
+  }
 
   $return_value = $function($form_id, $form);
-  
+
+  //restore original $_POST
+  if ($_POST && $form['#data_separation']) {
+    $_POST = $saved_post;
+  }
+
   //save global variables for the next time we have to operate on this form_id
   $saved_globals[$form_id]['form_values'] = $form_values;
   $saved_globals[$form_id]['form_submitted'] = $form_submitted;
@@ -148,7 +156,10 @@ function subform_element_call($function, $form_id, &$form) {
   // We've finished calling functions that alter the global values, so we can
   // restore the ones that were there before this function was called.
   list($form_values, $form_submitted, $form_button_counter) = array_pop($saved_globals[$form_id]['before']);
-  
+  if (isset($_POST)) {
+    $_POST['form_id'] = $saved_globals[$form_id]['before_post_form_id'];
+  }
+
   //propagate if the subform has been submitted
   $form_submitted = $form_submitted || $saved_globals[$form_id]['form_submitted'];
   //also count the form buttons of subforms to the outer form

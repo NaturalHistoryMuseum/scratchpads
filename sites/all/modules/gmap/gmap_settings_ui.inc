@@ -7,6 +7,9 @@
  */
 
 function _gmap_admin_settings() {
+  // Reset the icondata cache.
+  gmap_get_icondata(TRUE);
+
   //note the same google api key variable name as in the googlemap module is used
   //note the name of the variable for center of the map is latlong although the format is actually longitude, latitude
 
@@ -215,7 +218,7 @@ function _gmap_admin_settings() {
       '#default_value' => isset($defaults['behavior'][$k]) ? $defaults['behavior'][$k] : $v['default'],
       '#description' => isset($v['help']) ? $v['help'] : '',
     );
-    if ($v['internal']) {
+    if (isset($v['internal']) && $v['internal']) {
       $form['gmap_default']['behavior'][$k]['#disabled'] = TRUE;
       // Compensate for behaviors becoming internal after acquiring the wrong value.
       $form['gmap_default']['behavior'][$k]['#value'] = $v['default'];

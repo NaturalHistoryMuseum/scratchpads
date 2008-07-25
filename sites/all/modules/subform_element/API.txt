@@ -43,7 +43,7 @@ Attribute Reference
 --------------------
 #id: The form_id of the form to include
 #arguments (optional): An array of arguments that shall be passed to the forms function
-#data_separation (optional): Defaults to TRUE. Prevents conflicts by separating the data in $_POST.
+#data_separation (optional): Defaults to FALSE. Prevents conflicts by separating the data in $_POST.
 #subform_after_build (optional): An optional array of after_build functions for the subform.
 #extra_form (optional): An optional array of further form elements that will be added to the form.
 
@@ -57,19 +57,21 @@ Without data separation the values of each form will be transmitted as usual in 
 $_POST array. So if both forms use a field with the same name, e.g. 'title' both will
 end up in $_POST['title'], so obviously the latter title will overwrite the first one.
 
-To prevent this #data_separation can be set to TRUE (this is default!). If this is activated,
+To prevent this #data_separation can be set to TRUE. If this is activated,
 the subform element will prefix the elements name so that the data ends up in e.g.
 $_POST[$subform_id]['title'], where $subform_id is the id of your subform. So the data
 is separated and you can safely combine forms with overlapping element names.
 
-Deactivate #data_separation only if you are sure that there are no overlapping element
-names. This has only the benefit of reducing a bit complexity of the subform element,
-but nothing you need to worry about. So if you are not sure, just stay with the default
-value.
+!! When #data_separation is off, be sure that there are no overlapping element names. !!
+
+
+File uploads:
 
 Note that #data_separation applies to all form elements except from files. Due to the
 way file uploads work in drupal, there is no #data_separation possible. So one has to
 avoid element name collisions for file uploads!
+Furthermore the AJAX callbacks of the upload module or modules like imagefield bypass
+the formAPI - so they won't work properly with data separation turned on.
 
 
 #subform_after_build
