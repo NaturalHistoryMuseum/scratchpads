@@ -458,6 +458,6 @@ db_query("UPDATE {system} SET status = 0 WHERE name = 'acl' OR name = 'content_a
 node_access_rebuild();*/
 
 // Insert into node_access ANY nid WHICH isn't in there
-echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM node WHERE nid NOT IN (SELECT nid FROM node_access)")));
+/*echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM node WHERE nid NOT IN (SELECT nid FROM node_access)")));
 db_query("INSERT INTO node_access SELECT nid,0,'all',1,0,0 FROM node WHERE nid NOT IN (SELECT nid FROM node_access);");
-node_access_rebuild();
+node_access_rebuild();*/
