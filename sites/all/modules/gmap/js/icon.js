@@ -37,7 +37,7 @@ Drupal.gmap.getIcon = function(setname, sequence) {
 
   if (!this.gicons[setname]) {
     if (!Drupal.gmap.icons[setname]) {
-      alert('Request for invalid marker set '+setname+'!');
+      //alert('Request for invalid marker set '+setname+'!');
     }
     this.gicons[setname] = [];
     var q = Drupal.gmap.icons[setname];
