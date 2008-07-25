@@ -27,7 +27,7 @@ $domains[] = 'quartz.nhm.ac.uk';
 header("ContentType: text/plain");
 foreach ($domains as $domain){
   $contents = @file_get_contents("http://".$domain."/phptoexecute.php");
-  if ($contents){
+  if (strlen($contents)){
     echo '<p style="margin: 2px; padding:2px;"><a href="http://'.$domain.'">http://'.$domain.'</a></p><xmp>'.$contents.'</xmp>';
   }
 }
