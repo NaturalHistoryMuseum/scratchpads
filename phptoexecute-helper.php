@@ -29,6 +29,8 @@ foreach ($domains as $domain){
   $contents = @file_get_contents("http://".$domain."/phptoexecute.php");
   if (strlen($contents)){
     echo '<p style="margin: 2px; padding:2px;"><a href="http://'.$domain.'">http://'.$domain.'</a></p><xmp>'.$contents.'</xmp>';
+  } else {
+    echo '<p style="margin: 2px; padding:2px;">Nothing from <a href="http://'.$domain.'">http://'.$domain.'</a></p>';
   }
 }
 ?>
