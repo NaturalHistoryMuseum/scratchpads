@@ -978,9 +978,28 @@ function view_controls_form_alter($form_id, &$form){
 		  break;		
 		case 'node-form':		
   		//ensure the taxonomy module has added the options so assign default value in pre_render
-  		$form['#pre_render'][] = 'view_controls_pre_render';		
-			if(arg(3)){			
-				$form['#redirect'] = drupal_get_path_alias('taxonomy/term/'.arg(3));			
+  		//$form['#pre_render'][] = 'view_controls_pre_render';		
+			if(arg(3)){
+			  if(referer_uri() == url('taxonomy/term/'.arg(3),NULL,NULL,TRUE)){
+				  $form['#redirect'] = drupal_get_path_alias('taxonomy/term/'.arg(3));
+			  }
+        $term = taxonomy_get_term(arg(3));
+        if($form['field_taxonname']){
+          $form['field_taxonname']['values']['#value'] = $term->name;  
+        }
+        elseif($form['field_taxonomy_'.$form['type']['#value']]){
+          $form['field_taxonomy_'.$form['type']['#value']]['values']['#value'] = $term->name;
+        }elseif($form['taxonomy']){
+          $form['taxonomy'][$term->vid]['#value'] = array(arg(3));
+        /* For the benefit of the darwincore module
+         * Gah, I hate having customistaions in modules like this */
+        }elseif(isset($form['tabs']['taxonomy'])){
+          $term = taxonomy_get_term(arg(3));
+          $form['tabs']['taxonomy']['taxonomicname']['#value'] = $term->name;
+        }
+        elseif(isset($form['third_stage']['taxonomy'])){
+          $form['third_stage']['taxonomy'][$term->vid]['#value'] = array(arg(3));
+        }
 			}	
 			break;			
 	}	
@@ -1003,31 +1022,6 @@ function view_controls_views_edit_views_form_validation($form_id, $form_values){
 		
 	}
 	
-}
-
-/**
- * Set default taxonomy value
- */
-function view_controls_pre_render($form_id, &$form){
-  if(arg(3)){
-    $term = taxonomy_get_term(arg(3));
-    if($form['field_taxonname']){
-      $form['field_taxonname']['values']['#value'] = $term->name;  
-    }
-    elseif($form['field_taxonomy_'.$form['type']['#value']]){
-      $form['field_taxonomy_'.$form['type']['#value']]['values']['#value'] = $term->name;
-    }elseif($form['taxonomy']){
-      $form['taxonomy'][$term->vid]['#value'] = array(arg(3));
-    /* For the benefit of the darwincore module
-     * Gah, I hate having customistaions in modules like this */
-    }elseif(isset($form['tabs']['taxonomy'])){
-      $term = taxonomy_get_term(arg(3));
-      $form['tabs']['taxonomy']['taxonomicname']['#value'] = $term->name;
-    }
-    elseif(isset($form['third_stage']['taxonomy'])){
-      $form['third_stage']['taxonomy'][$term->vid]['#value'] = array(arg(3));
-    }
-  }  
 }
 
 /**
