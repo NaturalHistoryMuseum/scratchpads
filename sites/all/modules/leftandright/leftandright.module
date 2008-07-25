@@ -220,12 +220,37 @@ function leftandright_taxonomy($op, $type, $array = NULL){
  * List and manage vocabularies.
  */
 function leftandright_overview_vocabularies() {
+  $rebuilding = leftandright_trees_rebuilding();
+  $above_table = false;
+  if(count($rebuilding)){
+    $processes = variable_get('leftandright_rebuild_pids',array());
+    $current_pids = array();
+    foreach($rebuilding as $pid=>$vid){
+      // Check that this process was started by this site
+      if(in_array($pid,$processes)){
+        if(!$above_table){
+          $above_table = '<p><strong>'.t('Currently rebuilding the following vocabularies:').'</strong></p><ul>';
+        }
+        $vocabulary = taxonomy_get_vocabulary($vid);
+        $above_table .='<li>'.check_plain($vocabulary->name).'</li>';
+        $current_pids[] = $pid;
+        $display_above_table = true;
+      }
+    }
+    variable_set('leftandright_rebuild_pids',$current_pids);
+    $above_table .= '</ul>';
+  }
   $vocabularies = taxonomy_get_vocabularies();
   $rows = array();
   foreach ($vocabularies as $vocabulary) {
+    if(isset($rebuilding[$vocabulary->vid])){
+      $rebuild = t('This tree is currently being rebuilt');
+    } else {
+      $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
+    }
     $rows[] = array(
       'name' => check_plain($vocabulary->name),
-      'rebuild' => l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid)
+      'rebuild' => $rebuild
     );
   }
   if (empty($rows)) {
@@ -233,7 +258,7 @@ function leftandright_overview_vocabularies() {
   }
   $header = array(t('Name'),t('Rebuild Tree'));
 
-  return theme('table', $header, $rows, array('id' => 'taxonomy'));
+  return $above_table . theme('table', $header, $rows, array('id' => 'taxonomy'));
 }
 /***********************************************************************************
  * ADDITIONAL leftandright FUNCTIONS FOR OTHER MODULES!
@@ -383,6 +408,19 @@ function leftandright_overview_terms($vid){
 /***********************************************************************************
  * REBUILD TREE
  ***********************************************************************************/
+// Returns an indexed array of PIDs and the vocabularies associated with these PIDs
+function leftandright_trees_rebuilding(){  
+  exec('ps -ef | grep landr | grep -v grep',$exec_output);
+  $rebuilding=array();
+  foreach($exec_output as $process){
+    // Split the process by " " as the last part should be the vocabulary ID
+    $parts = explode(" ",preg_replace("/[\ ]*\ /"," ",$process));
+    $vid = array_pop($parts);
+    $pid = $parts[1];
+    $rebuilding[$pid]=$vid;
+  }
+  return $rebuilding;
+}
 function leftandright_rebuild_tree_page($args){
   leftandright_rebuild_tree($args);
   drupal_goto('admin/content/taxonomy/leftandright');
@@ -449,7 +487,7 @@ mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$
 mysql_select_db(\''.substr($url['path'], 1).'\');
 function rebuild_tree($tid, $left, $depth) {
   $right = $left+1;
-  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC");
+  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC , name DESC");
   while ($row = mysql_fetch_array($results)){
     $right = rebuild_tree($row[0], $right, $depth+1);
   }  
@@ -488,7 +526,7 @@ echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LO
   } else {
     $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','leftandright').'/landr';
     // FIXME - Needs port
-    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1);
+    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1).' '.$vid;
     $pid = shell_exec("nohup $command > /dev/null & echo $!");
     variable_set('leftandright_rebuild_pids',array_merge(variable_get('leftandright_rebuild_pids',array()),array($pid=>$pid)));
   }
