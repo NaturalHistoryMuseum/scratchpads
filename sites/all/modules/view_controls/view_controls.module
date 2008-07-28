@@ -982,6 +982,7 @@ function view_controls_form_alter($form_id, &$form){
 			if(arg(3)){
 			  if(referer_uri() == url('taxonomy/term/'.arg(3),NULL,NULL,TRUE)){
 				  $form['#redirect'] = drupal_get_path_alias('taxonomy/term/'.arg(3));
+				  $form['taxonomy'][$term->vid]['#value'] = array(arg(3));
 			  }
         $term = taxonomy_get_term(arg(3));
         if($form['field_taxonname']){

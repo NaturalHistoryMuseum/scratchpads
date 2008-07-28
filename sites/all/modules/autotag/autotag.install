@@ -47,7 +47,7 @@ function autotag_install(){
 function autotag_update_1(){
   $ret = array();
   $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
-  $ret[] = update_sql("UPDATE {system} SET weight=%d WHERE name='autotag'", $taxonomy_weight+10);
+  $ret[] = update_sql("UPDATE {system} SET weight=".($taxonomy_weight+10)." WHERE name='autotag'");
   return $ret;
 }
 
