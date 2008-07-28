@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /var/www/html/screenshots
 ./create-screenshots
-./create-screenshots-long
+#./create-screenshots-long
 php anotate-screenshots.php | bash
 ./create-resizes

@@ -8,6 +8,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
+<h1>All The Screenshots</h1>
 <?php
 
 // All the small images
