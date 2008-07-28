@@ -272,6 +272,9 @@ function scratchpadify_menu($may_cache){
         $items[] = $item;
       }
     }
+    
+    // Have to add CSS here as hook_links is cached
+    drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
   }
   return $items;
 }
@@ -310,6 +313,46 @@ function scratchpadify_filter($op, $delta = 0, $format = -1, $text = '') {
       return $text;
   }
 }
+/**
+ * Implementation of hook_link_alter
+ */
+function scratchpadify_link_alter(&$node, &$links){
+  // We need to delete the taxonomy modules created links here.
+  foreach ($node->taxonomy as $term) {
+    if(isset($links['taxonomy_term_'. $term->tid])){
+      unset($links['taxonomy_term_'. $term->tid]);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_link
+ */
+function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
+  // This returns one BIG link which has lots of lickle links in it
+  $terms = array();
+  foreach ($node->taxonomy as $term) {
+    if(!isset($terms[$term->vid])){
+      $terms[$term->vid] = array();
+    }
+    $terms[$term->vid][] = $term;
+  }
+    
+  $return_html = '<ul class="scratchpadify-terms">';
+  foreach($terms as $vid => $terms){
+    $vocabulary = taxonomy_get_vocabulary($vid);
+    $return_html .= '<li>'.check_plain($vocabulary->name).'<ul>';
+    foreach($terms as $term){
+      $return_html .= '<li>'.l($term->name,'taxonomy/term/'.$term->tid).'</li>';
+    }
+    $return_html .= '</ul></li>';
+  }
+  $return_html .= '</ul>';
+  $links = array();
+  $links[] = array('title' => $return_html , 'html' => true);
+  return $links;
+}
+
 /**
  * Implementation of hook_footer()
  */
