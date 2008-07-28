@@ -980,12 +980,17 @@ function view_controls_form_alter($form_id, &$form){
   		//ensure the taxonomy module has added the options so assign default value in pre_render
   		//$form['#pre_render'][] = 'view_controls_pre_render';		
 			if(arg(3)){
-			  if(referer_uri() == url('taxonomy/term/'.arg(3),NULL,NULL,TRUE)){
-				  $form['#redirect'] = drupal_get_path_alias('taxonomy/term/'.arg(3));
-				  $form['taxonomy'][$term->vid]['#value'] = array(arg(3));
+			  if(referer_uri() == url('taxonomy/term/'.arg(3),NULL,NULL,TRUE) || referer_uri() == url(arg(0)."/".arg(1)."/".arg(2)."/".arg(3),NULL,NULL,TRUE)){
+			    $term = taxonomy_get_term(arg(3));
+			    if(isset($term->tid) && $term->tid){
+  				  $form['#redirect'] = drupal_get_path_alias('taxonomy/term/'.arg(3));
+  				  $form['taxonomy'][$term->vid]['#default_value'] = array(arg(3));
+			    }
 			  }
-        $term = taxonomy_get_term(arg(3));
-        if($form['field_taxonname']){
+			  
+			  /*********************************************************************
+          REMOVE THE FOLLOWING ASAP */
+			  if($form['field_taxonname']){
           $form['field_taxonname']['values']['#value'] = $term->name;  
         }
         elseif($form['field_taxonomy_'.$form['type']['#value']]){
