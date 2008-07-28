@@ -302,13 +302,10 @@ function leftandright_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0
     $depth_sql = 'AND depth<%d';
     $params[] = $max_depth;
   }
-  $results = db_query_range("SELECT t.tid,t.*,l.depth,parent FROM {term_data} t, {leftandright} l, {term_hierarchy} h WHERE t.tid = l.tid AND h.tid=t.tid AND t.vid = %d AND lft>%d AND rgt <%d $depth_sql ORDER BY lft", $params, $offset, $count);
+  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {leftandright} l WHERE t.tid = l.tid AND t.vid = %d AND lft>%d AND rgt <%d $depth_sql ORDER BY lft", $params, $offset, $count);
   $tree = array();
-  $last_term = false;
+  // FIXME - We're not returning the parents for a term - is this an issue?
   while($row = db_fetch_object($results)){
-    if(!$last_term){
-      
-    }
     $tree[] = $row;
   }
   return $tree;

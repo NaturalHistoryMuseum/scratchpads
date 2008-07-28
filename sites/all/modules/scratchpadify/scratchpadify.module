@@ -10,62 +10,287 @@
  * Implemenation of fook_menu
  */
 function scratchpadify_menu($may_cache){
+  $hide_paths = array();
+  $hide_paths[] = array(
+    'path' => 'admin/settings/thickbox',
+    'title' => t('Thickbox'),
+    'description' => t('Configure Thickbox behavior.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'thickbox_admin_settings',
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/admin',
+    'title' => t('Administration theme'),
+    'description' => t('Settings for how your administrative pages should look.'),
+    'position' => 'left',
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_admin_theme_settings'),
+    'block callback' => 'system_admin_theme_settings');
+  $hide_paths[]= array (
+    'path' => 'admin/settings/citation',
+    'title' => t('Citation'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('citation_admin_form'),
+    'description' => t('Configuration of citation.'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/clean-urls',
+    'title' => t('Clean URLs'),
+    'description' => t('Enable or disable clean URLs for your site.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_clean_url_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/clone',
+    'title' => t('Clone module'),
+    'description' => t('Allows users to clone (copy then edit) an existing node.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('clone_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/contemplate',
+    'title' => t('Content Template Settings'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('contemplate_system_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/error-reporting',
+    'title' => t('Error reporting'),
+    'description' => t('Control how Drupal deals with errors including 403/404 errors as well as PHP error reporting.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_error_reporting_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/file-system',
+    'title' => t('File system'),
+    'description' => t('Tell Drupal where to store uploaded files and how they are accessed.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_file_system_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/uploads',
+    'title' => t('File uploads'),
+    'description' => t('Control how files may be attached to content.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('upload_admin_settings'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/hashcash',
+    'title' => t('Hashcash settings'),
+    'description' => t('Change the default hashcash settings to include or exclude forms.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('hashcash_admin_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/image_attach',
+    'title' => t('Image attach'),
+    'description' => t('Enable image attach for content'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('image_attach_admin_settings'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/image_import',
+    'title' => t('Image import'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('image_import_admin_settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'description' => t('Change settings for the Image Import module.'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/image-toolkit',
+    'title' => t('Image toolkit'),
+    'description' => t('Choose which image toolkit to use if you have installed optional toolkits.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_image_toolkit_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/imce',
+    'title' => t('IMCE settings'),
+    'description' => t('Control how your image/file browser works.'),
+    'callback' => 'imce_form_admin');
+  $hide_paths[] = array(
+    'path' => 'admin/settings/lightbox2',
+    'title' => t('Lightbox2'),
+    'callback' => 'lightbox2_settings_page',
+    'description' => t('Allows the user to configure the lightbox2 settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/mimemail',
+    'title' => t('Mail'),
+    'description' => t('HTML E-mail settings'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'mimemail_settings',
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/mollom',
+    'description' => t('Mollom is a webservice that helps you manage your community.'),
+    'title' => t('Mollom'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('mollom_admin_settings'),
+    'type' => MENU_NORMAL_ITEM
+    );
+  $hide_paths[] = array(
+    'path' => 'admin/settings/imagex',
+    'title' => t('Multiple image settings'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('imagex_admin_settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'description' => t('Change the way that multiple image upload is handled'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/performance',
+    'title' => t('Performance'),
+    'description' => t('Enable or disable page caching for anonymous users, and enable or disable CSS preprocessor.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_performance_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/quote',
+    'title' => t('Quote'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'quote_settings_form');
+  $hide_paths[] = array('path' => 'admin/settings/search_attachments',
+    'title' => t('Search attachments settings'),
+    'description' => t('Configure searching attachments'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('search_attachments_admin_instructions'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/sitemenu',
+    'title' => t('Sitemenu'),
+    'description' => t('Settings for the sitemenu module.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('sitemenu_settings'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/tabs',
+    'title' => t('Tabs'),
+    'description' => t('Configuration for tabs'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('tabs_admin_settings'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/taxonomy-breadcrumb',
+    'title' => t('Taxonomy Breadcrumb'),
+    'description' => t('Configure how taxonomy based breadcrumbs are displayed.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('taxonomy_breadcrumb_admin_settings'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/tinymce',
+    'title' => t('TinyMCE'),
+    'callback' => 'tinymce_admin',
+    'description' => t('Configure the rich editor.'));
+  $hide_paths[] = array(
+    'path' => 'admin/settings/userplus',
+    'title' => t('Userplus'),
+    'description' => t('Settings for the userplus module.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('userplus_admin_settings'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[]= array (
+    'path' => 'admin/settings/view_controls',
+    'title' => t('View controls'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('view_controls_admin_form'),
+    'description' => t('Configuration of view controls.'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/settings/webform',
+    'title' => t('Webform'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'webform_admin_settings',
+    'description' => t('Global configuration of webform functionality.'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/logs/settings',
+    'title' => t('Access log settings'),
+    'description' => t('Control details about what and how your site logs.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('statistics_access_logging_settings'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 3);
+  $hide_paths[] = array(
+    'path' => 'admin/logs/job_queue',
+    'title' => t('Queued jobs'),
+    'description' => t('View a list of the queued jobs.'),
+    'callback' => 'job_queue_list');
+  $hide_paths[] = array(
+    'path' => 'admin/settings/job_queue',
+    'title' => t('Job queue'),
+    'description' => t('Set queue priorities.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('job_queue_settings_form'));
+  $hide_paths[] = array(
+    'path' => 'admin/user/roles',
+    'title' => t('Roles'),
+    'description' => t('List, edit, or add user roles.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('user_admin_new_role'),
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/user/roleassign',
+    'title' => t('Role assign'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('roleassign_admin'),
+    'description' => t('Allows site administrators to further delegate the task of managing user\'s roles.'));
+  $hide_paths[] = array(
+    'path'     => 'admin/content/date',
+    'title'    => t('Date Import/Export'),
+    'description' => t('Import and export date data.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'date_copy_import_ical_form',
+    'type' => MENU_NORMAL_ITEM);
+  $hide_paths[] = array(
+    'path' => 'admin/content/templates',
+    'title' => t('Content templates'),
+    'description' => t('Create templates to customize output of teaser and body content.'),
+    'callback' => 'contemplate_edit_type');
+  $hide_paths[] = array(
+    'path' => 'admin/build/modules',
+    'title' => t('Modules'),
+    'description' => t('Enable or disable add-on modules for your site.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('system_modules'));
+  $hide_paths[] = array(
+    'path' => 'admin/og/og_user_roles',
+    'title' => t('Organic groups user roles'),
+    'description' => t('Allows group administrators to add members into group roles.  Also edit multinode access configuration.'),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => 'og_user_roles_admin_settings');
   $items = array();
   if($may_cache){
     // Here we're simply deleting any sessions that are older than 24 hours.  We do this 
     // under the cache portion of the site to try and restrict the number of times that
     // this is pointlessly executed
-    db_query("DELETE FROM {sessions} WHERE timestamp < %d",(time()-86400) );
-    foreach(array(
-      'admin/settings/thickbox',
-      'admin/settings/admin',
-      'admin/settings/citation',
-      'admin/settings/clean-urls',
-      'admin/settings/clone',
-      'admin/settings/contemplate',
-      'admin/settings/error-reporting',
-      'admin/settings/file-system',
-      'admin/settings/uploads',
-      'admin/settings/hashcash',
-      'admin/settings/image_attach',
-      'admin/settings/image_import',
-      'admin/settings/image-toolkit',
-      'admin/settings/imce',
-      'admin/settings/lightbox2',
-      'admin/settings/mimemail',
-      'admin/settings/mollom',
-      'admin/settings/imagex',
-      'admin/settings/performance',
-      'admin/settings/quote',
-      'admin/settings/search_attachments',
-      'admin/settings/sitemenu',
-      'admin/settings/tabs',
-      'admin/settings/taxonomy-breadcrumb',
-      'admin/settings/tinymce',
-      'admin/settings/userplus',
-      'admin/settings/view_controls',
-      'admin/settings/webform',
-      'admin/logs/settings',
-      'admin/logs/job_queue',
-      'admin/user/roles',
-      'admin/user/roleassign',
-      'admin/content/date',
-      'admin/content/templates',
-      'admin/build/modules',
-      'admin/og/og_user_roles'
-      ) as $path){
+    db_query("DELETE FROM {sessions} WHERE timestamp < %d",(time()-86400) );    
+    foreach($hide_paths as $item){
+      // Take a copy of the menu item so that we can save it
       // Delete the following menu items to stop folk from meddling
       $items[] = array(
-        'path' => $path,
-        'title' => t('Gone'),
+        'path' => $item['path'],
+        'title' => t('Scratchpad Administrators Only'),
         'callback' => 'drupal_not_found',
         'type' => MENU_CALLBACK
       );
     }
+  }else {
+    // Reset the menus (ONLY FOR UID 1)
+    if(user_access('SCRATCHPADIFY')){
+      foreach($hide_paths as $item){
+        $items[] = $item;
+        $item['path'] = $item['path'].'-scratch';
+        $item['callback'] = 'scratchpadify_forward';
+        $items[] = $item;
+      }
+    }
   }
   return $items;
 }
- 
+
+/**
+ * Callback to forward menus on to their correct locations
+ */
+function scratchpadify_forward(){
+  $i = 0;
+  $goto_array = array();
+  while(arg($i)){
+    $goto_array[] = arg($i);
+    $i++;
+  }
+  // remove -scratch from the final arg
+  $final_arg = array_pop($goto_array);
+  $goto_array[] = substr($final_arg,0,strpos($final_arg,"-scratch"));
+  drupal_goto(implode("/",$goto_array));
+}
 /**
  * Implementation of hook_filter
  */
