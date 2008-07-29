@@ -384,26 +384,40 @@ urchinTracker();
 function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
   switch ($op){
     case 'list':
-      return array(array('info'=>'Scratchpad statistics'));
+      return array(array('info'=>t('Scratchpad statistics')),array('info'=>t('Create Content')));
     case 'view':
-      $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
-      $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
-      $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
-      $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
-      return array('subject'=>'Statistics','content'=>theme_item_list($items));
+      if($delta == 0){
+        $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
+        $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
+        $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
+        $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
+        return array('subject'=>'Statistics','content'=>theme_item_list($items));
+      } elseif($delta == 1){
+        if(user_access('create node content')){
+          $node_types = node_get_types();
+          $items = array();
+          foreach($node_types as $node_type => $node_type_values){
+            $items[] = l($node_type_values->name,$node_type);
+          }
+          return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
+        }
+      }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
-      $form['additional_text']=array(
-        '#description' => t('Enter any additional text you would like above the statistics.'),
-        '#title' => t('Additional text'),
-        '#type' => 'textfield',
-        '#weight' => -9,
-        '#default_value' => variable_get('scratchpadify-stats-block-text')
-      );
-      return $form;
+      if($delta == 0){
+        $form['additional_text']=array(
+          '#description' => t('Enter any additional text you would like above the statistics.'),
+          '#title' => t('Additional text'),
+          '#type' => 'textfield',
+          '#weight' => -9,
+          '#default_value' => variable_get('scratchpadify-stats-block-text')
+        );
+        return $form;
+      }
     case 'save':
-      variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
-      break;       
+      if($delta == 0){
+        variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
+      }
   }
 }
 
