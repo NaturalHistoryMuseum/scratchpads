@@ -302,6 +302,7 @@ function nodereference_widget($op, &$node, $field, &$items) {
             if ($item['nid']) {
               $form[$field['field_name']][$delta]['node_name'] = array(
                 '#type' => 'textfield',
+                '#maxlength' => 350,
                 '#title' => ($delta == 0) ? t($field['widget']['label']) : '',
                 '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
                 '#default_value' => $item['default node_name'],
@@ -313,6 +314,7 @@ function nodereference_widget($op, &$node, $field, &$items) {
           foreach (range($delta, $delta + 2) as $delta) {
             $form[$field['field_name']][$delta]['node_name'] = array(
               '#type' => 'textfield',
+              '#maxlength' => 350,
               '#title' => ($delta == 0) ? t($field['widget']['label']) : '',
               '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
               '#default_value' => '',
@@ -323,6 +325,7 @@ function nodereference_widget($op, &$node, $field, &$items) {
         else {
           $form[$field['field_name']][0]['node_name'] = array(
             '#type' => 'textfield',
+            '#maxlength' => 350,
             '#title' => t($field['widget']['label']),
             '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
             '#default_value' => $items[0]['default node_name'],

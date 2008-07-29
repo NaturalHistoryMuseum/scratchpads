@@ -397,7 +397,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           $node_types = node_get_types();
           $items = array();
           foreach($node_types as $node_type => $node_type_values){
-            $items[] = l($node_type_values->name,$node_type);
+            $items[] = l($node_type_values->name,'node/add/'.$node_type);
           }
           return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
         }
