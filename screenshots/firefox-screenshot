@@ -1,7 +1,7 @@
 #!/bin/bash
 DISPLAY=:2.0 /root/bin/firefox -width 1038 -height 768 http://$1 &
 # Give it plenty of time to load
-sleep 30
+sleep 60
 DISPLAY=:2.0 import -window root $1.jpg
 convert $1.jpg -crop 1024x768+1+1 $1.jpg
 killall firefox firefox-bin &>/dev/null
