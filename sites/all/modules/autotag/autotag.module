@@ -212,7 +212,7 @@ function autotag_form_alter($form_id, &$form){
       foreach($form['#post']['taxonomy'] as $key => $terms){
         if($key != 'tags'){
           $place_holders = array();
-          if(is_array($term)){
+          if(is_array($terms)){
             foreach($terms as $doesntmatter){
               $place_holders[] = '%d';
             }
