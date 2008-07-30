@@ -669,7 +669,9 @@ function _autotag_submit($node){
       foreach($node->taxonomy as $vid => $taxonomy_vocab){
         if(isset($taxonomy_vocab[$term])){
           unset($node->taxonomy[$vid][$term]);
-          unset($node->taxonomy[$vid][array_search($term,$node->taxonomy[$vid])]);
+          while(array_search($term,$node->taxonomy[$vid])!==false){
+            unset($node->taxonomy[$vid][array_search($term,$node->taxonomy[$vid])]);
+          }
           $values[] = $term;
         }
       }
