@@ -14,6 +14,12 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 $return = menu_execute_active_handler();
 
+
+if(!isset($_SESSION['message_sent']) || !$_SESSION['message_sent']){
+  $_SESSION['message_sent'] = true;
+  drupal_set_message("This site will be taken offline for approximately one hour today at 14:00 BST".print_r($_SESSION,true));
+}
+
 // Menu status constants are integers; page content is a string.
 if (is_int($return)) {
   switch ($return) {
