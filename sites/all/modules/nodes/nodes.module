@@ -1,0 +1,206 @@
+<?php
+/**
+ * Nodes is a module which allows a user to edit lots of nodes at once
+ */
+
+
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function nodes_menu($maycache){
+  $items = array();
+  if($maycache){
+    $items[] = array(
+      'path' => 'nodes',
+      'title' => t('Multiple node edit page'),
+      'callback' => 'nodes_edit_page',
+      'description' => t('Allows a user to quickly and easily edit multiple nodes at once'),
+      'access' => TRUE,
+      'type' => MENU_NORMAL_ITEM
+    );
+    $items[] = array(
+      'path' => 'nodes-submit',
+      'title' => t('Submit target for "nodes"'),
+      'callback' => 'nodes_submit_form_part',
+      'access' => TRUE,
+      'type' => MENU_CALLBACK       
+    );
+    $items[] = array(
+      'path' => 'nodes-edit',
+      'title' => t('Edit field'),
+      'callback' => 'nodes_edit_field',
+      'access' => TRUE,
+      'type' => MENU_CALLBACK
+    );
+  }
+  return $items;
+}
+/***********************************************************************************
+ * CALLBACKS
+ ***********************************************************************************/
+/**
+ * Returns the HTML for a multiple edit page.  This the work horse method of this
+ * module.
+ *
+ * @param String $content_type
+ * @return String HTML
+ */
+function nodes_edit_page($type = null, $sort = null, $num = null){
+  // $content_type enables the nodes edit page to filter by a particular content
+  // type just by changing the URL.
+  
+  // The type is essential, so make sure it is set
+  if(is_null($type)){
+    // Type is null, default to?
+    drupal_set_message(t('The content type to edit is not set'),'error');
+    // Return a list of links to this page.
+    $types = node_get_types();
+    $types_list = array();
+    foreach($types as $link=>$type){
+      $types_list[] = l($type->name,'nodes/'.$link);
+    }
+    return theme('item_list', $types_list,t('Select a content type to edit from the list below'));
+  }
+  $form = nodes_get_form_for_type($type);
+  
+  // We'll start with 25 of the most recently created nodes
+  $order = 'created';
+  $num_to_edit = 25;
+  $results = db_query("SELECT nid FROM {node} n WHERE type='%s' ORDER BY %s DESC",$type, $order);
+  $nodes = array();
+  while(($row = db_fetch_array($results)) && ($num_nodes < $num_to_edit)){
+    // Check that we can actually edit this node
+    $node = node_load($row['nid']);
+    if(node_access('update',$node)){
+      $nodes[] = $node;
+    }
+  }
+  // We should now have an array of nodes that we can edit - if this is empty, then we need
+  // to explain to the user that they don't have the privileges to edit any nodes
+  if(!count($nodes)){
+    // array is empty - set message
+    drupal_set_message(t('You don\'t have the permissions to edit any nodes of this type.'),'error');
+    drupal_goto('nodes');
+  }
+  // We have an array, lets put it in our special themed table!
+  return theme('nodes_table', $nodes, $form);
+}
+
+function nodes_edit_field($nid , $field){
+  $node = node_load($nid);
+  // Lets get the form for this type, strip everything but the required field and wahey
+  $form = nodes_get_form_for_type($node->type);
+  $new_form = array();
+  if(isset($form[$field])){
+    $new_form[$field] = $form[$field];
+    $new_form[$field]['#default_value'] = $node->$field;
+  } else {
+    // field is hiding, lets find it
+    foreach($form as $name => $form_field){
+      if(is_array($form_field) && isset($form_field[$field])){
+        // Lets handle fieldsets here
+        if(isset($form_field['#type']) && $form_field['#type']=='fieldset'){
+          $form_field[$field]['#default_value'] = $node->$field;
+          $new_form[$field] = $form_field[$field];
+        } else {
+          $form_field[$field]['#value'] = $node->$field;
+          $new_form[$name] = $form_field;
+        }
+      }
+    }
+  }
+  if(count($new_form)){
+    print drupal_render_form('nodes-edit-field',$new_form);
+  } else {
+    print "<h1>".t('Unable to edit this field type')."</h1>";
+  }
+  exit;
+}
+
+
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+function nodes_get_form_for_type($type){
+  global $user;
+  $types = node_get_types();
+  $type = isset($type) ? str_replace('-', '_', $type) : NULL;
+  // If a node type has been specified, validate its existence.
+  if (isset($types[$type]) && node_access('create', $type)) {
+    // Initialize settings:
+    $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+    $output = _nodes_get_form_no_render($type .'_node_form', $node);
+  }
+  return $output;
+}
+
+function _nodes_get_form_no_render($form_id) {
+  // We're coming in fresh; build things as they would be. If the
+  // form's #multistep flag is set, store the build parameters so
+  // the same form can be reconstituted for validation.
+  $args = func_get_args();
+  $form = call_user_func_array('drupal_retrieve_form', $args);
+  
+  // Process the form, submit it, and store any errors if necessary.
+  drupal_process_form($args[0], $form);
+
+  return $form;
+}
+function _nodes_get_fieldtypes(){
+  return array('textfield','textarea');
+}
+function _nodes_handle_field($field){
+  $fields = _nodes_get_fieldtypes();
+  if(in_array($field['#type'],$fields)){
+    return true;
+  }
+}
+/***********************************************************************************
+ * THEME FUNCTIONS
+ ***********************************************************************************/
+function theme_nodes_table($nodes, $form){
+  // Add the javascript necesary to the page
+  drupal_add_js(drupal_get_path('module','nodes').'/nodes.js');
+  
+  $field_types = _nodes_get_fieldtypes();
+  $return_string = '<table class="nodes"><tr>';
+  // Put the headers on first
+  // We need to analyze the form sent to see what fields we can handle
+  $fields = array();
+  foreach($form as $name => $field){
+    if(is_array($field)){
+      if(isset($field['#type'])){
+        if(_nodes_handle_field($field)){
+          $return_string .= '<th>'.$field['#title'].'</th>';
+          $fields[] = $name;
+        }
+      } else {
+        foreach($field as $name => $field_part){
+          if(is_array($field_part)){
+            if(isset($field_part['#type'])){
+              if(_nodes_handle_field($field_part)){
+                $return_string .= '<th>'.$field_part['#title'].'</th>';
+                $fields[] = $name;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  $return_string .= '</tr>';
+  foreach($nodes as $node){
+    if($class == 'odd'){
+      $class = 'even';
+    } else {
+      $class = 'odd';
+    }
+    $return_string .= '<tr class="'.$class.'">';
+    foreach($fields as $field){
+      $id = $field."_".$node->nid;
+      $return_string .= '<td ondblclick="nodes(\''.$id.'\', \''.$node->nid.'\',\''.$field.'\')"><span id="'.$id.'">'.strip_tags(substr($node->$field,0,100)).'</span></td>';
+    }
+    $return_string .= '</tr>';
+  }
+  return $return_string .'</table>';
+}
