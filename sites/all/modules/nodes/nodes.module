@@ -45,7 +45,7 @@ function nodes_menu($maycache){
  * @param String $content_type
  * @return String HTML
  */
-function nodes_edit_page($type = null, $sort = null, $num = null){
+function nodes_edit_page($type = null, $count = 25){
   // $content_type enables the nodes edit page to filter by a particular content
   // type just by changing the URL.
   
@@ -65,10 +65,9 @@ function nodes_edit_page($type = null, $sort = null, $num = null){
   
   // We'll start with 25 of the most recently created nodes
   $order = 'created';
-  $num_to_edit = 25;
-  $results = db_query("SELECT nid FROM {node} n WHERE type='%s' ORDER BY %s DESC",$type, $order);
+  $results = pager_query("SELECT nid FROM {node} n WHERE type='%s' ORDER BY %s DESC",$count,0,NULL,$type, $order);
   $nodes = array();
-  while(($row = db_fetch_array($results)) && ($num_nodes < $num_to_edit)){
+  while(($row = db_fetch_array($results))){
     // Check that we can actually edit this node
     $node = node_load($row['nid']);
     if(node_access('update',$node)){
@@ -83,9 +82,14 @@ function nodes_edit_page($type = null, $sort = null, $num = null){
     drupal_goto('nodes');
   }
   // We have an array, lets put it in our special themed table!
-  return theme('nodes_table', $nodes, $form);
+  return theme('nodes_table', $nodes, $form) . theme('pager', NULL , $count);
 }
-
+/**
+ * Returns the HTML when requested for a single form field
+ *
+ * @param Int $nid
+ * @param Specific node field $field
+ */
 function nodes_edit_field($nid , $field){
   $node = node_load($nid);
   // Lets get the form for this type, strip everything but the required field and wahey
@@ -93,31 +97,83 @@ function nodes_edit_field($nid , $field){
   $new_form = array();
   if(isset($form[$field])){
     $new_form[$field] = $form[$field];
-    $new_form[$field]['#default_value'] = $node->$field;
+    $new_form[$field]['#value'] = $node->$field;
+    $new_form[$field]['#title'] = '';
+    $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
   } else {
     // field is hiding, lets find it
     foreach($form as $name => $form_field){
       if(is_array($form_field) && isset($form_field[$field])){
         // Lets handle fieldsets here
         if(isset($form_field['#type']) && $form_field['#type']=='fieldset'){
-          $form_field[$field]['#default_value'] = $node->$field;
+          $form_field[$field]['#value'] = $node->$field;
+          $form_field[$field]['#id'] = 'nodes-form-'.$node->nid;
+          $form_field[$field]['#title'] = '';
           $new_form[$field] = $form_field[$field];
         } else {
           $form_field[$field]['#value'] = $node->$field;
+          $form_field[$field]['#title'] = '';
+          $form_field[$field]['#id'] = 'nodes-form-'.$node->nid;
           $new_form[$name] = $form_field;
         }
       }
     }
   }
   if(count($new_form)){
-    print drupal_render_form('nodes-edit-field',$new_form);
+    $new_form['updated'] = array(
+      '#type' => 'hidden',
+      '#value' => $node->changed,
+      '#id' => 'nodes-form-'.$node->nid.'-updated'
+    );
+    $new_form['submit'] = array(
+      '#type' => 'button',
+      '#value' => 'Submit',
+      '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."')"),
+      '#weight' => 10
+    );
+    $new_form['cancel'] = array(
+      '#type' => 'button',
+      '#value' => 'Cancel',
+      '#attributes' => array('onclick'=>'nodescancel();'),
+      '#weight' => 11
+    );
+    print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$new_form).'</div>'));
   } else {
-    print "<h1>".t('Unable to edit this field type')."</h1>";
+    print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
   }
   exit;
 }
-
-
+/**
+ * Handles the form submission.
+ * 
+ * This function needs to be as paranoid as possible - we DO NOT want this module
+ * to be a security issue.
+ * 
+ * We need to return the node id, and the new value (the old value if the user doesn't
+ * have the permission to edit this node).
+ */
+function nodes_submit_form_part(){
+  $nid = array_pop(explode("-",$_POST['formid']));
+  $value = $_POST['formvalue'];
+  $node = node_load($nid);
+  if(node_access('update',$node)){
+    if($node->changed == $_POST['updated']){
+      $node->$_POST['field'] = $value;
+      node_save($node);
+    } else {
+      $value = t('[Another user has edited this node] ').$node->$_POST['field'];
+    }
+  } else {
+    // Make sure we can even view this node
+    if(node_access('view',$node)){
+      $value = t('[Permission denied] ').$node->$_POST['field'];
+    } else {
+      $value = t('Access denied');
+    }
+  }
+  print drupal_to_js(array('nid'=>$nid , 'value'=>$value , 'updated'=>$node->changed));
+  exit;
+}
 /***********************************************************************************
  * HELPER FUNCTIONS
  ***********************************************************************************/
@@ -147,26 +203,67 @@ function _nodes_get_form_no_render($form_id) {
   return $form;
 }
 function _nodes_get_fieldtypes(){
-  return array('textfield','textarea');
+  return array('textfield','textarea','select','checkbox','checkboxes','radio','radios');
 }
-function _nodes_handle_field($field){
+function _nodes_handle_field($field, $form){
   $fields = _nodes_get_fieldtypes();
-  if(in_array($field['#type'],$fields)){
-    return true;
+  if(isset($form[$field]['#type'])){
+    if(in_array($form[$field]['#type'],$fields)){
+      return $form[$field]['#title'];
+    }
+  } else {
+    // We need to find the field FFS
   }
 }
+/*
+function _nodes_find_field($form, $fieldname, $path){
+  foreach($form as $name=>$value){
+    if
+  }
+}
+*/
 /***********************************************************************************
  * THEME FUNCTIONS
  ***********************************************************************************/
 function theme_nodes_table($nodes, $form){
-  // Add the javascript necesary to the page
+  // Add the javascript & css necesary to the page
   drupal_add_js(drupal_get_path('module','nodes').'/nodes.js');
+  drupal_add_css(drupal_get_path('module','nodes').'/nodes.css');
   
   $field_types = _nodes_get_fieldtypes();
-  $return_string = '<table class="nodes"><tr>';
+  $return_string = '<table class="nodes"><tr><th>Node</th>';
   // Put the headers on first
   // We need to analyze the form sent to see what fields we can handle
   $fields = array();
+  $possible_fields = array();
+  // We'll use one of the nodes to ascertain all the possible fields
+  foreach($nodes[0] as $field=>$node_value){
+    if(is_array($node_value)){
+      $possible_fields[$field] = array($field);
+    } else {      
+      $possible_fields[$field] = $field;
+    }
+  }
+  // Lets find where each of the possible_fields is in the array, and find
+  // out if the input that is associated with it is one that we'll handle
+  /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
+  //print_r($possible_fields);
+  //print_r($form);exit;
+  print_r(array_search("textfield",$form,true));
+  print_r($form);exit;
+  foreach($possible_fields as $possible_field){
+    // We've got our possible field name, lets find it in the form
+    if(is_array($possible_field)){
+      // Arrays meen more than one input
+    } else {
+      $title = _nodes_handle_field($possible_field, $form);
+      if($title){
+        $return_string .= '<th>'.$title.'</th>';
+        $fields[] = $possible_field;
+      }
+    }
+  }
+  /* exit;
   foreach($form as $name => $field){
     if(is_array($field)){
       if(isset($field['#type'])){
@@ -187,7 +284,7 @@ function theme_nodes_table($nodes, $form){
         }
       }
     }
-  }
+  } */
   $return_string .= '</tr>';
   foreach($nodes as $node){
     if($class == 'odd'){
@@ -196,9 +293,10 @@ function theme_nodes_table($nodes, $form){
       $class = 'odd';
     }
     $return_string .= '<tr class="'.$class.'">';
+    $return_string .= '<td>'.l($node->nid,'node/'.$node->nid,array('target'=>'_blank')).'</td>';
     foreach($fields as $field){
       $id = $field."_".$node->nid;
-      $return_string .= '<td ondblclick="nodes(\''.$id.'\', \''.$node->nid.'\',\''.$field.'\')"><span id="'.$id.'">'.strip_tags(substr($node->$field,0,100)).'</span></td>';
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\')">'.strip_tags(substr($node->$field,0,100)).'</td>';
     }
     $return_string .= '</tr>';
   }
