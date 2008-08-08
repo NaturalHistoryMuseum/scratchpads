@@ -14,6 +14,7 @@ function nodes(id, url){
 }
 function nodescancel(){
   $(".nodes-form").remove();
+  lastform = false;
   return false;
 }
 function nodessubmit(url,id,field){

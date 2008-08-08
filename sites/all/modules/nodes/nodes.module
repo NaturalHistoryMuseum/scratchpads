@@ -95,30 +95,10 @@ function nodes_edit_field($nid , $field){
   // Lets get the form for this type, strip everything but the required field and wahey
   $form = nodes_get_form_for_type($node->type);
   $new_form = array();
-  if(isset($form[$field])){
-    $new_form[$field] = $form[$field];
-    $new_form[$field]['#value'] = $node->$field;
-    $new_form[$field]['#title'] = '';
-    $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
-  } else {
-    // field is hiding, lets find it
-    foreach($form as $name => $form_field){
-      if(is_array($form_field) && isset($form_field[$field])){
-        // Lets handle fieldsets here
-        if(isset($form_field['#type']) && $form_field['#type']=='fieldset'){
-          $form_field[$field]['#value'] = $node->$field;
-          $form_field[$field]['#id'] = 'nodes-form-'.$node->nid;
-          $form_field[$field]['#title'] = '';
-          $new_form[$field] = $form_field[$field];
-        } else {
-          $form_field[$field]['#value'] = $node->$field;
-          $form_field[$field]['#title'] = '';
-          $form_field[$field]['#id'] = 'nodes-form-'.$node->nid;
-          $new_form[$name] = $form_field;
-        }
-      }
-    }
-  }
+  $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
+  $new_form[$field]['#value'] = $node->$field;
+  $new_form[$field]['#title'] = '';
+  $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
   if(count($new_form)){
     $new_form['updated'] = array(
       '#type' => 'hidden',
@@ -137,6 +117,7 @@ function nodes_edit_field($nid , $field){
       '#attributes' => array('onclick'=>'nodescancel();'),
       '#weight' => 11
     );
+    //print_r($new_form);exit;
     print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$new_form).'</div>'));
   } else {
     print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
@@ -212,16 +193,43 @@ function _nodes_handle_field($field, $form){
       return $form[$field]['#title'];
     }
   } else {
-    // We need to find the field FFS
+    // Lets walk through the array, looking for the field following [$field]['#type]
+    $form_field = _nodes_search_form($form, $field, $fields);
+    if($form_field){
+      if(isset($form_field['#title'])){
+        return $form_field['#title'];
+      } else {
+        // Get the parent which is probably a fieldset and return the title 
+        // of that.
+        $form_field = _nodes_search_form($form, $field, $fields, true);
+        return $form_field['#title'];
+      }
+    }
   }
 }
-/*
-function _nodes_find_field($form, $fieldname, $path){
-  foreach($form as $name=>$value){
-    if
+/**
+ * Following function recursively searches a form for the
+ * "field" and returns it if found, and false if not
+ */
+function _nodes_search_form($form, $field, $field_types, $parent = false){
+  foreach($form as $key=>$value){
+    if($key === $field){
+      if($parent){
+        return $form;
+      }
+      if(in_array($value['#type'],$field_types)){
+        return $value;
+      }
+    }
+    if(is_array($value)){
+      $return = _nodes_search_form($value, $field, $field_types, $parent);
+      if($return){
+        return $return;
+      }
+    }
   }
+  return false;
 }
-*/
 /***********************************************************************************
  * THEME FUNCTIONS
  ***********************************************************************************/
@@ -247,14 +255,12 @@ function theme_nodes_table($nodes, $form){
   // Lets find where each of the possible_fields is in the array, and find
   // out if the input that is associated with it is one that we'll handle
   /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
-  //print_r($possible_fields);
+  //print_r(array_search("textfield",$form,true));
   //print_r($form);exit;
-  print_r(array_search("textfield",$form,true));
-  print_r($form);exit;
   foreach($possible_fields as $possible_field){
     // We've got our possible field name, lets find it in the form
     if(is_array($possible_field)){
-      // Arrays meen more than one input
+      // Arrays mean more than one input
     } else {
       $title = _nodes_handle_field($possible_field, $form);
       if($title){
@@ -263,28 +269,6 @@ function theme_nodes_table($nodes, $form){
       }
     }
   }
-  /* exit;
-  foreach($form as $name => $field){
-    if(is_array($field)){
-      if(isset($field['#type'])){
-        if(_nodes_handle_field($field)){
-          $return_string .= '<th>'.$field['#title'].'</th>';
-          $fields[] = $name;
-        }
-      } else {
-        foreach($field as $name => $field_part){
-          if(is_array($field_part)){
-            if(isset($field_part['#type'])){
-              if(_nodes_handle_field($field_part)){
-                $return_string .= '<th>'.$field_part['#title'].'</th>';
-                $fields[] = $name;
-              }
-            }
-          }
-        }
-      }
-    }
-  } */
   $return_string .= '</tr>';
   foreach($nodes as $node){
     if($class == 'odd'){
@@ -296,7 +280,7 @@ function theme_nodes_table($nodes, $form){
     $return_string .= '<td>'.l($node->nid,'node/'.$node->nid,array('target'=>'_blank')).'</td>';
     foreach($fields as $field){
       $id = $field."_".$node->nid;
-      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\')">'.strip_tags(substr($node->$field,0,100)).'</td>';
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');$(document).ready();">'.strip_tags(substr($node->$field,0,100)).'</td>';
     }
     $return_string .= '</tr>';
   }
