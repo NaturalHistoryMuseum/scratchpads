@@ -13,6 +13,23 @@
 .nodes-form .form-item{
  padding:0 0 5px 0;
 }
-.nodes td{
+.nodes td,.nodes th{
  border:solid 1px #ccc;
+}
+.nodes tr.header{
+ border:solid;
+ border-color:black;
+ border-width: 3px 1px;
+}
+#wrapper, #container{
+ max-width:none !important;
+}
+.nodes{
+ width:100%;
+ background-color:white;
+}
+.nodes th{
+ background-color:#333;
+ color: #ddd;
+ border-color:black;
 }

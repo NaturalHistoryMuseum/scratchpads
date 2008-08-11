@@ -82,7 +82,11 @@ function nodes_edit_page($type = null, $count = 25){
     drupal_goto('nodes');
   }
   // We have an array, lets put it in our special themed table!
-  return theme('nodes_table', $nodes, $form) . theme('pager', NULL , $count);
+  $output = theme('nodes_table', $nodes, $form) . theme('pager', NULL , $count);
+  
+  // Thanks to the panels module for showing me how to hide blocks
+  drupal_set_title('');
+  print theme('page', $output, FALSE);
 }
 /**
  * Returns the HTML when requested for a single form field
@@ -95,10 +99,21 @@ function nodes_edit_field($nid , $field){
   // Lets get the form for this type, strip everything but the required field and wahey
   $form = nodes_get_form_for_type($node->type);
   $new_form = array();
-  $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-  $new_form[$field]['#value'] = $node->$field;
-  $new_form[$field]['#title'] = '';
-  $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+  $parent_form = _nodes_search_form($form, $field, _nodes_get_fieldtypes(),true);
+  if(!isset($parent_form['#type'])){
+    //$parent_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
+    $parent_form[$field]['#value'] = $node->$field;
+    $parent_form[$field]['#default_value'] = $node->$field;
+    $parent_form[$field]['#title'] = '';
+    $parent_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+    $new_form[$field] = $parent_form;
+  } else {
+    $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
+    $new_form[$field]['#value'] = $node->$field;
+    $new_form[$field]['#default_value'] = $node->$field;
+    $new_form[$field]['#title'] = '';
+    $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+  }
   if(count($new_form)){
     $new_form['updated'] = array(
       '#type' => 'hidden',
@@ -188,21 +203,40 @@ function _nodes_get_fieldtypes(){
 }
 function _nodes_handle_field($field, $form){
   $fields = _nodes_get_fieldtypes();
-  if(isset($form[$field]['#type'])){
-    if(in_array($form[$field]['#type'],$fields)){
-      return $form[$field]['#title'];
-    }
-  } else {
-    // Lets walk through the array, looking for the field following [$field]['#type]
+  if(is_array($field)){
+    
+    
+    // Array fields aren't working
+    /*
+    
+    
+    $field = array_pop($field);
     $form_field = _nodes_search_form($form, $field, $fields);
-    if($form_field){
-      if(isset($form_field['#title'])){
-        return $form_field['#title'];
-      } else {
-        // Get the parent which is probably a fieldset and return the title 
-        // of that.
-        $form_field = _nodes_search_form($form, $field, $fields, true);
-        return $form_field['#title'];
+    $title = '';
+    if($field === 'taxonomy')
+      print_r($form_field);exit;
+    foreach($form_field as $form){
+      $title .= $form['#title'];
+    }
+    return $title;
+    */
+  } else {
+    if(isset($form[$field]['#type'])){
+      if(in_array($form[$field]['#type'],$fields)){
+        return $form[$field]['#title'];
+      }
+    } else {
+      // Lets walk through the array, looking for the field following [$field]['#type]
+      $form_field = _nodes_search_form($form, $field, $fields);
+      if($form_field){
+        if(isset($form_field['#title'])){
+          return $form_field['#title'];
+        } else {
+          // Get the parent which is probably a fieldset and return the title 
+          // of that.
+          $form_field = _nodes_search_form($form, $field, $fields, true);
+          return $form_field['#title'];
+        }
       }
     }
   }
@@ -237,9 +271,10 @@ function theme_nodes_table($nodes, $form){
   // Add the javascript & css necesary to the page
   drupal_add_js(drupal_get_path('module','nodes').'/nodes.js');
   drupal_add_css(drupal_get_path('module','nodes').'/nodes.css');
+  drupal_add_js('misc/collapse.js'); // Needed incase the page contains a fieldset in a popup
   
   $field_types = _nodes_get_fieldtypes();
-  $return_string = '<table class="nodes"><tr><th>Node</th>';
+  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Node').'</th>';
   // Put the headers on first
   // We need to analyze the form sent to see what fields we can handle
   $fields = array();
@@ -258,16 +293,15 @@ function theme_nodes_table($nodes, $form){
   //print_r(array_search("textfield",$form,true));
   //print_r($form);exit;
   foreach($possible_fields as $possible_field){
-    // We've got our possible field name, lets find it in the form
-    if(is_array($possible_field)){
-      // Arrays mean more than one input
-    } else {
-      $title = _nodes_handle_field($possible_field, $form);
-      if($title){
-        $return_string .= '<th>'.$title.'</th>';
-        $fields[] = $possible_field;
-      }
+    $title = _nodes_handle_field($possible_field, $form);
+    if($title){
+      $return_string .= '<th>'.$title.'</th>';
+      $fields[] = $possible_field;
     }
+  }
+  $return_string .= '</tr><tr class="all"><td></td>';
+  foreach($fields as $field){
+    $return_string .= '<td>'.t('Edit all [To do]').'</td>';
   }
   $return_string .= '</tr>';
   foreach($nodes as $node){
@@ -277,10 +311,19 @@ function theme_nodes_table($nodes, $form){
       $class = 'odd';
     }
     $return_string .= '<tr class="'.$class.'">';
-    $return_string .= '<td>'.l($node->nid,'node/'.$node->nid,array('target'=>'_blank')).'</td>';
+    $link_text = $node->nid;
+    if($node->type=='image'){
+      if(isset($node->images['thumbnail'])){
+        $link_text = '<img src="'.url($node->images['thumbnail']).'" alt="'.t('Node').' '.$node->nid.'"/>';
+      } else {
+        // Thumbnail doesn't exist - should we warn the user in watchdog?
+        $link_text = $node->nid;
+      }
+    }
+    $return_string .= '<td>'.l($link_text,'node/'.$node->nid,array('target'=>'_blank'),NULL,NULL,FALSE,TRUE).'</td>';
     foreach($fields as $field){
       $id = $field."_".$node->nid;
-      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');$(document).ready();">'.strip_tags(substr($node->$field,0,100)).'</td>';
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');">'.strip_tags(substr($node->$field,0,100)).'</td>';
     }
     $return_string .= '</tr>';
   }
