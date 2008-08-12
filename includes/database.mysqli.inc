@@ -83,21 +83,11 @@ function db_connect($url) {
   @mysqli_real_connect($connection, $url['host'], $url['user'], $url['pass'], substr($url['path'], 1), $url['port'], NULL, MYSQLI_CLIENT_FOUND_ROWS);
 
   // Find all database connection errors and error 1045 for access denied for user account
-  if (mysqli_connect_errno() >= 2000 || mysqli_connect_errno() == 1045) {
+  if (mysqli_connect_errno() > 0) {
     drupal_maintenance_theme();
     drupal_set_header('HTTP/1.1 503 Service Unavailable');
-    drupal_set_title('Unable to connect to database server');
-    print theme('maintenance_page', '<p>If you still have to install Drupal, proceed to the <a href="'. base_path() .'install.php">installation page</a>.</p>
-<p>If you have already finished installing Drupal, this either means that the username and password information in your <code>settings.php</code> file is incorrect or that we can\'t connect to the MySQL database server. This could mean your hosting provider\'s database server is down.</p>
-<p>The MySQL error was: '. theme('placeholder', mysqli_connect_error($connection)) .'.</p>
-<p>Currently, the username is '. theme('placeholder', $url['user']) .' and the database server is '. theme('placeholder', $url['host']) .'.</p>
-<ul>
-  <li>Are you sure you have the correct username and password?</li>
-  <li>Are you sure that you have typed the correct hostname?</li>
-  <li>Are you sure that the database server is running?</li>
-  <li>Are you sure that the mysqli libraries are compiled in your PHP installation? Try using the mysql library instead by editing your <code>settings.php</code> configuration file in Drupal.</li>
-</ul>
-<p>For more help, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.</p>');
+    drupal_set_title('This site is temporarily unavailable');
+    print theme('maintenance_page', '<p>If this message continues to appear for more than 24 hours, please contact the maintainer of this Scratchpad, or contact the Scratchpad team <a href="http://scratchpads.eu/">http://scratchpads.eu/</a>');
     exit;
   }
   else if (mysqli_connect_errno() > 0) {
