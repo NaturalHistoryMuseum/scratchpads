@@ -33,7 +33,13 @@ if (isset($_SERVER['HTTP_HOST'])) {
 }
 $user_password = parse_ini_file("/var/www/drupal_db_passwords",true);
 ini_set('mysql.default_socket',     '/var/lib/mysql/mysql.sock');
-$db_url = 'mysqli://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
+if(!isset($user_password[$db_url_part])){
+  // Likely that this site has either been deleted, or never existed
+  header('Location: http://scratchpads.eu/');
+  exit;
+} else {
+  $db_url = 'mysqli://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
+}
 $db_prefix="";
 
 // Set the User Agent for PHP accessing other sites so that Web admin's know
