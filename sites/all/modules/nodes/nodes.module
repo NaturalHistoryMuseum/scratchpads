@@ -99,21 +99,26 @@ function nodes_edit_field($nid , $field){
   // Lets get the form for this type, strip everything but the required field and wahey
   $form = nodes_get_form_for_type($node->type);
   $new_form = array();
-  $parent_form = _nodes_search_form($form, $field, _nodes_get_fieldtypes(),true);
-  if(!isset($parent_form['#type'])){
-    //$parent_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-    $parent_form[$field]['#value'] = $node->$field;
-    $parent_form[$field]['#default_value'] = $node->$field;
-    $parent_form[$field]['#title'] = '';
-    $parent_form[$field]['#id'] = 'nodes-form-'.$node->nid;
-    $new_form[$field] = $parent_form;
+  if(is_array($node->$field)){
+    $new_form = _nodes_handle_field(array($field), $form);
   } else {
-    $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-    $new_form[$field]['#value'] = $node->$field;
-    $new_form[$field]['#default_value'] = $node->$field;
-    $new_form[$field]['#title'] = '';
-    $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+    $parent_form = _nodes_handle_field($field, $form);
+    if(!isset($parent_form['#type'])){
+      //$parent_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
+      $parent_form[$field]['#value'] = $node->$field;
+      $parent_form[$field]['#default_value'] = $node->$field;
+      $parent_form[$field]['#title'] = '';
+      $parent_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+      $new_form[$field] = $parent_form;
+    } else {
+      $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
+      $new_form[$field]['#value'] = $node->$field;
+      $new_form[$field]['#default_value'] = $node->$field;
+      $new_form[$field]['#title'] = '';
+      $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+    }
   }
+  //print_r($new_form);exit;
   if(count($new_form)){
     $new_form['updated'] = array(
       '#type' => 'hidden',
@@ -123,16 +128,16 @@ function nodes_edit_field($nid , $field){
     $new_form['submit'] = array(
       '#type' => 'button',
       '#value' => 'Submit',
-      '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."')"),
-      '#weight' => 10
+      '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."')", 'class'=>'nodes-button'),
+      '#weight' => 1000
     );
     $new_form['cancel'] = array(
       '#type' => 'button',
       '#value' => 'Cancel',
-      '#attributes' => array('onclick'=>'nodescancel();'),
-      '#weight' => 11
+      '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
+      '#weight' => 1001
     );
-    //print_r($new_form);exit;
+    print_r();
     print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$new_form).'</div>'));
   } else {
     print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
@@ -203,42 +208,13 @@ function _nodes_get_fieldtypes(){
 }
 function _nodes_handle_field($field, $form){
   $fields = _nodes_get_fieldtypes();
-  if(is_array($field)){
-    
-    
-    // Array fields aren't working
-    /*
-    
-    
-    $field = array_pop($field);
-    $form_field = _nodes_search_form($form, $field, $fields);
-    $title = '';
-    if($field === 'taxonomy')
-      print_r($form_field);exit;
-    foreach($form_field as $form){
-      $title .= $form['#title'];
+  if(isset($form[$field]['#type'])){
+    if(in_array($form[$field]['#type'],$fields)){
+      return $form[$field];
     }
-    return $title;
-    */
   } else {
-    if(isset($form[$field]['#type'])){
-      if(in_array($form[$field]['#type'],$fields)){
-        return $form[$field]['#title'];
-      }
-    } else {
-      // Lets walk through the array, looking for the field following [$field]['#type]
-      $form_field = _nodes_search_form($form, $field, $fields);
-      if($form_field){
-        if(isset($form_field['#title'])){
-          return $form_field['#title'];
-        } else {
-          // Get the parent which is probably a fieldset and return the title 
-          // of that.
-          $form_field = _nodes_search_form($form, $field, $fields, true);
-          return $form_field['#title'];
-        }
-      }
-    }
+    // Lets walk through the array, looking for the field following [$field]['#type]
+    return _nodes_search_form($form, $field, $fields);
   }
 }
 /**
@@ -247,12 +223,28 @@ function _nodes_handle_field($field, $form){
  */
 function _nodes_search_form($form, $field, $field_types, $parent = false){
   foreach($form as $key=>$value){
-    if($key === $field){
+    $temp_field = $field;
+    if(is_array($field)){
+      $temp_field = $field[0];
+    }
+    if($key === $temp_field){
       if($parent){
         return $form;
       }
-      if(in_array($value['#type'],$field_types)){
+      if(in_array($value['#type'],$field_types) && isset($value['#type'])){
         return $value;
+      }
+      if(is_array($field)){
+        $form_to_return = array();
+        foreach($value as $field_part){
+          if(in_array($field_part['#type'],$field_types)){
+            $form_to_return[] = $field_part;
+          }
+        }
+        if(count($form_to_return)){
+          $form_to_return['nodes_array'] = 'nodes_array';
+          return $form_to_return;
+        }
       }
     }
     if(is_array($value)){
@@ -290,13 +282,28 @@ function theme_nodes_table($nodes, $form){
   // Lets find where each of the possible_fields is in the array, and find
   // out if the input that is associated with it is one that we'll handle
   /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
-  //print_r(array_search("textfield",$form,true));
-  //print_r($form);exit;
   foreach($possible_fields as $possible_field){
-    $title = _nodes_handle_field($possible_field, $form);
-    if($title){
-      $return_string .= '<th>'.$title.'</th>';
-      $fields[] = $possible_field;
+    $field_form = _nodes_handle_field($possible_field, $form);
+    if($field_form){
+      // Is this an array
+      if(isset($field_form['nodes_array'])){
+        unset($field_form['nodes_array']);
+        $title_array = array();
+        foreach($field_form as $field_form_part){
+          $title_array[] = (isset($field_form_part['#title'])) ? $field_form_part['#title'] : $possible_field[0];
+        }
+        $title = implode(" / ",$title_array);
+      } else {
+        $title = (isset($field_form['#title'])) ? $field_form['#title'] : $possible_field;
+      }
+      if($title){
+        $return_string .= '<th>'.$title.'</th>';
+        if(is_array($possible_field)){
+          $fields[] = $possible_field[0];
+        } else {
+          $fields[] = $possible_field;
+        }
+      }
     }
   }
   $return_string .= '</tr><tr class="all"><td></td>';

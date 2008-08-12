@@ -3,6 +3,7 @@
  background-color:white;
  border:solid 1px black;
  padding:10px;
+ min-width:200px;
 }
 .nodes td:hover{
  background-color: #999999;
@@ -13,8 +14,14 @@
 .nodes-form .form-item{
  padding:0 0 5px 0;
 }
-.nodes td,.nodes th{
+.nodes th{
  border:solid 1px #ccc;
+ background-color:#333;
+ color: #ddd;
+ border-color:black;
+}
+.nodes td{
+ border:dotted 1px #ccc;
 }
 .nodes tr.header{
  border:solid;
@@ -27,9 +34,19 @@
 .nodes{
  width:100%;
  background-color:white;
+ border:solid 1px #ccc;
 }
-.nodes th{
- background-color:#333;
- color: #ddd;
- border-color:black;
+.nodes-button{
+ color:black;
+ background-color:#eee;
+ border:solid 1px black;
+ padding:1px;
+}
+.nodes-button:hover{
+ border:outset 2px black;
+ padding:0px
+}
+.nodes-button:active{
+ border:inset 2px black;
+ padding:0px
 }
