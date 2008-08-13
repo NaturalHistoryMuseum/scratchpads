@@ -1,4 +1,5 @@
 .nodes-form{
+ text-align:left;
  position:absolute;
  background-color:white;
  border:solid 1px black;
@@ -49,4 +50,17 @@
 .nodes-button:active{
  border:inset 2px black;
  padding:0px
+}
+.nodes td.nohover:hover{
+ background-color:inherit;
+ background-image:none;
+}
+.nodes-selected{
+ background-color:#adb2c1 !important;
+}
+.nodes tr.all{
+ text-align:center;
+}
+.deselected{
+ display:none;
 }

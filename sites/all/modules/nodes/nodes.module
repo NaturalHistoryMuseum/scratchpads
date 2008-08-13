@@ -40,10 +40,7 @@ function nodes_menu($maycache){
  ***********************************************************************************/
 /**
  * Returns the HTML for a multiple edit page.  This the work horse method of this
- * module.
- *
- * @param String $content_type
- * @return String HTML
+ * module
  */
 function nodes_edit_page($type = null, $count = 25){
   // $content_type enables the nodes edit page to filter by a particular content
@@ -88,37 +85,42 @@ function nodes_edit_page($type = null, $count = 25){
   drupal_set_title('');
   print theme('page', $output, FALSE);
 }
+
 /**
  * Returns the HTML when requested for a single form field
- *
- * @param Int $nid
- * @param Specific node field $field
  */
 function nodes_edit_field($nid , $field){
-  $node = node_load($nid);
+  if(!is_numeric($nid)){
+    $form = nodes_get_form_for_type($nid);
+  } else {
+    $node = node_load($nid);
+    $form = nodes_get_form_for_type($node->type, $node);
+  }
   // Lets get the form for this type, strip everything but the required field and wahey
-  $form = nodes_get_form_for_type($node->type);
   $new_form = array();
   if(is_array($node->$field)){
     $new_form = _nodes_handle_field(array($field), $form);
+    foreach($new_form as &$new_form_part){
+      $new_form_part['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
+    }
   } else {
-    $parent_form = _nodes_handle_field($field, $form);
-    if(!isset($parent_form['#type'])){
-      //$parent_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-      $parent_form[$field]['#value'] = $node->$field;
-      $parent_form[$field]['#default_value'] = $node->$field;
-      $parent_form[$field]['#title'] = '';
-      $parent_form[$field]['#id'] = 'nodes-form-'.$node->nid;
-      $new_form[$field] = $parent_form;
-    } else {
+    $new_form = _nodes_search_form($form, $field, _nodes_get_fieldtypes(),true);
+    if(isset($new_form['#type'])){
+      unset($new_form);
       $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-      $new_form[$field]['#value'] = $node->$field;
-      $new_form[$field]['#default_value'] = $node->$field;
+    }
+    if(count($new_form[$field])>1){
       $new_form[$field]['#title'] = '';
-      $new_form[$field]['#id'] = 'nodes-form-'.$node->nid;
+      $new_form[$field]['#attributes']['class'] = 'nodes-form-'.$node->nid;
+    } else {
+      // Gah, this code is horrible.  Looks like we're here because we're editing
+      // multiple nodes and the field is an array field.  Lets try this again!      
+      $new_form = _nodes_handle_field(array($field), $form);
+      foreach($new_form as &$new_form_part){
+        $new_form_part['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
+      }
     }
   }
-  //print_r($new_form);exit;
   if(count($new_form)){
     $new_form['updated'] = array(
       '#type' => 'hidden',
@@ -129,15 +131,14 @@ function nodes_edit_field($nid , $field){
       '#type' => 'button',
       '#value' => 'Submit',
       '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."')", 'class'=>'nodes-button'),
-      '#weight' => 1000
+      '#weight' => 10000
     );
     $new_form['cancel'] = array(
       '#type' => 'button',
       '#value' => 'Cancel',
       '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
-      '#weight' => 1001
+      '#weight' => 10001
     );
-    print_r();
     print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$new_form).'</div>'));
   } else {
     print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
@@ -155,7 +156,11 @@ function nodes_edit_field($nid , $field){
  */
 function nodes_submit_form_part(){
   $nid = array_pop(explode("-",$_POST['formid']));
-  $value = $_POST['formvalue'];
+  if(count($_POST['formvalue'])==1){
+    $value = $_POST['formvalue'][0];
+  } else {
+    $value = $_POST['formvalue'];
+  }
   $node = node_load($nid);
   if(node_access('update',$node)){
     if($node->changed == $_POST['updated']){
@@ -172,20 +177,26 @@ function nodes_submit_form_part(){
       $value = t('Access denied');
     }
   }
+  // If this field is an array, we need to output it as a string
+  if(is_array($value)){
+    $value = t('Multiple values');
+  }
   print drupal_to_js(array('nid'=>$nid , 'value'=>$value , 'updated'=>$node->changed));
   exit;
 }
 /***********************************************************************************
  * HELPER FUNCTIONS
  ***********************************************************************************/
-function nodes_get_form_for_type($type){
+function nodes_get_form_for_type($type, $node = null){
   global $user;
   $types = node_get_types();
   $type = isset($type) ? str_replace('-', '_', $type) : NULL;
   // If a node type has been specified, validate its existence.
   if (isset($types[$type]) && node_access('create', $type)) {
     // Initialize settings:
-    $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+    if(is_null($node)){
+      $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+    }
     $output = _nodes_get_form_no_render($type .'_node_form', $node);
   }
   return $output;
@@ -266,7 +277,7 @@ function theme_nodes_table($nodes, $form){
   drupal_add_js('misc/collapse.js'); // Needed incase the page contains a fieldset in a popup
   
   $field_types = _nodes_get_fieldtypes();
-  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Node').'</th>';
+  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Select').'</th><th>'.t('Node').'</th>';
   // Put the headers on first
   // We need to analyze the form sent to see what fields we can handle
   $fields = array();
@@ -296,6 +307,7 @@ function theme_nodes_table($nodes, $form){
       } else {
         $title = (isset($field_form['#title'])) ? $field_form['#title'] : $possible_field;
       }
+      $title = check_plain($title);
       if($title){
         $return_string .= '<th>'.$title.'</th>';
         if(is_array($possible_field)){
@@ -306,9 +318,9 @@ function theme_nodes_table($nodes, $form){
       }
     }
   }
-  $return_string .= '</tr><tr class="all"><td></td>';
+  $return_string .= '</tr><tr class="all"><td class="nohover" onclick="nodesselectallrows();"><span id="selected">'.t('Select all').'</span><span class="deselected" id="deselected">'.t('Deselect all').'</span></td><td class="nohover"></td>';
   foreach($fields as $field){
-    $return_string .= '<td>'.t('Edit all [To do]').'</td>';
+    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$field).'\');"><span id="all-'.$field.'">'.t('Edit all').'</span></td>';
   }
   $return_string .= '</tr>';
   foreach($nodes as $node){
@@ -317,7 +329,7 @@ function theme_nodes_table($nodes, $form){
     } else {
       $class = 'odd';
     }
-    $return_string .= '<tr class="'.$class.'">';
+    $return_string .= '<tr id="nodes-row-'.$node->nid.'" class="selectable '.$class.'"><td class="nohover" onclick="nodesselectrow('.$node->nid.');"><form><input id="nodes-row-checkbox-'.$node->nid.'" type="checkbox"/></form></td>';
     $link_text = $node->nid;
     if($node->type=='image'){
       if(isset($node->images['thumbnail'])){
@@ -327,9 +339,12 @@ function theme_nodes_table($nodes, $form){
         $link_text = $node->nid;
       }
     }
-    $return_string .= '<td>'.l($link_text,'node/'.$node->nid,array('target'=>'_blank'),NULL,NULL,FALSE,TRUE).'</td>';
+    $return_string .= '<td class="nohover">'.l($link_text,'node/'.$node->nid,array('target'=>'_blank'),NULL,NULL,FALSE,TRUE).'</td>';
     foreach($fields as $field){
       $id = $field."_".$node->nid;
+      if(is_array($node->$field)){
+        $node->$field = t('Multiple values');
+      }
       $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');">'.strip_tags(substr($node->$field,0,100)).'</td>';
     }
     $return_string .= '</tr>';

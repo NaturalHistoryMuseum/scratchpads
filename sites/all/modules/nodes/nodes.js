@@ -5,6 +5,8 @@ function nodes(id, url){
     $(".nodes-form").remove();
     // Get the HTML from server, and add it
     var nodesGetForm = function (data) {
+      //alert("***"+data);
+      //alert($('#id'+id).html());
       var returnHtml = Drupal.parseJson(data);
       $('#'+id).html($('#'+id).html()+returnHtml['html']);
       
@@ -30,6 +32,23 @@ function nodes(id, url){
       });
       // End of the shite
       
+      // Lets try moving this frame around a little
+      var right = parseInt($('.nodes-form').width()) + parseInt($('.nodes-form').css('left').replace('px','')) + 50;
+      if (typeof window.innerWidth != 'undefined'){
+        viewportwidth = window.innerWidth;
+      } 
+      else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0){
+        viewportwidth = document.documentElement.clientWidth;
+      } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth;
+      }
+      if(right > viewportwidth){
+        var moveleft = right - viewportwidth;
+        if(moveleft<0){
+          moveleft = 0;
+        }
+        $('.nodes-form').css('left',parseInt($('.nodes-form').css('left').replace('px',''))-parseInt(moveleft)+'px');
+      }
     }
     $.get(url, null, nodesGetForm);
     lastform = id;    
@@ -45,5 +64,42 @@ function nodessubmit(url,id,field){
     var returnHtml = Drupal.parseJson(data);
     $('#'+field+'_'+returnHtml['nid']).html(returnHtml['value']);
   }
-  $.post(url,{formvalue: $('#'+id).val(), formid: id, field: field, updated: $('#'+id+'-updated').val()},nodesSubmitForm);
+  var valueToSend = new Array();
+  $('.'+id).each(function(i){
+    valueToSend[valueToSend.length] = $(this).val();
+  });
+  $.post(url,{'formvalue[]':valueToSend,'formid':id,'field':field,'updated':$('#'+id+'-updated').val()},nodesSubmitForm);
+}
+var allselected = false;
+function nodesselectallrows(){
+  if(!allselected){
+    $('.selectable').each(function(){
+      var nidparts = $(this).attr('id').split("-");
+      var nid = nidparts[2];
+      $('#nodes-row-'+nid).addClass('nodes-selected');
+      $('#nodes-row-checkbox-'+nid).attr('checked','checked');
+    });
+    allselected = true;
+    $('#selected').toggle();
+    $('#deselected').toggle();
+  } else {
+    $('.selectable').each(function(){
+      var nidparts = $(this).attr('id').split("-");
+      var nid = nidparts[2];
+      $('#nodes-row-'+nid).removeClass('nodes-selected');
+      $('#nodes-row-checkbox-'+nid).removeAttr('checked');
+    });
+    allselected = false;
+    $('#deselected').toggle();
+    $('#selected').toggle();
+  }
+}
+function nodesselectrow(nid){
+  if($('#nodes-row-checkbox-'+nid).attr('checked')){
+    $('#nodes-row-checkbox-'+nid).removeAttr('checked');
+  } else {
+    $('#nodes-row-checkbox-'+nid).attr('checked','checked');
+  }
+  $('#nodes-row-'+nid).toggleClass('nodes-selected');
+  return false;
 }
