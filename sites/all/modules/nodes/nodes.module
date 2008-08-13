@@ -139,6 +139,13 @@ function nodes_edit_field($nid , $field){
       '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
       '#weight' => 10001
     );
+    // Add a hidden field to hold all the node IDs if this is an "all" form
+    if(!is_numeric($nid)){
+      $new_form['nodeids'] = array(
+        '#type' => 'hidden',
+        '#default_value' => ''
+      );
+    }
     print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$new_form).'</div>'));
   } else {
     print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
@@ -154,14 +161,14 @@ function nodes_edit_field($nid , $field){
  * We need to return the node id, and the new value (the old value if the user doesn't
  * have the permission to edit this node).
  */
-function nodes_submit_form_part(){
+function nodes_submit_form_part(){  
   $nid = array_pop(explode("-",$_POST['formid']));
-  if(count($_POST['formvalue'])==1){
+  $node = node_load($nid);
+  if(!is_array($node->$_POST['field'])){
     $value = $_POST['formvalue'][0];
   } else {
     $value = $_POST['formvalue'];
-  }
-  $node = node_load($nid);
+  }  
   if(node_access('update',$node)){
     if($node->changed == $_POST['updated']){
       $node->$_POST['field'] = $value;
