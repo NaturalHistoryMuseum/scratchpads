@@ -11,6 +11,13 @@
  */
 function views_json_views_style_plugins() {
   return array(
+    'views_json_simple' => array(
+      'name' => t('Views JSON: Simple JSON data document'),
+      'theme' => 'views_json_simple',
+      'needs_table_header' => TRUE,
+      'needs_fields' => TRUE,
+      'even_empty' => TRUE,  
+    ),  
     'views_json_exhibit' => array(
       'name' => t('Views JSON: MIT Simile/Exhibit JSON data document'),
       'theme' => 'views_json_exhibit',
@@ -18,19 +25,26 @@ function views_json_views_style_plugins() {
       'needs_fields' => TRUE,
       'even_empty' => TRUE,
     ),
+
   );
 }
 
 /*
- * Implementation of hook_views_arguments to add the Canonical JSON and
+ * Implementation of hook_views_arguments to add the simple JSON and
  * and Exhibit JSON argument selectors.
  * @returns array of arguments
  */ 
 function views_json_views_arguments() {
   $arguments = array(
+    'json_simple' => array(
+      'name' => t('Views JSON: Simple JSON data document selector'),
+      'handler' => 'views_json_simple_views_handler',
+      'option' => 'string',
+      'help' => t('This argument specifies a document selector; it will only provide a method for rendering the current view as JSON.'),
+    ),
     'json_exhibit' => array(
       'name' => t('Views JSON: MIT Simile/Exhibit JSON data document selector'),
-      'handler' => 'views_json_views_handler',
+      'handler' => 'views_json_exhibit_views_handler',
       'option' => 'string',
       'help' => t('This argument specifies a document selector; it will only provide a method for rendering the current view as JSON.'),
     ),
@@ -39,18 +53,49 @@ function views_json_views_arguments() {
 }
 
 /**
- * handler for our own Exhibit JSON argument handler
+ * handler for our own Simple JSON argument handler
  */
-function views_json_views_handler($op, &$query, $argtype, $arg='') {
+function views_json_simple_views_handler($op, &$query, $argtype, $arg='') {
   if ($op == 'filter') {
-    views_json_views_argument('argument', $GLOBALS['current_view'], $arg);
+    views_json_simple_views_argument('argument', $GLOBALS['current_view'], $arg);
   }
 }
 
 /**
- * argument hook that will display the JSON data document or display export icons.
+ * handler for our own Exhibit JSON argument handler
  */
-function views_json_views_argument($op, &$view, $arg) {
+function views_json_exhibit_views_handler($op, &$query, $argtype, $arg='') {
+  if ($op == 'filter') {
+    views_json_exhibit_views_argument('argument', $GLOBALS['current_view'], $arg);
+  }
+}
+
+/**
+ * argument hook that will display the Simple JSON data document or display export icons.
+ */
+function views_json_simple_views_argument($op, &$view, $arg) {
+  if ($op == 'argument' && ($arg == 'json_simple')) {
+    $view->page_type = 'views_'. $arg;
+  }
+  else if ($op == 'post_view' && $view->build_type != 'block') {
+    $args = views_post_view_make_args($view, $arg, $arg);
+    $url = views_get_url($view, $args);
+    $title = views_get_title($view, 'page', $args);
+    $links = array();
+   
+    if ($arg == 'json_simple') {
+      if (($image = theme('image', drupal_get_path('module', 'views_json') .'/json32x32.png', t('Exhibit JSON'), t('Show @title as MIT Simile/Exhibit JSON', array('@title' => $title))))) {
+        $links[] = l($image, $url, array('class' => 'json-icon'), $url_filter, NULL, FALSE, TRUE);
+      return implode('&nbsp;&nbsp;', $links);
+      }
+    }
+  }    
+}
+
+/**
+ * argument hook that will display the Exhibit JSON data document or display export icons.
+ */
+function views_json_exhibit_views_argument($op, &$view, $arg) {
   if ($op == 'argument' && ($arg == 'json_exhibit')) {
     $view->page_type = 'views_'. $arg;
   }
@@ -66,8 +111,30 @@ function views_json_views_argument($op, &$view, $arg) {
       return implode('&nbsp;&nbsp;', $links);
       }
     }
+  }    
+}
+
+/**
+ * post view to display the render icons
+ */
+function views_json_views_post_view($view, $items, $output) {
+  $links = '';
+  foreach ($view->argument as $id => $argument) {
+    if ($argument['type'] == 'json_simple') {
+      $links .= views_json_simple_views_argument('post_view', $view, $argument['type'], '');
+    }
+    if ($argument['type'] == 'json_exhibit') {
+      $links .= views_json_exhibit_views_argument('post_view', $view, $argument['type'], '');
+    }    
   }
-    
+  return $links;
+}
+
+/*
+ * describes how to theme a simple JSON view
+ */
+function theme_views_json_simple($view, $nodes, $type) {
+  views_json_simple_render($view->vid, $nodes, $type);
 }
 
 /*
@@ -77,17 +144,31 @@ function theme_views_json_exhibit($view, $nodes, $type) {
   views_json_exhibit_render($view->vid, $nodes, $type);
 }
 
-/**
- * post view to display the render icons
- */
-function views_json_views_post_view($view, $items, $output) {
-  $links = '';
-  foreach ($view->argument as $id => $argument) {
-    if ($argument['type'] == 'json_exhibit') {
-      $links .= views_json_views_argument('post_view', $view, $argument['type'], '');
-    }
+function views_json_simple_render($vid, $nodes, $type) {
+  $view = views_load_view($vid);
+  $result = views_build_view('items', $view);
+  $fields = _views_get_fields();
+  $json = '"nodes":'.str_repeat(" ", 4)."[\n";
+  foreach ($nodes as $node) {
+   $json.= str_repeat(" ", 6)."{\n";
+   foreach ($view->field as $field) { 
+    if ($fields[$field['id']]['visible'] !== false) {
+      $label = $field['label'] ? $field['label'] : $fields[$field['fullname']]['name'];
+      $label = trim(views_json_strip_illegal_chars(views_json_encode_special_chars($label)));        
+      $value = trim(views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view));
+      $value = views_json_encode_special_chars($value);
+      $label = str_replace("Profile ", '', $label); //strip out Profile: from profile fields
+      $json.=str_repeat(" ", 8).'"'.$label.'"'. " ".": ".'"'.$value.'"'.",\n";
+    }    
+   }
+   $json.=str_repeat(" ", 6)."},\n\n";
   }
-  return $links;
+  $json.=str_repeat(" ", 4)."]";
+  
+  drupal_set_header('Content-Type: text/javascript');
+  print $json;
+  module_invoke_all('exit');
+  exit; 
 }
 
 function views_json_exhibit_render($vid, $nodes, $type) {
@@ -95,11 +176,9 @@ function views_json_exhibit_render($vid, $nodes, $type) {
   $view = views_load_view($vid);
   $result = views_build_view('items', $view);
   $fields = _views_get_fields();
-  
-  $items = array();
-  $view_properties = array ();
-  $json = "{\n".str_repeat(" ", 4).'"items"'." : ". "  [";
+  $json = "{\n".str_repeat(" ", 4).'"items"'." : ". "[\n";
   foreach ($nodes as $node) {
+  $json.= str_repeat(" ", 8)."{\n";	
    /*$items[] = array(
      'type'        => $node->type,
      'id'          => 'node/' . $node->nid,
@@ -109,42 +188,76 @@ function views_json_exhibit_render($vid, $nodes, $type) {
      'changed'     => gmstrftime(EXHIBIT_DATE_FORMAT, $node->changed),
      'body'        => $node->teaser,
      'url'         => url('node/' . $node->nid, array('absolute' => TRUE)),
-   );*/
-   $json.="\n".str_repeat(" ", 8)."{\n";
+   );*/	   
+   //$json.=str_repeat(" ", 12).'"type" '. " ".": ".'"'.(isset($node->type) ? $node->type : 'Item').'",'."\n";
+   //$json.=str_repeat(" ", 12).'"label" '. " "." : ".'"'.(isset($node->title) ? $node->title : 'untitled').'",'."\n";
+   $json.=str_repeat(" ", 12).'"type" '. " ".": ".'"'.'##type##'.'",'."\n";
+   $json.=str_repeat(" ", 12).'"label" '. " "." : ".'"'.'##label##'.'",'."\n"; 
    foreach ($view->field as $field) { 
     if ($fields[$field['id']]['visible'] !== false) {
-        $label = $field['label'] ? $field['label'] : $fields[$field['fullname']]['name'];
-        $value = $field;
-        $value = views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view);
-        $value = preg_replace('/<.*?>/', '', $value); // strip html tags
-        $value = str_replace(array("\r", "\n", ','), ' ', $value); // strip line breaks and commas
-        $value = str_replace(array(':', '#', '/',),'', $value); //strip special javascript characters
-        $label = str_replace(array(':', '#', '/',),'', $label); //strip special javascript characters
-        $value = str_replace('"', '""', $value); // escape " characters
-        $value = decode_entities($value);
-        $json.=str_repeat(" ", 8).$label. " ".": ".'"'.$value.'"'."\n";
+      $label = $field['label'] ? $field['label'] : $fields[$field['fullname']]['name'];
+    	$label = trim(views_json_strip_illegal_chars(views_json_encode_special_chars($label)));        
+      $value = trim(views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view));
+      if (strtotime($value))
+        $value = date(EXHIBIT_DATE_FORMAT, strtotime($value));
+    	$value = views_json_encode_special_chars($value);
+      $label = str_replace("Profile ", '', $label); //strip out Profile: from profile fields
+      if ($label == 'type') $json = str_replace('##type##', $value, $json);
+      elseif ($label == 'label') $json = str_replace('##label##', $value, $json);
+      else $json.=str_repeat(" ", 12).'"'.$label.'"'. " ".": ".'"'.$value.'"'.",\n";
     }    
    }
+   if (strpos($json, '##type##') !== false) 
+   	$json = str_replace('##type##', (isset($node->type) ? $node->type : 'Item'), $json);
+   if (strpos($json, '##label##') !== false) 
+    $json = str_replace('##label##', (isset($node->title) ? $node->title : 'none'), $json);   
+   $json = rtrim($json, ",\n");
+   $json.="\n";
    $json.=str_repeat(" ", 8)."},\n";
   }
+  $json = rtrim($json, ",\n");
+  $json.="\n";
   $json.=str_repeat(" ", 4)."]\n}";
-// $types  = array('node' => array('label' => t('Node'), 'pluralLabel' => t('Nodes')));
-// $properties = array(
-//   'author'     => array('valueType' => 'item'),
-//   'created'    => array('valueType' => 'date'),
-//   'changed'    => array('valueType' => 'date'),
-//   'url'        => array('valueType' => 'url'),
-// );
-//  $exhibit_json = array(
-//   'items'      => $items,
-//   'types'      => $types,
-//   'properties' => $properties,
-// );
-//return drupal_to_js($exhibit_json);
-//print_r($items);
+  
 
 drupal_set_header('Content-Type: text/javascript');
 print $json;
 module_invoke_all('exit');
 exit;
+}
+
+/**
+ * Strips illegal JSON characters in identifier string
+ *
+ * @param string $input
+ * @return string
+ */
+function views_json_strip_illegal_chars($input) {
+ $output = str_replace(array('{','}','[', ']', ':', ',', '"', "'", chr(47), chr(92)), '', $input);
+ $output = preg_replace(
+                        '/[\x{80}-\x{A0}'. // Non-printable ISO-8859-1 + NBSP
+                        '\x{01}-\x{1F}'. //Non-printable ASCII characters
+                        '\x{0}]/u', // NULL byte
+        '', $output);
+
+ return $output; 	
+}
+
+/**
+ * Encodes special JSON characters in string
+ *
+ * @param string $input
+ * @return string
+ */
+function views_json_encode_special_chars($input) {
+	$output = str_replace(chr(92), '\\', $input);
+	$output = str_replace(chr(47), '\/', $output);
+	$output = str_replace('"', '\"', $output);
+	$output = str_replace(chr(8), '\b', $output);
+	$output = str_replace(chr(12), '\f', $output);
+	$output = str_replace(chr(13).chr(10), '\n', $output);
+	$output = str_replace(chr(10), '\n', $output);
+	$output = str_replace(chr(13), '\r', $output);
+	$output = str_replace(chr(9), '\t', $output);
+	return $output;
 }
