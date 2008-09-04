@@ -60,6 +60,7 @@ function legal_menu($may_cache) {
 function legal_display_fields($conditions) {
     
     $form = array();
+		$accept_label = t('<strong>Accept</strong> Terms & Conditions of Use');
     
     $form['current_id'] = array(
       '#type' => 'value',
@@ -90,6 +91,12 @@ function legal_display_fields($conditions) {
               '#value' => filter_xss_admin($conditions['conditions']),
             );
             break;
+        case 3: // Page Link
+            $form['legal']['conditions'] = array(
+              '#value' => ' ',
+            );
+						$accept_label = t('<strong>Accept</strong> !terms of Use', array('!terms' => l('Terms & Conditions', 'legal')));
+            break; 
         
         default: // scroll box (HTML)
             $form['legal']['conditions'] = array(
@@ -120,7 +127,7 @@ function legal_display_fields($conditions) {
     
     $form['legal']['legal_accept'] = array(
         '#type' => 'checkbox',
-        '#title' => t('<strong>Accept</strong> Terms & Conditions of Use'),
+        '#title' => $accept_label,
         '#default_value' => 0,
         '#weight' => 50,
         '#required' => TRUE,
@@ -140,6 +147,7 @@ function legal_page() {
         break;
       case 1: // CSS Scroll Box with HTML
       case 2: // HTML
+      case 3: // Page Link   
         $output = filter_xss_admin($conditions['conditions']);
         break;
     }
@@ -168,7 +176,7 @@ function legal_administration() {
       '#type' => 'radios',
       '#title' => t('Display Style'),
       '#default_value' => variable_get('legal_display', '0'),
-      '#options' => array(t('Scroll Box'), t('Scroll Box (CSS)'), t('HTML Text')),
+      '#options' => array(t('Scroll Box'), t('Scroll Box (CSS)'), t('HTML Text'), t('Page Link')),
       '#description' => t('How terms & conditions should be displayed to users.'),
       '#required' => TRUE,
     );
@@ -243,8 +251,14 @@ function legal_preview($form, $form_values) {
             $form['legal']['conditions'] = array(
               '#value' => filter_xss_admin($form['conditions']['#value']),
             );
+				    $form['legal']['legal_accept']['#title'] = t('<strong>Accept</strong> Terms & Conditions of Use');
             break;
-        
+        case 3: // Page Link
+            $form['legal']['conditions'] = array(
+              '#value' => ' ',
+            );
+				    $form['legal']['legal_accept']['#title'] = t('<strong>Accept</strong> !terms of Use', array('!terms' => l('Terms & Conditions', 'legal')));
+            break;  
         default: // scroll box (HTML)
             $form['legal']['conditions'] = array(
               '#type' => 'textarea',
@@ -254,6 +268,7 @@ function legal_preview($form, $form_values) {
               '#rows' => 10,
               '#attributes' => array('readonly' => ''),
             );
+						$form['legal']['legal_accept']['#title'] = t('<strong>Accept</strong> Terms & Conditions of Use');
     }
 
     // overide additional checkboxes in preview
@@ -554,7 +569,7 @@ function legal_login($uid, $id_hash = NULL) {
     
     $form['save'] = array(
         '#type' => 'submit',
-        '#value' => t('Save'),
+        '#value' => t('Confirm'),
     );
     
     return $form;
@@ -637,7 +652,7 @@ function legal_save_accept($uid, $tc_id) {
 function legal_get_conditions() {
 
     $conditions = db_fetch_array(db_query("SELECT * FROM {legal_conditions} ORDER BY tc_id DESC LIMIT 1"));
-    $conditions['extras'] = unserialize($conditions['extras']);
+    $conditions['extras'] = empty($conditions['extras']) ? array() : unserialize($conditions['extras']);
     return $conditions;
 }
 

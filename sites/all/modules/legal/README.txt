@@ -72,6 +72,12 @@ CONFIGURATION
 
 	Note: When displayed on the page /legal your T&Cs will be automatically 
                 reformatted to HTML Text if entered as a Scroll Box or Scroll Box (CSS)
+
+
+********************************************************************
+KNOWN PROBLEMS
+
+There is a conflict with the SecureSite module - do not use Legal and SecureSite on the same site.
        
        
        
