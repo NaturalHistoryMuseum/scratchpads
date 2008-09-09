@@ -24,7 +24,7 @@ function bio_taxonomy_menu() {
 
 function bio_taxonomy_term_page($str_tids = '', $depth = 0, $op = 'page') {
   $output = taxonomy_term_page($str_tids, $depth, $op);
-  $result = db_query("SELECT nid FROM {taxonomy_bio} WHERE tid = ".$str_tids);
+  $result = db_query("SELECT nid FROM {taxonomy_bio} WHERE tid = %s",$str_tids);
   $biotax = db_fetch_object($result);
   if (isset($biotax->nid)){
     $node = node_load($biotax->nid);
@@ -40,15 +40,15 @@ function bio_taxonomy_taxonomy($op, $type, $array= NULL){
     switch($op){
       case "insert":
         if (isset($array['authority']) && strlen(trim($array['authority']))>0)
-      db_query("INSERT INTO taxonomy_bio VALUES (".$array['tid'].",".$array['authority'].");");
+      db_query("INSERT INTO taxonomy_bio VALUES (%d , %d)", $array['tid'], $array['authority']);
         break;
       case "update":
-        db_query("DELETE FROM taxonomy_bio WHERE tid = ".$array['tid']);
+        db_query("DELETE FROM taxonomy_bio WHERE tid = %d", $array['tid']);
         if (isset($array['authority']) && strlen(trim($array['authority']))>0)
-          db_query("INSERT INTO taxonomy_bio VALUES (".$array['tid'].",".$array['authority'].");");
+          db_query("INSERT INTO taxonomy_bio VALUES (%d, %d)",$array['tid'], $array['authority']);
         break;
       case "delete":
-        db_query("DELETE FROM taxonomy_bio WHERE tid = ".$array['tid']);
+        db_query("DELETE FROM taxonomy_bio WHERE tid = %d", $array['tid']);
         break;
     }
   }
