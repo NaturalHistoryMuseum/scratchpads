@@ -1,0 +1,68 @@
+<?php
+// $Id: checkbox_validate.module,v 1.2.2.2 2008/08/23 22:03:05 MegaGrunt Exp $  
+
+/**
+ * Implementation of hook_menu().
+ */
+function checkbox_validate_menu($may_cache) {
+	$items = array();
+
+	if (!$may_cache) {
+		drupal_add_css(drupal_get_path('module', 'checkbox_validate') .'/checkbox_validate.css'); 
+	}
+	return $items;
+}
+
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function checkbox_validate_form_alter($form_id, &$form) {
+  $form = checkbox_validate_recurse($form); 
+  return; 
+}
+
+/**
+ * Recurse through a form array to find required checkboxes
+ */
+function checkbox_validate_recurse($form_item) {
+  if (!is_array($form_item)) return;
+
+  foreach ($form_item as $key => $value) {
+
+    if (strpos($key, '#') === 0) {
+
+      if (isset($form_item['#type']) && $form_item['#type'] == 'checkbox' && isset($form_item['#required']) && $form_item['#required'] == TRUE) {
+         
+        $form_item['#validate']['checkbox_validate_validation'] = array();
+        $form_item['#title'] .= '<span class="form-required" title="' . t('This field is required.') . '"> *</span>';  
+        return $form_item;
+      }
+      
+    }
+    else {
+
+      $form_item[$key] = checkbox_validate_recurse($value, $key);
+    }
+  }
+
+  return $form_item;
+}
+
+
+/* validate a required checkbox */
+function checkbox_validate_validation($element) { 
+  if (empty($element['#value'])) form_error($element, t('!title field is required.', array('!title' => filter_xss_admin(($element['#title'])))));
+  return;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function checkbox_validate_theme() {
+  return array(
+    'checkbox_validate_required' => array(
+      'arguments' => array(),
+    ),
+  );
+}

@@ -7,12 +7,11 @@ $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM informati
 $result = mysql_query($sql);
 $tables = array();
 while($row = mysql_fetch_array($result)){
-  $tables[] = 'SELECT * FROM '.$row['tablename'].' WHERE status=1 ';
+  $tables[] = 'SELECT * FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
 }
 $sql = 'SELECT COUNT(DISTINCT mail) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql;';
 $result = mysql_query($sql);
 echo "Users: ".array_pop(mysql_fetch_array($result))."\n";
-
 // Now calculate total nodes
 $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM information_schema.tables WHERE table_name = 'node';";
 $result = mysql_query($sql);
@@ -31,7 +30,7 @@ while ($row=mysql_fetch_array($result)){
   }
 }
 
-/*
+/**
 // List the emails and hopefully institutions of users, along with the site.
 $sql = "SELECT table_schema AS site FROM information_schema.tables WHERE table_name = 'users' AND table_schema != 'lepindex_data';";
 $result = mysql_query($sql);
