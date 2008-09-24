@@ -90,101 +90,34 @@ function nodes_edit_page($type = null, $count = 25){
  * Returns the HTML when requested for a single form field
  */
 function nodes_edit_field($nid , $field){
-  // Looks like the best way of doing this might be to return the WHOLE form, just making every field
-  // except the one being edited "hidden"
-  
-  /**
-   * New attempt at this function
-   */
+  // If we've got a node, load it and plug it into the form, else get a blank form
   if(!is_numeric($nid)){
     $form = nodes_get_form_for_type($nid);
   } else {
     $node = node_load($nid);
     $form = nodes_get_form_for_type($node->type, $node);
   }
-  $new_form = $form;
+  // Hide all but the relevant bits of the form
   _nodes_search_form_for_field($form, $field);
-  /*
-  if(!is_numeric($nid)){
-    $form = nodes_get_form_for_type($nid);
-  } else {
-    $node = node_load($nid);
-    $form = nodes_get_form_for_type($node->type, $node);
+  // Add submit and cancel buttons
+  if (!count($form)){
+    print drupal_to_js(array('html'=>'<p class="error">'.t('Error. You don\'t have sufficient privileges to edit this field').'</p>'));
+    exit;
   }
-  //print_r($form);exit;
-  // Lets get the form for this type, strip everything but the required field and wahey
-  $new_form = array();
-  if(isset($form[$field])){
-    // If there is an element in the form with this name, use it, it makes things easier for us
-    $new_form[$field] = $form[$field];
-    // We now need to work through this array, and change any fields in it to the correct class
-    foreach($new_form[$field] as &$form){
-      if(isset($form['#type']) && is_array($form)){
-        $form['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
-      } elseif (is_array($form)){
-        foreach($form as &$form_part){
-          if(isset($form_part['#type']) && is_array($form_part)){
-            $form_part['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
-          }          
-        }
-      }
-    }
-    print_r($node);
-    print_r($new_form);exit;
-  }
-  else if(is_array($node->$field)){
-    $new_form = _nodes_handle_field(array($field), $form);
-    foreach($new_form as &$new_form_part){
-      $new_form_part['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
-    }
-  } else {
-    $new_form = _nodes_search_form($form, $field, _nodes_get_fieldtypes(),true);
-    if(isset($new_form['#type'])){
-      unset($new_form);
-      $new_form[$field] = _nodes_search_form($form, $field, _nodes_get_fieldtypes());
-    }
-    if(count($new_form[$field])>1){
-      $new_form[$field]['#title'] = '';
-      $new_form[$field]['#attributes']['class'] = 'nodes-form-'.$node->nid;
-    } else {
-      // Gah, this code is horrible.  Looks like we're here because we're editing
-      // multiple nodes and the field is an array field.  Lets try this again!      
-      $new_form = _nodes_handle_field(array($field), $form);
-      foreach($new_form as &$new_form_part){
-        $new_form_part['#attributes'] = array('class' => 'nodes-form-'.$node->nid);
-      }
-    }
-  }
-  if(count($new_form)){
-    $new_form['updated'] = array(
-      '#type' => 'hidden',
-      '#value' => $node->changed,
-      '#id' => 'nodes-form-'.$node->nid.'-updated'
-    );
-    $new_form['submit'] = array(
-      '#type' => 'button',
-      '#value' => 'Submit',
-      '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."')", 'class'=>'nodes-button'),
-      '#weight' => 10000
-    );
-    $new_form['cancel'] = array(
-      '#type' => 'button',
-      '#value' => 'Cancel',
-      '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
-      '#weight' => 10001
-    );
-    // Add a hidden field to hold all the node IDs if this is an "all" form
-    if(!is_numeric($nid)){
-      $new_form['nodeids'] = array(
-        '#type' => 'hidden',
-        '#default_value' => ''
-      );
-    }
-  */
-    print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$form).'</div>'));
-  /*} else {
-    print drupal_to_js(array('html'=>"<h1>".t('Unable to edit this field type')."</h1>"));
-  }*/
+  $form['submit'] = array(
+    '#type' => 'button',
+    '#value' => 'Submit',
+    '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit',NULL,NULL,TRUE)."','nodes-form-".$node->nid."','".$field."'); return false;", 'class'=>'nodes-button'),
+    '#weight' => 1000
+  );
+  $form['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
+    '#weight' => 1001
+  );
+  // Output the form - KAPOW!
+  print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$form).'</div>'));
   exit;
 }
 /**
@@ -196,14 +129,15 @@ function nodes_edit_field($nid , $field){
  * We need to return the node id, and the new value (the old value if the user doesn't
  * have the permission to edit this node).
  */
-function nodes_submit_form_part(){  
+function nodes_submit_form_part(){
   $nid = array_pop(explode("-",$_POST['formid']));
   $node = node_load($nid);
+  print_r($node->$_POST['field']);
   if(!is_array($node->$_POST['field'])){
     $value = $_POST['formvalue'][0];
   } else {
     $value = $_POST['formvalue'];
-  }  
+  }
   if(node_access('update',$node)){
     if($node->changed == $_POST['updated']){
       $node->$_POST['field'] = $value;
@@ -223,6 +157,8 @@ function nodes_submit_form_part(){
   if(is_array($value)){
     $value = t('Multiple values');
   }
+  print_r($node->$_POST['field']);
+  exit;
   print drupal_to_js(array('nid'=>$nid , 'value'=>$value , 'updated'=>$node->changed));
   exit;
 }
@@ -248,14 +184,20 @@ function _nodes_search_form_for_field(&$form, $field){
             array_walk($form, '_node_walk_form', $field_to_find);
           }
         } elseif(isset($form['#type']) && $form['#type'] == 'fieldset'){
-          $form['#collapsible'] = false;
-          $form['#collapsed'] = false;
+          if(isset($form['#tree']) && $form['#tree']){
+            // Hide this fieldset
+            $form['#type'] = 'hidden';
+          } else {
+            $form['#collapsible'] = false;
+            $form['#collapsed'] = false;
+          }
         }
       }
+    } else {
+      $form['#attributes']['class'] = $form['#attributes']['class'] . ' nodes-form-field';
     }
   }
   array_walk($form, '_node_walk_form',$field);
-  //print_r($form);exit;
 }
 function nodes_get_form_for_type($type, $node = null){
   global $user;
