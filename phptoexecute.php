@@ -463,4 +463,4 @@ db_query("INSERT INTO node_access SELECT nid,0,'all',1,0,0 FROM node WHERE nid N
 node_access_rebuild();*/
 
 // Set all sites to preprocess CSS
-variable_set('preprocess_css',1);
+/* variable_set('preprocess_css',1); */
