@@ -461,3 +461,6 @@ node_access_rebuild();*/
 /*echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM node WHERE nid NOT IN (SELECT nid FROM node_access)")));
 db_query("INSERT INTO node_access SELECT nid,0,'all',1,0,0 FROM node WHERE nid NOT IN (SELECT nid FROM node_access);");
 node_access_rebuild();*/
+
+// Set all sites to preprocess CSS
+variable_set('preprocess_css',1);
