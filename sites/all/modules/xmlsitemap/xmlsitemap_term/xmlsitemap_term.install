@@ -2,15 +2,35 @@
 // $Id$
 
 /**
+ * @file
+ * Install file for XML Sitemap: Term
+ */
+
+/**
+ * Implementation of hook_requirements().
+ */
+function xmlsitemap_term_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+  if (in_array($GLOBALS['db_type'], array('mysql', 'mysqli')) && version_compare(db_version(), '4.0.14') < 0) {
+    $requirements['xmlsitemap_term_sql'] = array(
+      'title' => $t('XML Sitemap: Term'),
+      'value' => $t('Your MySQL version is too low. &ldquo;XML Sitemap: Term&rdquo; requires MySQL 4.0.14 or higher.'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+  return $requirements;
+}
+
+/**
  * Implementation of hook_install().
  */
-function xmlsitemap_term_install() {           
+function xmlsitemap_term_install() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
       db_query("CREATE TABLE {xmlsitemap_term} (
         tid int,
-        pid int,
         last_changed int(11),
         previously_changed int(11),
         priority_override float,
@@ -20,7 +40,6 @@ function xmlsitemap_term_install() {
     case 'pgsql':
       db_query("CREATE TABLE {xmlsitemap_term} (
         tid integer,
-        pid integer,
         last_changed integer,
         previously_changed integer,
         priority_override real,
@@ -39,9 +58,8 @@ function xmlsitemap_term_enable() {
     db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_term'", ++$weight);
   }
   db_query("
-    INSERT INTO {xmlsitemap_term} (tid, last_changed, pid)
-    SELECT td.tid, %d, ua.pid FROM {term_data} td
-    LEFT JOIN {url_alias} ua ON ua.src = CONCAT('taxonomy/term/', td.tid) OR ua.src = CONCAT('forum/', td.tid)
+    INSERT INTO {xmlsitemap_term} (tid, last_changed)
+    SELECT td.tid, %d FROM {term_data} td
     LEFT JOIN {xmlsitemap_term} xt ON xt.tid = td.tid
     WHERE xt.tid IS NULL
   ", time());
@@ -68,31 +86,13 @@ function xmlsitemap_term_uninstall() {
 
 /**
  * Implementation of hook_update_N().
- * Add missing URL aliases.
+ *
+ * Drop the pid column now that we know how to join on the src index of the
+ * url_alias table.
  */
-function xmlsitemap_term_update_1() {
-  $ret = array(update_sql("UPDATE {xmlsitemap_term} SET pid = NULL WHERE pid = 0"));
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("
-        UPDATE {xmlsitemap_term} xt, {url_alias} ua SET xt.pid = ua.pid
-        WHERE xt.pid IS NULL AND (
-          ua.src = CONCAT('taxonomy/term/', xt.tid) OR ua.src = CONCAT('forum/', xt.tid)
-        )
-      ");
-      break;
-    case 'pgsql':
-      $ret[] = update_sql("
-        UPDATE {xmlsitemap_term} SET pid = {url_alias}.pid FROM {url_alias}
-        WHERE {xmlsitemap_term}.pid IS NULL
-        AND (
-          {url_alias}.src = CONCAT('taxonomy/term/', {xmlsitemap_term}.tid)
-          OR {url_alias}.src = CONCAT('forum/', {xmlsitemap_term}.tid)
-        )
-      ");
-      break;
-  }
-  return $ret;
+function xmlsitemap_term_update_2() {
+  return array(
+    update_sql("ALTER TABLE {xmlsitemap_term} DROP pid"),
+  );
 }
 

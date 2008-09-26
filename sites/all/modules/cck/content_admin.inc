@@ -116,7 +116,7 @@ function content_admin_field_overview_form($type_name) {
         foreach ($form['#groups'][$key]['fields'] as $field_name => $field) {
           $row = array();
           $field = $type['fields'][$field_name];
-          $row['label']     = $field['widget']['label'];
+          $row['label']     = check_plain($field['widget']['label']);
           $row['name']      = $field['field_name'];
           $row['type']      = $field_types[$field['type']]['label'];
           $row['weights']   = 'form-field-weights';
@@ -139,7 +139,7 @@ function content_admin_field_overview_form($type_name) {
       elseif (substr($key, 0, 6) == 'field_') {
         $row = array();
         $field = $type['fields'][$key];
-        $row['label']     = $field['widget']['label'];
+        $row['label']     = check_plain($field['widget']['label']);
         $row['name']      = $field['field_name'];
         $row['type']      = $field_types[$field['type']]['label'];
         $row['weights']   = 'form-field-weights';
@@ -427,7 +427,7 @@ function _content_admin_display_overview_row($field, $field_type) {
   );
 
   $row = array();
-  $row['type_label']  = array('#value' => $field['widget']['label']);
+  $row['type_label']  = array('#value' => check_plain($field['widget']['label']));
   $row['type']        = array('#value' => $field_type['label']);
 
   $row['label']['format'] = array(
@@ -774,12 +774,29 @@ function _content_admin_field($type_name, $field_name) {
     '#title' => t('Help text'),
     '#default_value' => $field['widget']['description'],
     '#rows' => 5,
-    '#description' => t('Instructions to present to the user below this field on the editing form.'),
+    '#description' => t('Instructions to present to the user below this field on the editing form.<br />Allowed HTML tags: @tags', array('@tags' => _content_filter_xss_display_allowed_tags())),
     '#required' => FALSE,
   );
 
   // Add handling for default value if not provided by field.
   if (content_handle('widget', 'default value', $field) == CONTENT_CALLBACK_DEFAULT) {
+
+    // Store the original default value for use in programmed forms.
+    // Set '#default_value' instead of '#value' so programmed values
+    // can override whatever we set here.
+    $default_value = isset($field['widget']['default_value']) ? $field['widget']['default_value'] : array();
+    $form['widget']['default_value'] = array(
+      '#type' => 'value',
+      '#default_value' => $default_value,
+      );
+    $form['widget']['default_value_php'] = array(
+      '#type' => 'value',
+      '#default_value' => $field['widget']['default_value_php'],
+      );
+
+    // We can't tell at the time we build the form if this is a programmed
+    // form or not, so we always end up adding the default value widget
+    // even if we won't use it.
     $form['#attributes'] = array("enctype" => "multipart/form-data");
     $form['widget']['default_value_fieldset'] = array(
       '#type' => 'fieldset',
@@ -787,7 +804,6 @@ function _content_admin_field($type_name, $field_name) {
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
     );
-    $default_value = is_array($field['widget']['default_value']) ? $field['widget']['default_value'] : array();
     $module = $widget_types[$field['widget']['type']]['module'];
     $function = $module .'_widget';
     if (function_exists($function)) {
@@ -810,26 +826,41 @@ function _content_admin_field($type_name, $field_name) {
       '#collapsible' => TRUE,
       '#collapsed' => empty($field['widget']['default_value_php']),
     );
-    $db_info = content_database_info($field);
-    $columns = array_keys($db_info['columns']);
-    foreach ($columns as $key => $column) {
-      $columns[$key] = "'$column' => value for $column";
+
+    if (user_access('Use PHP input for field settings (dangerous - grant with care)')) {
+      $db_info = content_database_info($field);
+      $columns = array_keys($db_info['columns']);
+      foreach ($columns as $key => $column) {
+        $columns[$key] = "'$column' => value for $column";
+      }
+      $sample = 'return array(
+    0 => array('. implode(', ', $columns) .'),
+    // You\'ll usually want to stop here. Provide more values
+    // if you want your \'default value\' to be multi-valued :
+    1 => array('. implode(', ', $columns) .'),
+    2 => ...
+  );';
+
+      $form['widget']['default_value_fieldset']['advanced_options']['default_value_php'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Code'),
+        '#default_value' => isset($field['widget']['default_value_php']) ? $field['widget']['default_value_php'] : '',
+        '#rows' => 6,
+        '#tree' => TRUE,
+        '#description' => t("Advanced Usage Only: PHP code that returns a default value. Should not include &lt;?php ?&gt; delimiters. If this field is filled out, the value returned by this code will override any value specified above. Expected format :<pre>!sample</pre>Using !link_devel 'devel load' tab on a %type content page might help you figure out the expected format.", array(
+          '!sample' => $sample,
+          '!link_devel' => l("devel.module's", 'http://www.drupal.org/project/devel'),
+          '%type' => $type_name)),
+      );
     }
-    $sample = 'array(
-  0 => array('. implode(', ', $columns) .'),
-  // You\'ll usually want to stop here. Provide more values
-  // if you want your \'default value\' to be multi-valued :
-  1 => array('. implode(', ', $columns) .'),
-  2 => ...
-);';
-    $form['widget']['default_value_fieldset']['advanced_options']['default_value_php'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Code'),
-      '#default_value' => $field['widget']['default_value_php'],
-      '#rows' => 6,
-      '#tree' => TRUE,
-      '#description' => t('Advanced Usage Only: PHP code that returns a default value. Should not include &lt;?php ?&gt; delimiters. If this field is filled out, the value returned by this code will override any value specified above. Expected format :<pre>!sample</pre>Using !link_devel\'s \'devel load\' tab on a %type content page might help you figure out the expected format.', array('!sample' => $sample, '!link_devel' => l('devel.module', 'http://www.drupal.org/project/devel'), '%type' => $type_name)),
-    );
+    else {
+      $form['widget']['default_value_fieldset']['advanced_options']['markup_default_value_php'] = array(
+        '#type' => 'item',
+        '#title' => t('Code'),
+        '#value' => !empty($field['widget']['default_value_php']) ? '<code>'. check_plain($field['widget']['default_value_php']) .'</code>' : t('&lt;none&gt;'),
+        '#description' => empty($field['widget']['default_value_php']) ? t("You're not allowed to input PHP code.") : t('This PHP code was set by an administrator and will override any value specified above.'),
+      );
+    }
   }
 
   $form['field'] = array(
@@ -893,6 +924,14 @@ function _content_admin_field_validate($form_id, $form_values, $form) {
   // If content.module is handling the default value,
   // validate the result using the field validation.
   if (content_handle('widget', 'default value', $field) == CONTENT_CALLBACK_DEFAULT) {
+
+    // If this is a programmed form, get rid of the default value widget, 
+    // we have the default values already.
+    if ($form['#programmed']) {
+      form_set_value(array('#parents' => array('default_value_widget')), NULL);
+      return;
+    }
+    
     if (isset($form_values['default_value_php']) && ($php = trim($form_values['default_value_php']))) {
       ob_start();
       $return = eval($php);
@@ -914,7 +953,7 @@ function _content_admin_field_validate($form_id, $form_values, $form) {
         foreach ($columns as $key => $column) {
           $columns[$key] = "'$column' => value for $column";
         }
-        $sample = 'array(
+        $sample = 'return array(
   0 => array('. implode(', ', $columns) .'),
   // You\'ll usually want to stop here. Provide more values
   // if you want your \'default value\' to be multi-valued :
@@ -1078,7 +1117,8 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                 vid int unsigned NOT NULL default '0',
                 delta int unsigned NOT NULL default '0',
                 nid int unsigned NOT NULL default '0',
-                PRIMARY KEY (vid,delta)
+                PRIMARY KEY (vid,delta),
+                KEY nid (nid)
               ) /*!40100 DEFAULT CHARACTER SET utf8 */");
             break;
 
@@ -1089,6 +1129,7 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                 nid int_unsigned NOT NULL default '0',
                 PRIMARY KEY (vid,delta)
               )");
+            db_query("CREATE INDEX {". $new_db_info['table'] ."}_nid_idx ON {". $new_db_info['table'] ."}(nid)");
             break;
         }
       }
@@ -1099,7 +1140,8 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
             db_query("CREATE TABLE {". $new_db_info['table'] ."} (
                 vid int unsigned NOT NULL default '0',
                 nid int unsigned NOT NULL default '0',
-                PRIMARY KEY (vid)
+                PRIMARY KEY (vid),
+                KEY nid (nid)
               ) /*!40100 DEFAULT CHARACTER SET utf8 */");
             break;
 
@@ -1109,6 +1151,7 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                 nid int_unsigned NOT NULL default '0',
                 PRIMARY KEY (vid)
               )");
+            db_query("CREATE INDEX {". $new_db_info['table'] ."}_nid_idx ON {". $new_db_info['table'] ."}(nid)");
             break;
         }
       }
@@ -1162,7 +1205,8 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                   vid int unsigned NOT NULL default '0',
                   delta int unsigned NOT NULL default '0',
                   nid int unsigned NOT NULL default '0',
-                  PRIMARY KEY (vid,delta)
+                  PRIMARY KEY (vid,delta),
+                  KEY nid (nid),
                 ) /*!40100 DEFAULT CHARACTER SET utf8 */");
                 break;
 
@@ -1173,6 +1217,7 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                   nid int_unsigned NOT NULL default '0',
                   PRIMARY KEY (vid,delta)
                 )");
+                db_query("CREATE INDEX {". $new_db_info['table'] ."}_nid_idx ON {". $new_db_info['table'] ."}(nid)");
                 break;
             }
 
@@ -1184,7 +1229,8 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                 db_query("CREATE TABLE {". $new_db_info['table'] ."} (
                   vid int unsigned NOT NULL default '0',
                   nid int unsigned NOT NULL default '0',
-                  PRIMARY KEY (vid)
+                  PRIMARY KEY (vid),
+                  KEY nid (nid),
                 ) /*!40100 DEFAULT CHARACTER SET utf8 */");
                 break;
 
@@ -1192,8 +1238,9 @@ function content_alter_db_field($previous_field, $previous_columns, $new_field, 
                   db_query("CREATE TABLE {". $new_db_info['table'] ."} (
                     vid int_unsigned NOT NULL default '0',
                     nid int_unsigned NOT NULL default '0',
-                    PRIMARY KEY (vid)
+                    PRIMARY KEY (vid),
                   )");
+                  db_query("CREATE INDEX {". $new_db_info['table'] ."}_nid_idx ON {". $new_db_info['table'] ."}(nid)");
                   break;
             }
           }  // end: if ($new_field['multiple'])

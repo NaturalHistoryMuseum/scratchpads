@@ -2,29 +2,38 @@
 // $Id$
 
 /**
+ * @file
+ * Install file for XML Sitemap
+ */
+
+/**
  * Implementation of hook_install().
  */
 function xmlsitemap_install() {
+  $t = get_t();
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      db_query("CREATE TABLE {xmlsitemap_additional} (
-        path varchar(128) NOT NULL default '',
-        pid int,
-        last_changed int(11),
-        previously_changed int(11),
-        priority float,
-        PRIMARY KEY (path)
+      db_query("CREATE TABLE {xmlsitemap} (
+        loc varchar(128) NOT NULL default '',
+        lastmod int(11),
+        changefreq int(11),
+        priority float
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       break;
     case 'pgsql':
-      db_query("CREATE TABLE {xmlsitemap_additional} (
-        path varchar(128) NOT NULL default '',
-        pid integer,
-        last_changed integer,
-        previously_changed integer,
-        priority real,
-        PRIMARY KEY (path)
+      db_query('CREATE OR REPLACE FUNCTION first(anyelement, anyelement) RETURNS anyelement AS \'SELECT COALESCE($1, $2);\' LANGUAGE \'sql\';');
+      @db_query("DROP AGGREGATE first(anyelement)");
+      db_query("CREATE AGGREGATE first(
+        sfunc = first,
+        basetype = anyelement,
+        stype = anyelement
+      );");
+      db_query("CREATE TABLE {xmlsitemap} (
+        loc varchar(128) NOT NULL default '',
+        lastmod integer,
+        changefreq integer,
+        priority real
       );");
       break;
   }
@@ -35,69 +44,63 @@ function xmlsitemap_install() {
  * Implementation of hook_enable().
  */
 function xmlsitemap_enable() {
-  global $base_path;
-  $xsl = file_get_contents(drupal_get_path('module', 'xmlsitemap') .'/gss/gss.xsl');
-
-  $css_start = strpos($xsl, '<link href="') + strlen('<link href="');
-  $css_length = strpos($xsl, '" type="text/css" rel="stylesheet"/>') - $css_start;
-  $xsl = substr_replace($xsl, "$base_path". drupal_get_path('module', 'xmlsitemap') .'/gss/gss.css', $css_start, $css_length);
-
-  $js_start = strpos($xsl, '<script src="') + strlen('<script src="');
-  $js_length = strpos($xsl, '"></script>') - $js_start;
-  $xsl = substr_replace($xsl, "$base_path". drupal_get_path('module', 'xmlsitemap') .'/gss/gss.js', $js_start, $js_length);
-
-  if (file_check_directory(($path = file_directory_path() .'/xmlsitemap'), TRUE)) {
-    file_save_data($xsl, "$path/gss.xsl", FILE_EXISTS_REPLACE);
-  }
-  _xmlsitemap_gsitemap_replace();
+  xmlsitemap_update_sitemap();
 }
 
 /**
- * Replace Google Sitemap if it is installed.
+ * Implementation of hook_uninstall().
  */
-function _xmlsitemap_gsitemap_replace() {
-  if (db_result(db_query("
-    SELECT 1 FROM {system}
-    WHERE type = 'module' AND name = 'gsitemap' AND (status = 1 OR schema_version >= 0)
-  "))) {
-    db_query("INSERT INTO {xmlsitemap_additional} SELECT * FROM {gsitemap_additional}");
-    $modules = array('xmlsitemap_node', 'xmlsitemap_engines');
-    if (variable_get('gsitemap_showterms', FALSE)) {
-      $modules[] = 'xmlsitemap_term';
-      variable_del('gsitemap_showterms');
-    }
-    if (variable_get('gsitemap_showusers', FALSE)) {
-      $modules[] = 'xmlsitemap_user';
-      variable_del('gsitemap_showusers');
-    }
-    drupal_install_modules($modules);
-    $settings = db_query("SELECT * FROM {variable} WHERE name LIKE 'gsitemap\_%'");
-    while ($variable = db_fetch_object($settings)) {
-      switch ($variable->name) {
-        case 'gsitemap_frontpage':
-          $name = 'xmlsitemap_front_page_priority';
-          break;
-        case 'gsitemap_priority':
-          $name = 'xmlsitemap_additional_links_priority';
-          break;
-        case 'gsitemap_logacc':
-          $name = 'xmlsitemap_log_access';
-          break;
-        default:
-          $name = 'xmlsitemap'. strstr($variable->name, '_');
-          break;
-      }
-      variable_set($name, (float) unserialize($variable->value));
-    }
-    module_disable(array('gsitemap'));
-    drupal_uninstall_module('gsitemap');
+function xmlsitemap_uninstall() {
+  db_query("DROP TABLE {xmlsitemap}");
+  $settings = db_query("SELECT name FROM {variable} WHERE name LIKE 'xmlsitemap\_%'");
+  while ($variable = db_fetch_object($settings)) {
+    variable_del($variable->name);
   }
 }
 
 /**
- * Implementation of hook_disable().
+ * Implementation of hook_update_N().
  */
-function xmlsitemap_disable() {
+function xmlsitemap_update_1() {
+  $ret = array();
+  $t = get_t();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("CREATE TABLE {xmlsitemap} (
+        loc varchar(128) NOT NULL default '',
+        lastmod int(11),
+        changefreq int(11),
+        priority float
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+    case 'pgsql':
+      $ret[] = update_sql("CREATE TABLE {xmlsitemap} (
+        loc varchar(128) NOT NULL default '',
+        lastmod integer,
+        changefreq integer,
+        priority real
+      );");
+      break;
+  }
+  drupal_install_modules(array('xmlsitemap_menu'));
+  $mid = db_result(db_query_range("SELECT mid FROM {menu} WHERE pid = 0 AND title = '%s'", t('XML Sitemap'), 0, 1));
+  $result = db_query("SELECT * FROM {xmlsitemap_additional}");
+  while ($link = db_fetch_object($result)) {
+    $link->priority = isset($link->priority) ? $link->priority : variable_get('xmlsitemap_additional_links_priority', 0.5);
+    $item = array(
+      'mid' => db_next_id('{menu}_mid'),
+      'pid' => $mid,
+      'path' => $link->path,
+      'title' => $link->path,
+      'weight' => $link->priority * 20 - 10,
+      'type' => MENU_CUSTOM_ITEM | MENU_MODIFIED_BY_ADMIN,
+    );
+    db_query("INSERT INTO {menu} (mid, pid, path, title, weight, type) VALUES (%d, %d, '%s', '%s', %d, %d)", $item);
+  }
+  menu_rebuild();
+  $ret[] = update_sql("DROP TABLE {xmlsitemap_additional}");
+  variable_del('xmlsitemap_additional_links_priority');
   $path = file_directory_path() .'/xmlsitemap';
   if ($dir = @opendir($path)) {
     while (($file = readdir($dir)) !== FALSE) {
@@ -108,16 +111,6 @@ function xmlsitemap_disable() {
     closedir($dir);
     rmdir($path);
   }
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function xmlsitemap_uninstall() {
-  db_query("DROP TABLE {xmlsitemap_additional}");
-  $settings = db_query("SELECT name FROM {variable} WHERE name LIKE 'xmlsitemap\_%'");
-  while ($variable = db_fetch_object($settings)) {
-    variable_del($variable->name);
-  }
+  return $ret;
 }
 

@@ -1,0 +1,362 @@
+<?php
+// $Id: form_store.module,v 1.1 2007/03/21 21:32:06 heine Exp $
+
+/**
+ * Provides an API for modules that need to know what forms to act on.
+ *
+ * By Heine Deelstra (http://heine.familiedeelstra.com).
+ *
+ */
+
+/* Todo: 
+ *   - Confirmation form on deletion.
+ *
+ */ 
+ 
+ 
+function form_store_help($section) {
+
+  switch ($section) {
+    
+    case 'admin/settings/form-store':
+      
+      if (module_exists('form_collect')) {
+        $txt = '<p>'. t('To add more forms to the list below visit <a href="@url">Collect forms</a>, enable the setting <em>Collect forms while browsing the site</em> and visit the desired forms.',
+          array('@url' => url('admin/settings/form-store/collect'))) .'</p>';
+      }
+      else {
+        $txt = '<p>'. t('To add additional forms to the list below, enable the module <a href="@url">Form collect</a>, then visit the <a href="@url_settings">Form collect settings</a> page.', 
+               array(
+                 '@url' => url('admin/build/modules', NULL, 'edit-status-form-collect'),
+                 '@url_settings' => url('admin/settings/form-store/collect')
+               )) .'</p>';
+      }
+      return $txt;
+  }
+
+}
+
+/**
+ * Implementation of hook_menu.
+ *
+ * All paths require the "adminster site configuration" permission.
+ */
+function form_store_menu($may_cache) {
+
+  if ($may_cache) {
+    $items = array();
+
+    $items[] = array(
+      'path' => 'admin/settings/form-store',
+      'title' => t('Form store'),
+      'type' => MENU_NORMAL_ITEM,
+      'callback' => 'form_store_page',
+      'access' => user_access('administer site configuration'),
+      'description' => t('View and collect forms in use on the site.')
+    );
+
+    $items[] = array(
+      'path' => 'admin/settings/form-store/store',
+      'title' => t('Form store'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -1,
+      'access' => user_access('administer site configuration'),
+    );
+
+    $items[] = array(
+      'path' => 'form-store/show',
+      'title' => t('Form store - form preview'),
+      'type' => MENU_CALLBACK,
+      'access' => user_access('administer site configuration'),
+      'callback' => 'form_store_show_page',
+    );
+
+    $items[] = array(
+      'path' => 'form-store/edit',
+      'title' => t('Edit description'),
+      'type' => MENU_CALLBACK,
+      'access' => user_access('administer site configuration'),
+      'callback' => 'form_store_edit_page',
+    );
+    return $items;
+  }
+}
+
+/**
+ * Edit the description of a stored form.
+ *
+ * @param unknown_type $fid
+ *
+ * @return The edit form, or a 404 not found page.
+ */
+function form_store_edit_page($fid = 0) {
+  if ($form = form_store_get_fid($fid)) {
+    return drupal_get_form('form_store_edit_form', $form);
+  }
+  else {
+    drupal_not_found();
+  }
+}
+
+/**
+ * Build the form description edit / delete form.
+ *
+ * @param unknown_type $collected_form
+ *
+ * @return unknown
+ */
+function form_store_edit_form($collected_form) {
+  $form = array('#description' => t('Edit descriptions of forms.'), '#skip_duplicate_check' => TRUE);
+
+  $form['description'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Description of %form_id', array('%form_id' => $collected_form->form_id)),
+    '#default_value' => $collected_form->description,
+    '#maxlength' => 255,
+  );
+
+  $form['fid'] = array('#type' => 'value', '#value' => $collected_form->fid);
+  $form['collected_form_id'] = array('#type' => 'value', '#value' => $collected_form->form_id);
+
+  $form['buttons'] = array(
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+    ),
+    'remove' => array(
+      '#type' => 'submit',
+      '#value' => t('Remove'),
+    ),
+  );
+  return $form;
+}
+
+/**
+ * Act on the edit form submission.
+ *
+ * When Save has been pressed, save the new description.
+ * When Remove has been pressed, remove the form from the store.
+ */
+function form_store_edit_form_submit($form_id, $form_values) {
+  if ($form_values['op'] == t('Save')) {
+    db_query("UPDATE {form_store_forms} f SET f.description = '%s' WHERE f.fid = %d", $form_values['description'], $form_values['fid']);
+    drupal_set_message(t('Changes to the %form_id description have been saved.', array('%form_id' => $form_values['collected_form_id'])));
+  }
+  else if ($form_values['op'] == t('Remove')) {
+    db_query("DELETE FROM {form_store_forms} WHERE fid = %d", $form_values['fid']);
+    drupal_set_message(t('%form_id has been removed from the list.', array('%form_id' => $form_values['collected_form_id'])));
+  }
+  return 'admin/settings/form-store';
+}
+
+/**
+ * Attempt to display a form based on the stored serialized Form array.
+ *
+ * @param unknown_type $fid
+ * @return unknown
+ */
+function form_store_show_page($fid = 0) {
+  if ($form = form_store_get_fid($fid)) {
+    // Check post to make sure users won't accidentally damage their site
+    // by submitting a broken form.
+    if (empty($_POST)) {
+      drupal_set_title(t('Preview %form_id.', array('%form_id' => $form->form_id)));
+      $output .= drupal_get_form('form_store_form_preview', $form->preview);
+      return $output;
+    }
+    else {
+      drupal_set_title(t('Attempted submission of preview.'));
+      $output = '<p>'. t('You attempted to submit a <strong>preview</strong> of %form_id.', array('%form_id' => $form->form_id)) .'</p>';
+      return $output;
+    }
+  }
+  else {
+    drupal_not_found();
+  }
+}
+
+function form_store_form_preview($preview) {
+  if (!empty($preview)) {
+    $form = unserialize($preview);
+    unset($form['#token']);
+    unset($form['#post']);
+    unset($form['#submit']);
+    unset($form['#validate']);
+    unset($form['#action']);
+  }
+  else {
+    $form = array(
+      'nopreview' => array('#value' => t('No preview is available')),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Display an overview of forms in the Form store.
+ */
+function form_store_page() {
+  $collected_forms = array();
+  $result = pager_query("SELECT f.fid, f.form_id, f.description FROM {form_store_forms} f ORDER BY f.form_id", 50);
+  while ($collected_form = db_fetch_object($result)) {
+    $collected_forms[$collected_form->fid] = $collected_form;
+  }
+  $output = drupal_get_form('form_store_page_form', $collected_forms);
+  $output .= theme('pager', 50);
+  return $output;
+}
+
+/**
+ * Build a quick description edit + overview form.
+ *
+ * Forms with a description will show as markup, forms
+ * without a description will have a textfield to edit the
+ * description.
+ */
+function form_store_page_form($collected_forms = array()) {
+  $form = array('#description' => t('Provides an overview of collected forms.'));
+
+  $form['forms'] = array('#tree' => TRUE);
+
+  foreach ($collected_forms as $collected_form) {
+    $form['forms'][$collected_form->fid] = array(
+      '#tree' => TRUE,
+      'collected_id' => array(
+        '#type' => 'markup',
+        '#value' => $collected_form->form_id
+      ),
+      'collected_description' => empty($collected_form->description) ?
+         array('#type' => 'textfield', '#default_value' => $collected_form->description) :
+         array('#value' => check_plain($collected_form->description)),
+    );
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  return $form;
+}
+
+/**
+ * Theme the quick description + overview form into a table.
+ *
+ * Provide preview and edit links as well.
+ */
+function theme_form_store_page_form($form) {
+
+  $rows = array();
+  foreach (element_children($form['forms']) as $key) {
+    $row = array();
+    $row[] = drupal_render($form['forms'][$key]['collected_id']);
+    $row[] = drupal_render($form['forms'][$key]['collected_description']);
+    $row[] = l(t('edit'), 'form-store/edit/'. $key) .', '. l(t('preview'), 'form-store/show/'. $key);
+    $rows[] = $row;
+  }
+  $output = theme_table(array(t('Internal name'), t('Description'), t('Operations')), $rows);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/**
+ * Save new descriptions.
+ */
+function form_store_page_form_submit($form_id, $form_values) {
+  if (is_array($form_values['forms'])) {
+    foreach ($form_values['forms'] as $fid => $data) {
+      if (!empty($data['collected_description'])) {
+        db_query("UPDATE {form_store_forms} f SET f.description = '%s' WHERE f.fid = %d", $data['collected_description'], $fid);
+      }
+    }
+  }
+}
+
+/**
+ * Add a form to the Form store.
+ *
+ * @param unknown_type $form_id
+ * @param unknown_type $form - either a form object or a mock.
+ *
+ * @TODO Perhaps store a serialized form for future 'previewing'?
+ */
+function form_store_add($form_id, $form) {
+  $preview = serialize($form);
+  $description = isset($form['#description']) ? $form['#description'] : '';
+  db_query("INSERT INTO {form_store_forms} (form_id, description, preview) VALUES ('%s', '%s', '%s')", $form_id, $description, $preview);
+}
+
+/**
+ * Remove a form from the Form store.
+ *
+ * @param unknown_type $form_id
+ *   A form_id
+ */
+function form_store_remove($form_id) {
+  if ($form = db_fetch_object(db_query("SELECT f.fid, f.form_id FROM {form_store_forms} f  WHERE f.form_id = '%s'", $form_id))) {
+    form_store_remove_fid($form->fid);
+  }
+}
+
+/**
+ * Remove a form from the Form store.
+ *
+ * @param unknown_type $fid
+ *   The form store id.
+ *
+ * @return The amount of removed records (usually 1).
+ */
+function form_store_remove_fid($fid) {
+  return db_result(db_query("DELETE FROM {form_store_forms} WHERE fid = %d", $fid));
+}
+
+/**
+ * Fetch data from the Form store.
+ *
+ * @param unknown_type $form_id
+ * @return a Form store object (fid, form_id, description).
+ */
+function form_store_get($form_id) {
+  static $cache;
+  if (!isset($cache[$form_id])) {
+    if ($form = db_fetch_object(db_query("SELECT f.form_id, f.fid, f.description FROM {form_store_forms} f  WHERE f.form_id = '%s'", $form_id))) {
+      $cache[$form_id] = $form;
+    }
+    else {
+      return FALSE;
+    }
+  }
+  return $cache[$form_id];
+}
+
+/**
+ * Fetch data from the Form store.
+ *
+ * @param unknown_type $fid Form store id.
+ * @return a Form store object (fid, form_id, description, preview).
+ */
+function form_store_get_fid($fid) {
+  static $cache;
+  if (!isset($cache[$fid])) {
+    if ($form = db_fetch_object(db_query("SELECT f.* FROM {form_store_forms} f  WHERE f.fid = %d", $fid))) {
+      $cache[$fid] = $form;
+    }
+    else {
+      return FALSE;
+    }
+  }
+  return $cache[$fid];
+}
+
+
+/**
+ * Get all forms in the Form store.
+ *
+ * @return An array of [$form_id] => Form store objects (fid, form_id, description).
+ */
+function form_store_get_all() {
+  $forms = array();
+  $result = db_query("SELECT f.fid, f.form_id, f.description FROM {form_store_forms} f");
+  while ($form = db_fetch_object($result)) {
+    $forms[$form->form_id] = $form;
+  }
+  return $forms;
+}

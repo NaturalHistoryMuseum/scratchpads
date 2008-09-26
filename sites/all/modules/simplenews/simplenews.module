@@ -766,14 +766,18 @@ function theme_simplenews_block($block) {
  * hook_forms() is required to provide unique form id for each block form.
  */
 function simplenews_forms() {
-  foreach (taxonomy_get_tree(variable_get('simplenews_vid', '')) as $newsletter) {
-    $forms['simplenews_block_form_'. $newsletter->tid] = array(
-      'callback' => 'simplenews_block_form',
-      'callback arguments' => array($newsletter->tid),
-    );
+  $forms = array();
+  if ($tree = taxonomy_get_tree(variable_get('simplenews_vid', ''))) {
+    foreach ($tree as $newsletter) {
+      $forms['simplenews_block_form_'. $newsletter->tid] = array(
+        'callback' => 'simplenews_block_form',
+        'callback arguments' => array($newsletter->tid),
+      );
+    }
   }
   return $forms;
 }
+
 /**
  * Helper function for API functions; loads a user or creates a dummy anonymous
  * user with uid = 0 and $mail equal to the input param.
@@ -960,7 +964,7 @@ function _simplenews_subscription_manager_form($subscription) {
   $form['#base'] = 'simplenews_subscription_manager_form';
   $options = array();
   foreach (taxonomy_get_tree(variable_get('simplenews_vid', '')) as $newsletter) {
-    $options[$newsletter->tid] = $newsletter->name;
+    $options[$newsletter->tid] = check_plain($newsletter->name);
   }
   $form['subscriptions'] = array('#type' => 'fieldset', '#description' => t('Select the newsletter(s) to which you want to subscribe or unsubscribe.'));
   $form['subscriptions']['newsletters'] = array('#type' => 'checkboxes',
@@ -1320,7 +1324,7 @@ function simplenews_mail_send($mail) {
   $from = isset($mail->from_name) ? '"'. mime_header_encode(addslashes($mail->from_name)).'" <'. $from_email .'>' : $from_email;
 
   $headers = array(
-    //'From' => $from,
+    'From' => $from,
     'Reply-To' => $from_email,
     'X-Mailer' => 'Drupal',
     'Return-Path' => $from_email,
@@ -2077,7 +2081,7 @@ function simplenews_subscription_list_add() {
   );
   $newsletters = array();
   foreach (taxonomy_get_tree(variable_get('simplenews_vid', '')) as $newsletter) {
-    $newsletters[$newsletter->tid] = $newsletter->name;
+    $newsletters[$newsletter->tid] = check_plain($newsletter->name);
   }
   $form['newsletters'] = array(
     '#type' => 'fieldset',
@@ -2170,7 +2174,7 @@ function simplenews_subscription_list_export() {
     foreach ($tree as $newsletter) {
       $form['simplenews_newsletter']['tid_'. $newsletter->tid] = array(
         '#type' => 'checkbox',
-        '#title' => $newsletter->name,
+        '#title' => check_plain($newsletter->name),
         '#return_value' => 1,
       );
     }
@@ -2405,7 +2409,7 @@ function simplenews_types_overview() {
   $header = array(t('Newsletter name'), t('Operations'));
 
   foreach (taxonomy_get_tree(variable_get('simplenews_vid', '')) as $term) {
-    $rows[] = array($term->name, l(t('edit newsletter'), 'admin/content/newsletters/types/edit/'. $term->tid));
+    $rows[] = array(check_plain($term->name), l(t('edit newsletter'), 'admin/content/newsletters/types/edit/'. $term->tid));
   }
 
   if (count($rows) == 0) {

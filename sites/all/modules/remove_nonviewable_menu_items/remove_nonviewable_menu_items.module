@@ -1,0 +1,93 @@
+<?php
+// $Id: remove_nonviewable_menu_items.module,v 1.1 2007/05/30 21:26:10 ngroot Exp $
+
+/**
+    Remove Nonviewable Menu Items - remove nonviewable items from menus
+    Copyright (C) 2007 Neal Groothuis
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+
+/**
+ * Implementation of hook_help().
+ * @param section which section of the site we're displaying help
+ * @return help text for section
+ */
+
+function remove_nonviewable_menu_items_help($section='') {
+
+  $output = '';
+
+  switch ($section) {
+    case "admin/help/remove_nonviewable_menu_items":
+      $output = '<p>'.  t("Removes nonviewable items from menus"). '</p>';
+      break;
+  }
+
+  return $output;
+} // function remove_nonviewable_menu_items_help
+
+/**
+ * Implementation of hook_menu().
+ * @param may_cache Return cacheable menu items?
+ * @return array of menu items
+ */
+
+function remove_nonviewable_menu_items_menu($may_cache) {
+  $poisoned_items = array();
+
+  if ($may_cache) {
+    if (module_exists('menu')) {
+      $result = db_query(db_rewrite_sql('SELECT m.mid, m.* FROM {menu} m ORDER BY m.mid ASC', 'm', 'mid'));
+      while ($item = db_fetch_object($result)) {
+        $normal_path = drupal_get_normal_path($item->path);
+        if (substr($normal_path, 0, 5) == 'node/') {
+          if(is_numeric(substr($normal_path, 5))) {
+            $nid = substr($normal_path, 5);
+            $node = node_load($nid);
+            if (!node_access("view", $node)) {
+              // User cannot view this node.   
+              $poisoned_items[] = array('path' => $item->path, 
+                'access' => FALSE,
+                'title' => $item->title);
+            }
+          }
+        }
+      }
+    }
+  }
+  return $poisoned_items;
+}
+
+
+/**
+ * Implementation of hook_enable().
+ */
+
+function remove_nonviewable_menu_items_enable() {
+  menu_rebuild();
+}
+
+
+/**
+ * Implementation of hook_disable().
+ */
+
+function remove_nonviewable_menu_items_disable() {
+  menu_rebuild();
+}
+
+

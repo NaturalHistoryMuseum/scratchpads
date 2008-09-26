@@ -2,15 +2,35 @@
 // $Id$
 
 /**
+ * @file
+ * XML Sitemap: User install file
+ */
+
+/**
+ * Implementation of hook_requirements().
+ */
+function xmlsitemap_user_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+  if (in_array($GLOBALS['db_type'], array('mysql', 'mysqli')) && version_compare(db_version(), '4.0.14') < 0) {
+    $requirements['xmlsitemap_user_sql'] = array(
+      'title' => $t('XML Sitemap: User'),
+      'value' => $t('Your MySQL version is too low. &ldquo;XML Sitemap: User&rdquo; requires MySQL 4.0.14 or higher.'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+  return $requirements;
+}
+
+/**
  * Implementation of hook_install().
  */
-function xmlsitemap_user_install() {           
+function xmlsitemap_user_install() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
       db_query("CREATE TABLE {xmlsitemap_user} (
         uid int,
-        pid int,
         last_changed int(11),
         previously_changed int(11),
         priority_override float,
@@ -18,14 +38,13 @@ function xmlsitemap_user_install() {
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       db_query("CREATE TABLE {xmlsitemap_user_role} (
         rid int,
-        priority float NOT NULL DEFAULT 0,
+        priority float,
         PRIMARY KEY (rid)
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       break;
     case 'pgsql':
       db_query("CREATE TABLE {xmlsitemap_user} (
         uid integer,
-        pid integer,
         last_changed integer,
         previously_changed integer,
         priority_override real,
@@ -33,7 +52,7 @@ function xmlsitemap_user_install() {
       );");
       db_query("CREATE TABLE {xmlsitemap_user_role} (
         rid integer,
-        priority real NOT NULL DEFAULT 0,
+        priority real,
         PRIMARY KEY (rid)
       ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
       break;
@@ -49,12 +68,11 @@ function xmlsitemap_user_enable() {
     db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_user'", ++$weight);
   }
   db_query("
-    INSERT INTO {xmlsitemap_user} (uid, last_changed, pid)
-    SELECT u.uid, u.created, ua.pid FROM {users} u
-    LEFT JOIN {url_alias} ua ON ua.src = CONCAT('user/', u.uid)
+    INSERT INTO {xmlsitemap_user} (uid, last_changed)
+    SELECT u.uid, u.created FROM {users} u
     LEFT JOIN {xmlsitemap_user} xu ON xu.uid = u.uid
     WHERE u.uid <> 0 AND xu.uid IS NULL
-  ", time());
+  ");
   db_query("
     INSERT INTO {xmlsitemap_user_role} (rid)
     SELECT r.rid FROM {role} r
@@ -77,27 +95,25 @@ function xmlsitemap_user_disable() {
 function xmlsitemap_user_uninstall() {
   db_query("DROP TABLE {xmlsitemap_user}");
   db_query("DROP TABLE {xmlsitemap_user_role}");
+  $settings = db_query("SELECT name FROM {variable} WHERE name LIKE 'xmlsitemap\_user\_%'");
+  while ($variable = db_fetch_object($settings)) {
+    variable_del($variable->name);
+  }
 }
 
 /**
  * Implementation of hook_update_N().
- * Add missing URL aliases.
  */
-function xmlsitemap_user_update_1() {
-  $ret = array(update_sql("UPDATE {xmlsitemap_user} SET pid = NULL WHERE pid = 0"));
+function xmlsitemap_user_update_2() {
+  $ret = array();
+  $ret[] = update_sql("ALTER TABLE {xmlsitemap_user} DROP pid");
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      $ret[] = update_sql("
-        UPDATE {xmlsitemap_user} xu, {url_alias} ua SET xu.pid = ua.pid
-        WHERE xu.pid IS NULL AND ua.src = CONCAT('user/', xu.uid)
-      ");
+      $ret[] = update_sql("ALTER TABLE {xmlsitemap_user_role} CHANGE priority priority float");
       break;
     case 'pgsql':
-      $ret[] = update_sql("
-        UPDATE {xmlsitemap_user} SET pid = {url_alias}.pid FROM {url_alias}
-        WHERE {xmlsitemap_user}.pid IS NULL AND ua.src = CONCAT('user/', {xmlsitemap_user}.uid)
-      ");
+      db_change_column($ret, 'xmlsitemap_user_role', 'priority', 'priority', 'real');
       break;
   }
   return $ret;

@@ -7,6 +7,80 @@
  */
 
 /**
+ * Expand field info to create field => widget info.
+ */
+function content_field_instance_expand($field) {
+  if (isset($field['widget'])) {
+    return $field;
+  }
+  $field['widget'] = !empty($field['widget_settings']) ? $field['widget_settings'] : array();
+  $field['widget']['label'] = !empty($field['label']) ? $field['label'] : $field['field_name'];
+  $field['widget']['weight'] = !empty($field['weight']) ? $field['weight'] : NULL;
+  $field['widget']['description'] = !empty($field['description']) ? $field['description'] : '';
+
+  if (!empty($field['widget_type'])) {
+    $field['widget']['type'] = $field['widget_type'];
+    $widget_types = _content_widget_types();
+    $field['widget']['module'] = isset($widget_types[$field['widget_type']]['module']) ? $widget_types[$field['widget_type']]['module'] : $field['widget_module'];
+  }
+  elseif (!empty($field['widget_module'])) {
+    $field['widget']['module'] = $field['widget_module'];
+  }
+
+  unset($field['widget_type']);
+  unset($field['weight']);
+  unset($field['label']);
+  unset($field['description']);
+  unset($field['widget_module']);
+  unset($field['widget_settings']);
+
+  // If content.module is handling the default value,
+  // initialize $widget_settings with default values,
+  if (isset($field['default_value']) && isset($field['default_value_php']) &&
+      content_callback('widget', 'default value', $field) == CONTENT_CALLBACK_DEFAULT) {
+    $field['widget']['default_value'] = !empty($field['default_value']) ? $field['default_value']  : NULL;
+    $field['widget']['default_value_php'] = !empty($field['default_value_php']) ? $field['default_value_php'] : NULL;
+    unset($field['default_value']);
+    unset($field['default_value_php']);
+  }
+  return $field;
+}
+
+/**
+ * Collapse field info from field => widget to flattened form values.
+ */
+function content_field_instance_collapse($field) {
+  if (!isset($field['widget'])) {
+    return $field;
+  }
+  $field['widget_settings'] = !empty($field['widget']) ? $field['widget'] : array();
+  $field['widget_type'] = !empty($field['widget']['type']) ? $field['widget']['type'] : '';
+  $field['weight'] = !empty($field['widget']['weight']) ? $field['widget']['weight'] : 0;
+  $field['label'] = !empty($field['widget']['label']) ? $field['widget']['label'] : $field['field_name'];
+  $field['description'] = !empty($field['widget']['description']) ? $field['widget']['description'] : '';
+  $field['type_name'] = !empty($field['type_name']) ? $field['type_name'] : '';
+
+  if (!empty($field['widget']['module'])) {
+    $widget_module = $field['widget']['module'];
+  }
+  elseif (!empty($field['widget']['type'])) {
+    $widget_types = _content_widget_types();
+    $widget_module = $widget_types[$field['widget']['type']]['module'];
+  }
+  else {
+    $widget_module = '';
+  }
+  $field['widget_module'] = $widget_module;
+  unset($field['widget_settings']['type']);
+  unset($field['widget_settings']['weight']);
+  unset($field['widget_settings']['label']);
+  unset($field['widget_settings']['description']);
+  unset($field['widget_settings']['module']);
+  unset($field['widget']);
+  return $field;
+}
+
+/**
  * Rebuild content type information from node tables.
  *
  *  Used to update CCK tables that might have missed changes made when CCK was disabled.
@@ -44,7 +118,8 @@ function content_type_create($info) {
         db_query("CREATE TABLE {". $table ."} (
           vid int unsigned NOT NULL default '0',
           nid int unsigned NOT NULL default '0',
-          PRIMARY KEY (vid)
+          PRIMARY KEY (vid),
+          KEY nid (nid)
         ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       break;
 
@@ -54,6 +129,7 @@ function content_type_create($info) {
           nid int_unsigned NOT NULL default '0',
           PRIMARY KEY (vid)
         )");
+        db_query("CREATE INDEX {". $table ."}_nid_idx ON {". $table ."}(nid)");
       break;
     }
     drupal_set_message(t('The content fields table %name has been created.', array('%name' => $table)));
@@ -89,7 +165,7 @@ function content_type_update($info) {
       drupal_set_message(t('Content fields table %old_name has been renamed to %new_name and field instances have been updated.', array('%old_name' => $old_name, '%new_name' => $new_name)));
     }
   }
-  // reset all content type info
+  // reset all content type info.
   content_clear_type_cache();
 }
 
@@ -100,6 +176,11 @@ function content_type_update($info) {
  *   value supplied by hook_node_type()
  */
 function content_type_delete($info) {
+  // Don't delete data for content-type defined by disabled modules.
+  if (!empty($info->disabled)) {
+    return;
+  }
+
   $type = content_types($info->type);
 
   foreach ($type['fields'] as $field) {
@@ -111,7 +192,7 @@ function content_type_delete($info) {
     drupal_set_message(t('The content fields table %name has been deleted.', array('%name' => $table)));
   }
 
-  // reset all content type info
+  // Reset all content type info.
   content_clear_type_cache();
 }
 

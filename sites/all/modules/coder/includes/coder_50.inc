@@ -1,10 +1,19 @@
 <?php
 // $Id$
 
-/** @file
- * This include file implements coder functionality for 4.7 -> 5.0 upgrades
+/**
+ * @file
+ * This include file implements coder functionality for 4.7 -> 5.x upgrades.
+ *
+ * @note
+ *   It is inappropriately named coder_50 instead of coder_5, due to confussion
+ *   of the new numbering standard that began with Drupal 5, yet it's not worth
+ *   changing all the names at this point.
  */
 
+/**
+ * Implementation of hook_reviews().
+ */
 function coder_50_reviews() {
   $rules = array(
     array(
@@ -44,7 +53,7 @@ function coder_50_reviews() {
     ),
     array(
       '#type' => 'regex',
-      '#source' => 'all',
+      '#source' => 'allphp',
       '#value' => '\$_POST\s*\[\s*[\'"]?op[\'"]?\s*\]',
       '#warning' => '$_POST[\'op\'] deprecated in favor of $form_values[\'op\']',
       '#severity' => 'normal',
@@ -76,14 +85,13 @@ function coder_50_reviews() {
 }
 
 /**
- * Define the rule callbacks
+ * Define the rule callbacks for 5.x, see do_coder_review_callback().
  */
-
 function _coder_50_callback(&$coder_args, $review, $rule, $lines, &$results) {
-  // only perform this check on module's (not includes)
+  // Only perform this check on module's (not includes).
   $filename = $coder_args['#filename'];
   if (substr($filename, -7) == '.module') {
-    // make sure that a .info file exists
+    // Make sure that a .info file exists.
     $filename = drupal_substr(realpath($filename), 0, -7) .'.info';
     if (!file_exists($filename)) {
       $severity_name = _coder_severity_name($coder_args, $review, $rule);
@@ -94,14 +102,14 @@ function _coder_50_callback(&$coder_args, $review, $rule, $lines, &$results) {
 }
 
 /**
- * Define the warning callbacks
+ * Define the warning callbacks.
  */
 
 function _coder_50_user_mail_warning() {
   return t('!user_mail() is replaced by !drupal_mail()',
     array(
       '!user_mail' => theme('drupalapi', 'user_mail', '4.7'),
-      '!drupal_mail' => theme('drupalapi', 'drupal_mail'),
+      '!drupal_mail' => theme('drupalapi', 'drupal_mail', '5'),
     )
   );
 }
@@ -110,7 +118,7 @@ function _coder_50_user_mail_wrapper_warning() {
   return t('!user_mail_wrapper() changed to !drupal_mail_wrapper()',
     array(
       '!user_mail_wrapper' => theme('drupalapi', 'user_mail_wrapper', '4.7'),
-      '!drupal_mail_wrapper' => theme('drupalapi', 'drupal_mail_wrapper'),
+      '!drupal_mail_wrapper' => theme('drupalapi', 'drupal_mail_wrapper', '5'),
     )
   );
 }
@@ -119,7 +127,7 @@ function _coder_50_message_na_warning() {
   return t('The function !message_na() was removed, remove it from your modules as well and replace it with !t(\'n/a\')',
     array(
       '!message_na' => theme('drupalapi', 'message_na', '4.7'),
-      '!t' => theme('drupalapi', 't'),
+      '!t' => theme('drupalapi', 't', '5'),
     )
   );
 }
@@ -128,7 +136,7 @@ function _coder_50_module_exist_warning() {
   return t('!module_exist() is now !module_exists()',
     array(
       '!module_exist' => theme('drupalapi', 'module_exist', '4.7'),
-      '!module_exists' => theme('drupalapi', 'module_exists'),
+      '!module_exists' => theme('drupalapi', 'module_exists', '5'),
     )
   );
 }
@@ -137,7 +145,7 @@ function _coder_50_drupal_call_js_warning() {
   return t('Remove !drupal_call_js(), use "!drupal_add_js(\'myCustomFunction(your, parameters, here)\', \'inline\');" instead',
     array(
       '!drupal_call_js' => theme('drupalapi', 'drupal_call_js', '4.7'),
-      '!drupal_add_js' => theme('drupalapi', 'drupal_add_js'),
+      '!drupal_add_js' => theme('drupalapi', 'drupal_add_js', '5'),
     )
   );
 }
@@ -146,7 +154,7 @@ function _coder_50_system_listing_warning() {
   return t('!system_listing() is now !drupal_system_listing()',
     array(
       '!system_listing' => theme('drupalapi', 'system_listing', '4.7'),
-      '!drupal_system_listing' => theme('drupalapi', 'drupal_system_listing'),
+      '!drupal_system_listing' => theme('drupalapi', 'drupal_system_listing', '5'),
     )
   );
 }
@@ -155,7 +163,7 @@ function _coder_50_theme_add_style_warning() {
   return t('Replace !theme_add_style() with !drupal_add_css()',
     array(
       '!theme_add_style' => theme('drupalapi', 'theme_add_style', '4.7'),
-      '!drupal_add_css' => theme('drupalapi', 'drupal_add_css'),
+      '!drupal_add_css' => theme('drupalapi', 'drupal_add_css', '5'),
     )
   );
 }
@@ -164,7 +172,7 @@ function _coder_50_form_render_warning() {
   return t('Replace !form_render() with !drupal_render()',
     array(
       '!form_render' => theme('drupalapi', 'form_render', '4.7'),
-      '!drupal_render' => theme('drupalapi', 'drupal_render'),
+      '!drupal_render' => theme('drupalapi', 'drupal_render', '5'),
     )
   );
 }
@@ -173,7 +181,7 @@ function _coder_50_node_get_name_warning() {
   return t('Replace !node_get_name($node) with !node_get_types(\'name\', $node)',
     array(
       '!node_get_name' => theme('drupalapi', 'node_get_name', '4.7'),
-      '!node_get_types' => theme('drupalapi', 'node_get_types'),
+      '!node_get_types' => theme('drupalapi', 'node_get_types', '5'),
     )
   );
 }

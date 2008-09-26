@@ -251,7 +251,7 @@ function nodereference_widget($op, &$node, $field, &$items) {
           '#size' =>  $field['multiple'] ? min(count($options), 6) : 0,
           '#options' => $options,
           '#required' => $field['required'],
-          '#description' => t($field['widget']['description']),
+          '#description' => content_filter_xss(t($field['widget']['description'])),
         );
 
         return $form;
@@ -296,13 +296,12 @@ function nodereference_widget($op, &$node, $field, &$items) {
 
         if ($field['multiple']) {
           $form[$field['field_name']]['#type'] = 'fieldset';
-          $form[$field['field_name']]['#description'] = t($field['widget']['description']);
+          $form[$field['field_name']]['#description'] = content_filter_xss(t($field['widget']['description']));
           $delta = 0;
           foreach ($items as $item) {
             if ($item['nid']) {
               $form[$field['field_name']][$delta]['node_name'] = array(
                 '#type' => 'textfield',
-                '#maxlength' => 350,
                 '#title' => ($delta == 0) ? t($field['widget']['label']) : '',
                 '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
                 '#default_value' => $item['default node_name'],
@@ -314,7 +313,6 @@ function nodereference_widget($op, &$node, $field, &$items) {
           foreach (range($delta, $delta + 2) as $delta) {
             $form[$field['field_name']][$delta]['node_name'] = array(
               '#type' => 'textfield',
-              '#maxlength' => 350,
               '#title' => ($delta == 0) ? t($field['widget']['label']) : '',
               '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
               '#default_value' => '',
@@ -325,12 +323,11 @@ function nodereference_widget($op, &$node, $field, &$items) {
         else {
           $form[$field['field_name']][0]['node_name'] = array(
             '#type' => 'textfield',
-            '#maxlength' => 350,
             '#title' => t($field['widget']['label']),
             '#autocomplete_path' => 'nodereference/autocomplete/'. $field['field_name'],
             '#default_value' => $items[0]['default node_name'],
             '#required' => $field['required'],
-            '#description' => t($field['widget']['description']),
+            '#description' => content_filter_xss( t( $field['widget']['description'] )),
           );
         }
         return $form;
@@ -344,7 +341,21 @@ function nodereference_widget($op, &$node, $field, &$items) {
               // explicit nid
               list(, $title, $nid) = $matches;
               if (!empty($title) && ($n = node_load($nid)) && $title != $n->title) {
-                form_set_error($error_field, t('%name : Title mismatch. Please check your selection.'), array('%name' => t($field['widget']['label'])));
+                form_set_error($error_field, t('%name : Title mismatch. Please check your selection.', array('%name' => t($field['widget']['label']))));
+              }
+            }
+            else {
+              // no explicit nid
+              $nids = _nodereference_potential_references($field, FALSE, $item['node_name'], TRUE);
+              if (empty($nids)) {
+                form_set_error($error_field, t('%name: Found no valid post with that title.', array('%name' => t($field['widget']['label']))));
+              }
+              else {
+                // TODO:
+                // the best thing would be to present the user with an additional form,
+                // allowing the user to choose between valid candidates with the same title
+                // ATM, we pick the first matching candidate...
+                $nid = array_shift(array_keys($nids));
               }
             }
           }

@@ -1,0 +1,80 @@
+<?php
+// $Id: xmlsitemap_file.install,v 1.1.2.1 2008/05/23 21:45:29 darrenoh Exp $
+
+/**
+ * @file
+ * Install file for XML Sitemap: File
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function xmlsitemap_file_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE {xmlsitemap_file} (
+        fid int,
+        nid int,
+        changed int(11),
+        previously_changed int(11),
+        PRIMARY KEY (fid)
+      ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+    case 'pgsql':
+      db_query("CREATE TABLE {xmlsitemap_file} (
+        fid integer,
+        nid integer,
+        changed integer,
+        previously_changed integer,
+        PRIMARY KEY (fid)
+      );");
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function xmlsitemap_file_enable() {
+  $weight = db_result(db_query("SELECT MAX(weight) FROM {system} WHERE type = 'module' AND name IN('pathauto', 'upload')"));
+  if ($weight !== FALSE) {
+    db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'xmlsitemap_file'", ++$weight);
+  }
+  db_query("
+    INSERT INTO {xmlsitemap_file} (fid, nid)
+    SELECT f.fid, f.nid FROM {files} f
+    LEFT JOIN {xmlsitemap_file} xf ON f.fid = xf.fid
+    WHERE xf.fid IS NULL
+  ");
+  $result = db_query("
+    SELECT * FROM {files} f
+    INNER JOIN {xmlsitemap_file} xf ON f.fid = xf.fid
+  ");
+  while ($file = db_fetch_object($result)) {
+    $changed = filemtime($file->filepath);
+    if ($changed > $file->changed) {
+      db_query("
+        UPDATE {xmlsitemap_file}
+        SET previously_changed = changed, changed = %d
+        WHERE fid = %d
+      ", $changed, $file->fid);
+    }
+  }
+  xmlsitemap_update_sitemap();
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function xmlsitemap_file_disable() {
+  xmlsitemap_update_sitemap();
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function xmlsitemap_file_uninstall() {
+  db_query("DROP TABLE {xmlsitemap_file}");
+}
+

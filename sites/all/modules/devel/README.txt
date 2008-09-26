@@ -8,7 +8,7 @@ summary includes how many times each query was executed on a page
 (shouldn't run same query multiple times), and how long each query
  took (short is good - use cache for complex queries).
 
-Also a dpr() function is provided, which pretty prints arrays and strings. Useful during
+Also dpr() and dpm() functions are provided, which pretty print arrays and strings. Useful during
 development.
 
 Included in this package is also: 
@@ -16,13 +16,17 @@ Included in this package is also:
 - macro.module which records form submissions and can pay them back later or on another site. More
 information available at http://drupal.org/node/79900.
 
+Goodies
+-------------
+- You should also download Krumo from http://krumo.sourceforge.net/. Unpack it into a subdirectory 
+called krumo. Devel will automatically start using it. You may also call krumo($variable) to get 
+a pretty print of any variable.
+
+AJAX developers in particular ought to install FirePHP Core from http://www.firephp.org/ and put it in the devel directory. Your path to fb.php should looks like devel/FirePHPCore/lib/FirePHPCore/fb.php. You can use svn checkout http://firephp.googlecode.com/svn/trunk/trunk/Libraries/FirePHPCore. Then you can log php variables to the Firebug console. Is quite useful. 
+
+
 
 AUTHOR/MAINTAINER
 ======================
 -moshe weitzman
 weitzman at tejasa DOT com
-
-NOTE
-====
-The subdirectory generate/ includes some scripts that can be used to help testing
-on a Drupal site. See generate/README.txt for details.

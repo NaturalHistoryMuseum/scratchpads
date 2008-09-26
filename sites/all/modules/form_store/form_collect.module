@@ -1,0 +1,82 @@
+<?php
+
+// $Id: form_collect.module,v 1.1 2007/03/21 21:32:06 heine Exp $
+
+/**
+ * Collects form information while browsing.
+ *
+ * By Heine Deelstra (http://heine.familiedeelstra.com).
+ *
+ * Collection page is on admin/settings/form-store/collect
+ *
+ */
+
+
+function form_collect_help($section) {
+
+  switch ($section) {
+
+    case 'admin/settings/form-store/collect':
+      $txt = '<p>'. t('When you enable <em>Collect forms while browsing the site</em>, every form on your site will, when visited, be added to the <a href="@url">Form store</a>.',
+        array('@url' => url('admin/settings/form-store'))) .'</p>';
+      return $txt;
+  }
+
+}
+
+/**
+ * Define a Collect forms tab on admin/settings/form-store.
+ */
+function form_collect_menu($may_cache) {
+  if ($may_cache) {
+    $items = array();
+    $items[] = array(
+      'path' => 'admin/settings/form-store/collect',
+      'title' => 'Collect forms',
+      'type' => MENU_LOCAL_TASK,
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('form_collect_form'),
+      'access' => user_access('administer site configuration'),
+    );
+    return $items;
+  }
+}
+
+/**
+ * Settings form for Form collect.
+ *
+ * Allows one to enable the collection.
+ *
+ * @return Settings form.
+ */
+function form_collect_form() {
+  // Suppress the 5.2 duplicate submission fitler (# 107358).
+  $form = array(
+    '#description' => t('Settings for the Form collect module.'),
+    '#skip_duplicate_check' => TRUE
+  );
+  $form['form_collect_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Collect forms while browsing the site'),
+    '#default_value' => variable_get('form_collect_enabled', 0),
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Add new form_ids to the Form store.
+ *
+ * @param unknown_type $form_id
+ * @param unknown_type $form
+ */
+function form_collect_form_alter($form_id, &$form) {
+  if (variable_get('form_collect_enabled', 0) && !form_store_get($form_id)) {
+    // Form store handles the addition
+    form_store_add($form_id, $form);
+
+    // While collection is for all users, only privileged ones see the message.
+    if (user_access('administer site configuration')) {
+      drupal_set_message(t('Form %form_id had been added to the store.', array('%form_id' => $form_id)));
+    }
+  }
+}

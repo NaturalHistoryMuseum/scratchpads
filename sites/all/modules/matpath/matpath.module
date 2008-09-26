@@ -1,0 +1,412 @@
+<?php
+/* $Id$*/
+/* $HeadURL$*/
+
+/** 
+ * @file matpath.module
+ */
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function matpath_menu($maycache){
+  $items = array();
+  if(!$maycache){ // FIXME  - REMOVE ! AFTER DEVELOPMENT
+    $items[] = array(
+      'path' => 'admin/settings/matpath',
+      'title' => t(LEFTANDRIGHT_SETTINGS),
+      'description' => t(LEFTANDRIGHT_SETTINGS_DESC),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('matpath_admin_settings'),
+      'access' => user_access('administer site configuration')
+    );
+    $items[] = array('path' => 'admin/content/taxonomy/matpath',
+      'title' => t('Rebuild Tree'),
+      'callback' => 'matpath_overview_vocabularies',
+      'access' => user_access('administer taxonomy'),
+      'type' => MENU_LOCAL_TASK);
+    $items[] = array(
+      'path' => 'matpath/update',
+      'title' => t(LEFTANDRIGHT_UPDATE_PAGE_TITLE),
+      'description' => t(LEFTANDRIGHT_UPDATE_PAGE_TITLE_DESC),
+      'callback' => 'matpath_rebuild_tree_page',
+      'access' => user_access('administer site configuration')
+    );
+  }
+  return $items;
+}/*
+function matpath_help($section) {
+  switch ($section) {
+    case 'admin/content/taxonomy/matpath':
+      return '<p>'. t('') .'</p>';
+  }
+}*/
+/**
+ * The following function adds the data to the left and right table when a new term is
+ * added to the site, or it alters the data if the parent of a term is changed, or if 
+ * the name itself is changed.  etc
+ */
+function matpath_taxonomy($op, $type, $array = NULL){
+  if($type=='term'){
+    switch($op){
+      case 'delete':
+        // Get the path for this term, and update all the children of this term (moving them up)
+        $results = db_query("SELECT path FROM {matpath} WHERE tid =  %d", $array['tid']);
+        while($row = db_fetch_array($results)){
+          $path = array_pop($row);
+          $old_path = $path.'/'.$array['tid'];
+          db_query("UPDATE {matpath} SET path = REPLACE(path, '%s', '%s') WHERE path LIKE '%s%%' OR path = '%s'", $old_path, $path, "$old_path/", $old_path);
+        }
+        db_query("DELETE FROM {matpath} WHERE tid = %d", $array['tid']);
+      case 'update':
+        // Get the paths for the parents, and see if they compare with the current paths
+        $results = db_query("SELECT path FROM {matpath} WHERE tid = %d");
+        $paths = matpath_calculate_paths($array['parents']);
+        $db_paths = array();
+        while($row = db_fetch_array($results)){
+          $db_paths[] = $row['path'];
+        }
+        // Lets get the keep, de
+      case 'insert':   
+    }
+  }
+}
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+function matpath_calculate_paths($parents){
+  // Paths to return array
+  $paths = array();
+  // Check that parents is array, if not set it so
+  if(!is_array($parents)){
+    $parents = array($parents);
+  }
+  foreach($parents as $parent){
+    $results = db_query("SELECT path FROM {matpath} WHERE id = %d", $parents);
+    while($row = db_fetch_array($results)){
+      $paths[] = $row['path']."/".$parents;
+    }
+  }
+  return $paths;
+}
+/***********************************************************************************
+ * TAXONOMY ADDITIONAL PAGE
+ ***********************************************************************************/
+/**
+ * List and manage vocabularies.
+ */
+function matpath_overview_vocabularies() {
+  $rebuilding = matpath_trees_rebuilding();
+  $above_table = false;
+  if(count($rebuilding)){
+    $processes = variable_get('matpath_rebuild_pids',array());
+    $current_pids = array();
+    foreach($rebuilding as $pid=>$vid){
+      // Check that this process was started by this site
+      if(in_array($pid,$processes)){
+        if(!$above_table){
+          $above_table = '<p><strong>'.t('Currently rebuilding the following vocabularies:').'</strong></p><ul>';
+        }
+        $vocabulary = taxonomy_get_vocabulary($vid);
+        $above_table .='<li>'.check_plain($vocabulary->name).'</li>';
+        $current_pids[] = $pid;
+        $display_above_table = true;
+      }
+    }
+    variable_set('matpath_rebuild_pids',$current_pids);
+    $above_table .= '</ul>';
+  }
+  $vocabularies = taxonomy_get_vocabularies();
+  $rows = array();
+  foreach ($vocabularies as $vocabulary) {
+    if(isset($rebuilding[$vocabulary->vid])){
+      $rebuild = t('This tree is currently being rebuilt');
+    } else {
+      $rebuild = l(t('rebuild tree'), 'matpath/update/'.$vocabulary->vid);
+    }
+    $rows[] = array(
+      'name' => check_plain($vocabulary->name),
+      'rebuild' => $rebuild
+    );
+  }
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No categories available.'), 'colspan' => '5'));
+  }
+  $header = array(t('Name'),t('Rebuild Tree'));
+
+  return $above_table . theme('table', $header, $rows, array('id' => 'taxonomy'));
+}
+/***********************************************************************************
+ * ADDITIONAL matpath FUNCTIONS FOR OTHER MODULES!
+ ***********************************************************************************/
+/**
+ * Following function returns TRUE if this term or one of its descendants
+ * has been used to tag a node, FALSE if not.
+ */
+function matpath_descendant_used($tid){
+  //return false;
+  $result = db_query("SELECT COUNT(*) FROM {term_node} WHERE tid IN (SELECT tid FROM {matpath} WHERE lft>=(SELECT lft FROM {matpath} WHERE tid=%d) AND rgt<=(SELECT rgt FROM {matpath} WHERE tid=%d))",$tid,$tid);
+  if(array_pop(db_fetch_array($result))){
+    return true;
+  } else {
+    return false;
+  }
+}
+/***********************************************************************************
+ * REPLACEMENT FUNCTIONS FOR taxonomy module
+ ***********************************************************************************/
+function matpath_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0, $count=1000){
+  // First we do a count, if the tree is too big, we give a warning.
+  $tree_size = matpath_get_tree_count($vid, $parent, $max_depth);
+  if($tree_size>1000){
+    watchdog('taxonomy','Tried to get a big tree [taxonomy_get_tree('.$vid.','.$parent.','.$max_depth.')',WATCHDOG_WARNING);
+  }
+  $left = 0;
+  $right = 10000000000;// Is this big enough?
+  if($parent != 0){
+    $results = db_query("SELECT lft,rgt,depth FROM {matpath} WHERE tid = %d", $parent);
+    $row = db_fetch_array($results);
+    $left = $row['lft'];
+    $right = $row['rgt'];
+    if(isset($max_depth) && $max_depth != NULL){
+      $max_depth += $row['depth']+1;
+    }
+  }
+  $params = array($vid, $left, $right);
+  $depth_sql = '';
+  if(isset($max_depth) && $max_depth != NULL){
+    $depth_sql = 'AND depth<%d';
+    $params[] = $max_depth;
+  }
+  $results = db_query_range("SELECT t.tid,t.*,l.depth FROM {term_data} t, {matpath} l WHERE t.tid = l.tid AND t.vid = %d AND lft>%d AND rgt <%d $depth_sql ORDER BY lft", $params, $offset, $count);
+  $tree = array();
+  // FIXME - We're not returning the parents for a term - is this an issue?
+  while($row = db_fetch_object($results)){
+    $tree[] = $row;
+  }
+  return $tree;
+}
+function matpath_get_tree_count($vid, $parent = 0, $max_depth = NULL){
+  // Get parent left and right
+  $left = 0;
+  $right = 10000000000;// Is this big enough?
+  if($parent != 0){
+    $results = db_query("SELECT lft,rgt FROM {matpath} WHERE tid = %d", $parent);
+    $row = db_fetch_array($results);
+    $left = $row['lft'];
+    $right = $row['rgt'];
+  }
+  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {matpath} WHERE vid=%d AND lft>=%d AND rgt <=%d", $vid, $left, $right)));
+}
+function matpath_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC ') {
+  if (count($tids) > 0) {
+    if($depth =='all'){
+      $depth = null;
+    }
+    $matpaths = array();
+    foreach($tids as $tid){
+      $result = db_query("SELECT lft,rgt,depth FROM {matpath} WHERE tid = %d",$tid);
+      $row = db_fetch_array($result);
+      $sql = "(lft>=".$row['lft']." AND rgt<=".$row['rgt'];
+      if(isset($depth) && $depth!=null){
+        $sql .= "AND depth<=".$row['depth']+$depth;
+      }
+      $sql .= ")";
+      $matpaths[] = $sql;
+    }
+    $sql = "SELECT DISTINCT(n.nid), n.sticky, n.title, n.created FROM {node} n, {term_node} t, {matpath} l WHERE t.nid = n.nid AND l.tid=t.tid AND (".implode(" $operator ",$matpaths).") ORDER BY ".$order;
+    if ($pager) {
+      $result = pager_query($sql, variable_get('default_nodes_main', 10), 0, $sql_count, $args);
+    }
+    else {
+      $result = db_query_range($sql, $args, 0, variable_get('feed_default_items', 10));
+    }
+  }
+  return $result;  
+}
+/**
+ * Following function is barely changed from the original, but just to make things simpler, it's recreated here.
+ */
+function matpath_overview_terms($vid){
+  $destination = drupal_get_destination();
+
+  $header = array(t('Name'), t('Operations'));
+  $vocabulary = taxonomy_get_vocabulary($vid);
+  if (!$vocabulary) {
+    return drupal_not_found();
+  }
+
+  drupal_set_title(check_plain($vocabulary->name));
+  $start_from      = $_GET['page'] ? $_GET['page'] : 0;
+  $total_entries   = 0;  // total count for pager
+  $page_increment  = 25; // number of tids per page
+  $displayed_count = 0;  // number of tids shown
+
+  if ($vocabulary->tags) {
+    // We are not calling taxonomy_get_tree because that might fail with a big
+    // number of tags in the freetagging vocabulary.
+    $results = pager_query(db_rewrite_sql('SELECT t.*, h.parent FROM {term_data} t INNER JOIN  {term_hierarchy} h ON t.tid = h.tid WHERE t.vid = %d ORDER BY weight, name', 't', 'tid'), $page_increment, 0, NULL, $vid);
+    while ($term = db_fetch_object($results)) {
+      $rows[] = array(
+        l($term->name, "taxonomy/term/$term->tid"),
+        l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array(), $destination),
+      );
+    }
+  }
+  else {
+    $total_entries = matpath_get_tree_count($vid);
+    //$tree = taxonomy_get_tree($vocabulary->vid);
+    $tree = matpath_get_tree($vocabulary->vid, 0,NULL,$start_from*$page_increment,$page_increment);
+    foreach ($tree as $term) {
+      $total_entries++; // we're counting all-totals, not displayed
+      if (($start_from && ($start_from * $page_increment) >= $total_entries) || ($displayed_count == $page_increment)) {
+        continue;
+      }
+      $rows[] = array(str_repeat('--', $term->depth) .' '. l($term->name, "taxonomy/term/$term->tid"), l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array(), $destination));
+      $displayed_count++; // we're counting tids displayed
+    }
+    if (!$total_entries) {
+      $rows[] = array(array('data' => t('No terms available.'), 'colspan' => '2'));
+    }
+    $GLOBALS['pager_page_array'][] = $start_from;
+    $GLOBALS['pager_total'][] = intval($total_entries / $page_increment);
+  }
+  $output .= theme('table', $header, $rows, array('id' => 'taxonomy'));
+  if ($vocabulary->tags || $total_entries >= $page_increment) {
+    $output .= theme('pager', NULL, $page_increment);
+  }
+  return $output;
+  
+}
+/***********************************************************************************
+ * REBUILD TREE
+ ***********************************************************************************/
+// Returns an indexed array of PIDs and the vocabularies associated with these PIDs
+function matpath_trees_rebuilding(){  
+  exec('ps -ef | grep landr | grep -v grep',$exec_output);
+  $rebuilding=array();
+  foreach($exec_output as $process){
+    // Split the process by " " as the last part should be the vocabulary ID
+    $parts = explode(" ",preg_replace("/[\ ]*\ /"," ",$process));
+    $vid = array_pop($parts);
+    $pid = $parts[1];
+    $rebuilding[$pid]=$vid;
+  }
+  return $rebuilding;
+}
+function matpath_rebuild_tree_page($args){
+  matpath_rebuild_tree($args);
+  drupal_goto('admin/content/taxonomy/matpath');
+}
+function matpath_rebuild_tree($vid){
+  // Lets load this vocabulary, firstly to make sure it exists, and secondly
+  // so that we know its name
+  $vocabulary = taxonomy_get_vocabulary($vid);
+  if(!$vocabulary){return;}
+  // Check that the vocabulary has terms, if not, just return
+  $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
+  $array_results = db_fetch_array($result);
+  if(!$array_results['c']){
+    drupal_set_message(check_plain($vocabulary->name).' has no terms');
+    return;
+  }
+  
+  // Get the DB connection shit in the same way as core does
+  global $db_url;  
+  $url = parse_url($db_url);
+  $url['user'] = urldecode($url['user']);
+  if(isset($url['pass'])) {
+    $url['pass'] = urldecode($url['pass']);
+  } else {
+    $url['pass'] = '';}
+  $url['host'] = urldecode($url['host']);
+  $url['path'] = urldecode($url['path']);
+  $url['port'] = $url['port'] ? $url['port'] : 3306;
+  
+  // Calculate the tid to start from (creating a parent if the vocabulary
+  // has multiple roots (forest not tree).
+  $results = db_query("SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
+  $tid;
+  $temporary_root_created = false;
+    
+  if(db_num_rows($results)==1){
+    // Single tree, woot
+    $tid = array_pop(db_fetch_array($results));
+  } else {
+    $temporary_root_created = true;
+    // Either no results (Farp), Or we have a forest.  Lets tree it!
+    // Create new term to be the base of the tree.
+    // Because the term is temporary, we don't use taxonomy_ functions, but instead
+    // use trusty SQL.
+    $tid = db_next_id('{term_data}_tid');
+    // Create term
+    db_query("INSERT INTO {term_data} (tid, vid, name) VALUES (%d , %d , 'TEMPORARY TERM')", $tid, $vid);
+    db_query("INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d , 0)", $tid);
+    // Set parent of current roots as this term
+    $result = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE t.tid = h.tid AND parent =0 AND vid = %d AND t.tid != %d",$vid, $tid);
+    $tids = array();
+    while($row=db_fetch_array($result)){
+      $tids[] = $row['tid'];
+    }
+    db_query("UPDATE {term_hierarchy} SET parent = %d WHERE tid IN (".implode(",",$tids).")",$tid,$tid);
+  }
+  
+  // Create the string which will become the PHP file to execute
+  /**
+   * FIXME - The following doesn't use Drupal's {table_name} shenanigans
+   */  
+  $tmp_php_file_string = '<?php
+mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
+mysql_select_db(\''.substr($url['path'], 1).'\');
+function rebuild_tree($tid, $left, $depth) {
+  $right = $left+1;
+  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC , name DESC");
+  while ($row = mysql_fetch_array($results)){
+    $right = rebuild_tree($row[0], $right, $depth+1);
+  }  
+  echo "($tid , '.$vid.' , $left , $right, $depth)";
+  if($left != 1){
+    echo ",";
+  }
+  return $right+1;
+} 
+echo "DELETE FROM '.db_prefix_tables('{matpath}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{matpath}').' (tid, vid, lft, rgt, depth) VALUES ";
+rebuild_tree('.$tid.',1, ';
+  if($temporary_root_created){
+    $tmp_php_file_string .= '-1';
+  } else {
+    $tmp_php_file_string .= '0';    
+  }
+  $tmp_php_file_string .= ');
+echo ";";';
+  
+  // Add the deletion of the temporary term if required to the PHP file
+  if($temporary_root_created){
+    $tmp_php_file_string .= '
+echo "DELETE FROM '.db_prefix_tables('{matpath}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_data}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_hierarchy}').' WHERE tid = '.$tid.';";
+echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
+  }
+  $tmp_php_file_string .= '
+echo "UPDATE '.db_prefix_tables('{matpath}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";';
+  // Write this out to a temporary file which we'll EXEC!
+  $filepath = file_create_filename('matpath.php', file_directory_temp());
+  file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
+  
+  // FIXME - TEST FOR WINDOWS HERE, IF WINDOWS, EXECUTE BAT FILE INSTEAD
+  // Lets try to execute the file
+  if($windoze){
+    
+  } else {
+    $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','matpath').'/landr';
+    // FIXME - Needs port
+    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1).' '.$vid;
+    $pid = shell_exec("nohup $command > /dev/null & echo $!");
+    variable_set('matpath_rebuild_pids',array_merge(variable_get('matpath_rebuild_pids',array()),array($pid=>$pid)));
+  }
+  
+  // Finally delete the file
+  sleep(2); // Not sure if this sleep is necesary, but it seems to be
+  file_delete($filepath);
+  
+  // Set message to say that we're doing the rebuild
+  drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.check_plain($vocabulary->name));
+}

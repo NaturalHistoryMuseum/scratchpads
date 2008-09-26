@@ -1,14 +1,44 @@
 $Id$
-XML Sitemap Module
 
-If you are upgrading from Google Sitemap, make sure you are using the latest
-version.
+INSTALLING XML SITEMAP
+----------------------
 
-Installation Instructions:
+1. Place the xmlsitemap directory in your modules directory (usually
+   sites/all/modules).
 
-1. Place the xmlsitemap directory in sites/all/modules.
+2. Go to the XML Sitemap section at
+   http://www.example.com/?q=admin/build/modules and enable XML Sitemap and any
+   of the optional related modules you want to use.
 
-2. Enable this module at Administer -> Site building -> Modules.
+   Optional modules included with XML Sitemap:
 
-3. The sitemap is now operational at ?q=sitemap.xml. Configure advanced
-   options at Administer -> Site configuration -> XML Sitemap.
+   XML Sitemap: Menu - Adds menu items to the site map.
+   XML Sitemap: Node - Adds nodes to the site map.
+   XML Sitemap: File - Adds node file attachments to the site map.
+   XML Sitemap: Term - Adds taxonomy terms to the site map.
+   XML Sitemap: User - Adds user profiles to the site map.
+   XML Sitemap: Engines - Supports Google, Yahoo!, Ask, and Windows Live.
+
+3. The sitemap is now operational at http://www.example.com/?q=sitemap.xml. See
+   README.txt for configuration instructions.
+
+UPGRADING FROM OLDER VERSIONS
+-----------------------------
+
+XML Sitemap 5.x-1.x:
+Install the latest 5.x-1.x release and run update.php before upgrading.
+
+Google Sitemap:
+Install the latest 5.x-1.x release of XML Sitemap. To ensure that your Google
+Sitemap settings are transferred correctly, enable XML Sitemap before removing
+gsitemap from your modules directory.
+
+UNINSTALLATION
+--------------
+
+1. Go to http://www.example.com/?q=admin/build/modules and disable all XML
+   Sitemap modules.
+
+2. Go to http://www.example.com/?q=admin/build/modules/uninstall and uninstall
+   all XML Sitemap modules.
+

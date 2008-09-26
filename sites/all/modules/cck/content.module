@@ -65,6 +65,13 @@ function content_init() {
 }
 
 /**
+ * Implementation of hook_perm().
+ */
+function content_perm() {
+  return array('Use PHP input for field settings (dangerous - grant with care)');
+}
+
+/**
  * Implementation of hook_menu().
  */
 function content_menu($may_cache) {
@@ -165,10 +172,14 @@ function content_menu($may_cache) {
  * its own loading. This can make for a number of queries in some cases, so we
  * cache the loaded object structure and invalidate it during the update process.
  */
-function content_load($node) {
+function content_load(&$node) {
   $cid = 'content:'. $node->nid .':'. $node->vid;
   if ($cached = cache_get($cid, 'cache_content')) {
-    return unserialize($cached->data);
+    $extra = unserialize($cached->data);
+    foreach ($extra as $key => $value) {
+      $node->$key = $value;
+    }
+    return $extra;
   }
   else {
     $default_additions = _content_field_invoke_default('load', $node);
@@ -265,7 +276,7 @@ function content_delete(&$node) {
   if (db_table_exists($table)) {
     db_query('DELETE FROM {'. $table .'} WHERE nid = %d', $node->nid);
   }
-  cache_clear_all('content:'. $node->nid, 'cache_content', TRUE);
+  cache_clear_all('content:'. $node->nid .':', 'cache_content', TRUE);
 }
 
 /**
@@ -315,6 +326,10 @@ function content_nodeapi(&$node, $op, $teaser, $page) {
       break;
 
     case 'insert':
+      if ($node->devel_generate) {
+        include_once('./'. drupal_get_path('module', 'content') .'/content.devel.inc');
+        content_generate_fields($node);
+      }
       content_insert($node);
       break;
 
@@ -603,6 +618,7 @@ function _content_field_view(&$node, $teaser = NULL, $page = NULL) {
         }
         else {
           foreach ($node_field as $delta => $item) {
+            $item['#delta'] = $delta;
             $node_field[$delta]['view'] = content_format($field, $item, $formatter, $node);
           }
           $value = theme('field', $node, $field, $node_field, $teaser, $page);
@@ -696,25 +712,23 @@ function content_types($type_name = NULL) {
  */
 function content_fields($field_name = NULL, $content_type_name = NULL) {
   $info = _content_type_info();
-  if (isset($field_name)) {
-    if (isset($info['fields'][$field_name])) {
-      if (isset($content_type_name)) {
-        if (isset($info['content types'][$content_type_name]['fields'][$field_name])) {
-          return $info['content types'][$content_type_name]['fields'][$field_name];
-        }
-        else {
-          return NULL;
-        }
-      }
-      else {
-        return $info['fields'][$field_name];
-      }
-    }
-    else {
-      return NULL;
-    }
+
+  // If there is no field name specified, return the entire fields array.
+  if (!isset($field_name)) {
+    return $info['fields'];
   }
-  return $info['fields'];
+  elseif (!isset($info['fields'][$field_name])) {
+    return NULL;
+  }
+  elseif (!isset($content_type_name)) {
+    return $info['fields'][$field_name];
+  }
+  elseif (isset($info['content types'][$content_type_name]['fields'][$field_name])) {
+    return $info['content types'][$content_type_name]['fields'][$field_name];
+  }
+
+  // If all else fails, return NULL.
+  return NULL;
 }
 
 /**
@@ -953,6 +967,31 @@ function content_transpose_array_rows_cols($array) {
 }
 
 /**
+ * Like filter_xss_admin(), but with a shorter list of allowed tags.
+ *
+ * Used for items entered by administrators, like field descriptions,
+ * allowed values, where some (mainly inline) mark-up may be desired
+ * (so check_plain() is not acceptable).
+ */
+function content_filter_xss($string) {
+  return filter_xss($string, _content_filter_xss_allowed_tags());
+}
+
+/**
+ * List of tags allowed by content_filter_xss().
+ */
+function _content_filter_xss_allowed_tags() {
+  return array('a', 'b', 'big',  'code', 'del', 'em', 'i', 'ins',  'pre', 'q', 'small', 'span', 'strong', 'sub', 'sup', 'tt', 'ol', 'ul', 'li', 'p', 'br', 'img');
+}
+
+/**
+ * Human-readable list of allowed tags, for display in help texts.
+ */
+function _content_filter_xss_display_allowed_tags() {
+  return '<'. implode('> <', _content_filter_xss_allowed_tags()) .'>';
+}
+
+/**
  * Format a field item for display.
  *
  * @param $field
@@ -976,7 +1015,7 @@ function content_format($field, $item, $formatter = 'default', $node = NULL) {
   $field_types = _content_field_types();
   $formatters = $field_types[$field['type']]['formatters'];
 
-  if (!isset($formatter, $formatters)) {
+  if (!isset($formatter, $formatters, $formatters[$formatter])) {
     $formatter = 'default';
   }
   return module_invoke($formatters[$formatter]['module'], 'field_formatter', $field, $item, $formatter, $node);
@@ -1004,17 +1043,19 @@ function content_format($field, $item, $formatter = 'default', $node = NULL) {
  */
 function theme_field(&$node, &$field, &$items, $teaser, $page) {
   $label_display = isset($field['display_settings']['label']['format']) ? $field['display_settings']['label']['format'] : 'above';
-  $label = t($field['widget']['label']);
+  $label = check_plain(t($field['widget']['label']));
   $items_output = '';
 
+  $count = 1;
   foreach ($items as $delta => $item) {
     if (!empty($item['view']) || $item['view'] === "0") {
-      $items_output .= '<div class="field-item">';
+      $items_output .= '<div class="field-item '. ($count % 2 ? 'odd' : 'even') .'">';
       if ($label_display == 'inline') {
         $items_output .= '<div class="field-label-inline'. ($delta ? '' : '-first') .'">';
         $items_output .= $label .':&nbsp;</div>' ;
       }
       $items_output .= $item['view'] .'</div>';
+      $count++;
     }
   }
 

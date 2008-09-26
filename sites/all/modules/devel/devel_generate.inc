@@ -91,9 +91,12 @@ function devel_create_nodes($records, $users, $title_length = 8, $types = array(
         devel_generate_add_terms($node);
       }
 
+      // A flag to let hook_nodeapi() implementations know that this is a generated node.
+      $node->devel_generate = $records;
+      
       // Save the node:
       node_save($node);
-
+      
       // Setup a path:
       db_query("INSERT INTO {url_alias} (src, dst) VALUES ('%s', '%s')", "node/$node->nid", "node-$node->nid-$node->type");
       unset($node);
@@ -106,7 +109,7 @@ function devel_generate_add_terms(&$node) {
   $vocabs = taxonomy_get_vocabularies($node->type);
   // dsm($vocabs);
   foreach ($vocabs as $vocab) {
-    $sql = "SELECT tid FROM term_data WHERE vid = %d ORDER BY RAND()";
+    $sql = "SELECT tid FROM {term_data} WHERE vid = %d ORDER BY RAND()";
     $result = db_query_range($sql, $vocab->vid, 0, 5);
     while ($row = db_fetch_object($result)) {
       if ($vocab->tags) {

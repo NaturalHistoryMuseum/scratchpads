@@ -1,0 +1,106 @@
+<?php
+
+// $Id: form_store.install,v 1.1 2007/03/21 21:32:06 heine Exp $
+
+/**
+ * Creates database tables required by form_store.module
+ *
+ * By Heine Deelstra (http://heine.familiedeelstra.com).
+ *
+ */
+
+function form_store_install() {
+   switch ($GLOBALS['db_type']) {
+     // TODO: Test on PostgreSQL.
+     // TODO: Decide on TEXT/VARCHAR for description?
+     // TODO: Add indices.
+
+     case 'pgsql':
+       drupal_set_message("Sorry, PostgreSQL is not yet support.");
+       break;
+
+      case 'mysql':
+      case 'mysqli':
+        db_query("CREATE TABLE {form_store_forms} (
+          fid int(10) auto_increment,
+          form_id varchar(255) NOT NULL default '',
+          description varchar(255),
+          preview TEXT,
+          PRIMARY KEY (fid),
+          KEY (form_id)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+        break;
+
+   }
+   $forms = form_store_core_forms_list();
+   foreach ($forms as $form_id => $description) {
+     db_query("INSERT INTO {form_store_forms} (form_id, description, preview) VALUES ('%s', '%s', '')", $form_id, $description);
+   }
+}
+
+/**
+ * Remove tables, sequence on uninstall.
+ *
+ */
+function form_store_uninstall() {
+  db_query("DROP TABLE {form_store_forms}");
+  db_query("DELETE FROM {sequences} WHERE name = '{form_store_forms}_id'");
+}
+
+/** 
+ * Add a column preview to hold the serialized form array.
+ * Change column description to be a VARCHAR (better fit with textfield).
+ * 
+ * Note: prerelease update. 
+ */
+function form_store_update_1() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+
+     case 'pgsql':
+       break;
+
+      case 'mysql':
+      case 'mysqli':
+        // Add a field to keep the serialized form array for previews
+        $ret[] = update_sql("ALTER TABLE {form_store_forms} ADD preview TEXT");
+        $ret[] = update_sql("ALTER TABLE {form_store_forms} CHANGE description description VARCHAR(255)");
+        break;
+   }
+   return $ret;
+}
+
+/**
+ * Note: prerelease update. 
+ */
+function form_store_update_2() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+
+     case 'pgsql':
+       break;
+
+      case 'mysql':
+      case 'mysqli':
+        // Add a field to keep the serialized form array for previews
+        $max_fid = db_result(db_query("SELECT MAX(fid) FROM {form_store_forms}"));
+        $ret[] = update_sql("ALTER TABLE {form_store_forms} CHANGE fid fid int(10) auto_increment");
+        $ret[] = update_sql("ALTER TABLE {form_store_forms} AUTO_INCREMENT = ". $max_fid);
+        break;
+   }
+   return $ret;
+  
+}
+
+/**
+ * Return a partial list of core forms.
+ */
+function form_store_core_forms_list() {
+  return array(
+    'comment_form' => t('post a comment'),
+    'user_register' => t('register a user account'),
+    'user_pass' => t('request a new password'),
+    'page_node_form' => t('create a page'),
+    'story_node_form' => t('create a story'),
+  );
+}
