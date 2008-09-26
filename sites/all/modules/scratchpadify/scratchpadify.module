@@ -399,6 +399,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           foreach($node_types as $node_type => $node_type_values){
             $items[] = l($node_type_values->name,'node/add/'.$node_type);
           }
+          $items[] = l(t('Import bibliography','biblio/import/form'));
           return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
         }
       }
