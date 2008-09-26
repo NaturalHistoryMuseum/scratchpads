@@ -25,7 +25,13 @@
       <br/>
       <?php if(count($available_resources)): ?>
       <span class="label">Available Resources</span>
-      <br/>
+      <br/><br/>
+      <table width="60%" cellspacing="1" cellpadding="1" bgcolor="#FFFFFF">
+       <tr>
+        <td width="20%" align="center"><input type="checkbox" class="checkbox" name="checkall_all" value="check_all" onclick="javascript:InvertAll();"/></td>
+        <td width="80%" align="left" class="tip">&nbsp;&nbsp;( invert selection )</td>
+       </tr>
+      </table>
       <table width="60%" cellspacing="1" cellpadding="1" bgcolor="#999999">
       <?php foreach ($available_resources as $name => $config_file): ?>
        <tr>

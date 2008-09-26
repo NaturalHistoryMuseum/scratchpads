@@ -53,7 +53,7 @@ class CnsSchemaHandler_v1 extends TpConceptualSchemaHandler
         // otherwise load only concepts from the last schema in the file.
         $parts = explode( '#', $file );
 
-        if ( count( $parts ) == 2 )
+        if ( count( $parts ) == 2 and strlen( $parts[1] ) )
         {
             $this->mConceptSourceTarget = $parts[1];
 
@@ -62,7 +62,7 @@ class CnsSchemaHandler_v1 extends TpConceptualSchemaHandler
 
         // there is nothing here...
 
-        $lines = $this->ReadFile($file);
+        $lines = $this->ReadFile( $file );
         
         foreach ( $lines as $line_number => $line )
         {
@@ -142,13 +142,20 @@ class CnsSchemaHandler_v1 extends TpConceptualSchemaHandler
                 continue;
             }
             
+            if ( $this->mPreparedConcept and 
+                 $this->mCurrentConceptSource == $this->mConceptSourceTarget )
+            {
+                break; // no need to continue parsing, already loaded all we need
+            }
+
             // if we have got this far then the line does not fall in a mode we understand
             //$error = "Ignoring line $line_number of $file. I do not understand mode $this->mMode.";
             //TpDiagnostics::Append( DC_GENERAL_ERROR, $error, DIAG_WARN );
-        }
 
-        // Load additional schema properties if necessary
-        if ( $this->mPreparedConcept and ! is_null( $this->mConceptSourceTarget ) )
+        } // end foreach
+
+        // Load additional schema properties
+        if ( $this->mPreparedConcept )
         {
             if ( strlen( $this->mLastLabel ) )
             {

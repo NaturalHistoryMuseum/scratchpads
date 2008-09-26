@@ -30,7 +30,6 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
     var $mDarwinElementPrefix = '?';
     var $mInTags = array();
     var $mNamespaces = array();
-    var $mInterrupt = false;
     var $mConcept;
 
     function DarwinSchemaHandler_v2( ) 
@@ -80,11 +79,6 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
 
     function StartElement( $parser, $name, $attrs ) 
     {
-        if ( $this->mInterrupt )
-        {
-            return;
-        }
-
         array_push( $this->mInTags, $name );
 
         $depth = count( $this->mInTags );
@@ -117,10 +111,12 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
                                   $remoteNamespace, $expectedNamespace );
                 TpDiagnostics::Append( DC_XML_PARSE_ERROR, $error, DIAG_ERROR );
 
-                $this->mInterrupt = true;
                 $this->mInTags = array();
                 $this->mNamespaces = array();
                 $this->mDarwinElementPrefix = '?';
+
+                // Interrupt parsing
+                xml_set_element_handler( $parser, null, null );
             }
         }
         // Global elements are potential concept candidates
@@ -146,11 +142,6 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
 
     function EndElement( $parser, $name ) 
     {
-        if ( $this->mInterrupt )
-        {
-            return;
-        }
-
         if ( strcasecmp( $name, $this->mXmlSchemaNs.':element' ) == 0 and 
              is_object( $this->mConcept ) )
         {
@@ -206,10 +197,8 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
 
         if ( isset( $attrs['type'] ) )
         {
-            $type = $attrs['type'];
-
             // Try to get the fully qualified type, but only from the type attribute
-            $parts = explode( ':', $type );
+            $parts = explode( ':', $attrs['type'] );
 
             if ( count( $parts ) == 2 )
             {
@@ -218,7 +207,33 @@ class DarwinSchemaHandler_v2 extends TpConceptualSchemaHandler
  
                 if ( isset( $this->mNamespaces[$prefix] ) )
                 {
-                    $type = $this->mNamespaces[$prefix].':'.$type_name;
+                    $ns = $this->mNamespaces[$prefix];
+
+                    if ( $ns == 'http://rs.tdwg.org/dwc/dwcore/' )
+                    {
+                        $xsd_namespace = 'http://www.w3.org/2001/XMLSchema';
+
+                        // Hard coded
+                        switch ( $type_name )
+                        {
+                            case 'dayOfYearDataType':
+                                $type = $xsd_namespace.'#decimal';
+                                break;
+                            case 'positiveDouble':
+                            case 'decimalLatitudeDataType':
+                            case 'decimalLongitudeDataType':
+                                $type = $xsd_namespace.'#double';
+                                break;
+                            case 'spatialFitDataType':
+                            case 'DateTimeISO':
+                                $type = $xsd_namespace.'#string';
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        $type = TpConfigUtils::GetPrimitiveXsdType( $type_name, $ns );
+                    }
                 }
             }
         }

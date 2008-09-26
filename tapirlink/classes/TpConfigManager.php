@@ -20,6 +20,7 @@
  * @author Renato De Giovanni <renato [at] cria . org . br>
  */
 
+require_once('TpConfigUtils.php');
 require_once('TpUtils.php');
 require_once('TpResources.php');
 require_once('TpPage.php');
@@ -34,16 +35,29 @@ class TpConfigManager
 
     function CheckEnvironment( )
     {
+        global $g_dlog;
+
+        $g_dlog->debug('Checking environment');
+
+        // The same browser can be used with different TapirLink installations,
+        // so session data should distinguish between these
+        $instance_id = TpConfigUtils::GetServiceId();
+
+        session_name( $instance_id );
+
         // It's important to start the session here (and not on configurator.php)
         // because there are objects being stored in the session, and they can
         // only be reloaded when the session is started after importing all necessary
-        // class definitions
+        // class definitions.
+        // Also, from the PHP documentation: "If you are using cookie-based sessions, 
+        // you must call session_start() before anything is outputted to the browser".
         session_start();
 
         // Do nothing if environment was already checked and if 
         // "force_reload" is not present
         if ( isset( $_SESSION['envOk'] ) and ! isset( $_REQUEST['force_reload'] ) )
         {
+            $g_dlog->debug('Environment was already checked');
             return true;
         }
 
@@ -104,21 +118,28 @@ class TpConfigManager
             TpDiagnostics::Append( DC_SERVER_SETUP_ERROR, $error_msg, DIAG_FATAL );
         }
 
+        // Check that session is working
+        
+		session_destroy();
+        session_start();
         $_SESSION['test'] = '1';
         session_write_close();
+   		$_SESSION = array();
         session_start();
-
+        
         if ( ! isset( $_SESSION['test'] ) )
         {
-            $error_msg = 'PHP session control is not working properly (check in '.
-                         'your PHP configuration if session support is enabled, '.
+            $error_msg = 'PHP session control is not working properly (please check '.
+                         'your PHP configuration file if session support is enabled, '.
                          'and also if session.save_path exists and is writable by '.
-                         'the webserver)';
-
+                         'the Web Server)';
+  
             TpDiagnostics::Append( DC_SERVER_SETUP_ERROR, $error_msg, DIAG_FATAL );
         }
-
-        // Check permissions
+        
+        unset( $_SESSION['test'] );
+        
+        // Check config directory permissions
 
         $config_dir = TP_CONFIG_DIR;
 
@@ -214,8 +235,9 @@ class TpConfigManager
         // Summing up
         if ( ! TpDiagnostics::Count() )
         {
+            // The same browser can be used with different TapirLink installations,
+            // so session data should distinguish between these
             $_SESSION['envOk'] = 1;
-
             return true;
         }
         else
@@ -227,6 +249,10 @@ class TpConfigManager
 
     function HandleEvents( )
     {
+        global $g_dlog;
+
+        $g_dlog->debug('Handling events');
+
         // Get resources anyway (need to display them on the main panel)
         $r_resources =& TpResources::GetInstance();
 
@@ -419,6 +445,9 @@ class TpConfigManager
         }
 
         $resources_list = $r_resources->GetAllResources();
+
+        flush();
+        session_write_close();
 
         // Display main page - which always needs a Page object in variable $page!
         include('main_panel.tmpl.php');

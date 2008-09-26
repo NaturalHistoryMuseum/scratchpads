@@ -56,7 +56,7 @@ class TpPage
         // Can be overwritten by subclasses to include specific javascript code
         return '';
 
-    } // end of member function GetScroll
+    } // end of member function GetJavascript
 
     function GetScroll( )
     {

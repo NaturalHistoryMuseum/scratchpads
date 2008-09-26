@@ -28,6 +28,7 @@ require_once('TpResponse.php');
 require_once('TpSqlBuilder.php');
 require_once('TpSchemaInspector.php');
 require_once('TpXmlGenerator.php');
+require_once('pear/Cache.php');
 
 class TpSearchResponse extends TpResponse
 {
@@ -113,10 +114,10 @@ class TpSearchResponse extends TpResponse
 
         $r_response_structure =& $r_output_model->GetResponseStructure();
 
-        // Report unsupported schema constructs if not in debug mode
-        if ( ! _DEBUG )
+        if ( is_object( $r_response_structure ) )
         {
-            if ( is_object( $r_response_structure ) )
+            // Report unsupported schema constructs if not in debug mode
+            if ( ! _DEBUG )
             {
                 $unsupported_schema_constructs = $r_response_structure->GetUnsupportedConstructs();
 
@@ -128,9 +129,18 @@ class TpSearchResponse extends TpResponse
                 }
             }
         }
+        else
+        {
+            $this->Error( 'Could not load response structure' );
+
+            return;
+        }
 
         $rejected_paths = array();
         $accepted_paths = array();
+
+        $cache_response_structure = false;
+        $cache_output_model = false;
 
         if ( ! $r_response_structure->LoadedFromCache() )
         {
@@ -168,7 +178,7 @@ class TpSearchResponse extends TpResponse
             $r_response_structure->SetRejectedPaths( $rejected_paths );
             $r_response_structure->SetAcceptedPaths( $accepted_paths );
 
-            $r_response_structure->Cache();
+            $cache_response_structure = true;
         }
         else 
         {
@@ -180,11 +190,13 @@ class TpSearchResponse extends TpResponse
         {
             if ( ! $r_output_model->LoadedFromCache() )
             {
-                $r_output_model->Cache();
+                $cache_output_model = true;
             }
         }
         else
         {
+            $cache_response_structure = false;
+
             $this->Error( 'Invalid or unsupported output model' );
             return;
         }
@@ -194,7 +206,7 @@ class TpSearchResponse extends TpResponse
         $g_dlog->debug( '--------------' );
         $g_dlog->debug( 'Preparing SQL Builder' );
 
-        $sql_builder = new TpSqlBuilder();
+        $sql_builder = new TpSqlBuilder( $r_data_source->GetConnection() );
 
         $num_targets = 0;
 
@@ -203,6 +215,8 @@ class TpSearchResponse extends TpResponse
         {
             if ( in_array( $path, array_keys( $accepted_paths ) ) )
             {
+                $num_mappings = count( $expressions );
+
                 foreach ( $expressions as $expression )
                 {
                     if ( $expression->GetType() == EXP_CONCEPT )
@@ -211,19 +225,34 @@ class TpSearchResponse extends TpResponse
 
                         $concept = $r_local_mapping->GetConcept( $concept_id );
 
-                        if ( $concept == null or ! $concept->IsMapped() )
-                        {
-                            $msg = 'Concept "'.$concept_id.'" is not mapped';
+                        $add_concept = true;
 
-                            echo $this->Error( $msg );
-                            return;
+                        if ( is_null( $concept ) or ! $concept->IsMapped() )
+                        {
+                            // Don't raise error in concatenations
+                            if ( $num_mappings == 1 )
+                            {
+                                $msg = 'Concept "'.$concept_id.'" is not mapped';
+
+                                echo $this->Error( $msg );
+                                return;
+                            }
+
+                            $add_concept = false;
                         }
 
-                        $sql_builder->AddTargetConcept( $concept );
+                        if ( $add_concept )
+                        {
+                            $sql_builder->AddTargetConcept( $concept );
 
-                        ++$num_targets;
+                            ++$num_targets;
 
-                        $g_dlog->debug( 'Adding target: '.$concept_id );
+                            $g_dlog->debug( 'Adding target: '.$concept_id );
+                        }
+                        else
+                        {
+                            $g_dlog->debug( 'Skipping target (concatenation): '.$concept_id );
+                        }
                     }
                 }
             }
@@ -231,7 +260,7 @@ class TpSearchResponse extends TpResponse
 
         if ( $num_targets == 0 )
         {
-            $msg = 'Could not determine any data target';
+            $msg = 'No concepts in the output model have been mapped by this provider';
             echo $this->Error( $msg );
             return;
         }
@@ -260,6 +289,17 @@ class TpSearchResponse extends TpResponse
             }
 
             $sql_builder->OrderBy( $order_by_concepts );
+        }
+
+        // Only cache after most errors have been checked
+        if ( $cache_response_structure )
+        {
+            $r_response_structure->Cache();
+        }
+
+        if ( $cache_output_model )
+        {
+            $r_output_model->Cache();
         }
 
         $sql_builder->AddRecordSource( $r_tables->GetStructure() );
@@ -310,18 +350,22 @@ class TpSearchResponse extends TpResponse
              ( ! empty( $template ) ) and 
              ( ! $this->mRequest->LoadedTemplateFromCache() ) )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $cache_dir = TP_CACHE_DIR . '/' . $this->mRequest->GetResourceCode();
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'templates';
 
             $cache = new Cache( 'file', $cache_options );
             $cache_id = $cache->generateID( $template );
 
-            if ( ( ! $cache->isCached( $cache_id, 'templates' ) ) or 
-                 (  $cache->isExpired( $cache_id, 'templates' ) ) )
+            if ( ( ! $cache->isCached( $cache_id, $subdir ) ) or 
+                 (  $cache->isExpired( $cache_id, $subdir ) ) )
             {
                 $cache_expires = TP_TEMPLATE_CACHE_LIFE_SECS;
                 $cached_data = serialize( $parameters );
 
-                $cache->save( $cache_id, $cached_data, $cache_expires, 'templates' );
+                $cache->save( $cache_id, $cached_data, $cache_expires, $subdir );
 
                 $g_dlog->debug( 'Caching query template with id generated from "'.
                                 $template.'"' );
@@ -365,23 +409,62 @@ class TpSearchResponse extends TpResponse
 
             TpDiagnostics::Append( DC_DEBUG_MSG, 'SQL to count: '.$sql, DIAG_DEBUG );
 
-            $encoded_sql = TpServiceUtils::EncodeSql( $sql, $db_encoding );
+            // Try to get count from cache if this feature is enabled
+            $cached_data = null;
 
-            $result_set = &$cn->Execute( $encoded_sql );
-
-            if ( ! is_object( $result_set ) )
+            if ( TP_USE_CACHE and TP_SQL_COUNT_CACHE_LIFE_SECS )
             {
-                $this->Error( 'Failed to count matched records' );
+                $cache_dir = TP_CACHE_DIR . '/' . $this->mRequest->GetResourceCode();
 
-                $r_data_source->ResetConnection();
+                $cache_options = array( 'cache_dir' => $cache_dir );
 
-                return;
+                $subdir = 'cnt';
+
+                $cache = new Cache( 'file', $cache_options );
+                $cache_id = $cache->generateID( $sql );
+            }
+
+            if ( $cached_data = $cache->get( $cache_id, $subdir ) )
+            {
+                $g_dlog->debug( 'Getting count from cache' );
+
+                TpDiagnostics::Append( DC_SYS_MSG, 'Count retrieved from cache', DIAG_WARN );
+
+                $matched = (int)$cached_data;
             }
             else
             {
-                $matched = $result_set->RecordCount();
+                $encoded_sql = TpServiceUtils::EncodeSql( $sql, $db_encoding );
 
-                $result_set->Close();
+                $result_set = &$cn->Execute( $encoded_sql );
+
+                if ( ! is_object( $result_set ) )
+                {
+                    $this->Error( 'Failed to count matched records' );
+
+                    $r_data_source->ResetConnection();
+
+                    return;
+                }
+                else
+                {
+                    $matched = $result_set->RecordCount();
+
+                    $result_set->Close();
+                }
+
+
+                // Save result in cache if this feature is enabled
+                if ( TP_USE_CACHE and TP_SQL_COUNT_CACHE_LIFE_SECS and 
+                     is_null( $cached_data ) )
+                {
+                    $cache_expires = TP_SQL_COUNT_CACHE_LIFE_SECS;
+                    $cached_data = $matched;
+
+                    $cache->save( $cache_id, $cached_data, $cache_expires, $subdir );
+
+                    $g_dlog->debug( 'Caching count SQL: '.$matched );
+                }
             }
         }
 
@@ -438,7 +521,7 @@ class TpSearchResponse extends TpResponse
 
             echo "\n".'<summary start="'.$start.'"';
 
-            if ( ! $result_set->EOF and $this->mTotalReturned > 0 )
+            if ( ! $result_set->EOF )
             {
                 $next = $start + $limit;
 

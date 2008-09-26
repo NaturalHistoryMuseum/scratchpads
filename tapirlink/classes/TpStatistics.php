@@ -50,13 +50,27 @@ class TpStatistics
 {
     function LogSchemaInfo( &$rStatsDb, &$params, $currentMonth, $currentYear )
     {
+        $operation = $params['operation'];
+        
+        // We only track certain operations
+        if ( $operation == 'inventory' or $operation == 'search' or $operation == 'custom' )
+        {
+            $do_nothing_special = true;
+        }
+        else
+        {
+            return;
+        }
+
+    
         if ( $rStatsDb )
         {
-            if ( TpUtils::IsUrl( $params['output_model'] ) )
+
+            if ( array_key_exists( 'output_model', $params ) && TpUtils::IsUrl( $params['output_model'] ) )
             {
                 $recstr = $params['output_model'];
             }
-            elseif( $params['operation'] == 'inventory' )
+            elseif ( $params['operation'] == 'inventory' )
             {
                 $recstr = 'inventory';
             }
@@ -64,7 +78,6 @@ class TpStatistics
             {
                 $recstr = 'custom';
             }
-
             $whereClause = new AndWhereClause();
             $whereClause->add( new SimpleWhereClause( TBL_MONTH, '=', $currentMonth ) );
             $whereClause->add( new SimpleWhereClause( TBL_YEAR, '=', $currentYear ) );
@@ -89,6 +102,19 @@ class TpStatistics
 
     function LogResourceInfo( &$rStatsLog, &$rStatsDb, &$params, $currentMonth, $currentYear )
     {
+        $operation = $params['operation'];
+        
+        // We only track certain operations
+        if ( $operation == 'inventory' or $operation == 'search' or $operation == 'custom' )
+        {
+            $do_nothing_special = true;
+        }
+        else
+        {
+            return;
+        }
+
+        
         $log_str = TpServiceUtils::GetLogString( $params );
 
         $rStatsLog->log( $log_str, PEAR_LOG_INFO );

@@ -47,6 +47,7 @@ class TpImportForm extends TpPage
     var $mLastSchemaLocation;
     var $mRootBooleanOperator; // Root COP or LOP
     var $mOperatorsStack = array();
+    var $mConcatenatedCharData; // SAX character data handlers can be called multiple times even when processing a single string, so we need to concatenate before doing something useful
 
     function TpImportForm( )
     {
@@ -247,6 +248,22 @@ class TpImportForm extends TpPage
 
     } // end of member function HandleEvents
 
+    function GetJavascript( )
+    {
+        return '
+  function InvertAll()
+  {
+    for ( i=0; i < document.import.elements.length; i++ )
+    {
+      if (document.import.elements[i].type == \'checkbox\' )
+      {
+        document.import.elements[i].checked = !(document.import.elements[i].checked);
+      }
+    }
+  }';
+
+    } // end of member function GetJavascript
+
     function DisplayHtml( )
     {
         $errors = TpDiagnostics::GetMessages();
@@ -322,7 +339,9 @@ class TpImportForm extends TpPage
         xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0);
         xml_set_object( $parser, $this );
         xml_set_element_handler( $parser, '_StartMetadataElement', '_EndMetadataElement' );
-        xml_set_character_data_handler( $parser, '_MetadataCharacterData' );
+        xml_set_character_data_handler( $parser, '_ConcatenateCharacterData' );
+
+        $this->mConcatenatedCharData = '';
 
         if ( !( $fp = fopen( $digirMetadataFile, 'r' ) ) ) 
         {
@@ -373,75 +392,85 @@ class TpImportForm extends TpPage
 
     function _EndMetadataElement( $parser, $name )
     {
+        $this->_MetadataCharacterData( $this->mConcatenatedCharData );
+
+        $this->mConcatenatedCharData = '';
+
         array_pop( $this->mInTags );
 
     } // end of _EndMetadataElement
 
-    function _MetadataCharacterData( $parser, $data )
+    function _ConcatenateCharacterData( $parser, $data )
     {
+        $this->mConcatenatedCharData .= $data;
+
+    } // end of _ConcatenateCharacterData
+
+    function _MetadataCharacterData( $data )
+    {
+        if ( ! strlen( trim( $data ) ) ) 
+        {
+            return;
+        }
+
         $depth = count( $this->mInTags );
 
-        if ( strlen( trim( $data ) ) ) 
+        $in_tag = $this->mInTags[$depth-1];
+
+        // Sub elements of <host>
+        if ( $depth > 1 and strcasecmp( $this->mInTags[$depth-2], 'host' ) == 0 )
         {
-            $depth = count( $this->mInTags );
+            $r_entity =& $this->mHostRelatedEntity->GetEntity();
 
-            $in_tag = $this->mInTags[$depth-1];
-
-            // Sub elements of <host>
-            if ( $depth > 1 and strcasecmp( $this->mInTags[$depth-2], 'host' ) == 0 )
+            // host/name => entity name (role = technical host)
+            if ( strcasecmp( $in_tag, 'name' ) == 0 ) 
             {
-                $r_entity =& $this->mHostRelatedEntity->GetEntity();
-
-                // host/name => entity name (role = technical host)
-                if ( strcasecmp( $in_tag, 'name' ) == 0 ) 
-                {
-                    $r_entity->AddName( $data, null );
-                }
-                // host/code => entity code
-                else if ( strcasecmp( $in_tag, 'code' ) == 0 ) 
-                {
-                    $r_entity->SetAcronym( $data );
-                }
-                // host/relatedInformation => entity related information
-                else if ( strcasecmp( $in_tag, 'relatedInformation' ) == 0 ) 
-                {
-                    $r_entity->SetRelatedInformation( $data );
-                }
-                // host/abstract => entity description
-                else if ( strcasecmp( $in_tag, 'abstract' ) == 0 ) 
-                {
-                    $r_entity->AddDescription( $data, null );
-                }
+                $r_entity->AddName( $data, null );
             }
-            // Sub elements of <contact>
-            else if ( $depth > 1 and strcasecmp( $this->mInTags[$depth-2], 'contact' ) == 0 )
+            // host/code => entity code
+            else if ( strcasecmp( $in_tag, 'code' ) == 0 ) 
             {
-                $r_entity =& $this->mHostRelatedEntity->GetEntity();
+                $r_entity->SetAcronym( $data );
+            }
+            // host/relatedInformation => entity related information
+            else if ( strcasecmp( $in_tag, 'relatedInformation' ) == 0 ) 
+            {
+                $r_entity->SetRelatedInformation( $data );
+            }
+            // host/abstract => entity description
+            else if ( strcasecmp( $in_tag, 'abstract' ) == 0 ) 
+            {
+                $r_entity->AddDescription( $data, null );
+            }
+        }
+        // Sub elements of <contact>
+        else if ( $depth > 1 and strcasecmp( $this->mInTags[$depth-2], 'contact' ) == 0 )
+        {
+            $r_entity =& $this->mHostRelatedEntity->GetEntity();
 
-                $r_related_contact =& $r_entity->GetLastRelatedContact();
+            $r_related_contact =& $r_entity->GetLastRelatedContact();
 
-                $r_contact =& $r_related_contact->GetContact();
+            $r_contact =& $r_related_contact->GetContact();
 
-                // contact/name => contact full name
-                if ( strcasecmp( $in_tag, 'name' ) == 0 ) 
-                {
-                    $r_contact->SetFullName( $data );
-                }
-                // contact/email => contact email
-                else if ( strcasecmp( $in_tag, 'emailAddress' ) == 0 ) 
-                {
-                    $r_contact->SetEmail( $data );
-                }
-                // contact/phone => contact telephone
-                else if ( strcasecmp( $in_tag, 'phone' ) == 0 ) 
-                {
-                    $r_contact->SetTelephone( $data );
-                }
-                // contact/title => contact title
-                else if ( strcasecmp( $in_tag, 'title' ) == 0 ) 
-                {
-                    $r_contact->AddTitle( $data, null );
-                }
+            // contact/name => contact full name
+            if ( strcasecmp( $in_tag, 'name' ) == 0 ) 
+            {
+                $r_contact->SetFullName( $data );
+            }
+            // contact/email => contact email
+            else if ( strcasecmp( $in_tag, 'emailAddress' ) == 0 ) 
+            {
+                $r_contact->SetEmail( $data );
+            }
+            // contact/phone => contact telephone
+            else if ( strcasecmp( $in_tag, 'phone' ) == 0 ) 
+            {
+                $r_contact->SetTelephone( $data );
+            }
+            // contact/title => contact title
+            else if ( strcasecmp( $in_tag, 'title' ) == 0 ) 
+            {
+                $r_contact->AddTitle( $data, null );
             }
         }
 
@@ -487,7 +516,9 @@ class TpImportForm extends TpPage
         xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0);
         xml_set_object( $parser, $this );
         xml_set_element_handler( $parser, '_StartConfigElement', '_EndConfigElement' );
-        xml_set_character_data_handler( $parser, '_ConfigCharacterData' );
+        xml_set_character_data_handler( $parser, '_ConcatenateCharacterData' );
+
+        $this->mConcatenatedCharData = '';
 
         if ( !( $fp = fopen( $configFile, 'r' ) ) ) 
         {
@@ -796,6 +827,10 @@ class TpImportForm extends TpPage
 
     function _EndConfigElement( $parser, $name )
     {
+        $this->_ConfigCharacterData( $this->mConcatenatedCharData );
+
+        $this->mConcatenatedCharData = '';
+
         if ( strcasecmp( $name, 'table' ) == 0 )
         {
             if ( is_object( $this->mCurrentTable ) )
@@ -848,7 +883,7 @@ class TpImportForm extends TpPage
 
     } // end of _EndConfigElement
 
-    function _ConfigCharacterData( $parser, $data )
+    function _ConfigCharacterData( $data )
     {
         $depth = count( $this->mInTags );
 

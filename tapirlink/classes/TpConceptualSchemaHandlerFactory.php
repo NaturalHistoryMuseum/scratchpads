@@ -23,6 +23,7 @@
 require_once('DarwinSchemaHandler_v1.php');
 require_once('DarwinSchemaHandler_v2.php');
 require_once('CnsSchemaHandler_v1.php');
+require_once('CnsSchemaHandler_v2.php');
 
 class TpConceptualSchemaHandlerFactory
 {
@@ -44,6 +45,10 @@ class TpConceptualSchemaHandlerFactory
         else if ( $id == 'CnsSchemaHandler_v1') 
         {
             return new CnsSchemaHandler_v1();
+        }
+        else if ( $id == 'CnsSchemaHandler_v2') 
+        {
+            return new CnsSchemaHandler_v2();
         }
         return null;
 

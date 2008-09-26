@@ -31,6 +31,8 @@ class TpInventoryParameters extends TpOperationParameters
     {
         $this->TpOperationParameters();
 
+        $this->mRevision = '$Revision$';
+
     } // end of member function TpInventoryParameters
 
     function LoadKvpParameters()
@@ -68,7 +70,7 @@ class TpInventoryParameters extends TpOperationParameters
                 {
                     $tag = 'value';
 
-                    if ( is_array( $tag_name ) and isset( $tag_name[$i] ) )
+                    if ( is_array( $tag_name ) and isset( $tag_name[$i] ) and ! empty( $tag_name[$i] ) )
                     {
                         $tag = $tag_name[$i];
                     }
@@ -82,7 +84,7 @@ class TpInventoryParameters extends TpOperationParameters
             {
                 $tag = 'value';
 
-                if ( isset( $tag_name ) and ! is_array( $tag_name ) )
+                if ( isset( $tag_name ) and ( ! is_array( $tag_name ) ) and ! empty( $tag_name ) )
                 {
                     $tag = $tag_name;
                 }

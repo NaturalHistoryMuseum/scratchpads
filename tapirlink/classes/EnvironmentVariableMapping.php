@@ -137,7 +137,7 @@ class EnvironmentVariableMapping extends TpConceptMapping
 
     } // end of member function GetXml
 
-    function GetSqlTarget( ) 
+    function GetSqlTarget( &$rAdodb, $inWhereClause=false ) 
     {
         $value = $this->mrResource->GetVariable( $this->mVariable );
 
@@ -150,6 +150,29 @@ class EnvironmentVariableMapping extends TpConceptMapping
         return array();
 
     } // end of member function GetSqlFrom
+
+    function GetLocalXsdType( ) 
+    {
+        if ( $this->mVariable == 'timestamp' )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#dateTime';
+        }
+        else if ( $this->mVariable == 'datecreated' )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#dateTime';
+        }
+        else if ( $this->mVariable == 'lastupdate' )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#dateTime';
+        }
+        else if ( $this->mVariable == 'date' )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#date';
+        }
+
+        return 'http://www.w3.org/2001/XMLSchema#string';
+
+    } // end of member function GetLocalXsdType
 
     /**
      * Internal method called before serialization

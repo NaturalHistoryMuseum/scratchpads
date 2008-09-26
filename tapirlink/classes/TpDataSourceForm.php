@@ -46,7 +46,7 @@ class TpDataSourceForm extends TpWizardForm
         }
         else
         {
-            $this->SetMessage( "Next steps depend on an open connection with your datasource.\nPlease, provide the necessary information here:" );
+            $this->SetMessage( "The next steps depend on an open connection with your database.\nPlease, provide the necessary information here.\n\nNote: if you get a blank page after clicking on 'next step'\nor PHP errors from ADOdb, you probably didn't install the corresponding\nPHP module to connect to a database using the selected driver." );
 
             $r_data_source->LoadDefaults();
         }
@@ -150,6 +150,7 @@ class TpDataSourceForm extends TpWizardForm
             $options = array( '' => '-- Select --',
                               'ado' => 'ADO generic driver',
                               'db2' => 'DB2',
+                              'odbc_db2' => 'DB2 using generic ODBC extension',
                               'firebird' => 'Firebird version of interbase',
                               'fbsql' => 'FrontBase',
                               'informix' => 'Informix generic driver',
@@ -163,10 +164,13 @@ class TpDataSourceForm extends TpWizardForm
                               'mssqlpo' => 'Microsoft SQL Server (portable driver)',
                               'mssql' => 'Microsoft SQL Server 7 and later',
                               'odbc_mssql' => 'Microsoft SQL Server (using ODBC)',
+                              'mssql_n' => 'Microsoft SQL Server with auto-prepended "N" (correct unicode storage)',
+                              'pdo_mssql' => 'Microsoft SQL Server PDO driver (only for PHP5)',
                               'vfp' => 'Microsoft Visual FoxPro',
                               'mysqlt' => 'MySQL with transaction support',
                               'mysql' => 'MySQL without transaction support',
                               'mysqli' => 'MySQL using newer PHP5 API',
+                              'pdo_mysql' => 'MySQL PDO driver (only for PHP5)',
                               'netezza' => 'Netezza',
                               'odbtp' => 'Odbtp generic driver',
                               'odbtp_unicode' => 'Odbtp with unicode support',
@@ -176,9 +180,13 @@ class TpDataSourceForm extends TpWizardForm
                               'oci805' => 'Oracle 8.0.5',
                               'oracle' => 'Oracle 7 (old client API)',
                               'odbc_oracle' => 'Oracle (using ODBC)',
+                              'pdo_oci' => 'Oracle PDO driver (only for PHP5)',
+                              'pdo' => 'Generic PDO driver for PHP5',
                               'postgres' => 'PostgreSQL generic driver',
-                              'postgres7' => 'PostgreSQL 7 or later',
                               'postgres64' => 'PostgreSQL 6.4 and earlier',
+                              'postgres7' => 'PostgreSQL 7',
+                              'postgres8' => 'PostgreSQL 8',
+                              'pdo_pgsql' => 'PostgreSQL PDO driver (only for PHP5)',
                               'sapdb' => 'SAP DB',
                               'sqlanywhere' => 'SQL Anywhere (Sybase)',
                               'sqlite' => 'SQLite',

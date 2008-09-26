@@ -22,10 +22,187 @@
  * 
  */
 
-require_once('TpDiagnostics.php');
+require_once(dirname(__FILE__).'/TpDiagnostics.php');
 
 class TpUtils 
 {
+    /** Format the output of debug_backtrace in a human friendly fashion.
+     *  Render as Plain text for as HTML, and an option to print it directly.
+     *
+     */
+    function DumpPrettyStack( $renderAsHtml=true, $printInline=false )
+    {
+        // debug_backtrace is only available since PHP 4.3.0
+        if ( version_compare( phpversion(), '4.3.0', '<' ) > 0 )
+        {
+            $msg = 'debug_backtrace not available in this PHP version';
+            TpDiagnostics::Append( DC_UNSUPPORTED_CAPABILITY, $msg, DIAG_WARN );
+
+            return '';
+        }
+    
+        $return_value = '';
+        
+        $stack_array = debug_backtrace();
+
+        $td   = '';
+        $untd = '';
+        $tr   = '';
+        $untr = '';
+        
+        if ( $renderAsHtml )
+        {
+            $td   = '<TD>';
+            $untd = '</TD>';
+            $tr   = '<TR>';
+            $untr = '</TR>';
+        }
+        
+        if ( $renderAsHtml )
+        {
+            $return_value = '<TABLE><TR><TD></TD><TD>File</TD><TD>Line</TD><TD>Function</TD></TR>';
+        }
+
+        $count = 0;
+        
+        //we don't want this function call reported in the stack, so shift it off the array
+        array_shift( $stack_array );
+
+        foreach( $stack_array as $element )
+        {
+            $file     = false;
+            $line     = false;
+            $class    = false;
+            $object   = false;
+            $function = false;
+            $args     = false;
+            
+            if ( array_key_exists( 'file', $element ) )
+            {
+                $file = $element['file'];
+            }
+            
+            if ( array_key_exists( 'line', $element ) )
+            {
+                $line = $element['line'];
+            }
+
+            if ( array_key_exists( 'class', $element ) )
+            {
+                $class = $element['class'];
+            }
+
+            if ( array_key_exists( 'object', $element ) )
+            {
+                $object = $element['object'];
+            }
+
+            if ( array_key_exists( 'function', $element ) )
+            {
+                $function = $element['function'];
+            }
+            
+            if ( array_key_exists( 'args', $element ) )
+            {
+                $args = $element[ 'args' ];
+                $arg_total = count( $args );
+                $arg_count = 1;
+                $func_args = '(';
+
+                foreach( $args as $arg )
+                {
+                    if ( is_array( $arg ) )
+                    {
+                        $func_args .= ' {Array}';
+                    }
+                    else if ( is_object( $arg ) )
+                    {
+                        $func_args .= ' {Object}';
+                    }
+                    else if ( is_bool( $arg ) )
+                    {
+                        if ( $arg )
+                        {
+                            $func_args .= ' true';
+                        }
+                        else
+                        {
+                            $func_args .= ' false';
+                        }
+                    }
+                    else if ( is_float( $arg ) or is_int( $arg ) )
+                    {
+                       $func_args .= " $arg";
+                    }
+                    else if ( is_string( $arg ) )
+                    {
+                       $func_args .= " \"$arg\"";
+                    }
+                    else if ( is_resource( $arg ) )
+                    {
+                       $func_args .= " {resource $arg}";
+                    }
+                    else if ( is_null( $arg ) )
+                    {
+                        $func_args .= ' NULL';
+                    }
+                    
+                    if ( $arg_count < $arg_total )
+                    {
+                        $func_args .= ',';
+                    }
+
+                    $arg_count++;
+                }
+
+                $func_args .= ')';
+            }
+
+            $return_value .= "$tr$td #$count $untd$td";
+
+            if ( $file )
+            {
+                $return_value .= "$element[file] ";
+            }
+
+            $return_value .= "$untd$td";
+
+            if ( $line )
+            {
+                $return_value .= "$element[line] ";
+            }
+
+            $return_value .= "$untd$td";
+
+            if ( $class )
+            {
+                $return_value .= "$element[class]::";
+            }
+
+            if ( $function )
+            {
+                $return_value .= "$element[function]$func_args";
+            }
+
+
+            $return_value .= " $untd$untr\n";
+            
+            $count++;
+        }
+        
+        if ( $renderAsHtml )
+        {
+            $return_value .= "</TABLE>\n";
+        }
+
+        if ( $printInline )
+        {
+            print( "$return_value" );
+        }
+        
+        return $return_value;
+    }
+    
     /** Instantiate two log objects: the main one called g_log and another one
      *  just for detailed debugging called g_dlog. 
      *
@@ -56,6 +233,15 @@ class TpUtils
         }
 
         // Separate log for detailed debugging
+        TpUtils::InitializeDebugLog();
+
+    } // end of InitializeLogs
+
+    /** Instantiate a log object for detailed debugging called g_dlog. 
+     *
+     */
+    function InitializeDebugLog( ) 
+    {
         $debug_file_name = TP_DEBUG_DIR.'/'.TP_DEBUG_LOGFILE;
 
         $debug_logtype = 'null';
@@ -81,7 +267,7 @@ class TpUtils
             TpDiagnostics::Append( DC_LOG_ERROR, $msg, DC_WARN );
         }
 
-    } // end of InitializeLogs
+    } // end of InitializeDebugLog
 
     /** Get value from post/get environment variables or return a default 
      *
@@ -200,7 +386,7 @@ class TpUtils
     {
         // Since "htmlspecialchars" does not work with utf-8 in versions
         // prior than 4.3.0 (stable!), we need to use mb_ereg_replace as an alternative
-        if ( version_compare( phpversion(), "4.3.0", ">=" ) > 0 )
+        if ( version_compare( phpversion(), '4.3.0', '>=' ) > 0 )
         {
             $s = htmlspecialchars( $s, ENT_COMPAT, 'UTF-8' );
         }
@@ -272,20 +458,6 @@ class TpUtils
         return $date.'T'.$time.$time_zone;
 
     } // end of TimestampToXsdDateTime
-
-    /**
-     * Returns this script URL
-     */
-    function GetServiceId()
-    {
-        $sn = isset($_SERVER['SERVER_NAME'])?$_SERVER['SERVER_NAME']:'localhost';
-        $sp = isset($_SERVER['SERVER_PORT'])?$_SERVER['SERVER_PORT']:'80';
-        $ss = isset($_SERVER['SCRIPT_NAME'])?$_SERVER['SCRIPT_NAME']:'/DiGIR.php';
-
-        $s = 'http://'.$sn.':'.$sp.$ss;
-
-        return $s;
-    }
 
     /** Simple function that returns a hash out of a simple array 
      *  using each array value as both the key and the value of the hash.
@@ -371,7 +543,7 @@ class TpUtils
         {
             foreach ( $attrs as $attr_key => $attr_value )
             {
-                $xml_attrs = ' ' . $attr_key .'="'. $attr_value .'"';
+                $xml_attrs = ' ' . $attr_key .'="'. TpUtils::EscapeXmlSpecialChars( $attr_value ) .'"';
             }
         }
 
@@ -482,15 +654,119 @@ class TpUtils
 
     } // end of DumpArray
 
-    function GetFileHandle( $location ) // Remember to close the file handle!!
+    /**
+     * Returns the alternative file name given a file location.
+     */
+    function GetAlternativeFileName( $location )
     {
-        if ( ini_get('allow_url_fopen') || ! TpUtils::IsUrl( $location ) )
+        global $g_dlog;
+
+        if ( ! defined( 'TP_LOCAL_REPOSITORY' ) )
+        {
+            $g_dlog->debug( 'TP_LOCAL_REPOSITORY not defined. Cannot try alternative location.' );
+            return null;
+        }
+
+        $parsed_url = parse_url( $location );
+
+        if ( $parsed_url and isset( $parsed_url['path'] ) )
+        {
+            $file = array_pop( explode( '/', $parsed_url['path'] ) );
+
+            $file = TP_LOCAL_REPOSITORY.'/'.$file;
+
+            return $file;
+        }
+        else
+        {
+            $g_dlog->debug( 'Could not parse location URL to find alternative name' );
+            return null;
+        }
+
+    } // end of GetAlternativeFileName
+
+    /**
+     * Try to open a file from its original location. Upon failure, try 
+     * alternative location if TP_LOCAL_REPOSITORY is defined.
+     * NOTE: Remember to close the file handle.
+     * @param $location string File location
+     * @return file handle or null
+     */
+    function GetFileHandle( $location )
+    {
+        global $g_dlog;
+
+        $attempt = array();
+
+        $local_copy = TpUtils::GetAlternativeFileName( $location );
+
+        if ( TP_FILE_RETRIEVAL_BEHAVIOUR == 'prefer_local' )
+        {
+            if ( is_null( $local_copy ) )
+            {
+                $attempt[] = $location; // no alternative, use original
+            }
+            else
+            {
+                $attempt[] = $local_copy; // prefer local copy
+                $attempt[] = $location;   // otherwise try original
+            }
+        }
+        if ( TP_FILE_RETRIEVAL_BEHAVIOUR == 'only_local' )
+        {
+            if ( is_null( $local_copy ) )
+            {
+                return null; // no way
+            }
+
+            $attempt[] = $local_copy; // there may be a local copy, so try to use it
+        }
+        else
+        {
+            $attempt[] = $location; // prefer original
+
+            if ( ! is_null( $local_copy ) )
+            {
+                $attempt[] = $local_copy; // otherwise try a possible local copy
+            }
+        }
+
+        foreach ( $attempt as $file_location )
+        {
+            $g_dlog->debug( 'Trying to open: '.$file_location );
+
+            $fp = TpUtils::OpenFile( $file_location );
+
+            if ( is_resource( $fp ) )
+            {
+                return $fp;
+            }
+            else
+            {
+                // Remove PHP warning
+                TpDiagnostics::PopDiagnostic();
+            }
+        }
+
+        return null;
+
+    } // end of member function GetFileHandle
+
+    /**
+     * Try to open a file with fopen if allow_url_fopen permits, otherwise
+     * use curl to open. NOTE: Remember to close the file handle.
+     * @param $location string File location
+     * @return file handle or null
+     */
+    function OpenFile( $location )
+    {
+        global $g_dlog;
+
+        if ( ini_get( 'allow_url_fopen' ) || ! TpUtils::IsUrl( $location ) )
         {
             if ( !( $fp = fopen( $location, 'r' ) ) )
             {
-                $error = "Could not open file: $location";
-                TpDiagnostics::Append( DC_IO_ERROR, $error, DIAG_ERROR );
-
+                $g_dlog->debug( 'fopen error' );
                 return null;
             }
         }
@@ -498,17 +774,50 @@ class TpUtils
         {
             // This is a URL and we are not permitted to fopen urls, so use cURL.
             // Open a temporary file to write curl session results to.
+
+            $g_dlog->debug( 'Using curl to retrieve file' );
+
             $fp = tmpfile();
             $ch = curl_init( $location );
             curl_setopt( $ch, CURLOPT_FILE, $fp );
             curl_exec( $ch );
+
+            $error = curl_error( $ch );
+
+            if ( ! empty( $error )  )
+            {
+                $g_dlog->debug( 'curl error: '.$error );
+                return null;
+            }
+
             curl_close( $ch );
             rewind( $fp );
         }
 
         return $fp;
 
-    } // end of member function GetFileHandle
+    } // end of member function OpenFile
+
+   /** Simple function that receives an ADODB meta columns array that  
+     *  frequently contains column names in upper case as keys. This method
+     *  returns the same array but using the original column names as keys.
+     *  
+     * @param array ADODB meta columns array
+     *
+     * @return array with original column names pointing to column objects
+     */
+    function FixAdodbColumnsArray( $columns ) 
+    {
+        $ret_array = array();
+  
+        foreach ( $columns as $key => $object )
+        {
+            $ret_array[$object->name] = $object;
+        }
+
+        return $ret_array;
+
+    } // end of FixAdodbColumnsArray
 
 } // end of TpUtils
 ?>

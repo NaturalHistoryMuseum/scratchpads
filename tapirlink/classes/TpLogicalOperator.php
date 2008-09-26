@@ -104,11 +104,12 @@ class TpLogicalOperator extends TpBooleanOperator
 
         if ( $this->mLogicalType == LOP_NOT )
         {
-            $sql .= 'NOT (';
+            $sql_piece = $this->mBooleanOperators[0]->GetSql( $rResource );
 
-            $sql .= $this->mBooleanOperators[0]->GetSql( $rResource );
-
-            $sql .= ')';
+            if ( ! empty( $sql_piece ) )
+            {
+                $sql = 'NOT ('.$sql_piece.')';
+            }
         }
         else
         {
@@ -116,16 +117,16 @@ class TpLogicalOperator extends TpBooleanOperator
 
             for ( $i = 0; $i < count( $this->mBooleanOperators ); ++$i )
             {
-                if ( $i > 0 )
-                {
-                    $sql .= $op . '(';
-                }
+                $sql_piece = $this->mBooleanOperators[$i]->GetSql( $rResource );
 
-                $sql .= $this->mBooleanOperators[$i]->GetSql( $rResource );
-
-                if ( $i > 0 )
+                if ( ! empty( $sql_piece ) )
                 {
-                    $sql .= ')';
+                    if ( ! empty( $sql ) )
+                    {
+                        $sql .= $op;
+                    }
+
+                    $sql .= '('.$sql_piece.')';
                 }
             }
         }
@@ -154,15 +155,10 @@ class TpLogicalOperator extends TpBooleanOperator
             {
                 if ( $i > 0 )
                 {
-                    $txt .= $op . '(';
+                    $txt .= $op;
                 }
 
-                $txt .= $this->mBooleanOperators[$i]->GetLogRepresentation();
-
-                if ( $i > 0 )
-                {
-                    $txt .= ')';
-                }
+                $txt .= '('.$this->mBooleanOperators[$i]->GetLogRepresentation().')';
             }
         }
 

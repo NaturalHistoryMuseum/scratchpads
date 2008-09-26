@@ -1,6 +1,6 @@
 <?php
 /* 
-V4.54 5 Nov 2004  (c) 2000-2004 John Lim (jlim@natsoft.com.my). All rights reserved.
+V4.98 13 Feb 2008  (c) 2000-2008 John Lim (jlim#natsoft.com.my). All rights reserved.
 Released under both BSD license and Lesser GPL library license. 
 Whenever there is any discrepancy between the two licenses, 
 the BSD license will take precedence. See License.txt. 
@@ -26,8 +26,8 @@ class  ADODB_ado_access extends ADODB_ado {
 	var $fmtTimeStamp = "#Y-m-d h:i:sA#";// note no comma
 	var $sysDate = "FORMAT(NOW,'yyyy-mm-dd')";
 	var $sysTimeStamp = 'NOW';
-	var $upperCase = 'ucase';		/// uppercase function
 	var $hasTransactions = false;
+	var $upperCase = 'ucase';
 	
 	function ADODB_ado_access()
 	{

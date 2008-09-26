@@ -21,9 +21,11 @@
  */
 
 require_once('TpDiagnostics.php');
+require_once('phpxsd/XsNamespaceManager.php');
 
 class TpOperationParameters
 {
+    var $mRevision = '$Revision$';
     var $mInTags = array(); // name element stack during XML parsing
     var $mLabel;
     var $mDocumentation;
@@ -35,6 +37,19 @@ class TpOperationParameters
         $this->mFilter = new TpFilter();
 
     } // end of member function TpOperationParameters
+
+    function GetRevision( )
+    {
+        $revision_regexp = '/^\$'.'Revision:\s(\d+)\s\$$/';
+
+        if ( preg_match( $revision_regexp, $this->mRevision, $matches ) )
+        {
+            return (int)$matches[1];
+        }
+
+        return null;
+
+    } // end of member function GetRevision
 
     function LoadKvpParameters()
     {
@@ -64,10 +79,13 @@ class TpOperationParameters
         $parser = xml_parser_create_ns();
         xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0);
         xml_set_object( $parser, $this );
+        xml_set_start_namespace_decl_handler( $parser, 'DeclareNamespace' );
         xml_set_element_handler( $parser, 'StartElement', 'EndElement' );
         xml_set_character_data_handler( $parser, 'CharacterData' );
 
-        if ( !( $fp = fopen( $location, 'r' ) ) )
+        $fp = TpUtils::GetFileHandle( $location );
+
+        if ( ! is_resource( $fp ) )
         {
             // Replace PHP warning with a better message
             TpDiagnostics::PopDiagnostic();
@@ -98,6 +116,26 @@ class TpOperationParameters
         return true;
 
     } // end of member function ParseTemplate
+
+    function DeclareNamespace( $parser, $prefix, $uri ) 
+    {
+        $path = implode( '/', $this->mInTags );
+
+        $flag = null;
+
+        if ( strcasecmp( $path, 'request/search' ) == 0 )
+        {
+            // Namespaces declared in output model or query template.
+            // This flag indicates a potential namespace declared in
+            // an output model element.
+            $flag = 'm';
+        }
+
+        $r_namespace_manager =& XsNamespaceManager::GetInstance();
+
+        $r_namespace_manager->AddNamespace( $parser, $prefix, $uri, $flag );
+
+    } // end of member function DeclareNamespace
 
     function StartElement( $parser, $qualified_name, $attrs )
     {
@@ -166,7 +204,7 @@ class TpOperationParameters
      */
     function __sleep()
     {
-	return array( 'mTemplate', 'mFilter' );
+	return array( 'mRevision', 'mTemplate', 'mFilter' );
 
     } // end of member function __sleep
 

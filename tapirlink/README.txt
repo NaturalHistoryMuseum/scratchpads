@@ -39,10 +39,6 @@ The KVP filter parsing functionality in TapirLink has been ported
 from PyWrapper code (http://www.pywrapper.org), whose main author 
 is Markus Döring.
 
-The design of all XML Schema classes in TapirLink was based on the API 
-documentation of the xsom Java package (https://xsom.dev.java.net/) 
-written by Kohsuke Kawaguchi.
-
 NOTES
 =====
 
@@ -105,7 +101,7 @@ FEATURES
   schemas.
 * Response structures with basicSchemaLanguage.
 * Several types of relational databases supported 
-  (check http://phplens.com/lens/adodb/docs-adodb.htm#drivers)
+  (check http://phplens.com/adodb/supported.databases.html)
 * Log only requests can be accepted.
 * Complete filter parsing. "Equals" and "like" can be case sensitive 
   or not.
@@ -212,7 +208,8 @@ DEVELOPER GUIDELINES
 ====================
 
 Anyone willing to collaborate is welcome. Please contact the author 
-about your plans and for SVN access.
+about your plans and for SVN access:
+renato at cria dot org dot br
 
 TapirLink follows this coding standard:
 

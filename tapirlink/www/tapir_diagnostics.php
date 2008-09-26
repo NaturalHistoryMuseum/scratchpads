@@ -55,6 +55,12 @@ define('DC_DEBUG_MSG','DEBUG_MESSAGE');
 
 		
 /****
+Displays a system message.  
+*/
+define('DC_SYS_MSG','SYSTEM_MESSAGE');
+
+		
+/****
 Indicates that a certain capability is not supported.  
 */
 define('DC_UNSUPPORTED_CAPABILITY','UNSUPPORTED_CAPABILITY');
@@ -206,6 +212,12 @@ define('DC_MISSING_LIBRARY','MISSING_LIBRARY');
 A float value indicating the number of seconds to produce the response.
 */
 define('DC_DURATION','DURATION');
+
+		
+/****
+Memory peak when processing response on the server.
+*/
+define('DC_MEM_PEAK','MEMORY_PEAK');
 
 		
 /****

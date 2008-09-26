@@ -1620,7 +1620,6 @@ class XPathEngine extends XPathBase {
    */
   function importFromString($xmlString, $absoluteParentPath = '') {
     $bDebugThisFunction = FALSE;
-
     if ($bDebugThisFunction) {
       $aStartTime = $this->_beginDebugFunction("importFromString");
       echo "Importing from string of length ".strlen($xmlString)." to node '$absoluteParentPath'\n<br>";
@@ -1701,7 +1700,7 @@ class XPathEngine extends XPathBase {
         $source = empty($this->properties['xmlFile']) ? 'string' : 'file ' . basename($this->properties['xmlFile']) . "'";
         $errStr = "XML error in given {$source} on line ".
                xml_get_current_line_number($parser). '  column '. xml_get_current_column_number($parser) .
-               '. Reason:'. xml_error_string(xml_get_error_code($parser));
+               '. Reason:' . xml_error_string( xml_get_error_code( $parser ) );
         break; // try-block
       }
       
@@ -5097,6 +5096,7 @@ class XPathEngine extends XPathBase {
    * @return            (string) The XML string with translated ampersands.
    */
   function _translateAmpersand($xmlSource, $reverse=FALSE) {
+    return $xmlSource; // Added by Renato De Giovanni to avoid nasty problems when uisng this library
     $PHP5 = (substr(phpversion(), 0, 1) == '5');
     if ($PHP5) {
       //otherwise we receive  &amp;nbsp;  instead of  &nbsp;

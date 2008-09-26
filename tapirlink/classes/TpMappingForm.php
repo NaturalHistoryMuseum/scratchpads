@@ -26,6 +26,7 @@ require_once('TpConfigUtils.php');
 require_once('TpHtmlUtils.php');
 require_once('TpDiagnostics.php');
 require_once('TpConceptMappingFactory.php');
+require_once('Cache.php'); // pear
 require_once(TP_XPATH_LIBRARY);
 
 class TpMappingForm extends TpWizardForm
@@ -56,11 +57,15 @@ class TpMappingForm extends TpWizardForm
 
             $r_data_source =& $this->mResource->GetDataSource();
 
+            $update_session_data = false;
+
             if ( ! $r_data_source->IsLoaded() )
             {
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_data_source->LoadFromXml( $config_file );
+
+                $update_session_data = true;
             }
 
             $r_tables =& $this->mResource->GetTables();
@@ -70,6 +75,15 @@ class TpMappingForm extends TpWizardForm
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_tables->LoadFromXml( $config_file );
+
+                $update_session_data = true;
+            }
+
+            if ( $update_session_data )
+            {
+                $r_resources =& TpResources::GetInstance();
+
+                $r_resources->SaveOnSession();
             }
 
             $this->LoadDatabaseMetadata(); 
@@ -77,7 +91,8 @@ class TpMappingForm extends TpWizardForm
             // Local mapping
             $r_local_mapping =& $this->mResource->GetLocalMapping();
 
-            // If local mapping is already stored in session, initialize individual mappings
+            // If local mapping is already stored in session, initialize 
+            // individual mappings
             if ( count( $r_local_mapping->GetMappedSchemas() ) )
             {
                 $this->InitializeMappings();
@@ -188,13 +203,15 @@ class TpMappingForm extends TpWizardForm
 
             $valid_tables = $cn->MetaTables();
 
+            $convert_case = false;
+
             foreach ( $tables as $table )
             {
                 if ( in_array( $table, $valid_tables ) )
                 {
-                    $columns = $cn->MetaColumns( $table );
+                    $columns = $cn->MetaColumns( $table, $convert_case );
 
-                    $this->mTablesAndColumns[$table] = $columns;
+                    $this->mTablesAndColumns[$table] = TpUtils::FixAdodbColumnsArray( $columns );
                 }
             }
 
@@ -271,15 +288,15 @@ class TpMappingForm extends TpWizardForm
 
                         if ( $checkConsistency )
                         {
-                            $adodb_field = strtoupper( $field );
-
                             if ( ! isset( $this->mTablesAndColumns[$table] ) or 
                                  ! is_array( $this->mTablesAndColumns[$table] ) or 
-                                 ! isset( $this->mTablesAndColumns[$table][$adodb_field] ) )
+                                 ! isset( $this->mTablesAndColumns[$table][$field] ) )
                             {
                                 $msg = 'Current mapping for concept "'.$concept->GetName().'"'.
                                        ' ('.$table.'.'.$field.') does not exist in the '.
-                                       'database';
+                                       'database'.isset( $this->mTablesAndColumns[$table] ).'-'. 
+                                 is_array( $this->mTablesAndColumns[$table] ).'-'. 
+                                 isset( $this->mTablesAndColumns[$table][$field] ).TpUtils::DumpArray($this->mTablesAndColumns[$table]);
                                 TpDiagnostics::Append( CFG_DATA_VALIDATION_ERROR, $msg, DIAG_ERROR );
                             }
                         }
@@ -349,14 +366,16 @@ class TpMappingForm extends TpWizardForm
                 }
                 else
                 {
-                    $r_local_mapping->LoadNewSchema( $location );
+                    $warn = 'Please select the format of the additional schema to load!';
+                    TpDiagnostics::Append( CFG_DATA_VALIDATION_ERROR, $warn, DIAG_ERROR );
+                    return;
                 }
             }
         }
         // Simple refresh or next or save
         else if ( isset( $_REQUEST['refresh'] ) or 
                   isset( $_REQUEST['next'] ) or 
-                  isset( $_REQUEST['save'] ) ) 
+                  isset( $_REQUEST['update'] ) )
         {
             if ( isset( $_REQUEST['next'] ) and ! $this->ReadyToProceed() )
             {
@@ -518,6 +537,35 @@ class TpMappingForm extends TpWizardForm
                 // Clicked update
                 if ( isset( $_REQUEST['update'] ) ) 
                 {
+                    // Remove all possible content from cache (query templates,
+                    // output models and response structures) since this kind of
+                    // cached data largely depends on what it mapped.
+
+                    $cache_dir = TP_CACHE_DIR . '/' . $this->mResource->GetCode();
+
+                    $cache_options = array( 'cache_dir' => $cache_dir );
+
+                    $cache = new Cache( 'file', $cache_options );
+
+                    if ( file_exists( $cache_dir . '/models' ) )
+                    {
+                        $cache->flush( 'models' );
+                    }
+                    if ( file_exists( $cache_dir . '/structures' ) )
+                    {
+                        $cache->flush( 'structures' );
+                    }
+                    if ( file_exists( $cache_dir . '/templates' ) )
+                    {
+                        $cache->flush( 'templates' );
+                    }
+
+                    // Also flush response cache
+                    if ( file_exists( $cache_dir . '/function_cache' ) )
+                    {
+                        $cache->flush( 'function_cache' );
+                    }
+
                     $this->SetMessage( 'Changes successfully saved!' );
                 }
 
@@ -760,8 +808,10 @@ class TpMappingForm extends TpWizardForm
         if ( $id == 'handler') 
         {
             $options = array( ''                       => '-- format --',
-                              'DarwinSchemaHandler_v2' => 'DarwinCore',
-                              'CnsSchemaHandler_v1'    => 'CNS' );
+                              'DarwinSchemaHandler_v1' => 'Old DarwinCore (tied to DiGIR)',
+                              'DarwinSchemaHandler_v2' => 'New DarwinCore',
+                              'CnsSchemaHandler_v1'    => 'CNS text file',
+                              'CnsSchemaHandler_v2'    => 'CNS XML file' );
         }
 
         return $options;

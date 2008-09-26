@@ -556,7 +556,7 @@ function getCustomPage( $providerName,  $startDay, $endDay, $startMonth, $startY
 function generateAvailableMonthsForYear( $availableLogFileNames, $targetYear )
 {
     $availableMonths =  getAllMonths();
-    
+    $returnValue ="";
         
     foreach( $availableMonths as $month )
     {
@@ -1466,13 +1466,20 @@ function getResourceMonthDetailRow( $month, $monthStr, $day, $year, $queries, $m
 {
     global $mainPage;
     $nbsp="";
+    $hrefBegin = "";
+    $hrefEnd = "";
+    
     if( $day < 10 )
     {
         $space=" ";
         $nbsp="&nbsp;&nbsp;";
     }
-
-    $zeroMatchesPercent= round( ( $zeroMatches * 100 ) / $queries, 0  );
+    $zeroMatchesPercent = 0;
+    if(  $queries > 0)
+    {
+        $zeroMatchesPercent = round( ( $zeroMatches * 100 ) / $queries, 0  );
+    }
+    
     if($dolink)
     {
         $hrefBegin="<A HREF=\"$mainPage?action=daydetail&month=$month&day=$day&year=$year&resource=$resource\">";
@@ -1500,15 +1507,29 @@ function getResourceMonthDetailRow( $month, $monthStr, $day, $year, $queries, $m
 
     if( $doSchemas)
     {
+        $schemaMatches = 0;
         for( $i = 0; $i < $schemaCount; $i++ )
         {
-            
-    
+            if ( ! isset( $schemaHits[ $i ] ) )
+            {
+                $schemaHits[ $i ] = array( 'queries' => 0, 'matches' => 0 );
+            }
+
             $schemaQueries = $schemaHits[ $i ]['queries'];
-            $schemaPercentQueries = round(($schemaHits[ $i ]['queries'] * 100 )/$queries,0);
+            $schemaPercentQueries = 0;
+            if( $queries > 0 )
+            {
+                $schemaPercentQueries = round(($schemaHits[ $i ]['queries'] * 100 )/$queries,0);
+            }
             
+            $schemaPercentMatches = 0;
             $schemaMatches = $schemaHits[ $i ]['matches'];
-            $schemaPercentMatches = round(($schemaHits[ $i ]['matches'] * 100 )/$matches,0);
+            
+            if( $matches > 0 )
+            {
+                $schemaPercentMatches = round(($schemaHits[ $i ]['matches'] * 100 )/$matches,0);
+            }
+            
             if( $schemaQueries === NULL)
             {
                 $schemaQueries="0";
@@ -1633,16 +1654,16 @@ function getResourceMonthDetailCenter( $month, $year, $resource, $schemaCount, &
     
     for( $i = 1; $i <= $daysInMonth; $i++ )
     {
-        $space = "";
+        $space = '';
         if( $i < 10 )
         {
-            $space = "0";
+            $space = '0';
         }
        
         $whereClause = new AndWhereClause();
         
-        $whereClause->add( new SimpleWhereClause( TBL_MONTH_RESOURCE, '=', "resource=" . $resource ) );
-        $whereClause->add( new SimpleWhereClause( TBL_MONTH_DATE, "=", "$monthStr $space$i $year") );
+        $whereClause->add( new SimpleWhereClause( TBL_MONTH_RESOURCE, '=', 'resource=' . $resource ) );
+        $whereClause->add( new SimpleWhereClause( TBL_MONTH_DATE, '=', "$monthStr $space$i $year") );
         $rows = $db_connection->selectWhere( $filename, $whereClause );
         
         $queries = 0;
@@ -1667,11 +1688,11 @@ function getResourceMonthDetailCenter( $month, $year, $resource, $schemaCount, &
                     $index=0;
                     
                     //BUGBUG this could be made much more effcient by associative arrays
-                    if( $infoArray[ 'type' ] == "inventory" )
+                    if( $infoArray[ 'type' ] == 'inventory' )
                     {                    
                         for( $j = 0; $j < $schemaCount; $j++ )
                         {
-                            if( $schemas[ $j ] == "inventory" )
+                            if( $schemas[ $j ] == 'inventory' )
                             {
                                 $index = $j;
                                 $j = $schemaCount;
@@ -1692,8 +1713,14 @@ function getResourceMonthDetailCenter( $month, $year, $resource, $schemaCount, &
                                 $j = $schemaCount;
                             }
                         }
-                        $schemaHits[ $index ][ 'matches' ] = $schemaHits[ $index ][ 'matches' ] + $infoArray[ 'returnedrecs' ];
-                        $schemaHits[ $index ][ 'queries' ] = $schemaHits[ $index ][ 'queries' ] + 1;
+
+                        if( ! isset( $schemaHits[ $index ] ) )
+                        {
+                            $schemaHits[ $index ] = array( 'matches' => 0, 'queries' => 0 );
+                        }
+
+                        $schemaHits[ $index ][ 'matches' ] += $infoArray[ 'returnedrecs' ];
+                        $schemaHits[ $index ][ 'queries' ] += 1;
                     }
                 }
             }
@@ -1707,8 +1734,13 @@ function getResourceMonthDetailCenter( $month, $year, $resource, $schemaCount, &
         $totalMonthZeroMatches = $totalMonthZeroMatches + $zeroMatches;
         foreach( array_keys( $schemaHits ) as $key  )
         {
-            $totalMonthSchemaHits[ $key ]['queries'] = $totalMonthSchemaHits[ $key ]['queries'] + $schemaHits[ $key ]['queries'];
-            $totalMonthSchemaHits[ $key ]['matches'] = $totalMonthSchemaHits[ $key ]['matches'] + $schemaHits[ $key ]['matches'];
+            if( ! isset( $totalMonthSchemaHits[ $key ] ) )
+            {
+                $totalMonthSchemaHits[ $key ] = array( 'queries' => 0, 'matches' => 0);
+            }
+
+            $totalMonthSchemaHits[ $key ]['queries'] += $schemaHits[ $key ]['queries'];
+            $totalMonthSchemaHits[ $key ]['matches'] += $schemaHits[ $key ]['matches'];
         }
     }
     
@@ -1747,6 +1779,8 @@ function getResourceMonthDetailPage( $providerName, $month, $year, $resource, $d
 {
     require_once('flatfile/flatfile.php');
 
+    $day = "";
+    
     $db_connection = new flatfile();
     $db_connection->datadir = TP_STATISTICS_DIR;
     $monthStr=monthNumberToText( $month);
@@ -2103,11 +2137,11 @@ function addMonthTodDate( $currentDate )
 
 function parseDataLine( &$dataArray, $dataLine )
 {
-    
     $infoArray = explode( "\t", $dataLine );
     $dataArray = array();
     $dataArray[ 'wellformed' ] = false;
-    if( substr( $infoArray[ 4 ], 0, 4  )  == "type" )
+
+    if( isset( $infoArray[ 4 ] ) and substr( $infoArray[ 4 ], 0, 4  ) == 'type' )
     {
         $elementCount = count( $infoArray );
         $dataArray[ 'wellformed' ] = true;
@@ -2116,22 +2150,24 @@ function parseDataLine( &$dataArray, $dataLine )
         $dataArray[ 'date' ] = $infoArray[ 0 ];
         for( $i = 4; $i < $elementCount; $i++ )
         {
-            $element = explode( "=", $infoArray[ $i ] );
-            if( $element[0] == "filter" )
+            $element = explode( '=', $infoArray[ $i ] );
+            if( $element[0] == 'filter' )
             {
-                $dataArray[ "filter" ] = substr($infoArray[ $i ],7);
+                $dataArray[ 'filter' ] = substr($infoArray[ $i ],7);
             }
-            elseif( $element[0] == "request" )
+            elseif( $element[0] == 'request' )
             {
-                $dataArray[ "request" ] = $infoArray[ $i ];
+                $dataArray[ 'request' ] = $infoArray[ $i ];
             }
-            elseif( $element[0] == "whereclause" )
+            elseif( $element[0] == 'whereclause' )
             {
-                $dataArray[ "whereclause" ] = substr($infoArray[ $i ],12);
+                $dataArray[ 'whereclause' ] = substr($infoArray[ $i ],12);
             }
             else
             {
-                $dataArray[ $element[0] ] =  $element[ 1 ];
+                $new_value = ( isset( $element[ 1 ] ) ) ? $element[ 1 ] : '?';
+
+                $dataArray[ $element[0] ] = $new_value;
             }
         }
     }
@@ -2241,7 +2277,14 @@ function getResultsTableCenter( $startMonth, $startYear, $endMonth, $endYear, $a
                     if( $infoArray[ 'wellformed' ] == true )
                     {
                         $day = substr( $infoArray[ 'date' ], 4, 2 );
-                        $daysCounted[ $day ]++;
+                        if( isset( $daysCounted[ $day ] ) )
+                        {
+                            $daysCounted[ $day ]++;
+                        }
+                        else
+                        {
+                            $daysCounted[ $day ] = 1;
+                        }
                     
                         if( $infoArray['type'] == "search" || $infoArray['type'] == "custom" )
                         {
@@ -2267,18 +2310,60 @@ function getResultsTableCenter( $startMonth, $startYear, $endMonth, $endYear, $a
                     
                         if( $infoArray[ 'wellformed' ] == true )
                         {
-                            $destinationAddresses[ $infoArray[ 1 ] ]++;
-                            $sourceAddresses[ $infoArray[ 'source_ip' ] ]++;
-                            $sourceHosts[ $infoArray[ 'source_host' ] ]++;
-                            $resources[ $infoArray[ 'resource' ] ]++;
+                            if( isset( $destinationAddresses[ $infoArray[ 'destination_ip' ] ] ) )
+                            {
+                                $destinationAddresses[ $infoArray[ 'destination_ip' ] ]++;
+                            }
+                            else
+                            {
+                                $destinationAddresses[ $infoArray[ 'destination_ip' ] ] = 1;
+                            }
+                            if( isset( $sourceAddresses[ $infoArray[ 'source_ip' ] ] ) )
+                            {
+                                $sourceAddresses[ $infoArray[ 'source_ip' ] ]++;
+                            }
+                            else
+                            {
+                                $sourceAddresses[ $infoArray[ 'source_ip' ] ] = 1;
+                            }
+                            if( isset( $sourceHosts[ $infoArray[ 'source_host' ] ] ) )
+                            {
+                                $sourceHosts[ $infoArray[ 'source_host' ] ]++;
+                            }
+                            else
+                            {
+                                $sourceHosts[ $infoArray[ 'source_host' ] ] = 1;
+                            }
+                            if( isset( $resources[ $infoArray[ 'resource' ] ] ) )
+                            {
+                                $resources[ $infoArray[ 'resource' ] ]++;
+                            }
+                            else
+                            {
+                                $resources[ $infoArray[ 'resource' ] ] = 1;
+                            }
                         
                             $resourceDaysCounted[  $infoArray[ 'resource' ]  ][ "$currentMonth $currentYear $day" ] = 1;
-                        
-                            $returnedRecs[ $infoArray[ 'resource' ] ] = $returnedRecs[ $infoArray[ 'resource' ] ] + $infoArray[ 'returnedrecs' ];
-                        
-                            if( $infoArray['type'] == "search" || $infoArray['type'] == "custom" )
+
+                            if( isset( $returnedRecs[ $infoArray[ 'resource' ] ] ) )
                             {
-                                $returnedRecs[ "search" ] = $returnedRecs[ "search" ] + $infoArray[ 'returnedrecs' ];
+                                $returnedRecs[ $infoArray[ 'resource' ] ] += $infoArray[ 'returnedrecs' ];
+                            }
+                            else 
+                            {
+                                $returnedRecs[ $infoArray[ 'resource' ] ] = $infoArray[ 'returnedrecs' ]; 
+                            }
+                        
+                            if( $infoArray['type'] == 'search' || $infoArray['type'] == 'ustom' )
+                            {
+                                if( isset( $returnedRecs[ 'search' ] ) )
+                                {
+                                    $returnedRecs[ 'search' ] += $infoArray[ 'returnedrecs' ];
+                                }
+                                else
+                                {
+                                    $returnedRecs[ 'search' ] = $infoArray[ 'returnedrecs' ];
+                                }
                             }
                             else
                             {
@@ -2286,9 +2371,23 @@ function getResultsTableCenter( $startMonth, $startYear, $endMonth, $endYear, $a
                             }
 
                             //BUGBUG is a resource is named total, this will cause problems
-                            $returnedRecs[ 'total' ] = $returnedRecs[ 'total' ] + $infoArray[ 'returnedrecs' ];
+                            if( isset( $returnedRecs[ 'total' ] ) )
+                            {
+                                $returnedRecs[ 'total' ] += $infoArray[ 'returnedrecs' ];
+                            }
+                            else
+                            {
+                                $returnedRecs[ 'total' ] = $infoArray[ 'returnedrecs' ];
+                            }
+
+                            if( ! isset( $recordStructs[ $infoArray[ 'recstr' ] ]  ) )
+                            {
+                                $recordStructs[ $infoArray[ 'recstr' ] ] = array('hits' => 0, 'total' => 0 );
+                            }
                             $recordStructs[ $infoArray[ 'recstr' ] ]['hits']++;
-                            $recordStructs[ $infoArray[ 'recstr' ] ]['total'] = $recordStructs[ $infoArray[ 'recstr' ] ]['total'] + $infoArray[ 'returnedrecs' ];   
+
+
+                            $recordStructs[ $infoArray[ 'recstr' ] ]['total'] += $infoArray[ 'returnedrecs' ];   
                         }
                     }
                 }
@@ -2783,7 +2882,8 @@ function getResourceDayDetailCenter( $month, $day, $year, $resource, &$db_connec
                 {
                     $dolink = 0;
                     $schema = $infoArray[ 'column' ];
-                    $whereclause="DISTINCT " . htmlspecialchars($infoArray[ 'column' ]) . " " . htmlspecialchars($infoArray[ 'whereclause' ]) ;
+                    //$whereclause="DISTINCT " . htmlspecialchars($infoArray[ 'column' ]) . " " . htmlspecialchars($infoArray[ 'whereclause' ]) ;
+                    $whereclause = htmlspecialchars($infoArray[ 'whereclause' ]) ;
                 }
                 else if( $infoArray[ 'type' ] == "custom" )
                 {

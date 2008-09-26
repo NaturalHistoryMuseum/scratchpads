@@ -34,7 +34,8 @@ class TpConcept
                              // if the concept should be present in output models.
     var $mSearchable = true;
     var $mMapping;
-    var $mType;
+    var $mType;              // Concept type (string). Usually Namespace#TypeName.
+
     var $mDocumentation;
 
     function TpConcept( ) 
@@ -181,14 +182,14 @@ class TpConcept
 
         $type_str = '';
 
-        if ( $this->mType != null )
+        if ( ! is_null( $this->mType ) )
         {
             $type_str = 'type="'.$this->mType.'" ';
         }
 
         $doc_str = '';
 
-        if ( $this->mDocumentation != null )
+        if ( ! is_null( $this->mDocumentation ) )
         {
             $doc_str = 'documentation="'.TpUtils::EscapeXmlSpecialChars( $this->mDocumentation ).'" ';
         }
@@ -217,9 +218,23 @@ class TpConcept
     {
         $searchable = ( $this->IsSearchable() ) ? 'true' : 'false';
 
+        $datatype_xml = '';
+
+        if ( $this->IsMapped() )
+        {
+            $mapping = $this->GetMapping();
+
+            $datatype = $mapping->GetLocalXsdType();
+
+            if ( ! is_null( $datatype ) )
+            {
+                $datatype_xml = ' datatype="'.$datatype.'"';
+            }
+        }
+
         $xml = "\t\t\t";
-        $xml .= '<mappedConcept searchable="'. $searchable .'" id="'.
-                TpUtils::EscapeXmlSpecialChars( $this->GetId() ).'"/>'."\n";
+        $xml .= '<mappedConcept id="'.TpUtils::EscapeXmlSpecialChars( $this->GetId() ).
+                     '" searchable="'. $searchable .'"'.$datatype_xml.'/>'."\n";
 
         return $xml;
 

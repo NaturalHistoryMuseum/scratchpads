@@ -237,20 +237,31 @@ if ( $ok )
 echo "\n<h3>Checking PHP configuration...</h3>\n";
 flush();
 
-$allow_url_fopen = ini_get( 'allow_url_fopen' );
+$memory_limit = ini_get( 'memory_limit' );
 
-$result = ($allow_url_fopen) ? 'yes' : 'no';
+$val = trim( $memory_limit );
 
-echo "\nallow_url_fopen... ".$result;
+$last = strtolower( substr( $val, strlen($val)-1 ) );
 
-if ( $allow_url_fopen )
+switch ( $last )
+{
+    case 'g':
+        $val *= 1024;
+    case 'm':
+        $val *= 1024;
+    case 'k':
+        $val *= 1024;
+}
+
+echo "\nmemory_limit... ".$memory_limit;
+
+if ( $val >= 16777216 ) // 16M
 {
     echo ' (OK)<br />';
 }
 else
 {
-    echo '<br /><b>Error:</b> You must set this to TRUE, otherwise it will no be possible '.
-         'to parse remote output models and template definitions!<br />';
+    echo '<br /><b>Warning:</b> TapirLink can easily consume more than 10M when processing requests. It is advisable to set the memory_limit of your PHP installation (inside php.ini) to at least 16M.<br />';
 }
 
 $register_globals = ini_get('register_globals');

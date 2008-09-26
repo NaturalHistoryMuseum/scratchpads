@@ -110,10 +110,10 @@ class TpConfigUtils // only class methods
         $xparser->setXmlOption( XML_OPTION_CASE_FOLDING, false );
         $xparser->setXmlOption( XML_OPTION_SKIP_WHITE, true );
 
-        // Load existing file
-        if ( ! $xparser->importFromFile( $file ) ) 
+        if ( ! $xparser->importFromFile( $file ) )
         {
-            $error = 'Could not load the XML file '.$file.'.';
+            $xml_error = $xparser->getLastError();
+            $error = 'Could not load the XML file '.$file.'.' . 'Error is ' . $xparser->getLastError();
             TpDiagnostics::Append( DC_IO_ERROR, $error, DIAG_ERROR );
             return false;
         }
@@ -267,6 +267,112 @@ class TpConfigUtils // only class methods
         return '?';
 
     } // end of GetFieldType
+
+    /**
+     * Returns a unique identifier for the service. This function does not
+     * return the URL of the service! It's just a way to generate an identifier
+     * that can distinguish between different instances of TapirLink.
+     * Note: the service id is used as a session name, so it may not contain
+     * characters such as dots. 
+     */
+    function GetServiceId()
+    {
+        $domain = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME']:'localhost';
+        $port   = isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT']:'80';
+        $script = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME']:'/tapir.php';
+        $protocol = ( isset($_SERVER['HTTPS']) and 
+                      ! empty($_SERVER['HTTPS']) ) ? 'https':'http';
+
+        $s = $protocol.'://'.$domain.':'.$port.$script;
+
+        return strtr( $s, '.', '_' );
+
+    } // end of GetServiceId
+
+    /**
+     * Returns the primitive XSD type given a pair typename/namespace, or
+     * a full type string (namespace concatenated with typename. Only
+     * works for types that are already under the XSD namespace.
+     * Null is returned if the primitive type could not be determined.
+     */
+    function GetPrimitiveXsdType( $typeStr, $ns=null )
+    {
+        $xsd_namespace = 'http://www.w3.org/2001/XMLSchema';
+
+        // If type contains namespace
+        if ( is_null( $ns ) )
+        {
+            if ( strlen( $typeStr ) < 32 ) // size of xsd_namespace
+            {
+                return null;
+            }
+
+            $ns = substr( $typeStr, 0, 32 );
+
+            $type_name = substr( $typeStr, 33 ); // skip separator
+        }
+        else
+        {
+            $type_name = $typeStr;
+        }
+
+        if ( $ns == $xsd_namespace )
+        {
+            switch ( $type_name )
+            {
+                case 'anyURI':
+                case 'boolean':
+                case 'base64Binary':
+                case 'date':
+                case 'dateTime':
+                case 'decimal':
+                case 'double':
+                case 'duration':
+                case 'float':
+                case 'gDay':
+                case 'gMonth':
+                case 'gMonthDay':
+                case 'gYear':
+                case 'gYearMonth':
+                case 'hexBinary':
+                case 'NOTATION':
+                case 'QName':
+                case 'string':
+                case 'time':
+                    return $xsd_namespace.'#'.$type_name;
+                case 'normalizedString':
+                case 'token':
+                case 'language':
+                case 'Name':
+                case 'NMTOKEN':
+                case 'NMTOKENS':
+                case 'NCName':
+                case 'ID':
+                case 'IDREF':
+                case 'IDREFS':
+                case 'ENTITY':
+                case 'ENTITIES':
+                    return $xsd_namespace.'#string';
+                case 'integer':
+                case 'nonPositiveInteger':
+                case 'negativeInteger':
+                case 'long':
+                case 'int':
+                case 'short':
+                case 'byte':
+                case 'nonNegativeInteger':
+                case 'unsignedLong':
+                case 'unsignedInt':
+                case 'unsignedShort':
+                case 'unsignedByte':
+                case 'positiveInteger':
+                    return $xsd_namespace.'#decimal';
+            }
+        }
+
+        return null;
+
+    } // end of member function GetPrimitiveXsdType
 
 } // end of TpConfigUtils
 ?>

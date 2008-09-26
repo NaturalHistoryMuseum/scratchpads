@@ -22,6 +22,9 @@
  * 
  */
 
+require_once('TpTable.php');
+require_once('TpConcept.php');
+require_once('TpConceptMapping.php');
 require_once('TpDiagnostics.php');
 
 class TpSqlBuilder 
@@ -39,10 +42,43 @@ class TpSqlBuilder
 
     var $mConditions = array();
 
-    function TpSqlBuilder( ) 
+    var $mrAdodb;
+
+    function TpSqlBuilder( &$rAdodb )
     {
+        $this->mrAdodb =& $rAdodb;
 
     } // end of member function TpSqlBuilder
+
+    /** Return a table or column name ready to be used in a SQL statement.
+     *  The SQL syntax is not case sensitive by default. However, names can be 
+     *  case sensitive and contain spaces and other delimiters and can use keywords, 
+     *  if sourrounded with double quotation marks ("). This function was created to 
+     *  check if a name must be surrounded with double quotes or not and returning
+     *  the correct value. right now it only checks if there is some letter in upper 
+     *  cases. In the future it could check for spaces and reserved words. Ideally
+     *  it should be part of ADODB.
+     */
+    function GetSqlName( $name ) 
+    {
+        if ( ! TP_SQL_DELIMIT_NAMES )
+        {
+            return $name;
+        }
+    
+        $names = explode( '.', $name );
+
+        for ( $i = 0; $i < count( $names ); ++$i )
+        {
+            if ( $names[$i] !== strtolower( $names[$i] ) )
+            {
+                $names[$i] = '"'.$names[$i].'"';
+            }
+        }
+
+        return implode( '.', $names );
+
+    } // end of member function GetSqlName
 
     function SetDistinct( $bool ) 
     {
@@ -74,7 +110,7 @@ class TpSqlBuilder
 
     } // end of member function AddTargetColumn
 
-    /** $concept here should always correspond to a property
+    /** "Concept" here should always correspond to a property (attribute).
      *  In the future, $concept should also indicate to which 
      *  class it belongs. And the class must also have a mapping.
      */
@@ -82,19 +118,21 @@ class TpSqlBuilder
     {
         $mapping = $concept->GetMapping();
 
-        $sql_target = $mapping->GetSqlTarget();
+        $sql_target = $mapping->GetSqlTarget( $this->mrAdodb );
 
         $concept_id = $concept->GetId();
 
-        if ( empty( $sql_target ) )
+        if ( ! strlen( $sql_target ) )
         {
             $msg = 'Could not find a valid local mapping for concept "'.$concept_id.'". It will be ignored.';
-            TpDiagnostics::Append( DC_UNMAPPED_CONCEPT, $msg, DIAG_WARN );
+            TpDiagnostics::Append( DC_UNMAPPED_CONCEPT, $msg, DIAG_ERROR );
 
-            return;
+            return false;
         }
 
         $this->mSelect[$concept_id] = $sql_target;
+
+        return true;
 
     } // end of member function AddTargetConcept
 
@@ -108,11 +146,11 @@ class TpSqlBuilder
 
             if ( strcasecmp( $targetId, $target_id ) == 0 )
             {
-                break;
+                return $i;
             }
         }
 
-        return $i;
+        return -1;
 
     } // end of member function GetTargetIndex
 
@@ -135,7 +173,10 @@ class TpSqlBuilder
 
     function AddCondition( $sql ) 
     {
-        array_push( $this->mConditions, $sql );
+        if ( ! empty( $sql ) )
+        {
+            array_push( $this->mConditions, $sql );
+        }
         
     } // end of member function AddCondition
 
@@ -195,7 +236,7 @@ class TpSqlBuilder
                 }
             }
 
-            $from = $this->mTables[$keys[0]]->GetName();
+            $from = $this->GetSqlName( $this->mTables[$keys[0]]->GetName() );
 
             if ( $n_tab > 1 )
             {
@@ -205,13 +246,11 @@ class TpSqlBuilder
                 {
                     $from = '(' . $from;
                     $from .= ' LEFT JOIN ';
-                    $from .= $this->mTables[$keys[$i]]->GetName();
+                    $from .= $this->GetSqlName( $this->mTables[$keys[$i]]->GetName() );
                     $from .= ' ON ';
-                    $from .= $this->mTables[$keys[$i]]->GetParentName().'.'.
-                             $this->mTables[$keys[$i]]->GetJoin();
+                    $from .= $this->GetSqlName( $this->mTables[$keys[$i]]->GetParentName().'.'.$this->mTables[$keys[$i]]->GetJoin() );
                     $from .= ' = ';
-                    $from .= $this->mTables[$keys[$i]]->GetName().'.'.
-                             $this->mTables[$keys[$i]]->GetKey();
+                    $from .= $this->GetSqlName( $this->mTables[$keys[$i]]->GetName().'.'.$this->mTables[$keys[$i]]->GetKey() );
                     $from .= ")\n";
                 }
             }

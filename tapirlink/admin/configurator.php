@@ -60,6 +60,13 @@ if ( ! defined( '_DEBUG' ) )
     define( '_DEBUG', false );
 }
 
+# Prepare global variable for debugging
+TpUtils::InitializeDebugLog();
+
+global $g_dlog;
+
+$g_dlog->debug('Running configurator.php');
+
 # Instantiate a manager for configuration
 $config_manager = new TpConfigManager();
 
@@ -74,5 +81,7 @@ if ( TpDiagnostics::Count() ) {
 define( 'TP_MANDATORY_FIELD_FLAG', '(*) ' );
 
 $config_manager->HandleEvents();
+
+$g_dlog->debug('Finished configurator.php');
 
 ?>

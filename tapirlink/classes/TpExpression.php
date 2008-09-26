@@ -23,6 +23,7 @@
 require_once('tapir_globals.php');
 require_once('TpFilter.php');
 require_once('TpConceptMapping.php');
+require_once('TpDiagnostics.php');
 
 class TpExpression
 {
@@ -36,7 +37,9 @@ class TpExpression
     function TpExpression( $type, $reference, $required=false )
     {
         $this->mType = $type;
-        $this->mReference = $reference;
+
+        $this->SetReference( $reference );
+
         $this->mRequired = $required;
 
     } // end of member function TpExpression
@@ -59,29 +62,17 @@ class TpExpression
 
     } // end of member function GetReference
 
-    function GetValue( &$rResource, $localType, $caseSensitive, $isLike )
+    function GetValue( &$rResource, $localType, $caseSensitive, $isLike, $conceptDatatype=null )
     {
         $value = '';
 
         if ( $this->mType == EXP_LITERAL )
         {
-            $value = $this->mReference;
+            $value = $this->_PrepareValue( $this->mReference, $rResource, $localType, $caseSensitive, $isLike, $conceptDatatype );
 
-            if ( $localType != TYPE_NUMERIC )
+            if ( is_null( $value ) )
             {
-                if ( $localType == TYPE_TEXT and ! $caseSensitive )
-                {
-                    $value = $this->UpperCase( $value );
-                }
-
-                $value = str_replace( TP_SQL_QUOTE, TP_SQL_QUOTE_ESCAPE, $value );
-
-                if ( $isLike )
-                {
-                    $value = $this->GetLikeTerm( $value );
-                }
-
-                $value = TP_SQL_QUOTE . $value . TP_SQL_QUOTE;
+                return $value;
             }
         }
         else if ( $this->mType == EXP_PARAMETER )
@@ -94,23 +85,11 @@ class TpExpression
                 return null;
             }
 
-            $value = $_REQUEST[$this->mReference];
+            $value = $this->_PrepareValue( $_REQUEST[$this->mReference], $rResource, $localType, $caseSensitive, $isLike, $conceptDatatype );
 
-            if ( $localType != TYPE_NUMERIC )
+            if ( is_null( $value ) )
             {
-                if ( $localType == TYPE_TEXT and ! $caseSensitive )
-                {
-                    $value = $this->UpperCase( $value );
-                }
-
-                $value = str_replace( TP_SQL_QUOTE, TP_SQL_QUOTE_ESCAPE, $value );
-
-                if ( $isLike )
-                {
-                    $value = $this->GetLikeTerm( $value );
-                }
-
-                $value = TP_SQL_QUOTE . $value . TP_SQL_QUOTE;
+                return $value;
             }
         }
         else if ( $this->mType == EXP_CONCEPT )
@@ -124,7 +103,7 @@ class TpExpression
                 $msg = 'Concept "'.$this->mReference.'" is not mapped';
 
                 TpDiagnostics::Append( DC_UNMAPPED_CONCEPT, $msg, DIAG_WARN );
-                return null;
+                return false;
             }
 
             if ( ! $concept->IsSearchable() )
@@ -132,19 +111,21 @@ class TpExpression
                 $msg = 'Concept "'.$this->mReference.'" is not searchable';
 
                 TpDiagnostics::Append( DC_UNSEARCHABLE_CONCEPT, $msg, DIAG_WARN );
-                return null;
+                return false;
             }
 
             $mapping = $concept->GetMapping();
 
-            $value = $mapping->GetSqlTarget();
+            $r_data_source =& $rResource->GetDataSource();
+
+            $r_adodb_connection =& $r_data_source->GetConnection();
+
+            $in_where_clause = true;
+
+            $value = $mapping->GetSqlTarget( $r_adodb_connection, $in_where_clause );
 
             if ( $localType == TYPE_TEXT and ! $caseSensitive )
             {
-                $r_data_source =& $rResource->GetDataSource();
-
-                $r_adodb_connection =& $r_data_source->GetConnection();
-
                 $value = $r_adodb_connection->upperCase.'('.$value.')';
             }
         }
@@ -159,7 +140,7 @@ class TpExpression
                 $msg = 'Unknown variable "'.$this->mReference.'"';
 
                 TpDiagnostics::Append( DC_UNKNOWN_VARIABLE, $msg, DIAG_WARN );
-                return null;
+                return false;
             }
 
             $value = $rResource->GetVariable( $this->mReference );
@@ -206,7 +187,7 @@ class TpExpression
 
     } // end of member function GetLogRepresentation
 
-    function UpperCase( $value )
+    function _UpperCase( $value )
     {
         if ( version_compare( phpversion(), '4.3.0', '>=' ) > 0 )
         {
@@ -249,9 +230,9 @@ class TpExpression
 
         return $value;
 
-    } // end of member function UpperCase
+    } // end of member function _UpperCase
 
-    function GetLikeTerm( $value )
+    function _GetLikeTerm( $value )
     {
         $no_wildcard = false;
 
@@ -366,7 +347,95 @@ class TpExpression
 
         return $value;
 
-    } // end of member function GetLikeTerm
+    } // end of member function _GetLikeTerm
+
+    function _PrepareValue( $value, &$rResource, $localType, $caseSensitive, $isLike, $conceptDatatype )
+    {
+        $add_delimiter = true;
+
+        // TODO: add specific blocks for the other concept types
+
+        if ( $conceptDatatype === 'http://www.w3.org/2001/XMLSchema#dateTime' and 
+                  ! $isLike )
+        {
+            if ( preg_match( "'^([\-]?\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|(\+|\-)(\d{2}):(\d{2}))?$'", $value, $matches ) and 
+                 (int)$matches[2] >  0 && (int)$matches[2] < 13 && 
+                 (int)$matches[3] >  0 && (int)$matches[3] < 32 && 
+                 (int)$matches[4] >= 0 && (int)$matches[4] < 24 && 
+                 (int)$matches[5] >= 0 && (int)$matches[5] < 61 && 
+                 (int)$matches[6] >= 0 && (int)$matches[6] < 61 )
+            {
+                $year  = $matches[1];
+                $month = $matches[2];
+                $day   = $matches[3];
+                $hr    = $matches[4];
+                $min   = $matches[5];
+                $secs  = $matches[6];
+
+                // Note: second decimals and time zone are being ignored
+
+                $r_data_source =& $rResource->GetDataSource();
+
+                $r_adodb_connection =& $r_data_source->GetConnection();
+
+                if ( $localType == TYPE_DATETIME )
+                {
+                   $value = $r_adodb_connection->DBTimeStamp( "$year-$month-$day $hr:$min:$secs" );
+                   $add_delimiter = false;
+                }
+                else if ( $localType == TYPE_DATE )
+                {
+                   $value = $r_adodb_connection->DBDate( "$year-$month-$day" );
+
+                   $add_delimiter = false;
+                }
+                else if ( $localType == TYPE_TEXT )
+                {
+                    // Assume that the text follows the same pattern?
+                }
+                else if ( $localType == TYPE_NUMERIC )
+                {
+                    $msg = 'Expression '.$this->ToString().' has a local datatype (numeric) incompatible with the corresponding concept datatype (xsd:dateTime)';
+
+                    TpDiagnostics::Append( DC_INVALID_FILTER, $msg, DIAG_WARN );
+
+                    return null;
+                }
+            }
+            else
+            {
+                $msg = 'Value "'.$value.'" does not match the expected xsd:dateTime pattern';
+
+                TpDiagnostics::Append( DC_INVALID_FILTER, $msg, DIAG_WARN );
+            }
+        }
+
+        if ( $localType != TYPE_NUMERIC )
+        {
+            if ( $localType == TYPE_TEXT and ! $caseSensitive )
+            {
+                $value = $this->_UpperCase( $value );
+            }
+
+            if ( $add_delimiter )
+            {
+                $value = str_replace( TP_SQL_QUOTE, TP_SQL_QUOTE_ESCAPE, $value );
+            }
+
+            if ( $isLike )
+            {
+                $value = $this->_GetLikeTerm( $value );
+            }
+
+            if ( $add_delimiter )
+            {
+                $value = TP_SQL_QUOTE . $value . TP_SQL_QUOTE;
+            }
+        }
+
+        return $value;
+
+    } // end of member function _PrepareValue
 
     function ToString( )
     {

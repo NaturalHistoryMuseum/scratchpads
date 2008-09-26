@@ -63,10 +63,6 @@
     <span class="RegularText">Maximum element levels: <xsl:value-of select="tapir:response/tapir:capabilities/tapir:settings/tapir:maxElementLevels"/></span><br/>
     <br/>
 
-    <span class="Label">Concept name servers</span><br/>
-    <span class="RegularText">none</span><br/>
-    <br/>
-
     <span class="Label">Mapped schemas</span><br/>
     <xsl:for-each select="tapir:response/tapir:capabilities/tapir:concepts/tapir:schema">
     <br/>

@@ -30,7 +30,7 @@
 class TpNestedList
 {
     var $mList;
-    var $mParent;
+    var $mrParent;
 
     function TpNestedList( $list=array() )
     {
@@ -81,19 +81,19 @@ class TpNestedList
             $element->SetParent( $this );
         }
         
-        $this->mList[count($this->mList)] =& $element;
+        $this->mList[] = $element;
         
     } // end of member function GetParent
 
     function SetParent( &$rParent ) 
     {
-        $this->mParent = $rParent;
+        $this->mrParent =& $rParent;
         
     } // end of member function SetParent
 
     function &GetParent( ) 
     {
-        return $this->mParent;
+        return $this->mrParent;
         
     } // end of member function GetParent
 
@@ -127,12 +127,12 @@ class TpNestedList
 
     function GetDepth( ) 
     {
-        if ( $this->mParent == null )
+        if ( $this->mrParent == null )
         {
             return 0;
         }
 
-        return $this->mParent->GetDepth()+ 1;
+        return $this->mrParent->GetDepth()+ 1;
         
     } // end of member function GetDepth
 

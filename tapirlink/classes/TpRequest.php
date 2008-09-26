@@ -25,7 +25,7 @@
 require_once('TpDiagnostics.php');
 require_once('TpResources.php');
 require_once('TpUtils.php');
-require_once('TpNamespaceManager.php');
+require_once('phpxsd/XsNamespaceManager.php');
 
 // These are needed for the unserialize method call
 require_once('TpSearchParameters.php');
@@ -158,6 +158,8 @@ class TpRequest
 
     function LoadKvpParameters()
     {
+        global $g_dlog;
+
         $this->mRequestEncoding = 'kvp';
 
         // Stash request to a file
@@ -214,12 +216,8 @@ class TpRequest
 
         if ( $log_only == 'true' or (int)$log_only == 1 )
         {
+            $g_dlog->debug( 'Detected log-only request' );
             $this->mLogOnly = true;
-        }
-
-        if ( $this->mLogOnly )
-        {
-            return true;
         }
 
         $this->mXslt = TpUtils::GetVar( 'xslt', null );
@@ -363,7 +361,6 @@ class TpRequest
         }
 
         $parser = xml_parser_create_ns();
-        //$parser = xml_parser_create();
         xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0);
         xml_set_object( $parser, $this );
         xml_set_start_namespace_decl_handler( $parser, 'DeclareNamespace' );
@@ -434,6 +431,8 @@ class TpRequest
 
     function StartElement( $parser, $qualified_name, $attrs ) 
     {
+        global $g_dlog;
+
         $name = TpUtils::GetUnqualifiedName( $qualified_name );
 
         array_push( $this->mInTags, strtolower( $name ) );
@@ -497,7 +496,18 @@ class TpRequest
                 }
 
                 $this->mStart = (int)TpUtils::GetInArray( $attrs, 'start', 0 );
-                $this->mLimit = (int)TpUtils::GetInArray( $attrs, 'limit', null );
+
+                if ( $this->mStart < 0 )
+                {
+                    $this->mStart = 0;
+                }
+
+                $this->mLimit = (int)TpUtils::GetInArray( $attrs, 'limit', -1 );
+
+                if ( $this->mLimit < 0 )
+                {
+                    $this->mLimit = null;
+                }
 
                 if ( $this->mOperation == 'search' )
                 {
@@ -530,7 +540,11 @@ class TpRequest
                         // part of the output model element
                         if ( $this->mOperation == 'search' )
                         {
-                            $r_namespace_manager =& TpNamespaceManager::GetInstance();
+                            $g_dlog->debug( 'Removing possible namespaces that were '.
+                                            'flagged as being part of the output '.
+                                            'model element (detected <template>)' );
+
+                            $r_namespace_manager =& XsNamespaceManager::GetInstance();
 
                             $r_namespace_manager->RemoveFlag( $parser, 'm' );
                         }
@@ -555,7 +569,11 @@ class TpRequest
                         // part of the output model element
                         if ( strcasecmp( $name, 'searchtemplate' ) == 0 )
                         {
-                            $r_namespace_manager =& TpNamespaceManager::GetInstance();
+                            $g_dlog->debug( 'Removing possible namespaces that were '.
+                                            'flagged as being part of the output model '.
+                                            'element (detected <searchTemplate>)' );
+
+                            $r_namespace_manager =& XsNamespaceManager::GetInstance();
 
                             $r_namespace_manager->RemoveFlag( $parser, 'm' );
                         }
@@ -634,7 +652,7 @@ class TpRequest
             $flag = 'm';
         }
 
-        $r_namespace_manager =& TpNamespaceManager::GetInstance();
+        $r_namespace_manager =& XsNamespaceManager::GetInstance();
 
         $r_namespace_manager->AddNamespace( $parser, $prefix, $uri, $flag );
 
@@ -686,19 +704,90 @@ class TpRequest
         // If cache is enabled
         if ( TP_USE_CACHE and TP_TEMPLATE_CACHE_LIFE_SECS )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $cache_dir = TP_CACHE_DIR . '/' . $this->mResourceCode;
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'templates';
 
             $cache = new Cache( 'file', $cache_options );
             $cache_id = $cache->generateID( $this->mTemplate );
-            $cached_data = $cache->get( $cache_id, 'templates' );
+            $cached_data = $cache->get( $cache_id, $subdir );
 
-            if ( $cached_data and ! $cache->isExpired( $cache_id, 'templates' ) )
+            if ( $cached_data and ! $cache->isExpired( $cache_id, $subdir ) )
             {
-                 $g_dlog->debug( 'Unserializing query template from cache' );
+                $g_dlog->debug( 'Unserializing query template from cache' );
 
-                 $this->mOperationParameters = unserialize( $cached_data );
+                // Check if serialized object has the mRevision property.
+                // If not, this means that the cached object was based on 
+                // the old Tp*Parameters class definition, so we need 
+                // to discard it.
+                if ( strpos( $cached_data, ':"mRevision"' ) === false )
+                {
+                    $g_dlog->debug( 'Detected obsolete serialized query template' );
 
-                 $this->mLoadedTemplateFromCache = true;
+                    if ( ! $cache->remove( $cache_id, $subdir ) )
+                    {
+                        $g_dlog->debug( 'Could not remove query template from cache' );
+                    }
+                    else
+                    {
+                        $g_dlog->debug( 'Removed query template from cache' );
+                    }
+                }
+                else
+                {
+                    $this->mOperationParameters = unserialize( $cached_data );
+
+                    if ( ! $this->mOperationParameters )
+                    {
+                        $g_dlog->debug( 'Could not unserialize query template from cache' );
+
+                        if ( ! $cache->remove( $cache_id, $subdir ) )
+                        {
+                            $g_dlog->debug( 'Could not remove query template from cache' );
+                        } 
+                        else
+                        {
+                            $g_dlog->debug( 'Removed query template from cache' );
+                        } 
+                    }
+                    else
+                    {
+                        // Check if unserialized object has correct version.
+                        // Should always pass this condition. It is here in case
+                        // there is any change in Tp*Parameters that may
+                        // affect caching in the future.
+                        $revision = $this->mOperationParameters->GetRevision();
+
+                        // NOTE: You may want to distinguish between search 
+                        // and inventory.
+
+                        if ( $revision > 557 )
+                        {
+                            // IMPORTANT: In the future it may be necessary to 
+                            // check the output model and/or response structure 
+                            // revisions here too!
+
+                            $g_dlog->debug( 'Loaded query template from cache' );
+
+                            $this->mLoadedTemplateFromCache = true;
+                        }
+                        else
+                        {
+                            $g_dlog->debug( 'Incorrect serialized query template revision ('.$revision.')' );
+
+                            if ( ! $cache->remove( $cache_id, $subdir ) )
+                            {
+                                $g_dlog->debug( 'Could not remove query template from cache' );
+                            }
+                            else
+                            {
+                                $g_dlog->debug( 'Removed query template from cache' );
+                            }
+                        }
+                    }
+                }
             }
         }
 

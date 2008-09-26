@@ -1,13 +1,41 @@
 <?php
 
 /**
-  V4.54 5 Nov 2004  (c) 2000-2004 John Lim (jlim@natsoft.com.my). All rights reserved.
+  V4.98 13 Feb 2008  (c) 2000-2008 John Lim (jlim#natsoft.com.my). All rights reserved.
   Released under both BSD license and Lesser GPL library license. 
   Whenever there is any discrepancy between the two licenses, 
   the BSD license will take precedence.
 	
   Set tabs to 4 for best viewing.
  
+*/
+
+/*
+In ADOdb, named quotes for MS SQL Server use ". From the MSSQL Docs:
+
+	Note Delimiters are for identifiers only. Delimiters cannot be used for keywords, 
+	whether or not they are marked as reserved in SQL Server.
+	
+	Quoted identifiers are delimited by double quotation marks ("):
+	SELECT * FROM "Blanks in Table Name"
+	
+	Bracketed identifiers are delimited by brackets ([ ]):
+	SELECT * FROM [Blanks In Table Name]
+	
+	Quoted identifiers are valid only when the QUOTED_IDENTIFIER option is set to ON. By default, 
+	the Microsoft OLE DB Provider for SQL Server and SQL Server ODBC driver set QUOTED_IDENTIFIER ON 
+	when they connect. 
+	
+	In Transact-SQL, the option can be set at various levels using SET QUOTED_IDENTIFIER, 
+	the quoted identifier option of sp_dboption, or the user options option of sp_configure.
+	
+	When SET ANSI_DEFAULTS is ON, SET QUOTED_IDENTIFIER is enabled.
+	
+	Syntax
+	
+		SET QUOTED_IDENTIFIER { ON | OFF }
+
+
 */
 
 // security - hide paths
@@ -18,6 +46,10 @@ class ADODB2_mssql extends ADODB_DataDict {
 	var $dropIndex = 'DROP INDEX %2$s.%1$s';
 	var $renameTable = "EXEC sp_rename '%s','%s'";
 	var $renameColumn = "EXEC sp_rename '%s.%s','%s'";
+
+	var $typeX = 'TEXT';  ## Alternatively, set it to VARCHAR(4000)
+	var $typeXL = 'TEXT';
+	
 	//var $alterCol = ' ALTER COLUMN ';
 	
 	function MetaType($t,$len=-1,$fieldobj=false)
@@ -30,7 +62,7 @@ class ADODB2_mssql extends ADODB_DataDict {
 		
 		$len = -1; // mysql max_length is not accurate
 		switch (strtoupper($t)) {
-
+		case 'R':
 		case 'INT': 
 		case 'INTEGER': return  'I';
 		case 'BIT':
@@ -47,10 +79,10 @@ class ADODB2_mssql extends ADODB_DataDict {
 	function ActualType($meta)
 	{
 		switch(strtoupper($meta)) {
+
 		case 'C': return 'VARCHAR';
-		case 'XL':
-		case 'X': return 'TEXT';
-		
+		case 'XL': return (isset($this)) ? $this->typeXL : 'TEXT';
+		case 'X': return (isset($this)) ? $this->typeX : 'TEXT'; ## could be varchar(8000), but we want compat with oracle
 		case 'C2': return 'NVARCHAR';
 		case 'X2': return 'NTEXT';
 		
@@ -60,6 +92,7 @@ class ADODB2_mssql extends ADODB_DataDict {
 		case 'T': return 'DATETIME';
 		case 'L': return 'BIT';
 		
+		case 'R':		
 		case 'I': return 'INT'; 
 		case 'I1': return 'TINYINT';
 		case 'I2': return 'SMALLINT';
@@ -241,12 +274,9 @@ CREATE TABLE
 		case 'BIGINT':
 			return $ftype;
 		}
-		if (strlen($fsize) && $ty != 'X' && $ty != 'B' && strpos($ftype,'(') === false) {
-			$ftype .= "(".$fsize;
-			if (strlen($fprec)) $ftype .= ",".$fprec;
-			$ftype .= ')';
-		}
-		return $ftype;
+    	if ($ty == 'T') return $ftype;
+    	return parent::_GetSize($ftype, $ty, $fsize, $fprec);    
+
 	}
 }
 ?>

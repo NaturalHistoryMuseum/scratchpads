@@ -9,7 +9,9 @@
 <span class="section"><?php print( $name ); ?></span>
 <br>
 <div width="80%" class="box2">
+<?php if ( isset( $a ) ): ?><p align="<?php print( $a ); ?>"><?php endif; ?>
 <span class="msg"><?php print( nl2br( $doc ) ); ?></span>
+<?php if ( isset( $a ) ): ?></p><?php endif; ?>
 </div>
 </center>
 </body>

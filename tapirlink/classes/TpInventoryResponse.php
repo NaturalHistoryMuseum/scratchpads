@@ -26,6 +26,7 @@ require_once('TpServiceUtils.php');
 require_once('TpDiagnostics.php');
 require_once('TpResponse.php');
 require_once('TpSqlBuilder.php');
+require_once('Cache.php'); // pear
 
 class TpInventoryResponse extends TpResponse
 {
@@ -42,6 +43,8 @@ class TpInventoryResponse extends TpResponse
 
     function Body()
     {
+        global $g_dlog;
+
         $inventory_parameters = $this->mRequest->GetOperationParameters();
 
         if ( ! is_object( $inventory_parameters ) )
@@ -74,9 +77,11 @@ class TpInventoryResponse extends TpResponse
 
         // Prepare SQL builder
 
-        $sql_builder = new TpSqlBuilder();
+        $sql_builder = new TpSqlBuilder( $r_data_source->GetConnection() );
 
         $concepts_xml = '';
+
+        $types = array(); // concept types
 
         foreach ( $concepts as $concept_id => $tag_name )
         {
@@ -90,7 +95,15 @@ class TpInventoryResponse extends TpResponse
                 return;
             }
 
-            $sql_builder->AddTargetConcept( $concept );
+            $types[] = $concept->GetType();
+
+            if ( ! $sql_builder->AddTargetConcept( $concept ) )
+            {
+                $msg = 'Concept "'.$concept_id.'" could not be added as a target (invalid local mapping)';
+
+                echo $this->Error( $msg );
+                return;
+            }
 
             $concepts_xml .= "\n".'<concept id="'.$concept_id.'" />';
         }
@@ -146,18 +159,22 @@ class TpInventoryResponse extends TpResponse
              ( ! empty( $template ) ) and 
              ( ! $this->mRequest->LoadedTemplateFromCache() ) )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $cache_dir = TP_CACHE_DIR . '/' . $this->mRequest->GetResourceCode();
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'templates';
 
             $cache = new Cache( 'file', $cache_options );
             $cache_id = $cache->generateID( $template );
 
-            if ( ( ! $cache->isCached( $cache_id, 'templates' ) ) or 
-                 (  $cache->isExpired( $cache_id, 'templates' ) ) )
+            if ( ( ! $cache->isCached( $cache_id, $subdir ) ) or 
+                 (  $cache->isExpired( $cache_id, $subdir ) ) )
             {
                 $cache_expires = TP_TEMPLATE_CACHE_LIFE_SECS;
-                $cached_data = serialize( $parameters );
+                $cached_data = serialize( $inventory_parameters );
 
-                $cache->save( $cache_id, $cached_data, $cache_expires, 'templates' );
+                $cache->save( $cache_id, $cached_data, $cache_expires, $subdir );
 
                 $g_dlog->debug( 'Caching query template with id generated from "'.
                                 $template.'"' );
@@ -208,23 +225,61 @@ class TpInventoryResponse extends TpResponse
 
             TpDiagnostics::Append( DC_DEBUG_MSG, 'SQL to count: '.$sql, DIAG_DEBUG );
 
-            $encoded_sql = TpServiceUtils::EncodeSql( $sql, $db_encoding );
+            // Try to get count from cache if this feature is enabled
+            $cached_data = null;
 
-            $result_set = &$cn->Execute( $encoded_sql );
-
-            if ( ! is_object( $result_set ) )
+            if ( TP_USE_CACHE and TP_SQL_COUNT_CACHE_LIFE_SECS )
             {
-                $this->Error( 'Failed to count matched records' );
+                $cache_dir = TP_CACHE_DIR . '/' . $this->mRequest->GetResourceCode();
 
-                $r_data_source->ResetConnection();
+                $cache_options = array( 'cache_dir' => $cache_dir );
 
-                return;
+                $subdir = 'cnt';
+
+                $cache = new Cache( 'file', $cache_options );
+                $cache_id = $cache->generateID( $sql );
+            }
+
+            if ( $cached_data = $cache->get( $cache_id, $subdir ) )
+            {
+                $g_dlog->debug( 'Getting count from cache' );
+
+                TpDiagnostics::Append( DC_SYS_MSG, 'Count retrieved from cache', DIAG_WARN );
+
+                $matched = (int)$cached_data;
             }
             else
             {
-                $matched = $result_set->RecordCount();
+                $encoded_sql = TpServiceUtils::EncodeSql( $sql, $db_encoding );
 
-                $result_set->Close();
+                $result_set = &$cn->Execute( $encoded_sql );
+
+                if ( ! is_object( $result_set ) )
+                {
+                    $this->Error( 'Failed to count matched records' );
+
+                    $r_data_source->ResetConnection();
+
+                    return;
+                }
+                else
+                {
+                    $matched = $result_set->RecordCount();
+
+                    $result_set->Close();
+                }
+
+                // Save result in cache if this feature is enabled
+                if ( TP_USE_CACHE and TP_SQL_COUNT_CACHE_LIFE_SECS and 
+                     is_null( $cached_data ) )
+                {
+                    $cache_expires = TP_SQL_COUNT_CACHE_LIFE_SECS;
+                    $cached_data = $matched;
+
+                    $cache->save( $cache_id, $cached_data, $cache_expires, $subdir );
+
+                    $g_dlog->debug( 'Caching count SQL: '.$matched );
+                }
             }
         }
 
@@ -280,7 +335,26 @@ class TpInventoryResponse extends TpResponse
             for ( $i = 0; $i < $num_concepts; ++$i )
             { 
                 echo "\n<".$tag_names[$i].'>';
-                echo TpServiceUtils::EncodeData( $result_set->fields[$i], $db_encoding );
+
+                $column_data = $result_set->fields[$i];
+
+                if ( $types[$i] === 'http://www.w3.org/2001/XMLSchema#dateTime' )
+                {
+                    // Try to convert to xsd:dateTime
+                    if ( preg_match( "'^(\d{4})\-(\d{2})\-(\d{2})\s(\d{2}):(\d{2}):(\d{2})((\+|\-)(\d{2})(:(\d{2}))?)?$'", $column_data, $matches ) )
+                    {
+                        $year  = $matches[1];
+                        $month = $matches[2];
+                        $day   = $matches[3];
+                        $hr    = $matches[4];
+                        $min   = $matches[5];
+                        $secs  = $matches[6];
+
+                        $column_data = "$year-$month-$day".'T'."$hr:$min:$secs";
+                    }
+                }
+
+                echo TpServiceUtils::EncodeData( $column_data, $db_encoding );
                 echo '</'.$tag_names[$i].'>';
             }
 

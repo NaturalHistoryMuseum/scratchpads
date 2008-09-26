@@ -166,10 +166,30 @@
 //define('TP_RESP_STRUCTURE_CACHE_LIFE_SECS', 31536000);
 
 /**
+* Number of seconds that cached SQL counts will be used before forcing another
+* hit in the database. Default is once a week. Set to zero to disable this cache.
+*/
+//define( 'TP_SQL_COUNT_CACHE_LIFE_SECS', 604800 );
+
+/**
 * Skin identifier (subdirectory name inside "www/skins" directory) indicating
 * a set of XSLT and CSS files to be used on top of responses.
 */
 //define('TP_SKIN', 'default');
+
+/**
+* Set this to true to delimit table/column names in the SQL statement with double quotes. 
+* This may be necessary for database schemas that use case sensitive names or names that 
+* coincide with reserved words.
+*/
+//define( 'TP_SQL_DELIMIT_NAMES', true );
+
+/**
+* Set this to true to use column references (the order of the column in 
+* SELECT {columns}) instead of the column names in GROUP BY or ORDER BY 
+* clauses. You should do this for PostgreSQL databases.
+*/
+//define( 'TP_SQL_USE_COLUMN_REF', true );
 
 /**
 * The following settings can be used as default values by the configurator 
@@ -204,6 +224,29 @@
 * for a particular conceptual schema (to help on automapping).
 */
 //define('TP_INDEX_OF_MAPPING_REFERENCES', 'http://somehost/somefile.xml');
+
+/**
+* Alternative location for files that need to be opened by the service.
+* This can be especially useful for providers that are behind a proxy or
+* for providers that only want to load local files.
+*/
+//define('TP_LOCAL_REPOSITORY', 'http://localhost/somepath/' or 'file:///somepath' or '/somelocalpath');
+
+/**
+* Indicates how file retrieval should happen: prefer original files (usually remote
+* and always the most up-to-date), prefer local copies (manually stored in 
+* TP_LOCAL_REPOSITORY) or use only local copies. Note that this has nothing to do
+* with the other caching settings.
+*/
+//define('TP_FILE_RETRIEVAL_BEHAVIOUR', 'prefer_original' or 'prefer_local' or 'only_local');
+
+/**
+* When using automatic updates, you can specify an alternative link to 
+* indicate the latest stable revision number instead of the default link 
+* below. Note: changing this setting is only recommended for those who are 
+* closely monitoring TapirLink development.
+*/
+//define( 'TP_CHECK_UPDATE_URL', 'http://rs.tdwg.org/tapir/software/tlink.xml' );
 
 /**
 * Note that it is also possible to change some of your default PHP operational

@@ -48,6 +48,26 @@
              </table>
             </td>
            </tr>
+           <tr bgcolor="#ffffee"><td align="left" valign="middle" width="40%" class="label"><?php print($this->GetHtmlLabel('output_models',false)); ?></td>
+            <td align="left" valign="middle" width="60%">
+             <table border="0" align="center" width="100%">
+               <tr>
+                 <td align="left" valign="middle" width="30%" class="label">alias</td>
+                 <td align="left" valign="middle" width="70%" class="label">location</td>
+               </tr><?php $i = 0; ?>
+               <?php foreach($r_settings->GetOutputModels() as $alias => $loc): ?>
+               <tr><?php ++$i; ?>
+                 <td align="left" valign="middle" width="30%" class="label"><input type="text" name="model_alias_<?php print($i); ?>" value="<?php print($alias); ?>" size="10"></td>
+                 <td align="left" valign="middle" width="70%" class="label"><input type="text" name="model_loc_<?php print($i); ?>" value="<?php print($loc); ?>" size="30"></td>
+               </tr>
+               <?php endforeach; ?>
+               <tr>
+                 <td align="left" valign="middle" width="30%" class="label"><input type="text" name="model_alias_new" value="<?php print(TpUtils::GetVar('model_alias_new','')); ?>" size="10"></td>
+                 <td align="left" valign="middle" width="70%" class="label"><input type="text" name="model_loc_new" value="<?php print(TpUtils::GetVar('model_loc_new','')); ?>" size="30">&nbsp;<input type="submit" name="add_output_model" value="add"/></td>
+               </tr>
+             </table>
+            </td>
+           </tr>
           </table>
           <p class="tip"><?php print(TP_MANDATORY_FIELD_FLAG); ?>Indicates mandatory fields</p>
           <br/>

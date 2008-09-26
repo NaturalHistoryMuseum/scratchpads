@@ -61,7 +61,7 @@ if ( isset( $_GET['lsid'] ) )
             header($_SERVER['SERVER_PROTOCOL'].' '.$status);
         }
 
-        die();
+        die( $error );
     }
     else 
     {

@@ -20,13 +20,13 @@
  * @author Renato De Giovanni <renato [at] cria . org . br>
  */
 
-require_once('TpSchemaVisitor.php');
+require_once('phpxsd/XsSchemaVisitor.php');
 require_once('TpDiagnostics.php');
 require_once('TpUtils.php');
 require_once('TpServiceUtils.php');
 require_once('TpFilter.php');
 
-class TpXmlGenerator extends TpSchemaVisitor
+class TpXmlGenerator extends XsSchemaVisitor
 {
     var $mrOutputModel;
     var $mResponseStructure;
@@ -138,6 +138,16 @@ class TpXmlGenerator extends TpSchemaVisitor
         //       there was a previous checking done by TpSchemaInspector.
         $r_type =& $rXsElementDecl->GetType();
 
+        if ( ! is_object( $r_type ) )
+        {
+            $msg = 'Error processing element '.$path.' (no type)';
+            TpDiagnostics::Append( DC_GENERAL_ERROR, $msg, DIAG_FATAL );
+
+            $this->mAbort = true;
+
+            return '';
+        }
+
         // Element cardinality
 
         $limit = $min_occurs;
@@ -150,7 +160,14 @@ class TpXmlGenerator extends TpSchemaVisitor
 
             if ( $max_occurs == 'unbounded' )
             {
-                $limit = min( $this->mLimit, $this->mMaxRepetitions );
+                if ( is_null( $this->mLimit ) )
+                {
+                    $limit = $this->mMaxRepetitions;
+                }
+                else
+                {
+                    $limit = min( $this->mLimit, $this->mMaxRepetitions );
+                }
             }
             else
             {
@@ -709,7 +726,21 @@ class TpXmlGenerator extends TpSchemaVisitor
 
             if ( $mapping != null )
             {
-                $value = $this->_GetMappedData( $mapping, $path );
+                $primitive_type = null;
+
+                $type = $obj->GetType();
+
+                if ( is_object( $type ) )
+                {
+                    $p_obj = $this->mResponseStructure->GetPrimitiveXsdType( $type );
+
+                    if ( is_object( $p_obj ) )
+                    {
+                        $primitive_type = $p_obj->GetUri();
+                    }
+                }
+
+                $value = $this->_GetMappedData( $mapping, $path, $primitive_type );
             }
         }
 
@@ -717,7 +748,7 @@ class TpXmlGenerator extends TpSchemaVisitor
 
     } // end of _GetValue
 
-    function _GetMappedData( $mapping, $path )
+    function _GetMappedData( $mapping, $path, $primitiveType )
     {
         global $g_dlog;
 
@@ -777,7 +808,25 @@ class TpXmlGenerator extends TpSchemaVisitor
                 if ( $column_index >= 0 and is_array( $this->mrResultSet->fields ) and 
                      array_key_exists( $column_index, $this->mrResultSet->fields ) )
                 {
-                    $data .= TpServiceUtils::EncodeData( $this->mrResultSet->fields[$column_index], $this->mDbEncoding );
+                    $column_data = $this->mrResultSet->fields[$column_index];
+
+                    if ( $primitiveType === 'http://www.w3.org/2001/XMLSchema#dateTime' )
+                    {
+                        // Try to convert to xsd:dateTime
+                        if ( preg_match( "'^(\d{4})\-(\d{2})\-(\d{2})\s(\d{2}):(\d{2}):(\d{2})((\+|\-)(\d{2})(:(\d{2}))?)?$'", $column_data, $matches ) )
+                        {
+                            $year  = $matches[1];
+                            $month = $matches[2];
+                            $day   = $matches[3];
+                            $hr    = $matches[4];
+                            $min   = $matches[5];
+                            $secs  = $matches[6];
+
+                            $column_data = "$year-$month-$day".'T'."$hr:$min:$secs";
+                        }
+                    }
+
+                    $data .= TpServiceUtils::EncodeData( $column_data, $this->mDbEncoding );
                 }
                 else 
                 {

@@ -1,9 +1,81 @@
+Release 0.6.1 (2008-08-01)
+--------------------------
+(revision 746)
+
+    * Added support for automatic updates.
+    * Bugfix: dateLastUpdated environment variable was not working if it
+      was mapped to a field with a datatype other than datetime.
+    * Removed unnecessary verification to check if session.save_path is writable
+      when running the configurator.
+    * Included caching mechanism for count SQL in inventories and searches. Can
+      be controlled with TP_SQL_COUNT_CACHE_LIFE_SECS.
+
+
+Release 0.6.0 (2008-04-30)
+--------------------------
+(revision 660)
+
+    * Bugfix: When different configuration interfaces from different 
+      TapirLink installations were being accessed through the same browser,
+      session caching was not making any distinction between them.
+    * Users now need to explicitly choose the conceptual schema format when
+      trying to load an additional conceptual schema in the configuration 
+      interface (mapping form).
+    * When loading concepts from a CNS configuration file (old text format), if the 
+      concept_source alias was not specified then the last concept_source
+      will be loaded.
+    * Bugfix: Resuming the inclusion of new resources was probably not working 
+      correctly in previous versions.
+    * Configuration interface can now make use of debug logging.
+    * Bugfix: KVP filters were not working properly on PHP 4.x when they had
+      nested parenthesis.
+    * Many adjustments in the statistics module.
+    * Fixed bug that was affecting KVP requests when parameter names were in uppercase.
+    * Included missing "charset=utf-8" in the HTTP header.
+    * Flush cache after any change in the local mapping.
+    * Resources are not serialized in session anymore when running the web service.
+    * Bugfix: Empty tagname parameters (inventory operation) were not being ignored.
+    * Bugfix: Output models were failing to produce results when the indexing
+      element had a simple type.
+    * Bugfix: Searches were failing when the parameter "limit" was not specified
+      (default was being set to zero instead of null).
+    * Follow up protocol update: Filter condition will now be ignored when parameter
+      is not passed. When a concept is not locally mapped, the error will now only be
+      raised if there's no missing parameter.
+    * Bugfix: KVP filters were not working if they contained any of the following
+      operators: lessthan, lessthanorequals, greaterthan, greaterthanorequals.
+    * Bugfix: Search XML requests referencing external templates were not working.
+    * Updated local version of ADODB to 4.98.
+    * Changed DiGIR configuration import procedure to overcome an XML parsing problem
+      (or maybe it's a feature?) that sometimes splits a string and calls the character
+      data handler for each individual piece of the string. This was happening when
+      DiGIR metadata content contained diacriticals.
+    * Implemented driver to load concepts in the old DarwinCore format (tied to DiGIR).
+    * Created separate library for Xs classes.
+    * Included new settings TP_LOCAL_REPOSITORY (to indicate where local copies
+      of remote files may be found if manually copied there) and
+      TP_FILE_RETRIEVAL_BEHAVIOUR (prefer_original, prefer_local or only_local).
+    * Implemented driver to load concepts in the new CNS XML format.
+    * Added support to case sensitive dabatabase schemas.
+    * Bugfix: Now each resource has its separate cache directory.
+    * Bugfix: When a node contained a concatenated mapping, it was being rejected.
+      if one of the mappings evaluated to NULL.
+    * Added alias support for output models.
+    * Capabilities response now includes the local datatype for each mapped concept.^M
+    * Removed ConceptNameServers element from capabilities response.^M
+    * Bugfix: log-only requests were not working for search and inventory operations.^M
+    * Bugfix: "next" attribute was not being included in the search summary when^M
+      no records were returned.
+    * Added xsd:dateTime to db timestamp conversion in filters.
+    * Added db timestamp to xsd:dateTime conversion in search and inventory responses.
+    * Bugfix: Fixed value mappings using numeric type zero were not working.
+
 Release 0.5 (2007-09-09)
 ------------------------
 (revision 434)
 
     * Configuration interface can now make use of existing equivalent mappings
-      when clcking on the "automap" button.
+      when clicking on the "automap" button.
     * Added alias support for query templates.
     * Caching of query templates, output models and response structures is now
       activated by default (there were many bugfixes related with caching).

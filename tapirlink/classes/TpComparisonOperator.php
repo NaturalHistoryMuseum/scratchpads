@@ -24,6 +24,7 @@ require_once('TpFilter.php');
 require_once('TpBooleanOperator.php');
 require_once('TpDiagnostics.php');
 require_once('TpExpression.php');
+require_once('TpConceptMapping.php');
 
 class TpComparisonOperator extends TpBooleanOperator
 {
@@ -94,6 +95,10 @@ class TpComparisonOperator extends TpBooleanOperator
     {
         $concept = null;
 
+        $concept_error = false;
+
+        $concept_datatype = null;
+
         if ( $this->mBaseConcept->GetType() == EXP_CONCEPT )
         {
             $concept_id = $this->mBaseConcept->GetReference();
@@ -102,40 +107,73 @@ class TpComparisonOperator extends TpBooleanOperator
 
             $concept = $r_local_mapping->GetConcept( $concept_id );
 
-            // TODO: avoid error in non mandatory comparisons 
             if ( $concept == null or ! $concept->IsMapped() )
             {
+                // Don't raise error here. If the expression is a missing
+                // parameter then the comparison should be simply discarded
+
                 $msg = 'Concept "'.$concept_id.'" is not mapped';
 
-                TpDiagnostics::Append( DC_UNMAPPED_CONCEPT, $msg, DIAG_WARN );
-                return 'FALSE';
+                $concept_error = array( DC_UNMAPPED_CONCEPT, $msg, DIAG_WARN );
             }
-
-            if ( ! $concept->IsSearchable() )
+            else if ( ! $concept->IsSearchable() )
             {
+                // Don't raise error here. If the expression is a missing
+                // parameter then the comparison should be simply discarded
+
                 $msg = 'Concept "'.$concept_id.'" is not searchable';
 
-                TpDiagnostics::Append( DC_UNSEARCHABLE_CONCEPT, $msg, DIAG_WARN );
-                return 'FALSE';
+                $concept_error = array( DC_UNSEARCHABLE_CONCEPT, $msg, DIAG_WARN );
             }
+
+            $concept_datatype = $concept->GetType();
         }
         else
         {
             $concept = $this->mBaseConcept->GetReference(); // local filters
         }
 
-        $mapping = $concept->GetMapping();
-
-        $target = $mapping->GetSqlTarget();
-
-        if ( $this->mComparisonType == COP_ISNULL )
+        if ( $concept_error )
         {
-            return $target . ' IS NULL';
+            // There's an error in the base concept
+
+            if ( $this->mComparisonType == COP_ISNULL )
+            {
+                // When dealing with ISNULL, we should raise the error
+                TpDiagnostics::Append( $concept_error[0], $concept_error[1], $concept_error[2] );
+
+                return 'FALSE';
+            }
+
+            // Otherwise, let's pretend we have some values for the following variables.
+            // Later, if there's no missing parameter then we will raise the error.
+            // Missing parameters have preference to drop the comparison.
+
+            $target = '?'; // will be ignored later
+
+            $local_type = TYPE_TEXT; // will be ignored later
+        }
+        else
+        {
+            $mapping = $concept->GetMapping();
+
+            $r_data_source =& $rResource->GetDataSource();
+
+            $r_adodb_connection =& $r_data_source->GetConnection();
+
+            $in_where_clause = true;
+
+            $target = $mapping->GetSqlTarget( $r_adodb_connection, $in_where_clause );
+
+            if ( $this->mComparisonType == COP_ISNULL )
+            {
+                return $target . ' IS NULL';
+            }
+
+            $local_type = $mapping->GetLocalType();
         }
 
         $sql = $target;
-
-        $local_type = $mapping->GetLocalType();
 
         $case_sensitive = true;
 
@@ -230,9 +268,14 @@ class TpComparisonOperator extends TpBooleanOperator
             }
 
             $term = $this->mExpressions[$i]->GetValue( $rResource, $local_type, 
-                                                       $case_sensitive, $is_like );
+                                                       $case_sensitive, $is_like,
+                                                       $concept_datatype );
 
             if ( is_null( $term ) )
+            {
+                return '';
+            }
+            else if ( $term === false )
             {
                 return 'FALSE';
             }
@@ -243,6 +286,13 @@ class TpComparisonOperator extends TpBooleanOperator
         if ( $this->mComparisonType == COP_IN )
         {
             $sql .= ')';
+        }
+
+        if ( $concept_error )
+        {
+            TpDiagnostics::Append( $concept_error[0], $concept_error[1], $concept_error[2] );
+
+            return 'FALSE';
         }
 
         return $sql;

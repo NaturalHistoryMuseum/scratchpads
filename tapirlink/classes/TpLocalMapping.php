@@ -24,6 +24,7 @@ require_once('TpConceptualSchema.php');
 require_once('TpConceptMappingFactory.php');
 require_once('TpDiagnostics.php');
 require_once('TpUtils.php');
+require_once('TpConfigUtils.php');
 
 class TpLocalMapping
 {
@@ -35,6 +36,7 @@ class TpLocalMapping
     var $mCurrentConcept;
     var $mCurrentMapping;
     var $mrResource;
+    var $mRevision = null; // Revision number when this mapping was generated
 
     function TpLocalMapping( )
     {
@@ -117,8 +119,7 @@ class TpLocalMapping
         $parser = xml_parser_create();
         xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0);
         xml_set_object( $parser, $this );
-        xml_set_element_handler( $parser, 'SchemasStartElement', 
-                                                 'SchemasEndElement' );
+        xml_set_element_handler( $parser, 'SchemasStartElement', 'SchemasEndElement' );
         xml_set_character_data_handler( $parser, 'SchemasCharacterData' );
 
         $file = $this->GetSchemasFile();
@@ -187,7 +188,7 @@ class TpLocalMapping
             }
             else if ( strcasecmp( $this->mInTag, 'location' ) == 0 ) 
             {
-                $this->mCurrentSchema->SetLocation( $data );
+                $this->mCurrentSchema->SetSource( $data );
             }
             else if ( strcasecmp( $this->mInTag, 'handler' ) == 0 ) 
             {
@@ -219,10 +220,10 @@ class TpLocalMapping
 
     } // end of member function LoadSuggestedSchema
 
-    function LoadNewSchema( $location, $schemaHandler='DarwinSchemaHandler_v2' )
+    function LoadNewSchema( $location, $schemaHandler='CnsSchemaHandler_v2' )
     {
         $schema = new TpConceptualSchema();
-        $schema->SetLocation( $location );
+        $schema->SetSource( $location );
         $schema->SetHandler( $schemaHandler );
 
         if ( $schema->FetchConcepts() ) {
@@ -232,6 +233,8 @@ class TpLocalMapping
             if ( isset( $this->mMappedSchemas[$namespace] ) )
             {
                 // ignore because schema is already loaded/mapped
+                $error = sprintf( 'The specified schema is already loaded' );
+                TpDiagnostics::Append( CFG_DATA_VALIDATION_ERROR, $error, DIAG_ERROR );
                 return;
             }
 
@@ -300,7 +303,14 @@ class TpLocalMapping
 
     function StartElement( $parser, $name, $attrs ) 
     {
-        if ( strcasecmp( $name, 'schema' ) == 0 ) 
+        if ( strcasecmp( $name, 'mapping' ) == 0 ) 
+        {
+            if ( isset( $attrs['rev'] ) )
+            {
+                $this->mRevision = (int)$attrs['rev'];
+            }
+        }
+        else if ( strcasecmp( $name, 'schema' ) == 0 ) 
         {
             $this->mCurrentSchema = new TpConceptualSchema();
 
@@ -308,6 +318,12 @@ class TpLocalMapping
             $this->mCurrentSchema->SetLocation( $attrs['location'] );
             $this->mCurrentSchema->SetAlias( $attrs['alias'] );
             $this->mCurrentSchema->SetHandler( $attrs['handler'] );
+
+            // "source" attribtue was included later
+            if ( isset( $attrs['source'] ) and ! empty( $attrs['source'] ) )
+            {
+                $this->mCurrentSchema->SetSource( $attrs['source'] );
+            }
         }
         // Assuming "<concept>" can only occur inside "<schema>"
         else if ( strcasecmp( $name, 'concept' ) == 0 ) 
@@ -324,13 +340,83 @@ class TpLocalMapping
 
             if ( isset( $attrs['type'] ) )
             {
-                $this->mCurrentConcept->SetType( $attrs['type'] );
- 
+                $type = null;
+
+                // Try to fix old types
+                if ( is_null( $this->mRevision ) or $this->mRevision < 641 )
+                {
+                    $handler = $this->mCurrentSchema->GetHandler();
+
+                    if ( $handler == 'DarwinSchemaHandler_v1' )
+                    {
+                        $parts = explode( ':', $attrs['type'] );
+
+                        // Assuming that the namespace starts with "http:"
+                        if ( count( $parts ) >= 3 )
+                        {
+                            $type_name = array_pop( $parts );
+
+                            $ns = implode( ':', $parts );
+
+                            $type = $ns.'#'.$type_name;
+
+                            // Just in case...
+                            $type = TpConfigUtls::GetPrimitiveXsdType();
+                        }
+                    }
+                    else if ( $handler == 'DarwinSchemaHandler_v2' )
+                    {
+                        $parts = explode( ':', $attrs['type'] );
+
+                        // Assuming that the namespace starts with "http:"
+                        if ( count( $parts ) >= 3 )
+                        {
+                            $type_name = array_pop( $parts );
+
+                            $ns = implode( ':', $parts );
+
+                            if ( $ns == 'http://rs.tdwg.org/dwc/dwcore/' )
+                            {
+                                $xsd_namespace = 'http://www.w3.org/2001/XMLSchema';
+
+                                // Hard coded
+                                switch ( $type_name )
+                                {
+                                    case 'dayOfYearDataType':
+                                        $type = $xsd_namespace.'#decimal';
+                                        break;
+                                    case 'positiveDouble':
+                                    case 'decimalLatitudeDataType':
+                                    case 'decimalLongitudeDataType':
+                                        $type = $xsd_namespace.'#double';
+                                        break;
+                                    case 'spatialFitDataType':
+                                    case 'DateTimeISO':
+                                        $type = $xsd_namespace.'#string';
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                $type = $ns.'#'.$type_name;
+
+                                // Just in case...
+                                $type = TpConfigUtils::GetPrimitiveXsdType( $type );
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    $type = $attrs['type'];
+                }
+
+                $this->mCurrentConcept->SetType( $type );
+            }
             if ( isset( $attrs['documentation'] ) )
             {
                 $this->mCurrentConcept->SetDocumentation( $attrs['documentation'] );
             }
-           }
         }
         else if ( strcasecmp( $name, 'singleColumnMapping' ) == 0 ) 
         {
@@ -404,7 +490,7 @@ class TpLocalMapping
 
     function GetConfigXml( ) 
     {
-        $xml = "\t<mapping>\n";
+        $xml = "\t".'<mapping rev="'.TP_REVISION.'">'."\n";
 
         foreach ( $this->mMappedSchemas as $namespace => $schema ) 
         {
@@ -420,8 +506,6 @@ class TpLocalMapping
     function GetCapabilitiesXml( ) 
     {
         $xml = "\t<concepts>\n";
-
-        $xml .= "\t\t<conceptNameServers/>\n";
 
         foreach ( $this->mMappedSchemas as $namespace => $schema ) 
         {
@@ -496,7 +580,8 @@ class TpLocalMapping
      */
     function __sleep()
     {
-      return array( 'mMappedSchemas', 'mAvailableSchemas', 'mFetchedListOfSchemas' );
+      return array( 'mMappedSchemas', 'mAvailableSchemas', 'mFetchedListOfSchemas',
+                    'mRevision' );
 
     } // end of member function __sleep
 

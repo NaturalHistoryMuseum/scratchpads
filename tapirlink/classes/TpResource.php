@@ -30,6 +30,7 @@ require_once('TpLocalMapping.php');
 require_once('TpSettings.php');
 require_once('TpUtils.php');
 require_once('TpSqlBuilder.php');
+require_once('TpConceptMapping.php');
 
 class TpResource
 {
@@ -1523,109 +1524,127 @@ class TpResource
 
         $raise_errors = false;
 
-        if ( $this->mDataSource->Validate( $raise_errors ) )
+        if ( ! $this->mDataSource->Validate( $raise_errors ) )
         {
-            $cn = $this->mDataSource->GetConnection();
-
-            if ( ! is_object( $cn ) )
-            {
-                $err_str = 'Could not establish a connection with the database!';
-                TpDiagnostics::Append( DC_DB_CONNECTION_ERROR, $err_str, DIAG_ERROR );
-                return null;
-	    }
-
-            $sql_builder = new TpSqlBuilder();
-
-            $sql_builder->AddTargetColumn( $modifier );
-
-            // Tables
-            if ( ! is_object( $this->mTables ) )
-            {
-                if ( ! $this->LoadConfigXp() )
-                {
-                    return null;
-                }
-
-                $this->mTables = new TpTables();
-
-                $this->mTables->LoadFromXml( $config_file, $this->mConfigXp );
-            }
-
-            // Local Filter
-            if ( ! is_object( $this->mLocalFilter ) )
-            {
-                if ( ! $this->LoadConfigXp() )
-                {
-                    return null;
-                }
-
-                $this->mLocalFilter = new TpLocalFilter();
-
-                $this->mLocalFilter->LoadFromXml( $config_file, $this->mConfigXp );
-            }
-
-            // Local Mapping
-            if ( ! is_object( $this->mLocalMapping ) )
-            {
-                if ( ! $this->LoadConfigXp() )
-                {
-                    return null;
-                }
-
-                $this->mLocalMapping = new TpLocalMapping();
-
-                $this->mLocalMapping->LoadFromXml( $config_file );
-            }
-
-            $sql_builder->AddRecordSource( $this->mTables->GetStructure() );
-
-            if ( ! $this->mLocalFilter->IsEmpty() )
-            {
-                $local_filter_sql = $this->mLocalFilter->GetSql( $this );
-
-                $sql_builder->AddCondition( $local_filter_sql );
-            }
-
-            $descend = true;
-
-            $sql_builder->OrderBy( array( $modifier => $descend ) );
-
-            $sql = $sql_builder->GetSql();
-
-            TpDiagnostics::Append( DC_DEBUG_MSG, 'SQL: '.$sql, DIAG_DEBUG );
-
-            $rs = &$cn->SelectLimit( $sql, 1 );
-
-            if ( ! is_object( $rs ) )
-            {
-                $err = $cn->ErrorMsg();
-                TpDiagnostics::Append( DC_DATABASE_ERROR, htmlentities($err), DIAG_ERROR );
-                TpDiagnostics::Append( DC_DEBUG_SQL, htmlentities($sql), DIAG_DEBUG );
-                $cn->Close();
-                return null;
-            }
-
-            if ( ! $rs->EOF )
-            {
-                $date_time_parsed = strtotime( $rs->fields[0] );
-
-                if ( $date_time_parsed == -1 )
-                {
-                    // could not parse value returned from db!
-                    // return current timestamp, but warn users
-                    $err = 'Could not parse datetime provided by local database: '.$rs->fields[0];
-                    TpDiagnostics::Append( DC_GENERAL_ERROR, htmlentities($err), DIAG_WARN );
-                }
-                else
-                {
-                    return TpUtils::TimestampToXsdDateTime( $date_time_parsed );
-                }
-            }
-
-            $rs->Close();
-
-            $this->mDataSource->ResetConnection();
+            $err_str = 'Incorrect local database connection settings';
+            TpDiagnostics::Append( DC_DB_CONNECTION_ERROR, $err_str, DIAG_ERROR );
+            return null;
         }
+
+        $cn = $this->mDataSource->GetConnection();
+
+        if ( ! is_object( $cn ) )
+        {
+            $err_str = 'Could not establish a connection with the database!';
+            TpDiagnostics::Append( DC_DB_CONNECTION_ERROR, $err_str, DIAG_ERROR );
+            return null;
+        }
+
+        // Get field datatype
+        $datatype = $this->mSettings->GetModifierDatatype();
+
+        $sql_builder = new TpSqlBuilder( $cn );
+
+        $target = TpSqlBuilder::GetSqlName( $modifier );
+
+        if ( $datatype == TYPE_DATETIME )
+        {
+            $target = $cn->SQLDate( 'Y-m-d H:i:s', $target );
+        }
+
+        $sql_builder->AddTargetColumn( $target );
+
+        // Tables
+        if ( ! is_object( $this->mTables ) )
+        {
+            if ( ! $this->LoadConfigXp() )
+            {
+                return null;
+            }
+
+            $this->mTables = new TpTables();
+
+            $this->mTables->LoadFromXml( $config_file, $this->mConfigXp );
+        }
+
+        // Local Filter
+        if ( ! is_object( $this->mLocalFilter ) )
+        {
+            if ( ! $this->LoadConfigXp() )
+            {
+                return null;
+            }
+
+            $this->mLocalFilter = new TpLocalFilter();
+
+            $this->mLocalFilter->LoadFromXml( $config_file, $this->mConfigXp );
+        }
+
+        // Local Mapping
+        if ( ! is_object( $this->mLocalMapping ) )
+        {
+            if ( ! $this->LoadConfigXp() )
+            {
+                return null;
+            }
+
+            $this->mLocalMapping = new TpLocalMapping();
+
+            $this->mLocalMapping->LoadFromXml( $config_file );
+        }
+
+        $sql_builder->AddRecordSource( $this->mTables->GetStructure() );
+
+        if ( ! $this->mLocalFilter->IsEmpty() )
+        {
+            $local_filter_sql = $this->mLocalFilter->GetSql( $this );
+
+            $sql_builder->AddCondition( $local_filter_sql );
+        }
+
+        $descend = true;
+
+        $sql_builder->OrderBy( array( $target => $descend ) );
+
+        $sql = $sql_builder->GetSql();
+
+        TpDiagnostics::Append( DC_DEBUG_MSG, 'SQL: '.$sql, DIAG_DEBUG );
+
+        $rs = &$cn->SelectLimit( $sql, 1 );
+
+        if ( ! is_object( $rs ) )
+        {
+            $err = $cn->ErrorMsg();
+            TpDiagnostics::Append( DC_DATABASE_ERROR, htmlentities($err), DIAG_ERROR );
+            TpDiagnostics::Append( DC_DEBUG_MSG, htmlentities($sql), DIAG_DEBUG );
+            $cn->Close();
+            return null;
+        }
+
+        if ( ! $rs->EOF )
+        {
+            $date_time_parsed = strtotime( $rs->fields[0] );
+
+            if ( $date_time_parsed == -1 )
+            {
+                // could not parse value returned from db!
+                // return current timestamp, but warn users
+                $err = 'Could not parse datetime provided by local database: '.$rs->fields[0];
+                TpDiagnostics::Append( DC_GENERAL_ERROR, htmlentities($err), DIAG_WARN );
+            }
+            else
+            {
+                $rs->Close();
+
+                $this->mDataSource->ResetConnection();
+
+                return TpUtils::TimestampToXsdDateTime( $date_time_parsed );
+            }
+        }
+
+        $rs->Close();
+
+        $this->mDataSource->ResetConnection();
 
         return null;
 

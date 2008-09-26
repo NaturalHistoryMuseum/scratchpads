@@ -10,6 +10,7 @@
 		<search>
 			<?php print( $r_settings->GetSearchTemplatesXml() ); ?>
 			<outputModels>
+				<?php print( $r_settings->GetOutputModelsXml() ); ?>
 				<anyOutputModels>
 					<responseStructure>
 						<basicSchemaLanguage/>

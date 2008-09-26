@@ -58,6 +58,11 @@ class TpTablesForm extends TpWizardForm
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_data_source->LoadFromXml( $config_file );
+
+                // Update session data
+                $r_resources =& TpResources::GetInstance();
+
+                $r_resources->SaveOnSession();
             }
 
             $r_tables =& $this->mResource->GetTables();
@@ -134,21 +139,19 @@ class TpTablesForm extends TpWizardForm
 
                 $root_key = $r_root_table->GetKey();
 
-                $adodb_root_key = strtoupper( $root_key );
-
                 if ( ! isset( $this->mAllTablesAndColumns[$root_table_name] ) )
                 {
-                    $msg = 'The root table currently configured ("'.$root_table_name.
-                           '") does not exist in the database. '."\n".
+                    $msg = 'The root table currently configured ('.$root_table_name.
+                           ') does not exist in the database. '."\n".
                            'Please select another table and save the changes.';
                     TpDiagnostics::Append( CFG_INTERNAL_ERROR, $msg, DIAG_WARN );
 
                     $this->mDetectedInconsistency = true;
                 }
-                else if ( ! isset( $this->mAllTablesAndColumns[$root_table_name][$adodb_root_key] ) )
+                else if ( ! isset( $this->mAllTablesAndColumns[$root_table_name][$root_key] ) )
                 {
-                    $msg = 'The key field for the root table currently configured ("'.
-                           $root_key.'") does not exist in the table anymore. '."\n".
+                    $msg = 'The key field for the root table currently configured ('.
+                           $root_key.") does not seem to exist in the table anymore. \n".
                            'Please select another combination root table/key field '.
                            'and save the changes.';
                     TpDiagnostics::Append( CFG_INTERNAL_ERROR, $msg, DIAG_WARN );
@@ -190,16 +193,28 @@ class TpTablesForm extends TpWizardForm
 	    }
             else 
             {
+                $convert_case = false;
+
                 foreach ( $tables as $table )
                 {
-                    $columns = $cn->MetaColumnNames( $table );
+                    $columns = $cn->MetaColumns( $table, $convert_case );
 
-                    $this->mAllTablesAndColumns[$table] = $columns;
+                    if ( is_array( $columns ) )
+                    {
+                        $names = array();
+
+                        foreach ( $columns as $column )
+                        {
+                            $names[$column->name] = $column->name;
+                        }
+
+                        $this->mAllTablesAndColumns[$table] = $names;
+                    }
 		}
 
                 if ( empty( $this->mAllTablesAndColumns ) )
                 {
-                    $err_str = 'There was a problem when getting the column names from all tables!';
+                    $err_str = 'No field names could be retrieved for all tables!';
 
                     if ( $r_data_source->GetDriverName() == 'ado_access' )
                     {
@@ -429,9 +444,12 @@ class TpTablesForm extends TpWizardForm
         {
             foreach ( $this->mAllTablesAndColumns as $table => $columns )
             {
-                foreach ( $columns as $column )
+                if ( is_array( $columns ) )
                 {
-                    array_push( $options, $table . '.' . $column );
+                    foreach ( $columns as $column )
+                    {
+                        array_push( $options, $table . '.' . $column );
+                    }
                 }
             }
 
@@ -453,11 +471,14 @@ class TpTablesForm extends TpWizardForm
 
             foreach ( $this->mAllTablesAndColumns as $table => $columns )
             {
-                foreach ( $columns as $column )
+                if ( is_array( $columns ) )
                 {
-                    if ( in_array( $table, $tables_inside ) )
+                    foreach ( $columns as $column )
                     {
-                        array_push( $options, $table . '.' . $column );
+                        if ( in_array( $table, $tables_inside ) )
+                        {
+                            array_push( $options, $table . '.' . $column );
+                        }
                     }
                 }
             }
@@ -509,10 +530,6 @@ class TpTablesForm extends TpWizardForm
             $join = $table->GetJoin();
             $path = $table->GetPath();
 
-            $adodb_key  = strtoupper( $key );
-
-            $adodb_join  = strtoupper( $join );
-
             if ( ! isset( $this->mAllTablesAndColumns[$table_name] ) )
             {
                 $msg = 'Table "'.$table_name.'" is still part of the configuration'."\n".
@@ -523,7 +540,7 @@ class TpTablesForm extends TpWizardForm
 
                 continue;
             }
-            else if ( ! isset( $this->mAllTablesAndColumns[$table_name][$adodb_key] ) )
+            else if ( ! isset( $this->mAllTablesAndColumns[$table_name][$key] ) )
             {
                 $msg = 'Field "'.$table_name.'.'.$key.'" is still part of the '.
                        'configuration'."\n".
@@ -535,7 +552,7 @@ class TpTablesForm extends TpWizardForm
                 continue;
             }
             else if ( ( ! $detected_error_in_join ) and 
-                      ! isset( $this->mAllTablesAndColumns[$parent_table_name][$adodb_join] ) )
+                      ! isset( $this->mAllTablesAndColumns[$parent_table_name][$join] ) )
             {
                 $msg = 'Field "'.$parent_table_name.'.'.$join.'" is still part of the '.
                        'configuration'."\n".

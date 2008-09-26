@@ -178,7 +178,7 @@ class TpLsidResolver
 
         $access_point = $resource->GetAccessPoint();
 
-        $url = $access_point.'?op='.$op.'&amp;envelope=0&amp;t='.$tmpl;
+        $url = $access_point.'?op='.$op.'&amp;e=0&amp;t='.$tmpl;
 
         return $url;
 

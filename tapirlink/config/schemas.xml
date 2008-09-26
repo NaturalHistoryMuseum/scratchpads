@@ -2,27 +2,22 @@
 <schemas>
  <schema alias="DarwinCore">
     <namespace>http://rs.tdwg.org/dwc/dwcore/</namespace>
-    <location>http://rs.tdwg.org/dwc/tdwg_dw_core.xsd</location>
-    <handler>DarwinSchemaHandler_v2</handler>
+    <location>http://rs.tdwg.org/tapir/cns/dwc_1_4.xml</location>
+    <handler>CnsSchemaHandler_v2</handler>
   </schema>
   <schema alias="DarwinCore curatorial extension">
     <namespace>http://rs.tdwg.org/dwc/curatorial/</namespace>
-    <location>http://rs.tdwg.org/dwc/tdwg_dw_curatorial.xsd</location>
-    <handler>DarwinSchemaHandler_v2</handler>
+    <location>http://rs.tdwg.org/tapir/cns/dwcur_1_4.xml</location>
+    <handler>CnsSchemaHandler_v2</handler>
   </schema>
  <schema alias="DarwinCore geospatial extension">
     <namespace>http://rs.tdwg.org/dwc/geospatial/</namespace>
-    <location>http://rs.tdwg.org/dwc/tdwg_dw_geospatial.xsd</location>
-    <handler>DarwinSchemaHandler_v2</handler>
+    <location>http://rs.tdwg.org/tapir/cns/dwgeo_1_4.xml</location>
+    <handler>CnsSchemaHandler_v2</handler>
   </schema>
   <schema alias="ABCD 2.06">
      <namespace>http://www.tdwg.org/schemas/abcd/2.06</namespace>
-     <location>http://rs.tdwg.org/tapir/cns/alias.txt#abcd206</location>
-     <handler>CnsSchemaHandler_v1</handler>
-   </schema>
-  <schema alias="TDWG Ontology - Specimens">
-     <namespace>http://rs.tdwg.org/ontology/voc/Specimen#</namespace>
-     <location>http://rs.tdwg.org/ontology/voc/tapir/structure/Specimen/Specimen_basic.txt</location>
-     <handler>CnsSchemaHandler_v1</handler>
+     <location>http://rs.tdwg.org/tapir/cns/abcd_2_06.xml</location>
+     <handler>CnsSchemaHandler_v2</handler>
    </schema>
 </schemas>

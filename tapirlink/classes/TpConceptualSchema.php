@@ -27,9 +27,10 @@ require_once('TpDiagnostics.php');
 
 class TpConceptualSchema
 {
-    var $mAlias;
+    var $mAlias; // IMPORTANT: this is actually a label, not an alias in the TAPIR sense 
     var $mNamespace;
     var $mLocation;
+    var $mSource;
     var $mConcepts = array();   // $concept_id => $concept
     var $mSchemaHandler;
 
@@ -66,6 +67,12 @@ class TpConceptualSchema
 
     } // end of member function SetHandler
 
+    function GetHandler( ) 
+    {
+        return $this->mSchemaHandler;
+
+    } // end of member function GetHandler
+
     function SetAlias( $alias ) 
     {
         $this->mAlias = $alias;
@@ -98,9 +105,21 @@ class TpConceptualSchema
 
     function GetLocation( ) 
     {
-        return $this->mLocation;
+        return isset( $this->mLocation ) ? $this->mLocation : $this->mSource;
 
     } // end of member function GetLocation
+
+    function SetSource( $source ) 
+    {
+        $this->mSource = $source;
+
+    } // end of member function SetSource
+
+    function GetSource( ) 
+    {
+        return isset( $this->mSource ) ? $this->mSource : $this->mLocation;
+
+    } // end of member function GetSource
 
     function AddConcept( $concept ) 
     {
@@ -138,11 +157,19 @@ class TpConceptualSchema
 
     function GetConfigXml( ) 
     {
+        $source = '';
+
+        if ( ! empty( $this->mSource ) )
+        {
+            $source = ' source="'.TpUtils::EscapeXmlSpecialChars( $this->mSource ).'"';
+        }
+
         $xml = "\t\t";
         $xml .= '<schema namespace="'.TpUtils::EscapeXmlSpecialChars( $this->mNamespace ).'" '.
                         'location="'.TpUtils::EscapeXmlSpecialChars( $this->GetLocation() ).'" '.
                         'alias="'.TpUtils::EscapeXmlSpecialChars( $this->GetAlias() ).'" '.
-                        'handler="'.TpUtils::EscapeXmlSpecialChars( $this->mSchemaHandler ).'">'."\n";
+                        'handler="'.TpUtils::EscapeXmlSpecialChars( $this->mSchemaHandler ).'"'.
+                        $source.">\n";
 
         foreach ( $this->mConcepts as $id => $concept ) 
         {
@@ -188,7 +215,8 @@ class TpConceptualSchema
      */
     function __sleep()
     {
-      return array( 'mAlias', 'mNamespace', 'mLocation', 'mConcepts', 'mSchemaHandler' );
+      return array( 'mAlias', 'mNamespace', 'mLocation', 'mSource', 'mConcepts', 
+                    'mSchemaHandler' );
 
     } // end of member function __sleep
 

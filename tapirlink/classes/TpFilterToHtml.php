@@ -255,8 +255,6 @@ class TpFilterToHtml extends TpFilterVisitor
 
             $column = $table.'.'.$field;
 
-            $adodb_field = strtoupper( $field );
-
             if ( ! isset( $this->mTablesAndColumns[$table] ) or 
                  ! is_array( $this->mTablesAndColumns[$table] ) )
             {
@@ -264,7 +262,7 @@ class TpFilterToHtml extends TpFilterVisitor
                        'does not exist in the database.';
                 TpDiagnostics::Append( CFG_INTERNAL_ERROR, $msg, DIAG_ERROR );
             }
-            else if ( ! isset( $this->mTablesAndColumns[$table][$adodb_field] ) )
+            else if ( ! isset( $this->mTablesAndColumns[$table][$field] ) )
             {
                 $msg = 'Column "'.$field.'" is referenced by the current filter but '.
                        'does not exist in the database.';

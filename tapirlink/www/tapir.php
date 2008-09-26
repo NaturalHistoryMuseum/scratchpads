@@ -74,6 +74,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+// Definition of this constant can be used to indicate that
+// the Web Service (tapir.php) was called
+define( 'TP_RUNNING_TAPIR', 1 );
+
 require_once('tapir_globals.php');
 require_once('TpUtils.php');
 require_once('TpServiceUtils.php');
@@ -152,6 +156,8 @@ if ( $r_resource == null )
     $response->ReturnError( 'Resource "'.$resource_code.'" not found.' );
     die();
 }
+
+$r_resources->SetCurrentResourceCode( $resource_code );
 
 if ( $r_resource->GetStatus() != 'active' )
 {

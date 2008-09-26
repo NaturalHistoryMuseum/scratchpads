@@ -24,10 +24,13 @@ require_once('TpDiagnostics.php');
 require_once('TpUtils.php');
 require_once('TpExpression.php');
 require_once('TpResponseStructure.php');
-require_once('TpNamespaceManager.php');
+require_once('TpResources.php');
+require_once('phpxsd/XsNamespaceManager.php');
+require_once('pear/Cache.php');
 
 class TpOutputModel
 {
+    var $mRevision = '$Revision$';
     var $mInTags = array(); // name element stack during XML parsing
     var $mLabel;
     var $mDocumentation;
@@ -48,6 +51,19 @@ class TpOutputModel
 
     } // end of member function TpOutputModel
 
+    function GetRevision( )
+    {
+        $revision_regexp = '/^\$'.'Revision:\s(\d+)\s\$$/';
+
+        if ( preg_match( $revision_regexp, $this->mRevision, $matches ) )
+        {
+            return (int)$matches[1];
+        }
+
+        return null;
+
+    } // end of member function GetRevision
+
     function Parse( $location )
     {
         // This is a workaround because when browsing the provider 
@@ -64,14 +80,12 @@ class TpOutputModel
         xml_set_character_data_handler( $parser, 'CharacterData' );
         xml_set_start_namespace_decl_handler( $parser, 'DeclareNamespace' );
 
-        if ( !( $fp = fopen( $location, 'r' ) ) )
+        $fp = TpUtils::GetFileHandle( $location );
+
+        if ( ! is_resource( $fp ) )
         {
-            // Replace PHP warning with a better message
-            TpDiagnostics::PopDiagnostic();
-
-            $error = "Could not open the output model file: $location";
-            TpDiagnostics::Append( DC_IO_ERROR, $error, DIAG_FATAL );
-
+            $error = 'Could not open output model file: '.$location;
+            TpDiagnostics::Append( DC_IO_ERROR, $error, DIAG_ERROR );
             return false;
         }
       
@@ -110,14 +124,14 @@ class TpOutputModel
         if ( strcasecmp( $name, 'outputmodel' ) == 0 )
         {
             // Get possible prefix declarations
-            $r_namespace_manager =& TpNamespaceManager::GetInstance();
+            $r_namespace_manager =& XsNamespaceManager::GetInstance();
 
             $this->mNamespaces = $r_namespace_manager->GetFlaggedNamespaces( $parser, 'm' );
         }
         // <structure>
         else if ( strcasecmp( $name, 'structure' ) == 0 )
         {
-            // nothing
+            $g_dlog->debug( '[Response Structure]' );
         }
         // <indexingElement>
         else if ( strcasecmp( $name, 'indexingElement' ) == 0 )
@@ -216,8 +230,6 @@ class TpOutputModel
             // inside <structure>
             else if ( in_array( 'structure', $this->mInTags ) )
             {
-                $g_dlog->debug( '[Response Structure]' );
-
                 if ( $this->mInTags[$depth-2] == 'structure' and 
                      strcasecmp( $name, 'schema' ) == 0 and 
                      isset( $attrs['location'] ) )
@@ -278,7 +290,7 @@ class TpOutputModel
             $flag = 'm';
         }
 
-        $r_namespace_manager =& TpNamespaceManager::GetInstance();
+        $r_namespace_manager =& XsNamespaceManager::GetInstance();
 
         $r_namespace_manager->AddNamespace( $parser, $prefix, $uri, $flag );
 
@@ -304,26 +316,85 @@ class TpOutputModel
         // If cache is enabled
         if ( TP_USE_CACHE and TP_RESP_STRUCTURE_CACHE_LIFE_SECS )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $r_resources =& TpResources::GetInstance();
+
+            $cache_dir = TP_CACHE_DIR . '/' . $r_resources->GetCurrentResourceCode();
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'structures';
 
             $cache = new Cache( 'file', $cache_options );
             $cache_id = $cache->generateID( $location );
-            $cached_data = $cache->get( $cache_id, 'structures' );
+            $cached_data = $cache->get( $cache_id, $subdir );
 
-            if ( $cached_data and ! $cache->isExpired( $cache_id, 'structures' ) )
+            if ( $cached_data and ! $cache->isExpired( $cache_id, $subdir ) )
             {
-                 $g_dlog->debug( 'Unserializing response structure from cache' );
+                $g_dlog->debug( 'Unserializing response structure from cache' );
 
-                 $this->mResponseStructure = unserialize( $cached_data );
+                // Check if serialized object has the mRevision property.
+                // If not, this means that the cached object was based on 
+                // the old TpResponseStructure class definition, so we need 
+                // to discard it.
+                if ( strpos( $cached_data, ':"mRevision"' ) === false )
+                {
+                    $g_dlog->debug( 'Detected obsolete serialized response structure' );
 
-                 if ( ! $this->mResponseStructure )
-                 {
-                     $error = 'Could not unserialize response structure from cache';
-                     TpDiagnostics::Append( DC_GENERAL_ERROR, $error, DIAG_FATAL );
-                     return false;
-                 }
+                    if ( ! $cache->remove( $cache_id, $subdir ) )
+                    {
+                        $g_dlog->debug( 'Could not remove response structure from cache' );
+                    }
+                    else
+                    {
+                        $g_dlog->debug( 'Removed response structure from cache' );
+                    }
+                }
+                else
+                {
+                    $this->mResponseStructure = unserialize( $cached_data );
 
-                 $loaded_from_cache = true;
+                    if ( ! $this->mResponseStructure )
+                    {
+                        $g_dlog->debug( 'Could not unserialize response structure from cache' );
+
+                        if ( ! $cache->remove( $cache_id, $subdir ) )
+                        {
+                            $g_dlog->debug( 'Could not remove response structure from cache' );
+                        } 
+                        else
+                        {
+                            $g_dlog->debug( 'Removed response structure from cache' );
+                        } 
+                    }
+                    else
+                    {
+                        // Check if unserialized object has correct version.
+                        // Should always pass this condition. It is here in case
+                        // there is any change in TpResponseStructure that may
+                        // affect caching in the future.
+                        $revision = $this->mResponseStructure->GetRevision();
+
+                        if ( $revision > 557 )
+                        {
+                            $g_dlog->debug( 'Loaded response structure from cache' );
+
+                            $loaded_from_cache = true;
+                        }
+                        else
+                        {
+                            $g_dlog->debug( 'Incorrect serialized response structure revision ('.$revision.')' );
+
+                            if ( ! $cache->remove( $cache_id, $subdir ) )
+                            {
+                                $g_dlog->debug( 'Could not remove response structure from cache' );
+                            }
+                            else
+                            {
+                                $g_dlog->debug( 'Removed response structure from cache' );
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -332,6 +403,8 @@ class TpOutputModel
             $g_dlog->debug( 'Retrieving and parsing response structure' );
 
             $this->mResponseStructure = new TpResponseStructure();
+
+            $this->mResponseStructure->SetFileOpenCallback( array( 'TpUtils', 'GetFileHandle' ) );
 
             if ( ! $this->mResponseStructure->Parse( $location ) )
             {
@@ -480,7 +553,13 @@ class TpOutputModel
 
         if ( TP_USE_CACHE and TP_OUTPUT_MODEL_CACHE_LIFE_SECS )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $r_resources =& TpResources::GetInstance();
+
+            $cache_dir = TP_CACHE_DIR . '/' . $r_resources->GetCurrentResourceCode();
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'models';
 
             $cache = new Cache( 'file', $cache_options );
 
@@ -493,13 +572,13 @@ class TpOutputModel
 
             $cache_id = $cache->generateID( $location );
 
-            if ( ( ! $cache->isCached( $cache_id, 'models' ) ) or 
-                 (  $cache->isExpired( $cache_id, 'models' ) ) )
+            if ( ( ! $cache->isCached( $cache_id, $subdir ) ) or 
+                 (  $cache->isExpired( $cache_id, $subdir ) ) )
             {
                 $cache_expires = TP_OUTPUT_MODEL_CACHE_LIFE_SECS;
                 $cached_data = serialize( $this );
 
-                $cache->save( $cache_id, $cached_data, $cache_expires, 'models' );
+                $cache->save( $cache_id, $cached_data, $cache_expires, $subdir );
 
                 $g_dlog->debug( 'Caching output model with id generated from "'.
                                 $location.'"' );
@@ -515,8 +594,8 @@ class TpOutputModel
      */
     function __sleep()
     {
-	return array( 'mLocation', 'mIndexingElement', 'mMapping', 'mAutomapping',
-                      'mResponseStructure', 'mNamespaces' );
+	return array( 'mRevision', 'mLocation', 'mIndexingElement', 'mMapping', 
+                      'mAutomapping', 'mResponseStructure', 'mNamespaces' );
 
     } // end of member function __sleep
 

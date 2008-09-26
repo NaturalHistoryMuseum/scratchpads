@@ -249,12 +249,30 @@ class TpIndexingPreferences
     {
         $xml = '';
 
-        if ( strlen( $this->GetStartTime() ) > 0 || 
-             strlen( $this->GetMaxDuration() ) > 0 || 
-             strlen( $this->GetFrequency() ) > 0 ) 
+        $start_time   = $this->GetStartTime();
+        $max_duration = $this->GetMaxDuration();
+        $frequency    = $this->GetFrequency();
+
+         if ( strlen( $start_time . $max_duration . $frequency ) )
         {
-            $xml .= sprintf( '%s<indexingPreferences startTime="%s" maxDuration="%s" frequency="%s"/>', $offset, TpUtils::EscapeXmlSpecialChars( $this->GetStartTime() ), TpUtils::EscapeXmlSpecialChars( $this->GetMaxDuration() ), TpUtils::EscapeXmlSpecialChars( $this->GetFrequency() ) );
-            $xml .= "\n";
+            $xml .= sprintf( '%s<indexingPreferences', $offset );
+
+            if ( strlen( $start_time ) )
+            {
+                $xml .= sprintf( ' startTime="%s"', TpUtils::EscapeXmlSpecialChars( $start_time  ) );
+            }
+
+            if ( strlen( $max_duration ) )
+            {
+                $xml .= sprintf( ' maxDuration="%s"', TpUtils::EscapeXmlSpecialChars( $max_duration ) );
+            }
+
+            if ( strlen( $frequency ) )
+            {
+                $xml .= sprintf( ' frequency="%s"', TpUtils::EscapeXmlSpecialChars( $frequency ) );
+            }
+
+            $xml .= "/>\n";
         }
 
         return $xml;

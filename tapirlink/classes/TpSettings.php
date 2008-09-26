@@ -21,7 +21,9 @@
  */
 
 require_once('TpUtils.php');
+require_once('TpConfigUtils.php');
 require_once('TpDiagnostics.php');
+require_once('TpConceptMapping.php');
 require_once( TP_XPATH_LIBRARY );
 
 class TpSettings
@@ -32,9 +34,12 @@ class TpSettings
     var $mCaseSensitiveInEquals;
     var $mCaseSensitiveInLike;
     var $mModifier;              // table.field that will update date last modified value
+    var $mModifierDatatype;      // local datatype of mModifier field 
+                                 // (note: property added in revision 670)
     var $mModified;
     var $mInventoryTemplates = array(); // alias => location
     var $mSearchTemplates = array();    // alias => location
+    var $mOutputModels = array();       // alias => location
     var $mInTags = array();
     var $mIsLoaded = false;
 
@@ -67,7 +72,7 @@ class TpSettings
 
     } // end of member function LoadDefaults
 
-    function LoadFromSession( ) 
+    function LoadFromSession( $adodbConn ) 
     {
         $this->mMaxElementRepetitions = TpUtils::GetVar( 'max_repetitions', null );
         $this->mMaxElementLevels      = TpUtils::GetVar( 'max_levels', null );
@@ -82,6 +87,44 @@ class TpSettings
         $this->mCaseSensitiveInLike = ($caseSensitiveInLike == 'true') ? true : false;
 
         $this->mModifier = TpUtils::GetVar( 'modifier', '' );
+
+        // Update datatype, initializing it with NULL
+        $this->mModifierDatatype = null;
+
+        $parts = explode( '.', $this->mModifier );
+
+        // Try catch block
+        do {
+
+            if ( count( $parts ) != 2 ) // table.column
+            {
+                $msg = 'dateLastModified setting could not be split into table/column';
+                //TpDiagnostics::Append( DC_CONFIG_FAILURE, $msg, DIAG_WARN );
+                break;
+            }
+
+            $convert_case = false;
+
+            $columns = $adodbConn->MetaColumns( $parts[0], $convert_case );
+
+            if ( ! is_array( $columns ) )
+            {
+                $msg = 'Could not get database metadata for dateLastModified setting';
+                //TpDiagnostics::Append( DC_CONFIG_FAILURE, $msg, DIAG_WARN );
+                break;
+            }
+
+            foreach ( $columns as $column )
+            {
+                if ( $column->name == $parts[1] )
+                {
+                    $this->mModifierDatatype = TpConfigUtils::GetFieldType( $column );
+                    break;
+                }
+            }
+
+        } while ( false );
+
         $this->mModified = TpUtils::GetVar( 'modified', '' );
 
         // Inventory templates
@@ -156,6 +199,42 @@ class TpSettings
             }
         }
 
+        // Output models
+        $this->mOutputModels = array();
+
+        for ( $i = 1; $i < 50; ++$i )
+        {
+            $alias_param = 'model_alias_'.$i;
+            $location_param = 'model_loc_'.$i;
+
+            $alias = TpUtils::GetVar( $alias_param );
+            $location = TpUtils::GetVar( $location_param );
+
+            if ( $alias and $location )
+            {
+                $this->AddOutputModel( $alias, $location );
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        $alias_param = 'model_alias_new';
+        $location_param = 'model_loc_new';
+
+        $alias = TpUtils::GetVar( $alias_param );
+        $location = TpUtils::GetVar( $location_param );
+
+        if ( $alias and $location )
+        {
+            if ( $this->AddOutputModel( $alias, $location ) )
+            {
+                unset( $_REQUEST[$alias_param] );
+                unset( $_REQUEST[$location_param] );
+            }
+        }
+
         $this->mIsLoaded = true;
 
     } // end of member function LoadFromSession
@@ -222,6 +301,11 @@ class TpSettings
             if ( isset( $attrs['fromField'] ) )
             {
                 $this->mModifier = $attrs['fromField'];
+
+                if ( isset( $attrs['datatype'] ) )
+                {
+                    $this->mModifierDatatype = $attrs['datatype'];
+                }
             }
             if ( isset( $attrs['fixedValue'] ) )
             {
@@ -272,6 +356,15 @@ class TpSettings
                 {
                     $this->AddSearchTemplate( $attrs['alias'], $attrs['location'] );
                 }
+            }
+        }
+        else if ( strcasecmp( $name, 'outputModel' ) == 0 )
+        {
+            $num_elements = count( $this->mInTags );
+
+            if ( isset( $attrs['alias'] ) and isset( $attrs['location'] ) )
+            {
+                $this->AddOutputModel( $attrs['alias'], $attrs['location'] );
             }
         }
 
@@ -398,6 +491,20 @@ class TpSettings
             $ret_val = false;
         }
 
+        if ( ! empty( $this->mModifier ) and ! is_null( $this->mModifierDatatype ) and 
+             ( $this->mModifierDatatype != TYPE_DATETIME and 
+               $this->mModifierDatatype != TYPE_TEXT ) )
+        {
+            if ( $raiseErrors )
+            {
+                $error = 'Unsupported datatype for date last modified field ('.
+                         $this->mModifierDatatype .'). It must be either '.TYPE_DATETIME.
+                         ' or '.TYPE_TEXT;
+                TpDiagnostics::Append( CFG_DATA_VALIDATION_ERROR, $error, DIAG_ERROR );
+            }
+            $ret_val = false;
+        }
+
         // Validate modified
         $pattern = '[\-]?\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}([Z|(+|\-)]\d{2}\:\d{2})?';
 
@@ -426,6 +533,11 @@ class TpSettings
         if ( ! empty( $this->mModifier ) )
         {
             $xml .= ' fromField="'.$this->mModifier.'"';
+
+            if ( ! is_null( $this->mModifierDatatype ) )
+            {
+                $xml .= ' datatype="'.$this->mModifierDatatype.'"';
+            }
         }
         else
         {
@@ -482,6 +594,12 @@ class TpSettings
 
     } // end of member function GetModifier
 
+    function GetModifierDatatype( ) 
+    {
+        return $this->mModifierDatatype;
+
+    } // end of member function GetModifierDatatype
+
     function GetModified( ) 
     {
         return $this->mModified;
@@ -536,6 +654,27 @@ class TpSettings
 
     } // end of member function AddSearchTemplate
 
+    function AddOutputModel( $alias, $location ) 
+    {
+        if ( strlen( $alias ) == 0 or strlen( $location ) == 0 )
+        {
+            return false;
+        }
+
+        if ( ! TpUtils::IsUrl( $location ) )
+        {
+            $error = 'Output model location ('.$location.') is not a URL';
+            TpDiagnostics::Append( DC_IO_ERROR, $error, DIAG_ERROR );
+
+            return false;
+        }
+
+        $this->mOutputModels[$alias] = $location;
+
+        return true;
+
+    } // end of member function AddOutputModel
+
     function GetInventoryTemplate( $alias ) 
     {
         if ( isset( $this->mInventoryTemplates[$alias] ) )
@@ -558,6 +697,17 @@ class TpSettings
 
     } // end of member function GetSearchTemplate
 
+    function GetOutputModel( $alias ) 
+    {
+        if ( isset( $this->mOutputModels[$alias] ) )
+        {
+            return $this->mOutputModels[$alias];
+        }
+
+        return null;
+
+    } // end of member function GetOutputModel
+
     function GetInventoryTemplates( ) 
     {
         return $this->mInventoryTemplates;
@@ -570,19 +720,25 @@ class TpSettings
 
     } // end of member function GetSearchTemplates
 
+    function GetOutputModels( ) 
+    {
+        return $this->mOutputModels;
+
+    } // end of member function GetOutputModels
+
     function GetInventoryTemplatesXml( ) 
     {
-        $xml = ( count( $this->mInventoryTemplates ) ) ? '<templates>' : '';
+        $xml = ( count( $this->mInventoryTemplates ) ) ? "<templates>\n" : "\n";
 
         foreach ( $this->mInventoryTemplates as $alias => $location )
         {
             $alias = TpUtils::EscapeXmlSpecialChars( $alias );
             $location = TpUtils::EscapeXmlSpecialChars( $location );
 
-            $xml .= '<template location="'.$location.'" alias="'.$alias.'"/>';
+            $xml .= "\t\t\t\t\t".'<template location="'.$location.'" alias="'.$alias.'"/>'."\n";
         }
 
-        $xml .= ( count( $this->mInventoryTemplates ) ) ? "</templates>\n" : '';
+        $xml .= ( count( $this->mInventoryTemplates ) ) ? "\t\t\t\t</templates>\n" : '';
 
         return $xml;
 
@@ -590,18 +746,39 @@ class TpSettings
 
     function GetSearchTemplatesXml( ) 
     {
-        $xml = ( count( $this->mSearchTemplates ) ) ? '<templates>' : '';
+        $xml = ( count( $this->mSearchTemplates ) ) ? "<templates>\n" : "\n";
 
         foreach ( $this->mSearchTemplates as $alias => $location )
         {
-            $xml .= '<template location="'.$location.'" alias="'.$alias.'"/>';
+            $alias = TpUtils::EscapeXmlSpecialChars( $alias );
+            $location = TpUtils::EscapeXmlSpecialChars( $location );
+
+            $xml .= "\t\t\t\t\t".'<template location="'.$location.'" alias="'.$alias.'"/>'."\n";
         }
 
-        $xml .= ( count( $this->mSearchTemplates ) ) ? "</templates>\n" : '';
+        $xml .= ( count( $this->mSearchTemplates ) ) ? "\t\t\t\t</templates>\n" : '';
 
         return $xml;
 
     } // end of member function GetSearchTemplatesXml
+
+    function GetOutputModelsXml( ) 
+    {
+        $xml = ( count( $this->mOutputModels ) ) ? "<knownOutputModels>\n" : "\n";
+
+        foreach ( $this->mOutputModels as $alias => $location )
+        {
+            $alias = TpUtils::EscapeXmlSpecialChars( $alias );
+            $location = TpUtils::EscapeXmlSpecialChars( $location );
+
+            $xml .= "\t\t\t\t\t".'<outputModel location="'.$location.'" alias="'.$alias.'"/>'."\n";
+        }
+
+        $xml .= ( count( $this->mOutputModels ) ) ? "\t\t\t\t</knownOutputModels>\n" : '';
+
+        return $xml;
+
+    } // end of member function GetOutputModelsXml
 
     /**
      * Internal method called before serialization
@@ -614,7 +791,8 @@ class TpSettings
 
       return array( 'mMaxElementRepetitions', 'mMaxElementLevels', 'mLogOnly',
                     'mCaseSensitiveInEquals', 'mCaseSensitiveInLike', 'mModifier',
-                    'mModified', 'mIsLoaded', 'mInventoryTemplates', 'mSearchTemplates' );
+                    'mModified', 'mIsLoaded', 'mInventoryTemplates', 'mSearchTemplates',
+                    'mOutputModels' );
 
     } // end of member function __sleep
 

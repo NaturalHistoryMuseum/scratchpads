@@ -56,11 +56,15 @@ class TpLocalFilterForm extends TpWizardForm
 
             $r_data_source =& $this->mResource->GetDataSource();
 
+            $update_session_data = false;
+
             if ( ! $r_data_source->IsLoaded() )
             {
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_data_source->LoadFromXml( $config_file );
+
+                $update_session_data = true;
             }
 
             $r_tables =& $this->mResource->GetTables();
@@ -70,6 +74,15 @@ class TpLocalFilterForm extends TpWizardForm
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_tables->LoadFromXml( $config_file );
+
+                $update_session_data = true;
+            }
+
+            if ( $update_session_data )
+            {
+                $r_resources =& TpResources::GetInstance();
+
+                $r_resources->SaveOnSession();
             }
 
             $this->LoadDatabaseMetadata(); 
@@ -186,11 +199,13 @@ class TpLocalFilterForm extends TpWizardForm
 
             $tables = $root_table->GetAllTables();
 
+            $convert_case = false;
+
             foreach ( $tables as $table )
             {
-                $columns = $cn->MetaColumns( $table );
+                $columns = $cn->MetaColumns( $table, $convert_case );
 
-                $this->mTablesAndColumns[$table] = $columns;
+                $this->mTablesAndColumns[$table] = TpUtils::FixAdodbColumnsArray( $columns );
 
                 if ( ! in_array( $table, $valid_tables ) )
                 {

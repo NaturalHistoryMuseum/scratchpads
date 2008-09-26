@@ -47,11 +47,15 @@ class TpSettingsForm extends TpWizardForm
 
             $r_data_source =& $this->mResource->GetDataSource();
 
+            $update_session_data = false;
+
             if ( ! $r_data_source->IsLoaded() )
             {
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_data_source->LoadFromXml( $config_file );
+
+                $update_session_data = true;
             }
 
             $r_tables =& $this->mResource->GetTables();
@@ -61,6 +65,15 @@ class TpSettingsForm extends TpWizardForm
                 $config_file = $this->mResource->GetConfigFile();
 
                 $r_tables->LoadFromXml( $config_file );
+
+                $update_session_data = true;
+            }
+
+            if ( $update_session_data )
+            {
+                $r_resources =& TpResources::GetInstance();
+
+                $r_resources->SaveOnSession();
             }
 
             $r_settings =& $this->mResource->GetSettings();
@@ -101,7 +114,7 @@ class TpSettingsForm extends TpWizardForm
 
         $r_tables =& $this->mResource->GetTables();
 
-        $r_settings->LoadFromSession();
+        $r_settings->LoadFromSession( $r_data_source->GetConnection() );
 
         $this->LoadDatabaseMetadata(); 
 
@@ -180,15 +193,17 @@ class TpSettingsForm extends TpWizardForm
 	    }
             else 
             {
+                $convert_case = false;
+
                 foreach ( $tables as $table )
                 {
                     if ( in_array( $table, $valid_tables ) )
                     {
-                        $columns = $cn->MetaColumnNames( $table );
+                        $columns = $cn->MetaColumns( $table, $convert_case );
 
                         foreach ( $columns as $column )
                         {
-                            array_push( $this->mTablesAndColumns, $table.'.'.$column );
+                            array_push( $this->mTablesAndColumns, $table.'.'.$column->name );
                         }
                     }
 		}
@@ -345,6 +360,13 @@ class TpSettingsForm extends TpWizardForm
             $label = 'Search templates';
             $doc = 'If you wish to explicitly declare that you support one or more '.
                    'specific search templates, indicate here alias and location '.
+                   'for each one.';
+        }
+        else if ( $labelId == 'output_models') 
+        {
+            $label = 'Output models';
+            $doc = 'If you wish to explicitly declare that you support one or more '.
+                   'specific output models, indicate here alias and location '.
                    'for each one.';
         }
 

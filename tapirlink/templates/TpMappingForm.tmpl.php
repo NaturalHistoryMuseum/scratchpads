@@ -15,7 +15,7 @@
 <?php endif; ?>
   <tr bgcolor="#ffffff">
     <td width="30%" align="left" nowrap="nowrap"><span class="label">Location of additional schema: </span></td>
-    <td width="70%" align="left" nowrap="nowrap"><input type="text" name="load_from_location" value="<?php TpUtils::GetVar('location'); ?>" size="45"/>&nbsp;<?php print(TpHtmlUtils::GetCombo('handler','0',$this->GetOptions('handler'))); ?></td>
+    <td width="70%" align="left" nowrap="nowrap"><input type="text" name="load_from_location" value="<?php TpUtils::GetVar('location'); ?>" size="45"/>&nbsp;<?php print(TpHtmlUtils::GetCombo('handler','0',$this->GetOptions('handler'))); ?>&nbsp;<a href="help_cs_drivers.php" class="label_required" onClick="javascript:window.open('help_cs_drivers.php','help','width=800,height=550,menubar=no,toolbar=no,scrollbars=yes,resizable=yes,personalbar=no,locationbar=no,statusbar=no').focus(); return false;" onMouseOver="javascript:window.status='more information about conceptual schema drivers'; return true;" onMouseOut="window.status=''; return true;">?</a></td>
   </tr>
 </table>
 <br/><input type="submit" name="load_schemas" value="load the specified schemas above"/><br/>

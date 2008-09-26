@@ -148,11 +148,9 @@ class TpFilterRefresher extends TpFilterVisitor
                 if ( is_object( $base_concept ) or 
                      $current_reference != $new_reference )
                 {
-                    $adodb_field = strtoupper( $field );
-
-                    if ( isset( $this->mTablesAndColumns[$table][$adodb_field] ) )
+                    if ( isset( $this->mTablesAndColumns[$table][$field] ) )
                     {
-                        $field_obj = $this->mTablesAndColumns[$table][$adodb_field];
+                        $field_obj = $this->mTablesAndColumns[$table][$field];
 
                         $type = TpConfigUtils::GetFieldType( $field_obj );
 

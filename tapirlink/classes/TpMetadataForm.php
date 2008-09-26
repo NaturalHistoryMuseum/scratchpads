@@ -151,7 +151,7 @@ class TpMetadataForm extends TpWizardForm
 
     function HandleEvents( ) 
     {
-        // Clicked next
+        // Clicked next or update
         if ( isset( $_REQUEST['next'] ) or isset( $_REQUEST['update'] ) ) 
         {
             $update_resources = false;
@@ -179,18 +179,20 @@ class TpMetadataForm extends TpWizardForm
             {
                 $this->SetMessage( 'Changes successfully saved!' );
             }
-            else 
+            else // Clicked Next
             {
                 $r_resources =& TpResources::GetInstance();
 
                 if ( $r_resources->GetResource( $r_metadata->GetId() ) == null )
                 {
                     $r_resources->AddResource( $this->mResource );
+                }
 
-                    if ( ! $r_resources->Save() )
-                   {
-                        return;
-                    }
+                // Saving here avoids the configurator to later try to find 
+                // the removed entry and therefore raise a warning
+                if ( ! $r_resources->Save() )
+                {
+                    return;
                 }
             }
 

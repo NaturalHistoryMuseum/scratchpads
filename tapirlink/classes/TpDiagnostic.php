@@ -22,7 +22,7 @@
  * 
  */
 
-require_once('TpUtils.php');
+require_once(dirname(__FILE__).'/TpUtils.php');
 
 /**
 * Class TpDiagnostic

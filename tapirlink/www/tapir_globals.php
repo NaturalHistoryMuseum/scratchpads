@@ -47,8 +47,11 @@
  *
  */
 
-// Change all parameter names to lower case
-array_change_key_case( $_REQUEST, CASE_LOWER );
+// Change all parameter names to lower case if the Web Service is running
+if (  defined( 'TP_RUNNING_TAPIR' ) )
+{
+    $_REQUEST = array_change_key_case( $_REQUEST, CASE_LOWER );
+}
 
 // Load possible local configuration file, which can be used to override the default
 // values for the defines in this file.	
@@ -217,9 +220,6 @@ if ( ! defined( 'TP_MAX_RUNTIME' ) ) {
     define( 'TP_MAX_RUNTIME', 120 );
 }
 
-/////////////////////////////////////////////
-//Stuff more specific to TapirLink operation
-
 /**
 * The file name of the Resources xml file which contains a list of resource
 * names and associated configuration information.  Must be located in the
@@ -325,6 +325,32 @@ if ( ! defined( 'TP_OUTPUT_MODEL_CACHE_LIFE_SECS' ) )
 if ( ! defined( 'TP_RESP_STRUCTURE_CACHE_LIFE_SECS' ) )
 {
     define( 'TP_RESP_STRUCTURE_CACHE_LIFE_SECS', 31536000 );
+}
+
+/**
+* Number of seconds that cached SQL counts can be used before 
+* forcing another hit in the dabatase. Default is once a week.
+*/
+if ( ! defined( 'TP_SQL_COUNT_CACHE_LIFE_SECS' ) )
+{
+    define( 'TP_SQL_COUNT_CACHE_LIFE_SECS', 604800 );
+}
+
+/**
+* Indicates how file retrieval should happen. Possible values:
+* prefer_original: Prefer original files directly specified in the request or
+*                  inside other documents referenced by the request. These are
+*                  usually remote files and always the most up-to-date).
+* prefer_local: Prefer local copies that could be manually stored in 
+*               TP_LOCAL_REPOSITORY.
+* only_local: Always use local copies that were manually stored in 
+*             TP_LOCAL_REPOSITORY.
+*
+* Please note that this setting has nothing to do with the other caching settings.
+*/
+if ( ! defined( 'TP_FILE_RETRIEVAL_BEHAVIOUR' ) )
+{
+    define( 'TP_FILE_RETRIEVAL_BEHAVIOUR', 'prefer_original' );
 }
 
 /**
@@ -458,13 +484,31 @@ if ( ! defined( 'TP_SQL_WILDCARD' ) )
 }
 
 /**
+* Set this to true to delimit table/column names in the SQL statement with double quotes. 
+* This may be necessary for database schemas that use case sensitive names or names that 
+* coincide with reserved words.
+*/
+if ( ! defined( 'TP_SQL_DELIMIT_NAMES' ) )
+{
+    define( 'TP_SQL_DELIMIT_NAMES', false );
+}
+
+/**
 * Set this to true to use column references (the order of the column in 
 * SELECT {columns}) instead of the column names in GROUP BY or ORDER BY 
-* clauses.
+* clauses. You should do this for PostgreSQL databases.
 */
 if ( ! defined( 'TP_SQL_USE_COLUMN_REF' ) )
 {
     define( 'TP_SQL_USE_COLUMN_REF', false );
+}
+
+//////////////////////////////////////////////////////
+// AUTOMATIC UPDATES
+
+if ( ! defined( 'TP_CHECK_UPDATE_URL' ) )
+{
+    define( 'TP_CHECK_UPDATE_URL', 'http://rs.tdwg.org/tapir/software/tlink.xml' );
 }
 
 //////////////////////////////////////////////////////
@@ -506,7 +550,7 @@ if ( ! defined( 'TP_UDDI_PUBLISH_PORT' ) )
 
 define( 'TP_MIN_PHP_VERSION', '4.2.3' );
 
-define( 'TP_VERSION', '0.5' ); 
+define( 'TP_VERSION', '0.6.1' );
 
 $revision = '$Revision$.';
 

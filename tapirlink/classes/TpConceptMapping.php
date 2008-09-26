@@ -106,7 +106,7 @@ class TpConceptMapping
 
     } // end of member function GetXml
 
-    function GetSqlTarget( ) 
+    function GetSqlTarget( &$rAdodb, $inWhereClause=false )
     {
         // Must be overwritten by subclasses
         return '';
@@ -125,6 +125,29 @@ class TpConceptMapping
         return $this->mLocalType;
 
     } // end of member function GetLocalType
+
+    function GetLocalXsdType( ) 
+    {
+        if ( $this->mLocalType == TYPE_TEXT )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#string';
+        }
+        else if ( $this->mLocalType == TYPE_NUMERIC )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#decimal';
+        }
+        else if ( $this->mLocalType == TYPE_DATETIME )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#dateTime';
+        }
+        else if ( $this->mLocalType == TYPE_DATE )
+        {
+            return 'http://www.w3.org/2001/XMLSchema#date';
+        }
+
+        return null;
+
+    } // end of member function GetLocalXsdType
 
     function GetLocalTypes( ) 
     {

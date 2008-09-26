@@ -37,11 +37,21 @@ class TpResources
     {
         static $instance;
 
+        global $g_dlog;
+
+        // Note: There is no need to use session when running the web service (tapir.php)
+
         if ( ! isset( $instance ) )
         {
-            if ( isset ( $_SESSION['resources'] ) and 
+            if ( ( ! defined( 'TP_RUNNING_TAPIR' ) ) and 
+                 isset ( $_SESSION['resources'] ) and 
                  ! isset( $_REQUEST['force_reload'] ) ) 
             {
+                if ( is_object( $g_dlog ) )
+                {
+                    $g_dlog->debug('Loading resources instance from session');
+                }
+
                 $instance =& $_SESSION['resources'];
             }
             else 
@@ -53,7 +63,7 @@ class TpResources
         }
         else
         {
-            if ( isset( $_REQUEST['force_reload'] ) ) 
+            if ( isset( $_REQUEST['force_reload'] ) and ! defined( 'TP_RUNNING_TAPIR' ) ) 
             {
                 $instance = new TpResources();
 
@@ -64,6 +74,60 @@ class TpResources
         return $instance;
 
     } // end of member function GetInstance
+
+    /**
+     * Set the current resource code. This function was created to be called 
+     * when processing a service request to indicate the current resource code.
+     *
+     * @param $code string Resource code.
+     * @return Boolean True if resource exists, false otherwise
+     */
+    function SetCurrentResourceCode( $code )
+    {
+        $r_resource =& $this->GetResource( $code );
+
+        if ( is_null( $r_resource ) )
+        {
+            return false;
+        }
+
+        $this->_CurrentResourceCode( $code );
+
+        return true;
+
+    } // end of function SetCurrentResourceCode
+
+    /**
+     * Return the current resource code.
+     *
+     * @return string Current resource code.
+     */
+    function GetCurrentResourceCode()
+    {
+        return $this->_CurrentResourceCode();
+
+    } // end of function GetCurrentResourceCode
+
+    /**
+     * Set the current resource code when the parameter is specified and 
+     * return the resource code stored in a static variable. This way we
+     * keep compatibility with PHP4 and PHP5.
+     *
+     * @param $setCode string needle.
+     * @return string Current resource code (can be null).
+     */
+    function _CurrentResourceCode( $setCode=null )
+    {
+        static $code;
+
+        if ( ! is_null( $setCode ) )
+        {
+            $code = $setCode;
+        }
+        
+        return $code;
+
+    } // end of function _CurrentResourceCode
 
     function &GetResource( $code, $raiseError=true )
     {
@@ -77,8 +141,7 @@ class TpResources
 
         if ( $raiseError ) 
         {
-            $error = 'Could not find resource identified by code "'.$code.
-                     '". Please check installation.';
+            $error = 'Could not find resource identified by code "'.$code.'"';
             TpDiagnostics::Append( DC_SERVER_SETUP_ERROR, $error, DIAG_ERROR );
         }
 
@@ -112,7 +175,14 @@ class TpResources
 
     function Load( ) 
     {
+        global $g_dlog;
+
         $file = $this->GetFile();
+
+        if ( is_object( $g_dlog ) )
+        {
+            $g_dlog->debug('Loading resources from file: '.$file);
+        }
 
         if ( !( $fp = fopen( $file, 'r' ) ) ) 
         {
@@ -144,7 +214,11 @@ class TpResources
 
         fclose( $fp );
 
-        $this->SaveOnSession();
+        if ( ! defined( 'TP_RUNNING_TAPIR' ) )
+        {
+            // No need to use session when running the web service (tapir.php)
+            $this->SaveOnSession();
+        }
 
     } // end of member function Load
 
@@ -229,6 +303,8 @@ class TpResources
                     return false;
                 }
 
+                unset( $_REQUEST['resource'] );
+
                 return true;
             }
 
@@ -273,6 +349,13 @@ class TpResources
 
     function Save( ) 
     {
+        global $g_dlog;
+
+        if ( is_object( $g_dlog ) )
+        {
+            $g_dlog->debug('Saving resources on file');
+        }
+
         if ( ! TpConfigUtils::WriteToFile( $this->GetXml(), $this->GetFile() ) ) 
         {
             $last_error = TpDiagnostics::PopDiagnostic();
@@ -292,6 +375,13 @@ class TpResources
 
     function SaveOnSession( ) 
     {
+        global $g_dlog;
+
+        if ( is_object( $g_dlog ) )
+        {
+            $g_dlog->debug('Saving resources on session');
+        }
+
         $_SESSION['resources'] =& $this;
 
     } // end of member function SaveOnSession

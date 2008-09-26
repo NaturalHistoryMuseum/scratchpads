@@ -23,6 +23,9 @@
 require_once('TpOperationParameters.php');
 require_once('TpOutputModel.php');
 require_once('TpFilter.php');
+require_once('TpResources.php');
+require_once('pear/Cache.php');
+require_once('phpxsd/XsManager.php');
 
 class TpSearchParameters extends TpOperationParameters
 {
@@ -32,7 +35,20 @@ class TpSearchParameters extends TpOperationParameters
 
     function TpSearchParameters( )
     {
+        if ( _DEBUG )
+        {
+            $r_manager =& XsManager::GetInstance();
+
+            $r_manager->SetDebugMode = true;
+
+            global $g_dlog;
+
+            $r_manager->SetLogger( $g_dlog );
+        }
+
         $this->TpOperationParameters();
+
+        $this->mRevision = '$Revision$';
 
     } // end of member function TpSearchParameters
 
@@ -233,44 +249,133 @@ class TpSearchParameters extends TpOperationParameters
         // "fopen" is used to read templates!)
         if ( ! TpUtils::IsUrl( $location ) )
         {
-            $error = 'Output model is not a URL.';
-            TpDiagnostics::Append( DC_INVALID_REQUEST, $error, DIAG_FATAL );
+            $r_resources =& TpResources::GetInstance();
 
-            return false;
+            $resource_code = $r_resources->GetCurrentResourceCode();
+
+            $r_resource =& $r_resources->GetResource( $resource_code );
+
+            if ( is_null( $r_resource ) )
+            {
+                // Error is already thrown in GetResource
+                return false;
+            }
+
+            // Check if output model is a known alias
+            $r_resource->LoadConfig();
+
+            $r_settings =& $r_resource->GetSettings();
+
+            $real_location = $r_settings->GetOutputModel( $location );
+
+            if ( $real_location )
+            {
+                $g_dlog->debug( 'Output model parameter is a known alias: '.$location );
+                $location = $real_location;
+            }
+            else
+            {
+                $error = 'Output model is neither a URL nor a known alias.';
+                TpDiagnostics::Append( DC_INVALID_REQUEST, $error, DIAG_FATAL );
+
+                return false;
+            }
         }
+
+        $g_dlog->debug( 'Location '. $location );
 
         $loaded_from_cache = false;
 
         // If cache is enabled
         if ( TP_USE_CACHE and TP_OUTPUT_MODEL_CACHE_LIFE_SECS )
         {
-            $cache_options = array( 'cache_dir' => TP_CACHE_DIR );
+            $r_resources =& TpResources::GetInstance();
+
+            $cache_dir = TP_CACHE_DIR . '/' . $r_resources->GetCurrentResourceCode();
+
+            $cache_options = array( 'cache_dir' => $cache_dir );
+
+            $subdir = 'models';
 
             $cache = new Cache( 'file', $cache_options );
             $cache_id = $cache->generateID( $location );
-            $cached_data = $cache->get( $cache_id, 'models' );
+            $cached_data = $cache->get( $cache_id, $subdir );
 
-            if ( $cached_data and ! $cache->isExpired( $cache_id, 'models' ) )
+            if ( $cached_data and ! $cache->isExpired( $cache_id, $subdir ) )
             {
-                 $g_dlog->debug( 'Unserializing output model from cache' );
+                $g_dlog->debug( 'Unserializing output model from cache' );
 
-                 $this->mOutputModel = unserialize( $cached_data );
+                // Check if serialized object has the mRevision property.
+                // If not, this means that the cached object was based on 
+                // the old TpOutputModel class definition, so we need 
+                // to discard it.
+                if ( strpos( $cached_data, ':"mRevision"' ) === false )
+                {
+                    $g_dlog->debug( 'Detected obsolete serialized output model' );
 
-                 if ( ! $this->mOutputModel )
-                 {
-                     $error = 'Could not unserialize output model from cache';
-                     TpDiagnostics::Append( DC_GENERAL_ERROR, $error, DIAG_FATAL );
-                     return false;
-                 }
+                    if ( ! $cache->remove( $cache_id, $subdir ) )
+                    {
+                        $g_dlog->debug( 'Could not remove output model from cache' );
+                    }
+                    else
+                    {
+                        $g_dlog->debug( 'Removed output model from cache' );
+                    }
+                }
+                else
+                {
+                    $this->mOutputModel = unserialize( $cached_data );
 
-                 $loaded_from_cache = true;
+                    if ( ! $this->mOutputModel )
+                    {
+                        $g_dlog->debug( 'Could not unserialize output model from cache' );
+
+                        if ( ! $cache->remove( $cache_id, $subdir ) )
+                        {
+                            $g_dlog->debug( 'Could not remove output model from cache' );
+                        } 
+                        else
+                        {
+                            $g_dlog->debug( 'Removed output model from cache' );
+                        } 
+                    }
+                    else
+                    {
+                        // Check if unserialized object has correct version.
+                        // Should always pass this condition. It is here in case
+                        // there is any change in TpOutputModel that may
+                        // affect caching in the future.
+                        $revision = $this->mOutputModel->GetRevision();
+
+                        if ( $revision > 557 )
+                        {
+                            // IMPORTANT: In the future it may be necessary to 
+                            // check the response structure revision here too!
+
+                            $g_dlog->debug( 'Loaded output model from cache' );
+
+                            $loaded_from_cache = true;
+                        }
+                        else
+                        {
+                            $g_dlog->debug( 'Incorrect serialized output model revision ('.$revision.')' );
+
+                            if ( ! $cache->remove( $cache_id, $subdir ) )
+                            {
+                                $g_dlog->debug( 'Could not remove output model from cache' );
+                            }
+                            else
+                            {
+                                $g_dlog->debug( 'Removed output model from cache' );
+                            }
+                        }
+                    }
+                }
             }
         }
 
         if ( ! $loaded_from_cache )
         {
-            $g_dlog->debug( 'Location '.$location );
-
             $g_dlog->debug( 'Retrieving and parsing output model' );
 
             $this->mOutputModel = new TpOutputModel();

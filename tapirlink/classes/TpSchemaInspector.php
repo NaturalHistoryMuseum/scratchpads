@@ -20,16 +20,16 @@
  * @author Renato De Giovanni <renato [at] cria . org . br>
  */
 
-require_once('TpSchemaVisitor.php');
+require_once('phpxsd/XsSchemaVisitor.php');
 require_once('TpDiagnostics.php');
 require_once('TpServiceUtils.php');
 require_once('TpFilter.php');
 
-class TpSchemaInspector extends TpSchemaVisitor
+class TpSchemaInspector extends XsSchemaVisitor
 {
     var $mrResource;
     var $mrOutputModel;
-    var $mResponseStructure;
+    var $mrResponseStructure;
     var $mIndexingElement;
     var $mrLocalMapping;
     var $mMaxLevels;
@@ -45,13 +45,11 @@ class TpSchemaInspector extends TpSchemaVisitor
     {
         $this->mrResource =& $rResource;
         $this->mrOutputModel =& $rOutputModel;
-        $this->mResponseStructure = $rOutputModel->GetResponseStructure();
+        $this->mrResponseStructure =& $rOutputModel->GetResponseStructure();
         $this->mIndexingElement = $rOutputModel->GetIndexingElement();
         $this->mrLocalMapping =& $rLocalMapping;
         $this->mMaxLevels = $maxLevels;
         $this->mPartialNodes = $partial;
-
-	//var_dump($this->mResponseStructure->mNamespaces);
 
         if ( count( $partial ) )
         {
@@ -66,7 +64,7 @@ class TpSchemaInspector extends TpSchemaVisitor
 
         $g_dlog->debug( '[Schema Inspector]' );
 
-        if ( ! is_object( $this->mResponseStructure ) )
+        if ( ! is_object( $this->mrResponseStructure ) )
         {
             $error = 'Could not find a response structure in the output model';
             TpDiagnostics::Append( DC_INVALID_REQUEST, $error, DIAG_ERROR );
@@ -76,7 +74,7 @@ class TpSchemaInspector extends TpSchemaVisitor
             return;
         }
 
-        $global_elements = $this->mResponseStructure->GetElementDecls();
+        $global_elements = $this->mrResponseStructure->GetElementDecls();
 
         $path = '';
 
@@ -95,6 +93,8 @@ class TpSchemaInspector extends TpSchemaVisitor
         {
             $lacks_concrete = true;
 
+            $ns = $this->mrResponseStructure->GetTargetNamespace();
+
             foreach ( $global_elements as $el_name => $xs_element_decl )
             {
                 if ( ! $xs_element_decl->IsAbstract() )
@@ -102,7 +102,8 @@ class TpSchemaInspector extends TpSchemaVisitor
                     $lacks_concrete = false;
 
                     // First "concrete" global element declaration
-                    $xs_element_decl->Accept( $this, $path );
+                    $r_xs_element_decl =& $this->mrResponseStructure->GetElementDecl( $ns, $el_name );
+                    $r_xs_element_decl->Accept( $this, $path );
 
                     break;
                 }
@@ -142,7 +143,7 @@ class TpSchemaInspector extends TpSchemaVisitor
 
             $g_dlog->debug( 'Found element reference '.$ref );
 
-            $rReferencedElement =& $this->mResponseStructure->GetElementDecl( $ns, $ref );
+            $rReferencedElement =& $this->mrResponseStructure->GetElementDecl( $ns, $ref );
 
             if ( is_object( $rReferencedElement ) )
             {
@@ -212,108 +213,15 @@ class TpSchemaInspector extends TpSchemaVisitor
             return;
         }
 
-        $r_type =& $rXsElementDecl->GetType();
-
         // Set type object if necessary
-        if ( is_string( $r_type ) )
+        if ( ! $this->_PrepareType( $rXsElementDecl, $path, $min_occurs ) )
         {
-            $g_dlog->debug( 'Has string type '.$r_type );
-
-            $type_str = $r_type;
-
-            $r_type =& $this->mResponseStructure->GetType( $rXsElementDecl->GetTargetNamespace(), $r_type );
-
-            if ( $r_type == null )
-            {
-                if ( $min_occurs > 0 )
-                {
-                    $error = 'Unknown type '.$type_str.' for mandatory element "'.$path.'"';
-
-                    TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-
-                    $this->mAbort = true;
-                }
-                else
-                {
-                    $error = 'Unknown type "'.$type_str.'" for element "'.$path.'". It '.
-                             'will be discarded';
-
-                    TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-                }
-
-                array_push( $this->mRejectedPaths, $path );
-
-                return;
-            }
-
-            $g_dlog->debug( 'Setting type object' );
-
-            $rXsElementDecl->SetType( $r_type );
-        }
-        else if ( ! is_object( $r_type ) )
-        {
-            if ( $min_occurs > 0 )
-            {
-                $error = 'Unknown type "'.$r_type.'" for mandatory element "'.$path.'"';
-                TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-
-                $this->mAbort = true;
-            }
-            else
-            {
-                $error = 'Unknown type "'.$r_type.'" for element "'.$path.'". It '.
-                         'will be discarded';
-                TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-            }
-
-            array_push( $this->mRejectedPaths, $path );
-
             return;
         }
 
+        $r_type =& $rXsElementDecl->GetType();
+
         $r_basetype =& $r_type->GetBaseType();
-
-        // Set base type object if necessary
-        if ( ! is_null( $r_basetype ) )
-        {
-            $g_dlog->debug( 'Has base type' );
-
-            if ( is_string( $r_basetype ) )
-            {
-                $g_dlog->debug( 'Base type is string '.$r_basetype );
-
-                $basetype_str = $r_basetype;
-
-                $r_basetype =& $this->mResponseStructure->GetType( $rXsElementDecl->GetTargetNamespace(), $basetype_str );
-
-                if ( $r_basetype == null )
-                {
-                    if ( $min_occurs > 0 )
-                    {
-                        $error = 'Unknown base type '.$basetype_str.' for mandatory element "'.$path.'"';
-
-                        TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-
-                        $this->mAbort = true;
-                    }
-                    else
-                    {
-                        $error = 'Unknown base type "'.$basetype_str.'" for element "'.$path.'". It '.
-                                 'will be discarded';
-
-                        TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
-                    }
-
-                    array_push( $this->mRejectedPaths, $path );
-
-                    return;
-                }
-
-                $g_dlog->debug( 'Setting base type object' );
-
-                $r_type->SetBaseType( $r_basetype );
-            }
-        }
 
         if ( $r_type->IsComplexType() )
         {
@@ -394,7 +302,6 @@ class TpSchemaInspector extends TpSchemaVisitor
                                           $type_has_attributes );
             }
 
-
             if ( $path == $this->mIndexingElement )
             {
                 $this->mFoundIndexingElement = true;
@@ -425,6 +332,11 @@ class TpSchemaInspector extends TpSchemaVisitor
             if ( $this->_CheckSimpleContent( $rXsElementDecl, $path, $min_occurs ) )
             {
                 $this->mAcceptedPaths[$path] = $min_occurs;
+
+                if ( $path == $this->mIndexingElement )
+                {
+                    $this->mFoundIndexingElement = true;
+                }
             }
         }
 
@@ -444,7 +356,7 @@ class TpSchemaInspector extends TpSchemaVisitor
 
             $g_dlog->debug( 'Found attribute reference '.$ref.' in namespace '.$ns );
 
-            $rReferencedAttribute =& $this->mResponseStructure->GetAttributeDecl( $ns, $ref );
+            $rReferencedAttribute =& $this->mrResponseStructure->GetAttributeDecl( $ns, $ref );
 
             if ( is_object( $rReferencedAttribute ) )
             {
@@ -483,6 +395,11 @@ class TpSchemaInspector extends TpSchemaVisitor
         if ( $rXsAttributeUse->IsRequired() )
         {
             $min_occurs = 1;
+        }
+
+        if ( ! $this->_PrepareType( $rXsAttributeUse, $path, $min_occurs ) )
+        {
+            return;
         }
 
         if ( $this->_CheckSimpleContent( $rXsAttributeUse, $path, $min_occurs ) )
@@ -534,6 +451,116 @@ class TpSchemaInspector extends TpSchemaVisitor
         
     } // end of member function VisitModelGroup
 
+    function _PrepareType( &$rTypedObj, $path, $minOccurs )
+    {
+        global $g_dlog;
+
+        $r_type =& $rTypedObj->GetType();
+
+        // Set type object if necessary
+        if ( is_string( $r_type ) )
+        {
+            $g_dlog->debug( 'Has string type '.$r_type );
+
+            $type_str = $r_type;
+
+            $r_type =& $this->mrResponseStructure->GetType( $rTypedObj->GetTargetNamespace(), $r_type );
+
+            if ( $r_type == null )
+            {
+                if ( $minOccurs > 0 )
+                {
+                    $error = 'Unknown type '.$type_str.' for mandatory node "'.$path.'"';
+
+                    TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+
+                    $this->mAbort = true;
+                }
+                else
+                {
+                    $error = 'Unknown type "'.$type_str.'" for node "'.$path.'". It '.
+                             'will be discarded';
+
+                    TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+                }
+
+                array_push( $this->mRejectedPaths, $path );
+
+                return false;
+            }
+
+            $g_dlog->debug( 'Setting type object' );
+
+            $rTypedObj->SetType( $r_type );
+        }
+        else if ( ! is_object( $r_type ) )
+        {
+            if ( $minOccurs > 0 )
+            {
+                $error = 'Undefined type for mandatory node "'.$path.'"';
+                TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+
+                $this->mAbort = true;
+            }
+            else
+            {
+                $error = 'Undefined type for node "'.$path.'". It will be discarded';
+                TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+            }
+
+            array_push( $this->mRejectedPaths, $path );
+
+            return false;
+        }
+
+        $r_basetype =& $r_type->GetBaseType();
+
+        // Set base type object if necessary
+        if ( ! is_null( $r_basetype ) )
+        {
+            $g_dlog->debug( 'Has base type' );
+
+            if ( is_string( $r_basetype ) )
+            {
+                $g_dlog->debug( 'Base type is string '.$r_basetype );
+
+                $basetype_str = $r_basetype;
+
+                $r_basetype =& $this->mrResponseStructure->GetType( $rTypedObj->GetTargetNamespace(), $basetype_str );
+
+                if ( $r_basetype == null )
+                {
+                    if ( $minOccurs > 0 )
+                    {
+                        $error = 'Unknown base type '.$basetype_str.' for mandatory node "'.$path.'"';
+
+                        TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+
+                        $this->mAbort = true;
+                    }
+                    else
+                    {
+                        $error = 'Unknown base type "'.$basetype_str.'" for node "'.$path.'". It '.
+                                 'will be discarded';
+
+                        TpDiagnostics::Append( DC_TRUNCATED_RESPONSE, $error, DIAG_WARN );
+                    }
+
+                    array_push( $this->mRejectedPaths, $path );
+
+                    return false;
+                }
+
+                $g_dlog->debug( 'Setting base type object' );
+
+                $r_type->SetBaseType( $r_basetype );
+            }
+        }
+
+        return true;
+        
+    } // end of member function _PrepareType
+
     function _CheckContentType( &$rContentType, $path, $isBaseType, $hasAttributes )
     {
         global $g_dlog;
@@ -576,7 +603,9 @@ class TpSchemaInspector extends TpSchemaVisitor
 
         if ( ( ! $obj->HasFixedValue() ) and $mapping != null )
         {
-            for ( $i = 0; $i < count( $mapping ); ++$i )
+            $num_mappings = count( $mapping );
+
+            for ( $i = 0; $i < $num_mappings; ++$i )
             {
                 $expression = $mapping[$i];
 
@@ -656,9 +685,13 @@ class TpSchemaInspector extends TpSchemaVisitor
 
                         TpDiagnostics::Append( DC_CONTENT_UNAVAILABLE, $msg, DIAG_WARN );
 
-                        array_push( $this->mRejectedPaths, $path );
+                        // Don't reject if it's a concatenation
+                        if ( $num_mappings == 1 )
+                        {
+                            array_push( $this->mRejectedPaths, $path );
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
                 else if ( $expression->GetType() == EXP_VARIABLE )
@@ -677,9 +710,13 @@ class TpSchemaInspector extends TpSchemaVisitor
 
                         TpDiagnostics::Append( DC_CONTENT_UNAVAILABLE, $msg, DIAG_WARN );
 
-                        array_push( $this->mRejectedPaths, $path );
+                        // Don't reject if it's a concatenation
+                        if ( $num_mappings == 1 )
+                        {
+                            array_push( $this->mRejectedPaths, $path );
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }

@@ -24,6 +24,7 @@ require_once('TpConceptMapping.php');
 require_once('TpDiagnostics.php');
 require_once('TpUtils.php');
 require_once('TpConfigUtils.php');
+require_once('TpSqlBuilder.php');
 
 class SingleColumnMapping extends TpConceptMapping
 {
@@ -52,9 +53,7 @@ class SingleColumnMapping extends TpConceptMapping
             {
                 if ( ! empty( $this->mField ) ) 
                 {
-                    $adodb_field = strtoupper( $this->mField );
-
-                    if ( ! isset( $this->mTablesAndColumns[$this->mTable][$adodb_field] ) )
+                    if ( ! isset( $this->mTablesAndColumns[$this->mTable][$this->mField] ) )
                     {
                         $this->mField = null;
                     }
@@ -124,11 +123,9 @@ class SingleColumnMapping extends TpConceptMapping
                 // If changed this field or chose this field for the first time
                 // then try to figure out the type
 
-                $adodb_field = strtoupper( $this->mField );
-
-                if ( isset( $this->mTablesAndColumns[$this->mTable][$adodb_field] ) )
+                if ( isset( $this->mTablesAndColumns[$this->mTable][$this->mField] ) )
                 {
-                    $field = $this->mTablesAndColumns[$this->mTable][$adodb_field];
+                    $field = $this->mTablesAndColumns[$this->mTable][$this->mField];
 
                     $field_type = TpConfigUtils::GetFieldType( $field );
 
@@ -228,9 +225,24 @@ class SingleColumnMapping extends TpConceptMapping
 
     } // end of member function GetOptions
 
-    function GetSqlTarget( ) 
+    function GetSqlTarget( &$rAdodb, $inWhereClause=false ) 
     {
-        return $this->mTable .'.'. $this->mField;
+        $target = TpSqlBuilder::GetSqlName( $this->mTable .'.'. $this->mField );
+
+        if ( ! $inWhereClause )
+        {
+            if ( $this->GetLocalType() == TYPE_DATETIME )
+            {
+                // TODO: How to handle timezones?
+                $target = $rAdodb->SQLDate( 'Y-m-d H:i:s', $target );
+            }
+            else if ( $this->GetLocalType() == TYPE_DATE )
+            {
+                $target = $rAdodb->SQLDate( 'Y-m-d', $target );
+            }
+        }
+
+        return $target;
 
     } // end of member function GetSqlTarget
 

@@ -111,7 +111,7 @@ class FixedValueMapping extends TpConceptMapping
 
     } // end of member function GetXml
 
-    function GetSqlTarget( ) 
+    function GetSqlTarget( &$rAdodb, $inWhereClause=false ) 
     {
         if ( $this->mLocalType == TYPE_NUMERIC )
         {
@@ -119,7 +119,7 @@ class FixedValueMapping extends TpConceptMapping
         }
         else
         {
-            return "'".$this->mValue."'";
+            return TP_SQL_QUOTE.$this->mValue.TP_SQL_QUOTE;
         }
 
     } // end of member function GetSqlTarget

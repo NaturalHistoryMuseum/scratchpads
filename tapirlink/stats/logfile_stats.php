@@ -10,7 +10,7 @@ header("Cache-Control: no-cache");
 require_once( '../www/tapir_globals.php' );
 
 //BUBU redundant?
-$monthNames = array("null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+$monthNames = array('null', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
 //BUGBUG should use TapirLink global variables
 include('filesorter.php'); //will sort any log files found in the log dir in chronological order
 
@@ -60,7 +60,7 @@ elseif( $action == 'daydetail' )
     $day= $_GET['day'];
     $year=$_GET['year'];
     $resource=$_GET['resource'];
-    $ascsv=$_GET['ascsv'];
+    $ascsv= isset( $_GET['ascsv'] ) ? $_GET['ascsv'] : 0;
     print( getResourceDayDetailPage( $providerName, $month, $day, $year, $resource, $ascsv ) );
 }
 elseif( $action == 'custom' )

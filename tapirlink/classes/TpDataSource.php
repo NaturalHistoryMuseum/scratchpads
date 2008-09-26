@@ -79,7 +79,7 @@ class TpDataSource
 
     function LoadFromXml( $file, $xpr=false )
     {
-        if ( ! is_object( $xpr ) ) 
+       if ( ! is_object( $xpr ) ) 
         {
             $xpr = new XPath();
             $xpr->setVerbose( 1 );
@@ -98,16 +98,25 @@ class TpDataSource
 
         $datasource_attrs = $xpr->getAttributes( $path_to_datasource );
 
-        $this->mDriverName       = $datasource_attrs['dbtype'];
-        $this->mEncoding         = $datasource_attrs['encoding'];
-        $this->mConnectionString = str_replace( array('&quot;', '&amp;'), 
+        if ( count( $datasource_attrs ) )
+        {
+            $this->mDriverName       = $datasource_attrs['dbtype'];
+            $this->mEncoding         = $datasource_attrs['encoding'];
+            $this->mConnectionString = str_replace( array('&quot;', '&amp;'), 
                                                 array('"'     , '&'), 
                                                 $datasource_attrs['constr'] );
-        $this->mUserName         = $datasource_attrs['uid'];
-        $this->mPassword         = $datasource_attrs['pwd'];
-        $this->mDatabaseName     = $datasource_attrs['database'];
+            $this->mUserName         = $datasource_attrs['uid'];
+            $this->mPassword         = $datasource_attrs['pwd'];
+            $this->mDatabaseName     = $datasource_attrs['database'];
 
-        $this->mIsLoaded = true;
+            $this->mIsLoaded = true;
+        }
+        else
+        {
+            $error = 'Could not find data source attributes in configuration file';
+            TpDiagnostics::Append( CFG_INTERNAL_ERROR, $error, DIAG_ERROR );
+            return;
+        }
 
         $this->ResetConnection();
 

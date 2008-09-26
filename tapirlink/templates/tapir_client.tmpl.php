@@ -114,7 +114,7 @@ function getDefaultRequest()
 <body onLoad="getDefaultRequest()">
 <h1>TapirLink XML Client</h1>
 
-<form id="clientForm" action="tapir_client.php" method="POST" target="_new">
+<form id="clientForm" action="<?php print($_SERVER['PHP_SELF']); ?>" method="POST" target="_new">
 
 <b>Accesspoint:</b> <?php print(TpHtmlUtils::GetCombo('local_accesspoint', TpUtils::GetVar('local_accesspoint', current($local_accesspoints)), $local_accesspoints)); ?><br />
 <br />

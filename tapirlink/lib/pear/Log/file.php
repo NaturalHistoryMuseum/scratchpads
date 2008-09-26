@@ -277,11 +277,12 @@ class Log_file extends Log
             return false;
         }
 
+
         /* If the log file isn't already open, open it now. */
         if (!$this->_opened && !$this->open()) {
             return false;
         }
-
+        
         /* Extract the string representation of the message. */
         $message = $this->_extractMessage($message);
 
@@ -305,7 +306,6 @@ class Log_file extends Log
 
         /* Notify observers about this log message. */
         $this->_announce(array('priority' => $priority, 'message' => $message));
-
         return $success;
     }
 

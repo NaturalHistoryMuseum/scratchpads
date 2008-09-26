@@ -224,7 +224,7 @@ class TpFilter
                         $token = substr( $token, 0, $first_end_bracket );
                     }
 
-                    if ( strlen( $token ) and 
+                    if ( strlen( $token ) and $token != ',' and
                          ! in_array( strtolower( $token ), 
                                      array_keys( $this->mOperators ) ) )
                     {
@@ -278,9 +278,11 @@ class TpFilter
 
         $i = 0;
 
-        $current_list = new TpNestedList( array('') );
+        $new_list = new TpNestedList( array('') );
 
         $escape = false;
+
+        $r_current_list =& $new_list;
 
         foreach ( $list as $token )
         {
@@ -288,8 +290,8 @@ class TpFilter
             {
                 ++$i;
 
-                $current_list->Append( $token );
-                $current_list->Append( '' );
+                $r_current_list->Append( $token );
+                $r_current_list->Append( '' );
             }
             else
             {
@@ -302,33 +304,32 @@ class TpFilter
                     if ( $char == $this->mEscapeChar and $escape )
                     {
                         $escape = false;
-                        $current_list->AddString( -1, $this->mEscapeChar );
+                        $r_current_list->AddString( -1, $this->mEscapeChar );
                     }
                     else
                     {
                         if ( $char == '(' and ! $escape )
                         {
-                            $current_list->Append( new TpNestedList( array('') ) );
-                            $current_list =& $current_list->GetElement( -1 );
+                            $r_current_list->Append( new TpNestedList( array('') ) );
+                            $r_current_list =& $r_current_list->GetElement( -1 );
                         }
                         else if ( $char == ')' and ! $escape )
                         {
-                            $current_list =& $current_list->GetParent();
-
-                            $current_list->Append( '' );
+                            $r_current_list =& $r_current_list->GetParent();
+                            $r_current_list->Append( '' );
                         }
                         else
                         {
-                            $current_list->AddString( -1, $char );
+                            $r_current_list->AddString( -1, $char );
                         }
 
                         $escape = false;
                     }
                 }
-	    }
+            }
         }
 
-        return $current_list;
+        return $new_list;
 
     } // end of member function _ResolveBrackets
 
@@ -429,12 +430,10 @@ class TpFilter
 
         while ( $nestedList->GetSize() == 1 )
         {
-            ++$cnt;
-
             $first_element = $nestedList->GetElement(0);
 
-            if ( ( is_object( $nestedList ) and 
-                   strtolower( get_class( $nestedList ) ) == 'tpnestedlist' ) )
+            if ( is_object( $first_element ) and 
+                 strtolower( get_class( $first_element ) ) == 'tpnestedlist' )
             {
                 $nestedList = $first_element;
             }
@@ -457,7 +456,7 @@ class TpFilter
             else if ( (! is_string( $element ) ) or $element != ',' )
             {
                 // don't append the token "," which has no meaning, 
-                // eg in IN operator arg lists. Be aware that sublists still have kommas
+                // eg in IN operator arg lists. Be aware that sublists still have commas
                 array_push( $tokens, $element );
             }
         }
@@ -550,7 +549,7 @@ class TpFilter
 
                 $op = new TpLogicalOperator( LOP_NOT );
 
-                $arg = new NestedList( array_slice( $tokens, $idx+1 ) );
+                $arg = new TpNestedList( array_slice( $tokens, $idx+1 ) );
 
                 $boolean_operator = $this->_ResolveOperators( $arg );
 
@@ -600,9 +599,22 @@ class TpFilter
 
             $op = new TpComparisonOperator( COP_ISNULL );
 
-            $op->SetExpression( $tokens[$idx+1] );
+            if ( is_object( $tokens[$idx+1] ) and 
+                 strtolower( get_class( $tokens[$idx+1] ) ) == 'tpexpression' )
+            {
+                $op->SetExpression( $tokens[$idx+1] );
+            }
+            else
+            {
+                $error = "Argument to 'isNull' operator is not an expression";
+                TpDiagnostics::Append( DC_INVALID_FILTER, $error, DIAG_ERROR );
+
+                $this->mIsValid = false;
+
+                return null;
+            }
         }
-        else if ( $opClass == 'equals' or $opClass == 'like' or $opClass == 'in' or
+        else if ( $opClass == 'equals' or $opClass == 'like' or
                   $opClass == 'greaterthanorequals' or $opClass == 'greaterthan' or
                   $opClass == 'lessthanorequals' or $opClass == 'lessthan' )
         {
@@ -621,19 +633,19 @@ class TpFilter
             {
                 $op = new TpComparisonOperator( COP_EQUALS );
             }
-            else if ( $opClass == 'lessThan' )
+            else if ( $opClass == 'lessthan' )
             {
                 $op = new TpComparisonOperator( COP_LESSTHAN );
             }
-            else if ( $opClass == 'lessThanOrEquals' )
+            else if ( $opClass == 'lessthanorequals' )
             {
                 $op = new TpComparisonOperator( COP_LESSTHANOREQUALS );
             }
-            else if ( $opClass == 'greaterThan' )
+            else if ( $opClass == 'greaterthan' )
             {
                 $op = new TpComparisonOperator( COP_GREATERTHAN );
             }
-            else if ( $opClass == 'greaterThanOrEquals' )
+            else if ( $opClass == 'greaterthanorequals' )
             {
                 $op = new TpComparisonOperator( COP_GREATERTHANOREQUALS );
             }
@@ -641,20 +653,27 @@ class TpFilter
             {
                 $op = new TpComparisonOperator( COP_LIKE );
             }
-            else if ( $opClass == 'in' )
+            else
             {
-                $op = new TpComparisonOperator( COP_IN );
+                $error = "Invalid filter: Unknown comparison operator '$opClass'";
+                TpDiagnostics::Append( DC_INVALID_FILTER, $error, DIAG_ERROR );
+
+                $this->mIsValid = false;
+
+                return null;
             }
 
             if ( is_object( $tokens[$idx-1] ) and 
-                 strtolower( get_class( $tokens[$idx-1] ) ) == 'tpexpression' )
+                 strtolower( get_class( $tokens[$idx-1] ) ) == 'tpexpression' and
+                 $tokens[$idx-1]->GetType() == EXP_CONCEPT )
             {
                 $op->SetExpression( $tokens[$idx-1] );
 
                 $arg = $tokens[$idx+1];
             }
             else if ( is_object( $tokens[$idx+1] ) and 
-                      strtolower( get_class( $tokens[$idx+1] ) ) == 'tpexpression' )
+                      strtolower( get_class( $tokens[$idx+1] ) ) == 'tpexpression' and 
+                      $tokens[$idx+1]->GetType() == EXP_CONCEPT )
             {
                 $arg = $tokens[$idx-1];
 
@@ -681,6 +700,15 @@ class TpFilter
             {
                 $op->SetExpression( $arg );
             }
+        }
+        else if ( $opClass == 'in' )
+        {
+            $error = "Invalid filter: Operator 'in' cannot be used in KVP requests";
+            TpDiagnostics::Append( DC_INVALID_FILTER, $error, DIAG_ERROR );
+
+            $this->mIsValid = false;
+
+            return null;
         }
 
         return $op;

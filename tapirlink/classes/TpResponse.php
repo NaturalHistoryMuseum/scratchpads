@@ -25,7 +25,7 @@
 require_once('TpUtils.php');
 require_once('TpDiagnostics.php');
 require_once('TpXmlNamespace.php');
-require_once('Cache/Function.php');
+require_once('pear/Cache/Function.php');
 
 class TpResponse 
 {
@@ -108,7 +108,9 @@ class TpResponse
 
                 $params = $this->GetParams();
 
-                $cache_params = array( 'cache_dir' => TP_CACHE_DIR,
+                $cache_dir = TP_CACHE_DIR . '/' . $this->mRequest->GetResourceCode();
+
+                $cache_params = array( 'cache_dir' => $cache_dir,
                                        'filename_prefix' => 'req_' );
 
                 $cache = new Cache_Function( 'file', $cache_params, $this->mCacheLife );
@@ -144,6 +146,7 @@ class TpResponse
         {
             require_once('flatfile/flatfile.php');
             require_once('TpStatistics.php');
+            require_once('TpStatisticsLogger.php');
 
             $current_month = date('m');
             $current_year  = date('Y');
@@ -169,6 +172,11 @@ class TpResponse
                                            $current_month, $current_year );
             TpStatistics::LogSchemaInfo( $stats_db, $log_data, 
                                          $current_month, $current_year );
+
+            $LogStruct = new TpStatisticsLogger( $log_data );
+            $LogStruct->Initialize( $log_data );
+
+            $LogStruct->WriteRequestResult( $stats_log );
         }
 
     } // end of member function Process
@@ -265,7 +273,7 @@ class TpResponse
     function XmlHeader()
     {
         // Send the XML content type header
-        header ( 'Content-type: text/xml' );
+        header ( 'Content-type: text/xml; charset=utf-8' );
 
         // Start the response
         echo TpUtils::GetXmlHeader();
