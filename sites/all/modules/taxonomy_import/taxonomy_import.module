@@ -98,11 +98,15 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
   {   
     global $parser_depth;
     global $xml_converted;
-    if ($name == "NAME"){
+    global $in_synonym;
+    if ($name == "NAME"  && !$in_synonym){
       for ($i = 0; $i < $parser_depth-1; $i++) {
           $xml_converted .= "\t";
       }
       $xml_converted .= $attrs['CANONICALFORM']."\n";
+    }
+    if($name == "SYNONYMS"){
+      $in_synonym = true;
     }
     if ($name == "NODES"){ 
       $parser_depth++;
@@ -111,9 +115,13 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
   
   function endElement($parser, $name)
   {
+    global $in_synonym;
     if ($name=="NODES"){
       global $parser_depth;
       $parser_depth--;
+    }
+    if($name == "SYNONYMS"){
+      $in_synonym = false;
     }
   }
   
@@ -143,7 +151,7 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
     }
     else {
       foreach ($lines as $line) {
-        xml_parse($xml_parser, $line);// Should add error handling here!
+        xml_parse($xml_parser, utf8_encode($line));// Should add error handling here!
       }
     }
     global $xml_converted;
