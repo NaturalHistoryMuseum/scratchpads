@@ -99,11 +99,18 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
     global $parser_depth;
     global $xml_converted;
     global $in_synonym;
+    global $in_name_without_canonical;
     if ($name == "NAME"  && !$in_synonym){
       for ($i = 0; $i < $parser_depth-1; $i++) {
           $xml_converted .= "\t";
       }
-      $xml_converted .= $attrs['CANONICALFORM']."\n";
+      if(isset($attrs['CANONICALFORM']) && $attrs['CANONICALFORM'] != ''){
+        $xml_converted .= $attrs['CANONICALFORM']."\n";
+      } else {
+        // The canonical form is blank, there is probably no authority, so 
+        // we should use the full name
+        $in_name_without_canonical = true;
+      }
     }
     if($name == "SYNONYMS"){
       $in_synonym = true;
@@ -113,9 +120,19 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
     }
   }
   
+  function stringElement($parser, $data){
+    global $in_name_without_canonical;
+    global $xml_converted;
+    if($in_name_without_canonical){
+      $xml_converted .= "$data\n";
+    }
+  }
+  
   function endElement($parser, $name)
   {
     global $in_synonym;
+    global $in_name_without_canonical;
+    $in_name_without_canonical = false;
     if ($name=="NODES"){
       global $parser_depth;
       $parser_depth--;
@@ -139,6 +156,7 @@ function taxonomy_import_ubio_import($taxonomic_name,$classification, $vid, $xml
   if ($xml && $xml !=''){    
     $xml_parser = xml_parser_create();
     xml_set_element_handler($xml_parser, "startElement", "endElement");
+    xml_set_character_data_handler  ($xml_parser, "stringElement");
     $lines = preg_split("/[\n\r]+/", $xml);
     $xml_converted ="";
     if (trim($lines[1])=="IMPORT FROM SERVER FILE"){
