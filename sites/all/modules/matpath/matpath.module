@@ -38,92 +38,113 @@ function matpath_taxonomy($op, $type, $array = NULL){
         // This behaviour could be changed quite easily, we could have options for the 
         // following on deleting a term:
         // - All children are also deleted
-        // - Children are moved up to the terms parent (* Selected)
+        // - Children are moved up to the term's parent (* Selected)
         // - Children become orphans, with no parents.
         
         // Get the current path(s) of this term, this will allow us to get all the children.
         // We can also calculate the parent path(s) from this/these path(s).
         $results = db_query("SELECT path FROM {matpath} WHERE tid = %d", $array['tid']);
         while($row = db_fetch_array($results)){
-          // For each of this term's paths, move the children up.
-          $path = array_pop($row);
-          $new_path = substr($path, 0, strrpos($path,"/"));
+          // For each of this term's paths, move the children up.  Children are given paths
+          // which are derived from the parents.  This means we don't have to guess/calculate
+          // where a child can go.  Paths end up looking like:
+          // //0/1/1/0
+          // //0/1/1/1
+          // //0/1/1/2 <- Parent to be deleted
+          // //0/1/1/3
+          // //0/1/1/2/0 <- Child
+          // //0/1/1/2/1 <- Child
+          // The children then become:
+          // //0/1/1/20
+          // //0/1/1/21
+          // This isn't a problem if there are already siblings numbered 20 or 21, as the
+          // term being deleted would have been 02 and not just 2.
+          $path = array_pop($row);          
           // This is just one SQL query - magic
-          db_query("UPDATE {matpath} SET path = REPLACE(path, '%s', '%s') WHERE path LIKE '%s%%'", $path, $new_path, "$path/");
+          db_query("UPDATE {matpath} SET path = REPLACE(path, '%s/', '%s') WHERE path LIKE '%s/%%' AND vid = %d", $path, $path, $path, $array['vid']);
+          // Delete this term/path combo before reordering.
+          db_query("DELETE FROM {matpath} WHERE path = '%s' AND vid = %d", $path, $array['vid']);
+          // For each path, we need to update the parent so that the siblings are
+          // all ordered correctly.
+          matpath_reorder_path($array['vid'], substr($path, 0, strrpos($path, "/")));
         }
-        // Finally, delete the term
-        db_query("DELETE FROM {matpath} WHERE tid = %d", $array['tid']);
+        break;
 
       case 'update':
         // Operations that will result in a change to the database structure are:
-        // - Added/changing the parent(s) of a term
-        // - Changing the term text so that it is ordered above or below other terms
-        // - Changing the weight of a term so that it is ordered above or below other terms
+        // - Add/change the parent(s) of a term
+        // - Change the term text so that it is ordered above or below other terms
+        // - Change the weight of a term so that it is ordered above or below other terms
         
         // We therefore need to calculate the paths that this term should occupy from the submitted
         // form values, and check those against the ones in the database.  If these differ, then
         // changes are required, if they don't differ, then no changes are required.
-        $results = db_query("SELECT path FROM {matpath} WHERE tid = %d");
+        $results = db_query("SELECT path FROM {matpath} WHERE tid = %d", $array['tid']);
         $db_paths = array();
         while($row = db_fetch_array($results)){
           $db_paths[] = array_pop($row);
         }
         // Get the paths that we'd like to have set, based on the parents
         // array values
-        $paths = matpath_calculate_paths_from_parents($array['parents']);
+        $paths = matpath_calculate_paths_from_parents($array);
+        print_r($db_paths);
+        print_r($paths);
+        exit;
         // Now lets compare the two arrays.
         // Anything in both can be ignored
         // Anything in db_paths, but not in paths needs removing
         // Anything in paths, but not in db_paths needs adding.  Additions will need to have the children
         //   added also.
-        if(count($paths)>count($db_paths)){
-          // There are paths to add, we'll need a copy of the children
-          // Let's create a temporary table to store the children tree (rooted directly below
-          // the term that we're updating), this can then be copied for all additional paths
-          $results = db_query_temporary("SELECT tid,vid,REPLACE(path,(SELECT path FROM {matpath} WHERE tid = %d LIMIT 1),'') path FROM {matpath} WHERE path LIKE (SELECT CONCAT(path,'/%') FROM {matpath} WHERE tid = %d LIMIT 1)", $array['tid'], $array['tid'], 'matpathtemp');
-          
-          // We can now look at the paths to add, and add only the required number, as the others
-          // will be added by replacing other paths.
-          $paths_to_add = array_diff($paths, $db_paths);
-          for($i=0; $i<(count($paths)-count($db_paths)); $i++){
-            // We'll only add any additional numbers, others can be updated
-            $new_path = array_pop($paths_to_add);
-            db_query("INSERT INTO {matpath} (tid, vid, path) SELECT tid, vid, CONCAT('%s',path) FROM matpathtemp", $new_path);
-          }
-          // Let's update the db_paths
-          $results = db_query("SELECT path FROM {matpath} WHERE tid = %d");
-          $db_paths = array();
-          while($row = db_fetch_array($results)){
-            $db_paths[] = $row['path'];
-          }          
-        }
-        // Now we can compare db_paths with paths, and update/delete
+        
+        // Lets get the paths to add, and the paths to remove
         $paths_to_add = array_diff($paths, $db_paths);
         $paths_to_remove = array_diff($db_paths, $paths);
-        // Work through the paths_to_add, overriding an entry from paths_to_remove
-        foreach($paths_to_add as $new_path){
-          $old_path = array_pop($paths_to_remove);
-          db_query("UPDATE {matpath} SET path = REPLACE(path, '%s', '%s') WHERE path LIKE '%s/%%' OR path = '%s'", $old_path, $new_path, $old_path, $old_path);
+        
+        // We'll store a record of the children of one of the paths (these WILL all be identical).
+        // This will be needed for additions, just incase all the paths for this term are 
+        // removed before the addition - it's also quick if adding multiple paths - WOOT!
+        db_query_temporary("SELECT tid,vid,REPLACE(path,(SELECT path FROM {matpath} WHERE tid = %d LIMIT 1),'') path FROM {matpath} WHERE path LIKE (SELECT CONCAT(path,'/%') FROM {matpath} WHERE tid = %d LIMIT 1) AND vid = %d", $array['tid'], $array['tid'], $array['vid'], 'matpathtemp');
+        
+        // Let's remove each path to remove
+        foreach($paths_to_remove as $path){
+          // Remove the path, no need to worry about children here
+          db_query("DELETE FROM {matpath} WHERE (path = '%s' OR path LIKE '%s/%%') AND vid = %d", $path, $path, $array['vid']);
+          // We do however need to reorder the siblings, SQUASH          
+          matpath_reorder_path($array['vid'], substr($path, 0, strrpos($path, "/")));
         }
-        // Finally, remove any left over
-        foreach($paths_to_remove as $old_path){
-          // No need to worry about children here (I THINK - CHECK THIS)
-          db_query("DELETE FROM {matpath} WHERE path LIKE '%s/%%' OR path = '%s'", $old_path, $old_path);
+        
+        // Now lets add each path to add
+        foreach($paths_to_add as $path){
+          // First things first, we need to make room for this path, so lets do that
+          matpath_make_room_for_path($array['vid'], $path);
+          // Now we've made room, we can add it, along with the children we saved to the
+          // temporary table earlier
+          db_query("INSERT INTO {matpath} (vid, tid, path) SELECT %d, %d, '%s' UNION SELECT vid, tid, CONCAT('%s',path) FROM matpathtemp", $array['vid'], $array['tid'], $path, $path);
+          
+          // Finally, we need to correct the depths of the terms added, we can do this limited
+          // by path so that it's not too much of a database hit
+          matpath_update_depths($array['vid'], substr($path, 0, strrpos($path, "/")));
         }
+        break;
+        
       case 'insert':
         // This is a new term, and therefore won't have any children, inserting is easy.
-        $parent_paths = matpath_calculate_paths_from_parents($array['parents'], $array['weight']."-".$array['name']);
-        $inserts = array();
-        $values = array();
-        foreach($parent_paths as $path){
-          $inserts[] = "(%d, %d, '%s', %d)";
-          $values[] = $array['tid'];
-          $values[] = $array['vid'];
-          $new_path = "$path/".$array['weight']."-".str_replace("/","",$array['name']);
-          $values[] = $new_path;
-          $values[] = substr_count($new_path, "/");
+        $paths = matpath_calculate_paths_from_parents($array);
+        foreach($paths as $path){
+          // If the new path doesn't exist, then we can just add it, if however it does,
+          // then we need to calculate where we can add the child, then reorder
+          if(array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {matpath} WHERE path = '%s'", $path)))){
+            matpath_make_room_for_path($array['vid'], $path);
+          } 
+          // If we've got here, then we've either made room, or the path was tagged on 
+          // the end, now we can chuffin' add the path.
+          db_query("INSERT INTO {matpath} (tid,vid,path) VALUES (%d, %d, '%s')", $array['tid'], $array['vid'], $path);
+          // And add its depth
+          matpath_update_depths($array['vid'], $path);
         }
-        db_query('INSERT INTO matpath (tid, vid, path, depth) VALUES '.implode(",",$inserts), $values);
+        // Finally, reorder in the rare event that the insert was child 11, 101, 1001, etc.
+        matpath_reorder_path($array['vid'], substr($path, 0, strrpos($path, "/")));
+        break;
     }
   }
 }
@@ -131,14 +152,42 @@ function matpath_taxonomy($op, $type, $array = NULL){
  * HELPER FUNCTIONS
  ***********************************************************************************/
 /**
+ * This is already in the database, christ, we're going to have to shuffle.
+ * Everything above this path (or below depending on your sexual preference), needs
+ * moving down one, we'll start from the end, and simply update the path - easy!
+ */
+function matpath_make_room_for_path($vid, $path){  
+  // First lets calculate the paths to move from this term's parent path
+  $parent_path = substr($path, 0, strrpos($path, "/"));
+  $results = db_query("SELECT path FROM {matpath} WHERE path LIKE '%s/%%' AND path NOT LIKE '%s/%%/%%' AND vid = %d ORDER BY path DESC", $parent_path, $parent_path, $vid);
+  // Get the number of this sibling for checking against the ones being moved            
+  $this_sibling_num = array_pop(explode("/",$path));
+  // Get the total number of siblings (plus 1) for the padding
+  $mag_of_siblings = strlen(db_num_rows($results));
+  while($row = db_fetch_array($results)){
+    $path_to_move = array_pop($row);
+    $move_sibling_num = array_pop(explode("/",$path_to_move));
+    if($move_sibling_num < $this_sibling_num){
+      break;
+    }
+    // Calculate the new path
+    $new_path = substr($path, 0, strrpos($path, "/"))."/".str_pad(($move_sibling_num+1), $mag_of_siblings, "0", STR_PAD_LEFT);              
+  
+    // If we're here, we can do the move
+    db_query("UPDATE {matpath} SET path = REPLACE(path, '%s', '%s') WHERE path = '%s' OR path LIKE '%s/%%'", $path_to_move, $new_path, $path_to_move, $path_to_move);
+  }
+}
+/**
  * This function calculates the path(s) for a term, based on the parents of the term,
  * and the term itself.  This function is made more complicated by the fact that the
  * term's siblings heavily affect the final element of the path.
- *
- * @param String[] $parents
- * @param Object $term
  */
-function matpath_calculate_paths_from_parents($parents, $term){
+function matpath_calculate_paths_from_parents($term){
+  // Just extract vid and parents
+  $vid = $term['vid'];
+  $parents = $term['parent'];
+  print_r($term);
+  
   // Paths to return array
   $paths = array();
   // Check that parents is array, if not set it so
@@ -148,124 +197,169 @@ function matpath_calculate_paths_from_parents($parents, $term){
   foreach($parents as $parent){
     // Get the path of each of the parents, allowing us to select the siblings
     // and calculate the position of this term relative to the siblings
-    $results = db_query("SELECT path FROM {matpath} WHERE id = %d", $parent);
+    // Note, this is ordered by depth descending, as we could potentially alter a tree
+    // whose branches we need to alter later.  The returned order of this function
+    // therefore HAS significance.
+    $results = db_query("SELECT path FROM {matpath} WHERE tid = %d ORDER BY depth DESC", $parent);
     // Note, a parent can have multiple paths, but the position of the siblings
     // below that path is always the same, we can therefore calculate that just
     // once.
     $sibling_position = false;
     while($row = db_fetch_array($results)){
       $path = array_pop($row);
+      $num_siblings = 0;
       if($sibling_position === false){
         $sibling_position = 0;
         // Calculate this terms position relative to siblings
-        $result = db_query("SELECT name, weight FROM term_data t, matpath m WHERE t.tid=m.tid AND path LIKE '%s%%'", $path);
+        $result = db_query("SELECT name, weight FROM term_data t, matpath m WHERE t.tid=m.tid AND path LIKE '%s/%%' AND path NOT LIKE '%s/%%/%%' AND m.vid = %d AND m.tid != %d", $path, $path, $vid, $term['tid']);
+        // We need the number of siblings so that we can know how much to pad the sibling number by.
+        // We mustn't pad more than we need to, as that could result in the paths not being
+        // reordered on an insert
+        $num_siblings = strlen(db_num_rows($result));
         while($sibling_row = db_fetch_array($result)){
           // Compare the return row against the term.  If the weight is less, or the
           // term name appears before this terms in the alphabet, then increase the
           // sibling_position by 1
-          if($sibling_row['weight']<$term->weight || strcmp($term->name, $sibling_row['name'])){
+          if($sibling_row['weight']<$term['weight'] || ($sibling_row['weight'] == $term['weight'] && strcmp($term['name'], $sibling_row['name'])>0)){
             $sibling_position ++;
-          }
+          }            
         }
       }
-      $paths[] = "$path/$sibling_position";
+      $paths[] = "$path/".str_pad($sibling_position, $num_siblings, "0", STR_PAD_LEFT);
     }
   }
   return $paths;
 }
+
 /**
  * Following function updates all the weights in the matpath table.  This is made
  * possible given the direct relationship between the number of "/" characters in
  * the path, and the weight itself.
  */
-function matpath_update_weights($vid, $path='//'){
+function matpath_update_depths($vid, $path='//'){
   db_query("UPDATE matpath SET depth = LENGTH(path)-LENGTH(REPLACE(path,'/',''))-2 WHERE vid=%d AND path LIKE '%s%%'", $vid, $path);
 }
-/***********************************************************************************
- * TAXONOMY ADDITIONAL PAGE
- ***********************************************************************************/
-/**
- * List and manage vocabularies.
-function matpath_overview_vocabularies() {
-  $rebuilding = matpath_trees_rebuilding();
-  $above_table = false;
-  if(count($rebuilding)){
-    $processes = variable_get('matpath_rebuild_pids',array());
-    $current_pids = array();
-    foreach($rebuilding as $pid=>$vid){
-      // Check that this process was started by this site
-      if(in_array($pid,$processes)){
-        if(!$above_table){
-          $above_table = '<p><strong>'.t('Currently rebuilding the following vocabularies:').'</strong></p><ul>';
-        }
-        $vocabulary = taxonomy_get_vocabulary($vid);
-        $above_table .='<li>'.check_plain($vocabulary->name).'</li>';
-        $current_pids[] = $pid;
-        $display_above_table = true;
-      }
-    }
-    variable_set('matpath_rebuild_pids',$current_pids);
-    $above_table .= '</ul>';
-  }
-  $vocabularies = taxonomy_get_vocabularies();
-  $rows = array();
-  foreach ($vocabularies as $vocabulary) {
-    if(isset($rebuilding[$vocabulary->vid])){
-      $rebuild = t('This tree is currently being rebuilt');
-    } else {
-      $rebuild = l(t('rebuild tree'), 'matpath/update/'.$vocabulary->vid);
-    }
-    $rows[] = array(
-      'name' => check_plain($vocabulary->name),
-      'rebuild' => $rebuild
-    );
-  }
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No categories available.'), 'colspan' => '5'));
-  }
-  $header = array(t('Name'),t('Rebuild Tree'));
 
-  return $above_table . theme('table', $header, $rows, array('id' => 'taxonomy'));
-}
- */
-/***********************************************************************************
- * ADDITIONAL matpath FUNCTIONS FOR OTHER MODULES!
- ***********************************************************************************/
 /**
- * Following function returns TRUE if this term or one of its descendants
- * has been used to tag a node, FALSE if not.
+ * Gets the total number of terms in a taxonomic tree.  This is used by the 
+ * ..._get_tree function
  */
-function matpath_descendant_used($tid){
-  //return false;
-  $result = db_query("SELECT COUNT(*) FROM {term_node} WHERE tid IN (SELECT tid FROM {matpath} WHERE lft>=(SELECT lft FROM {matpath} WHERE tid=%d) AND rgt<=(SELECT rgt FROM {matpath} WHERE tid=%d))",$tid,$tid);
-  if(array_pop(db_fetch_array($result))){
-    return true;
-  } else {
-    return false;
+function matpath_get_tree_count($vid, $parent = 0, $max_depth = NULL){
+  // Get parent left and right
+  $path = "/";
+  if($parent != 0){
+    $path = array_pop(db_fetch_array(db_query("SELECT path FROM {matpath} WHERE tid = %d", $parent)));
+  }
+  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {matpath} WHERE vid=%d AND path LIKE '%s/%%'", $vid, $path)));
+}
+
+/**
+ * Following function reorders the children of a particular term.  This function is
+ * used on update and deletion of terms.  Reordering is done based on a term's weight
+ * and its name.
+ */
+function matpath_reorder_path($vid, $path){
+  if(is_null($path) || $path == ''){
+    debug_print_backtrace();
+    exit;
+  }
+  // Lets get the current order of the terms in the database, along with their paths
+  // By getting the paths, we can look for gaps
+  $db_order = array();
+  $results = db_query("SELECT t.tid, path FROM {term_data} t, {matpath} m WHERE m.tid=t.tid AND path LIKE '%s/%%' AND path NOT LIKE '%s/%%/%%' ORDER BY path", $path, $path);
+  while($row = db_fetch_array($results)){
+    $db_order[$row['tid']] = $row['path'];
+  }
+  // Now we need the correct order of the terms
+  $correct_order = array();
+  $results = db_query("SELECT t.tid FROM {term_data} t, {matpath} m WHERE m.tid=t.tid AND path LIKE '%s/%%' AND path NOT LIKE '%s/%%/%%' ORDER BY weight, name", $path, $path);
+  $i=0;  
+  $mag_of_siblings = strlen(db_num_rows($results)-1);
+  while($row = db_fetch_array($results)){
+    $correct_order[$row['tid']] = $path."/".str_pad($i, $mag_of_siblings, "0", STR_PAD_LEFT);
+    $i++;
+  }
+  echo 
+  print_r($db_order);
+  print_r($correct_order);
+  exit;
+  // Check we actually need to do some changing, if not, just return
+  if(!count(array_diff($correct_order, $db_order))){
+    return;
+  }
+  $first = true;
+  $paths_placeholder = array();
+  $db_parameters = array();
+  foreach($db_order as $tid => $from_path){
+    // We don't need to change anything if there it's already correct
+    if($from_path == $correct_order[$tid]){
+      continue;
+    }
+    // First one we call the db_query_temporary function, subsequent ones we add to
+    // this table.
+    // Because path is passed to this function, we need to use placeholders.
+    $db_parameters[] = $from_path;
+    $db_parameters[] = $from_path;
+    $paths_placeholder[] = " path='%s' OR path LIKE '%s/%%' ";
+    if($first){
+      $first = false;
+      db_query_temporary("SELECT tid,vid,REPLACE(path,'%s','%s') path,depth FROM {matpath} WHERE path LIKE '%s/%%' OR path = '%s'", $from_path, $correct_order[$tid], $from_path, $from_path, 'matpathreorder');
+    } else {
+      db_query("INSERT INTO matpathreorder SELECT tid,vid,REPLACE(path,'%s','%s'),depth FROM {matpath} WHERE path LIKE '%s/%%' OR path = '%s'", $from_path, $correct_order[$tid], $from_path, $from_path);
+    }
+  }
+  // Lets check that we have something to do, we'll no this is the case if
+  // $paths_placeholder isn't empty
+  if(count($paths_placeholder)){
+    // Now we delete everything that starts with the moved paths  
+    db_query("DELETE FROM {matpath} WHERE ".implode("OR", $paths_placeholder), $db_parameters);
+    
+    // Now we add everything from the temp table, just a straight copy - WOOT!
+    db_query("INSERT INTO {matpath} SELECT * FROM matpathreorder");
+    
+    // Finally, we'll drop the table, incase this function is called more than once
+    db_query("DROP TABLE matpathreorder");
   }
 }
 /***********************************************************************************
  * REPLACEMENT FUNCTIONS FOR taxonomy module
  ***********************************************************************************/
+/**
+ * The following function completely replaces taxonomy_get_tree.  It has an additional
+ * parameter which specifies the maximum number of terms to return.
+ */
 function matpath_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0, $count=1000){
-  // First we do a count, if the tree is too big, we give a warning.
-  $tree_size = matpath_get_tree_count($vid, $parent, $max_depth);
-  if($tree_size>1000){
-    watchdog('taxonomy','Tried to get a big tree [taxonomy_get_tree('.$vid.','.$parent.','.$max_depth.')',WATCHDOG_WARNING);
+  // FIXME
+  // - THIS FUNCTION DOES NOT CURRENTLY RESPECT DEPTH PROPERLY IF THE PARENT IS 
+  //   SPECIFIED.  DEPTH IS STILL DONE RELATIVE TO ROOT, AND NOT FROM THE "PARENT"
+  // - THIS FUNCTION DOES NOT RETURN THE PARENT IDs AS PART OF THE TERM OBJECT
+  
+  // Due to, what I consider, a bug with taxonomy.module, we're returning an empty
+  // array if $parent is null.
+  // taxonomy_get_tree(vid); DOES NOT EQUAL taxonomy_get_tree(vid, null);
+  if(is_null($parent)){
+    return array();
   }
+  
+  // We should perhaps be logging when large trees are fetched, but given it is 
+  // predictable, there is probably no point.
+  
+  // Lets get the path from where we'll root the tree.  This can be any of the term's
+  // paths, as all of the structure below should be identical.
   $path = '/';
-  if($parent != 0){
-    $path = array_pop(db_fetch_array(db_query("SELECT path FROM {matpath} WHERE tid = %d", $parent)));
+  if($parent){
+    $path = array_pop(db_fetch_array(db_query("SELECT path FROM {matpath} WHERE tid = %d LIMIT 1", $parent)));
   }
-  $params = array($vid, $path);
+  $params = array($path, $vid);
   $depth_sql = '';
   if(isset($max_depth) && $max_depth != NULL){
     $depth_sql = 'AND depth<%d';
     $params[] = $max_depth;
   }
-  $results = db_query_range("SELECT t.tid,t.*,m.depth FROM {term_data} t, {matpath} m WHERE t.tid = m.tid AND m.vid = %d AND path LIKE '%s/%%' $depth_sql ORDER BY path", $params, $offset, $count);
+  // Get all the information which will go towards being the tree
+  $results = db_query_range("SELECT t.tid,t.name,t.description,t.vid,depth,weight FROM {matpath} m, {term_data} t WHERE m.tid = t.tid AND path LIKE '%s/%%' AND t.vid = %d $depth_sql ORDER BY path", $params, $offset, $count);
   
-  echo db_num_rows($results);
+  // The tree object to return
   $tree = array();
   // FIXME - We're not returning the parents for a term - is this an issue?
   while($row = db_fetch_object($results)){
@@ -273,15 +367,10 @@ function matpath_get_tree($vid, $parent = 0, $max_depth = NULL, $offset = 0, $co
   }
   return $tree;
 }
-function matpath_get_tree_count($vid, $parent = 0, $max_depth = NULL){
-  // Get parent left and right
-  $path = "/";
-  if($parent != 0){
-    $path = array_pop(db_fetch_array(db_query("SELECT path FROM {matpath} WHERE tid = %d", $parent)));
-  }
-  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {matpath} WHERE vid=%d AND path LIKE '%s/%%'", $vid, $path)));
-  return sprintf("SELECT COUNT(*) FROM {matpath} WHERE vid=%d AND path LIKE '%s/%%'", $vid, $path);
-}
+
+/**
+ * The following function completely replaces the taxonomy_select_nodes function.
+ */
 function matpath_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC ') {
   if (count($tids) > 0) {
     if($depth =='all'){
@@ -308,6 +397,7 @@ function matpath_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pa
   }
   return $result;  
 }
+
 /**
  * Following function is barely changed from the original, but just to make things simpler, it's recreated here.
  */
@@ -360,137 +450,4 @@ function matpath_overview_terms($vid){
   }
   return $output;
   
-}
-/***********************************************************************************
- * REBUILD TREE
- ***********************************************************************************/
-// Returns an indexed array of PIDs and the vocabularies associated with these PIDs
-function matpath_trees_rebuilding(){  
-  exec('ps -ef | grep landr | grep -v grep',$exec_output);
-  $rebuilding=array();
-  foreach($exec_output as $process){
-    // Split the process by " " as the last part should be the vocabulary ID
-    $parts = explode(" ",preg_replace("/[\ ]*\ /"," ",$process));
-    $vid = array_pop($parts);
-    $pid = $parts[1];
-    $rebuilding[$pid]=$vid;
-  }
-  return $rebuilding;
-}
-function matpath_rebuild_tree_page($args){
-  matpath_rebuild_tree($args);
-  drupal_goto('admin/content/taxonomy/matpath');
-}
-function matpath_rebuild_tree($vid){
-  // Lets load this vocabulary, firstly to make sure it exists, and secondly
-  // so that we know its name
-  $vocabulary = taxonomy_get_vocabulary($vid);
-  if(!$vocabulary){return;}
-  // Check that the vocabulary has terms, if not, just return
-  $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
-  $array_results = db_fetch_array($result);
-  if(!$array_results['c']){
-    drupal_set_message(check_plain($vocabulary->name).' has no terms');
-    return;
-  }
-  
-  // Get the DB connection shit in the same way as core does
-  global $db_url;  
-  $url = parse_url($db_url);
-  $url['user'] = urldecode($url['user']);
-  if(isset($url['pass'])) {
-    $url['pass'] = urldecode($url['pass']);
-  } else {
-    $url['pass'] = '';}
-  $url['host'] = urldecode($url['host']);
-  $url['path'] = urldecode($url['path']);
-  $url['port'] = $url['port'] ? $url['port'] : 3306;
-  
-  // Calculate the tid to start from (creating a parent if the vocabulary
-  // has multiple roots (forest not tree).
-  $results = db_query("SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
-  $tid;
-  $temporary_root_created = false;
-    
-  if(db_num_rows($results)==1){
-    // Single tree, woot
-    $tid = array_pop(db_fetch_array($results));
-  } else {
-    $temporary_root_created = true;
-    // Either no results (Farp), Or we have a forest.  Lets tree it!
-    // Create new term to be the base of the tree.
-    // Because the term is temporary, we don't use taxonomy_ functions, but instead
-    // use trusty SQL.
-    $tid = db_next_id('{term_data}_tid');
-    // Create term
-    db_query("INSERT INTO {term_data} (tid, vid, name) VALUES (%d , %d , 'TEMPORARY TERM')", $tid, $vid);
-    db_query("INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d , 0)", $tid);
-    // Set parent of current roots as this term
-    $result = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE t.tid = h.tid AND parent =0 AND vid = %d AND t.tid != %d",$vid, $tid);
-    $tids = array();
-    while($row=db_fetch_array($result)){
-      $tids[] = $row['tid'];
-    }
-    db_query("UPDATE {term_hierarchy} SET parent = %d WHERE tid IN (".implode(",",$tids).")",$tid,$tid);
-  }
-  
-  // Create the string which will become the PHP file to execute
-  /**
-   * FIXME - The following doesn't use Drupal's {table_name} shenanigans
-   */  
-  $tmp_php_file_string = '<?php
-mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
-mysql_select_db(\''.substr($url['path'], 1).'\');
-function rebuild_tree($tid, $left, $depth) {
-  $right = $left+1;
-  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC , name DESC");
-  while ($row = mysql_fetch_array($results)){
-    $right = rebuild_tree($row[0], $right, $depth+1);
-  }  
-  echo "($tid , '.$vid.' , $left , $right, $depth)";
-  if($left != 1){
-    echo ",";
-  }
-  return $right+1;
-} 
-echo "DELETE FROM '.db_prefix_tables('{matpath}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{matpath}').' (tid, vid, lft, rgt, depth) VALUES ";
-rebuild_tree('.$tid.',1, ';
-  if($temporary_root_created){
-    $tmp_php_file_string .= '-1';
-  } else {
-    $tmp_php_file_string .= '0';    
-  }
-  $tmp_php_file_string .= ');
-echo ";";';
-  
-  // Add the deletion of the temporary term if required to the PHP file
-  if($temporary_root_created){
-    $tmp_php_file_string .= '
-echo "DELETE FROM '.db_prefix_tables('{matpath}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_data}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_hierarchy}').' WHERE tid = '.$tid.';";
-echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
-  }
-  $tmp_php_file_string .= '
-echo "UPDATE '.db_prefix_tables('{matpath}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";';
-  // Write this out to a temporary file which we'll EXEC!
-  $filepath = file_create_filename('matpath.php', file_directory_temp());
-  file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
-  
-  // FIXME - TEST FOR WINDOWS HERE, IF WINDOWS, EXECUTE BAT FILE INSTEAD
-  // Lets try to execute the file
-  if($windoze){
-    
-  } else {
-    $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','matpath').'/landr';
-    // FIXME - Needs port
-    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1).' '.$vid;
-    $pid = shell_exec("nohup $command > /dev/null & echo $!");
-    variable_set('matpath_rebuild_pids',array_merge(variable_get('matpath_rebuild_pids',array()),array($pid=>$pid)));
-  }
-  
-  // Finally delete the file
-  sleep(2); // Not sure if this sleep is necesary, but it seems to be
-  file_delete($filepath);
-  
-  // Set message to say that we're doing the rebuild
-  drupal_set_message(t(LEFTANDRIGHT_REBUILDING).' '.check_plain($vocabulary->name));
 }
