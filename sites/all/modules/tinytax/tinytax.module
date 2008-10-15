@@ -269,7 +269,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
         $return_string .= ' tinytaxlast';
       }
     }
-    $return_string .= _theme_tinytax_term_list_link($parent, $vid);
+    $return_string .= '">'._theme_tinytax_term_list_link($parent, $vid);
   }
   if ($num_children){
     $return_string .='<div class="tinytaxlast tinytax tinytaxnode">';
@@ -283,7 +283,7 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
       elseif ($num_parents){
         $return_string .= ' tinytaxlast';
       }
-      $return_string .= _theme_tinytax_term_list_link($child, $vid);
+      $return_string .= '">'._theme_tinytax_term_list_link($child, $vid);
     }
     $return_string .='</div>';
   }
@@ -293,14 +293,12 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
   return $return_string;
 }
 function _theme_tinytax_term_list_link($term, $vid){
-  $class = 'tinytaxlink';
   // if this term has a child which is used!
   if(function_exists('leftandright_descendant_used')){
     if(leftandright_descendant_used($term->tid)){
-      $class .= 'used';      
+      $class = 'tinytaxused';      
     }
   }
-  $return_string = '">';
   if (substr($term->tid,0,3)!='vid'){
     $return_string .= l(
       '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.gif'.'"/>',
@@ -328,7 +326,7 @@ function _theme_tinytax_term_list_link($term, $vid){
       TRUE
     );
   }
-  $return_string .= '&nbsp;';
+  $return_string .= ' ';
   if (substr($term->tid,0,3)!='vid'){
     $return_string .= l(
       $term->name,
