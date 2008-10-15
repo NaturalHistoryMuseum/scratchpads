@@ -1,0 +1,159 @@
+<html><head><title>Drupal Modules</title>
+<style type="text/css">
+body{
+	border: solid 1px black;
+	padding: 20px;
+	margin: 20px;
+	font-family: Arial, Helvetica, Sans-Serif;
+}
+th {
+	background-color: #ccc;
+	border: solid 1px black;
+}
+tr {
+	background-color: #eee;
+	margin: 0;
+}
+td.prob {
+	color: white;
+	background-color: red;
+	border: solid 1px black;
+}
+td.fine {
+	color: white;
+	background-color: green;
+	border: solid 1px black;
+}
+td.prine{
+	color: black;
+	background-color: yellow;
+	border: solid 1px black;
+}
+table {
+	border: solid 3px #ddd;
+}
+li {
+	display: block;
+	border: solid 1px black;
+	padding 3px;
+	margin: 3px;
+}
+</style>
+</head><body>
+<h1>Scratchpad Upgrade to Drupal 6 Status Document</h1>
+<p>The following table provides a list of modules currently in use on the Scratchpads (including their current usage), and their porting to Drupal 6 status (<a href="http://groups.drupal.org/node/5036">Extra information</a>).  Note, modules developed by S.D.Rycroft which require porting are marked as "Fine" whilst those developed by B.Scott are marked as a "Problem", purely given the fact that Ben is only with us until April.</p>
+<p>I've attempted to categorise the modules into three:</p><ul><li style="background-color: green;">Modules which are either ported, or no longer needed</li><li style="background-color: yellow">Modules which are not ported, but shouldn't stop us from upgrading</li><li style="background-color: red;">Modules which are not ported, and that the Scratchpad's rely on.  Without attention these will stop a Drupal upgrade</li></ul>
+<table>
+<tr><th>Project</th><th>Current Usage</th><th>Status</th>
+<tr><td><a href="http://drupal.org/project/activeselect">activeselect</a></td><td>Unsure where this is being used.</td><td class="fine">Not required??? Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/addnode">addnode</a></td><td>Currently being used by the Specimen and Imagex modules.  Provides a clunky field to reference other nodes, or to create a new node.</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/advanced_forum">advanced_forum</a></td><td>Improves the themeing of the Forums. Not sure if we'd required this, as we could develop our own improved forum.</td><td class="fine">Not required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/akismet">akismet</a></td><td>Detects spam submissions in all content types, including comments.</td><td class="fine">Required. Ported - needs review</td></tr>
+<tr><td><a href="http://drupal.org/project/also_term">also_term</a></td><td>Module being developed by S.D.Rycroft</td><td class="fine">Requires starting</td></tr>
+<tr><td><a href="http://drupal.org/project/auto_nodetitle">auto_nodetitle</a></td><td>Used to automatically generate node titles from other node form fields.</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/autotag">autotag</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/backup">backup</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/batax">batax</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/biblio">biblio</a></td><td>Erm!</td><td class="fine">Required. Ported.</td></tr>
+<tr><td><a href="http://drupal.org/project/bio_image">bio_image</a></td><td>Minor module which adds taxonomy fields to the image content type.  Developed by S.D.Rycroft, and in need of tweaking.</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/bio_taxonomy">bio_taxonomy</a></td><td>Module which links the taxonomy with a biblio entry.  Wants integrating into an improved taxonomy solution. Developed by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/captcha">captcha</a></td><td>Not currently in use, although this will be changed on upgrade (assuming the issue with reCaptcha is resolved)</td><td class="fine">Required??? Ported.</td></tr>
+<tr><td><a href="http://drupal.org/project/cck">cck</a></td><td>Erm!</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/cck_taxonomy">cck_taxonomy</a></td><td class="prob">Not sure how this is currently being used, further analysis is required.</td><td></td></tr>
+<tr><td><a href="http://drupal.org/project/checkbox_validate">checkbox_validate</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/citation">citation</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/coder">coder</a></td><td>Helpful development module which isn't used on the Scratchpads</td><td class="fine">Not required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/contemplate">contemplate</a></td><td>Used on a limited number of sites to tweak how CCK nodes are displayed.</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/content_access">content_access</a></td><td>Used to restrict the access to particular content types, or particular nodes.</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/content_taxonomy">content_taxonomy</a></td><td>Provides a field for adding taxonomy terms to nodes.  This is probably not required, as an improvement to the taxonomy module will cover this</td><td class="prine">Required until taxonomy module improved. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/countrypresence">countrypresence</a></td><td>Used only on Chris Borrow's site.  Could well be improved. Developed by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/creativecommons_lite">creativecommons_lite</a></td><td>Actually very rarely used properly, and could therefore be removed/improved</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/darwincore">darwincore</a></td><td>Provides the specimen and location content types.  Still in active development by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/date">date</a></td><td>Not sure if this is actually being used on any of the sites.</td><td class="fine">Required? Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/dblclick2edit">dblclick2edit</a></td><td>Module developed from the dblclick module by B.Scott</td><td class="prine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/devel">devel</a></td><td>Used in development, and not actually required by any Scratchpads</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/easylink">easylink</a></td><td>Used in the TinyMCE WYSIWYG editor as an easy way to link to other nodes.</td><td class="prine">Required??? Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/editview">editview</a></td><td>Enables the editing of "table views" from the view itself.  Not essential, but definitely useful.</td><td class="fine">Not essential. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/email">email</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/empty_views">empty_views</a></td><td>Developed by B.Scott to provide empty views for panels pages.</td><td class="prob">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/fileshare">fileshare</a></td><td>Currently being used across all sites to allow easy creation of pages with multiple files for sharing.</td><td class="prine">Required. Not ported (removed from Drupal site)</td></tr>
+<tr><td><a href="http://drupal.org/project/form_store">form_store</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/fotonotes">fotonotes</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/glossary">glossary</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/gmap">gmap</a></td><td>Used on all sites to provide maps of content, and to allow adding of coordinates via a map</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/autotag">hashcash</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/image">image</a></td><td>Provides the image content type</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/imagex">imagex</a></td><td>Allows for the upload and annotation of many images at once. Developed by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/imce">imce</a></td><td>Used to allow the easy upload of files to the server from the TinyMCE editor. Perhaps should be discouraged</td><td class="fine">Not required? Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/import_html">import_html</a></td><td>Not used on the Scratchpads</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/ispecies">ispecies</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/job_queue">job_queue</a></td><td>Required, although not compulsary by other modules.</td><td class="fine">Not required? Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/jquery_form">jquery_form</a></td><td>Used by the Panels pages?</td><td class="fine">Required. Included in core</td></tr>
+<tr><td><a href="http://drupal.org/project/jquery_update">jquery_update</a></td><td>Used to change the version of the jQuery within Drupal to a later version</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/jquib">jquib</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/jstools">jstools</a></td><td>Provides the tabs forms and expandable menu elements. Not essential, although is used by the Specimen module</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/legal">legal</a></td><td>Provides the T&Cs form which all users of a Scratchpad must agree to</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/leftandright">leftandright</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/lightbox2">lightbox2</a></td><td>Provides the popup images shizzle</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/links">links</a></td><td>I don't think this is being used by anyone, although it is "being" ported</td><td class="fine">Not required? Not yet ported</td></tr>
+<tr><td><a href="http://drupal.org/project/location">location</a></td><td>Provides the ability to link content to locations. Currently used by the specimen location content type, and across a number of sites.</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/matpath">matpath</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/mimemail">mimemail</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/mollom">mollom</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/nagger">nagger</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/nhm_panels">nhm_panels</a></td><td>Developed by B.Scott</td><td class="prob">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/nhm_widgets">nhm_widgets</a></td><td>Developed by B.Scott</td><td class="prob">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/node_clone">node_clone</a></td><td>Used to create an exact copy of a node.</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/node_import">node_import</a></td><td>Used to import content from CSV files into nodes. Note, this does NOT work with our own content types (specimen, and any others we may create).</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/nodes">nodes</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/notify">notify</a></td><td>Used to send out emails to users when content is updated (and on other events).</td><td class="fine">Not required. Included in core?</td></tr>
+<tr><td><a href="http://drupal.org/project/oai2">oai2</a></td><td>Problematic module which provides an OAI-PMH interface to the biblio content of a site. Could be improved</td><td class="fine">Not required? Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/og">og</a></td><td>Used extensively across sites to enable users to create their own custom content types.</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/og_user_roles">og_user_roles</a></td><td>Allows users to assign roles to other users for a specific group.</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/openid">openid</a></td><td>Political requirement</td><td class="fine">Required. Included in core</td></tr>
+<tr><td><a href="http://drupal.org/project/pagearray">pagearray</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/panels">panels</a></td><td>Essential module required for the taxon panels pages</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/panels_vocab">panels_vocab</a></td><td>Developed by B.Scott.  Required to assign Categories to Panels</td><td class="prine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/panel_view_wizard">panel_view_wizard</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/paranoia">paranoia</a></td><td>Hides stuff from non admin users. Functionality could be added to the Scratchpadify module</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/pathauto">pathauto</a></td><td>Creates the URLs based on node titles (and not NIDs). Not essential, however, nice to have</td><td class="fine">Required. Ported - requires testing</td></tr>
+<tr><td><a href="http://drupal.org/project/path_redirect">path_redirect</a></td><td>Very useful if using the pathauto module</td><td class="prine">Required? Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/printable">printable</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/printable_nhm">printable_nhm</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/quote">quote</a></td><td>Adds the "quote" functionality to forums</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/remove_nonviewable_menu_items">remove_nonviewable_menu_items</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/recaptcha">recaptcha</a></td><td>Not currently in use, although this needs reviewing.</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/roleassign">roleassign</a></td><td>Determine what roles a Scratchpad maintainer can assign to new users</td><td class="prob">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/rollout">rollout</a></td><td>Developed by S.D.Rycroft - needs work</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/scratchpadify">scratchpadify</a></td><td>Developed by S.D.Rycroft - adds minor changes to a Scratchpad</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/search_attachments">search_attachments</a></td><td>Used only on the European Mosquito site to index nodes depending on the content of PDFs attached to the nodes.</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/simplenews">simplenews</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/sitemenu">sitemenu</a></td><td>Used on a couple of sites, namely Global bees. Not really required.</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/subform_element">subform_element</a></td><td>Required by another module?</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/synonyms">synonyms</a></td><td>Exposes synonyms to the search.</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/tablesorter">tablesorter</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/tasks">tasks</a></td><td>Creates a simple task content type.  Currently only used properly on the editwebrevisions site</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/taxonomy_breadcrumb">taxonomy_breadcrumb</a></td><td>A module which I'm not overly keen on as it often conflicts with other breadcrumb production</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/taxonomy_forceall">taxonomy_forceall</a></td><td>Panels pages 'do away with' the requirement of this module.</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/taxonomy_import">taxonomy_import</a></td><td>Developed by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/taxonomy_manager">taxonomy_manager</a></td><td>Truly awful module which barely works anyway.</td><td class="fine">NOT required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/taxtab">taxtab</a></td><td>Developed by S.D.Rycroft - Provides the taxonomy search tab.</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/term_merge">term_merge</a></td><td>Awful module which doesn't seem to do what folk expect (a merged into b, a's children should become b's, but instead are orphoned).</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/thickbox">thickbox</a></td><td>Kickass module!</td><td class="prob">Required. Not yet ported (scheduled for April)</td></tr>
+<tr><td><a href="http://drupal.org/project/tinymce">tinymce</a></td><td>WYSIWYG Editor used across all the sites.</td><td class="fine">Required. Port contributed, not yet released</td></tr>
+<tr><td><a href="http://drupal.org/project/tinytax">tinytax</a></td><td>Developed by S.D.Rycroft</td><td class="fine">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/token">token</a></td><td>Required by pathauto</td><td class="fine">Required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/tql">tql</a></td><td>Probably not used across the sites,</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/tree">tree</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/userplus">userplus</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/trackback">trackback</a></td><td>Not currently used as it subjects sites to spam</td><td class="fine">Not required. Ported</td></tr>
+<tr><td><a href="http://drupal.org/project/trip_search">trip_search</a></td><td>Provides an advanced search interface.  Not essential</td><td class="fine">Not required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/ui">ui</a></td><td>Ports the new jQuery to Drupal.  This is being used to enable advanced drag'n'drop features in Panels.</td><td class="fine">Required. Included in core</td></tr>
+<tr><td><a href="http://drupal.org/project/user_status">user_status</a></td><td>Sends emails to users when they are approved - actually quite useful</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/view_controls">view_controls</a></td><td>Developed by B.Scott</td><td class="prob">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/views">views</a></td><td>Essential module which should be included in Drupal core</td><td class="fine">Required. Ported (alpha)</td></tr>
+<tr><td><a href="http://drupal.org/project/views_datasource">views_datasource</a></td><td></td><td class="prob"></td></tr>
+<tr><td><a href="http://drupal.org/project/views_setup_wizard">views_setup_wizard</a></td><td>Developed by B.Scott</td><td class="prob">Requires porting/development</td></tr>
+<tr><td><a href="http://drupal.org/project/webform">webform</a></td><td>Useful module used to create forms which are filled in by users or anonymously. Could be worked around. Currently only used on the editwebrevisions site (CHECK???)</td><td class="prine">Required. Not ported</td></tr>
+<tr><td><a href="http://drupal.org/project/xmlsitemap">xmlsitemap</a></td><td>Not currently in use</td><td class="fine">Not required. Not ported</td></tr>
+</table></body></html>
