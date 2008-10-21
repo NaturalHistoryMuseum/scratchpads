@@ -1,0 +1,21 @@
+<?php
+/* $Id: robotstxt.install,v 1.1.4.3 2007/10/20 00:10:30 hass Exp $ */
+
+/**
+ * Implementation of hook_install().
+ */
+function robotstxt_install() {
+  if (file_exists('./robots.txt')) {
+    variable_set('robotstxt', check_plain(file_get_contents('./robots.txt')));
+  }
+  elseif (file_exists(drupal_get_path('module', 'robotstxt') .'/robots.txt')) {
+    variable_set('robotstxt', check_plain(file_get_contents(drupal_get_path('module', 'robotstxt') .'/robots.txt')));
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function robotstxt_uninstall() {
+  variable_del('robotstxt');
+}

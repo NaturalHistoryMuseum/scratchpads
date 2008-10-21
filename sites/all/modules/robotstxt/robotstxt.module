@@ -1,0 +1,134 @@
+<?php
+// $Id: robotstxt.module,v 1.2.2.8 2008/05/01 15:32:42 toddnienkerk Exp $
+
+/**
+ * Implementation of hook_help().
+ */
+function robotstxt_help($section) {
+  switch ($section) {
+    case 'admin/help#robotstxt': 
+      return '<p>'. t('In a multisite environment, there is no mechanism for having a separate robots.txt file for each site. This module addresses that need by letting you administer the robots.txt file from the settings interface.') .'</p>';
+      break;
+    case 'admin/settings/robotstxt':
+      return t('See http://www.robotstxt.org/ for more information concerning how to write your robots.txt file.');
+      break;      
+  }
+}
+
+/**
+ * Defines the robots.txt path as a callback.
+ */
+function robotstxt_menu($maycache) {
+  $items = array();
+  if ($maycache) {
+    $items[] = array(
+      'path' => 'robots.txt',
+      'access' => TRUE,
+      'callback' => 'robotstxt_robots',
+      'type' => MENU_CALLBACK,
+    );
+    $items[] = array(
+      'path' => 'admin/settings/robotstxt',
+      'title' => t('RobotsTxt'),
+      'description' => t('Manage your robots.txt file.'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('robotstxt_admin_settings'),
+      'access' => user_access('administer site configuration'),
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * You can edit the robots.txt for your site under admin/settings/robotstxt
+ */
+function robotstxt_admin_settings() {
+  $base = variable_get('robotstxt', FALSE);
+
+  if ($base === FALSE) {
+    $base = robotstxt_get_file_contents();
+  }
+
+  $form['robotstxt'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Contents of robots.txt'),
+    '#default_value' => $base,
+    '#cols' => 60,
+    '#rows' => 20,
+    '#required' => FALSE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Serve up the robots.txt file stored in the db.
+ */
+function robotstxt_robots() {
+  $base = variable_get('robotstxt', FALSE);
+
+  if ($base === FALSE) {
+    $base = robotstxt_get_file_contents();
+  }
+
+  drupal_set_header("Content-type: text/plain");
+  echo trim(check_plain($base));
+
+  // Hook other modules for adding additional lines to robots.txt
+  $lines = module_invoke_all('robotstxt');
+  foreach ($lines as $line) {
+    $line = check_plain($line);
+    if ($line != '') {
+      echo "\n" . trim($line);
+    }
+  }
+
+  exit;
+}
+
+/**
+ * Implementation of hook_requirements()
+ */
+function robotstxt_requirements($phase) {
+  $requirements = array();
+  switch ($phase) {
+    case 'install' :
+    case 'runtime' :
+      // Module cannot work without Clean URLs.
+      if (!variable_get('clean_url', 0)) {
+        $requirements['robotstxt_cleanurl'] = array(
+          'title' => t('RobotsTxt'),
+          'severity' => REQUIREMENT_ERROR,
+          'value' => t('<a href="!clean_url">Clean URLs</a> are mandatory for this module.', array('!clean_url' => url('admin/settings/clean-urls'))),
+        );
+      }
+
+      // Webservers prefer the robots.txt file on disk and does not allow menu path overwrite. 
+      if (file_exists('./robots.txt')) {
+        $requirements['robotstxt_file'] = array(
+          'title' => t('RobotsTxt'),
+          'severity' => REQUIREMENT_WARNING,
+          'value' => t('RobotsTxt module works only if you remove the existing robots.txt file in your website root.'),
+        );
+      }
+  }
+  return $requirements;
+}
+
+
+/**
+ * Retrieve contents of robots.txt from site root or module directory
+ */
+function robotstxt_get_file_contents() {
+  $file_contents = '';
+
+  if (file_exists('./robots.txt')) {
+    $file_contents = check_plain(file_get_contents('./robots.txt'));
+  }
+  elseif (file_exists(drupal_get_path('module', 'robotstxt') .'/robots.txt')) {
+    $file_contents = check_plain(file_get_contents(drupal_get_path('module', 'robotstxt') .'/robots.txt'));
+  }
+  
+  return $file_contents;
+}
