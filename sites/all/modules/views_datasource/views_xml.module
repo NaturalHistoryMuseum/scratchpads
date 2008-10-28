@@ -136,8 +136,8 @@ function views_xml_raw_render($vid, $nodes, $type) {
         $value = views_xml_strip_illegal_chars(views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view));
         $label = preg_replace('/\W/', '', $label); // atrip any non-word character  
         $label = str_replace("Profile", '', $label); //strip out Profile: from profile fields
-        if (strtotime($value))
-          $value = date(DATE_ISO8601, strtotime($value));
+        //if (strtotime($value))
+        //  $value = date(DATE_ISO8601, strtotime($value));
         if (is_null($value) || ($value === '')) continue;
         $xml .= "    <$label>$value</$label>\n";       
       }
@@ -176,8 +176,8 @@ function views_xml_opml_render($vid, $nodes, $type) {
         $value = views_xml_strip_illegal_chars(views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view));
         $label = preg_replace('/\W/', '', $label); // atrip any non-word character  
         $label = str_replace("Profile", '', $label); //strip out Profile: from profile fields
-        if (strtotime($value))
-          $value = date(DATE_ISO8601, strtotime($value));
+        //if (strtotime($value))
+        //  $value = date(DATE_ISO8601, strtotime($value));
         if (is_null($value) || ($value === '')) continue;        
         $xml .= $label.'="'.$value.'" ';
       }
