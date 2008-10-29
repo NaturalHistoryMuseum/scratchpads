@@ -56,6 +56,7 @@ function db_connect($url) {
   // Check if MySQLi support is present in PHP
   if (!function_exists('mysqli_init') && !extension_loaded('mysqli')) {
     drupal_maintenance_theme();
+    drupal_set_header('HTTP/1.1 503 Service Unavailable');
     drupal_set_title('PHP MySQLi support not enabled');
     print theme('maintenance_page', '<p>We were unable to use the MySQLi database because the MySQLi extension for PHP is not installed. Check your <code>PHP.ini</code> to see how you can enable it.</p>
 <p>For more help, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.</p>');
@@ -92,6 +93,7 @@ function db_connect($url) {
   }
   else if (mysqli_connect_errno() > 0) {
     drupal_maintenance_theme();
+    drupal_set_header('HTTP/1.1 503 Service Unavailable');
     drupal_set_title('Unable to select database');
     print theme('maintenance_page', '<p>We were able to connect to the MySQL database server (which means your username and password are okay) but not able to select the database.</p>
 <p>The MySQL error was: '. theme('placeholder', mysqli_connect_error($connection)) .'.</p>
@@ -192,18 +194,18 @@ function db_num_rows($result) {
 }
 
 /**
-* Return an individual result field from the previous query.
-*
-* Only use this function if exactly one field is being selected; otherwise,
-* use db_fetch_object() or db_fetch_array().
-*
-* @param $result
-*   A database query result resource, as returned from db_query().
-* @param $row
-*   The index of the row whose result is needed.
-* @return
-*   The resulting field or FALSE.
-*/
+ * Return an individual result field from the previous query.
+ *
+ * Only use this function if exactly one field is being selected; otherwise,
+ * use db_fetch_object() or db_fetch_array().
+ *
+ * @param $result
+ *   A database query result resource, as returned from db_query().
+ * @param $row
+ *   The index of the row whose result is needed.
+ * @return
+ *   The resulting field or FALSE.
+ */
 function db_result($result, $row = 0) {
   if ($result && mysqli_num_rows($result) > $row) {
     $array = mysqli_fetch_array($result, MYSQLI_NUM);
