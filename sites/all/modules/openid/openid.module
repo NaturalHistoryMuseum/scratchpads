@@ -103,8 +103,8 @@ function openid_form_alter($form_id, &$form) {
       '#maxlength' => 255,
       '#weight' => -1,
       '#description' => l(t('What is OpenID?'), 'http://openid.net/'),
-      '#prefix' => '<div id="edit-openid-identifier-wrapper">',
-      '#suffix' => '</div>'      
+      //'#prefix' => '<div id="edit-openid-identifier-wrapper">',
+      //'#suffix' => '</div>'      
       );
     $form['openid.return_to'] = array('#type' => 'hidden', '#value' => url('openid/authenticate', drupal_get_destination(), NULL, TRUE));
     $form['name']['#prefix'] = '<div id="edit-name-wrapper">';
