@@ -1,0 +1,33 @@
+<?php
+/**
+ * This file helps with the install of the autotag module.  All it does is sets the highest node ID for 
+ * nodes which cron will search.  Cron eventually becomes unnecessary for this module.
+ */
+/**
+ * Implementation of hook_install
+ */
+function matpath_install(){
+  $results = array();
+  // Create tables.
+  drupal_install_schema('matpath');
+  // Check the results, only going on if they're all alright  
+  if (count($result) != count(array_filter($result))) {
+  	drupal_set_message(t('Drupal was unable to install the database tables for the matpath module.'), 'error');
+  	return;
+  }
+  // Lets now initiate a tree rebuild for all the vocabularies on the site
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocabulary){
+    // Rather annoyingly, at this point the module file isn't known to Drupal, so 
+    // we have to include it
+    include_once('matpath.module');
+    matpath_rebuild_tree($vocabulary->vid);
+  }
+  drupal_set_message(t('Matpath module has been installed, and a full tree rebuild has been started'));
+}
+
+function matpath_uninstall(){
+  // Remove tables.
+  drupal_uninstall_schema('matpath');
+
+}

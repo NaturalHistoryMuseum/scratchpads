@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * This file installs the DwC specimen module.
+ */
+
+/*
+TODO:
+ 1. Install database
+ 2. Create the taxonomies
+ 3. Ensure the darwincore module is weighted higher than location */
+
+/**
+ * Implementation of hook_install
+ */
+function darwincore_install(){
+  // Increase the module's weight so that it is executed after location and after taxonomy (Don't fuck up).
+  db_query("UPDATE {system} SET weight = 11 WHERE name = 'darwincore'");
+  
+  // Install the taxonomies:
+  $vocabularies = array(
+    array(
+      array('name' => 'Basis of record','description' => 'A descriptive term indicating whether the record represents an object or observation.','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Preserved Specimen','description' => 'A physical object representing one or more organisms, part of organism, or artifact of an organism. synonyms: voucher, collection, lot.'),
+        array('name' => 'Fossil Specimen','description' => 'A physical object representing one or more fossil organisms, part of fossil organism, or artifact of a fossil organism.'),
+        array('name' => 'Living Specimen','description' => 'An organism removed from its natural occurrence and now living in captivity or cultivation.'),
+        array('name' => 'Human Observation','description' => 'A report by a known observer that an organism was present at the place and time.'),
+        array('name' => 'Machine Observation','description' => 'A report by a monitoring device that an organism was present at the place and time.'),
+        array('name' => 'Still Image','description' => 'An photograph, drawing, painting.'),
+        array('name' => 'Moving Image','description' => 'A sequence of still images taken at regular intervals and intended to be played back as a moving image; may include sound.'),
+        array('name' => 'Sound Recording','description' => 'An audio recording.'),
+        array('name' => 'Other Specimen','description' => 'Any type of specimen not covered by any of the categories above.')
+      )
+    ),
+    array(
+      array('name' => 'Sex','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Male'),
+        array('name' => 'Female'),
+        array('name' => 'Hermaphrodite'),
+        array('name' => 'Unknown'),
+        array('name' => 'Indeterminate'),
+        array('name' => 'Transitional'),
+        array('name' => 'Undetermined'),
+        array('name' => 'Multiple')
+      )
+    ),
+    array(
+      array('name' => 'Type Status','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Holotype'),
+        array('name' => 'Isotype'),
+        array('name' => 'Lectotype'),
+        array('name' => 'Neotype'),
+        array('name' => 'Nontype'),
+        array('name' => 'Not Provided'),
+        array('name' => 'Paralectotype'),
+        array('name' => 'Paratype'),
+        array('name' => 'Syntype')
+      )
+    ),
+    array(
+      array('name' => 'Continent/BodyOfWater','description' => 'The full, unabbreviated name of the continent or body of water from which the organism was collected or observed.','hierarchy' => 1,'module' => 'darwincorelocation', 'nodes'=> array('darwincorelocation'=>1)),
+      array(
+        array('name' => 'Continent','description' => 'The full, unabbreviated name of the continent from which the organism was collected or observed.', 'children' => array(
+            array('name' => 'Africa'),
+            array('name' => 'Asia-Temperate'),
+            array('name' => 'Asia-Tropical'),
+            array('name' => 'Australasia'),
+            array('name' => 'Pacific'),
+            array('name' => 'Northern America'),
+            array('name' => 'Southern America'),
+            array('name' => 'Antarctic'),
+            array('name' => 'Europe')
+          )
+        ),
+        array('name' => 'BodyOfWater','description' => 'The full, unabbreviated name of the body of water from which the organism was collected or observed.', 'children' => array(
+            array('name' => 'Atlantic Ocean'),
+            array('name' => 'Indian Ocean'),
+            array('name' => 'Southwestern Pacific'),
+            array('name' => 'South-Central Pacific'),
+            array('name' => 'Northwestern Pacific'),
+            array('name' => 'North-Central Pacific')
+          )
+        )
+      )
+    )    
+  );
+  foreach ($vocabularies as $vocabulary){
+    taxonomy_save_vocabulary($vocabulary[0]);
+    $vid = $vocabulary[0]['vid'];
+    foreach($vocabulary[1] as $term){
+      $term['vid'] = $vid;
+      $children = $term['children'];
+      taxonomy_save_term($term);
+      $parent=array($term['tid']);
+      if (isset($children)){
+        foreach($children as $term){
+          $term['parent'] = $parent;
+          $term['vid'] = $vid;
+          taxonomy_save_term($term);
+        }
+      }
+    }
+  }
+  // Create the database for specimen data
+  // Create tables.
+  drupal_install_schema('darwincore');
+  foreach($result as $table_result){
+    if(!$table_result){
+  	 drupal_set_message(t('This module is as dead as Darwin is (some table failed to install).'), 'error');
+  	 return;
+    }
+  }
+  drupal_set_message(t('Darwin would be proud - installed'));  
+}
+
+function darwincore_uninstall(){
+  // Remove tables.
+  drupal_uninstall_schema('darwincore');
+
+  // Remove the tables and various settings.
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocabulary){
+    if ($vocabulary->module == 'darwincore' || $vocabulary->module == 'darwincorelocation'){
+      $terms = taxonomy_get_tree($vocabulary->vid);
+      foreach ($terms as $term){
+        taxonomy_del_term($term->tid);      
+      }
+      taxonomy_del_vocabulary($vocabulary->vid);
+    }
+  }
+  node_type_delete('darwincore');
+}

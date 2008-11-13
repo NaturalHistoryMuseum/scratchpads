@@ -1,0 +1,625 @@
+<?php
+
+function nhm_panels_menu(){
+	
+	if(!$may_cache){
+		
+		drupal_add_css(drupal_get_path('module', 'nhm_panels').'/nhm_panels.css', 'module', 'all', false);
+		
+	}else{
+		
+		$items['admin/panels/panel-page/species/myspecies'] = array(
+	      'page callback' => 'views_setup_wizard_list_views',
+	      'access arguments' => array('Use the setup wizard'),
+				'title' => 'mySpecies panels',
+	      'type' => MENU_LOCAL_TASK,
+	    );
+		
+	}
+	
+	return $items;
+
+	
+}
+
+function nhm_panels_form_alter(&$form, &$form_state, $form_id){
+
+	
+	switch ($form_id){
+		
+		case 'panels_add_content_config_form': //simplify the add content form
+		case 'panels_edit_pane_config_form':
+		
+		$form['configuration']['css_id'] = null;
+		$form['configuration']['css_class'] = null;
+		$form['configuration']['override_title_markup']['#value'] = t('Enter a title for your panel if you wish to override the default title.');
+		$form['configuration']['block_visibility'] = null;
+		$form['access'] = null;
+		
+		break;
+		
+	}
+	
+	return $form;
+	
+}
+
+
+/**
+ * Implementation of hook_block().
+ *
+ * Generates a block containing the currently active forum topics and the
+ * most recently added forum topics.
+ */
+function nhm_panels_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info'] = t('Panel links');
+		break;
+		
+    case 'view':
+
+			$panels = panels_page_load_all();
+		
+      if (user_access('access content') && arg(0) == 'taxonomy' && arg(1) == 'term') { 
+        switch ($delta) {
+         case 0:
+            $blocks['content'] = nhm_panel_get_links();
+         break;
+				}	
+			}
+		break;
+	}
+	
+	return $blocks;
+	
+}	
+
+
+
+
+/**
+ * implementation of views_default_views
+ */
+function nhm_panels_views_default_views(){
+  
+		//tree panel
+
+	  $view = new stdClass();
+	  $view->name = 'tree';
+	  $view->description = '';
+	  $view->access = array (
+	);
+	  $view->view_args_php = '';
+	  $view->page = TRUE;
+	  $view->page_title = 'Tree';
+	  $view->page_header = '';
+	  $view->page_header_format = '1';
+	  $view->page_footer = '';
+	  $view->page_footer_format = '1';
+	  $view->page_empty = '';
+	  $view->page_empty_format = '1';
+	  $view->page_type = 'control_list';
+	  $view->url = '';
+	  $view->use_pager = FALSE;
+	  $view->nodes_per_page = '10';
+	  $view->sort = array (
+	  );
+	  $view->argument = array (
+	    array (
+	      'type' => 'taxid',
+	      'argdefault' => '7',
+	      'title' => '',
+	      'options' => '',
+	      'wildcard' => '',
+	      'wildcard_substitution' => '',
+	    ),
+	  );
+	  $view->field = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'body',
+	      'label' => '',
+	      'handler' => 'views_handler_field_body',
+	    ),
+	  );
+	  $view->filter = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'type',
+	      'operator' => 'OR',
+	      'options' => '',
+	      'value' => array (
+	  0 => 'tree',
+	),
+	    ),
+	  );
+	  $view->exposed_filter = array (
+	  );
+	  $view->requires = array(node);
+	  $views[$view->name] = $view;
+
+		//description panel
+
+	  $view = new stdClass();
+	  $view->name = 'description';
+	  $view->description = '';
+	  $view->access = array (
+	);
+	  $view->view_args_php = '';
+	  $view->page = TRUE;
+	  $view->page_title = 'Description';
+	  $view->page_header = '';
+	  $view->page_header_format = '1';
+	  $view->page_footer = '';
+	  $view->page_footer_format = '1';
+	  $view->page_empty = '';
+	  $view->page_empty_format = '1';
+	  $view->page_type = 'control_list';
+	  $view->url = '';
+	  $view->use_pager = FALSE;
+	  $view->nodes_per_page = '10';
+	  $view->sort = array (
+	  );
+	  $view->argument = array (
+	    array (
+	      'type' => 'taxid',
+	      'argdefault' => '7',
+	      'title' => '',
+	      'options' => '',
+	      'wildcard' => '',
+	      'wildcard_substitution' => '',
+	    ),
+	  );
+	  $view->field = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'body',
+	      'label' => '',
+	      'handler' => 'views_handler_field_body',
+	    ),
+	  );
+	  $view->filter = array (
+	    array (
+	      'tablename' => 'node',
+	      'field' => 'type',
+	      'operator' => 'OR',
+	      'options' => '',
+	      'value' => array (
+	  0 => 'description',
+	),
+	    ),
+	  );
+	  $view->exposed_filter = array (
+	  );
+	  $view->requires = array(node);
+	  $views[$view->name] = $view;
+	
+	
+	
+	
+		//filestore
+		
+		
+		  $view = new stdClass();
+		  $view->name = 'filestore';
+		  $view->description = '';
+		  $view->access = array (
+		);
+		  $view->view_args_php = '';
+		  $view->page = TRUE;
+		  $view->page_title = 'Files';
+		  $view->page_header = '';
+		  $view->page_header_format = '1';
+		  $view->page_footer = '';
+		  $view->page_footer_format = '1';
+		  $view->page_empty = '';
+		  $view->page_empty_format = '1';
+		  $view->page_type = 'control_list';
+		  $view->url = '';
+		  $view->use_pager = FALSE;
+		  $view->nodes_per_page = '10';
+		  $view->sort = array (
+		  );
+		  $view->argument = array (
+		    array (
+		      'type' => 'taxid',
+		      'argdefault' => '7',
+		      'title' => '',
+		      'options' => '20',
+		      'wildcard' => '',
+		      'wildcard_substitution' => '',
+		    ),
+		  );
+		  $view->field = array (
+		    array (
+		      'tablename' => 'files',
+		      'field' => 'filename',
+		      'label' => '',
+		      'handler' => 'views_handler_file_filename_download',
+		    ),
+		  );
+		  $view->filter = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'type',
+		      'operator' => 'OR',
+		      'options' => '',
+		      'value' => array (
+		  0 => 'fileshare',
+		),
+		    ),
+		  );
+		  $view->exposed_filter = array (
+		  );
+		  $view->requires = array(files, node);
+		  $views[$view->name] = $view;
+		
+		
+		
+		//specimens
+		
+		  $view = new stdClass();
+		  $view->name = 'specimens';
+		  $view->description = '';
+		  $view->access = array (
+		);
+		  $view->view_args_php = '';
+		  $view->page = TRUE;
+		  $view->page_title = 'Specimens';
+		  $view->page_header = '';
+		  $view->page_header_format = '1';
+		  $view->page_footer = '';
+		  $view->page_footer_format = '1';
+		  $view->page_empty = '';
+		  $view->page_empty_format = '1';
+		  $view->page_type = 'control_table';
+		  $view->url = '';
+		  $view->use_pager = FALSE;
+		  $view->nodes_per_page = '10';
+		  $view->sort = array (
+		  );
+		  $view->argument = array (
+		    array (
+		      'type' => 'taxid',
+		      'argdefault' => '7',
+		      'title' => '',
+		      'options' => '20',
+		      'wildcard' => '',
+		      'wildcard_substitution' => '',
+		    ),
+		  );
+		  $view->field = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'title',
+		      'label' => '',
+		      'handler' => 'views_handler_field_nodelink',
+		      'options' => 'link',
+		    ),
+		  );
+		  $view->filter = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'type',
+		      'operator' => 'OR',
+		      'options' => '',
+		      'value' => array (
+		  0 => 'darwincore',
+		),
+		    ),
+		  );
+		  $view->exposed_filter = array (
+		  );
+		  $view->requires = array(node);
+		  $views[$view->name] = $view;
+		
+		
+		
+		
+		
+		
+		//biblio
+		
+		  $view = new stdClass();
+		  $view->name = 'biblio';
+		  $view->description = 'Shows a summary view of biblio entries';
+		  $view->access = array (
+		);
+		  $view->view_args_php = '';
+		  $view->page = TRUE;
+		  $view->page_title = 'Bibliography';
+		  $view->page_header = '';
+		  $view->page_header_format = '1';
+		  $view->page_footer = '';
+		  $view->page_footer_format = '1';
+		  $view->page_empty = '';
+		  $view->page_empty_format = '1';
+		  $view->page_type = 'control_table';
+		  $view->url = '';
+		  $view->use_pager = FALSE;
+		  $view->nodes_per_page = '10';
+		  $view->sort = array (
+		  );
+		  $view->argument = array (
+		    array (
+		      'type' => 'taxid',
+		      'argdefault' => '7',
+		      'title' => '',
+		      'options' => '20',
+		      'wildcard' => '',
+		      'wildcard_substitution' => '',
+		    ),
+		  );
+		  $view->field = array (
+		    array (
+		      'tablename' => 'biblio',
+		      'field' => 'biblio_year',
+		      'label' => 'Year',
+		      'sortable' => '1',
+		      'defaultsort' => 'DESC',
+		    ),
+		    array (
+		      'tablename' => 'biblio',
+		      'field' => 'biblio_authors',
+		      'label' => 'Author',
+		      'sortable' => '1',
+		    ),
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'title',
+		      'label' => 'Title',
+		      'handler' => 'views_handler_field_nodelink',
+		      'sortable' => '1',
+		      'options' => 'link',
+		    ),
+		  );
+		  $view->filter = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'type',
+		      'operator' => 'OR',
+		      'options' => '',
+		      'value' => array (
+		  0 => 'biblio',
+		),
+		    ),
+		  );
+		  $view->exposed_filter = array (
+		  );
+		  $view->requires = array(biblio, node);
+		  $views[$view->name] = $view;
+		
+		
+		
+		
+		//images 
+		
+		  $view = new stdClass();
+		  $view->name = 'images';
+		  $view->description = '';
+		  $view->access = array (
+		);
+		  $view->view_args_php = '';
+		  $view->page = TRUE;
+		  $view->page_title = 'Images';
+		  $view->page_header = '';
+		  $view->page_header_format = '1';
+		  $view->page_footer = '';
+		  $view->page_footer_format = '1';
+		  $view->page_empty = '';
+		  $view->page_empty_format = '1';
+		  $view->page_type = 'control_teaser';
+		  $view->url = '';
+		  $view->use_pager = FALSE;
+		  $view->nodes_per_page = '6';
+		  $view->sort = array (
+		  );
+		  $view->argument = array (
+		    array (
+		      'type' => 'taxid',
+		      'argdefault' => '7',
+		      'title' => '',
+		      'options' => '20',
+		      'wildcard' => '',
+		      'wildcard_substitution' => '',
+		    ),
+		  );
+		  $view->field = array (
+		  );
+		  $view->filter = array (
+		    array (
+		      'tablename' => 'node',
+		      'field' => 'type',
+		      'operator' => 'OR',
+		      'options' => '',
+		      'value' => array (
+		  0 => 'image',
+		),
+		    ),
+		  );
+		  $view->exposed_filter = array (
+		  );
+		  $view->requires = array(node);
+		  $views[$view->name] = $view;
+		
+		
+		
+		return $views;
+
+}
+
+
+// we also want all of our default views to be available to the panels module
+
+/**
+ * Implementation of default_panel_views
+ * Define all the isepecies views as panel views 
+ */
+function nhm_panels_default_panel_views(){
+	
+	$panel_views = array();
+	$views = nhm_panels_views_default_views();
+	
+	foreach($views as $name => $view){
+	
+		$panel_view = new stdClass();
+	  $panel_view->pvid = 'new';
+	  $panel_view->view = $name;
+	  $panel_view->name = $name;
+	  $panel_view->description = $view->description;
+	  $panel_view->title = $view->page_title;
+	  $panel_view->category = 'Views';
+	  $panel_view->category_weight = '-1';
+	  $panel_view->view_type = 'page';
+	  $panel_view->use_pager = '0';
+	  $panel_view->pager_id = '0';
+	  $panel_view->nodes_per_page = $view->nodes_per_page;
+	  $panel_view->offset = '0';
+	  $panel_view->link_to_view = '0';
+	  $panel_view->more_link = '0';
+	  $panel_view->feed_icons = '0';
+	  $panel_view->url_override = '0';
+	  $panel_view->url = '';
+	  $panel_view->url_from_panel = '0';
+	  $panel_view->arguments = '0';
+	  $panel_view->contexts = array (
+	    0 => 
+	    array (
+	      'type' => 'context',
+	      'context' => 'any',
+	      'panel' => '0',
+	      'fixed' => '',
+	      'label' => 'Taxonomy: Term ID',
+	    ),
+	  );
+	  $panel_view->allow_type = '0';
+	  $panel_view->allow_nodes_per_page = '0';
+	  $panel_view->allow_offset = '0';
+	  $panel_view->allow_use_pager = '0';
+	  $panel_view->allow_link_to_view = '0';
+	  $panel_view->allow_more_link = '0';
+	  $panel_view->allow_feed_icons = '0';
+	  $panel_view->allow_url_override = '0';
+	  $panel_view->allow_url_from_panel = '0';
+	
+	$panel_views[$name] = $panel_view;
+	
+	}
+	
+	return $panel_views;
+
+}
+
+
+
+
+
+
+/****************************************************************************************
+
+															THEMING FUNCTIONS
+
+*****************************************************************************************/		
+
+/**
+ * Display the nodes of a view as a table.
+ */
+function phptemplate_view_controls_view_table($view, $nodes, $type) {
+
+  $fields = _views_get_fields();
+
+  foreach ($nodes as $node) {
+    $row = array();
+    foreach ($view->field as $field) {
+
+			if ($fields[$field['id']]['visible'] !== FALSE) {
+        $cell['data'] = views_theme_field('views_handle_field', $field['queryname'], $fields, $field, $node, $view);
+        $cell['class'] = "view-field ". views_css_safe('view-field-'. $field['queryname']);
+        $row[] = $cell;
+      }
+    }
+
+   $rows[] = array('data' => $row, 'class' => "dblclick node-".$node->nid);
+
+  }
+
+	$attributes = array('class' => 'tablesorter');
+
+	$output = '<div id="view-control-'.$view->name.'">';
+	$output .= theme('table', $view->table_header, $rows, $attributes);
+	$output .= '</div>';
+	
+  return $output;
+
+}
+
+function phptemplate_page_empty($view){
+
+	$tid = view_controls_get_view_tid($view);
+	
+		if($tid){
+
+			$term = taxonomy_get_term($tid);
+	
+			return '<div class="empty-text"><p>There is no matching content for <em>'.$term->name.'</em></p></div>';
+	
+		}
+	
+}
+
+
+function phptemplate_view_controls_view_nodes_images_item($view, $view_node, $teasers){
+
+$node = node_load($view_node);
+
+$output = '<div id="view-'.$view->name.'-node-'.$node->nid.'">';
+$output.=sprintf('<div class="panel-grid-image"><a rel="lightbox[%s]" href="/%s"><img src="/%s" alt="%s"></a></div>',
+	$view->name,
+	$node->images['preview'],
+	$node->images['thumbnail'],
+	$node->title
+	);
+$output .= '</div>';
+
+return $output;
+	
+}
+
+function phptemplate_menu_local_task($mid, $active, $primary){
+	
+	global $user;
+	
+	if($user->uid != 1){
+	
+		$hidden_local_tasks = array(
+			'admin/panels/panel-page/species/edit/layout'=>'layout',
+			'admin/panels/panel-page/species/edit/general'=>'Settings',
+			'admin/panels/panel-page/species/edit/settings'=>'Layout Settings',
+			'admin/panels/panel-page/species/edit/advanced'=>'Advanced',
+			'admin/panels/panel-page/species/edit/context'=>'Context',
+			'admin/panels/panel-page/species/export'=>'Export',
+			'admin/panels/panel-page/species/preview'=>'Preview',
+		);
+	
+		$item = menu_get_item($mid);
+		
+		if($hidden_local_tasks[$item['path']]){
+			return;
+		}
+	
+	}
+	
+	
+	
+	  if ($active) {
+	    return '<li class="active">'. menu_item_link($mid) ."</li>\n";
+	  }
+	  else {
+	    return '<li>'. menu_item_link($mid) ."</li>\n";
+	  }
+	
+}
+
+
+

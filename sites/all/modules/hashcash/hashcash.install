@@ -1,0 +1,29 @@
+<?php
+// $Id$
+
+/**
+ * Installing of the hashcash module
+ */
+function hashcash_install() {
+  // Create the database to link images with users.  
+  // Create tables.
+  drupal_install_schema('hashcash');
+  if ($result){    
+  	drupal_set_message(t('hashcash installed'));
+  }
+  else{    
+  	drupal_set_message(t('Postgres not currently supported for hashcash'), 'error');
+  }
+}
+
+/**
+ * Kick that loser to touch.
+ */
+function hashcash_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('hashcash');
+
+  variable_del('hashcash_expire');
+  variable_del('hashcash_form_ids');
+  variable_del('hashcash_addorignore');
+}

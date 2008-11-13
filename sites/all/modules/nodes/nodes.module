@@ -1,0 +1,362 @@
+<?php
+/**
+ * Nodes is a module which allows a user to edit lots of nodes at once
+ */
+
+
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function nodes_menu($maycache){
+  $items = array();
+  if($maycache){
+    $items['nodes'] = array(
+      'title' => 'Multiple node edit page',
+      'page callback' => 'nodes_edit_page',
+      'description' => 'Allows a user to quickly and easily edit multiple nodes at once',
+      'access arguments' => TRUE,
+      'type' => MENU_NORMAL_ITEM
+    );
+    $items['nodes-submit'] = array(
+      'title' => 'Submit target for "nodes"',
+      'page callback' => 'nodes_submit_form_part',
+      'access arguments' => TRUE,
+      'type' => MENU_CALLBACK       
+    );
+    $items['nodes-edit'] = array(
+      'title' => 'Edit field',
+      'page callback' => 'nodes_edit_field',
+      'access arguments' => TRUE,
+      'type' => MENU_CALLBACK
+    );
+  }
+  return $items;
+}
+/***********************************************************************************
+ * CALLBACKS
+ ***********************************************************************************/
+/**
+ * Returns the HTML for a multiple edit page.  This the work horse method of this
+ * module
+ */
+function nodes_edit_page($type = null, $count = 25){
+  // $content_type enables the nodes edit page to filter by a particular content
+  // type just by changing the URL.
+  
+  // The type is essential, so make sure it is set
+  if(is_null($type)){
+    // Type is null, default to?
+    drupal_set_message(t('The content type to edit is not set'),'error');
+    // Return a list of links to this page.
+    $types = node_get_types();
+    $types_list = array();
+    foreach($types as $link=>$type){
+      $types_list[] = l($type->name,'nodes/'.$link);
+    }
+    return theme('item_list', $types_list,t('Select a content type to edit from the list below'));
+  }
+  $form = nodes_get_form_for_type($type);
+  
+  // We'll start with 25 of the most recently created nodes
+  $order = 'created';
+  $results = pager_query("SELECT nid FROM {node} n WHERE type='%s' ORDER BY %s DESC",$count,0,NULL,$type, $order);
+  $nodes = array();
+  while(($row = db_fetch_array($results))){
+    // Check that we can actually edit this node
+    $node = node_load($row['nid']);
+    if(node_access('update',$node)){
+      $nodes[] = $node;
+    }
+  }
+  // We should now have an array of nodes that we can edit - if this is empty, then we need
+  // to explain to the user that they don't have the privileges to edit any nodes
+  if(!count($nodes)){
+    // array is empty - set message
+    drupal_set_message(t('You don\'t have the permissions to edit any nodes of this type.'),'error');
+    drupal_goto('nodes');
+  }
+  // We have an array, lets put it in our special themed table!
+  $output = theme('nodes_table', $nodes, $form) . theme('pager', NULL , $count);
+  
+  // Thanks to the panels module for showing me how to hide blocks
+  drupal_set_title('');
+  print theme('page', $output, FALSE);
+}
+
+/**
+ * Returns the HTML when requested for a single form field
+ */
+function nodes_edit_field($nid , $field){
+  // If we've got a node, load it and plug it into the form, else get a blank form
+  if(!is_numeric($nid)){
+    $form = nodes_get_form_for_type($nid);
+  } else {
+    $node = node_load($nid);
+    $form = nodes_get_form_for_type($node->type, $node);
+  }
+  // Hide all but the relevant bits of the form
+  _nodes_search_form_for_field($form, $field);
+  // Add submit and cancel buttons
+  if (!count($form)){
+    print drupal_to_js(array('html'=>'<p class="error">'.t('Error. You don\'t have sufficient privileges to edit this field').'</p>'));
+    exit;
+  }
+  $form['submit'] = array(
+    '#type' => 'button',
+    '#value' => 'Submit',
+    '#attributes' => array('onclick'=>"nodessubmit('".url('nodes-submit', array('absolute' => TRUE))."','nodes-form-".$node->nid."','".$field."'); return false;", 'class'=>'nodes-button'),
+    '#weight' => 1000
+  );
+  $form['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick'=>'nodescancel();', 'class'=>'nodes-button'),
+    '#weight' => 1001
+  );
+  // Output the form - KAPOW!
+  print drupal_to_js(array('html'=>'<div class="nodes-form">'.drupal_render_form('nodes-edit-field',$form).'</div>'));
+  exit;
+}
+/**
+ * Handles the form submission.
+ * 
+ * This function needs to be as paranoid as possible - we DO NOT want this module
+ * to be a security issue.
+ * 
+ * We need to return the node id, and the new value (the old value if the user doesn't
+ * have the permission to edit this node).
+ */
+function nodes_submit_form_part(){
+  $nid = array_pop(explode("-",$_POST['formid']));
+  $node = node_load($nid);
+  print_r($node->$_POST['field']);
+  if(!is_array($node->$_POST['field'])){
+    $value = $_POST['formvalue'][0];
+  } else {
+    $value = $_POST['formvalue'];
+  }
+  if(node_access('update',$node)){
+    if($node->changed == $_POST['updated']){
+      $node->$_POST['field'] = $value;
+      node_save($node);
+    } else {
+      $value = t('[Another user has edited this node] ').$node->$_POST['field'];
+    }
+  } else {
+    // Make sure we can even view this node
+    if(node_access('view',$node)){
+      $value = t('[Permission denied] ').$node->$_POST['field'];
+    } else {
+      $value = t('Access denied');
+    }
+  }
+  // If this field is an array, we need to output it as a string
+  if(is_array($value)){
+    $value = t('Multiple values');
+  }
+  print_r($node->$_POST['field']);
+  exit;
+  print drupal_to_js(array('nid'=>$nid , 'value'=>$value , 'updated'=>$node->changed));
+  exit;
+}
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+/**
+ * Walks through a form, altering it so that only the required field is NOT 'hidden'
+ *
+ * Returns ...
+ * 
+ * @param Array $form // The form to be searched
+ * @param String $field // The name of the field to look for
+ */
+function _nodes_search_form_for_field(&$form, $field){
+  function _node_walk_form(&$form , $field , $field_to_find){
+    if($field !== $field_to_find){
+      if(is_array($form)){
+        if(!isset($form[$field_to_find])){
+          if(isset($form['#type']) || isset($form['#value'])){
+            $form['#type'] = 'hidden';
+          } else {
+            array_walk($form, '_node_walk_form', $field_to_find);
+          }
+        } elseif(isset($form['#type']) && $form['#type'] == 'fieldset'){
+          if(isset($form['#tree']) && $form['#tree']){
+            // Hide this fieldset
+            $form['#type'] = 'hidden';
+          } else {
+            $form['#collapsible'] = false;
+            $form['#collapsed'] = false;
+          }
+        }
+      }
+    } else {
+      $form['#attributes']['class'] = $form['#attributes']['class'] . ' nodes-form-field';
+    }
+  }
+  array_walk($form, '_node_walk_form',$field);
+}
+function nodes_get_form_for_type($type, $node = null){
+  global $user;
+  $types = node_get_types();
+  $type = isset($type) ? str_replace('-', '_', $type) : NULL;
+  // If a node type has been specified, validate its existence.
+  if (isset($types[$type]) && node_access('create', $type)) {
+    // Initialize settings:
+    if(is_null($node)){
+      $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+    }
+    $output = _nodes_get_form_no_render($type .'_node_form', $node);
+  }
+  return $output;
+}
+
+function _nodes_get_form_no_render($form_id) {
+  // We're coming in fresh; build things as they would be. If the
+  // form's #multistep flag is set, store the build parameters so
+  // the same form can be reconstituted for validation.
+  $args = func_get_args();
+  $form = call_user_func_array('drupal_retrieve_form', $args);
+  
+  // Process the form, submit it, and store any errors if necessary.
+  drupal_process_form($args[0], $form);
+
+  return $form;
+}
+function _nodes_get_fieldtypes(){
+  return array('textfield','textarea','select','checkbox','checkboxes','radio','radios');
+}
+function _nodes_handle_field($field, $form){
+  $fields = _nodes_get_fieldtypes();
+  if(isset($form[$field]['#type'])){
+    if(in_array($form[$field]['#type'],$fields)){
+      return $form[$field];
+    }
+  } else {
+    // Lets walk through the array, looking for the field following [$field]['#type]
+    return _nodes_search_form($form, $field, $fields);
+  }
+}
+/**
+ * Following function recursively searches a form for the
+ * "field" and returns it if found, and false if not
+ */
+function _nodes_search_form($form, $field, $field_types, $parent = false){
+  foreach($form as $key=>$value){
+    $temp_field = $field;
+    if(is_array($field)){
+      $temp_field = $field[0];
+    }
+    if($key === $temp_field){
+      if($parent){
+        return $form;
+      }
+      if(in_array($value['#type'],$field_types) && isset($value['#type'])){
+        return $value;
+      }
+      if(is_array($field)){
+        $form_to_return = array();
+        foreach($value as $field_part){
+          if(in_array($field_part['#type'],$field_types)){
+            $form_to_return[] = $field_part;
+          }
+        }
+        if(count($form_to_return)){
+          $form_to_return['nodes_array'] = 'nodes_array';
+          return $form_to_return;
+        }
+      }
+    }
+    if(is_array($value)){
+      $return = _nodes_search_form($value, $field, $field_types, $parent);
+      if($return){
+        return $return;
+      }
+    }
+  }
+  return false;
+}
+/***********************************************************************************
+ * THEME FUNCTIONS
+ ***********************************************************************************/
+function theme_nodes_table($nodes, $form){
+  // Add the javascript & css necesary to the page
+  drupal_add_js(drupal_get_path('module','nodes').'/nodes.js');
+  drupal_add_css(drupal_get_path('module','nodes').'/nodes.css');
+  drupal_add_js('misc/collapse.js'); // Needed incase the page contains a fieldset in a popup
+  
+  $field_types = _nodes_get_fieldtypes();
+  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Select').'</th><th>'.t('Node').'</th>';
+  // Put the headers on first
+  // We need to analyze the form sent to see what fields we can handle
+  $fields = array();
+  $possible_fields = array();
+  // We'll use one of the nodes to ascertain all the possible fields
+  foreach($nodes[0] as $field=>$node_value){
+    if(is_array($node_value)){
+      $possible_fields[$field] = array($field);
+    } else {      
+      $possible_fields[$field] = $field;
+    }
+  }
+  // Lets find where each of the possible_fields is in the array, and find
+  // out if the input that is associated with it is one that we'll handle
+  /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
+  foreach($possible_fields as $possible_field){
+    $field_form = _nodes_handle_field($possible_field, $form);
+    if($field_form){
+      // Is this an array
+      if(isset($field_form['nodes_array'])){
+        unset($field_form['nodes_array']);
+        $title_array = array();
+        foreach($field_form as $field_form_part){
+          $title_array[] = (isset($field_form_part['#title'])) ? $field_form_part['#title'] : $possible_field[0];
+        }
+        $title = implode(" / ",$title_array);
+      } else {
+        $title = (isset($field_form['#title'])) ? $field_form['#title'] : $possible_field;
+      }
+      $title = check_plain($title);
+      if($title){
+        $return_string .= '<th>'.$title.'</th>';
+        if(is_array($possible_field)){
+          $fields[] = $possible_field[0];
+        } else {
+          $fields[] = $possible_field;
+        }
+      }
+    }
+  }
+  $return_string .= '</tr><tr class="all"><td class="nohover" onclick="nodesselectallrows();"><span id="selected">'.t('Select all').'</span><span class="deselected" id="deselected">'.t('Deselect all').'</span></td><td class="nohover"></td>';
+  foreach($fields as $field){
+    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$field).'\');"><span id="all-'.$field.'">'.t('Edit all').'</span></td>';
+  }
+  $return_string .= '</tr>';
+  foreach($nodes as $node){
+    if($class == 'odd'){
+      $class = 'even';
+    } else {
+      $class = 'odd';
+    }
+    $return_string .= '<tr id="nodes-row-'.$node->nid.'" class="selectable '.$class.'"><td class="nohover" onclick="nodesselectrow('.$node->nid.');"><form><input id="nodes-row-checkbox-'.$node->nid.'" type="checkbox"/></form></td>';
+    $link_text = $node->nid;
+    if($node->type=='image'){
+      if(isset($node->images['thumbnail'])){
+        $link_text = '<img src="'.url($node->images['thumbnail']).'" alt="'.t('Node').' '.$node->nid.'"/>';
+      } else {
+        // Thumbnail doesn't exist - should we warn the user in watchdog?
+        $link_text = $node->nid;
+      }
+    }
+    $return_string .= '<td class="nohover">'.l($link_text, 'node/'.$node->nid, array('attributes' => array('target'=>'_blank'), 'html' => TRUE)).'</td>';
+    foreach($fields as $field){
+      $id = $field."_".$node->nid;
+      if(is_array($node->$field)){
+        $node->$field = t('Multiple values');
+      }
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');">'.strip_tags(substr($node->$field,0,100)).'</td>';
+    }
+    $return_string .= '</tr>';
+  }
+  return $return_string .'</table>';
+}

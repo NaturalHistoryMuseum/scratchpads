@@ -1,0 +1,239 @@
+<?php
+
+/**
+ * Implementation of hook menu
+ */
+function citation_menu($may_cache){
+	
+	if ($may_cache) {
+
+		$items[]= array (
+	      'path' => 'citation',
+	      'callback' => 'citation_page_view',
+	      'access' => user_access('Access citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/ajax_callback',
+	      'callback' => 'citation_ajax_callback',
+	      'access' => user_access('Create citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+	
+		$items[]= array (
+	      'path' => 'citation/view',
+	      'title' => t('Citation'),
+				'callback' => 'drupal_get_form',
+	      'callback arguments' => array('citation_view_citation_form'),
+	      'access' => user_access('Access citations'),
+	      'type' => MENU_NORMAL_ITEM,
+	   );
+	
+	}else{
+		
+		$items[]= array (
+	      'path' => 'citation/ajax_callback/get_source',
+	      'callback' => 'citation_get_source',
+	      'access' => user_access('Access citations'),
+	      'type' => MENU_CALLBACK,
+	    );
+		
+		$GLOBALS['citations'] = array();
+		$path = drupal_get_path('module', 'citation');
+		drupal_add_js($path.'/citation.js');
+
+	}
+	
+	return $items;
+	
+}
+
+
+
+
+
+function citation_page_view(){
+		
+	$page = citation_load_page(arg(1)); 
+		
+	if($page){
+		
+		print($page);
+		exit;
+		
+	}else{
+		
+		return drupal_not_found();
+		
+	}
+
+	
+}
+
+function citation_load_page($cid){
+	
+	if(is_numeric($cid)){
+		
+		$result = db_query('SELECT page_data FROM citation WHERE cid=%d', $cid);
+
+		return db_result($result, 0);
+		
+	}
+	
+}
+
+
+
+
+
+function citation_ajax_callback(){
+	
+	// TODO: Remove all external data
+	db_query('INSERT INTO citation (cid, page_data, created) VALUES (%d, "%s", NOW())', $_POST['cid'], $_POST['page_data']);
+	exit;
+	
+}
+
+/**
+ * Implementation of hook_nodeapi
+ * As nodes load, add them to sources
+ */
+function citation_nodeapi($node, $op){
+	
+	switch ($op){
+		
+		case 'load';
+		
+			if (!($func = theme_get_function("citation_source".$node->type))) {
+		    $func = theme_get_function('citation_source');
+		  }
+		
+			$source = $func($node);
+		
+			citation_add_source($source);
+		
+		break;
+		
+	}
+	
+}
+
+/**
+ * Implementation of hook_views_pre_view
+ * Cached nodes in a view are not available from node_api - so load the node here to trigger nodeapi
+ */
+function citation_views_pre_view(&$view, $items){
+
+	foreach($items as $item){
+	
+		$node = node_load($item->nid);
+		
+	}
+
+}
+
+
+function theme_citation_source($node){
+	
+	$user = user_load(array('uid' => $node->uid));
+	
+	if($node->uid){
+		
+		$source = new stdClass;
+		$source->id = $node->uid;
+		$source->name = $user->name;
+		
+	}
+	
+}
+
+
+function citation_add_source($source){
+
+	static $sources;
+	
+	if(!$sources[$source->id]){
+		
+		drupal_add_js("var citations['.$source->id.'] = '".$source->name."';", 'inline');
+		$sources[$source->id] = true;
+	}
+	
+}
+
+
+
+
+function citation_create_citation_form($full_reference){
+	
+	// $sources = citation_sources();
+	// 
+	// foreach($sources as $source_id => $source_name){
+	// 	
+	// 	$names .= $source_name;
+	// 	
+	// 	if(is_numeric($source_id) && $source_id > 1){
+	// 		$uids[] = $source_id;
+	// 	}
+	// 
+	// }
+	// 
+	// $form['uids'] = array(
+	// 	'#type' => 'hidden',
+	// 	'#value' => $uids,
+	// );
+	// 
+	// $form['names'] = array(
+	// 	'#type' => 'hidden',
+	// 	'#value' => $names,
+	// 	'#prefix' => $names
+	// );
+	// 
+	// $form['submit'] = array('#type' => 'submit', '#value' => t('Create new citation'));
+	// 
+	// return $form;
+	
+}
+
+function citation_create_citation_form_submit($form_id, $form_values){
+	
+	print_r($form_values);
+	die();
+	
+}
+
+function citation_exit(){
+
+	$path = drupal_get_path('module', 'citation');
+	drupal_add_js($path.'/citation.js');
+	
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function citation_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0]['info'] = t('Authors / sources');
+		break;
+		
+    case 'view':
+
+			$panels = panels_page_load_all();
+		
+      if (user_access('access content')) { 
+        switch ($delta) {
+         case 0:
+            $blocks['content'] = drupal_get_form('citation_create_citation_form', true);
+         break;
+				}	
+			}
+		break;
+	}
+	
+	return $blocks;
+	
+}
+
+
