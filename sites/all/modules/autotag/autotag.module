@@ -83,8 +83,8 @@ function autotag_cron(){
 
 // Simply save what was entered in the checkbox
 function autotag_submit_vocabulary_form($form, $form_values){
-	// FIXME - this should be one single array for all the taxonomies. Ah well,
-	// it works!
+  // FIXME - this should be one single array for all the taxonomies. Ah well,
+  // it works!
   variable_set('autotag_is_disabled-'.$form_values['vid'], $form_values['disableautotag']);
 }
 /**
@@ -99,23 +99,23 @@ function autotag_submit_vocabulary_form($form, $form_values){
 function autotag_form_alter($form_id, &$form){
   // If this is not a node-form, finish
   if($form['#id'] != 'node-form'){
-  	// check if this is the vocabulary edit form, if so, we want to add a checkbox
-  	// to give users the option to ignore autotag
-  	if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
-  		// Here we can add the extra field
-  		$form['disableautotag'] = array(
+    // check if this is the vocabulary edit form, if so, we want to add a checkbox
+    // to give users the option to ignore autotag
+    if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
+      // Here we can add the extra field
+      $form['disableautotag'] = array(
         '#type' => 'checkbox',
         '#title' => t('Disable Autotag'),
         '#default_value' => variable_get('autotag_is_disabled-'.$form['vid']['#value'], 0),
-  		  '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
+        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
       );
       // Move submit and delete down
       $form['submit']['#weight'] = 100;
       $form['delete']['#weight'] = 100;
-  		// Finally we need a submit function
-  		$form['#submit']['autotag_submit_vocabulary_form'] = array();
-  	}
-  	return;
+      // Finally we need a submit function
+      $form['#submit']['autotag_submit_vocabulary_form'] = array();
+    }
+    return;
   }
   // If no vocabs are relevant to this node, simply return
   $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
