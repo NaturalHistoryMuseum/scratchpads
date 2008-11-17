@@ -575,9 +575,10 @@ function phptemplate_view_controls_view_nodes_images_item($view, $view_node, $te
 $node = node_load($view_node);
 
 $output = '<div id="view-'.$view->name.'-node-'.$node->nid.'">';
-$output.=sprintf('<div class="panel-grid-image"><a rel="lightbox[%s]" href="/%s"><img src="/%s" alt="%s"></a></div>',
+$output.=sprintf('<div class="panel-grid-image"><a rel="lightbox[%s]" href="/%s" title=\'%s\'><img src="/%s" alt="%s"></a></div>',
 	$view->name,
 	$node->images['preview'],
+	l(t("View image details"),"node/".$node->nid),
 	$node->images['thumbnail'],
 	$node->title
 	);
