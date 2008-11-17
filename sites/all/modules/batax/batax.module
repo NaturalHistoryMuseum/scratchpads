@@ -75,23 +75,21 @@ function batax_form_alter(&$form, &$form_state, $form_id){
 /**
  * hook_menu
  */
-function batax_menu($maycache){
-  $items = array();
-  if(!$maycache){
-    $items['admin/settings/batax'] = array(
-      'title' => 'Batax settings',
-      'description' => 'Change the number of terms required to force the use of taxonomy autocomplete',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('batax_admin_settings'),
-      'access arguments' => array('administer site configuration')
-    );
-    $items['batax/autocomplete'] = array(
-      'title' => 'Batax autocomplete',
-      'page callback' => 'batax_autocomplete',
-      'access arguments' => array('create node content'),
-      'type' => MENU_CALLBACK
-    );
-  }
+function batax_menu(){
+	$items = array();
+  $items['admin/settings/batax'] = array(
+    'title' => 'Batax settings',
+    'description' => 'Change the number of terms required to force the use of taxonomy autocomplete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('batax_admin_settings'),
+    'access arguments' => array('administer site configuration')
+  );
+  $items['batax/autocomplete'] = array(
+    'title' => 'Batax autocomplete',
+    'page callback' => 'batax_autocomplete',
+    'access arguments' => array('create node content'),
+    'type' => MENU_CALLBACK
+  );
   return $items;
 }
 /**

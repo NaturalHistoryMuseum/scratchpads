@@ -15,39 +15,15 @@ function backup_perm() {
 }
 
 function backup_menu() {
-	$retval = array();
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-	if ($may_cache){
-		$retval[] = array(
-			"path" => "admin/content/backup",
-			"title" => t("Backup"),
-			"access" => user_access('make backups'),
-			"callback" => "drupal_get_form",
-      'page arguments' => array('backup_form'),
-			"description" => "Back up your Drupal installation.",
-			"type" => MENU_CALLBACK|MENU_VISIBLE_IN_TREE|MENU_MODIFIABLE_BY_ADMIN
-		);
-	}
-	return $retval;
+	$items = array();
+	$items['admin/content/backup'] = array(
+		'title' => 'Backup',
+    'description' => 'Back up your Drupal installation.',
+    'access arguments' => array('administer site configuration'),
+		'page callback' => 'drupal_get_form',
+    'page arguments' => array('backup_form')
+	);
+	return $items;
 }
 
 /***********************************************************************************

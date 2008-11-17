@@ -20,7 +20,7 @@ define('AUTOTAG_TAGGED','Terms to use');
 define('AUTOTAG_IGNORE','Terms to ignore');
 define('AUTOTAG_SETTINGS','Autotag settings');
 define('AUTOTAG_CRON_SETTINGS','Cron settings');
-define('AUTOTAG_SETTINGS_DESC','Change the default autotag settings to include or exclude fields when automatically tagging content.');
+define('AUTOTAG_SETTINGS_DESC','Change the default autotag settings to module_load_include('', 'autotag', '');
 define('AUTOTAG_CRON_NUM','Number of nodes to update on cron');
 define('AUTOTAG_CRON_NUM_DESC','Sets the number of nodes to automatically tag when cron is run.  This allows for content created before the module was installed to be automatically tagged.');
 define('AUTOTAG_HIGH_NID','Highest node ID to autotag');
@@ -83,6 +83,8 @@ function autotag_cron(){
 
 // Simply save what was entered in the checkbox
 function autotag_submit_vocabulary_form($form, $form_values){
+  // FIXME - this should be one single array for all the taxonomies. Ah well,
+  // it works!
   variable_set('autotag_is_disabled-'.$form_values['vid'], $form_values['disableautotag']);
 }
 /**
@@ -97,23 +99,23 @@ function autotag_submit_vocabulary_form($form, $form_values){
 function autotag_form_alter(&$form, &$form_state, $form_id){
   // If this is not a node-form, finish
   if($form['#id'] != 'node-form'){
-  	// check if this is the vocabulary edit form, if so, we want to add a checkbox
-  	// to give users the option to ignore autotag
-  	if($form['#id'] == 'taxonomy-form-vocabulary'){
-  		// Here we can add the extra field
-  		$form['disableautotag'] = array(
+    // check if this is the vocabulary edit form, if so, we want to add a checkbox
+    // to give users the option to ignore autotag
+    if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
+      // Here we can add the extra field
+      $form['disableautotag'] = array(
         '#type' => 'checkbox',
         '#title' => t('Disable Autotag'),
         '#default_value' => variable_get('autotag_is_disabled-'.$form['vid']['#value'], 0),
-  		  '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
+        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
       );
       // Move submit and delete down
       $form['submit']['#weight'] = 100;
       $form['delete']['#weight'] = 100;
-  		// Finally we need a submit function
-  		$form['#submit'][] = 'autotag_submit_vocabulary_form';
-  	}
-  	return;
+      // Finally we need a submit function
+      $form['#submit'][] = 'autotag_submit_vocabulary_form';
+    }
+    return;
   }
   // If no vocabs are relevant to this node, simply return
   $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
@@ -472,7 +474,11 @@ function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
   foreach($vocabularies as $vocabulary){
-    if(in_array($type,$vocabulary->nodes) && $vocabulary->tags == 0 && $vocabulary->multiple == 1 && !variable_get('autotag_is_disabled-'.$vocabulary->vid, 0)){
+    if(in_array($type,$vocabulary->nodes) && 
+       $vocabulary->tags == 0 &&
+       $vocabulary->multiple == 1 &&
+       $vocabulary->module == 'taxonomy' &&
+       !variable_get('autotag_is_disabled-'.$vocabulary->vid, 0)){
       if($just_vids){
         $vids[] = $vocabulary->vid;
       } else {
