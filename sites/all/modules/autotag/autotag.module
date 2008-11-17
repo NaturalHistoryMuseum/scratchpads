@@ -83,6 +83,8 @@ function autotag_cron(){
 
 // Simply save what was entered in the checkbox
 function autotag_submit_vocabulary_form($form, $form_values){
+	// FIXME - this should be one single array for all the taxonomies. Ah well,
+	// it works!
   variable_set('autotag_is_disabled-'.$form_values['vid'], $form_values['disableautotag']);
 }
 /**
@@ -468,7 +470,11 @@ function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
   foreach($vocabularies as $vocabulary){
-    if(in_array($type,$vocabulary->nodes) && $vocabulary->tags == 0 && $vocabulary->multiple == 1 && !variable_get('autotag_is_disabled-'.$vocabulary->vid, 0)){
+    if(in_array($type,$vocabulary->nodes) && 
+       $vocabulary->tags == 0 &&
+       $vocabulary->multiple == 1 &&
+       $vocabulary->module == 'taxonomy' &&
+       !variable_get('autotag_is_disabled-'.$vocabulary->vid, 0)){
       if($just_vids){
         $vids[] = $vocabulary->vid;
       } else {
