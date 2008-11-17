@@ -101,7 +101,7 @@ function autotag_form_alter($form_id, &$form){
   if($form['#id'] != 'node-form'){
   	// check if this is the vocabulary edit form, if so, we want to add a checkbox
   	// to give users the option to ignore autotag
-  	if($form['#id'] == 'taxonomy-form-vocabulary'){
+  	if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
   		// Here we can add the extra field
   		$form['disableautotag'] = array(
         '#type' => 'checkbox',
