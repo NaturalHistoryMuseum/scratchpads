@@ -3,15 +3,17 @@ header("Content-Type: text/plain");
 // List the total users
 $array = parse_ini_file('/var/www/drupal_db_passwords',true);
 mysql_connect('localhost',$array['root']['user'],$array['root']['password']);
-$sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM information_schema.tables WHERE table_name = 'users' AND table_schema != 'lepindex_data';";
+$sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM information_schema.tables WHERE table_name = 'users' AND table_schema != 'drupal6' AND table_schema != 'lepindex_data';";
 $result = mysql_query($sql);
 $tables = array();
 while($row = mysql_fetch_array($result)){
-  $tables[] = 'SELECT * FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
+  $tables[] = 'SELECT mail FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
 }
 $sql = 'SELECT COUNT(DISTINCT mail) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql;';
 $result = mysql_query($sql);
-echo "Users: ".array_pop(mysql_fetch_array($result))."\n";
+echo "Users: ".array_pop(mysql_fetch_array($result))."\n\n";
+// Total sites
+echo "Sites: ".(count(scandir("/var/www/html/sites"))-9)."\n\n";
 // Now calculate total nodes
 $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM information_schema.tables WHERE table_name = 'node';";
 $result = mysql_query($sql);
@@ -21,7 +23,7 @@ while($row = mysql_fetch_array($result)){
 }
 $sql = 'SELECT COUNT(*) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql;';
 $result = mysql_query($sql);
-echo "Nodes: (Total ".array_pop(mysql_fetch_array($result)).")\n";
+echo "Nodes: ".array_pop(mysql_fetch_array($result))."\n\n";
 $sql = 'SELECT COUNT(nid) AS count,type FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql GROUP BY type ORDER BY count DESC;';
 $result = mysql_query($sql);
 while ($row=mysql_fetch_array($result)){
@@ -30,7 +32,7 @@ while ($row=mysql_fetch_array($result)){
   }
 }
 
-/**
+/*
 // List the emails and hopefully institutions of users, along with the site.
 $sql = "SELECT table_schema AS site FROM information_schema.tables WHERE table_name = 'users' AND table_schema != 'lepindex_data';";
 $result = mysql_query($sql);
@@ -56,4 +58,3 @@ while($row = mysql_fetch_array($result)){
     echo "  ".$row2['mail']."\n";
   }
 }
-*/

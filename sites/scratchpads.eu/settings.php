@@ -4,17 +4,19 @@
  * SHOULD BE RUN.  THIS WILL ENSURE THAT ALL FILES WITHIN THE 
  * SUBDIRECTORIES COPIES OF THIS FILE */
 
-// $Id$
+// $Id: settings.php~ 786 2008-08-12 10:24:17Z simor $
 
 // SDRycroft 9-5-07
 // Remove out the www from the domain, and then split it, using the first part
 // as the database name
 $db_url_part ="";
 if (isset($_SERVER['HTTP_HOST'])) {
+	// Don't really need to do the following due to apache removing "www" from 
+	// domain names
   $domain = preg_replace('`^www.`', '', $_SERVER['HTTP_HOST']);
   $host_parts = explode(".", $domain);
   $db_url_part = $host_parts[0];
-  if (strlen($db_url_part)<4)
+  if ($db_url_part=='pad')
     $db_url_part = $host_parts[1];
   // Finally remove "-" due to it not working as a table name
   $db_url_part = str_replace("-","",$db_url_part);  
