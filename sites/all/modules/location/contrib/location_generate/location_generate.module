@@ -1,0 +1,55 @@
+<?php
+// $Id: location_generate.module,v 1.3 2008/09/19 16:44:58 bdragon Exp $
+
+/**
+ * @file
+ * Generate random locations.
+ */
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function location_generate_nodeapi(&$node, $op) {
+  if ($op == 'presave') {
+    // Devel.module bulk node generation.
+    if (isset($node->devel_generate)) {
+      $sources = array(LOCATION_LATLON_USER_SUBMITTED, LOCATION_LATLON_GEOCODED_APPROX, LOCATION_LATLON_GEOCODED_EXACT);
+      $results = $node->devel_generate;
+      if ($results['add_locations']) {
+        $numlocs = rand(0, (int)variable_get('location_maxnum_'. $node->type, 0));
+        $node->locations = array();
+        for ($i = 0; $i < $numlocs; $i++) {
+          $location = array(
+            'lid' => NULL,
+            //'name' => '',
+            //'street' => '',
+            //'additional' => '',
+            //'city' => '',
+            //'province' => '',
+            //'postal_code' => '',
+            //'country' => '',
+            'latitude' => rand(-60, 60),
+            'longitude' => rand(-180, 180),
+            'source' => $sources[rand(0, 2)],
+          );
+          $dummy = array();
+          $location = array_merge(location_invoke_locationapi($dummy, 'default values'), $location);
+          $node->locations[] = $location;
+        }
+      }
+    }
+  }
+}
+
+function location_generate_form_devel_generate_content_form_alter(&$form, &$form_state) {
+  $form['add_locations'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Add locations to each node.'),
+    '#description' => t('Added by location_generate.module'),
+    '#default_value' => FALSE,
+  );
+
+  if (!isset($form['submit']['#weight'])) {
+    $form['submit']['#weight'] = 1;
+  }
+}

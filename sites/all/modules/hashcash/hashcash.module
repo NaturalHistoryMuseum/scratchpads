@@ -48,44 +48,22 @@ function hashcash_perm(){
  * 
  * Needed only for the module's settings page
  */
-function hashcash_menu($maycache){
+function hashcash_menu(){
   $items = array();
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-  if (!$may_cache) {
-    $items['admin/settings/hashcash'] = array(
-      'title' => 'Hashcash settings',
-      'description' => 'Change the default hashcash settings to include or exclude forms.',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('hashcash_admin_settings'),
-      'access arguments' => array('administer site configuration')
-    );
-    
-    // Add the hashcash javascript library to the header of the page
-    // This is done here, as it may not be possible to add the JS during hook_form_alter
-    if(!user_access('submit form without hashcash')){
-      drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
-    }
-  }
+  $items['admin/settings/hashcash'] = array(
+    'title' => 'Hashcash settings',
+    'description' => 'Change the default hashcash settings to include or exclude forms.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hashcash_admin_settings'),
+    'access arguments' => array('administer site configuration')
+  );
   return $items;
+}
+
+function hashcash_init(){
+  if(!user_access('submit form without hashcash')){
+    drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
+  }
 }
 
 /**
@@ -124,7 +102,7 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
       '#id' => 'hashcash-'.$form_id
     );
     // Alter validation to check the hashcash once submitted
-    $form['#validate'] = (count($form['#validate']))? array_merge(array('hashcash_validate'=>array()),$form['#validate']):array('hashcash_validate'=>array());
+    $form['#validate'][] = 'hashcash_validate';
     // Javascript which produces the hashcash
     $form['#attributes'] = array('onsubmit'=>'hashcash_create("hashcash-'.$form_id.'")');
   }
@@ -133,25 +111,26 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
 /**
  * Validation function to check the hashcash sent is actually SORTED!
  */
-function hashcash_validate($node, $form_values){
+function hashcash_validate($form, $form_state){
   // Check the hashcash passes
-  if(substr(sha1($form_values['hashcash']),0,2)!="00"){
-    // failed
+  $hashcash = $form_state['values']['hashcash'];
+  if(substr(sha1($hashcash),0,2)!="00"){
+    // failed;
     form_set_error('hashcash',t('Your hashcash value failed.  Please ensure you have JavaScript enabled in your browser'));
   } else {
     // Hashcash passed, now check the parts.
-    $hashcash_parts = explode(':',$form_values['hashcash']);
+    $hashcash_parts = explode(':',$hashcash);
     global $cookie_domain;
     if( $hashcash_parts[0]!='1'||
         ($hashcash_parts[1]!=date('ymd') && $hashcash_parts!=date('ymd',time()-(24*60*60))) ||
-        $hashcash_parts[2]!=$form_values['form_id'] ||
+        $hashcash_parts[2]!=$form['form_id']['#value'] ||
         $hashcash_parts[3]!=ip_address() ||
         $hashcash_parts[4]!=$cookie_domain ||
         !(isset($hashcash_parts[5]) && strlen($hashcash_parts[5])>10)){
       if(!isset($hashcash_parts[5])){
         $hashcash_parts[5] = 'NOT SET';
       }
-      watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form_values['form_id'].' - '.$hashcash_parts[3].':'.ip_address().' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
+      watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form['form_id']['#value'].' - '.$hashcash_parts[3].':'.ip_address().' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
       form_set_error('hashcash',t('Your hashcash string is not valid. Are you a spammer?'));
     } else {
       // Everything fine so far, final check.
@@ -160,10 +139,10 @@ function hashcash_validate($node, $form_values){
       // First thing, delete all the stale hashcash values from the database.
       db_query("DELETE FROM {hashcash} WHERE hcdate < '%s'", date('ymd',time()-(24*60*60*variable_get('hashcash_expire',2))));
       
-      $result = db_query("SELECT COUNT(*) FROM {hashcash} WHERE hashcash = '%s'",$form_values['hashcash']);
+      $result = db_query("SELECT COUNT(*) FROM {hashcash} WHERE hashcash = '%s'",$hashcash);
       if(array_pop(db_fetch_array($result))==0){
         // No rows, add it, and we're HOT TO TROT!
-        db_query("INSERT INTO {hashcash} (hcdate,hashcash) VALUES('%s','%s')",date('ymd'),$form_values['hashcash']);
+        db_query("INSERT INTO {hashcash} (hcdate,hashcash) VALUES('%s','%s')",date('ymd'),$hashcash);
       } else {
         // There must be a row, eep, SPAM
         form_set_error('hashcash',t('Your hashcash has already been submitted before.  Have you attempted to submit this form twice?'));

@@ -3,19 +3,10 @@
 /**
  * This file installs the DwC specimen module.
  */
-
-/*
-TODO:
- 1. Install database
- 2. Create the taxonomies
- 3. Ensure the darwincore module is weighted higher than location */
-
 /**
  * Implementation of hook_install
  */
 function darwincore_install(){
-  // Increase the module's weight so that it is executed after location and after taxonomy (Don't fuck up).
-  db_query("UPDATE {system} SET weight = 11 WHERE name = 'darwincore'");
   
   // Install the taxonomies:
   $vocabularies = array(
@@ -107,13 +98,63 @@ function darwincore_install(){
   // Create the database for specimen data
   // Create tables.
   drupal_install_schema('darwincore');
-  foreach($result as $table_result){
-    if(!$table_result){
-  	 drupal_set_message(t('This module is as dead as Darwin is (some table failed to install).'), 'error');
-  	 return;
-    }
-  }
-  drupal_set_message(t('Darwin would be proud - installed'));  
+  // Increase the module's weight so that it is executed after location and after taxonomy (Don't fuck up).
+  db_query("UPDATE {system} SET weight = 11 WHERE name = 'darwincore'");
+}
+
+function darwincore_schema(){
+  $schema['darwincore'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'vid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'sex' => array('type' => 'int', 'length' => 10),
+      'basisofrecord' => array('type' => 'int', 'length' => 10),
+      'typestatus' => array('type' => 'int', 'length' => 10),
+      'taxonomicname' => array('type' => 'int', 'length' => 10),
+      'institutioncode' => array('type' => 'varchar', 'length' => 255),
+      'collectioncode' => array('type' => 'varchar', 'length' => 255),
+      'cataloguenumbertext' => array('type' => 'text'),
+      'identificationqualifier' => array('type' => 'text'),
+      'identifiedby' => array('type' => 'varchar', 'length' => 255),
+      'dateidentified' => array('type' => 'datetime'),
+      'collectornumber' => array('type' => 'varchar', 'length' => 255),
+      'fieldnumber' => array('type' => 'varchar', 'length' => 255),
+      'collector' => array('type' => 'varchar', 'length' => 255),
+      'earliestdatecollected' => array('type' => 'datetime'),
+      'latestdatecollected' => array('type' => 'datetime'),
+      'fieldnotes' => array('type' => 'text', 'size' => 'big'),
+      'othercataloguenum' => array('type' => 'text', 'size' => 'big'),
+      'lifestage' => array('type' => 'varchar', 'length' => 255),
+      'count' => array('type' => 'int', 'length' => 5),
+      'genbanknum' => array('type' => 'varchar', 'length' => 255),
+      'remarks' => array('type' => 'text', 'size' => 'big'),
+      'location' => array('type' => 'int', 'length' => 10)
+    ),
+    'primary key' => array('vid')
+  );
+  $schema['darwincorelocation'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'vid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'continentocean' => array('type' => 'int', 'length' => 10),
+      'islandgroup' => array('type' => 'varchar', 'length' => 255),
+      'island' => array('type' => 'varchar', 'length' => 255),
+      'stateprovince' => array('type' => 'varchar', 'length' => 255),
+      'county' => array('type' => 'varchar', 'length' => 255),
+      'locality' => array('type' => 'varchar', 'length' => 255),
+      'geodeticdatum' => array('type' => 'varchar', 'length' => 255),
+      'verbatimcoordinatesystem' => array('type' => 'varchar', 'length' => 255),
+      'georeferenceprotocol' => array('type' => 'varchar', 'length' => 255),
+      'coordinateuncertainty' => array('type' => 'varchar', 'length' => 255),
+      'georeferenceremarks' => array('type' => 'varchar', 'length' => 255),
+      'minelevation' => array('type' => 'int', 'length' => 5),
+      'maxelevation' => array('type' => 'int', 'length' => 5),
+      'mindepth' => array('type' => 'int', 'length' => 5),
+      'maxdepth' => array('type' => 'int', 'length' => 5)
+    ),
+    'primary key' => array('vid')
+  );
+  return $schema;
 }
 
 function darwincore_uninstall(){

@@ -1,0 +1,59 @@
+<h2>Classification Import Instructions</h2>
+<div class="messages warning"><strong>Please Note:</strong> You can import classification multiple times, but be aware that there are no merge functions built into the import procedure. Consequently, you may wind-up with duplicate names in a hierarchy.</div>
+<p>There are two options to import a classification into your LifeDesk:</p>
+<ol>
+<li>Text file as either: Parent-child, Tabbed List, or a Full Hierarchy format (see below for examples). This file may be produced from spreadsheet editor like MS Excel or OpenOffice.org Calc.</li>
+<li>Programmatic import from EOL or other service supports Taxon Concept Schema XML export format.</li>
+</ol>
+<h3>Text File Preparation for Import</h3>
+
+<p>Make a tab-delimited text file in one of the three formats:</p>
+
+<p><strong>Parent-child</strong></p>
+
+<pre>
+kingdom1	any	descr1	syn1
+phylum1	kingdom1	descr2
+phylum2	kingdom1
+class1	phylum1
+order1	class1		syn2,syn3
+class2	phylum1
+order2	class2	descr3	syn4
+</pre>
+
+<p>The example of Parent-child in MS Excel 97/2003 format is available for <a href="path:parent_child.xls">download</a>.</p>
+
+<p><small>Please note that most fields here are delimited with the invisible "TAB" symbol. "any" means any word (just to designate the non-existed parent of upmost hierarchy level). "syn" and "descr" are synomym and description, respectively. Other words correspond with the names of taxa. Note that there are two consecutive "TAB" symbols on the line 5, which means that order1 has only synonyms but no description. Different synonyms are delimited with <em>commas</em>.</small></p>
+
+<p><strong>Tabbed List</strong></p>
+
+<pre>
+kingdom1;descr1
+	phylum1;descr2;syn1
+		class1
+			order1;;syn2,syn3
+		class2
+			order2
+			order3
+</pre>
+
+<p><small>Here the invisible "TAB" symbol used only to show the hierarchy level of the taxon. Description and synonyms are delimited with <em>semicolons</em>, whereas different synonyms are delimited with <em>commas</em>. Double semicolon on line 4 designates the case where order1 does not have description but has synonyms.</small></p>
+
+<p>The example of Tabbed List in MS Excel 97/2003 format is available for <a href="path:tabbed_list.xls">download</a>.</p>
+
+<p><strong>Full Hierarchy</strong></p>
+
+<pre>
+taxon	taxon	taxon	taxon	rank	description	synonyms
+kingdom1				kingdom
+kingdom1	phylum1			phylum
+kingdom1	phylum1	class1		classis	descr0
+kingdom1	phylum1	class1	order1	order	descr1	syn1,syn2
+kingdom1	phylum1	class1	order2	order		syn3,syn4
+kingdom1	phylum1	class2	order3	order	descr3	syn5
+</pre>
+
+<p>The example of Full Hierarchy in MS Excel 97/2003 format is available for <a href="path:full_hierarchy.xls">download</a>.</p>
+
+<p><small>All fields here delimited with "TAB". First line is the header row, with unlimited number of "taxon" columns, and two columns for "description" and "synonyms". Different synonyms are delimited with <em>commas</em>. Please note that this format allows to use taxonomic ranks whereas previous formats do not accept them.</small></p>
+

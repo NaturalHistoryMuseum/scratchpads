@@ -1,0 +1,219 @@
+<?php
+
+function classification_install() {
+  $vocab = array(
+	 'name' => 'Taxa',
+	 'hierarchy' => 1,
+	 'module' => 'taxon_description',
+	 'nodes' => array('taxon_description' => 1)
+  );
+  taxonomy_save_vocabulary($vocab);
+  drupal_install_schema('classification');
+}
+
+function classification_uninstall() {
+   // The following four lines should be removed in production to prevent classification from being deleted
+   $voc_name = 'Taxa';
+   $result = db_query(db_rewrite_sql("SELECT vid,name FROM {vocabulary} WHERE name = '%s'"), $voc_name);
+   $voc = db_fetch_object($result);
+   $vid = $voc->vid;
+   taxonomy_del_vocabulary($vid);
+   drupal_uninstall_schema('classification');
+   variable_del('classification_view_names');
+   variable_del('classification_ranks');
+}
+
+function classification_schema() {
+
+  $schema['classification_temp'] = array(
+    'description' => t('Stores a single row that gets updated during the import procedure'),
+    'fields' => array(
+      'cid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The {classification_temp}.cid'),
+      ),
+      'count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => t('A counter for the term import'),
+      ),
+      'term' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'description' => t('A holder for a term'),
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
+  
+  $schema['term_relation_has_type'] = array(
+    'description' => t('Stores term relation type information.'),
+    'fields' => array(
+      'trid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The {term_relation}.trid'),
+      ),
+      'rtid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The {term_realtion_types}.rtid.'),
+      ),
+    ),
+    'primary key' => array('trid', 'rtid'),
+  );
+  
+  $schema['term_relation_types'] = array(
+    'description' => t('Stores definitions for relation types'),
+    'fields' => array(
+      'rtid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The primary key for relation types'),
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => t('The relation type name.'),
+      ),
+      'namespace' => array( 
+        'type' => 'varchar', 
+        'length' => 128, 
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('The {term_realtion_namespace}.namespaces'), 
+      ),
+      'description' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+        'size' => 'big',
+        'description' => t('A description for the relation type.'),
+      ),
+    ),
+    'primary key' => array('rtid'),
+    'unique keys' => array('namespace_name' => array('namespace', 'name')),
+  );
+  
+  $schema['term_relation_types_namespaces'] = array( 
+    'description' => t('Stores namespaces for relation types'), 
+    'fields' => array( 
+      'namespace' => array( 
+        'type' => 'varchar', 
+        'length' => 128,
+        'not null' => TRUE, 
+        'description' => t('The primary key for namespaces'),
+      ),
+      'uri' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => t('The URI for the namespace'),
+      ),
+    ),
+    'primary key' => array('namespace'),
+  );
+
+  $schema['taxonomy_enhancer_fields'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'fid' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'taxonomy enhancer field provider module'
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'settings' => array(
+        'serialize' => TRUE,
+        'type' => 'text',
+      ),
+    ),
+    'primary key' => array('vid', 'fid'),
+  );
+
+  $schema['taxonomy_enhancer_value_text'] = array(
+    'fields' => array(
+       'tid' => array(
+         'type' => 'int', 
+         'unsigned' => TRUE, 
+         'not null' => TRUE, 
+         'disp-width' => '11',
+        ),
+       'fid' => array(
+         'type' => 'varchar', 
+         'length' => '255',
+         'not null' => TRUE,
+         'default' => '',
+        ),
+       'value' => array(
+         'type' => 'text',
+         'not null' => TRUE,
+        ),
+       'delta' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => FALSE,
+         'default' => 0,
+       ),
+       'format' => array(
+         'type' => 'int',
+         'not null' => FALSE,
+         'disp-width' => '11',
+       )
+    ),
+    'primary key' => array('tid', 'fid', 'delta'),
+  );
+
+  $schema['taxonomy_enhancer_value_nodereference'] = array(
+    'fields' => array(
+       'tid' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+       ),
+       'fid' => array(
+         'type' => 'varchar',
+         'length' => '255',
+         'not null' => TRUE,
+       ),
+       'nid' => array(
+         'type' => 'int',
+         'unsigned' => TRUE,
+         'not null' => TRUE,
+       ),
+     ),
+    'primary key' => array('tid', 'fid', 'nid'),
+  );
+
+  return $schema;
+}

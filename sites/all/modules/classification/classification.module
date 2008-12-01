@@ -1,0 +1,355 @@
+<?php
+/* $Id:$ */
+
+/** 
+ * @file classification.module
+ * This module makes it possible to import, edit and export names and classifications
+ */
+
+/**
+ * Implementation of hook_help
+ */
+function classification_help($path, $arg) {
+  switch($path) {
+   case 'admin/help#classification':
+     $output = t('The Classification module provides the ability to import, edit, and export the classification you use to organize your content.');
+     return $output;
+  }
+}
+
+/**
+ * Implementation of hook_perm
+ * Note: in order for the tree viewer to be seen outside the admin interface, anonymous permissions must be enabled for "view classification"
+ */
+function classification_perm() {
+  return array(
+    'access classification pages', 
+    'create classification', 
+    'import classification', 
+    'edit classification', 
+    'delete classification', 
+    'export classification',
+    'view classification',
+    'settings for classification'
+  );
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function classification_theme() {
+  return array(
+    'classification_manage' => array(
+      'arguments' => array('form' => array()),
+    ),
+    'classification_tree' => array(
+      'arguments' => array('element'), 
+    ),
+    'classification_tree_elements' => array( 
+      'arguments' => array('element'), 
+    ),
+  );
+}
+
+function classification_menu() {
+
+/**
+ * Menu items
+ */
+    $items['admin/classification'] = array(
+      'title' => t('Classification'),
+      'description' => t('Manage your classification(s).'),
+      'type' => MENU_NORMAL_ITEM,
+      'page callback' => 'classification_menu_block_page',
+      'access arguments' => array('access classification pages'),
+      'file' => 'includes/classification.default.inc',
+      'weight' => -9,
+    );
+
+    $items['admin/classification/manage'] = array(
+      'title' => t('Create & Delete'),
+      'description' => t('Manage temporary classifications that may be used to drag & drop names into your primary classification called "Taxa", which has been created for you.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('classification_manage'),
+      'access arguments' => array('create classification'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => -2,
+      'file' => 'includes/classification.manage.inc',
+    );
+
+    $items['admin/classification/import'] = array(
+      'title' => t('Import'),
+      'description' => t('Import names into your primary classification or into a temporary classification.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('classification_import_form'),
+      'access arguments' => array('import classification'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => -1,
+      'file' => 'includes/classification.import.inc',
+    );
+    
+    $items['admin/classification/edit'] = array(
+       'title' => t('Edit'),
+       'description' => t('Edit your primary classification.'),
+       'page callback' => 'drupal_get_form',
+       'page arguments' => array('classification_edit_form'),
+       'access arguments' => array('edit classification'),
+       'type' => MENU_NORMAL_ITEM,
+       'weight' => 0,
+       'file' => 'includes/classification.edit.inc',
+    );
+    
+    $items['admin/classification/export'] = array(
+       'title' => t('Export'),
+       'description' => t('Export your primary classification for uses elsewhere.'),
+       'page callback' => 'drupal_get_form',
+       'page arguments' => array('classification_export_form'),
+       'access arguments' => array('export classification'),
+       'type' => MENU_NORMAL_ITEM,
+       'weight' => 1,
+       'file' => 'includes/classification.export.inc',
+    );
+
+    $items['admin/classification/settings'] = array(
+      'title' => t('Settings'),
+      'description' => 'Advanced settings for handling of classification.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('classification_administration_form'),
+      'access arguments' => array('settings for classification'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => 2,
+      'file' => 'includes/classification.settings.inc',
+  );
+  
+/**
+ * Callbacks
+ */
+    $items['admin/classification/import_classification'] = array(
+      'title' => t('Import Classification'),
+      'page callback' => 'classification_import_classification',
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('import classification'),
+      'file' => 'includes/classification.import.inc',
+    );
+
+    $items['admin/classification/import_status'] = array(
+      'title' => t('Import Status'),
+      'page callback' => 'classification_import_status',
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('import classification'),
+      'file' => 'includes/classification.import.inc',
+    );
+    
+    $items['admin/classification/delete_classification'] = array(
+      'title' => t('Delete Classfication'),
+      'page callback' => 'classification_delete_classification',
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('delete classification'),
+      'file' => 'includes/classification.manage.inc',
+    );
+    
+    $items['admin/classification/import/search'] = array(
+      'title' => t('Search'),
+      'page callback' => 'classification_import_search',
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('import classification'),
+      'file' => 'includes/classification.import.inc',
+    );
+
+    $items['admin/classification/autocomplete'] = array(
+      'title' => 'Autocomplete for rerooting tree',
+      'page callback' => 'classification_autocomplete',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+
+    $items['admin/classification/checkterm'] = array(
+      'title' => 'Look for tid along with autocomplete',
+      'page callback' => 'classification_checkterm',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+    
+     $items['admin/classification/js_tree'] = array(
+      'title' => t('Classification tree callback'),
+      'page callback' => 'classification_js_tree',
+      'access arguments' => array('view classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+
+     $items['admin/classification/js_tree2'] = array(
+      'title' => t('Classification tree callback'),
+      'page callback' => 'classification_js_tree_alternate',
+      'access arguments' => array('view classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+
+     $items['admin/classification/js_tree_viewer'] = array(
+      'title' => t('Classification tree callback'),
+      'page callback' => 'classification_js_tree',
+      'access arguments' => array('view classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.viewer.inc',
+    );
+    
+     $items['admin/classification/get_metadata'] = array(
+      'title' => t('Classification Form Editor'),
+      'page callback' => 'classification_get_metadata',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+
+     $items['admin/classification/update_metadata'] = array(
+      'title' => t('Classification Form Editor'),
+      'page callback' => 'classification_update_metadata',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+
+     $items['admin/classification/update_settings'] = array(
+      'title' => t('Classification Settings Editor'),
+      'page callback' => 'classification_update_settings',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+    );
+    
+    $items['admin/classification/edit_name'] = array(
+       'title' => t('Edit'),
+       'page callback' => 'classification_edit_name',
+       'access arguments' => array('edit classification'),
+       'type' => MENU_CALLBACK,
+       'file' => 'includes/classification.edit.inc',
+    );
+    
+    $items['admin/classification/add_name'] = array(
+       'title' => t('Add'),
+       'page callback' => 'classification_add_name',
+       'access arguments' => array('edit classification'),
+       'type' => MENU_CALLBACK,
+       'file' => 'includes/classification.edit.inc',
+    );
+
+    $items['admin/classification/delete_name'] = array(
+       'title' => t('Delete'),
+       'page callback' => 'classification_delete_name',
+       'access arguments' => array('edit classification'),
+       'type' => MENU_CALLBACK,
+       'file' => 'includes/classification.edit.inc',
+    );
+
+    $items['admin/classification/move_name'] = array(
+       'title' => t('Drag and Drop'),
+       'page callback' => 'classification_move_name',
+       'access arguments' => array('edit classification'),
+       'type' => MENU_CALLBACK,
+       'file' => 'includes/classification.edit.inc',
+    );
+
+    $items['admin/classification/move_name_alternate'] = array(
+       'title' => t('Drag and Drop'),
+       'page callback' => 'classification_move_name_alternate',
+       'access arguments' => array('edit classification'),
+       'type' => MENU_CALLBACK,
+       'file' => 'includes/classification.edit.inc',
+    );
+    
+  return $items;
+}
+
+/**
+ * Get the necessary $vid for various forms
+ */
+function classification_get_vid($name) {
+  $voc = db_fetch_object(db_query(db_rewrite_sql("SELECT vid FROM {vocabulary} WHERE name = '%s'"), $name));
+  return $voc->vid;
+}
+
+/**
+ * Used to check name of vocabulary for use in canonical display
+ * And elect not to perform canonical regex on terms
+ */
+function classification_get_vocabulary($vid) {
+  $voc_name = db_fetch_object(db_query(db_rewrite_sql("SELECT name FROM {vocabulary} WHERE vid = %d"), $vid));
+  return $voc_name->name;
+}
+
+/******************************************
+ * CLASSIFICATION FORM ELEMENT DEFINITION
+ * 
+ * how to use:
+ *
+ * $css_file = drupal_get_path('module', 'classification_demo') . '/classification_demo.css';
+ *
+ * $form['name'] = array( 
+ *   '#type' => 'classification_tree',
+ *   '#css_file' => $css_file,
+ * );
+ * 
+ * Optional parameters:
+ *   #voc_name: specify the vocabulary name to use for the tree
+ ******************************************/
+
+/**
+ * Implementation of hook_elements
+ */
+function classification_elements() {
+  $type['classification_tree'] = array( 
+    '#input' => TRUE, 
+    '#process' => array('classification_tree_process_elements'), 
+    '#tree' => TRUE,
+  );
+  
+  return $type;
+}
+
+/**
+ * Processes the classification form element
+ * 
+ * @param $element
+ * @return the classification element
+ */
+function classification_tree_process_elements($element) {
+  
+  $module_path = drupal_get_path('module', 'classification') .'/';
+  drupal_add_js($module_path .'jsTree/css.js');
+  drupal_add_js($module_path .'jsTree/jquery.listen.js');
+  drupal_add_js($module_path .'jsTree/css.js');
+  drupal_add_js($module_path .'jsTree/tree_component.js');
+  drupal_add_js($module_path .'jsTree/jquery.cookie.js');
+  drupal_add_js($module_path .'js/classification_viewer.js');
+  
+  $element['#voc_name'] = isset($element['#voc_name']) ? $element['#voc_name'] : 'Taxa';
+  $element['#css_file'] = isset($element['#css_file']) ? drupal_add_css($element['#css_file']) : drupal_add_css($module_path .'css/classification.css');
+  $element['#tree'] = TRUE;
+  
+  $vid = classification_get_vid($element['#voc_name']);
+  
+  drupal_add_js(array('classification_vid' => array('vid' => $vid)), 'setting');
+  
+  return $element;
+}
+
+/**
+ * theme function for tree
+ *
+ * @param $element
+ * @return html output
+ */
+function theme_classification_tree(&$element) {
+  $tree = theme('classification_tree_elements', $element['#elements']);
+  return $tree;
+}
+
+function theme_classification_tree_elements($element) {
+  $output = '<div class="tree_wrapper_viewer">';
+  $output .= '<div id="classification_tree_viewer"></div>';
+  $output .= '</div>';
+  return $output;
+}

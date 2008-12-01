@@ -8,14 +8,30 @@ function hashcash_install() {
   // Create the database to link images with users.  
   // Create tables.
   drupal_install_schema('hashcash');
-  if ($result){    
-  	drupal_set_message(t('hashcash installed'));
-  }
-  else{    
-  	drupal_set_message(t('Postgres not currently supported for hashcash'), 'error');
-  }
 }
 
+function hashcash_schema(){
+  $schema['hashcash'] = array(
+    'description' => t('Table of used hashcashs'),
+    'fields' => array(
+      'hashcash' => array(
+        'description' => t('The hashcash.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE),
+      'hcdate' => array(
+        'description' => t('Date the hashcash was used'),
+        'type' => 'varchar',
+        'length' => 6,
+        'not null' => TRUE)
+      ),
+    'indexes' => array(
+      'hashcash_date_index' => array('hcdate')
+    ),
+    'primary key' => array('hashcash')
+  );
+  return $schema;
+}
 /**
  * Kick that loser to touch.
  */
