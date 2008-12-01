@@ -10,6 +10,16 @@
  */
 
 /**
+ * TODO
+ * 
+ * - Settings page for setting the width of images
+ * - Dynamic image width - could be done with JavaScript
+ * - Setting to define the WMS in use, it shouldn't be hard coded to the EDIT
+ *   WMS server
+ * - TESTING
+ */
+
+/**
  * Implementation of hook_node_info
  */
 function countriesmap_node_info() {
@@ -45,15 +55,16 @@ function countriesmap_access($op, $node, $account) {
 
 /**
  * Implementation of hook_perm
+ */
 function countriesmap_perm() {
   return array(
-    'create example content',
-    'delete own example content',
-    'delete any example content',
-    'edit own example content',
-    'edit any example content',
+    'create node content',
+    'delete own node content',
+    'delete any node content',
+    'edit own node content',
+    'edit any node content',
   );
-}*/
+}
 
 /**
  * Implementation of hook_form
