@@ -1,0 +1,229 @@
+<?php
+
+/**
+ * @file
+ * 
+ * The main module file for the countriesmap module.
+ * 
+ * This module creates a new content type "Countries map", which enables a user
+ * to select a list of countries to highlight on a map of the world.
+ */
+
+/**
+ * Implementation of hook_node_info
+ */
+function countriesmap_node_info() {
+  return array(
+    'countriesmap' => array(
+      'name' => t('Countries map'),
+      'module' => 'countriesmap',
+      'description' => t("A node type for displaying maps of the world with selectable countries highlighted"),
+      'has_title' => TRUE,
+      'title_label' => t('Title')
+    )
+  );
+}
+
+/**
+ * Implementation of hook_access
+ */
+function countriesmap_access($op, $node, $account) {
+  if ($op == 'create') {
+    return user_access('create node content', $account);
+  }
+  if ($op == 'update') {
+    if (user_access('edit any node content', $account) || (user_access('edit own node content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+  if ($op == 'delete') {
+    if (user_access('delete any node content', $account) || (user_access('delete own node content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_perm
+function countriesmap_perm() {
+  return array(
+    'create example content',
+    'delete own example content',
+    'delete any example content',
+    'edit own example content',
+    'edit any example content',
+  );
+}*/
+
+/**
+ * Implementation of hook_form
+ */
+function countriesmap_form(&$node) {
+  $type = node_get_types('type', $node);
+  if ($type->has_title) {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => check_plain($type->title_label),
+      '#required' => TRUE,
+      '#default_value' => $node->title,
+      '#weight' => -20
+    );
+  }
+  if ($type->has_body) {
+    $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
+  }
+  // Now we define the form elements specific to our node type.
+  // Lets get the continents from the continents table - these will be used for
+  // grouping the countries
+  $result = db_query("SELECT * FROM {countriesmap_continents} ORDER BY continent");
+  while($row = db_fetch_array($result)){
+    // Create a group in the form for this continent
+    $form['continent_'.$row['conid']] = array(
+      '#type' => 'fieldset',
+      '#title' => $row['continent'],
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#weight' => -20+$row['conid']
+    );
+    // Fetch the countries for this continent
+    $result2 = db_query("SELECT cmid, ct.name as regionname, ci.name as countryname FROM {countriesmap_tdwg} ct,{countriesmap_iso3166} ci WHERE isocode=code AND conid = %d ORDER BY ci.name,ct.name", $row['conid']);
+    while($row2 = db_fetch_array($result2)){
+      // Create a form element for each country
+      $fieldname = 'countriesmap_'.$row2['cmid'];
+      $form['continent_'.$row['conid']][$fieldname] = array(
+        '#type' => 'checkbox',
+        '#title' => $row2['countryname']." | ".$row2['regionname'],
+        '#default_value' => isset($node->$fieldname) && $node->$fieldname ? 1 : 0
+      );
+    }
+  }
+  return $form;
+}
+
+/**
+ * Implementation of hook_validate
+ */
+function countriesmap_validate(&$node) {
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      return;
+    }
+  }
+  // No country has been selected, return a form error (set sadly to title,
+  // as I don't know how to just set an error) FIXME
+  form_set_error('title', t('You must select a country'));
+}
+
+/**
+ * Implementation of hook_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function countriesmap_insert($node) {
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      // I'm afraid we're doing this the slow way!
+      db_query("INSERT INTO {countriesmap_nodes} (vid, nid, cmid) VALUES (%d, %d, %d)", $node->vid, $node->nid, substr($key, 13));
+    }
+  }
+}
+
+/**
+ * Implementation of hook_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ */
+function countriesmap_update($node) {
+  // if this is a new node or we're adding a new revision,
+  if (!$node->revision) {
+    // Updating a current revision
+    countriesmap_delete($node);
+  }
+  countriesmap_insert($node);
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function countriesmap_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'delete_revision':
+      // Notice that we're matching a single revision based on the node's vid.
+      db_query('DELETE FROM {countriesmap_nodes} WHERE vid = %d', $node->vid);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_delete
+ */
+function countriesmap_delete($node) {
+  // Notice that we're matching all revision, by using the node's nid.
+  db_query('DELETE FROM {countriesmap_nodes} WHERE nid = %d', $node->nid);
+}
+
+/**
+ * Implementation of hook_load
+ */
+function countriesmap_load($node) {
+  $result = db_query('SELECT cmid FROM {countriesmap_nodes} WHERE vid = %d', $node->vid);
+  $object = new stdClass();
+  while($row = db_fetch_array($result)){
+    $fieldname = 'countriesmap_'.$row['cmid'];
+    $object->$fieldname = 1;
+  }
+  return $object;
+}
+
+/**
+ * Implementation of hook_view().
+ *
+ * This is a typical implementation that simply runs the node text through
+ * the output filters.
+ */
+function countriesmap_view($node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+  $node->content['map'] = array(
+    '#value' => theme('countriesmap_display_map', $node),
+    '#weight' => 1,
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_theme().
+ *
+ * This lets us tell Drupal about our theme functions and their arguments.
+ */
+function countriesmap_theme() {
+  return array(
+    'countriesmap_display_map' => array(
+      'arguments' => array('node'),
+    ),
+  );
+}
+
+/**
+ * A custom theme function.
+ *
+ * By using this function to format our node-specific information, themes
+ * can override this presentation if they wish. We also wrap the default
+ * presentation in a CSS class that is prefixed by the module name. This
+ * way, style sheets can modify the output without requiring theme code.
+ */
+function theme_countriesmap_display_map($node) {
+  $output = '<div class="countriesmap_map">';
+  $level4ids = array();
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      // Again, we're doing this the slow way FIXME
+      $level4ids[] = array_pop(db_fetch_array(db_query("SELECT level4code FROM countriesmap_tdwg WHERE cmid = %d", substr($key, 13))));
+    }
+  }
+  $output .= '<img src="http://edit.csic.es/v1/areas.php?l=earth&as=a:0000ff,,1&ms='.variable_get('countriesmap_size', 800).'&bbox=-180,-90,180,90&ad=tdwg4:a:'.implode(",",$level4ids).'"/>';
+  $output .= '</div>';
+  return $output;
+}
