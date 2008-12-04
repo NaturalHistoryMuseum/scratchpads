@@ -34,13 +34,13 @@ function countrypresence_menu($may_cache) {
     'title'  =>  t('Country Presence'),
     'access'  =>  user_access('create country presence')
   );
+  /*
   $items[] = array(
     'path' => 'countrypresence/js',
     'access' => true, 
     'title' => t('CountryPresnce callback'),
     'callback' => 'countrypresnce_googlemapcreator',
     'type' => MENU_CALLBACK);
-    /*
   $items[] = array('path'  =>  'admin/content/countrypresence/import',
     'title'  =>  t('Import'),
     'access'  =>  user_access('create countrypresence content')||user_access('administer nodes'),
