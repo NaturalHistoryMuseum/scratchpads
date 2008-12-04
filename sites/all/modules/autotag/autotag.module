@@ -125,6 +125,9 @@ function autotag_form_alter($form_id, &$form){
   // up - probably best if we don't support multistep forms.
   if(isset($form['#multistep']) && $form['#multistep'] == true){return;}
   
+  // This also doesn't work with the webform module, lets disable it
+  if($form['type']['#value'] == 'webform'){return;}
+  
   // Lets change the form.
   
   // Add the CSS and JS necesary to style the form
