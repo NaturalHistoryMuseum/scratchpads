@@ -85,7 +85,13 @@ function autotag_cron(){
 function autotag_submit_vocabulary_form($form, $form_values){
   // FIXME - this should be one single array for all the taxonomies. Ah well,
   // it works!
-  variable_set('autotag_is_disabled-'.$form_values['vid'], $form_values['disableautotag']);
+  variable_set('autotag_is_disabled-'.$form_values['vid'], $form_values['values']['disableautotag']);
+}
+
+// Receive the form after the first page
+function autotag_form_submit($form, &$form_state){
+  $form_state['storage']['formsubmitted'] = $form;
+  return;
 }
 /**
  * Implementation of hook_form_alter
@@ -97,64 +103,42 @@ function autotag_submit_vocabulary_form($form, $form_values){
  * @param Array $form
  */
 function autotag_form_alter(&$form, &$form_state, $form_id){
-  // If this is not a node-form, finish
+  // If this is not a node form, check if it is the taxonomy vocabulary form.
+  // If so, add stuff to it.
   if($form['#id'] != 'node-form'){
     // check if this is the vocabulary edit form, if so, we want to add a checkbox
     // to give users the option to ignore autotag
     if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
       // Here we can add the extra field
-      $form['disableautotag'] = array(
+      $form['settings']['disableautotag'] = array(
         '#type' => 'checkbox',
         '#title' => t('Disable Autotag'),
         '#default_value' => variable_get('autotag_is_disabled-'.$form['vid']['#value'], 0),
         '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
       );
-      // Move submit and delete down
-      $form['submit']['#weight'] = 100;
-      $form['delete']['#weight'] = 100;
       // Finally we need a submit function
       $form['#submit'][] = 'autotag_submit_vocabulary_form';
     }
     return;
   }
+  
+  // If we're here, then this is a node form
   // If no vocabs are relevant to this node, simply return
   $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
   if(!count($hide_vids)){return;}
   
-  // If the form is already a multistep form, then we're going to muck things
-  // up - probably best if we don't support multistep forms.
-/* TODO #multistep is gone, use $form_state instead.
-   Move the rebuild statement to the submit function for this form. */
-	$form_state['rebuild'] = TRUE;
-//  if(isset($form['#multistep']) && $form['#multistep'] == true){return;}
+  // Autotag doesn't work with the following content types, return if this node
+  // is one of these.
+  $node_types_to_ignore = variable_get("autotag_borked_content_types", array(
+    "webform",
+    "biblio"
+  ));
+  if(in_array($form['type']['#value'], $node_types_to_ignore)){return;}
   
   // Lets change the form.
   
-  // Add the CSS and JS necesary to style the form
-  drupal_add_css(drupal_get_path('module','autotag').'/autotag.css');
-  if(function_exists('jquery_ui_backport_add')){
-    drupal_add_js(drupal_get_path('module','autotag').'/autotag-jquib.js');
-    jquery_ui_backport_add();
-  } else {
-    drupal_add_js(drupal_get_path('module','autotag').'/autotag-jquery.js');    
-  }
-  
-  // Form type is multistep, first page is as normal (with classifications removed), whilst the 
-  // second page has the drag'n'drop shit added
-/* TODO #multistep is gone, use $form_state instead.
-   Move the rebuild statement to the submit function for this form. */
-	$form_state['rebuild'] = TRUE;
-//  $form['#multistep'] = TRUE;
-  $step = isset($form['#post']['step']) ? (int) $form['#post']['step'] : 1;
-  $form['step'] = array(
-    '#type' => 'hidden',
-    '#value' => $step +1
-  );
-  $form['autotag'] = array();
-  $button_name = t('Submit');
-  
   // Hide the taxonomy fields -> this can greatly improve the rendering time for a page
-  // with a large classification on it.
+  // with a large classification on it.  We do this on all pages
   foreach($form['taxonomy'] as $key=>$value){
     if(in_array($key,$hide_vids)){
       $form['taxonomy'][$key] = array(
@@ -164,15 +148,148 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       );
     }
   }
+  
+  // If the form has NOT been submitted, we change the submit button name to
+  // next, and remove submit functions from the form
+  if(!$form_state['submitted'] && !$form_state['post']){
+    // Store the stubmit for use later
+    $form_state['storage']['formbuttons'] = $form['buttons'];
+    $form_state['storage']['formsubmit'] = $form['#submit']; 
+    
+    // Change the button so that it says "Next"
+    $form['buttons']['submit']['#value'] = t('Next');
+    // Change what will happen when we submit the form (remove the other 
+    // submits)
+    $form['buttons']['submit']['#submit'] = array('autotag_form_submit');
+    $form['#submit'] = array();
+  } else {
+    // Else we likely have either a submitted form, or one with post shit
+    if($form_state['storage']['formsubmitted']) {
+      // Restore the values to the form from t' previous page.
+      $form = $form_state['storage']['formsubmitted'];
+      $form['buttons'] = $form_state['storage']['formbuttons'];
+      $form['#submit'] = $form_state['storage']['formsubmit'];
+    }
+    // Add the CSS and JS necesary to style the form
+    drupal_add_css(drupal_get_path('module','autotag').'/autotag.css');
+    jquery_ui_add(array('ui.draggable', 'ui.droppable', 'ui.sortable'), 'packed');
+    
+    // Add a javascript function to update the hidden field with the contents of the "Terms to ignore" div
+    $form['submit']['#attributes']['onclick'] = 'autotag_update_form();';
+
+    // Search the text of the form, and update the taxonomy accordingly
+    $form = _autotag_search_form($form);
+    // Keep stuff as it is, just add the autotag bollocks to the top      
+    $form['autotag']['#type'] = 'fieldset';
+    $form['autotag']['#title'] = t(AUTOTAG_TITLE);
+    $form['autotag']['#collapsed'] = true;
+    $form['autotag']['#collapsible'] = false;
+    $form['autotag']['#weight'] = -100;
+    $form['autotag']['#description'] = t(AUTOTAG_DESCRIPTION);
+    $form['autotag']['ignoreterms'] = array(
+      '#type' => 'hidden'
+    );
+    // Build the ignore and tag lists
+    $lists = '';
+    $ignore_list = '';
+    $vocabularies = taxonomy_get_vocabularies();      
+    if(isset($form['#node']->nid)){
+      $ignore_terms = _autotag_get_ignore_terms($form['#node']->nid);
+      foreach($ignore_terms as $term){
+        $ignore_list .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
+      }
+    } else {
+      $ignore_terms = array();
+    }
+    if(is_array($form['#post']['taxonomy'])){
+      foreach($form['#post']['taxonomy'] as $key => $terms){
+        if($key != 'tags'){
+          $place_holders = array();
+          if(is_array($terms)){
+            foreach($terms as $doesntmatter){
+              $place_holders[] = '%d';
+            }
+          } else {
+            $place_holders[] = '%d';
+            $terms = array($terms);
+          }
+          if(count($place_holders)){
+            $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
+            while($term=db_fetch_object($results)){
+              if(!in_array($term,$ignore_terms)){
+                $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
+              }
+            }
+          }
+        }
+      }
+    }
+    // HTML shit for drag'n'droping
+    $form['autotag']['dragndropfields'] = array(
+      '#value' => '<div class="autotag-dnd" id="autotag-container">
+  <div id="autotag-dnd-left">
+    <h3>'.t(AUTOTAG_TAGGED).'</h3>
+    <ul>
+      '.$lists.'
+    </ul>
+  </div>
+  <div id="autotag-dnd-right">
+    <h3>'.t(AUTOTAG_IGNORE).'</h3>
+    <ul>
+      '.$ignore_list.'
+    </ul>
+  </div> 
+</div>');
+      
+    // Add an additional autocomplete field for adding any additional tags to the classification
+    $vocabs = _autotag_get_vids_for_type($form['type']['#value'], FALSE);
+    $vocabs_string = '';
+    $concater = '';
+    foreach($vocabs as $vocab){
+      $vocabs_string .= $concater.' '.check_plain($vocab->name);
+      $concater = ';';
+    }
+    $form['autotag']['additionaltags'] = array(
+      '#type' => 'textfield',
+      '#title' => t(AUTOTAG_ADDITIONAL_TERMS),
+      '#description' => t(AUTOTAG_ADDITIONAL_TERMS_DESC).$vocabs_string,
+      '#autocomplete_path' => 'autotag/autocomplete/'.$form['type']['#value']
+    );
+  }
+    // If we've come this far, and no terms were found in the page, autosubmit the form.
+    // FIXME, this may well stop people from tagging the content of a page at all, not sure
+    // what the solution to this could be though, as a second page could become annoying, hence
+    // the reason for this additional JS.
+    /**
+     * Removed for now - I'm not keed on this - users can click submit if they want!!!    
+    if($lists == '' && $ignore_list == ''){
+      drupal_add_js('$("#edit-submit2").click();</script>','inline','footer');
+    }
+  }
+  /*
+  // Lets get the step that we're on
+  $step = isset($form_state['values']) ? (int)$form_state['storage']['step'] : 0;
+  if(isset($form_state['storage']['']))
+  $form_state['storage']['step'] = $step +1;
+  
+  $form['autotag'] = array();
+  $button_name = t('Submit');
   // If on the first page, simply change the button from submit to next, and
   // also remove any redirects and submit functions that may have been on the form.
   if($step<2){
 //    $form['#redirect'] = FALSE;
-    $button_name = t('Next');
-    $form['#submit'] = FALSE;
+    print_r($form_state);
+    $form['buttons']['submit']['#value'] = t('Next');    
+    $form['buttons']['submit']['#submit'] = array();
+    
+    // Store the stubmit for use later
+    $form_state['storage']['oldsubmit'] = $form['#submit']; 
+    $form['#submit'] = array('autotag_form_submit');
   } 
   // If on the second page, do a whole load of magic
   else {
+    echo "We're on the second part";exit;
+    /*
     // Add the hidden taxonomy fields to the post stuff (needed to ensure we don't lose tagged shit)
     if(isset($form['#node']->taxonomy)){
       foreach($form['#node']->taxonomy as $term){
@@ -303,19 +420,24 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     }
     */
     // END OF PAGE 2 EXTRAS
-  }
+  //}
   // Hidden field which is updated by Javascript when the form is submitted
+  /*
   $form['autotag']['hideterms'] = array(
     '#type' => 'hidden',
     '#default_value' => '|'
   );
+  */
   // Additional submit button higher up the page so that lazy f*&kers don't have to 
   // scroll down.
-  $form['submit']['#value'] = $button_name;
+  /*
+  $form['buttons']['submit']['#value'] = $button_name;
   if($step==2){
     $form['autotag']['submit2'] = $form['submit'];
     $form['autotag']['submit2']['#prefix'] = '<div class="description">'.t(AUTOTAG_SUBMIT2_TEXT).'</div>';
   }
+  */
+  //print_r($form);exit;
 }
 
 /**
@@ -323,23 +445,21 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
  * 
  * Needed only for the module's settings page, and the autocomplete function
  */
-function autotag_menu($maycache){
+function autotag_menu(){
   $items = array();
-  if ($maycache) {
-    $items['admin/settings/autotag'] = array(
-      'title' => AUTOTAG_SETTINGS,
-      'description' => AUTOTAG_SETTINGS_DESC,
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('autotag_admin_settings'),
-      'access arguments' => array('administer site configuration')
-    );
-    $items['autotag/autocomplete'] = array(
-      'title' => 'Autocomplete autotag thingumy',
-      'page callback' => 'autotag_autocomplete',
-      'access arguments' => array('create node content'),
-      'type' => MENU_CALLBACK    
-    );
-  }
+  $items['admin/settings/autotag'] = array(
+    'title' => AUTOTAG_SETTINGS,
+    'description' => AUTOTAG_SETTINGS_DESC,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('autotag_admin_settings'),
+    'access arguments' => array('administer site configuration')
+  );
+  $items['autotag/autocomplete'] = array(
+    'title' => 'Autocomplete autotag thingumy',
+    'page callback' => 'autotag_autocomplete',
+    'access arguments' => array('create node content'),
+    'type' => MENU_CALLBACK    
+  );
   return $items;
 }
 
