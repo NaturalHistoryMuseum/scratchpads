@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: userplus.module,v 1.7.2.6 2008/11/13 07:40:48 marcp Exp $
 
 /**
  * @file
@@ -32,7 +32,7 @@ function userplus_menu($may_cache) {
   if ($may_cache) {
                      
     $items[] = array('path' => 'admin/settings/userplus',
-                     'title' => t('Userplus'),
+                     'title' => t('Userplus settings'),
                      'description' => t('Settings for the userplus module.'),
                      'callback' => 'drupal_get_form',
                      'callback arguments' => array('userplus_admin_settings'),
@@ -40,7 +40,7 @@ function userplus_menu($may_cache) {
                      'type' => MENU_NORMAL_ITEM);
                      
     $items[] = array('path' => 'admin/user/userplus',
-                     'title' => t('Userplus'),
+                     'title' => t('Userplus administration'),
                      'description' => t('Add multiple users; assign roles to multiple users.'),
                      'callback' => 'drupal_get_form',
                      'callback arguments' => array('userplus_add_users'),
@@ -197,6 +197,11 @@ function userplus_add_users() {
     }
   }
 
+  $form['notify'] = array(
+     '#type' => 'checkbox',
+     '#title' => t('Notify users of new account'),
+     '#default_value' => false,
+  );
   $form['submit'] = array('#type' => 'submit', '#value' => t('Create accounts'));
   return $form;
 }
@@ -282,14 +287,44 @@ function userplus_add_users_submit($form_id, $edit) {
                array('%name' => $u['name'],
                      '%email' => '<'. $u['mail'] .'>')));
       
-      user_save('', array('name' => $u['name'],
-                          'pass' => $u['pass'],
-                          'init' => $u['mail'],
-                          'mail' => $u['mail'],
-                          'roles' => $u['roles'],
-                          'status' => 1));
-      
-      drupal_set_message(t('Created new user account %name.', array('%name' => $u['name'])));
+      $account = user_save('',
+        array(
+          'name' => $u['name'],
+          'pass' => $u['pass'],
+          'init' => $u['mail'],
+          'mail' => $u['mail'],
+          'roles' => $u['roles'],
+          'status' => 1
+        )
+      );
+      // Send mail to user, liberally copied from user_register_submit
+      if ($edit['notify']) {
+        $from = variable_get('site_mail', ini_get('sendmail_from'));
+        global $base_url;
+        $variables = array(
+          '!username' => $u['name'],
+          '!site' => variable_get('site_name', 'Drupal'),
+          '!password' => $u['pass'],
+          '!uri' => $base_url,
+          '!uri_brief' => substr($base_url, strlen('http://')),
+          '!mailto' => $u['mail'],
+          '!date' => format_date(time()),
+          '!login_uri' => url('user', NULL, NULL, TRUE),
+          '!edit_uri' => url('user/'. $account->uid .'/edit', NULL, NULL, TRUE),
+          '!login_url' => user_pass_reset_url($account)
+        );
+	
+        // Create new user account, no administrator approval required.
+        $subject = _user_mail_text('admin_subject', $variables) ;
+        $body = _user_mail_text('admin_body', $variables);
+        
+        drupal_mail('user-register-notify', $u['mail'], $subject, $body, $from);
+
+        drupal_set_message(t('Password and further instructions have been e-mailed to the new user %user.', array('%user' => $u['name'])));
+      }
+      else {      
+        drupal_set_message(t('Created new user account %name.', array('%name' => $u['name'])));
+      }
     }
     
     drupal_set_message(format_plural(sizeof($users_added), '1 user was added.', '@count users were added.'));
@@ -329,6 +364,7 @@ function theme_userplus_add_users($edit) {
   }
 
   $output = theme('table', $header, $rows, array('id' => 'multi-users'));
+  $output .= drupal_render($edit['notify']);
   $output .= drupal_render($edit['submit']);
   
   // Don't forget the dreaded form_id -- http://drupal.org/node/38926 -- or
