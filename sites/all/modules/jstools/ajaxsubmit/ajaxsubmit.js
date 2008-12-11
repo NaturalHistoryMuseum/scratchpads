@@ -1,4 +1,4 @@
-// $Id$
+// $Id: ajaxsubmit.js,v 1.8.2.5 2008/04/14 16:10:31 nedjo Exp $
 
 /**
  * Attaches the ajaxsubmit behaviour to forms.

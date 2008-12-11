@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: jstools.module,v 1.7.2.8 2008/06/19 21:30:25 nedjo Exp $
 
 /**
  * @file
@@ -14,7 +14,7 @@
 function jstools_footer() {
   $javascript = drupal_add_js();
   $path = drupal_get_path('module', 'jstools');
-  if (isset($javascript['module']) && isset($javascript['module'][$path .'/jstools.js']) && isset($javascript['module']['misc/collapse.js'])) {
+  if (isset($javascript['module']) && isset($javascript['module'][$path .'/jstools.js']) && isset($javascript['module']['misc/collapse.js']) && !module_exists('jquery_update')) {
     drupal_add_js(drupal_get_path('module', 'jstools') .'/collapse.js');
   }
 }

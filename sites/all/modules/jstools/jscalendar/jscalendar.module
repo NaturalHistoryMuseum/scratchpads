@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: jscalendar.module,v 1.14.2.7 2008/06/19 22:35:37 nedjo Exp $
 
 /**
  * @file
@@ -30,7 +30,8 @@ function jscalendar_menu($may_cache){
       'title' => t('JS Calendar'),
       'description' => t('Configurations for the popup calendar'),
       'callback' => 'drupal_get_form',
-      'callback arguments' => array('jscalendar_admin_settings')
+      'callback arguments' => array('jscalendar_admin_settings'),
+      'access' => user_access('administer site configuration'),
     );
     
   }
@@ -114,14 +115,14 @@ function jscalendar_load($lib_locale = NULL) {
   // If the locale library hasn't been explicitly set, we look for support for the current locale.
   if (empty($lib_locale)) {
     // Supported directly.
-    if (in_array($locale, array('af', 'bg', 'ca', 'da', 'de', 'el', 'es', 'fi', 'fr', 'he', 'hu', 'id', 'is', 'it', 'ja', 'kn', 'ko', 'lt', 'nl', 'pl', 'ro', 'ru', 'sk', 'sv', 'tr'))) {
+    if (in_array($locale, array('af', 'bg', 'ca', 'da', 'de', 'el', 'es', 'fi', 'fr', 'hu', 'id', 'is', 'it', 'ja', 'kn', 'ko', 'lt', 'nl', 'pl', 'ro', 'ru', 'sk', 'sv', 'tr'))) {
       $lib_locale = $locale;
     }
     // Supported indirectly.
     else if ($locale == 'cs') {
        $lib_locale = 'cs-utf8';
     }
-    else if ($lib_locale == 'he') {
+    else if ($locale == 'he') {
        $lib_locale = 'he-utf8';
     }
     else if (($locale == 'pt-br') || ($locale == 'pt-pt')) {

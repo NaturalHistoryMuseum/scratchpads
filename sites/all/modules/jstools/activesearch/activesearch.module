@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: activesearch.module,v 1.1.2.11 2008/11/07 01:04:51 nedjo Exp $
 
 /**
  * Implementation of hook_menu().
@@ -61,6 +61,13 @@ function activesearch_form_alter($form_id, &$form) {
 
 function activesearch_admin_settings() {
   $form = array();
+  $form['jstools_history_remote'] = array(
+    '#type' => 'radios',
+    '#title' => t('History plugin'),
+    '#description' => t('Load the history_remote plugin, which ties search submission to browser history. Active Search will be missing some functionality if this is disabled. However, the plugin can cause errors in combination with certain other Javascript functionality. Disable to avoid such errors. Note that disabling this setting will affect other modules if you enable them: Tabs and Dynamicload.'),
+    '#default_value' => variable_get('jstools_history_remote', 0),
+    '#options' => array(t('disabled'), t('enabled')),
+  );
   $form['activesearch_tabs_mode'] = array(
     '#type' => 'radios',
     '#title' => t('Tabs'),
@@ -160,7 +167,9 @@ function activesearch_load() {
   drupal_add_js('misc/progress.js');
   $path = drupal_get_path('module', 'activesearch');
   jstools_add_js($path . '/activesearch.js');
-  drupal_add_js(drupal_get_path('module', 'jstools') . '/jquery.history_remote.pack.js');
+  if (variable_get('jstools_history_remote', 0)) {
+    drupal_add_js(drupal_get_path('module', 'jstools') . '/jquery.history_remote.pack.js');
+  }
   module_invoke('tabs', 'load');
 }
 

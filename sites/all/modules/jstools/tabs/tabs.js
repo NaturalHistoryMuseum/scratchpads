@@ -1,4 +1,4 @@
-// $Id$
+// $Id: tabs.js,v 1.2.2.9 2008/03/29 13:37:28 nedjo Exp $
 
 Drupal.behaviors.tabs = function (context) {
 

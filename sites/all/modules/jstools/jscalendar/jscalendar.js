@@ -1,4 +1,4 @@
-// $Id$
+// $Id: jscalendar.js,v 1.8.2.4 2008/03/29 13:37:28 nedjo Exp $
 
 if (Drupal.jsEnabled) {
   $(document).ready(function() {

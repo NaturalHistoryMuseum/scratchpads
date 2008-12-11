@@ -1,4 +1,4 @@
-// $Id$
+// $Id: collapsiblock.js,v 1.8.2.11 2008/04/14 16:10:32 nedjo Exp $
 
 Drupal.behaviors.collapsiblock = function (context) {
   $('div.block:not(.collapsiblock-processed)', context).addClass('collapsiblock-processed').each(function () {

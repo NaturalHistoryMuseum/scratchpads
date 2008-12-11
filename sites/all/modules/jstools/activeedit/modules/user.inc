@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: user.inc,v 1.1.2.5 2008/03/29 13:37:27 nedjo Exp $
 
 function user_activeedit_autocompletes() {
   $autocompletes = array();

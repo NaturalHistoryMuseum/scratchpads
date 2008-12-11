@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: tabs.module,v 1.9.2.18 2008/11/07 01:04:51 nedjo Exp $
 
 /**
  * @file
@@ -31,6 +31,13 @@ function tabs_menu($may_cache) {
  */
 function tabs_admin_settings() {
   $form = array();
+  $form['jstools_history_remote'] = array(
+    '#type' => 'radios',
+    '#title' => t('History plugin'),
+    '#description' => t('Load the history-remote plugin, which ties tab switching to browser back and forward buttons. The plugin can cause errors in combination with certain other Javascript functionality. Disable to avoid such errors. Note that disabling this setting will affect other modules if you use them: Active Search and Dynamicload.'),
+    '#default_value' => variable_get('jstools_history_remote', 0),
+    '#options' => array(t('disabled'), t('enabled')),
+  );
   $form['tabs_slide'] = array(
     '#type' => 'radios',
     '#title' => t('Slide effect'),
@@ -65,6 +72,18 @@ function tabs_admin_settings() {
     '#description' => t('Enable to add "next" and "previous" buttons to the bottom of all tab sets.'),
     '#default_value' => variable_get('tabs_navigation', 0),
     '#options' => array(t('disabled'), t('enabled')),
+  );
+  $form['tabs_nav_next'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Next button caption'),
+    '#description' => t('The text to be displayed in the \'next\' button.'),
+    '#default_value' => variable_get('tabs_nav_next', t('next')),
+  );
+  $form['tabs_nav_prev'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Previous button caption'),
+    '#description' => t('The text to be displayed in the \'previous\' button.'),
+    '#default_value' => variable_get('tabs_nav_prev', t('previous')),
   );
   $form = system_settings_form($form);
   return $form;
@@ -157,11 +176,13 @@ function tabs_load() {
     jstools_add_js(
       array(
         $path . '/jquery.tabs.pack.js',
-        drupal_get_path('module', 'jstools') . '/jquery.history_remote.pack.js',
         $path . '/tabs.js',
       )
     );
-    drupal_add_js(array('tabs' => array('slide' => (bool) variable_get('tabs_slide', 0), 'fade' => (bool) variable_get('tabs_fade', 0), 'speed' => variable_get('tabs_speed', 'slow'), 'auto_height' => (bool) variable_get('tabs_auto_height', 0), 'next_text' => t('next'), 'previous_text' => t('previous'))), 'setting');
+    if (variable_get('jstools_history_remote', 0)) {
+      drupal_add_js(drupal_get_path('module', 'jstools') . '/jquery.history_remote.pack.js');
+    }
+    drupal_add_js(array('tabs' => array('slide' => (bool) variable_get('tabs_slide', 0), 'fade' => (bool) variable_get('tabs_fade', 0), 'speed' => variable_get('tabs_speed', 'slow'), 'auto_height' => (bool) variable_get('tabs_auto_height', 0), 'next_text' => variable_get('tabs_nav_next', t('next')), 'previous_text' => variable_get('tabs_nav_prev', t('previous')))), 'setting');
     drupal_add_css($path . '/drupal-tabs.css');
     drupal_add_css($path . '/tabs.css');
     drupal_set_html_head('

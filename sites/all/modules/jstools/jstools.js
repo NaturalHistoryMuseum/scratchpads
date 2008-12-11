@@ -1,4 +1,4 @@
-// $Id$
+// $Id: jstools.js,v 1.9.2.9 2008/06/19 21:30:25 nedjo Exp $
 
 Drupal.behaviors = Drupal.behaviors || {};
 
@@ -230,5 +230,7 @@ if (Drupal.jsEnabled) {
   // 'js enabled' cookie
   document.cookie = 'has_js=1';
   // Attach all behaviors.
-  $(document).ready(Drupal.attachBehaviors);
+  $(document).ready(function(){
+    Drupal.attachBehaviors(this);
+  });
 }
