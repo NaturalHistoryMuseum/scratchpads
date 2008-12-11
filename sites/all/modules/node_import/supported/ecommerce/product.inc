@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: product.inc,v 1.2.4.1 2008/03/17 13:02:51 robrechtj Exp $
 
 /**
  * @file

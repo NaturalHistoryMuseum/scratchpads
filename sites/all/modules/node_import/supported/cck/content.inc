@@ -1,5 +1,5 @@
 <?php
-/* $Id$ */
+/* $Id: content.inc,v 1.1.2.2.2.18 2008/11/03 20:23:54 robrechtj Exp $ */
 
 /**
  *  CCK data can be imported into any column of a CCK field.
@@ -69,10 +69,10 @@ function content_node_import_prepare(&$node, $preview = FALSE) {
       // Find the column names for this field type and process each.
       $db_info = content_database_info($field);
       foreach ($db_info['columns'] as $column => $info) {
-        $dummy_name = $field['field_name'] .'_'. $column;
+        $dummy_name = $field_name .'_'. $column;
 
         // Force a node value for missing data.
-        if (empty($node->$dummy_name)) {
+        if (!isset($node->$dummy_name) || strlen($node->$dummy_name) == 0) {
           $values = array(0 => $globals['fields'][$dummy_name]);
         }
         else {
@@ -91,80 +91,156 @@ function content_node_import_prepare(&$node, $preview = FALSE) {
             case 'datestamp':
               // Get properly formatted date for value column.
               // Assume timezone and offset values are correct as input.
-              if ($column == 'value') {
-                include_once(drupal_get_path('module', 'date') .'/date.inc');
-                if ($field['type'] == 'date') {
-                  // Is the imported date a unix timestamp? If so convert it to ISO date.
-                  if (is_numeric($value) && date_is_valid($value, DATE_UNIX)) {
-                    $value = date_unix2iso($value);
+              if ($column == 'value' && $value != '') {
+                if (variable_get('date_api_version', 0) >= 5.2) {
+                  // Date 2 API
+                  include_once('./'. drupal_get_path('module', 'date') .'/date_token.inc');
+                  if ($field['type'] == 'date') {
+                    // Is the imported date a unix timestamp? If so convert it to ISO date.
+                    if (is_numeric($value) && date_is_valid($value, DATE_UNIX)) {
+                      $value = date_convert($value, DATE_UNIX, DATE_ISO);
+                    }
+                    // If the imported date is a (partial) ISO date, convert it
+                    // to date's ISO date.
+                    else if (($date_array = date_convert($value, DATE_ISO, DATE_ARRAY)) != NULL) {
+                      $value = date_convert($date_array, DATE_ARRAY, DATE_ISO);
+                    }
+                    // Otherwise, use strtotime and unix2iso to convert 
+                    // partial ISO or text date into full ISO.
+                    else {
+                      $value = date_convert(strtotime($value), DATE_UNIX, DATE_ISO);
+                    }
                   }
-                  // If the imported date is a (partial) ISO date, convert it
-                  // to date's ISO date.
-                  else if (($date_array = date_iso2array($value)) != 'ERROR') {
-                    $value = date_array2iso($date_array);
-                  }
-                  // Otherwise, use strtotime and unix2iso to convert 
-                  // partial ISO or text date into full ISO.
                   else {
-                    $value = date_unix2iso(strtotime($value));
+                    // Is this already a unix timestamp? If not try strototime.
+                    if (!is_numeric($value) || !date_is_valid($value, DATE_UNIX)) {
+                      $value = strtotime($value);
+                    }
                   }
                 }
                 else {
-                  // Is this already a unix timestamp? If not try strototime.
-                  if (!is_numeric($value) || !date_is_valid($value, DATE_UNIX)) {
-                    $value = strtotime($value);
+                  // Date 1 API
+                  include_once('./'. drupal_get_path('module', 'date') .'/date.inc');
+                  if ($field['type'] == 'date') {
+                    // Is the imported date a unix timestamp? If so convert it to ISO date.
+                    if (is_numeric($value) && date_is_valid($value, DATE_UNIX)) {
+                      $value = date_unix2iso($value);
+                    }
+                    // If the imported date is a (partial) ISO date, convert it
+                    // to date's ISO date.
+                    else if (($date_array = date_iso2array($value)) != 'ERROR') {
+                      $value = date_array2iso($date_array);
+                    }
+                    // Otherwise, use strtotime and unix2iso to convert 
+                    // partial ISO or text date into full ISO.
+                    else {
+                      $value = date_unix2iso(strtotime($value));
+                    }
+                  }
+                  else {
+                    // Is this already a unix timestamp? If not try strototime.
+                    if (!is_numeric($value) || !date_is_valid($value, DATE_UNIX)) {
+                      $value = strtotime($value);
+                    }
                   }
                 }
               }
               break;
 
             case 'nodereference':
-              // If $value is numeric use it, otherwise
-              // find a node title that matches and get nid.
-              if (intval($value) > 0) {
-                $value = intval($value);
-              }
-              else {
-                $referenced_nodes = array();
-                $sql = "SELECT nid, title FROM {node} WHERE title SOUNDS LIKE '%s'";
-                $result = db_query($sql, $value);
-                $record_found = db_fetch_object($result);
-                if ($record_found) {
-                  $value = $record_found->nid;
-                }
-              }
+              $tmp = node_import_nodereference($value);
+              $value = (isset($tmp) ? $tmp : $value);
               break;
 
             case 'userreference':
-              // If $value is numeric use it, otherwise
-              // find a user name that matches and get uid.
-              if (intval($value) > 0) {
-                $value = intval($value);
-              }
-              else {
-                if (($account = user_load(array('name' => $author['name'])))) {
-                  $value = $account->uid;
-                }
-              }
+              $tmp = node_import_userreference($value);
+              $value = (isset($tmp) ? $tmp : $value);
               break;
 
             case 'number_integer':
-              // Make sure numeric data is brought in as numeric values.
-              $value = intval($value);
+              if (strlen($value) > 0) {
+                $value = intval($value);
+              }
               break;
 
             case 'number_decimal':
-              $value = floatval($value);
+              if (strlen($value) > 0) {
+                $value = floatval($value);
+              }
               break;
           }
 
           // Set the correct node field values.
-          if (!is_array($node->$field['field_name'])) {
+          if (!isset($node->$field_name)) {
             $node->$field_name = array($delta => array($column => $value));
           }
-          else {
+          else if (!isset($node->{$field_name}[$delta])) {
             $node->$field_name += array($delta => array($column => $value));
           }
+          else {
+            $node->{$field_name}[$delta] += array($column => $value);
+          }
+        }
+
+        // We need to handle a couple of field widget types specially.
+        switch ($field['widget']['type']) {
+          case 'options_select':
+          case 'options_onoff':
+          case 'options_buttons':
+            $keys = array();
+            $allowed_values = _optionwidgets_options($field, $node);
+            $allowed_keys = array();
+            foreach ($allowed_values as $key => $value) {
+              $key = (string)$key;
+              $allowed_keys[strtolower($key)] = $key;
+              $allowed_keys[strtolower($value)] = $key;
+            }
+            
+            foreach ($node->$field_name as $delta => $value_list) {
+              $value = strtolower($value_list['value']);
+              if (isset($allowed_keys[$value])) {
+                $keys[] = $allowed_keys[$value];
+              }
+              else {
+                $errors[] = t('%value is not an allowed value for %label.', array('%value' => $value_list['value'], '%label' => $field['widget']['label']));
+              }
+            }
+
+            if ($field['multiple'] || $field['widget']['type'] == 'options_onoff') {
+              $node->$field_name += array('keys' => $keys);
+            }
+            else {
+              $node->$field_name += array('key' => reset($keys));
+            }
+            break;
+
+          case 'nodereference_autocomplete':
+            foreach ($node->$field_name as $delta => $value) {
+              $value['node_name'] = $value['nid'] .' [nid:'. $value['nid'] .']';
+              $node->{$field_name}[$delta] = $value;
+            }
+            break;
+
+          case 'nodereference_select':
+            $nids = array();
+            foreach ($node->$field_name as $delta => $nid_list) {
+              $nids[$nid_list['nid']] = $nid_list['nid'];
+            }
+            if ($field['multiple']) {
+              $node->$field_name += array('nids' => $nids);
+            }
+            else {
+              $node->$field_name += array('nid' => reset($nids));
+            }
+            break;
+
+          case 'link':
+            foreach ($node->$field_name as $delta => $link_list) {
+              if (!isset($link_list['attributes']) || strlen($link_list['attributes']) == 0) {
+                $node->{$field_name}[$delta]['attributes'] = $field['widget']['default_value'][0]['attributes'];
+              }
+            }
+            break;
         }
 
         // Unset the dummy column value.

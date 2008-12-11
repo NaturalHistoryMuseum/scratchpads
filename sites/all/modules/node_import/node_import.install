@@ -18,7 +18,7 @@ function node_import_install() {
                       "\"type\" VARCHAR(16) NOT NULL DEFAULT '', ".
                       "csv_headers TEXT NOT NULL, ".
                       "mapping TEXT NOT NULL, ".
-                      "KEY type (type) ".
+                      "KEY \"type\" (\"type\") ".
                       ");");
       break;
   }
@@ -52,9 +52,10 @@ function node_import_update_1() {
                             "\"type\" VARCHAR(16) NOT NULL DEFAULT '', ".
                             "csv_headers TEXT NOT NULL, ".
                             "mapping TEXT NOT NULL, ".
-                            "KEY type (type) ".
+                            "KEY \"type\" (\"type\") ".
                             ");");
       break;
   }
   return $items;
 }
+

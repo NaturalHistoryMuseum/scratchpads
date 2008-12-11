@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: node_import.module,v 1.50.2.3.2.26 2008/11/11 09:37:58 robrechtj Exp $
 
 /**
  * @file
@@ -275,8 +275,10 @@ function _node_import_mapping(&$edit) {
 
     $j = 0;
     while (($row = $function($edit['file']->filepath)) && $j++ < 5) {
+      // Make sure we have at least as many values as we have $headers.
+      $row = array_slice(array_merge((array)$row, array_fill(count($row), count($headers), '')), 0, count($headers));
       foreach ($row as $i => $value) {
-        $datatmp[$i][] = check_plain($value);
+        $datatmp[$i][] = check_plain($value) .'&nbsp;';
       }
     }
 
@@ -295,9 +297,9 @@ function _node_import_mapping(&$edit) {
         '#options' => $fields,
       );
     }
-    
-    foreach ($datatmp as $i => $value) {
-      $form['match'][$i]['#description'] = '<ul><li>'. implode('</li><li>', $value) .'</li></ul>';
+
+    foreach ((array)$datatmp as $i => $value) {
+      $form['match'][$i]['#description'] = '<ul><li>'. implode('</li><li>', (array)$value) .'</li></ul>';
     }
   }
 
@@ -627,7 +629,7 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
 
     // Assign the mapped fields to the $node.
     foreach ($row as $i => $value) {
-      if (!empty($match[$i])) {
+      if (strlen($match[$i]) > 0) {
         $fieldname = $match[$i];
         $node->$fieldname = $value;
       }
@@ -645,12 +647,11 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
 
     // Prepare the node for import. We could have written the following loop
     // as: module_invoke_all('node_import_prepare', $node, $preview > 0);
-    // but unfortunately module_invoke_all passes all argumens by value.
-    foreach (module_list() as $module_name) {
+    // but unfortunately module_invoke_all passes all arguments by value.
+    // Note that module_invoke() passes arguments by value as well.
+    foreach (module_implements('node_import_prepare') as $module_name) {
       $function = $module_name .'_node_import_prepare';
-      if (function_exists($function)) {
-        $errors = array_merge((array)$errors, (array)$function($node, $preview > 0));
-      }
+      $errors = array_merge((array)$errors, (array)$function($node, $preview > 0));
     }
 
     // We can't do the normal validation we've done in 4.6 because a lot
@@ -688,13 +689,9 @@ function _node_import_get_nodes($filepath, $type, $match, $global, $preview, &$e
     }
 
     // Now we have either imported the node or not. Report it to interested
-    // modules.
-    foreach (module_list() as $module_name) {
-      $function = $module_name .'_node_import_postprocess';
-      if (function_exists($function)) {
-        $output .= $function($node, $preview > 0, count($errors) > 0);
-      }
-    }
+    // modules. As we are not interested in changes to $node, we can use
+    // module_invoke_all() here (pass by value).
+    module_invoke_all('node_import_postprocess', $node, $preview > 0, count($errors) > 0);
 
     // Clean up
     unset($node);
@@ -834,10 +831,11 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
     $str = trim(fgets($handle, $length));
   }
 
+  $multiline = FALSE;
   while (strlen($str) > 0) {
     $str = ltrim($str);
 
-    if ($str[0] == $delimiter) {
+    if ($str[0] == $delimiter && !empty($fields)) {
       $str = ltrim(substr($str, 1));
     }
 
@@ -845,14 +843,19 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
       $inside = TRUE;
       $value = '';
       while ($inside) {
+        $newvalue = '';
         for ($i = 1; $i < strlen($str); $i++) {
           if (($str[$i] == $qualifier) && ($str[$i - 1] != $escape)) {
-            $str = substr($str, (strlen($value) + 2));
+            $str = $multiline ? substr($str, (strlen($newvalue) + 2)) : substr($str, (strlen($value) + 2));
             $value = str_replace(($escape . $qualifier), $qualifier, $value);
             $inside = FALSE;
+            $multiline = FALSE;
             break;
           }
-          $value .= $str{$i};
+          $value .= $str[$i];
+          if ($multiline) {
+            $newvalue .= $str{$i};
+          }
         }
         if ($inside) {
           if (feof($handle)) {
@@ -860,14 +863,19 @@ function _node_import_csv_get_row($filepath, $reset = FALSE) {
           }
           else {
             $str = "\n" . fgets($handle, $length); // We need to read more data, multiline field.
+            $multiline = TRUE;
           }
         }
       }
     }
     else {
-      $end = strpos($str, $delimiter);
-      $value = ($end !== false) ? substr($str, 0, $end) : $str;
-      $str = substr($str, strlen($value));
+      if (strlen($str) > 0) {
+        $end = strpos($str, $delimiter);
+        $value = ($end !== false) ? substr($str, 0, $end) : $str;
+        $str = substr($str, strlen($value));
+      } else {
+        break;
+      }
     }
 
     $fields[] = $value;

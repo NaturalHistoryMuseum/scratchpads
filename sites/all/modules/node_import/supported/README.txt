@@ -15,4 +15,4 @@ Please consider contacting the maintainer or posting an issue on
 http://drupal.org/project/node_import if you create a support file for a
 content type that is widely used.
 
-$Id$
+$Id: README.txt,v 1.1 2006/09/21 08:13:35 robrechtj Exp $

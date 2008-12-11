@@ -1,5 +1,5 @@
 <?php
-/* $Id$ */
+/* $Id: node_import_hook_docs.php,v 1.1.4.2 2008/05/03 08:44:28 robrechtj Exp $ */
 
 /**
  * @file

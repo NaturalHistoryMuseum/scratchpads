@@ -1,5 +1,5 @@
 <?php
-/* $Id$ */
+/* $Id: node.inc,v 1.11.2.1.2.8 2008/10/29 21:13:20 robrechtj Exp $ */
 
 /**
  * Implementation of hook_node_import_types().
@@ -51,10 +51,10 @@ function node_node_import_fields($type) {
 function node_node_import_prepare(&$node, $preview = FALSE) {
   global $user;
 
-  $type_info = node_get_types('type', $type);
+  $type_info = node_get_types('type', $node->type);
 
   $globals = $node->node_import_node;
-  unset($node->node_import_node);
+  //unset($node->node_import_node);
 
   $author = $globals['author'];
   $options = $globals['options'];
@@ -166,7 +166,10 @@ function node_node_import_prepare(&$node, $preview = FALSE) {
   // 4. Options (published, promoted, sticky, moderated, new revision).
 
   if (!isset($options)) {
-    $options = variable_get('node_options_'. $node->type, array('status', 'promote'));
+    $options = array();
+    foreach ((array)variable_get('node_options_'. $node->type, array('status', 'promote')) as $option) {
+      $options[$option] = 1;
+    }
   }
   $all_options = array('status', 'moderate', 'promote', 'sticky', 'revision');
 
@@ -182,11 +185,12 @@ function node_node_import_prepare(&$node, $preview = FALSE) {
   }
 
   // 5. Title.
+
   if ($type_info->has_title && (!isset($node->title) || empty($node->title))) {
     $errors[] = t('You need to provide a non-empty title.');
   }
   else if ($unique_title) {
-    $count = db_fetch_object(db_query("SELECT count(*) cnt FROM {node} WHERE title = '%s' AND type = '%s'", $node->title, $node->type));
+    $count = db_fetch_object(db_query("SELECT count(*) AS cnt FROM {node} WHERE title = '%s' AND type = '%s'", $node->title, $node->type));
     if ($count->cnt > 0) {
       $errors[] = t('The node title %title is not unique for this node type.', array('%title' => $node->title));
     }

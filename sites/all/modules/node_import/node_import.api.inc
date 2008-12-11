@@ -1,5 +1,5 @@
 <?php 
-// $Id$
+// $Id: node_import.api.inc,v 1.8.2.1.2.11 2008/10/18 08:06:55 robrechtj Exp $
 
 /**
  * @file
@@ -145,10 +145,12 @@ function node_import_automap($type, $headers) {
  */
 function node_import_userreference($name) {
   static $uids = array();
+  $name = trim($name);
 
   if (!isset($uids[$name])) {
     $uids[$name] = NULL;
-    if ((is_numeric($name) && intval($name) > 0 && ($user = user_load(array('uid' => intval($name))))) ||
+    if (strlen($name) > 0 &&
+        (is_numeric($name) && intval($name) > 0 && ($user = user_load(array('uid' => intval($name))))) ||
         ($user = user_load(array('name' => $name))) ||
         ($user = user_load(array('mail' => $name)))) {
       $uids[$name] = $user->uid;
@@ -177,13 +179,17 @@ function node_import_userreference($name) {
  */
 function node_import_nodereference($title) {
   static $nids = array();
+  $title = trim($title);
 
   if (!isset($nids[$title])) {
     $nids[$title] = NULL;
-    if (is_numeric($title) && intval($title) > 0 && ($node = node_load(intval($title)))) {
+    if (strlen($title) > 0 && is_numeric($title) && intval($title) > 0 && ($node = node_load(intval($title), NULL, TRUE))) {
       $nids[$title] = $node->nid;
     }
-    else if (($node = db_fetch_object(db_query("SELECT nid FROM {node} WHERE title SOUNDS LIKE '%s'", $title)))) {
+    else if (strlen($title) > 0 && ($node = db_fetch_object(db_query("SELECT nid FROM {node} WHERE title = '%s'", $title)))) {
+      $nids[$title] = $node->nid;
+    }
+    else if (strlen($title) > 0 && ($node = db_fetch_object(db_query("SELECT nid FROM {node} WHERE title SOUNDS LIKE '%s'", $title)))) {
       $nids[$title] = $node->nid;
     }
   }

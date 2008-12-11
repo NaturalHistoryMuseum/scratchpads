@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: event.inc,v 1.3.2.1.2.2 2008/03/17 13:06:02 robrechtj Exp $
 
 if (file_exists(drupal_get_path('module', 'event') .'/event_timezones.inc')) {
   include_once(drupal_get_path('module', 'event') . '/event_timezones.inc');

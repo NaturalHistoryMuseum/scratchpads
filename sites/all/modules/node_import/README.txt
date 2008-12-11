@@ -29,6 +29,26 @@ Installing node_import (first time installation)
 3. Enable the module from Drupal's admin pages (Administer >> Site building
    >> Modules). The needed tables will be automatically created.
 
+   If the creation of the database tables fail, you can create them manually:
+
+   CREATE TABLE node_import_mappings(
+     type VARCHAR(16) NOT NULL DEFAULT '',
+     csv_headers TEXT NOT NULL,
+     mapping TEXT NOT NULL,
+     KEY type(type)
+   );
+
+   Do not forget to prefix the table names if you use database table
+   prefixing. Note that 'type' may be a reserved word for your database
+   version. In this case you need to quote it:
+
+   CREATE TABLE node_import_mappings(
+     "type" VARCHAR(16) NOT NULL DEFAULT '',
+     csv_headers TEXT NOT NULL,
+     mapping TEXT NOT NULL,
+     KEY "type"("type")
+   );
+
 4. Assign the 'import nodes' permission to the desired roles (Administer >>
    User management >> Access control) that are allowed to import nodes from
    a file. Note that the user will also need the correct permissions to
@@ -165,6 +185,8 @@ If the user does not have this permission, the nodes will be created with
 the default workflow options, the current date as creation date and the
 current user as the owner.
 
+You can specify a user by name, email or uid.
+
 Another option is "Titles must be unique for this node type". If this
 option is checked, the import of a row will fail when there is already
 another node of the same type with the same title.
@@ -248,6 +270,68 @@ There are two ways for this:
  - or you specify a seperate column for the day, the month, the year,
    the hour and the minutes of as well the start and end dates.
 
+Image support
+*************
+
+Added support for image module.
+
+ * You need to upload the images to files/images before doing the import.
+
+ * The content of the column you map to Image: Image must be the filename
+   relative to files/images (or whatever you set the image directory
+   path to).
+
+For example:
+
+ * Upload image1.jpg to files/images.
+
+ * Import a CSV file like:
+
+   "Title","Body","Image"
+   "The title", "The body", "image1.jpg"
+
+ * Map the Title column to the Title field, the Body column to the Body
+   field and the Image column to the Image: Image field.
+
+The image_gallery module is supported as well because it works with
+taxonomy module. This means that you can create image galleries by
+importing a CSV file like:
+
+"Title","Body","Image","Image gallery"
+"The title", "The body", "image1.jpg","The gallery"
+
+Here you would map the Image gallery column to the Taxonomy: Image
+galleries field.
+
+Just like with taxonomy terms, you can assign a default image gallery
+in the options or let Drupal create non-existing image galleries on
+the fly (select Add non-existing terms to the vocabulary).
+
+Upload (attachments) support
+****************************
+
+Added support for upload module.
+
+ * Only one attachment can be specified.
+
+ * You need to upload the file to files/ before doing the import.
+
+ * The content of the column you map to Upload: File attachments must
+   be the filename relative to files/ (or whatever you set the file
+   directory path to).
+
+For example:
+
+ * Upload file1.txt to files/
+
+ * Import a CSV file like:
+
+   "Title","Body","File"
+   "The title", "The body", "file1.txt"
+
+ * Map the Title column to the Title field, the Body column to the Body
+   field and the File column to the Upload: File attachments field.
+
 Extending node_import
 ------------------------------------------------------------------------------
 
@@ -292,4 +376,4 @@ if you attach a (small) file that shows the problem. When you do, mention how
 you configured the type you are trying to import, eg what vocabularies you
 have defined, whether the content type is event- or location-enabled, etc.
 
-$Id$
+$Id: README.txt,v 1.15.2.1.2.5 2008/06/28 09:40:58 robrechtj Exp $
