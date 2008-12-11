@@ -1,6 +1,6 @@
 <?php
-// $Id$
-// $Name: DRUPAL-5--2-4 $
+// $Id: clone.module,v 1.9.2.14 2008/10/15 18:38:49 pwolanin Exp $
+// $Name: DRUPAL-5--2-6 $
 
 /**
  * Implementation of hook_help().
@@ -59,6 +59,8 @@ function clone_access($node) {
   global $user;
   // Check basic permissions first.
   $access = (user_access('clone node') || ($user->uid && ($node->uid == $user->uid) && user_access('clone own nodes')));
+  // Make sure the user can view the original node content.
+  $access = $access && node_access('view', $node);
   // Check additional conditions
   $access = $access && (clone_is_permitted($node->type) && filter_access($node->format) && node_access('create', $node->type));
   // Let other modules alter this - for exmple to only allow some users
