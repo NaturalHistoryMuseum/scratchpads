@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: gmap_markerinfo.inc,v 1.1.2.6 2008/07/15 20:12:23 bdragon Exp $
 
 /**
  * @file

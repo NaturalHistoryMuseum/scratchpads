@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: poly.js,v 1.1.2.5 2008/06/13 20:09:33 bdragon Exp $ */
 
 /**
  * GPolyLine / GPolygon manager

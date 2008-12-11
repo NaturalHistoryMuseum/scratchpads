@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: gmarkermanager_marker.js,v 1.1.2.4 2008/04/30 21:06:39 bdragon Exp $ */
 
 /**
  * GMap Markers

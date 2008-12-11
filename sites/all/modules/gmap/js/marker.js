@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: marker.js,v 1.1.2.4 2008/08/21 00:40:46 bdragon Exp $ */
 
 /**
  * Common marker routines.

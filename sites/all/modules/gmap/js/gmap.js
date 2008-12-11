@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: gmap.js,v 1.1.2.41 2008/10/29 18:09:34 bdragon Exp $ */
 
 /**
  * Drupal to Google Maps API bridge.
@@ -27,6 +27,10 @@ Drupal.gmap = new function() {
       }
     }
     return false;
+  };
+
+  this.unloadMap = function(mapid) {
+    delete _maps[mapid];
   };
 
   this.addHandler = function(handler,callback) {
@@ -268,35 +272,19 @@ Drupal.gmap.addHandler('gmap',function(elem) {
       },0);
     }
     map.setCenter(new GLatLng(obj.vars.latitude,obj.vars.longitude), obj.vars.zoom);
-    if ($.fn.mousewheel && !obj.vars.behavior.nomousezoom) {
-      $(elem).mousewheel(function(event, delta) {
-        var zoom = map.getZoom();
-        if (delta > 0) {
-          zoom++;
-        }
-        else if (delta < 0) {
-          zoom--;
-        }
-        map.setZoom(zoom);
-        // Event handled.
-        return false;
-      });
+
+    if (!obj.vars.nocontzoom) {
+      map.enableDoubleClickZoom();
+      map.enableContinuousZoom();
+    }
+    if (!obj.vars.nomousezoom) {
+      map.enableScrollWheelZoom();
     }
 
     // Send out outgoing zooms
-    GEvent.addListener(obj.map, "zoomend", function(oldzoom,newzoom) {
+    GEvent.addListener(map, "zoomend", function(oldzoom,newzoom) {
       obj.vars.zoom = newzoom;
       obj.change("zoom", _ib.zoom);
-    });
-
-    // Sync zoom if different after move.
-    // Partial workaround for a zoom + move bug.
-    // Full solution will involve listening to movestart and forbidding zooms
-    // until complete.
-    GEvent.addListener(map, "moveend", function() {
-      if (map.getZoom() != obj.vars.zoom) {
-        obj.change("zoom");
-      }
     });
 
     // Send out outgoing moves

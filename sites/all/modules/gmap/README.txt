@@ -1,4 +1,4 @@
-$Id$
+$Id: README.txt,v 1.10.2.6 2008/07/07 22:18:43 bec Exp $
 
 Description
 -----------

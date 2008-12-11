@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: markerloader_georss.js,v 1.1.2.6 2008/04/30 21:06:39 bdragon Exp $ */
 
 /**
  * GMap Marker Loader

@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: gmap.module,v 1.51.2.172 2008/12/05 17:33:20 bdragon Exp $
 
 /**
  * @file
@@ -10,12 +10,18 @@
  * html and javascript code required to insert a google map.
  */
 
-// Current minimum version: 2.113
-// Minimum version last changed on: June 9 2008
-// Reason: G_SATELLITE_3D_MAP support in gmap_addons. See http://code.google.com/apis/earth/.
-//
-// See http://groups.google.com/group/Google-Maps-API/web/api-version-changes
-// for details on using other version numbers.
+/**
+ * Define the Google Maps API version being used.
+ *
+ * Current minimum version: 2.113
+ *
+ * Minimum version last changed on: June 9 2008
+ *
+ * Reason: G_SATELLITE_3D_MAP support in gmap_addons. See http://code.google.com/apis/earth/.
+ *
+ * See http://groups.google.com/group/Google-Maps-API/web/api-version-changes
+ * for details on using other version numbers.
+ */
 define('GMAP_API_VERSION', '2.115');
 
 /**
@@ -65,26 +71,52 @@ function gmap_gmap($op, &$map) {
         'feed' => array(
           'multiple' => TRUE,
         ),
+        'style' => array(
+          'multiple' => TRUE,
+        ),
       );
     case 'pre_theme_map':
       $path = drupal_get_path('module', 'gmap') .'/js/';
-      // Activate markers if needed
+      // Activate markers if needed.
       if ((isset($map['behavior']['dynmarkers']) && $map['behavior']['dynmarkers']) || !empty($map['markers'])) {
-        // The marker data is not a real file. Work around this fact.
         static $header_set = FALSE;
         if (!$header_set) {
           $header_set = TRUE;
-          drupal_add_js("/* GMap markers enabled. */</script>\n<script type=". '"text/javascript" src="'. url('map/markerdata.js') .'">', 'inline', 'header', FALSE, TRUE, FALSE);
+          // If the user is using private download method, it's up to them to get the path set up.
+          if (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC) != FILE_DOWNLOADS_PUBLIC) {
+            $markerpath = variable_get('gmap_private_markerfile', '');
+            if (empty($markerpath) || !file_exists($markerpath)) {
+              drupal_set_message(t('GMap marker file settings are not configured properly for Private download method, markers will not work!'), 'error');
+            }
+            else {
+              drupal_add_js($markerpath, 'module', 'header', FALSE, TRUE, FALSE);
+            }
+          }
+          // With public method, we can handle all bookkeeping ourselves.
+          else {
+            $markerpath = file_create_path('js');
+            if (!$markerpath || !file_exists("$markerpath/gmap_markers.js")) {
+              gmap_regenerate_markers();
+              $markerpath = file_create_path('js');
+            }
+            drupal_add_js("$markerpath/gmap_markers.js", 'module', 'header', FALSE, TRUE, FALSE);
+          }
         }
+
         drupal_add_js($path .'icon.js');
         drupal_add_js($path .'marker.js');
-        drupal_add_js($path . variable_get('gmap_mm_type', 'gmap') .'_marker.js');
+
+        $mm = variable_get('gmap_mm_type', 'gmap');
+        // If you really really want to override the marker manager, implement
+        // this, take $mm by ref, and have fun. --Bdragon
+        if (function_exists('_gmap_markermanager_override')) {
+          _gmap_markermanager_override($mm);
+        }
+
+        drupal_add_js($path . $mm .'_marker.js');
       }
       if (isset($map['behavior']['locpick']) && $map['behavior']['locpick']) {
         drupal_add_js($path .'locpick.js');
-      }
-      if (variable_get('gmap_load_zoom_plugin', TRUE) && !$map['behavior']['nomousezoom']) {
-        drupal_add_js(drupal_get_path('module', 'gmap') .'/thirdparty/mousewheel.js');
       }
       if (!empty($map['markers']) || !empty($map['lines'])) {
         drupal_add_js($path .'markerloader_static.js');
@@ -98,7 +130,7 @@ function gmap_gmap($op, &$map) {
       }
       break;
     case 'macro_multiple':
-      return array('points', 'markers', 'feed', 'circle', 'rpolygon', 'polygon', 'line');
+      return array('points', 'markers', 'feed', 'circle', 'rpolygon', 'polygon', 'line', 'style');
     case 'behaviors':
       return array(
         'locpick' => array(
@@ -121,6 +153,11 @@ function gmap_gmap($op, &$map) {
           'title' => t('Disable mousezoom'),
           'default' => FALSE,
           'help' => t('Disable using the scroll wheel to zoom the map.'),
+        ),
+        'nocontzoom' => array(
+          'title' => t('Disable Continuous Zoom'),
+          'default' => FALSE,
+          'help' => t('Disable dynamically resizing images while waiting for tiles to load when zooming.'),
         ),
         'autozoom' => array(
           'title' => t('Use AutoZoom'),
@@ -187,6 +224,8 @@ function gmap_gmap($op, &$map) {
 
 /**
  * Set up the HTML header for GMap.
+ * If you are going to include a custom JS file that extends GMap, you probabaly
+ * want to call this first to ensure that the core js files have been added.
  */
 function _gmap_doheader() {
   static $gmap_initialized = FALSE;
@@ -197,6 +236,11 @@ function _gmap_doheader() {
   drupal_add_css($gmap_path .'/gmap.css');
   drupal_add_js($gmap_path .'/js/gmap.js');
   $mm = variable_get('gmap_mm_type', 'gmap');
+  // If you really really want to override the marker manager, implement
+  // this, take $mm by ref, and have fun. --Bdragon
+  if (function_exists('_gmap_markermanager_override')) {
+    _gmap_markermanager_override($mm);
+  }
   if ($mm=='clusterer') {
     drupal_add_js($gmap_path .'/js/icon.js');
     drupal_add_js($gmap_path .'/thirdparty/Clusterer2.js');
@@ -210,46 +254,17 @@ function _gmap_doheader() {
   drupal_add_js(array('gmap_markermanager' => $mms[$mm]), 'setting');
 // @@@
 drupal_add_js($gmap_path .'/js/poly.js');
-  $key = gmap_get_key();
-  drupal_set_html_head('<script src="'. check_url('http://maps.google.com/maps?file=api&v='. variable_get('gmap_api_version', GMAP_API_VERSION) .'&key='. $key) .'" type="text/javascript"></script>');
 
-  drupal_add_js(array(
-    'gmap_init' => array(
-      'querypath' => base_path() .'map/query',
-    ),
-  ), 'setting');
+  global $locale;
+  $query = array(
+    'file' => 'api',
+    'v' => variable_get('gmap_api_version', GMAP_API_VERSION),
+    'key' => gmap_get_key(),
+    'hl' => $locale,
+  );
+  drupal_set_html_head('<script src="'. check_url(url('http://maps.google.com/maps', drupal_query_string_encode($query))) .'" type="text/javascript"></script>');
 
   $gmap_initialized = TRUE;
-}
-
-/**
- * Parse a macro style definition.
- * Example: #111111/1/100/#111111/1
- */
-function _gmap_parse_style($style) {
-  $styles = explode('/', $style);
-
-  // @@@ Todo: Fix up old xmaps stuff. Possibly detect by looking for array length 7?
-
-  // Strip off # signs, they get added by code.
-  if (isset($styles[0]) && substr($styles[0], 0, 1) == '#') {
-    $styles[0] = substr($styles[0], 1);
-  }
-  if (isset($styles[3]) && substr($styles[3], 0, 1) == '#') {
-    $styles[3] = substr($styles[3], 1);
-  }
-
-  // Assume anything > 0 and < 1.1 was an old representation.
-  if ($styles[2] > 0 && $styles[2] < 1.1) {
-    $styles[2] = $styles[2] * 100;
-  }
-  if (isset($styles[4])) {
-    if ($styles[4] > 0 && $styles[4] < 1.1) {
-      $styles[4] = $styles[4] * 100;
-    }
-  }
-
-  return $styles;
 }
 
 /**
@@ -264,314 +279,14 @@ function _gmap_parse_style($style) {
  *   A GMap array.
  */
 function gmap_parse_macro($instring, $ver = 2) {
-  // Get a list of keys that are "multiple."
-  $m = array();
-  $multiple = module_invoke_all('gmap', 'macro_multiple', $m);
-
-  // Remove leading and trailing tags
-  if (substr(trim($instring), -1)==']') {
-    $instring = substr(trim($instring), 0, -1);
-  }
-  if (substr($instring, 0, 5)=='[gmap') {
-    $instring = substr($instring, 6);
-  }
-
-  // Chop the macro into an array
-  $temp = explode('|', $instring);
-  $m = array();
-  foreach ($temp as $row) {
-    $offset = strpos($row, '=');
-    if ($offset !== FALSE) {
-      $k = trim(substr($row, 0, $offset));
-      $r = trim(substr($row, $offset+1));
-      if (in_array($k, $multiple)) {
-        // Things that can appear multiple times
-        if (!isset($m[$k])) {
-          $m[$k] = array();
-        }
-        $m[$k][] = $r;
-      }
-      else {
-        $m[$k] = $r;
-      }
-    }
-  }
-
-  // Synonyms
-  if (isset($m['type'])) {
-    $m['maptype'] = $m['type'];
-    unset($m['type']);
-  }
-  if (isset($m['control'])) {
-    $m['controltype'] = $m['control'];
-    unset($m['control']);
-  }
-
-  if (isset($m['feed']) && is_array($m['feed'])) {
-    foreach ($m['feed'] as $k => $v) {
-      $temp = explode('::', $v);
-      // Normalize url
-      if (substr($temp[1], 0, 1) == '/') {
-        $temp[1] = substr($temp[1], 1);
-      }
-      $temp[1] = url($temp[1]);
-      $m['feed'][$k] = array(
-        'markername' => $temp[0],
-        'url' => $temp[1],
-      );
-    }
-  }
-
-  // Merge points and markers
-  if (!isset($m['points']) || !is_array($m['points'])) $m['points'] = array();
-  if (!isset($m['markers']) || !is_array($m['markers'])) $m['markers'] = array();
-  $m['markers-temp'] = array_merge($m['points'], $m['markers']);
-  unset($m['points']);
-  unset($m['markers']);
-
-  // all shapes in 1 array
-  if (isset($m['circle']) && is_array($m['circle'])) {
-    foreach ($m['circle'] as $shape) {
-      $s = array('type' => 'circle');
-      $cp = strpos($shape, ':');
-      if ($cp !== FALSE) {
-        $stylestr = substr($shape, 0, $cp);
-        $s['style'] = _gmap_parse_style($stylestr);
-        $shape = substr($shape, $cp+1);
-      }
-      $tmp = explode('+', $shape);
-      $s['radius'] = $tmp[1] ? $tmp[1] : 100;
-      if ($tmp[2]) $s['numpoints'] = trim($tmp[2]);
-      $tmp = _gmap_str2coord($tmp[0]);
-      $s['center'] = $tmp[0];
-      $m['shapes'][] = $s;
-    }
-    unset($m['circle']);
-  }
-  // Fixup legacy lines.
-  if (isset($m['line1'])) {
-    $def = gmap_defaults();
-    if (!isset($m['line'])) $m['line'] = array();
-    $m['line'][] = $def['line_colors'][0] .':'. $m['line1'];
-    unset($m['line1']);
-  }
-  if (isset($m['line2'])) {
-    $def = gmap_defaults();
-    if (!isset($m['line'])) $m['line'] = array();
-    $m['line'][] = $def['line_colors'][1] .':'. $m['line3'];
-    unset($m['line2']);
-  }
-  if (isset($m['line3'])) {
-    $def = gmap_defaults();
-    if (!isset($m['line'])) $m['line'] = array();
-    $m['line'][] = $def['line_colors'][2] .':'. $m['line3'];
-    unset($m['line3']);
-  }
-
-  if (isset($m['line']) && is_array($m['line'])) {
-    foreach ($m['line'] as $shape) {
-      $s = array('type' => 'line');
-      $cp = strpos($shape, ':');
-      if ($cp != FALSE) {
-        $stylestr = substr($shape, 0, $cp);
-        $s['style'] = _gmap_parse_style($stylestr);
-        $shape = substr($shape, $cp+1);
-      }
-      $s['points'] = _gmap_str2coord($shape);
-      $m['shapes'][] = $s;
-    }
-    unset($m['line']);
-  }
-  if (isset($m['rpolygon']) && is_array($m['rpolygon'])) {
-    foreach ($m['rpolygon'] as $shape) {
-      $s = array('type' => 'rpolygon');
-      $cp = strpos($shape, ':');
-      if ($cp !== FALSE) {
-        $stylestr = substr($shape, 0, $cp);
-        $s['style'] = _gmap_parse_style($stylestr);
-        $shape = substr($shape, $cp+1);
-      }
-      $tmp = explode('+', $shape);
-      if ($tmp[2]) {
-        $s['numpoints'] = (int)trim($tmp[2]);
-        $tmp = array_slice($tmp, 0, 2);
-      }
-      $shape = implode('+', $tmp);
-      $tmp = _gmap_str2coord($shape);
-      $s['center'] = $tmp[0];
-      $s['point2'] = $tmp[1];
-      $m['shapes'][] = $s;
-    }
-    unset($m['rpolygon']);
-  }
-  if (isset($m['polygon']) && is_array($m['polygon'])) {
-    foreach ($m['polygon'] as $shape) {
-      $s = array('type' => 'polygon');
-      $cp = strpos($shape, ':');
-      if ($cp !== FALSE) {
-        $stylestr = substr($shape, 0, $cp);
-        $s['style'] = _gmap_parse_style($stylestr);
-        $shape = substr($shape, $cp+1);
-      }
-      $s['points'] = _gmap_str2coord($shape);
-      $m['shapes'][] = $s;
-    }
-    unset($m['polygon']);
-  }
-
-  // Version 1 -> 2 conversion
-  if ($ver == 1) {
-    // Zoom is flipped
-    if (isset($m['zoom'])) {
-      $m['zoom'] = 18 - $m['zoom'];
-      if ($m['zoom'] < 1) {
-        $m['zoom'] = 1;
-      }
-    }
-  }
-
-  // Center -> latitude and longitude
-  if (isset($m['center']) && is_array($m['center'])) {
-    list($m['latitude'], $m['longitude']) = explode(',', $m['center']);
-    unset($m['center']);
-  }
-
-  // Behavior
-  if (isset($m['behaviour'])) {
-    $m['behavior'] = $m['behaviour'];
-    unset($m['behaviour']);
-  }
-  if (isset($m['behavior'])) {
-    $sep = ' ';
-    if (strpos($m['behavior'], ',') !== FALSE) {
-      // In some places, commas were used to seperate behaviors.
-      // This was originally an accident, but it's easy enough to support.
-      $sep = ',';
-    }
-    $m['behavior-temp'] = explode($sep, $m['behavior']);
-    $m['behavior'] = array();
-    foreach ($m['behavior-temp'] as $v) {
-      $m['behavior'][substr($v, 1)] = (substr($v, 0, 1) == '+') ? TRUE : FALSE;
-    }
-    unset($m['behavior-temp']);
-  }
-
-  // tcontrol now is mtc.
-  if (isset($m['tcontrol'])) {
-    if (strtolower(trim($m['tcontrol'])) == 'on') {
-      $m['mtc'] = 'standard';
-    }
-    else {
-      $m['mtc'] = 'none';
-    }
-    unset($m['tcontrol']);
-  }
-
-  // notype also controls mtc.
-  if (isset($m['behavior']['notype'])) {
-    if ($m['behavior']['notype']) {
-      $m['mtc']= 'none';
-    }
-    unset($m['behavior']['notype']);
-  }
-
-  // Stuff that was converted to behavior flags
-
-  // Scale control.
-  if (isset($m['scontrol'])) {
-    if (strtolower(trim($m['scontrol'])) == 'on') {
-      $m['behavior']['scale'] = TRUE;
-    }
-    else {
-      $m['behavior']['scale'] = FALSE;
-    }
-    unset($m['scontrol']);
-  }
-
-  // Draggability.
-  if (isset($m['drag'])) {
-    if (strtolower(trim($m['drag'])) == 'yes') {
-      $m['behavior']['nodrag'] = FALSE;
-    }
-    else {
-      $m['behavior']['nodrag'] = TRUE;
-    }
-    unset($m['drag']);
-  }
-
-  // Markers fixup
-  foreach ($m['markers-temp'] as $t) {
-    unset($markername);
-    // Named?
-    if (strpos($t, '::')) { // Single : gets handled below.
-      list($markername, $t) = explode('::', $t, 2);
-    }
-    // Break down into points
-    $points = explode('+', $t);
-    $offset = -1;
-    foreach ($points as $point) {
-      $marker = array();
-      $offset++;
-      $marker['options'] = array();
-      // Labelled?
-      // @@@ Gmap allows both a tooltip and a popup, how to represent?
-      if (strpos($point, ':')) {
-        list($point, $marker['text']) = explode(':', $point, 2);
-        $marker['text'] = theme('gmap_marker_popup', $marker['text']);
-      }
-      if (strpos($point, '%')) {
-        list($point, $addons) = explode('%', $point, 2);
-        $motemp = explode('%', $addons);
-        foreach ($motemp as $option) {
-          $marker['options'][trim($option)] = TRUE;
-        }
-      }
-      list($marker['latitude'], $marker['longitude']) = explode(',', $point, 2);
-      // Named markers get an offset too.
-      if (isset($markername)) {
-        $marker['markername'] = $markername;
-        $marker['offset'] = $offset;
-      }
-      $m['markers'][] = $marker;
-    }
-  }
-  unset($m['markers-temp']);
-
-  // Assign an id if one wasn't specified.
-  if (!isset($m['id'])) {
-    $m['id'] = gmap_get_auto_mapid();
-  }
-
-  // The macro can now be manipulated by reference.
-  foreach (module_implements('gmap') as $module) {
-    $additions = call_user_func_array($module .'_gmap', array('parse_macro', &$m));
-    if (!empty($additions)) {
-      foreach ($additions as $k => $v) {
-        $m[$k] = $v;
-      }
-    }
-  }
-  return $m;
-}
-
-/**
- * Parse "x.xxxxx , y.yyyyyy (+ x.xxxxx, y.yyyyy ...)" into an array of points.
- */
-function _gmap_str2coord($str) {
-  // Explode along + axis
-  $arr = explode('+', $str);
-  // Explode along , axis
-  $points = array();
-  foreach ($arr as $pt) {
-    list($lat, $lon) = explode(',', $pt);
-    $points[] = array((float)trim($lat), (float)trim($lon));
-  }
-  return $points;
+  require_once drupal_get_path('module', 'gmap') .'/gmap_parse_macro.inc';
+  return _gmap_parse_macro($instring, $ver);
 }
 
 /**
  * Theme a marker popup.
  * This will get called for markers embedded in macros.
+ * @ingroup themeable
  */
 function theme_gmap_marker_popup($label) {
   return $label;
@@ -689,13 +404,13 @@ function gmap_dimension_validate(&$elem) {
 function gmap_filter($op, $delta = 0, $format = -1, $text = '') {
   switch ($op) {
     case 'list':
-      return (array(0 => t('GMap filter')));
+      return (array(0 => t('GMap macro expander')));
 
     case 'name':
       return t('Google map filter');
 
     case 'description':
-      return t('converts a google map  macro into the html required for inserting a google map.');
+      return t('Converts a Google Map macro into the HTML required for inserting a Google Map.');
 
     case 'process':
       $gmaps = _gmap_prepare($text);   //returns an array of $tables[0] = table macro $table[1]= table html
@@ -718,7 +433,7 @@ function gmap_filter($op, $delta = 0, $format = -1, $text = '') {
  * Implementation of hook_filter_tips().
  */
 function gmap_filter_tips($delta, $format, $long = FALSE) {
-  if (user_access('create macro')) { // only display macro if user can create one
+  if (user_access('create gmap macro')) { // only display macro if user can create one
     return t('Insert Google Map macro.') .'<a href="'. url('map/macro') .'" target="_blank" >'. t('Create a macro') .'</a>';
   }
   else {
@@ -732,12 +447,6 @@ function gmap_filter_tips($delta, $format, $long = FALSE) {
 function gmap_menu($may_cache) {
   if ($may_cache) {
     $items = array();
-/*    $items[] = array(
-      'path' => 'map',
-      'type' => MENU_ITEM_GROUPING,
-      'title' => t('google maps'),
-      'access' => user_access('create macro')||user_access('show user map')||user_access('show node map'),
-    );  */
     $items[] = array(
       'path' => 'admin/settings/gmap',
       'title' => t('GMap'),
@@ -747,45 +456,25 @@ function gmap_menu($may_cache) {
       'access' => user_access('administer site configuration'),
       'type' => MENU_NORMAL_ITEM,
     );
-    $items[] = array(
-      'path' => 'map/query',
-      'type' => MENU_CALLBACK,
-      'access' => user_access('access content'),
-      'callback' => 'gmap_json_query',
-    );
-    $items[] = array(
-      'path' => 'map/markerdata.js',
-      'type' => MENU_CALLBACK,
-      'access' => user_access('access content'),
-      'callback' => 'gmap_markerdata_js',
-    );
     return $items;
   }
 }
 
 /**
- * Generate the markerdata file.
+ * Regenerate the markerdata file.
  */
-function gmap_markerdata_js() {
-  drupal_set_header('Content-Type: text/javascript');
-  echo "// GMap marker image data.\n";
-  echo "Drupal.gmap.iconpath = ". drupal_to_js(base_path() . drupal_get_path('module', 'gmap') .'/markers') .";\n";
-  echo "Drupal.gmap.icondata = ". drupal_to_js(gmap_get_icondata()) .";\n";
-}
+function gmap_regenerate_markers() {
+  $contents = '';
 
+  // Create the js/ within the files folder.
+  $jspath = file_create_path('js');
+  file_check_directory($jspath, FILE_CREATE_DIRECTORY);
 
-/**
- * JSON request interface.
- */
-function gmap_json_query() {
-  if (arg(2)=='markers') {
-    drupal_set_header('Content-Type: text/javascript');
-    echo drupal_to_js(array(
-      'path' => base_path() . drupal_get_path('module', 'gmap') .'/markers',
-      'markers' => gmap_get_icondata(TRUE),
-    ));
-    exit();
-  }
+  $contents .= "// GMap marker image data.\n";
+  $contents .= "Drupal.gmap.iconpath = ". drupal_to_js(base_path() . drupal_get_path('module', 'gmap') .'/markers') .";\n";
+  $contents .= "Drupal.gmap.icondata = ". drupal_to_js(gmap_get_icondata()) .";\n";
+
+  file_save_data($contents, "$jspath/gmap_markers.js", FILE_EXISTS_REPLACE);
 }
 
 /**
@@ -908,6 +597,7 @@ function process_gmap_style($element) {
 
 /**
  * Theme a gmap_style fieldset.
+ * @ingroup themeable
  */
 function theme_gmap_style($element) {
   // Fieldsets print #value at the end, so we need to empty it out.
@@ -1030,6 +720,7 @@ function process_gmap_markerchooser($element) {
 
 /**
  * Overlay editor theme function.
+ * @ingroup themeable
  */
 function theme_gmap_overlay_edit($element) {
   $path = drupal_get_path('module', 'gmap');
@@ -1086,7 +777,17 @@ function theme_gmap_align($element) {
  * Gmap element theme hook
  */
 function theme_gmap($element) {
+  // Track the mapids we've used already.
+  static $mapids = array();
+
   _gmap_doheader();
+
+  // Convert from raw map array if needed.
+  if (!isset($element['#settings'])) {
+    $element = array(
+      '#settings' => $element,
+    );
+  }
 
   $mapid = FALSE;
   if (isset($element['#map']) && $element['#map']) {
@@ -1113,26 +814,31 @@ function theme_gmap($element) {
   // Push the mapid back into #settings.
   $element['#settings']['id'] = $mapid;
 
-  $map = array_merge(gmap_defaults(), $element['#settings']);
+  $mapdefaults = gmap_defaults();
+  $map = array_merge($mapdefaults, $element['#settings']);
+  // Styles is a subarray.
+  if (isset($element['#settings']['styles'])) {
+    $map['styles'] = array_merge($mapdefaults['styles'], $element['#settings']['styles']);
+  }
   gmap_map_cleanup($map);
 
   switch (strtolower($map['align'])) {
     case 'left':
-      $element['#attributes']['class'] += ' gmap-left';
+      $element['#attributes']['class'] .= ' gmap-left';
       break;
     case 'right':
-      $element['#attributes']['class'] += ' gmap-right';
+      $element['#attributes']['class'] .= ' gmap-right';
       break;
     case 'center':
     case 'centre':
-      $element['#attributes']['class'] += ' gmap-center';
+      $element['#attributes']['class'] .= ' gmap-center';
   }
 
   $style = array();
   $style[] = 'width: '. $map['width'];
   $style[] = 'height: '. $map['height'];
 
-  $element['#attributes']['class'] = trim($element['#attributes']['class'] .'gmap gmap-map gmap-'. $mapid .'-gmap');
+  $element['#attributes']['class'] = trim($element['#attributes']['class'] .' gmap gmap-map gmap-'. $mapid .'-gmap');
 
   // Some markup parsers (IE) don't handle empty inners well. Use the space to let users know javascript is required.
   // @@@ Bevan sez: Google static maps could be useful here.
@@ -1143,6 +849,14 @@ function theme_gmap($element) {
   foreach (module_implements('gmap') as $module) {
     call_user_func_array($module .'_gmap', array('pre_theme_map', &$map));
   }
+
+  if (isset($mapids[$element['#map']])) {
+    drupal_set_message(t('Duplicate map detected! GMap does not support multiplexing maps onto one MapID! GMap MapID: %mapid', array('%mapid' => $element['#map'])), 'error');
+    // Return the div anyway. All but one map for a given id will be a graymap,
+    // because obj.map gets stomped when trying to multiplex maps!
+    return $o;
+  }
+  $mapids[$element['#map']] = TRUE;
 
   // Inline settings extend.
   $o .= '<script type="text/javascript">'."\n";

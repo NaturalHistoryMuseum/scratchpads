@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: gmap.install,v 1.1.2.6 2008/10/29 18:09:33 bdragon Exp $
 
 /**
  * @file
@@ -18,6 +18,7 @@ function gmap_uninstall() {
   variable_del('gmap_markermanager');
   variable_del('gmap_markerfiles');
   variable_del('gmap_node_markers');
+  variable_del('gmap_private_markerfile');
 
   variable_del('googlemap_api_key');
 }
@@ -73,5 +74,14 @@ function gmap_update_5000() {
 function gmap_update_5001() {
   $ret = array();
   menu_rebuild();
+  return $ret;
+}
+
+/**
+ * Mini-update -- mousewheel.js no longer needed.
+ */
+function gmap_update_5002() {
+  $ret = array();
+  variable_del('gmap_load_zoom_plugin');
   return $ret;
 }

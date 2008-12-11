@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: icon.js,v 1.1.2.17 2008/10/03 18:37:23 bdragon Exp $ */
 
 /**
  * GIcon manager for GMap.
@@ -188,7 +188,9 @@ Drupal.gmap.addHandler('gmap', function(elem) {
 
   obj.bind('ready', function() {
     // Compatibility event.
-    obj.deferChange('iconsready', -1);
+    if (Drupal.gmap.icondata) {
+      obj.deferChange('iconsready', -1);
+    }
   });
 
   if (!obj.vars.behavior.customicons) {

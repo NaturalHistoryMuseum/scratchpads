@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: overlay_edit.js,v 1.1.2.32 2008/06/13 20:46:12 bdragon Exp $ */
 
 /**
  * Gmap Overlay Editor
