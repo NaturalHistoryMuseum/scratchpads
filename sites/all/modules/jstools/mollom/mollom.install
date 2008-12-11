@@ -1,0 +1,38 @@
+<?php
+// $Id: mollom.install,v 1.1.2.4 2008/11/01 17:14:01 dries Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function mollom_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("CREATE TABLE {mollom} (
+        did varchar(255) NOT NULL default '',
+        session varchar(255) NOT NULL default '',
+        quality varchar(255) NOT NULL default '',
+        PRIMARY KEY (did),
+        INDEX (session)
+      );");
+      break;
+      
+    case 'pgsql':
+      db_query("CREATE TABLE {mollom} (
+        did varchar(255) NOT NULL default '',
+        session varchar(255) NOT NULL default '',
+        quality varchar(255) NOT NULL default '',
+        PRIMARY KEY (did)
+      );");
+      db_query("CREATE INDEX {mollom}_session_idx ON {mollom} (session);");
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function mollom_uninstall() {
+  db_query("DELETE FROM {variable} WHERE name LIKE 'mollom_%'");
+  db_query('DROP TABLE {mollom}');
+}
