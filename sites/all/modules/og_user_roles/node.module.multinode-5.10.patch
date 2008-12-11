@@ -1,11 +1,9 @@
---- node.module.5.7.orig	2008-04-16 23:37:39.000000000 -0700
-+++ node.module	2008-05-09 00:34:33.000000000 -0700
-@@ -1120,6 +1120,16 @@ function node_menu($may_cache) {
-       'callback arguments' => array('node_configure_rebuild_confirm'),
-       'access' => user_access('administer nodes'),
+--- node.module-5-10.orig	2008-07-16 21:04:21.000000000 +0200
++++ node.module	2008-08-19 13:49:06.000000000 +0200
+@@ -1172,6 +1172,16 @@
        'type' => MENU_CALLBACK);
-+
-+    $items[] = array(
+ 
+     $items[] = array(
 +      'path' => 'admin/content/multinode',
 +      'title' => t('Multinode user interface'),
 +      'description' => t('Interface for configuring multiple node access.'),
@@ -13,11 +11,13 @@
 +      'callback arguments' => array('node_multinode'),
 +      'access' => user_access('administer nodes'),
 +      'type' => MENU_NORMAL_ITEM
-+     );  
- 
-     $items[] = array(
++    );  
++
++    $items[] = array(
        'path' => 'admin/content/types',
-@@ -2731,22 +2741,19 @@ function node_access($op, $node = NULL) 
+       'title' => t('Content types'),
+       'description' => t('Manage posts by content type, including default status, front page promotion, etc.'),
+@@ -2775,22 +2785,19 @@
  
    // If the module did not override the access rights, use those set in the
    // node_access table.
@@ -27,11 +27,6 @@
 -      foreach ($gids as $gid) {
 -        $grants[] = "(gid = $gid AND realm = '$realm')";
 -      }
--    }
--
--    $grants_sql = '';
--    if (count($grants)) {
--      $grants_sql = 'AND ('. implode(' OR ', $grants) .')';
 +  if ($op != 'create' && $node->nid) {
 +    $grants_sql = node_access_grants_sql($op, NULL, $user->uid, $node->status);
 +    // If the return value is FALSE, then the node status is unpublished and
@@ -46,13 +41,18 @@
 +      return (db_result($result));
      }
 -
+-    $grants_sql = '';
+-    if (count($grants)) {
+-      $grants_sql = 'AND ('. implode(' OR ', $grants) .')';
+-    }
+-
 -    $sql = "SELECT COUNT(*) FROM {node_access} WHERE (nid = 0 OR nid = %d) $grants_sql AND grant_$op >= 1";
 -    $result = db_query($sql, $node->nid);
 -    return (db_result($result));
    }
  
    // Let authors view their own nodes.
-@@ -2793,17 +2800,7 @@ function _node_access_where_sql($op = 'v
+@@ -2837,17 +2844,7 @@
      return;
    }
  
@@ -71,7 +71,7 @@
  
    $sql = "$node_access_alias.grant_$op >= 1 $grants_sql";
    return $sql;
-@@ -2833,7 +2830,6 @@ function node_access_grants($op, $uid = 
+@@ -2877,7 +2874,6 @@
    else {
      $user_object = $user;
    }
@@ -79,7 +79,7 @@
    return array_merge(array('all' => array(0)), module_invoke_all('node_grants', $user_object, $op));
  }
  
-@@ -2844,18 +2840,7 @@ function node_access_view_all_nodes() {
+@@ -2888,24 +2884,168 @@
    static $access;
  
    if (!isset($access)) {
@@ -87,22 +87,16 @@
 -    foreach (node_access_grants('view') as $realm => $gids) {
 -      foreach ($gids as $gid) {
 -        $grants[] = "(gid = $gid AND realm = '$realm')";
--      }
--    }
--
--    $grants_sql = '';
--    if (count($grants)) {
--      $grants_sql = 'AND ('. implode(' OR ', $grants) .')';
--    }
--
 +    $grants_sql = node_access_grants_sql('view');
-     $sql = "SELECT COUNT(*) FROM {node_access} WHERE nid = 0 $grants_sql AND grant_view >= 1";
-     $result = db_query($sql);
-     $access = db_result($result);
-@@ -2865,6 +2850,160 @@ function node_access_view_all_nodes() {
- }
- 
- /**
++    $sql = "SELECT COUNT(*) FROM {node_access} WHERE nid = 0 $grants_sql AND grant_view >= 1";
++    $result = db_query($sql);
++    $access = db_result($result);
++  }
++
++  return $access;
++}
++
++/**
 + * Check the logic of node grants and prepare the sql statement.
 + *
 + * @param $op
@@ -140,10 +134,10 @@
 +          $rules[$realm]['weight'] = $row->weight;
 +          $rules[$realm]['check'] = $row->checkstatus;
 +        }
-+      }
-+    }
+       }
+     }
 +  }
-+
+ 
 +  // Prepare the table alias, if needed.
 +  if (!empty($node_access_alias)) {
 +    $alias = $node_access_alias .'.';
@@ -170,9 +164,9 @@
 +      if (!empty($rule['weight'])) {
 +        $template[$group]['weight'] = $rule['weight'];
 +      }
-+      foreach ($rule as $key => $gid) {
++      foreach ($rule as $gid) {
 +        // Grants ids must be numeric.
-+        if (is_numeric($key)) {
++        if (is_numeric($gid)) {
 +          $grants[$group][$realm][] = $gid;
 +        }  
 +      }  
@@ -184,12 +178,14 @@
 +      return FALSE;
 +    }
 +    
-+    $grants_sql = '';
-+	$subquery = array();
+     $grants_sql = '';
++    $subquery = array();
 +    $subqueries = 'no';
 +
 +    // Run throught the $grants, if needed and generate the query SQL.
-+    if (count($grants)) {
+     if (count($grants)) {
+-      $grants_sql = 'AND ('. implode(' OR ', $grants) .')';
+-    }
 +      foreach ($grants as $group => $grant) {
 +        $clauses = array();
 +        foreach ($grant as $key => $value) {
@@ -205,19 +201,25 @@
 +          // Set defaults.
 +          $subqueries = 'yes';
 +          $weight = 0;
-+		  $logic = 'AND';
-+
++          $logic = 'AND';
+ 
+-    $sql = "SELECT COUNT(*) FROM {node_access} WHERE nid = 0 $grants_sql AND grant_view >= 1";
+-    $result = db_query($sql);
+-    $access = db_result($result);
+-  }
 +          if ($template[$group]['weight']) {
 +            $weight = $template[$group]['weight'];
-+          } 
-+
++          }
+ 
+-  return $access;
 +          if ($template[$group]['logic']) {
-+		    $logic = $template[$group]['logic'];
-+		  }
++            $logic = $template[$group]['logic'];
++          }
 +
 +          if ($logic == 'OR') {
 +            $this_query = "OR ". $alias ."nid IN (SELECT ". $alias ."nid FROM {node_access} ". $node_access_alias ." WHERE ";
-+		  } else {
++          }
++		      else {
 +            $this_query = "AND ". $alias ."nid IN (SELECT ". $alias ."nid FROM {node_access} ". $node_access_alias ." WHERE ";
 +          }
 +          $this_query = $this_query .'('. implode(' OR ', $clauses) .')) ';
@@ -228,21 +230,21 @@
 +      if ($subqueries == 'yes') {
 +        // Get subqueries from subquery table;
 +        // Sort if first by weight.
-+		$subquery_phrase = '';
++    		$subquery_phrase = '';
 +        asort($subquery);
-+		foreach ($subquery as $query=>$weight) {
++    		foreach ($subquery as $query=>$weight) {
 +          $subquery_phrase .= $query;
-+		}
-+//
-+// Just in case I need to put parenthesis elsewhere
-+//
-+//        $pattern = '/^AND /';
-+//        $replacement = 'AND  (';
-+//        $subquery_phrase = preg_replace($pattern, $replacement, $subquery_phrase);
-+//        $pattern = '/^OR /';
-+//        $replacement = 'OR  (';
-+//        $subquery_phrase = preg_replace($pattern, $replacement, $subquery_phrase);
-+//        $subquery_phrase = $subquery_phrase . ')';            
++    		}
++
++        // Just in case I need to put parenthesis elsewhere
++        //
++        //$pattern = '/^AND /';
++        //$replacement = 'AND  (';
++        //$subquery_phrase = preg_replace($pattern, $replacement, $subquery_phrase);
++        //$pattern = '/^OR /';
++        //$replacement = 'OR  (';
++        //$subquery_phrase = preg_replace($pattern, $replacement, $subquery_phrase);
++        //$subquery_phrase = $subquery_phrase . ')';            
 +        // Need to add parenthesis after first OR or AND and at the end of the query.
 +        $grants_sql .= $subquery_phrase;
 +        // Place everything after "AND" within parenthesis
@@ -250,17 +252,14 @@
 +        $replacement = 'AND  (';
 +        $grants_sql = preg_replace($pattern, $replacement, $grants_sql);
 +        $grants_sql = $grants_sql . ')';
-+	  }
++  	  }
 +    }
-+  }  
++  }
 +  return $grants_sql;
-+}
-+
-+/**
-  * Implementation of hook_db_rewrite_sql
-  */
- function node_db_rewrite_sql($query, $primary_table, $primary_field) {
-@@ -3050,3 +3189,100 @@ function node_forms() {
+ }
+ 
+ /**
+@@ -3094,3 +3234,100 @@
    }
    return $forms;
  }
@@ -285,9 +284,9 @@
 +
 +  // Get all rule realms from node_access table.
 +  $result = db_query("SELECT DISTINCT realm FROM {node_access}");
-+   while ($row = db_fetch_object($result)) {
++  while ($row = db_fetch_object($result)) {
 +    $rules[] = $row->realm;
-+   }    
++  }    
 +
 +  // Get all rule realms from modules.  User doing this should have grants in all modules affected.
 +  $op = 'view';
@@ -308,14 +307,13 @@
 +    $form[$realm]['realm'] = array('#type' => 'textfield', '#size' => 25, '#disabled' => TRUE, '#value' => check_plain($realm), '#default_value' => $realm); 
 +    $form[$realm]['group'] = array('#type' => 'textfield', '#size' => 5, '#default_value' => (isset($existing[$realm]->groupname) ? $existing[$realm]->groupname : '') ); 
 +    $form[$realm]['logic'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->logic) ? $existing[$realm]->logic : 'AND'), '#options' => array('AND' => 'AND', 'OR' => 'OR') ); 
-+    $form[$realm]['weight'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->weight) ? $existing[$realm]->weight : '0'), '#options' => array('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6', '7' => '7', '8' => '8', '9' => '9') ); 
++    $form[$realm]['weight'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->weight) ? $existing[$realm]->weight : '0'), '#options' => array('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6') ); 
 +    $form[$realm]['check'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->checkstatus) ? $existing[$realm]->checkstatus : '0'), '#options' => array('0' => '0', '1' => '1') ); 
 +  }
 +
 +  $form['submit'] = array('#type' => 'submit', '#value' => t('Save changes'));
 +
 +  return $form;
-+
 +}
 +
 +/**
@@ -330,10 +328,11 @@
 +
 +  foreach (element_children($form) as $i) {
 +    $block = &$form[$i];
-+    $rows[] = array(drupal_render($block['checkbox']), drupal_render($block['realm']),
-+        drupal_render($block['group']), drupal_render($block['logic']),
-+        drupal_render($block['weight']), drupal_render($block['check']),
-+      );
++    $rows[] = array(
++      drupal_render($block['checkbox']), drupal_render($block['realm']),
++      drupal_render($block['group']), drupal_render($block['logic']),
++      drupal_render($block['weight']), drupal_render($block['check']),
++    );
 +  }
 +
 +  $output .= theme('table', $header, $rows, array('id' => 'og-roles-multinode-table'));
@@ -356,8 +355,9 @@
 +  foreach ($form_values as $block) {
 +    if ($block['checkbox'] == 1) {
 +      db_query("INSERT INTO {multinode_access} (realm, groupname, logic, weight, checkstatus) VALUES ('%s','%s','%s','%s',%d)", $block['realm'], $block['group'], $block['logic'], $block['weight'], $block['check']);
-+	}
++	  }
 +  }
 +  drupal_set_message(t('The multinode access settings have been updated.'));
 +  cache_clear_all();
 +}
+\ No newline at end of file

@@ -1,4 +1,4 @@
-$Id$
+$Id: README.txt,v 1.1.2.15 2008/11/24 18:14:04 somebodysysop Exp $
 
 DESCRIPTION
 -----------
@@ -58,42 +58,44 @@ REQUIREMENTS
 
 INSTALLATION
 ------------
-- If you are currently running the "OG Roles" module, please uninstall it.  It
-  is incompatible with the "OG User Roles" module.
+   1. If you are currently running the "OG Roles" module, please uninstall it. 
+      It is incompatible with the "OG User Roles" module.
+   2. Enable the module from administer->site building->modules. This should 
+      create new table "og_users_roles".
+   3. Go to administer->user management->access control and assign 
+      "configure member roles" to the roles you wish to be able to assign group 
+      roles to users. Also, assign "administer og_user_roles" permission to 
+      user(s) who will be allowed to access the OG User Roles administration page.
+   4. Go to administer->organic groups->organic groups user roles settings 
+      page and select the roles which will be used as "group roles". Check off 
+      the desired roles under the column "Assignable roles".
+   5. Since OG version 5.x-7.0 and it's new access control, you may need to 
+      click on the "Clear the Cache" setting and install the user.module patch. 
+      See: http://drupal.org/node/177948
+   6. This module uses multi column checkbox settings for display of user 
+      roles. This saves space, particulary when your group has lots of users. 
+      To activate, you will need to drop the following code into the style.css 
+      file of your active theme(s):
 
-- Enable the module from administer >> modules.  This should create new table
-  "og_users_roles".  If it doesn't then use the og_users_roles.sql file found
-  in the distribution directory to create it manually.
+      .checkbox-columns .form-item {
+      font-size:75%;
+      width: 12em;
+      margin-right: 1px;
+      float: left;
+      display: inline;
+      }
+      .checkbox-columns-clear .form-item {
+      font-size:75%;
+      width: 12em;
+      margin-right: 1px;
+      clear: left;
+      float: left;
+      display: inline;
+      }
 
-- Go to administer >> user management >> access control and assign
-  "configure member roles" to the roles you wish to be able to assign group
-  roles to users.  Also, assign "administer og_user_roles" permission to user(s) who
-  will be allowed to access the OG User Roles administration page.
-
-- This module uses multi column checkbox settings for display of user roles.
-  This saves space, particulary when your group has lots of users.
-  To activate, you will need to drop the following code into the style.css
-  file of your active theme(s):
-
-.checkbox-columns .form-item {
-  font-size:75%;
-  width: 12em;
-  margin-right: 1px;
-  float: left;
-  display: inline;
-}
-.checkbox-columns-clear .form-item {
-  font-size:75%;
-  width: 12em;
-  margin-right: 1px;
-  clear: left;
-  float: left;
-  display: inline;
-}
-
-- This module supports content_access and acl modules. If you have installed
-  these access control modules, please follow integration instructions here:
-  http://groups.drupal.org/node/5392
+   7. This module supports content_access and acl modules. If you have 
+      installed these access control modules, please follow integration 
+      instructions here: http://groups.drupal.org/node/5392 
 
 OPTIONAL PATCHES
 ----------------
@@ -168,6 +170,8 @@ Only users with role ('administer og_user_roles') may configure this module.
   Requires the mimemail.module: 
      
      http://www.drupal.org/project/mimemail
+
+  See more details here: http://drupal.org/node/163567 
 
   Default Non-Group Role for new users
   ====================================
