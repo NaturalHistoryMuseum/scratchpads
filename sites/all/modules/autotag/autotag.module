@@ -298,7 +298,17 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   
   // Add a hidden field for recording the location of ignore and add terms in
   // the drag'n'drop interface.
-  
+  $form['autotag']['hideterms'] = array(
+    '#type' => 'hidden',
+    '#default_value' => '|'
+  );
+  // Additional submit button higher up the page so that lazy f*&kers don't have to 
+  // scroll down.
+  $form['submit']['#value'] = $button_name;
+  if($step==2){
+    $form['autotag']['submit2'] = $form['submit'];
+    $form['autotag']['submit2']['#prefix'] = '<div class="description">'.t(AUTOTAG_SUBMIT2_TEXT).'</div>';
+  }
 }
 
 /**
