@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: mollom.module,v 1.1.2.34 2008/11/03 16:38:45 dries Exp $
 
 define('MOLLOM_API_VERSION', '1.0');
 
@@ -76,7 +76,7 @@ function mollom_menu($may_cache) {
         'type' => MENU_CALLBACK);
     $items[] = array(
         'path' => 'admin/settings/mollom',
-        'description' => t('Mollom is a webservice that helps you manage your community.'),
+        'description' => t('Mollom is a web service that helps you manage your community.'),
         'title' => t('Mollom'),
         'callback' => 'drupal_get_form',
         'callback arguments' => array('mollom_admin_settings'),
@@ -113,10 +113,7 @@ function mollom_ajax_callback($type, $session_id) {
     $response = mollom('mollom.getAudioCaptcha', array('author_ip' => _mollom_ip_address(), 'session_id' => $session_id));
 
     if ($response) {
-      $output  = '<object type="audio/mpeg" data="'. check_plain($response['url']) .'" width="120" height="30">';
-      $output .= ' <param name="autoplay" value="false" />';
-      $output .= ' <param name="controller" value="true" />';
-      $output .= '</object>';
+      $output  = '<embed src="'. check_plain($response['url']) .'" autostart="true" width="120" height="30" />';
       $output .= ' (<a href="#" id="image-captcha">'. t('use image CAPTCHA') .'</a>)';
     }
   }
@@ -169,7 +166,7 @@ function _mollom_feedback_options() {
       'unwanted' => t('Report as unwanted, taunting or off-topic content'),
   ),
     '#default_value' => 'none',
-    '#description' => t("Mollom is a webservice that helps you moderate your site's content: see <a href=\"http://mollom.com\">http://mollom.com</a> for more information.  By sending feedback to Mollom, you teach Mollom what content you like and what content you dislike.  Like that, Mollom can do a better job helping you to moderate your site's content."),
+    '#description' => t("Mollom is a web service that helps you moderate your site's content: see <a href=\"http://mollom.com\">http://mollom.com</a> for more information.  By sending feedback to Mollom, you teach Mollom what content you like and what content you dislike.  Like that, Mollom can do a better job helping you to moderate your site's content. If you want to report multiple posts at once, you can use Mollom's bulk operations on the content and comment administration pages."),
   );
 
 }
@@ -274,7 +271,7 @@ function mollom_report_contact($session) {
   $form['feedback'] = _mollom_feedback_options();
   
   return confirm_form($form,
-      t('Are you sure you want to report the e-mail as inappropriate?'),
+      t('Are you sure you want to report the e-mail message as inappropriate?'),
       $_GET['destination'] ? $_GET['destination'] : '',
       t('This action cannot be undone.'),
       t('Report as inappropriate'), t('Cancel'));
@@ -845,12 +842,12 @@ function mollom_captcha_prerender($form_id, &$form) {
           '#name' => 'captcha-solution',
           '#id' => 'edit-captcha-solution',
           '#parents' => array(),
-          '#title' => t('CAPTCHA'),
-          '#prefix' => '<div id="captcha"><a href="http://mollom.com"><img src="'. url($response['url']) .'" alt="Mollom CAPTCHA" /></a> (<a href="#" id="audio-captcha">play audio CAPTCHA</a>)</div>',
+          '#title' => t('Word verification'),
+          '#field_prefix' => '<div id="captcha"><a href="http://mollom.com"><img src="'. url($response['url']) .'" alt="Mollom CAPTCHA" /></a> (<a href="#" id="audio-captcha">'. t('play audio CAPTCHA') .'</a>)</div>',
           '#required' => TRUE,
           '#size' => 10,
           '#value' => $form['#post']['captcha'],
-          '#description' => t("Type in the characters shown in the above; if you can't read them, submit the form and a new image will be generated."),
+          '#description' => t("Type the characters shown in the picture above; if you can't read them, submit the form and a new image will be generated."),
           '#weight' => min($form['submit']['#weight'], $form['preview']['#weight']) + 1);
 
       // Move the preview and/or submit button below the captcha:
@@ -899,7 +896,10 @@ function _mollom_retrieve_server_list() {
       return $result;
     }
     else {
-      watchdog('mollom', 'Error @errno: %server - %message - mollom.getServerList', array('@errno' => xmlrpc_errno(), '%server' => $server, '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR);
+      watchdog('mollom', t('Error @errno: %server - %message - mollom.getServerList', array('@errno' => xmlrpc_errno(), '%server' => $server, '%message' => xmlrpc_error_msg()), WATCHDOG_ERROR));
+      
+      // Reset the XMLRPC error:
+      xmlrpc_error(0);  // FIXME: this is crazy.
     }
   }
 
@@ -912,6 +912,8 @@ function _mollom_retrieve_server_list() {
  * Mollom.
  */
 function mollom($method, $data = array()) {
+  // Initialize refresh variable:
+  $refresh = FALSE;
   
   // Retrieve the list of Mollom servers from the database:
   $servers = variable_get('mollom_servers', NULL);
@@ -925,32 +927,53 @@ function mollom($method, $data = array()) {
   }
 
   if (is_array($servers)) { 
-    // Send the request to the first server, if that fails, try the other servers in the list:
-    foreach ($servers as $server) {
+    reset($servers);
+    while ($server = current($servers)) {
       $result = xmlrpc($server .'/'. MOLLOM_API_VERSION, $method, $data + _mollom_authentication());
 
       if ($errno = xmlrpc_errno()) {
-        watchdog('mollom', t('Error @errno: %server - %message - %method - <pre>@data</pre>', array('@errno' => xmlrpc_errno(), '%server' => $server, '%message' => xmlrpc_error_msg(), '%method' => $method, '@data' => print_r($data, TRUE))), WATCHDOG_ERROR);
-
         if ($errno == MOLLOM_REFRESH) {
-          // Retrieve a list of servers:
-          $servers = _mollom_retrieve_server_list();
+          if (!$refresh) { // Safety pal to avoid endless loops
+            // Retrieve a list of valid Mollom servers from mollom.com:
+            $servers = _mollom_retrieve_server_list();
 
-          // Store the updated list of servers in the database:
-          variable_set('mollom_servers', $servers);
+            // Reset the list of servers so we start from the first server in the list:
+            reset($servers);
+
+            // Store the updated list of servers in the database:
+            variable_set('mollom_servers', $servers);
+
+            // Log this for debuging purposes:
+            watchdog('mollom', t('The list of available Mollom servers was refreshed: @servers.', array('@servers' => print_r($servers, TRUE))));
+
+            // Mark that we have refreshed the list:
+            $refresh = TRUE;
+          }
         }
-        else if ($errno == MOLLOM_ERROR) {
-          return $result;
+        elseif ($errno == MOLLOM_REDIRECT) {
+          // If this is a network error, we go to the next server in the list.
+          $next = next($servers);
+
+          // Do nothing, we automatically select the next server.
+          watchdog('mollom', t('The Mollom server %server asked to use the next Mollom server in the list: %next.', array('%server' => $server, '%next' => $next)));
         }
-        else if ($errno == MOLLOM_REDIRECT) {
-          // Do nothing, we select the next client automatically.
+        else {
+          watchdog('mollom', t('Error @errno from %server: %message - %method - <pre>@data</pre>', array('@errno' => xmlrpc_errno(), '%server' => $server, '%message' => xmlrpc_error_msg(), '%method' => $method, '@data' => print_r($data, TRUE)), WATCHDOG_ERROR));
+
+          // If it is a 'clean' Mollom error we return instantly.
+          if ($errno == MOLLOM_ERROR) {
+            return $result;
+          }
+
+          // If this is a network error, we go to the next server in the list.
+          next($servers);
         }
 
         // Reset the XMLRPC error:
         xmlrpc_error(0);  // FIXME: this is crazy.
       }
       else {
-        return $result; 
+        return $result;
       }
     }
   }
