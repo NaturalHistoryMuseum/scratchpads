@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2007-07-04 15:36+0100\n"
-"Last-Translator: Thomas Klein <tkl-online@gmx.de>\n"
+"PO-Revision-Date: 2008-06-15 12:13+0100\n"
+"Last-Translator: Raimund Hofmann <drupal@raimund-hofmann.de>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -28,7 +28,7 @@ msgstr "Ansicht"
 #: webform.inc:20
 #: webform_report.inc:33
 msgid "Operations"
-msgstr "Arbeitsgänge"
+msgstr "Aktionen"
 
 #: webform.inc:28
 #: webform.module:294
@@ -52,16 +52,16 @@ msgstr "Download"
 
 #: webform.inc:32
 msgid "edit"
-msgstr "bearbeiten"
+msgstr "Bearbeiten"
 
 #: webform.inc:33
 #: webform.module:314
 msgid "clear"
-msgstr "bereinigen"
+msgstr "Bereinigen"
 
 #: webform.inc:47
 msgid "Clear Form Submissions"
-msgstr "Formulareingaben bereinigen"
+msgstr "Formulareingaben löschen"
 
 #: webform.inc:51
 msgid "Are you sure you want to delete all submissions for this form?"
@@ -69,7 +69,7 @@ msgstr "Sind Sie sicher, das sie alle Eingaben für dieses Formular löschen wol
 
 #: webform.inc:53
 msgid "Clear"
-msgstr "Bereinigen"
+msgstr "Leeren"
 
 #: webform.inc:53
 #: ;82
@@ -78,7 +78,7 @@ msgstr "Abbrechen"
 
 #: webform.inc:63
 msgid "Webform %title entries cleared."
-msgstr "Webform %title Einträge sind gelöscht."
+msgstr "Einträge des Webformulars %title wurden gelöscht."
 
 #: webform.inc:75
 msgid "Delete Form Submission"
@@ -86,7 +86,7 @@ msgstr "Formulareingaben löschen"
 
 #: webform.inc:80
 msgid "Are you sure you want to delete this submission?"
-msgstr "Sind Sie sicher, das sie alle Eingaben löschen wollen?"
+msgstr "Sind Sie sicher, das sie die Eingabe löschen wollen?"
 
 #: webform.inc:82
 #: webform_report.inc:61
@@ -94,35 +94,35 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: webform.inc:92
-msgid "Submission deleted"
-msgstr "Eingabe löschen"
+msgid "Submission deleted."
+msgstr "Eingabe wurde gelöscht."
 
 #: webform.inc:167
 msgid "Submitted on"
-msgstr "Eingaben sind vom"
+msgstr "Abgeschickt am:"
 
 #: webform.inc:171
 msgid "Submitted by user"
-msgstr "Eingabe des Benutzer"
+msgstr "Abgeschickt durch:"
 
 #: webform.inc:174
 msgid "Submitted by anonymous user"
-msgstr "Eingaben eines Anonymenbenutzers"
+msgstr "Von einem Gast abgeschickt"
 
 #: webform.inc:179
 msgid "Submitted values are"
-msgstr "Eingabeergebnisse sind"
+msgstr "Abgeschickte Daten:"
 
 #: webform.inc:201
-msgid "The results of this submission may be viewed at:\n"
-msgstr "Das Ergebnis der Eingabe kann angesehen werden unter:\n"
+msgid "The results of this submission may be viewed at:"
+msgstr "Die abgeschickten Daten können unter folgender Adresse angeschaut werden:"
 
 #: webform.inc:65
 #: webform.module:286
 #: ;319;133;1066;1257;1266;1404;1422;0
 #: webform.install:473
 msgid "webform"
-msgstr "Webform"
+msgstr "Webformular"
 
 #: webform_report.inc:29
 #: ;95
@@ -132,7 +132,7 @@ msgstr "Nr."
 #: webform_report.inc:30
 #: ;96
 msgid "Submitted"
-msgstr "Erzeugt"
+msgstr "Abgeschickt"
 
 #: webform_report.inc:31
 #: ;97
@@ -142,7 +142,7 @@ msgstr "Benutzer"
 #: webform_report.inc:32
 #: ;98
 msgid "IP Address"
-msgstr "Ip-Adresse"
+msgstr "IP-Adresse"
 
 #: webform_report.inc:253
 msgid "Q"
@@ -154,7 +154,7 @@ msgstr "Antworten"
 
 #: webform.module:26
 msgid "Webforms are forms and questionnaires. To add one select <strong>create content -&gt; webform</strong>. Below you can set different security and debug options."
-msgstr "Webforms sind Formulare und Fragebögen. Um ein Webform hinzuzufügen wählen Sie <strong>Inhalt erstellen -&gt; Webform</strong>. Nachfolgend können verschiedene Optionen für Sicherheit und Fehlersuche eingestellt werden."
+msgstr "Webformulare sind Formulare und Fragebögen. Um ein Webformular hinzuzufügen wählen Sie <strong>Inhalt erstellen -&gt; Webformular</strong>. Nachfolgend können verschiedene Optionen für Sicherheit und Fehlersuche eingestellt werden."
 
 #: webform.module:29
 msgid ""
@@ -189,29 +189,29 @@ msgstr ""
 
 #: webform.module:45
 msgid "A webform can be a questionnaires, contact or request forms. It can be used to let visitors make contact, register for a event or to enable a complex survey."
-msgstr "Ein Webform kann als Fragebogen, Kontakt- oder Anfrageformulare gestaltet werden: Ein Webform kann eingesetzt werden, um Besuchern eine Kontaktmöglichkeit zu bieten, zur Anmeldung an eine Veranstaltung oder auch zur Erstellung einer Umfrage."
+msgstr "Ein Webformular kann als Fragebogen, Kontakt- oder Anfrageformular gestaltet werden: Ein Webformular kann eingesetzt werden, um Besuchern eine Kontaktmöglichkeit zu bieten, zur Anmeldung an eine Veranstaltung oder auch zur Erstellung einer Umfrage."
 
 #: webform.module:48
 msgid "Available variables are: %username, %useremail, %site, %date."
-msgstr "Verfügbare Variablen: %username (Benutzername), %useremail (Mailadresse des Benutzers), %site (Domain der Website), %date (Datum)."
+msgstr "Verfügbare Variablen: %username (Benutzername), %useremail (Mailadresse des Benutzers), %site (Adresse der Website), %date (Datum)."
 
 #: webform.module:49
 msgid "You can also use %server[key] to add any of the special PHP <a href=\"http://www.php.net/reserved.variables#reserved.variables.server\">$_SERVER</a> variables and %get[key] to create prefilled forms from the <a href=\"http://www.php.net/reserved.variables#reserved.variables.get\">URL</a> (e.g. %server[HTTP_USER_AGENT] or %get[id])."
-msgstr "Sie können auch %server[key] verwenden, um jede für  PHP erhältlichen <a href=\"http://www.php.net/reserved.variables#reserved.variables.server\">$_SERVER</a> Variablen zu benutzen oder mit %get[key] mittels <a href=\"http://www.php.net/reserved.variables#reserved.variables.get\">URL</a> vorausgefüllte Formulare zu erstellen (z.B. %server[HTTP_USER_AGENT] or %get[id])."
+msgstr "Sie können auch %server[key] verwenden, um jede der speziellen <a href=\"http://www.php.net/reserved.variables#reserved.variables.server\">$_SERVER</a>-Variablen von PHP zu benutzen oder mit %get[key] mittels <a href=\"http://www.php.net/reserved.variables#reserved.variables.get\">URL</a> vorausgefüllte Formulare zu erstellen (z.B. %server[HTTP_USER_AGENT] or %get[id])."
 
 #: webform.module:51
-msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the varible %profile[profile_city]."
+msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the variable %profile[profile_city]."
 msgstr "Bei Verwendung des Profilmoduls haben Sie Zugriff auf alle Profildaten mittels %profile[form_name]. Wenn Sie zum Beispiel ein Profilwert mit dem Namen profil_stadt haben, verwenden Sie die Variable %profile[profil_stadt]."
 
 #: webform.module:76
 #: ;272 webform.install:504
 #: webform.info:0
 msgid "Webform"
-msgstr "Webform"
+msgstr "Webformular"
 
 #: webform.module:78
 msgid "Create a new form or questionnaire accessible to users. Submission results and statistics are recorded and accessible to privileged users."
-msgstr "Erstellung eines neuen Formulars oder eines Fragebogens um es den Benutzern zugänglich zumachen. Eingabeergebnisse und -statistiken werden gespeichert und privilegierten Benutzern zugänglich gemacht."
+msgstr "Erstelle ein neues, für Benutzer zugängliches Formular, oder Fragebogen. Abgeschickte Daten und Statistiken werden gespeichert und für berechtigte Benutzer zugänglich gemacht."
 
 #: webform.module:158
 msgid "Available Components"
@@ -219,7 +219,7 @@ msgstr "Verfügbare Komponenten"
 
 #: webform.module:161
 msgid "Below is a list of supported field types available for webform. You may disable any of these components by unchecking its corresponding box. Only checked components will be available in existing or new webforms."
-msgstr "In der Liste werden die Komponenten aufgezählt, welche in Webform vorhanden sind. Es ist möglich teile der Komponenten zu sperren, in dem Häcken aus der entsprechenden Komponente entfernt wird. Nur aktivierte Komponenten können in Webforms benutzt werden."
+msgstr "In der Liste werden die Komponenten aufgelistet, welche für das Formular verfügbar sind. Jede dieser Komponenten kann durch Entfernen des Hakens deaktiviert werden. Nur aktivierte Komponenten können in bestehenden oder neuen Formularen verwendet werden."
 
 #: webform.module:178
 msgid "Default E-mail Values"
@@ -231,19 +231,19 @@ msgstr "Absenderadresse"
 
 #: webform.module:187
 msgid "Default sender address. This may be the E-mail address of the maintainer of your forms. This is also used for Reply-To, Return-Path and Errors-To."
-msgstr "Standard Sendeadresse. Diese Email-Adresse ist der Absender der Forulare. Des Weiteren wird er für Reply-To, Return-Path und Errors-To benutzt."
+msgstr "Standard-Absenderadresse. Diese könnte z.B. die Email-Adresse von der Person sein, die das Formular pflegt. Die Adresse wird auch für \"Antwort an\" (Reply to), \"Rückleitung\" (Return path) und \"Fehler an\" (Errors to) verwendet."
 
 #: webform.module:192
 msgid "From Name"
-msgstr "Von Name"
+msgstr "Von"
 
 #: webform.module:194
 msgid "Default sender name which is displayed together with the E-mail address."
-msgstr "Standard Sendername, welcher angezeigt wird bei der Email-Adresse. "
+msgstr "Standard-Absendername, welcher zusammen mit der Email-Adresse angezeigt wird. "
 
 #: webform.module:199
 msgid "Default Subject"
-msgstr "Standard der Betreffzeile"
+msgstr "Standard-Betreff"
 
 #: webform.module:200
 #: ;609;1355
@@ -252,7 +252,7 @@ msgstr "Absender:"
 
 #: webform.module:201
 msgid "Default Subject. If not other stated in the form configuration this is appended to your form title. If you have e.g. defined \"Your \" (note the space) as a default subject and a form titled with \"Order\" the e-mail subject will be \"Your Order\"."
-msgstr "Standard Betreffzeile. Wenn nicht anderes in der Formularkonfiguration angeben wurde, wird diese Betreffzeile zu Ihrem Formulartitel hinzugefügt. Wenn man z.B. \"Dein \" (beachte das Leerzeichen) als Standard Betreffzeile definiert hat und der  Titel eines Formulars \"Auftrag \" heißt, dann bekommt die Email als Betreffzeile \"Dein Auftrag \"."
+msgstr "Standard Betreff. Wenn nichts anderes in der Formularkonfiguration angeben wurde, wird dieser Betreff zu Ihrem Formulartitel hinzugefügt. Wenn man z.B. \"Dein \" (beachte das Leerzeichen) als Standard Betreffzeile definiert hat und der  Titel eines Formulars \"Auftrag \" heißt, dann bekommt die Email als Betreff \"Dein Auftrag \"."
 
 #: webform.module:206
 msgid "Advanced Options"
@@ -260,15 +260,15 @@ msgstr "Erweiterte Optionen"
 
 #: webform.module:214
 msgid "Allow Cookies for Tracking Submissions"
-msgstr "Erlauben von Cookies für die Eingabeverfolgung"
+msgstr "Cookies für die Nachverfolgung von Absendungen erlauben."
 
 #: webform.module:216
 msgid "<a href=\"http://www.wikipedia.org/wiki/HTTP_cookie\">Cookies</a> can be used to help prevent the same user from repeatedly submitting a webform. This feature is not needed for limiting submissions per user, though it can increase accuracy in some situations. Besides cookies, webform also uses IP addresses and site usernames to prevent repeated submissions."
-msgstr "<a href=\"http://de.wikipedia.org/wiki/HTTP-Cookie\">Cookies</a> können verwendet werden, um zu helfen, das der gleiche Benutzer nicht wiederholt das selbe Formular einreicht. Diese Eigenschaft ist nicht nötigt, damit die Eingaben eines Benutzer begrenzt werden, obwohl sie die Genauigkeit in einigen Situationen erhöhen kann. Außer den Cookies benutzt Webform auch die IP-Adresse und den Benutzernamen um wiederholte Eingaben zu verhindern."
+msgstr "<a href=\"http://de.wikipedia.org/wiki/HTTP-Cookie\">Cookies</a> können verwendet werden, um einen Benutzer daran zu hindern, das gleiche Formular wiederholt abzuschicken. Diese Funktion wird nicht benötigt um \"Absendungen pro Benutzer\" zu begrenzen, obwohl es in manchen Fällen die Genauigkeit erhöhen kann. Neben Cookies wird auch die IP-Adresse und der Benutzername verwendet um wiederholte Absendungen zu unterbinden."
 
 #: webform.module:221
 msgid "Webforms Debug"
-msgstr "Webforms Fehlersuche"
+msgstr "Webformular Debugging"
 
 #: webform.module:224
 msgid "Set this option to \"Log submissions\" to log all submissions in the watchdog. Set it to \"Full debug\" to print debug info on submission. You probably want to leave this option on \"OFF\"."
@@ -290,15 +290,15 @@ msgstr "Aktiviert"
 
 #: webform.module:262
 msgid "Webforms"
-msgstr "Webforms"
+msgstr "Webformulare"
 
 #: webform.module:265
 msgid "View and edit all the available webforms on your site."
-msgstr "Anzeigen und bearbeiten der vorhandenen Webforms auf dieser Webseite."
+msgstr "Zeige und bearbeite alle verfügbaren Webformulare dieser Webseite."
 
 #: webform.module:276
 msgid "Global configuration of webform functionality."
-msgstr "Allgemeine Konfiguration der Webform-Funktionalität"
+msgstr "Globale Konfiguration der Webformular-Funktionalität"
 
 #: webform.module:290
 #: ;1422
@@ -311,7 +311,7 @@ msgstr "Gehe zum Formular"
 
 #: webform.module:340
 msgid "View this form."
-msgstr "Zeige dieses Formular an."
+msgstr "Zeige das Formular an."
 
 #: webform.module:361
 #: ;465;563
@@ -321,7 +321,7 @@ msgstr "Auswahl löschen"
 #: webform.module:380
 #: ;982
 msgid "Done"
-msgstr "Ausführen"
+msgstr "Fertig"
 
 #: webform.module:400
 #: ;457;568;841
@@ -330,7 +330,7 @@ msgstr "Auswahl bearbeiten"
 
 #: webform.module:418
 msgid "The form component has been changed. Remember to press Submit on the bottom of this form to save your changes."
-msgstr "Die Formularkomponente wurde verändert. Denken sie daran, das Formular zu speichern, damit die Änderungen erhalten bleiben."
+msgstr "Die Formularkomponente wurde verändert. Das Formular muss abgeschickt werden, bevor die Änderungen dauerhaft gespeichert werden."
 
 #: webform.module:420
 #: ;478;1054;1095 components/markup.inc:38
@@ -344,7 +344,7 @@ msgstr "Hinzufügen"
 
 #: webform.module:470
 msgid "Field deleted, form must be submitted to save changes"
-msgstr "Feld gelöscht, die Eingaben müssen bestätigt werden, damit sie gespeichert werden. "
+msgstr "Feld gelöscht, das Formular muss abgeschickt werden, damit es gespeichert wird. "
 
 #: webform.module:473
 msgid "A component must be selected to delete"
@@ -353,7 +353,7 @@ msgstr "Es muss eine Komponete zum Löschen ausgewählt sein"
 #: webform.module:477
 #: ;1162;1179;1289
 msgid "Submit"
-msgstr "Speichern"
+msgstr "Abschicken"
 
 #: webform.module:482
 msgid "Submission limit must be a number"
@@ -361,7 +361,7 @@ msgstr "Eingabenbegrenzung muss eine Nummer sein"
 
 #: webform.module:497
 msgid "Webform Settings"
-msgstr "Webforms Einstellungen"
+msgstr "Webformular-Einstellungen"
 
 #: webform.module:513
 msgid "Text to be shown as teaser and before the form."
@@ -373,7 +373,7 @@ msgstr "Bestätigungsnachricht oder Weiterleitungs-URL"
 
 #: webform.module:523
 msgid "Message to be shown upon successful submission or a path to a redirect page. Redirect pages must start with <em>http://</em> for external sites or <em>internal:</em> for an internal path. i.e. <em>http://www.example.com</em> or <em>internal:node/10</em>"
-msgstr "War dei Eingabe im Formulr erfolgreich, wird auf eine andere Seite weitergeleitet. Die Adressen für die Weiterleitungsseiten müssen mit <em>http://</em> für externe Aurufe beginnen oder <em>internal:</em> für einen internen Aufruf (z.B. <em>http://www.example.com</em> bzw. <em>internal:node/10</em>)."
+msgstr "War die Eingabe im Formulr erfolgreich, wird auf eine andere Seite weitergeleitet. Die Adressen für die Weiterleitungsseiten müssen mit <em>http://</em> für externe Aurufe beginnen oder <em>internal:</em> für einen internen Aufruf (z.B. <em>http://www.example.com</em> bzw. <em>internal:node/10</em>)."
 
 #: webform.module:536
 msgid "Components"
@@ -407,7 +407,7 @@ msgstr "Standardwert"
 #: webform.module:607
 #: ;608;609
 msgid "None"
-msgstr "Kein"
+msgstr "Nichts"
 
 #: webform.module:609
 msgid "$title"
@@ -427,23 +427,23 @@ msgstr "Email von Adresse"
 
 #: webform.module:638
 msgid "After adding components to this form, any e-mail or hidden form element may be selected as the sender's address for e-mails."
-msgstr "Nachdem Komponenten in diesem Formular hinzugefügt wurden, kann irgend eine E-Mail oder ein verstecktes Formularelement als der Absenderadresse für die E-Mails vorgewählt werden."
+msgstr "Nachdem Komponenten in diesem Formular hinzugefügt wurden, kann irgend eine E-Mail oder ein verstecktes Formularelement als  Absenderadresse für die E-Mails ausgewählt werden."
 
 #: webform.module:644
 msgid "E-mail subject"
-msgstr "Betreffzeile der Email"
+msgstr "Betreff der Email"
 
 #: webform.module:647
 msgid "After adding components to this form, any textfield or hidden form element may be selected as the subject line for e-mails."
-msgstr "Nachdem Komponenten in diesem Formular hinzugefügt wurden, kann irgend ein Textfeld oder ein verstecktes Formularelement als der Betreff der E-Mails vorgewählt werden."
+msgstr "Nachdem Komponenten in diesem Formular hinzugefügt wurden, kann irgend ein Textfeld oder ein verstecktes Formularelement als  Betreff der E-Mail ausgewählt werden."
 
 #: webform.module:657
 msgid "Advanced Settings"
 msgstr "Erweiterte Einstellungen"
 
 #: webform.module:665
-msgid "Limit the number of submission a user may send within a specified time period."
-msgstr "Sie haben die Brenzung für Eingaben innerhalb einer Zeitperiode erreicht."
+msgid "Limit the number of submissions a user may send within a specified time period"
+msgstr "Anzahl von Absendungen eines Nutzers auf einen bestimmten Zeitraum  begrenzen."
 
 #: webform.module:684
 msgid "Limit to "
@@ -451,11 +451,11 @@ msgstr "Begrenzung auf"
 
 #: webform.module:692
 msgid "submission(s)"
-msgstr "Eingabe(n)"
+msgstr "Absendung(en)"
 
 #: webform.module:704
 msgid "ever"
-msgstr "nie"
+msgstr "jemals"
 
 #: webform.module:705
 msgid "every hour"
@@ -470,12 +470,12 @@ msgid "every week"
 msgstr "jede Woche"
 
 #: webform.module:720
-msgid "Enter PHP code to preform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
-msgstr "Geben Sie hier den PHP Code ein, um eine zusätzliche Überprüfung für diese Formular zu ermöglichen. Füge das &lt;?php ?&gt; Tag ein. $form_id und $form_values sind gültige Variablen für PHP. Wenn die Überprüfung fehlschlagen soll, muss die Funktion form_set_error benutzen werden, um das Speichern des Formulars zu verhindern. Der Aufbau der Syntax sollte so sein, wie es in dem <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a> benutzt wurde."
+msgid "Enter PHP code to perform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a>."
+msgstr "Geben Sie hier den PHP-Code ein, um eine zusätzliche Überprüfung für dieses Formular zu ermöglichen. Füge das &lt;?php ?&gt; Tag ein. $form_id und $form_values sind gültige Variablen für PHP. Wenn die Überprüfung fehlschlagen soll, muss die Funktion form_set_error benutzen werden, um das Speichern des Formulars zu verhindern. Der Aufbau der Syntax sollte so sein, wie es in dem <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a> benutzt wurde."
 
 #: webform.module:729
-msgid "Enter PHP code to preform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
-msgstr "Geben Sie hier den PHP Code ein, um eine zusätzliche Verarbeitung des Formulars vorzunehmen (nach der Überprüfung). Füge das &lt;?php ?&gt; Tag ein. $form_id und $form_values sind gültige Variablen und der Aufbau der Syntax sollte so sein, wie es in dem <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a> benutzt wurde."
+msgid "Enter PHP code to perform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a>."
+msgstr "Geben Sie hier den PHP-Code ein, um eine zusätzliche Verarbeitung des Formulars vorzunehmen (nach der Überprüfung). Füge das &lt;?php ?&gt; Tag ein. $form_id und $form_values sind gültige Variablen und der Aufbau der Syntax sollte so sein, wie es in dem <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a> benutzt wurde."
 
 #: webform.module:748
 msgid "Redirect POST Values"
@@ -483,7 +483,7 @@ msgstr "Weiterleitung der POST-Werte"
 
 #: webform.module:749
 msgid "Forward the contents of the POST array to the redirect URL. Use this option for custom processing of the form information. No processing will be done by webform. The confirmation option above MUST be a full redirect URL for this option to have an effect."
-msgstr "Verschickung der Inhalt der POST-Elemente zu einer anderen URL. Diese Option ist für die seperate Verarbeitung der Formularinformationen. Die Verarbeitung erfolgt nicht durch Webform. Die Bestätigungsoption oben MUSS eine vollständige URL-Adresse sein, damit diese Option funktioniert."
+msgstr "Verschickung der Inhalt der POST-Elemente zu einer anderen URL. Diese Option ist für die separate Verarbeitung der Formularinformationen. Die Verarbeitung erfolgt nicht durch das Webformular-Modul. Die Bestätigungsoption oben MUSS eine vollständige URL-Adresse sein, damit diese Option funktioniert."
 
 #: webform.module:824
 msgid "Type"
@@ -497,7 +497,7 @@ msgstr "Wert"
 #: webform.module:826
 #: ;931 components/captcha.inc:24
 msgid "Mandatory"
-msgstr "Obligatorisch"
+msgstr "erforderlich"
 
 #: webform.module:827
 #: ;957
@@ -526,7 +526,7 @@ msgstr "Tragen Sie einen maschinenlesbaren Schlüssel für dieses Formularelemen
 
 #: webform.module:915
 msgid "Label"
-msgstr "Kennung"
+msgstr "Beschriftung"
 
 #: webform.module:916
 msgid "This is used as a descriptive label when displaying this form element."
@@ -534,7 +534,7 @@ msgstr "Dieses Element wird als beschreibende Anzeige verwendet, wenn man dieses
 
 #: webform.module:925
 msgid "A short description of the field used as help for the user when he/she uses the form."
-msgstr "Kurze Feldbeschreibung als Benutzerhilfe beim ausfüllen des Feldes."
+msgstr "Kurze Feldbeschreibung als Benutzerhilfe beim Ausfüllen des Feldes."
 
 #: webform.module:933
 msgid "Check this option if the user must enter a value."
@@ -542,27 +542,27 @@ msgstr "Aktivieren Sie diese Option, wenn der Benutzer einen Werte auswählen mu
 
 #: webform.module:946
 msgid "Parent Fieldset"
-msgstr "Knoten einer Eingabegruppe"
+msgstr "Übergeordnete Feld-Gruppe"
 
 #: webform.module:948
-msgid "Optional. You may organize your form by placing this component inside inside another fieldset."
-msgstr "Optional. Das Formular kann dadurch organisiert werden, in dem Komponenten innerhalb anderer Eingabegruppe hinsetzen."
+msgid "Optional. You may organize your form by placing this component inside another fieldset."
+msgstr "Optional. Das Formular kann durch die Platzierung von Komponenten in Feld-Gruppen organisiert werden."
 
 #: webform.module:959
 msgid "Optional. In the menu, the heavier items will sink and the lighter items will be positioned nearer the top."
-msgstr "Optional. Im dem Menü werden die schwereren Einzelteile nach Unten und die leichteren Einzelteilen nach Oben positioniert."
+msgstr "Optional. Im Menü werden schwerere Teile nach unten sinken, während leichtere Teile weiter oben platziert werden."
 
 #: webform.module:971
 msgid "The webform component of type @type does not have an edit function defined."
-msgstr "Diese Webform-Komponente vom Typ @type hat keine Bearbeitungsfunktion definiert."
+msgstr "Diese Webformular-Komponente vom Typ @type hat keine Bearbeitungsfunktion definiert."
 
 #: webform.module:1015
 msgid "The field name %field_name is invalid."
-msgstr "Der Eingabename %field_name ist ungültig."
+msgstr "Der Feldname %field_name ist ungültig."
 
 #: webform.module:1066
 msgid "Unauthorized webform access attempt by %name."
-msgstr "Nicht autorisierter Webform-Zugriffsversuch durch %name."
+msgstr "Nicht autorisierter Webformular-Zugriffsversuch durch %name."
 
 #: webform.module:1129
 msgid "Next Page >"
@@ -574,31 +574,31 @@ msgstr "< Vorherige Seite"
 
 #: webform.module:1232
 msgid "The webform component @type is not able to be displayed"
-msgstr "Die Webform-Komponente @type ist nicht in der Lage angezeigt zu werden"
+msgstr "Die Webformular-Komponente @type kann nicht angezeigt werden"
 
 #: webform.module:1257
 msgid "The authenticated user <a href=\"%user_url\">%username</a> attempted to submit more entries than allowed on the <a href=\"%webform_url\">%webform_title</a> webform"
-msgstr "Der bekannte Benutzer <a href=\"%userURL\">%username</a>  versuchte mehr Einträge in dem Formular <a href=\"%webformURL\">%webformTitle</a> abzugeben, als erlaubt."
+msgstr "Der registrierte Benutzer <a href=\"%userURL\">%username</a>  versuchte mehr Einträge im Formular <a href=\"%webformURL\">%webformTitle</a> abzugeben, als erlaubt."
 
 #: webform.module:1266
 msgid "An anonymous user with IP address %ip attempted to submit more entries than allowed on the <a href=\"%webform_url\">%webform_title</a> webform"
-msgstr "Ein anonymer Benutzer mit der IP-Adresse %ip versuchte mehr Einträge in dem Formular <a href=\"%webformURL\">%webformTitle</a> abzugeben, als erlaubt."
+msgstr "Ein anonymer Benutzer mit der IP-Adresse %ip versuchte mehr Einträge im Formular <a href=\"%webformURL\">%webformTitle</a> abzugeben, als erlaubt."
 
 #: webform.module:1274
 msgid "You have submitted the maximum number of entries. Check submission guidelines."
-msgstr "Sie haben die Höchstzahl der Eintragungen eingereicht. Schauen Sie in die Dokumentation."
+msgstr "Sie haben die Höchstzahl von Absendungen erreicht. Überprüfen Sie die Absende-Richtlinien."
 
 #: webform.module:1404
-msgid "Possible spam attempt from "
-msgstr "Möglicher Spam-Versuch von"
+msgid "Possible spam attempt from @remote_addr"
+msgstr "Möglicher Spam-Versuch von @remote_addr"
 
 #: webform.module:1405
 msgid "Illegal information. Data not submitted."
-msgstr "Ungültige Informationen. Daten wurden nicht gespeichert."
+msgstr "Ungültige Informationen. Daten wurden nicht abgeschickt."
 
 #: webform.module:1422
 msgid "Submission posted to %title"
-msgstr "Formular versandt an %title"
+msgstr "Absendung wurde unter %title gespeichert."
 
 #: webform.module:1473
 msgid "No node with the id '%nid' could be found"
@@ -610,35 +610,35 @@ msgstr "Gehe zurück zum Formular"
 
 #: webform.module:67
 msgid "create webforms"
-msgstr "Webforms erstellen"
+msgstr "Webformulare erstellen"
 
 #: webform.module:67
 msgid "edit own webforms"
-msgstr "Webforms verwalten"
+msgstr "eigene Webformulare verwalten"
 
 #: webform.module:67
 msgid "edit webforms"
-msgstr "Webforms bearbeiten"
+msgstr "Webformulare bearbeiten"
 
 #: webform.module:67
 msgid "access webform results"
-msgstr "Webform Zugriffsergebnisse"
+msgstr "Zugriff auf Webformular-Ergebnisse"
 
 #: webform.module:67
 msgid "clear webform results"
-msgstr "Webforms Ergebnisse bereinigen"
+msgstr "Webformular-Ergebnisse löschen"
 
 #: webform.module:67
 msgid "use PHP for additional processing"
-msgstr "verwendet PHP für zusätzliche Verarbeitung"
+msgstr "verwende PHP für zusätzliche Verarbeitung"
 
 #: webform.install:125
 msgid "Webform module installed module tables successfully."
-msgstr "Die Webform-Module wurden erfolgreich in die Tabellen eingetragen."
+msgstr "Webformular-Modul hat alle nötigen Datenbanktabellen erfolgreich installiert."
 
 #: webform.install:128
 msgid "The installation of webform module was unsuccessful."
-msgstr "Die Installation der Webform-Module war nicht erfolgreich."
+msgstr "Die Installation des Webformular-Moduls war nicht erfolgreich."
 
 #: webform.info:0
 msgid "Enables the creation of forms and questionnaires."
@@ -646,7 +646,7 @@ msgstr "Ermöglicht der Erzeugung von Formularen und Fragebögen."
 
 #: components/captcha.inc:13
 msgid "Using captcha components in webform requires the <a href='http://drupal.org/project/captcha'>Captcha</a> and <a href='http://drupal.org/node/52349'>Textimage</a> modules."
-msgstr "Die <a href='http://de.wikipedia.org/wiki/Captcha'>Captcha-Komponente</a> aus Webform benötigt die Module  <a href='http://drupal.org/project/captcha'>Captcha</a> und <a href='http://drupal.org/node/52349'>Textimage</a>."
+msgstr "Die <a href='http://de.wikipedia.org/wiki/Captcha'>Captcha</a>-Komponente in Webformularen benötigt die Module  <a href='http://drupal.org/project/captcha'>Captcha</a> und <a href='http://drupal.org/node/52349'>Textimage</a>."
 
 #: components/captcha.inc:27
 msgid "Captchas are always mandatory"
@@ -679,7 +679,7 @@ msgstr "Der Standardwert von dieser Eingabe."
 
 #: components/date.inc:17
 msgid "Accepts any date in any <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a>. Strings such as today, +2 months, and Dec 9 2004 are all valid."
-msgstr "Es wird nur das Datum im <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a> akzeptiert. Folgende Zeichenketten sind gültig: 'today', '+2 months' und 'Dec 9 2004'."
+msgstr "Es werden alle eingegebenen Datums im <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a> akzeptiert. Folgende Zeichenketten sind gültig: 'today', '+2 months' und 'Dec 9 2004'."
 
 #: components/date.inc:24
 #: components/time.inc:25
@@ -693,12 +693,12 @@ msgstr "Stellen Sie das Datum auf eine spezifische Zeitzone. Die Webseiten-Zeitz
 #: components/date.inc:32
 #: components/time.inc:33
 msgid "Observe Daylight Savings"
-msgstr "Beobachtung der Sommerzeit"
+msgstr "Beachte Sommerzeit"
 
 #: components/date.inc:35
 #: components/time.inc:36
 msgid "Automatically adjust the time during daylight savings."
-msgstr "Automatisches justieren der Zeit während der Sommerzeit."
+msgstr "Automatisches anpassen der Zeit während der Sommerzeit."
 
 #: components/date.inc:77
 msgid "month"
@@ -759,11 +759,11 @@ msgstr "Tag"
 #: components/date.inc:88
 #: components/time.inc:107
 msgid "This field is required."
-msgstr "Diese Eingabe wird benötigt."
+msgstr "Dieses Feld ist erforderlich."
 
 #: components/date.inc:131
 msgid "@type %name field required"
-msgstr "@type %name benötigt eine Eingabe"
+msgstr "@type %name ist erforderlich."
 
 #: components/date.inc:144
 msgid "Entered %name is not a valid date."
@@ -780,7 +780,7 @@ msgstr "Stellt Monat, Tag und Jahr dar."
 #: components/textfield.inc:131
 #: components/time.inc:250
 msgid "Left Blank"
-msgstr "Linker Freiraum"
+msgstr "Leer gelassen"
 
 #: components/date.inc:250
 #: components/email.inc:136
@@ -788,7 +788,7 @@ msgstr "Linker Freiraum"
 #: components/textfield.inc:132
 #: components/time.inc:251
 msgid "User entered value"
-msgstr "Benutzer eingetragener Wert"
+msgstr "Benutzer hat Wert eingetragen"
 
 #: components/email.inc:15
 msgid "User email as default"
@@ -796,19 +796,19 @@ msgstr "Benutzer E-Mail ist Standardwert"
 
 #: components/email.inc:18
 msgid "Set the default value of this field to the user email, if he/she is logged in."
-msgstr "Setz den Standardwert dieses Feldes auf die Benutzer E-Mail, wenn er/sie angemeldet ist."
+msgstr "Setze den Standardwert dieses Feldes auf die E-Mail-Adresse des Benutzers, wenn er/sie angemeldet ist."
 
 #: components/email.inc:23
 msgid "CC submission to this email"
-msgstr "Eingabenkopie an die E-Mail"
+msgstr "CC-Kopie an diese E-Mail-Adresse"
 
 #: components/email.inc:26
 msgid "Check this option if the email specified in this component should get a CC submission."
-msgstr "Überprüfung dieser Option, wenn die E-Mail als Bestandteil der Eingabenkopie spezifiziert wird."
+msgstr "Diese Option auswählen, wenn an die Email-Adresse eine Kopie geschickt werden soll."
 
 #: components/email.inc:27
 msgid "Note that this opens the risk that the form can be used to send emails to any address and might be missused as a spam gateway."
-msgstr "Hinweis: Wenn dieses Formular diese Feld benutzt, ist die Gefahr gegeben, das hiermit eine E-Mail an jede Adresse möglich ist. Dies wiedrum kann als Spam-Gateway genutzt werden."
+msgstr "Hinweis: Hiermit wird die Möglichkeit gegeben, dass das Formular E-mails an jede beliebige Adresse schicken kann. D.h. das Formular könnte als Spam-Verteiler missbraucht werden."
 
 #: components/email.inc:31
 #: components/textarea.inc:24
@@ -823,7 +823,7 @@ msgid "Width of the textfield."
 msgstr "Breite des Textfeldes."
 
 #: components/email.inc:80
-msgid "'%value' is not a valid email address"
+msgid "%value is not a valid email address."
 msgstr "'%value' ist keine gültige Email-Adresse"
 
 #: components/email.inc:105
@@ -835,7 +835,7 @@ msgstr "Ein Textfeld, welches automatisch mit der E-Mailadresse gefüllt wird, w
 #: components/textarea.inc:132
 #: components/textfield.inc:133
 msgid "Average submission length in words (ex blanks)"
-msgstr "Durchschnittliche Eingabelänge in Wörtern (ohne Leerzeichen)"
+msgstr "Durchschnittliche Textlänge in Wörtern (ohne Leerzeichen)"
 
 #: components/fieldset.inc:15
 msgid "Collapsible"
@@ -843,19 +843,19 @@ msgstr "Zusammenklappbar"
 
 #: components/fieldset.inc:17
 msgid "If this fieldset is collapsible, the user may open or close the fieldset."
-msgstr "Wenn die Eingabegruppe klappbar ist, kann der Benutzer diese Öffen oder Schließen."
+msgstr "Wenn die Feld-Gruppe zusammenklappbar ist, kann der Benutzer diese öffnen oder schließen."
 
 #: components/fieldset.inc:22
 msgid "Collapsed by Default"
-msgstr "Zusammengeklappt ist der Standardwert"
+msgstr "Standardmäßig zusammengeklappt"
 
 #: components/fieldset.inc:24
 msgid "Collapsible fieldsets are \"open\" by default. Select this option to default the fieldset to \"closed.\""
-msgstr "Die Eingabengruppe ist standardmäßig \"Offen\". Ist diese Option aktiviert, so ist die Gruppe standardmäßig \"Geschlossen\"."
+msgstr "Feld-Gruppen sind standardmäßig geöffnet. Diese Option zeigt die Feld-Gruppe im Ausgangszustand geschlossen an."
 
 #: components/fieldset.inc:74
 msgid "Fieldsets allow you to organize complex webforms into groups of fields."
-msgstr "Gruppierung erlaubt es ein komplexes Formular mehrer Eingabefelder in Gruppen zu organisieren."
+msgstr "Feld-Gruppen können in komplexen Formularen die Einzelfelder in Gruppen organisieren."
 
 #: components/file.inc:19
 msgid "Select the types of uploads you would like to allow."
@@ -903,7 +903,7 @@ msgstr "Hochladeverzeichnis"
 
 #: components/file.inc:73
 msgid "Webform uploads are always saved in the site files directory. You may optionally specify a subfolder to store your files."
-msgstr "Webform speichert alle hochgeladenen Dateien in ein Webseiten spezifisches Verzeichnis. Es ist aber möglich, ein Unterverzeichnis anzugeben, in welches diese Dateien gespeichert werden sollen.  "
+msgstr "Das Webformular-Modul speichert alle hochgeladenen Dateien im files-Verzeichnis der Webseite. Optional kann ein Unterverzeichnis angegeben werden."
 
 #: components/file.inc:158
 msgid "Category"
@@ -914,8 +914,8 @@ msgid "Types"
 msgstr "Typen"
 
 #: components/file.inc:202
-msgid "%fieldname field is required."
-msgstr "Die Eingabe von %fieldname wird benötigt."
+msgid "%field field is required."
+msgstr "%field ist erforderlich."
 
 #: components/file.inc:236
 msgid "Files with the '%ext' extension are not allowed, please upload a file with a %exts extension."
@@ -939,15 +939,15 @@ msgstr "Vom Benutzer hochgeladene Datei"
 
 #: components/file.inc:332
 msgid "Average uploaded file size"
-msgstr "Durchschnittliche Größe der Dateien, die hochgeladen wurde"
+msgstr "Durchschnittliche Größe der Dateien, die hochgeladen wurden"
 
 #: components/hidden.inc:69
 msgid "Create a field which is not visible to the user, but is recorded with the submission."
-msgstr "Erzeuge eine Eingabe, welche für den Benutzer nicht sichtbar ist, aber sie wird mitprotokoliert. "
+msgstr "Erzeugt ein für den Benutzer nicht sichtbares Feld. Trotzdem wird es beim Absenden mit geschickt."
 
 #: components/hidden.inc:99
 msgid "Empty"
-msgstr "Lerr"
+msgstr "Leer"
 
 #: components/hidden.inc:100
 msgid "Non-empty"
@@ -959,11 +959,11 @@ msgstr "Markup erlaubt es, eine spezielle HTML oder PHP Logik in das Formular ei
 
 #: components/markup.inc:74
 msgid "Presents a markup area of text. Does not render a field."
-msgstr "Stellt eine Hervorhebung des Textes dar. Diese tut sich nicht auf die Eingabe übertragen."
+msgstr "Zeigt eine HTML-Version des Textes. Zeigt kein Feld an."
 
 #: components/pagebreak.inc:38
 msgid "Break up a multi-page form."
-msgstr "Umbruch eines Mehrseitenformulars."
+msgstr "Aufspalten eines Mehrseitenformulars."
 
 #: components/select.inc:15
 msgid "Options"
@@ -971,7 +971,7 @@ msgstr "Optionen"
 
 #: components/select.inc:17
 msgid "A list of selectable options. One option per line. Key-value pairs may be entered seperated by pipes. i.e. safe_key|Some readable option"
-msgstr "Eine Liste von auswählbaren Optionen. Eine Option pro Zeile."
+msgstr "Eine Liste von auswählbaren Optionen. Eine Option pro Zeile. Schlüssel-Wert-Paare können mittels dem Pipe-Zeichen eingegeben werden. Z.B. sicherer_schluessel|Lesbarer Wert"
 
 #: components/select.inc:27
 msgid "The default value of the field. For multiple selects use commas to separate multiple defaults."
@@ -995,7 +995,7 @@ msgstr "Aktiviere diese Option, wenn die ausgewählten Komponenten in Form einer
 
 #: components/select.inc:55
 msgid "The options for this select contain illegal characters (quotes or spaces). Specify your options as <em>safe_value_no_spaces</em>|<em>The Real Value</em>."
-msgstr "Diese Option enthält unzulässige Zeichen (Anführungsstriche oder Leerzeichen). Spezifizieren Sie Ihre Option als <em>safe_value_no_spaces</em>|<em>realen Wert</em>."
+msgstr "Diese Option enthält unzulässige Zeichen (Anführungsstriche oder Leerzeichen). Spezifizieren Sie Ihre Option in der Form: <em>sicherer_wert_ohne_Leerzeichen</em>|<em>angezeigter Wert</em>."
 
 #: components/select.inc:84
 msgid "select..."
@@ -1016,7 +1016,7 @@ msgstr "Höhe des Textfeldes."
 #: components/textarea.inc:40
 #: components/textfield.inc:42
 msgid "Disabled"
-msgstr "Ausgeschaltet"
+msgstr "Deaktiviert"
 
 #: components/textarea.inc:42
 #: components/textfield.inc:44
@@ -1041,7 +1041,7 @@ msgstr "Basis Texteingabetyp."
 
 #: components/time.inc:17
 msgid "Accepts a time in any <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a>. Strings such as now, +2 hours, and 10:30pm are all valid."
-msgstr "Es wird nur das Datum im <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a> akzeptiert. Folgende Zeichenketten sind gültig: '+2 hours' und 10:30pm'."
+msgstr "Es wird jedes Datum im <a href=\"http://www.gnu.org/software/tar/manual/html_node/tar_109.html\">GNU Date Input Format</a> akzeptiert. Folgende Zeichenketten sind z.B. gültig: '+2 hours' und 10:30pm'."
 
 #: components/time.inc:27
 msgid "Adjust the time according to a specific timezone. Website timezone is defined in the <a href=\"%settings\">Site Settings</a> and is the default."
@@ -1073,9 +1073,9 @@ msgstr "pm"
 
 #: components/time.inc:140
 msgid " field is required"
-msgstr " benötigte Eingabe"
+msgstr " Feld ist erforderlich"
 
 #: components/time.inc:199
 msgid "Presents the user with hour and minute fields. Optional am/pm fields."
-msgstr "Stellt dem benutzer ein Feld für Stunde und Minute zur Verfügung. Optional auch am/pm Eingaben."
+msgstr "Stellt dem Benutzer ein Feld für Stunde und Minute zur Verfügung. Optional auch am/pm Eingaben."
 

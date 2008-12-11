@@ -1,4 +1,4 @@
-# $Id$
+# $Id: es.po,v 1.2.6.4 2008/10/07 21:50:31 quicksketch Exp $
 #
 # Spanish translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
@@ -99,7 +99,7 @@ msgid "Delete"
 msgstr "Borrar"
 
 #: webform.inc:98
-msgid "Submission deleted"
+msgid "Submission deleted."
 msgstr "Respuesta borrada"
 
 #: webform.inc:175
@@ -171,7 +171,7 @@ msgid "You can also use %server[key] to add any of the special PHP <a href=\"htt
 msgstr "También puede usar %server[key] para añadir alguna variable especial PHP <a href=\"http://www.php.net/reserved.variables#reserved.variables.server\">$_SERVER</a> y %get[key] para crear formularios prerellenados desde la <a href=\"http://www.php.net/reserved.variables#reserved.variables.get\">URL</a> (ejemplo: %server[HTTP_USER_AGENT] o %get[id])."
 
 #: webform.module:47
-msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the varible %profile[profile_city]."
+msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the variable %profile[profile_city]."
 msgstr "Si está utilizando el módulo de perfiles, puede acceder a todos los datos del perfil haciendo uso de la sintaxis %profile[nombre_formulario]. Si tiene, por ejemplo, un valor en el perfil denominado perfil_ciudad, añada la variable  %profile[perfil_ciudad]."
 
 #: webform.module:74;282;329 webform.install:507 webform.info:0;0
@@ -344,7 +344,7 @@ msgstr "Mensaje de confirmación o redirección URL"
 
 #: webform.module:518
 msgid "Message to be shown upon successful submission or a path to a redirect page. Redirect pages must start with <em>http://</em> for external sites or <em>internal:</em> for an internal path. i.e. <em>http://www.example.com</em> or <em>internal:node/10</em>"
-msgstr "Mensaje para ser mostrado al recibir una respuesta, o ruta a una página. Las rutas de páginas deben empezar con <em>http://</em> para sitios externos o <em>internal:</em> para una ruta interna. Ejemplo <em>http://www.ejemplo.com</em> o <em>internal:node/10"
+msgstr "Mensaje para ser mostrado al recibir una respuesta, o ruta a una página. Las rutas de páginas deben empezar con <em>http://</em> para sitios externos o <em>internal:</em> para una ruta interna. Ejemplo <em>http://www.ejemplo.com</em> o <em>internal:node/10</em>"
 
 #: webform.module:531
 msgid "Components"
@@ -443,11 +443,11 @@ msgid "every week"
 msgstr "cada semana"
 
 #: webform.module:711
-msgid "Enter PHP code to preform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
+msgid "Enter PHP code to perform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
 msgstr "Introduzca código PHP code para realizar validaciones adicionales. Debe incluir las etiquetas &lt;?php ?&gt;. $form_id y $form_values están disponibles. Si la validación falla, use la función form_set_error para impedir que se acepte el formulario. Use la misma sintaxis que en una función _validate tal como se muestra en la <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
 
 #: webform.module:720
-msgid "Enter PHP code to preform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
+msgid "Enter PHP code to perform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
 msgstr "Introduzca código PHP code para realizar procesamiento adicional después de la validación. Debe incluir las etiquetas &lt;?php ?&gt;. $form_id y $form_values están disponibles. Use la misma sintaxis que en una función _submit tal como se muestra en la <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
 
 #: webform.module:739
@@ -527,7 +527,7 @@ msgid "Parent Fieldset"
 msgstr "Fieldset padre"
 
 #: webform.module:935
-msgid "Optional. You may organize your form by placing this component inside inside another fieldset."
+msgid "Optional. You may organize your form by placing this component inside another fieldset."
 msgstr "Opcional. Puede organizar su formulario emplazando este componente dentro de un fieldset"
 
 #: webform.module:946

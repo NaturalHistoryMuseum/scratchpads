@@ -1,5 +1,22 @@
 <?php
-// $Id$
+// $Id: markup.inc,v 1.3.2.4.2.9 2008/09/06 20:51:36 quicksketch Exp $
+
+/**
+ * Create a default markup component.
+ */
+function _webform_defaults_markup() {
+  return array(
+    'name' => '',
+    'form_key' => NULL,
+    'pid' => 0,
+    'weight' => 0,
+    'value' => '',
+    'extra' => array(
+      'format' => FILTER_FORMAT_DEFAULT,
+    ),
+  );
+}
+
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the
@@ -11,16 +28,16 @@
  */
 function _webform_edit_markup($currfield) {
   $edit_fields = array();
-  $edit_fields['mandatory'] = array(); // Do not render the mandatory checkbox.
+  $edit_fields['advanced']['mandatory'] = array(); // Do not render the mandatory checkbox.
   $edit_fields['value'] = array(
     '#type' => 'textarea',
     '#title' => t("Value"),
-    '#default_value' => $currfield['default'],
-    '#description' => t('Markup allows you to enter custom HTML or PHP logic into your form.') .'<br />'. webform_help('webform/helptext#variables'),
+    '#default_value' => $currfield['value'],
+    '#description' => t('Markup allows you to enter custom HTML or PHP logic into your form.') . theme('webform_token_help'),
     '#weight' => -1,
   );
   // Add the filter form.
-  $edit_fields['extra']['filter'] = filter_form($currfield['extra']['format'], 0, array('field', 'extra', 'format'));
+  $edit_fields['extra']['format'] = filter_form($currfield['extra']['format'], 0, array('extra', 'format'));
 
   // No description for markup.
   $edit_fields['extra']['description'] = array();
@@ -48,7 +65,7 @@ function _webform_render_markup($component) {
   $form_item = array(
     '#type'   => 'markup',
     '#weight' => $component['weight'],
-    '#value'  => _webform_filtervalues(check_markup($component['value'], $component['extra']['format'], $check_filter), FALSE),
+    '#value'  => _webform_filter_values(check_markup($component['value'], $component['extra']['format'], $check_filter), NULL, NULL, FALSE),
     '#prefix' => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix' => '</div>',
   );
@@ -78,8 +95,6 @@ function _webform_submission_display_markup($data, $component, $enabled = false)
 function _webform_help_markup($section) {
   switch ($section) {
     case 'admin/settings/webform#markup_description':
-      $output = t("Presents a markup area of text. Does not render a field.");
-      break;
+      return t("Displays text as HTML in the form; does not render a field.");
   }
-  return $output;
 }

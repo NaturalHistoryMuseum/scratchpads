@@ -1,5 +1,23 @@
 <?php
-// $Id$
+// $Id: fieldset.inc,v 1.3.4.4.2.5 2008/09/06 20:51:36 quicksketch Exp $
+
+/**
+ * Create a default fieldset component.
+ */
+function _webform_defaults_fieldset() {
+  return array(
+    'name' => '',
+    'form_key' => NULL,
+    'pid' => 0,
+    'weight' => 0,
+    'extra' => array(
+      'collapsible' => 0,
+      'collapsed' => 0,
+      'description' => '',
+    ),
+  );
+}
+
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the
@@ -25,7 +43,7 @@ function _webform_edit_fieldset($currfield) {
     '#description' => t('Collapsible fieldsets are "open" by default. Select this option to default the fieldset to "closed."'),
     '#weight' => 3,
   );
-  $edit_fields['mandatory'] = array();
+  $edit_fields['advanced']['mandatory'] = array();
   return $edit_fields;
 }
 
@@ -42,15 +60,11 @@ function _webform_render_fieldset($component) {
     '#type'          => $component['type'],
     '#title'         => htmlspecialchars($component['name'], ENT_QUOTES),
     '#weight'        => $component['weight'],
-    '#description'   => _webform_filtervalues($component['extra']['description']),
+    '#description'   => _webform_filter_descriptions($component['extra']['description']),
     '#collapsible'   => $component['extra']['collapsible'],
     '#collapsed'     => $component['extra']['collapsed'],
     '#attributes'    => array("class" => "webform-component-". $component['type'], "id" => "webform-component-". $component['form_key']),
   );
-  // Change the 'width' option to the correct 'size' option.
-  if ($component['extra']['width'] > 0) {
-    $form_item['#size'] = $component['extra']['width'];
-  }
 
   return $form_item;
 }
@@ -78,8 +92,6 @@ function _webform_submission_display_fieldset($data, $component, $enabled = fals
 function _webform_help_fieldset($section) {
   switch ($section) {
     case 'admin/settings/webform#fieldset_description':
-      $output = t("Fieldsets allow you to organize complex webforms into groups of fields.");
-      break;
+      return t("Fieldsets allow you to organize multiple fields into groups.");
   }
-  return $output;
 }

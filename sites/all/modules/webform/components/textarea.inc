@@ -1,5 +1,28 @@
 <?php
-// $Id$
+// $Id: textarea.inc,v 1.11.2.4.2.7 2008/09/06 20:51:36 quicksketch Exp $
+
+/**
+ * Create a default textarea component.
+ */
+function _webform_defaults_textarea() {
+  return array(
+    'name' => '',
+    'form_key' => NULL,
+    'pid' => 0,
+    'weight' => 0,
+    'value' => '',
+    'mandatory' => 0,
+    'email' => 1,
+    'extra' => array(
+      'cols' => '',
+      'rows' => '',
+      'disabled' => 0,
+      'description' => '',
+      'attributes' => array(),
+    ),
+  );
+}
+
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the
@@ -14,8 +37,8 @@ function _webform_edit_textarea($currfield) {
   $edit_fields['value'] = array(
     '#type' => 'textarea',
     '#title' => t("Default value"),
-    '#default_value' => $currfield['default'],
-    '#description' => t('The default value of the field.') .'<br />'. webform_help('webform/helptext#variables'),
+    '#default_value' => $currfield['value'],
+    '#description' => t('The default value of the field.') . theme('webform_token_help'),
     '#cols' => 60,
     '#rows' => 5,
     '#weight' => 0,
@@ -24,7 +47,7 @@ function _webform_edit_textarea($currfield) {
     '#type' => 'textfield',
     '#title' => t("Width"),
     '#default_value' => $currfield['extra']['cols'],
-    '#description' => t('Width of the textfield.'),
+    '#description' => t('Width of the textfield.') .' '. t('Leaving blank will use the default size.'),
     '#size' => 5,
     '#maxlength' => 10,
   );
@@ -32,17 +55,17 @@ function _webform_edit_textarea($currfield) {
     '#type' => 'textfield',
     '#title' => t("Height"),
     '#default_value' => $currfield['extra']['rows'],
-    '#description' => t('Height of the textfield.'),
+    '#description' => t('Height of the textfield.') .' '. t('Leaving blank will use the default size.'),
     '#size' => 5,
     '#maxlength' => 10,
   );
-  $edit_fields['extra']['attributes']['disabled'] = array(
+  $edit_fields['extra']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t("Disabled"),
-    '#return_value' => 'disabled',
+    '#return_value' => 1,
     '#description' => t('Make this field non-editable. Useful for setting an unchangeable default value.'),
     '#weight' => 3,
-    '#default_value' => $currfield['extra']['attributes']['disabled'],
+    '#default_value' => $currfield['extra']['disabled'],
   );
   return $edit_fields;
 }
@@ -58,23 +81,18 @@ function _webform_edit_textarea($currfield) {
 function _webform_render_textarea($component) {
   $form_item = array(
     '#type'          => "textarea",
-    '#title'         => htmlspecialchars($component['name'], ENT_QUOTES),
-    '#default_value' => _webform_filtervalues($component['value']),
+    '#title'         => $component['name'],
+    '#default_value' => _webform_filter_values($component['value']),
     '#required'      => $component['mandatory'],
     '#weight'        => $component['weight'],
-    '#description'   => _webform_filtervalues($component['extra']['description']),
-    '#rows'          => $component['extra']['rows'],
-    '#cols'          => $component['extra']['cols'],
+    '#description'   => _webform_filter_descriptions($component['extra']['description']),
+    '#rows'          => $component['extra']['rows'] > 0 ? $component['extra']['rows'] : NULL,
+    '#cols'          => $component['extra']['cols'] > 0 ? $component['extra']['cols'] : NULL,
     '#attributes'    => $component['extra']['attributes'],
+    '#disabled'      => $component['extra']['disabled'],
     '#prefix'        => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix'        => '</div>',
   );
-  if ($component['extra']['rows'] > 0) {
-    $form_item['#rows'] = $component['extra']['rows'];
-  }
-  if ($component['extra']['cols'] > 0) {
-    $form_item['#cols'] = $component['extra']['cols'];
-  }
 
   return $form_item;
 }
@@ -104,10 +122,8 @@ function _webform_submission_display_textarea($data, $component, $enabled = fals
 function _webform_help_textarea($section) {
   switch ($section) {
     case 'admin/settings/webform#textarea_description':
-      $output = t("A large text area that allows for multiple lines of input.");
-      break;
+      return t("A large text area that allows for multiple lines of input.");
   }
-  return $output;
 }
 
 /**

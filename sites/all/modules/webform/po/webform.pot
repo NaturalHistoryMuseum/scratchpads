@@ -1,31 +1,32 @@
-# $Id$
+# $Id: webform.pot,v 1.1.2.1.2.10 2008/10/07 21:50:31 quicksketch Exp $
 #
 # LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  webform.inc,v 1.48.2.21 2008/02/01 03:04:09 quicksketch
-#  webform.module,v 1.113.2.75 2008/02/22 18:56:04 quicksketch
-#  webform_report.inc,v 1.15.2.11 2008/01/26 00:54:06 quicksketch
-#  webform.install,v 1.14.2.17 2008/02/28 01:50:22 quicksketch
+#  webform_components.inc,v 1.1.2.23 2008/05/27 17:02:50 quicksketch
+#  webform.module,v 1.113.2.70.2.44 2008/05/28 05:39:58 quicksketch
+#  markup.inc,v 1.3.2.4.2.6 2008/04/02 04:05:16 quicksketch
+#  webform_report.inc,v 1.15.2.11.2.7 2008/05/08 20:10:58 quicksketch
+#  webform_submissions.inc,v 1.1.2.13 2008/05/27 20:43:41 quicksketch
 #  webform.info: n/a
-#  markup.inc,v 1.3.2.4 2008/01/18 06:34:35 quicksketch
-#  date.inc,v 1.13.2.15 2008/01/25 05:56:08 quicksketch
-#  hidden.inc,v 1.11.2.3 2008/01/18 06:34:35 quicksketch
-#  select.inc,v 1.18.2.24 2008/02/10 06:26:40 quicksketch
-#  textarea.inc,v 1.11.2.4 2008/01/18 06:34:35 quicksketch
-#  textfield.inc,v 1.11.2.7 2008/01/22 03:07:58 quicksketch
-#  time.inc,v 1.14.2.6 2008/01/23 17:34:33 quicksketch
-#  email.inc,v 1.16.2.7 2008/01/23 04:50:40 quicksketch
-#  file.inc,v 1.2.2.21 2008/03/22 04:12:27 quicksketch
-#  fieldset.inc,v 1.3.4.4 2008/01/18 06:34:35 quicksketch
-#  grid.inc,v 1.1.2.4 2008/03/21 20:35:47 quicksketch
-#  pagebreak.inc,v 1.1.2.3 2008/01/18 18:05:33 quicksketch
+#  webform.install,v 1.14.2.16.2.19 2008/05/28 02:55:08 quicksketch
+#  date.inc,v 1.13.2.15.2.3 2008/04/15 09:20:37 quicksketch
+#  email.inc,v 1.16.2.7.2.6 2008/04/02 04:05:16 quicksketch
+#  hidden.inc,v 1.11.2.3.2.8 2008/05/08 19:38:01 quicksketch
+#  select.inc,v 1.18.2.19.2.12 2008/04/02 04:05:16 quicksketch
+#  textarea.inc,v 1.11.2.4.2.4 2008/05/27 16:31:15 quicksketch
+#  textfield.inc,v 1.11.2.7.2.3 2008/04/02 04:05:16 quicksketch
+#  time.inc,v 1.14.2.6.2.3 2008/04/02 04:05:16 quicksketch
+#  file.inc,v 1.2.2.19.2.7 2008/05/27 16:11:46 quicksketch
+#  fieldset.inc,v 1.3.4.4.2.2 2008/04/02 04:05:16 quicksketch
+#  grid.inc,v 1.1.2.3.2.3 2008/04/02 04:05:16 quicksketch
+#  pagebreak.inc,v 1.1.2.3.2.3 2008/02/10 06:37:51 quicksketch
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"POT-Creation-Date: 2008-03-29 23:11+0200\n"
+"POT-Creation-Date: 2008-05-28 19:43+0300\n"
 "PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
 "Last-Translator: NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
@@ -34,124 +35,256 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: webform.inc:17 webform.module:576
-msgid "Title"
+#: webform_components.inc:39;127;341
+msgid "Weight"
 msgstr ""
 
-#: webform.inc:18 webform_report.inc:61 webform.module:163
-msgid "View"
+#: webform_components.inc:44;127;308
+msgid "Mandatory"
 msgstr ""
 
-#: webform.inc:19 webform_report.inc:36
+#: webform_components.inc:50;127
+msgid "E-mail"
+msgstr ""
+
+#: webform_components.inc:92
+msgid "Add"
+msgstr ""
+
+#: webform_components.inc:98;366 webform.module:1246;1265;1282;1387
+msgid "Submit"
+msgstr ""
+
+#: webform_components.inc:104;241
+msgid "Publish"
+msgstr ""
+
+#: webform_components.inc:127 webform.module:704;1113
+msgid "Name"
+msgstr ""
+
+#: webform_components.inc:127 webform.module:705
+msgid "Type"
+msgstr ""
+
+#: webform_components.inc:127 components/markup.inc:17
+msgid "Value"
+msgstr ""
+
+#: webform_components.inc:127 webform_report.inc:44 webform.module:1909
 msgid "Operations"
 msgstr ""
 
-#: webform.inc:27 webform.module:116
-msgid "Submissions"
+#: webform_components.inc:132
+msgid "New component name"
 msgstr ""
 
-#: webform.inc:28 webform.module:124
-msgid "Analysis"
+#: webform_components.inc:182
+msgid "Edit this component"
 msgstr ""
 
-#: webform.inc:29 webform.module:132
-msgid "Table"
-msgstr ""
-
-#: webform.inc:30 webform.module:140
-msgid "Download"
-msgstr ""
-
-#: webform.inc:35 webform_report.inc:64;67 webform.module:170
+#: webform_components.inc:188 webform_report.inc:75 webform.module:227;1920
 msgid "Edit"
 msgstr ""
 
-#: webform.inc:36;58 webform.module:148
-msgid "Clear"
+#: webform_components.inc:189
+msgid "Clone"
 msgstr ""
 
-#: webform.inc:52
-msgid "Clear Form Submissions"
-msgstr ""
-
-#: webform.inc:56
-msgid "Are you sure you want to delete all submissions for this form?"
-msgstr ""
-
-#: webform.inc:58;90
-msgid "Cancel"
-msgstr ""
-
-#: webform.inc:68
-msgid "Webform %title entries cleared."
-msgstr ""
-
-#: webform.inc:83
-msgid "Delete Form Submission"
-msgstr ""
-
-#: webform.inc:88
-msgid "Are you sure you want to delete this submission?"
-msgstr ""
-
-#: webform.inc:90 webform_report.inc:70
+#: webform_components.inc:190;460 webform_report.inc:76 webform_submissions.inc:111 webform.module:236
 msgid "Delete"
 msgstr ""
 
-#: webform.inc:100
-msgid "Submission deleted"
+#: webform_components.inc:212
+msgid "No Components, add a component below."
 msgstr ""
 
-#: webform.inc:196
-msgid "Submitted on"
+#: webform_components.inc:244
+msgid "Your webform has been published."
 msgstr ""
 
-#: webform.inc:200
-msgid "Submitted by user"
+#: webform_components.inc:254
+msgid "The component positions and mandatory values have been updated."
 msgstr ""
 
-#: webform.inc:203
-msgid "Submitted by anonymous user"
+#: webform_components.inc:259
+msgid "Edit component: @name (@type)"
 msgstr ""
 
-#: webform.inc:207
-msgid "Submitted values are"
+#: webform_components.inc:285
+msgid "Label"
 msgstr ""
 
-#: webform.inc:211
-msgid "The results of this submission may be viewed at:\n"
+#: webform_components.inc:286
+msgid "This is used as a descriptive label when displaying this form element."
 msgstr ""
 
-#: webform.inc:70 webform.module:100;257;1436;1445;1583;1607;2003;2026;0 webform.install:470
-msgid "webform"
+#: webform_components.inc:294
+msgid "Field Key"
 msgstr ""
 
-#: webform_report.inc:32;101
+#: webform_components.inc:295
+msgid "Enter a machine readable key for this form element. May contain only lowercase alphanumeric characters and underscores. This key will be used as the name attribute of the form element."
+msgstr ""
+
+#: webform_components.inc:302 webform.module:479;1113
+msgid "Description"
+msgstr ""
+
+#: webform_components.inc:303
+msgid "A short description of the field used as help for the user when he/she uses the form."
+msgstr ""
+
+#: webform_components.inc:310
+msgid "Check this option if the user must enter a value."
+msgstr ""
+
+#: webform_components.inc:315
+msgid "Include in e-mails"
+msgstr ""
+
+#: webform_components.inc:317
+msgid "If checked, submitted values from this component will be included in e-mails."
+msgstr ""
+
+#: webform_components.inc:322
+msgid "Root"
+msgstr ""
+
+#: webform_components.inc:330
+msgid "Parent Fieldset"
+msgstr ""
+
+#: webform_components.inc:332
+msgid "Optional. You may organize your form by placing this component inside another fieldset."
+msgstr ""
+
+#: webform_components.inc:343
+msgid "Optional. In the menu, the heavier items will sink and the lighter items will be positioned nearer the top."
+msgstr ""
+
+#: webform_components.inc:355
+msgid "The webform component of type @type does not have an edit function defined."
+msgstr ""
+
+#: webform_components.inc:380
+msgid "The field key %field_key is invalid. Please include only lowercase alphanumeric characters and underscores."
+msgstr ""
+
+#: webform_components.inc:385
+msgid "The field key %field_key is already in use by the field labeled %existing_field. Please use a unique key."
+msgstr ""
+
+#: webform_components.inc:419
+msgid "Component %name cloned."
+msgstr ""
+
+#: webform_components.inc:423
+msgid "Component %name updated."
+msgstr ""
+
+#: webform_components.inc:427
+msgid "New component %name added."
+msgstr ""
+
+#: webform_components.inc:452
+msgid "Delete the %name fieldset?"
+msgstr ""
+
+#: webform_components.inc:453
+msgid "This will immediately delete the %name fieldset and all children elements within %name from the %webform webform. This cannot be undone."
+msgstr ""
+
+#: webform_components.inc:456
+msgid "Delete the %name component?"
+msgstr ""
+
+#: webform_components.inc:457
+msgid "This will immediately delete the %name component from the %webform webform. This cannot be undone."
+msgstr ""
+
+#: webform_components.inc:464
+msgid "Component %name deleted."
+msgstr ""
+
+#: webform_report.inc:20
+msgid "Submissions for %user"
+msgstr ""
+
+#: webform_report.inc:37;111
 msgid "#"
 msgstr ""
 
-#: webform_report.inc:33;102
+#: webform_report.inc:38;112
 msgid "Submitted"
 msgstr ""
 
-#: webform_report.inc:34;103
+#: webform_report.inc:41;113
 msgid "User"
 msgstr ""
 
-#: webform_report.inc:35;104
+#: webform_report.inc:42;114
 msgid "IP Address"
 msgstr ""
 
-#: webform_report.inc:256
+#: webform_report.inc:73 webform.module:218;1908
+msgid "View"
+msgstr ""
+
+#: webform_report.inc:85
+msgid "There are no submissions for this form. <a href=\"!url\">View this form</a>."
+msgstr ""
+
+#: webform_report.inc:90 webform.module:1674
+msgid "Go back to the form"
+msgstr ""
+
+#: webform_report.inc:185
+msgid "Clear Form Submissions"
+msgstr ""
+
+#: webform_report.inc:189
+msgid "Are you sure you want to delete all submissions for this form?"
+msgstr ""
+
+#: webform_report.inc:191 webform.module:188;1921
+msgid "Clear"
+msgstr ""
+
+#: webform_report.inc:191 webform_submissions.inc:111
+msgid "Cancel"
+msgstr ""
+
+#: webform_report.inc:199
+msgid "Webform %title entries cleared."
+msgstr ""
+
+#: webform_report.inc:296
 msgid "Q"
 msgstr ""
 
-#: webform_report.inc:257
+#: webform_report.inc:297
 msgid "responses"
 msgstr ""
 
+#: webform_report.inc:201 webform.module:350;1539;1578;0
+msgid "webform"
+msgstr ""
+
+#: webform_submissions.inc:104
+msgid "Delete Form Submission"
+msgstr ""
+
+#: webform_submissions.inc:109
+msgid "Are you sure you want to delete this submission?"
+msgstr ""
+
+#: webform_submissions.inc:116
+msgid "Submission deleted."
+msgstr ""
+
 #: webform.module:22
-msgid "Webforms are forms and questionnaires. To add one select <strong>create content -&gt; webform</strong>. Below you can set different security and debug options."
+msgid "Webforms are forms and questionnaires. To add one, select <a href=\"!url\">Create content -&gt; Webform</a>."
 msgstr ""
 
 #: webform.module:25
@@ -171,486 +304,470 @@ msgid "You can also use %server[key] to add any of the special PHP <a href=\"htt
 msgstr ""
 
 #: webform.module:47
-msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the varible %profile[profile_city]."
+msgid "If you are using the profiles module, you can also access all profile data using the syntax %profile[form_name]. If you for example have a profile value named profile_city, add the variable %profile[profile_city]."
 msgstr ""
 
-#: webform.module:75
+#: webform.module:65
+msgid "This page displays all the components currently configured for this webform node. You may add any number of components to the form, even multiple of the same type. To add a new component, fill in a name and select a type from the fields at the bottom of the table. Submit the form to create the new component or update any changed form values."
+msgstr ""
+
+#: webform.module:66
+msgid "Click on any existing component's name to edit its settings."
+msgstr ""
+
+#: webform.module:83
 msgid "Webforms"
 msgstr ""
 
-#: webform.module:78
+#: webform.module:86
 msgid "View and edit all the available webforms on your site."
 msgstr ""
 
-#: webform.module:85;156;194 webform.install:505 webform.info:0
+#: webform.module:93;263 webform.info:0
 msgid "Webform"
 msgstr ""
 
-#: webform.module:89
+#: webform.module:97
 msgid "Global configuration of webform functionality."
 msgstr ""
 
-#: webform.module:108;1607
+#: webform.module:119
+msgid "Webform confirmation"
+msgstr ""
+
+#: webform.module:126
+msgid "Configuration"
+msgstr ""
+
+#: webform.module:134
+msgid "Form components"
+msgstr ""
+
+#: webform.module:143;1578
 msgid "Results"
 msgstr ""
 
-#: webform.module:196
+#: webform.module:152;197;1916
+msgid "Submissions"
+msgstr ""
+
+#: webform.module:161;1917
+msgid "Analysis"
+msgstr ""
+
+#: webform.module:170;1918
+msgid "Table"
+msgstr ""
+
+#: webform.module:179;1919
+msgid "Download"
+msgstr ""
+
+#: webform.module:210
+msgid "Webform submission"
+msgstr ""
+
+#: webform.module:265
 msgid "Create a new form or questionnaire accessible to users. Submission results and statistics are recorded and accessible to privileged users."
 msgstr ""
 
-#: webform.module:298
+#: webform.module:425
 msgid "Go to form"
 msgstr ""
 
-#: webform.module:300
+#: webform.module:427
 msgid "View this form."
 msgstr ""
 
-#: webform.module:313
-msgid "Available Components"
-msgstr ""
-
-#: webform.module:316
-msgid "Below is a list of supported field types available for webform. You may disable any of these components by unchecking its corresponding box. Only checked components will be available in existing or new webforms."
-msgstr ""
-
-#: webform.module:333
-msgid "Default E-mail Values"
-msgstr ""
-
-#: webform.module:340
-msgid "From e-mail address"
-msgstr ""
-
-#: webform.module:342
-msgid "Default sender address. This may be the E-mail address of the maintainer of your forms. This is also used for Reply-To, Return-Path and Errors-To."
-msgstr ""
-
-#: webform.module:347
-msgid "From Name"
-msgstr ""
-
-#: webform.module:349
-msgid "Default sender name which is displayed together with the E-mail address."
-msgstr ""
-
-#: webform.module:354
-msgid "Default Subject"
-msgstr ""
-
-#: webform.module:355;696;1534
-msgid "Form submission from: "
-msgstr ""
-
-#: webform.module:356
-msgid "Default Subject. If not other stated in the form configuration this is appended to your form title. If you have e.g. defined \"Your \" (note the space) as a default subject and a form titled with \"Order\" the e-mail subject will be \"Your Order\"."
-msgstr ""
-
-#: webform.module:361
-msgid "Advanced Options"
-msgstr ""
-
-#: webform.module:369
-msgid "Allow Cookies for Tracking Submissions"
-msgstr ""
-
-#: webform.module:371
-msgid "<a href=\"http://www.wikipedia.org/wiki/HTTP_cookie\">Cookies</a> can be used to help prevent the same user from repeatedly submitting a webform. This feature is not needed for limiting submissions per user, though it can increase accuracy in some situations. Besides cookies, webform also uses IP addresses and site usernames to prevent repeated submissions."
-msgstr ""
-
-#: webform.module:376
-msgid "Webforms Debug"
-msgstr ""
-
-#: webform.module:378
-msgid "OFF"
-msgstr ""
-
-#: webform.module:378
-msgid "Log submissions"
-msgstr ""
-
-#: webform.module:378
-msgid "Full debug"
-msgstr ""
-
-#: webform.module:379
-msgid "Set this option to \"Log submissions\" to log all submissions in the watchdog. Set it to \"Full debug\" to print debug info on submission. You probably want to leave this option on \"OFF\"."
-msgstr ""
-
-#: webform.module:395;908
-msgid "Name"
-msgstr ""
-
-#: webform.module:395;584;1014
-msgid "Description"
-msgstr ""
-
-#: webform.module:395
-msgid "Enabled"
-msgstr ""
-
-#: webform.module:419;520;650
-msgid "Delete Selected"
-msgstr ""
-
-#: webform.module:438;493;1072
-msgid "Done"
-msgstr ""
-
-#: webform.module:456;512;655;926
-msgid "Edit Selected"
-msgstr ""
-
-#: webform.module:463
-msgid "The form component has been changed. Remember to press Submit on the bottom of this form to save your changes."
-msgstr ""
-
-#: webform.module:465;533;1166;1214 components/markup.inc:41
-msgid "Preview"
-msgstr ""
-
-#: webform.module:503;672
-msgid "Add"
-msgstr ""
-
-#: webform.module:525
-msgid "Field deleted, form must be submitted to save changes"
-msgstr ""
-
-#: webform.module:528
-msgid "A component must be selected to delete"
-msgstr ""
-
-#: webform.module:532;1304;1323;1340;1468
-msgid "Submit"
-msgstr ""
-
-#: webform.module:537
-msgid "Submission limit must be a number"
-msgstr ""
-
-#: webform.module:568
+#: webform.module:461
 msgid "Webform Settings"
 msgstr ""
 
-#: webform.module:585
+#: webform.module:470;1907
+msgid "Title"
+msgstr ""
+
+#: webform.module:480
 msgid "Text to be shown as teaser and before the form."
 msgstr ""
 
-#: webform.module:594
+#: webform.module:489
 msgid "Confirmation message or redirect URL"
 msgstr ""
 
-#: webform.module:595
+#: webform.module:490
 msgid "Message to be shown upon successful submission or a path to a redirect page. Redirect pages must start with <em>http://</em> for external sites or <em>internal:</em> for an internal path. i.e. <em>http://www.example.com</em> or <em>internal:node/10</em>"
 msgstr ""
 
-#: webform.module:608
-msgid "Components"
+#: webform.module:502
+msgid "Webform access control"
 msgstr ""
 
-#: webform.module:622;912;1047
-msgid "Weight"
+#: webform.module:507
+msgid "These permissions affect which roles can submit this webform. It does not prevent access to the webform page. If needing to prevent access to the webform page entirely, use a content access module such as <a href=\"http://drupal.org/project/taxonomy_access\">Taxonomy Access</a> or <a href=\"http://drupal.org/project/node_privacy_byrole\">Node Privacy by Role</a>."
 msgstr ""
 
-#: webform.module:628;911;1021
-msgid "Mandatory"
+#: webform.module:514
+msgid "Roles that can submit this webform"
 msgstr ""
 
-#: webform.module:664
-msgid "Add a new component"
+#: webform.module:515
+msgid "Uncheck all roles to prevent new submissions. The %authenticated role applies to any user signed into the site, regardless of other assigned roles."
 msgstr ""
 
-#: webform.module:667
-msgid "Each component adds a new field to the form. Any number components (even of the same type) may be added to the form. Select a component type to add above."
+#: webform.module:522
+msgid "Webform mail settings"
 msgstr ""
 
-#: webform.module:680
-msgid "Mail Settings"
-msgstr ""
-
-#: webform.module:688
+#: webform.module:532
 msgid "E-mail to address"
 msgstr ""
 
-#: webform.module:690
-msgid "Form submissions will be e-mailed to this address. Leave blank for none."
+#: webform.module:534
+msgid "Form submissions will be e-mailed to this address. Leave blank for none. Multiple e-mail addresses may be separated by commas."
 msgstr ""
 
-#: webform.module:694;695;696
-msgid "Default"
+#: webform.module:542
+msgid "Conditional e-mail recipients"
 msgstr ""
 
-#: webform.module:694;695;696
-msgid "None"
+#: webform.module:543
+msgid "The settings below allow you to send e-mails to multiple recipients based off the value of a component."
 msgstr ""
 
-#: webform.module:696
-msgid "$title"
-msgstr ""
-
-#: webform.module:713
+#: webform.module:567
 msgid "E-mail from name"
 msgstr ""
 
-#: webform.module:716
-msgid "After adding components to this form, any textfield or hidden form element may be selected as the sender's name for e-mails."
+#: webform.module:568
+msgid "After adding components to this form any email, select, or hidden form element may be selected as the sender's name for e-mails."
 msgstr ""
 
-#: webform.module:722
+#: webform.module:572
 msgid "E-mail from address"
 msgstr ""
 
-#: webform.module:725
-msgid "After adding components to this form, any e-mail or hidden form element may be selected as the sender's address for e-mails."
+#: webform.module:573
+msgid "After adding components to this form any textfield, select, or hidden form element may be selected as the sender's e-mail address."
 msgstr ""
 
-#: webform.module:731
+#: webform.module:577
 msgid "E-mail subject"
 msgstr ""
 
-#: webform.module:734
-msgid "After adding components to this form, any textfield or hidden form element may be selected as the subject line for e-mails."
+#: webform.module:578
+msgid "After adding components to this form any textfield, select, or hidden form element may be selected as the subject for e-mails."
 msgstr ""
 
-#: webform.module:743
-msgid "Advanced Settings"
+#: webform.module:613
+msgid "Webform advanced settings"
 msgstr ""
 
-#: webform.module:750
-msgid "Limit the number of submission a user may send within a specified time period."
+#: webform.module:621
+msgid "Show complete form in teaser"
 msgstr ""
 
-#: webform.module:758
+#: webform.module:623
+msgid "Display the entire form in the teaser display of this node."
+msgstr ""
+
+#: webform.module:627
+msgid "Limit the number of submissions a user may send within a specified time period"
+msgstr ""
+
+#: webform.module:632
 msgid "Unlimited"
 msgstr ""
 
-#: webform.module:767
-msgid "Limit to "
-msgstr ""
-
-#: webform.module:775
-msgid "submission(s)"
-msgstr ""
-
-#: webform.module:786
+#: webform.module:646
 msgid "ever"
 msgstr ""
 
-#: webform.module:787
+#: webform.module:647
 msgid "every hour"
 msgstr ""
 
-#: webform.module:788
+#: webform.module:648
 msgid "every day"
 msgstr ""
 
-#: webform.module:789
+#: webform.module:649
 msgid "every week"
 msgstr ""
 
-#: webform.module:802
-msgid "Enter PHP code to preform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
+#: webform.module:656
+msgid "Submit button text"
 msgstr ""
 
-#: webform.module:811
-msgid "Enter PHP code to preform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html\">Forms API</a>."
+#: webform.module:658
+msgid "By default the submit button on this form will have the label <em>Submit</em>. Enter a new title here to override the default."
 msgstr ""
 
-#: webform.module:830
-msgid "Redirect POST Values"
+#: webform.module:665
+msgid "Enter PHP code to perform additional validation for this form. Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables. If validation fails, use the form_set_error function to prevent the form from being submitted. Use the same syntax as a _validate function used in the <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a>."
 msgstr ""
 
-#: webform.module:831
-msgid "Forward the contents of the POST array to the redirect URL. Use this option for custom processing of the form information. No processing will be done by webform. The confirmation option above MUST be a full redirect URL for this option to have an effect."
+#: webform.module:674
+msgid "Enter PHP code to perform additional processing for this form (after the validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are available variables, use the same syntax as a _submit function used in the <a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html\">Forms API</a>."
 msgstr ""
 
-#: webform.module:904
-msgid "No Components, add a component below."
+#: webform.module:703
+msgid "To"
 msgstr ""
 
-#: webform.module:909
-msgid "Type"
+#: webform.module:718
+msgid "No components yet in this webform."
 msgstr ""
 
-#: webform.module:910 components/markup.inc:17
-msgid "Value"
+#: webform.module:733
+msgid "Custom"
 msgstr ""
 
-#: webform.module:931
-msgid "Component not found"
+#: webform.module:733
+msgid "Component"
 msgstr ""
 
-#: webform.module:953
-msgid "Unknown component type %component"
+#: webform.module:744
+msgid "Default"
 msgstr ""
 
-#: webform.module:972
-msgid "Add new %type component"
+#: webform.module:765
+msgid "Limit to !count submission(s) !timespan"
 msgstr ""
 
-#: webform.module:981
-msgid "Field Details"
+#: webform.module:840
+msgid "The new webform %title has been created. Add new fields to your webform with the form below."
 msgstr ""
 
-#: webform.module:998
-msgid "Field Key"
+#: webform.module:843
+msgid "This webform is currently unpublished. After finishing your changes to the webform, use the <em>Publish</em> button below."
+msgstr ""
+
+#: webform.module:867 components/markup.inc:41
+msgid "Preview"
+msgstr ""
+
+#: webform.module:889;1147
+msgid "Submission #@sid"
+msgstr ""
+
+#: webform.module:984
+msgid "Submissions for this form are closed."
+msgstr ""
+
+#: webform.module:988
+msgid "You must <a href=\"!login\">login</a> or <a href=\"!register\">register</a> to view this form."
+msgstr ""
+
+#: webform.module:992
+msgid "You do not have permission to view this form."
 msgstr ""
 
 #: webform.module:999
-msgid "Enter a machine readable key for this form element. May contain only lowercase alphanumeric characters and underscores. This key will be used as the name attribute of the form element."
+msgid "You have submitted this form the maximum number of times (@count)."
 msgstr ""
 
-#: webform.module:1006
-msgid "Label"
+#: webform.module:1002;1013
+msgid "You have already submitted this form."
 msgstr ""
 
-#: webform.module:1007
-msgid "This is used as a descriptive label when displaying this form element."
+#: webform.module:1005
+msgid "You may not submit another entry at this time."
 msgstr ""
 
-#: webform.module:1016
-msgid "A short description of the field used as help for the user when he/she uses the form."
+#: webform.module:1013;1016
+msgid "<a href=\"!url\">View your previous submissions</a>."
 msgstr ""
 
-#: webform.module:1023
-msgid "Check this option if the user must enter a value."
+#: webform.module:1031
+msgid "Available components"
 msgstr ""
 
-#: webform.module:1028
-msgid "Root"
+#: webform.module:1034
+msgid "These are the available field types for your installation of Webform. You may disable any of these components by unchecking its corresponding box. Only checked components will be available in existing or new webforms."
 msgstr ""
 
-#: webform.module:1036
-msgid "Parent Fieldset"
+#: webform.module:1051
+msgid "Default e-mail values"
 msgstr ""
 
-#: webform.module:1038
-msgid "Optional. You may organize your form by placing this component inside inside another fieldset."
+#: webform.module:1058
+msgid "From address"
 msgstr ""
 
-#: webform.module:1049
-msgid "Optional. In the menu, the heavier items will sink and the lighter items will be positioned nearer the top."
+#: webform.module:1060
+msgid "The default sender address for emailed webform results; often the e-mail address of the maintainer of your forms."
 msgstr ""
 
-#: webform.module:1061
-msgid "The webform component of type @type does not have an edit function defined."
+#: webform.module:1065
+msgid "From name"
 msgstr ""
 
-#: webform.module:1105
-msgid "The field key %field_key is invalid. Please include only lowercase alphanumeric characters and underscores."
+#: webform.module:1067
+msgid "The default sender name which is used along with the default from address."
 msgstr ""
 
-#: webform.module:1110
-msgid "The field key %field_key is already in use by the field labeled %existing_field. Please use a unique key."
+#: webform.module:1072
+msgid "Default subject"
 msgstr ""
 
-#: webform.module:1239;1239
+#: webform.module:1073;2012
+msgid "Form submission from: [title]"
+msgstr ""
+
+#: webform.module:1074
+msgid "The default subject line of any e-mailed results."
+msgstr ""
+
+#: webform.module:1079
+msgid "Advanced options"
+msgstr ""
+
+#: webform.module:1087
+msgid "Allow cookies for tracking submissions"
+msgstr ""
+
+#: webform.module:1089
+msgid "<a href=\"http://www.wikipedia.org/wiki/HTTP_cookie\">Cookies</a> can be used to help prevent the same user from repeatedly submitting a webform. This feature is not needed for limiting submissions per user, though it can increase accuracy in some situations. Besides cookies, Webform also uses IP addresses and site usernames to prevent repeated submissions."
+msgstr ""
+
+#: webform.module:1094
+msgid "Webforms debug"
+msgstr ""
+
+#: webform.module:1096
+msgid "Off"
+msgstr ""
+
+#: webform.module:1096
+msgid "Log submissions"
+msgstr ""
+
+#: webform.module:1096
+msgid "Full debug"
+msgstr ""
+
+#: webform.module:1097
+msgid "Set to \"Log submissions\" to log all submissions in the watchdog. Set to \"Full debug\" to print debug info on submission."
+msgstr ""
+
+#: webform.module:1113
+msgid "Enabled"
+msgstr ""
+
+#: webform.module:1171;1171
 msgid "Previous submission"
 msgstr ""
 
-#: webform.module:1242;1242
+#: webform.module:1174;1174
 msgid "Next submission"
 msgstr ""
 
-#: webform.module:1246
+#: webform.module:1178
 msgid "Submission Information"
 msgstr ""
 
-#: webform.module:1255
+#: webform.module:1187
+msgid "Form: !form"
+msgstr ""
+
+#: webform.module:1190
 msgid "Submitted by !name"
 msgstr ""
 
-#: webform.module:1288
+#: webform.module:1230
 msgid "Next Page >"
 msgstr ""
 
-#: webform.module:1289
+#: webform.module:1231
 msgid "< Previous Page"
 msgstr ""
 
-#: webform.module:1408
+#: webform.module:1350
 msgid "The webform component @type is not able to be displayed"
 msgstr ""
 
-#: webform.module:1436
-msgid "The authenticated user <a href=\"%user_url\">%username</a> attempted to submit more entries than allowed on the <a href=\"%webform_url\">%webform_title</a> webform"
+#: webform.module:1539
+msgid "Possible spam attempt from @remote_addr"
 msgstr ""
 
-#: webform.module:1445
-msgid "An anonymous user with IP address %ip attempted to submit more entries than allowed on the <a href=\"%webform_url\">%webform_title</a> webform"
-msgstr ""
-
-#: webform.module:1453
-msgid "You have submitted the maximum number of entries. Check submission guidelines."
-msgstr ""
-
-#: webform.module:1583
-msgid "Possible spam attempt from "
-msgstr ""
-
-#: webform.module:1584
+#: webform.module:1540
 msgid "Illegal information. Data not submitted."
 msgstr ""
 
-#: webform.module:1607
+#: webform.module:1578
 msgid "Submission posted to %title"
 msgstr ""
 
-#: webform.module:1689
-msgid "No node with the id '%nid' could be found"
+#: webform.module:1583
+msgid "Submission updated."
 msgstr ""
 
-#: webform.module:1704
-msgid "Go back to the form"
+#: webform.module:1667
+msgid "Thank you, your submission has been received."
 msgstr ""
 
-#: webform.module:2003;2026
-msgid "Unauthorized webform access attempt by %name."
+#: webform.module:1703
+msgid "Submitted on"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:1707
+msgid "Submitted by user"
+msgstr ""
+
+#: webform.module:1710
+msgid "Submitted by anonymous user"
+msgstr ""
+
+#: webform.module:1714
+msgid "Submitted values are"
+msgstr ""
+
+#: webform.module:1718
+msgid "The results of this submission may be viewed at:"
+msgstr ""
+
+#: webform.module:254
 msgid "create webforms"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "edit own webforms"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "edit webforms"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "access webform results"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "clear webform results"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "access own webform submissions"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "edit own webform submissions"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "edit webform submissions"
 msgstr ""
 
-#: webform.module:185
+#: webform.module:254
 msgid "use PHP for additional processing"
 msgstr ""
 
-#: webform.install:121
+#: webform.install:146
 msgid "Webform module installed module tables successfully."
 msgstr ""
 
-#: webform.install:124
+#: webform.install:149
 msgid "The installation of webform module was unsuccessful."
 msgstr ""
 
@@ -658,11 +775,11 @@ msgstr ""
 msgid "Enables the creation of forms and questionnaires."
 msgstr ""
 
-#: components/date.inc:16 components/hidden.inc:16 components/select.inc:26 components/textarea.inc:16 components/textfield.inc:16 components/time.inc:14
+#: components/date.inc:16 components/email.inc:18 components/hidden.inc:16 components/select.inc:26 components/textarea.inc:16 components/textfield.inc:16 components/time.inc:14
 msgid "Default value"
 msgstr ""
 
-#: components/date.inc:18 components/hidden.inc:18 components/textarea.inc:18 components/textfield.inc:18 components/time.inc:16
+#: components/date.inc:18 components/email.inc:20 components/hidden.inc:18 components/textarea.inc:18 components/textfield.inc:18 components/time.inc:16
 msgid "The default value of the field."
 msgstr ""
 
@@ -742,71 +859,71 @@ msgstr ""
 msgid "day"
 msgstr ""
 
-#: components/date.inc:133
-msgid "@type %name field required"
+#: components/date.inc:133 components/file.inc:206 components/time.inc:142
+msgid "%field field is required."
 msgstr ""
 
 #: components/date.inc:147
 msgid "Entered %name is not a valid date."
 msgstr ""
 
-#: components/date.inc:205
+#: components/date.inc:208
 msgid "Presents month, day, and year fields."
 msgstr ""
 
-#: components/date.inc:264 components/email.inc:158 components/file.inc:383 components/textarea.inc:142 components/textfield.inc:143 components/time.inc:261
+#: components/date.inc:267 components/email.inc:177 components/file.inc:388 components/textarea.inc:137 components/textfield.inc:144 components/time.inc:267
 msgid "Left Blank"
 msgstr ""
 
-#: components/date.inc:265 components/email.inc:159 components/textarea.inc:143 components/textfield.inc:144 components/time.inc:262
+#: components/date.inc:268 components/email.inc:178 components/textarea.inc:138 components/textfield.inc:145 components/time.inc:268
 msgid "User entered value"
 msgstr ""
 
-#: components/email.inc:16 components/textarea.inc:25 components/textfield.inc:25
-msgid "Width"
-msgstr ""
-
-#: components/email.inc:18 components/textarea.inc:27 components/textfield.inc:27
-msgid "Width of the textfield."
-msgstr ""
-
-#: components/email.inc:24
+#: components/email.inc:29
 msgid "User email as default"
 msgstr ""
 
-#: components/email.inc:27
+#: components/email.inc:31
 msgid "Set the default value of this field to the user email, if he/she is logged in."
 msgstr ""
 
-#: components/email.inc:31
-msgid "CC submission to this email"
+#: components/email.inc:37 components/textarea.inc:25 components/textfield.inc:25
+msgid "Width"
 msgstr ""
 
-#: components/email.inc:34
-msgid "Check this option if the email specified in this component should get a CC submission."
+#: components/email.inc:39 components/textarea.inc:27 components/textfield.inc:27
+msgid "Width of the textfield."
 msgstr ""
 
-#: components/email.inc:35
-msgid "Note that this opens the risk that the form can be used to send emails to any address and might be missused as a spam gateway."
+#: components/email.inc:39 components/textarea.inc:27;35 components/textfield.inc:27
+msgid "Leaving blank will use the default size."
 msgstr ""
 
-#: components/email.inc:39 components/textarea.inc:41 components/textfield.inc:43
+#: components/email.inc:45 components/hidden.inc:29 components/select.inc:49
+msgid "E-mail a submission copy"
+msgstr ""
+
+#: components/email.inc:48 components/hidden.inc:32 components/select.inc:52
+msgid "Check this option if this component contains an e-mail address that should get a copy of the submission. Emails are sent individually so other emails will not be shown to the recipient."
+msgstr ""
+
+#: components/email.inc:52 components/textarea.inc:41 components/textfield.inc:43
 msgid "Disabled"
 msgstr ""
 
-#: components/email.inc:41 components/textarea.inc:43 components/textfield.inc:45
+#: components/email.inc:54 components/textarea.inc:43 components/textfield.inc:45
 msgid "Make this field non-editable. Useful for setting an unchangeable default value."
 msgstr ""
 
-#: components/email.inc:94
-msgid "'%value' is not a valid email address"
+#: components/email.inc:113
+msgid "%value is not a valid email address."
 msgstr ""
 
-#: components/email.inc:123
-msgid "A textfield that automatically fills in logged-in users e-mail."
+#: components/email.inc:142
+msgid "A textfield that automatically fills in a logged-in user's e-mail."
 msgstr ""
 
-#: components/email.inc:160 components/hidden.inc:113 components/textarea.inc:144 components/textfield.inc:145
+#: components/email.inc:179 components/hidden.inc:124 components/textarea.inc:139 components/textfield.inc:146
 msgid "Average submission length in words (ex blanks)"
 msgstr ""
 
@@ -827,7 +944,7 @@ msgid "Collapsible fieldsets are \"open\" by default. Select this option to defa
 msgstr ""
 
 #: components/fieldset.inc:81
-msgid "Fieldsets allow you to organize complex webforms into groups of fields."
+msgid "Fieldsets allow you to organize multiple fields into groups."
 msgstr ""
 
 #: components/file.inc:18
@@ -882,47 +999,47 @@ msgstr ""
 msgid "Webform uploads are always saved in the site files directory. You may optionally specify a subfolder to store your files."
 msgstr ""
 
-#: components/file.inc:158
+#: components/file.inc:85
+msgid "The save directory %directory could not be created. Check that the webform files directory is writtable."
+msgstr ""
+
+#: components/file.inc:161
 msgid "Category"
 msgstr ""
 
-#: components/file.inc:158
+#: components/file.inc:161
 msgid "Types"
 msgstr ""
 
-#: components/file.inc:203
-msgid "%fieldname field is required."
-msgstr ""
-
-#: components/file.inc:246
+#: components/file.inc:251
 msgid "Files with the '%ext' extension are not allowed, please upload a file with a %exts extension."
 msgstr ""
 
-#: components/file.inc:251
+#: components/file.inc:256
 msgid "The file '%filename' is too large (%filesize KB). Please upload a file %maxsize KB or smaller."
 msgstr ""
 
-#: components/file.inc:279
+#: components/file.inc:284
 msgid "The uploaded file %filename was unable to be saved. The destination directory may not be writable."
 msgstr ""
 
-#: components/file.inc:287
+#: components/file.inc:292
 msgid "The uploaded file was unable to be saved. The destination directory does not exist."
 msgstr ""
 
-#: components/file.inc:334
+#: components/file.inc:339
 msgid "Uploading a new file will replace the current file."
 msgstr ""
 
-#: components/file.inc:347
+#: components/file.inc:352
 msgid "Allow users to submit files of the configured types."
 msgstr ""
 
-#: components/file.inc:384
+#: components/file.inc:389
 msgid "User uploaded file"
 msgstr ""
 
-#: components/file.inc:385
+#: components/file.inc:390
 msgid "Average uploaded file size"
 msgstr ""
 
@@ -970,15 +1087,19 @@ msgstr ""
 msgid "Allows creation of grid questions, denoted by radio buttons."
 msgstr ""
 
-#: components/hidden.inc:76
-msgid "Create a field which is not visible to the user, but is recorded with the submission."
+#: components/hidden.inc:75
+msgid "@name (hidden)"
 msgstr ""
 
-#: components/hidden.inc:111
+#: components/hidden.inc:87
+msgid "A field which is not visible to the user, but is recorded with the submission."
+msgstr ""
+
+#: components/hidden.inc:122
 msgid "Empty"
 msgstr ""
 
-#: components/hidden.inc:112
+#: components/hidden.inc:123
 msgid "Non-empty"
 msgstr ""
 
@@ -987,7 +1108,7 @@ msgid "Markup allows you to enter custom HTML or PHP logic into your form."
 msgstr ""
 
 #: components/markup.inc:81
-msgid "Presents a markup area of text. Does not render a field."
+msgid "Displays text as HTML in the form; does not render a field."
 msgstr ""
 
 #: components/pagebreak.inc:13
@@ -1022,15 +1143,19 @@ msgstr ""
 msgid "Check this option if you want the select component to be of listbox type instead of radiobuttons or checkboxes."
 msgstr ""
 
-#: components/select.inc:56
+#: components/select.inc:53
+msgid "To use the option with a select component, you must use key-value pairs seperated by pipes. i.e. user@example.com|Sample user."
+msgstr ""
+
+#: components/select.inc:64
 msgid "The options for this select contain illegal characters (quotes or spaces). Specify your options as <em>safe_value_no_spaces</em>|<em>The Real Value</em>."
 msgstr ""
 
-#: components/select.inc:87
+#: components/select.inc:95
 msgid "select..."
 msgstr ""
 
-#: components/select.inc:302
+#: components/select.inc:311
 msgid "Allows creation of checkboxes, radio buttons, or select menus."
 msgstr ""
 
@@ -1042,7 +1167,7 @@ msgstr ""
 msgid "Height of the textfield."
 msgstr ""
 
-#: components/textarea.inc:107
+#: components/textarea.inc:102
 msgid "A large text area that allows for multiple lines of input."
 msgstr ""
 
@@ -1054,7 +1179,7 @@ msgstr ""
 msgid "Maxlength of the textfield."
 msgstr ""
 
-#: components/textfield.inc:108
+#: components/textfield.inc:109
 msgid "Basic textfield type."
 msgstr ""
 
@@ -1090,11 +1215,7 @@ msgstr ""
 msgid "pm"
 msgstr ""
 
-#: components/time.inc:139
-msgid " field is required"
-msgstr ""
-
-#: components/time.inc:205
+#: components/time.inc:211
 msgid "Presents the user with hour and minute fields. Optional am/pm fields."
 msgstr ""
 

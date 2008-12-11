@@ -1,5 +1,28 @@
 <?php
-// $Id$
+// $Id: email.inc,v 1.16.2.7.2.11 2008/10/06 05:45:41 quicksketch Exp $
+
+/**
+ * Create a default email component.
+ */
+function _webform_defaults_email() {
+  return array(
+    'name' => '',
+    'form_key' => NULL,
+    'pid' => 0,
+    'weight' => 0,
+    'value' => '',
+    'mandatory' => 0,
+    'email' => 1,
+    'extra' => array(
+      'width' => '',
+      'disabled' => 0,
+      'email' => 0,
+      'description' => '',
+      'attributes' => array(),
+    ),
+  );
+}
+
 /**
  * Create a set of form items to be displayed on the form for editing this
  * component. Use care naming the form items, as this correlates directly to the
@@ -10,39 +33,59 @@
  *   An array of form items to be displayed on the edit component page.
  */
 function _webform_edit_email($currfield) {
-  $edit_fields = array();
+  $edit_fields['value'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Default value"),
+    '#default_value' => $currfield['value'],
+    '#description' => t('The default value of the field.') . theme('webform_token_help'),
+    '#size' => 60,
+    '#maxlength' => 127,
+    '#weight' => 0,
+    '#attributes' => ($currfield['value'] == '%useremail' && count(form_get_errors()) == 0) ? array('disabled' => TRUE) : array(),
+    '#id' => 'email-value',
+  );
+  $edit_fields['user_email'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("User email as default"),
+    '#default_value' => $currfield['value'] == '%useremail' ? 1 : 0,
+    '#description' => t('Set the default value of this field to the user email, if he/she is logged in.'),
+    '#attributes' => array('onclick' => 'getElementById("email-value").value = (this.checked ? "%useremail" : ""); getElementById("email-value").disabled = this.checked;'),
+    '#weight' => 0,
+    '#validate' => array('_webform_edit_email_validate' => array()),
+  );
   $edit_fields['extra']['width'] = array(
     '#type' => 'textfield',
     '#title' => t("Width"),
     '#default_value' => $currfield['extra']['width'],
-    '#description' => t('Width of the textfield.'),
+    '#description' => t('Width of the textfield.') .' '. t('Leaving blank will use the default size.'),
     '#size' => 5,
     '#maxlength' => 10,
   );
-  $edit_fields['value'] = array(
+  $edit_fields['extra']['email'] = array(
     '#type' => 'checkbox',
-    '#title' => t("User email as default"),
-    '#default_value' => $currfield['default'],
-    '#return_value' => 'user email',
-    '#description' => t('Set the default value of this field to the user email, if he/she is logged in.'),
+    '#title' => t("E-mail a submission copy"),
+    '#return_value' => 1,
+    '#default_value' => $currfield['extra']['email'],
+    '#description' => t('Check this option if this component contains an e-mail address that should get a copy of the submission. Emails are sent individually so other emails will not be shown to the recipient.'),
   );
-  $edit_fields['extra']['carboncopy'] = array(
-    '#type' => 'checkbox',
-    '#title' => t("CC submission to this email"),
-    '#return_value' => 'Y',
-    '#default_value' => ($currfield['extra']['carboncopy'] == 'Y' ? TRUE : FALSE),
-    '#description' => t('Check this option if the email specified in this component should get a CC submission.') .' '.
-                      t('Note that this opens the risk that the form can be used to send emails to any address and might be missused as a spam gateway.'),
-  );
-  $edit_fields['extra']['attributes']['disabled'] = array(
+  $edit_fields['extra']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t("Disabled"),
-    '#return_value' => 'disabled',
+    '#return_value' => 1,
     '#description' => t('Make this field non-editable. Useful for setting an unchangeable default value.'),
     '#weight' => 3,
-    '#default_value' => $currfield['extra']['attributes']['disabled'],
+    '#default_value' => $currfield['extra']['disabled'],
   );
   return $edit_fields;
+}
+
+/**
+ * Validation function for the email edit form.
+ */
+function _webform_edit_email_validate($element) {
+  if ($element['#value']) {
+    form_set_value(array('#parents' => array('value')), '%useremail');
+  }
 }
 
 /**
@@ -57,20 +100,17 @@ function _webform_render_email($component) {
   global $user;
   $form_item = array(
     '#type'          => 'textfield',
-    '#title'         => htmlspecialchars($component['name'], ENT_QUOTES),
+    '#title'         => $component['name'],
+    '#default_value' => _webform_filter_values($component['value']),
     '#required'      => $component['mandatory'],
     '#weight'        => $component['weight'],
-    '#description'   => _webform_filtervalues($component['extra']['description']),
+    '#description'   => _webform_filter_descriptions($component['extra']['description']),
     '#attributes'    => $component['extra']['attributes'],
+    '#disabled'      => $component['extra']['disabled'],
     '#prefix'        => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix'        => '</div>',
-    '#validate'      => array('_webform_validate_email' => array('submitted]['. $component['cid'])),
+    '#validate'      => array('_webform_validate_email' => array($component)),
   );
-
-  // Fill in the user's email address if available.
-  if ($user->uid && $user->mail && $component['value'] == 'user email') {
-    $form_item['#default_value'] = $user->mail;
-  }
 
   // Change the 'width' option to the correct 'size' option.
   if ($component['extra']['width'] > 0) {
@@ -89,9 +129,9 @@ function _webform_render_email($component) {
  * @return
  *   True if successful, calls a form_set_error if the email is not valid.
  */
-function _webform_validate_email($formelement, $name) {
-  if (!empty($formelement['#value']) && !valid_email_address($formelement['#value'])) {
-    form_set_error($name, t("'%value' is not a valid email address", array('%value' => $formelement['#value'])));
+function _webform_validate_email($form_element, $component) {
+  if (!empty($form_element['#value']) && !valid_email_address($form_element['#value'])) {
+    form_error($form_element, t("%value is not a valid email address.", array('%value' => $form_element['#value'])));
   }
 }
 
@@ -120,10 +160,8 @@ function _webform_submission_display_email($data, $component, $enabled = false) 
 function _webform_help_email($section) {
   switch ($section) {
     case 'admin/settings/webform#email_description':
-      $output = t("A textfield that automatically fills in logged-in users e-mail.");
-      break;
+      return t("A textfield that automatically fills in a logged-in user's e-mail.");
   }
-  return $output;
 }
 
 /**

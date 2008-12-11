@@ -6,7 +6,7 @@
 # #-#-#-#-#  webform-module.po (webform-module)  #-#-#-#-#
 # translation of webform-module.po to
 # LANGUAGE translation of Drupal (webform.module)
-# $Id$
+# $Id: hu.po,v 1.1.2.1.2.5 2008/10/07 21:50:31 quicksketch Exp $
 # Copyright YEAR NAME <EMAIL@ADDRESS>, 2005.
 #
 # FEHÉR János (http://mindworks.hu) <feher.janos _at- mindworks.hu>, 2007.
@@ -93,7 +93,7 @@ msgid "Delete"
 msgstr "Törlés"
 
 #: webform.inc:98
-msgid "Submission deleted"
+msgid "Submission deleted."
 msgstr "Eredmény törölve"
 
 #: webform.inc:175
@@ -113,8 +113,8 @@ msgid "Submitted values are"
 msgstr "A beküldött értékek"
 
 #: webform.inc:190
-msgid "The results of this submission may be viewed at:\n"
-msgstr "A űrlapra beküldött eredmények megtekinthetőek itt:\n"
+msgid "The results of this submission may be viewed at:"
+msgstr "A űrlapra beküldött eredmények megtekinthetőek itt:"
 
 #: webform.inc:69 webform.module:296;142;1071;1263;1272;1409;1427;0
 #: webform.install:476
@@ -211,7 +211,7 @@ msgstr ""
 msgid ""
 "If you are using the profiles module, you can also access all profile data "
 "using the syntax %profile[form_name]. If you for example have a profile "
-"value named profile_city, add the varible %profile[profile_city]."
+"value named profile_city, add the variable %profile[profile_city]."
 msgstr ""
 
 #: webform.module:74;282;329 webform.install:507 webform.info:0
@@ -522,20 +522,20 @@ msgstr "hetente"
 
 #: webform.module:711
 msgid ""
-"Enter PHP code to preform additional validation for this form. Include the "
+"Enter PHP code to perform additional validation for this form. Include the "
 "&lt;?php ?&gt; tags. $form_id and $form_values are available variables. If "
 "validation fails, use the form_set_error function to prevent the form from "
 "being submitted. Use the same syntax as a _validate function used in the <a "
-"href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html"
+"href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html"
 "\">Forms API</a>."
 msgstr ""
 
 #: webform.module:720
 msgid ""
-"Enter PHP code to preform additional processing for this form (after the "
+"Enter PHP code to perform additional processing for this form (after the "
 "validation). Include the &lt;?php ?&gt; tags. $form_id and $form_values are "
 "available variables, use the same syntax as a _submit function used in the "
-"<a href=\"http://api.drupal.org/api/4.7/file/developer/topics/forms_api.html"
+"<a href=\"http://api.drupal.org/api/file/developer/topics/forms_api.html"
 "\">Forms API</a>."
 msgstr ""
 
@@ -626,7 +626,7 @@ msgstr "Szülő mezőcsoport"
 
 #: webform.module:935
 msgid ""
-"Optional. You may organize your form by placing this component inside inside "
+"Optional. You may organize your form by placing this component inside "
 "another fieldset."
 msgstr ""
 
@@ -688,8 +688,8 @@ msgid ""
 msgstr ""
 
 #: webform.module:1409
-msgid "Possible spam attempt from "
-msgstr "Lehetséges kéretlen reklám (spam) próbálkozás innen:"
+msgid "Possible spam attempt from @remote_addr"
+msgstr "Lehetséges kéretlen reklám (spam) próbálkozás innen: @remote_addr"
 
 #: webform.module:1410
 msgid "Illegal information. Data not submitted."
@@ -935,7 +935,7 @@ msgid ""
 msgstr ""
 
 #: components/email.inc:94
-msgid "'%value' is not a valid email address"
+msgid "%value is not a valid email address."
 msgstr "Érvénytelen email cím: %value"
 
 #: components/email.inc:123
@@ -1034,7 +1034,7 @@ msgid "Types"
 msgstr "Típusok"
 
 #: components/file.inc:204
-msgid "%fieldname field is required."
+msgid "%field field is required."
 msgstr ""
 
 #: components/file.inc:238

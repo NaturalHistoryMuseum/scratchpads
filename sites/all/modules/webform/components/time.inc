@@ -1,5 +1,27 @@
 <?php
-// $Id$
+// $Id: time.inc,v 1.14.2.6.2.8 2008/10/08 19:51:44 quicksketch Exp $
+
+/**
+ * Create a default time component.
+ */
+function _webform_defaults_time() {
+  return array(
+    'name' => '',
+    'form_key' => NULL,
+    'pid' => 0,
+    'weight' => 0,
+    'value' => '',
+    'mandatory' => 0,
+    'email' => 1,
+    'extra' => array(
+      'timezone' => 'site',
+      'check_daylight_savings' => 0,
+      'hourformat' => '12-hour',
+      'description' => '',
+    ),
+  );
+}
+
 /**
  * Create a set of form items to be displayed on the form for editing this component.
  * Use care naming the form items, as this correlates directly to the database schema.
@@ -12,7 +34,7 @@ function _webform_edit_time($currfield) {
   $edit_fields['value'] = array(
     '#type' => 'textfield',
     '#title' => t("Default value"),
-    '#default_value' => $currfield['default'],
+    '#default_value' => $currfield['value'],
     '#description' => t('The default value of the field.') .'<br />'. t('Accepts a time in any <a href="http://www.gnu.org/software/tar/manual/html_node/tar_109.html">GNU Date Input Format</a>. Strings such as now, +2 hours, and 10:30pm are all valid.'),
     '#size' => 60,
     '#maxlength' => 127,
@@ -23,7 +45,7 @@ function _webform_edit_time($currfield) {
     '#type' => 'radios',
     '#title' => t("Timezone"),
     '#default_value' => empty($currfield['extra']['timezone']) ? "site" : $currfield['extra']['timezone'],
-    '#description' => t('Adjust the time according to a specific timezone. Website timezone is defined in the <a href="%settings">Site Settings</a> and is the default.', array('%settings' => url('admin/settings'))),
+    '#description' => t('Adjust the time according to a specific timezone. Website timezone is defined in the <a href="!settings">Site Settings</a> and is the default.', array('!settings' => url('admin/settings/date-time'))),
     '#options' => array('site' => 'Website Timezone', 'user' => 'User Timezone', 'gmt' => 'GMT'),
     '#weight' => 0,
   );
@@ -103,10 +125,12 @@ function _webform_render_time($component) {
     '#title' => $component['name'],
     '#required' => $component['mandatory'],
     '#weight' => $component['weight'],
-    '#description' => _webform_filtervalues($component['extra']['description']),
+    '#description' => _webform_filter_descriptions($component['extra']['description']),
     '#prefix' => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix' => '</div>',
     '#theme' => 'webform_time',
+    '#validate' => array('webform_validate_time' => array()),
+    '#webform_component' => $component,
   );
 
   $form_item['hour'] = array(
@@ -114,30 +138,42 @@ function _webform_render_time($component) {
     '#type' => 'select',
     '#default_value' => $hour,
     '#options' => $hours,
-    '#validate' => array('webform_validate_time' => array('hour', $component['name'], $component['mandatory'])),
-    );
+  );
   $form_item['minute'] = array(
     '#prefix' => ':',
     '#type' => 'select',
     '#default_value' => $minute,
     '#options' => $minutes,
-    '#validate' => array('webform_validate_time' => array('minute', $component['name'], $component['mandatory'])),
-    );
+  );
   if ($component['extra']['hourformat'] == '12-hour') {
     $form_item['ampm'] = array(
       '#type' => 'radios',
       '#default_value' => $am_pm,
       '#options' => $am_pms,
-      );
+    );
   }
 
   return $form_item;
 }
 
-function webform_validate_time($field, $field_name, $component_name, $mandatory) {
-  if (!is_numeric($field['#value']) && $mandatory) {
-    form_set_error($field_name, $component_name ." ". $field_name ." ". t(" field is required"));
-    return false;
+function webform_validate_time($form_item) {
+  $form_key = $form_item['#webform_component']['form_key'];
+  $name = $form_item['#webform_component']['name'];
+
+  // Check if the user filled the required fields.
+  foreach ($form_item['#webform_component'] == '12-hour' ? array('hour', 'minute', 'ampm') : array('hour', 'minute') as $field_type) {
+    if (!is_numeric($form_item[$field_type]['#value']) && $form_item['#required']) {
+      form_set_error($form_key, t("%field field is required.", array('%field' => $name)));
+      return;
+    }
+  }
+
+  // Check for a valid time.
+  if ($form_item['hour']['#value'] !== "" || $form_item['minute']['#value'] !== "" || (isset($form_item['ampm']) && $form_item['ampm']['#value'] !== "")) {
+    if (!is_numeric($form_item['hour']['#value']) || !is_numeric($form_item['minute']['#value']) || (isset($form_item['ampm']) && $form_item['ampm']['#value'] === "")) {
+      form_set_error($form_key, t("Entered %name is not a valid time.", array('%name' => $name)));
+      return;
+    }
   }
 }
 
@@ -161,13 +197,15 @@ function _webform_submission_display_time($data, $component, $enabled = false) {
   $form_item['ampm']['#disabled'] = !$enabled;
 
   // Match the hourly data to the hour format.
-  $timestamp = strtotime($data['value']['0'] .":". $data['value']['1'] . $data['value']['2']);
-  if ($component['extra']['hourformat'] == "24-hour") {
-    $form_item['hour']['#default_value'] = date("H", $timestamp);
-  }
-  else {
-    $form_item['hour']['#default_value'] = date("g", $timestamp);
-    $form_item['ampm']['#default_value'] = $data['value']['2'];
+  if ($data['value']['1']) {
+    $timestamp = strtotime($data['value']['0'] .":". $data['value']['1'] . (isset($data['value']['2']) ? $data['value']['2'] : ''));
+    if ($component['extra']['hourformat'] == "24-hour") {
+      $form_item['hour']['#default_value'] = date("H", $timestamp);
+    }
+    else {
+      $form_item['hour']['#default_value'] = date("g", $timestamp);
+      $form_item['ampm']['#default_value'] = $data['value']['2'];
+    }
   }
   return $form_item;
 }
@@ -202,10 +240,8 @@ function theme_webform_mail_time($data, $component) {
 function _webform_help_time($section) {
   switch ($section) {
     case 'admin/settings/webform#time_description':
-      $output = t("Presents the user with hour and minute fields. Optional am/pm fields.");
-      break;
+      return t("Presents the user with hour and minute fields. Optional am/pm fields.");
   }
-  return $output;
 }
 
 /**
