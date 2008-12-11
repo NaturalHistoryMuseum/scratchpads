@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: contemplate.module,v 1.8.2.25 2008/11/14 06:42:12 jrglasgow Exp $
 // by Jeff Robbins - Lullabot - www.lullabot.com
 
 define('CONTEMPLATE_TEASER_ENABLED', 0x0001);
@@ -338,7 +338,7 @@ function contemplate_edit_type_form($type = NULL) {
   }
   else {
     $form['rss']['rss'] = array(
-      '#value' => t('<p>This template is being read from<br />%file<br />Please make changes to this file or remove it to continue editing here.</p>', array('%file' => $template['body-file']->filename)),
+      '#value' => t('<p>This template is being read from<br />%file<br />Please make changes to this file or remove it to continue editing here.</p>', array('%file' => $template['rss-file']->filename)),
     );
   }
 
@@ -575,9 +575,7 @@ function contemplate_node_views($type) {
   $nid = db_result(db_query("SELECT nid FROM {node} WHERE type = '%s' ORDER BY created DESC", $type));
   if ($nid) {
     $bodynode = contemplate_node_view(node_load($nid), FALSE, TRUE);
-
     $teasernode = contemplate_node_view(node_load($nid), TRUE, FALSE);
-  
     return array('body' => $bodynode, 'teaser' => $teasernode);
   }
   else {
@@ -609,9 +607,9 @@ function contemplate_examples($type) {
     $error = t('No %type content items exist to use as an example. Please create a %type item and then come back here to see an output of its parts.', array("%type" => $type));
     $toutput = $boutput = $routput = $error;
   }
-   if ($recursion_limit_hit) {
-     drupal_set_message(t('While traversing node variables your recursion limit of %limit was hit %recursion_limit_hit times', array('%limit' => variable_get('contemplate_max_recursion_depth', 10), '%recursion_limit_hit' => $recursion_limit_hit)), 'error');
-   }
+  if ($recursion_limit_hit) {
+    drupal_set_message(t('While traversing node variables your recursion limit of %limit was hit %recursion_limit_hit times. For more information about this error goto '. l('http://drupal.org/node/230885', 'http://drupal.org/node/230885') .'. This issue will not effect the operation of Content Template, but it may not show you all available variables on this page. This message will only appear on this page.', array('%limit' => variable_get('contemplate_max_recursion_depth', 10), '%recursion_limit_hit' => $recursion_limit_hit)));
+  }
   return array('body' => $boutput, 'teaser' => $toutput, 'rss' => $routput);
 }
 
@@ -638,6 +636,13 @@ function contemplate_array_variables($array, $target, $parents = FALSE, $object 
     $recursion_limit_hit++;
     return '';
   }
+  //
+  //  if $array['#node'] exists we need to remove it to prevent recursion and PHP Fatal errors on Memory Limit
+  //
+  if (isset($array['#node'])) {
+    unset($array['#node']);
+  }
+  
   if (is_object($array)) {
     $array = (array)$array;
   }
@@ -684,10 +689,10 @@ function contemplate_array_variables($array, $target, $parents = FALSE, $object 
 
       $output .= "<dd>\n";
       if (is_array($value)) {
-        $output .= contemplate_array_variables($value, $target, $field, FALSE, $depth++, $recursion_limit_hit);
+        $output .= contemplate_array_variables($value, $target, $field, FALSE, $depth + 1, $recursion_limit_hit);
       }
       elseif (is_object($value)) {
-        $output .= contemplate_array_variables((array)$value, $target, $field, TRUE, $depth++, $recursion_limit_hit);
+        $output .= contemplate_array_variables((array)$value, $target, $field, TRUE, $depth + 1, $recursion_limit_hit);
       }
       else {
         $value = is_bool($value) ? ($value ? 'TRUE' : 'FALSE') : $value;
