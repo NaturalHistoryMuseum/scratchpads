@@ -1,5 +1,5 @@
 <?php
-// $Id: content_panels.inc,v 1.1.2.15 2008/08/18 11:36:32 yched Exp $
+// $Id: content_panels.inc,v 1.1.2.16 2008/10/17 00:02:58 yched Exp $
 /**
  * Panels 2 interface for CCK fieldgroups and fields.
  *
@@ -110,7 +110,7 @@ function content_panels_render_field($conf, $panel_args, $context) {
   $block->delta = $conf['field_name'];
 
   if ($conf['label'] == 'normal') {
-    $block->title = $field['widget']['label'];
+    $block->title = t($field['widget']['label']);
   }
   $node_field = isset($node->$field['field_name']) ? $node->$field['field_name'] : array();
   if (content_handle('field', 'view', $field) == CONTENT_CALLBACK_CUSTOM) {

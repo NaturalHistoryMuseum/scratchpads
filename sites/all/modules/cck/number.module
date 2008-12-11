@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: number.module,v 1.34.2.29 2008/09/17 16:25:19 yched Exp $
 
 /**
  * @file
@@ -378,7 +378,7 @@ function number_allowed_values($field) {
       // Sanitize the user input with a permissive filter.
       $opt = content_filter_xss($opt);
       list($key, $value) = explode('|', $opt);
-      $allowed_values[$field['field_name']][$key] = $value ? $value : $key;
+      $allowed_values[$field['field_name']][$key] = (isset($value) && $value !=='') ? $value : $key;
     }
   }
   return $allowed_values[$field['field_name']];

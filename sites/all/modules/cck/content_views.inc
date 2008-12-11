@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: content_views.inc,v 1.2.2.22 2008/11/05 19:38:03 yched Exp $
 
 /**
  * @file
@@ -63,7 +63,7 @@ function content_views_field_tables($field) {
     if ($field['multiple']) {
       $addlfields[] = 'delta';
     }
-    
+
     $table['fields'] = array();
     $table['fields'][$main_column['column']] = array(
       'name' => $field_types[$field['type']]['label'] .': '. $field['widget']['label'] .' ('. $field['field_name'] .')',

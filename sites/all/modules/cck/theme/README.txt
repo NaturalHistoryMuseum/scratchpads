@@ -1,4 +1,4 @@
-// $Id$
+// $Id: README.txt,v 1.2.2.2 2007/01/20 01:38:46 yched Exp $
 
 Theming Constructed Content Types
 =================================

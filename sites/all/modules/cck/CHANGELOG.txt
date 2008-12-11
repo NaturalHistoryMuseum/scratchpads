@@ -1,4 +1,18 @@
-// $Id$
+// $Id: CHANGELOG.txt,v 1.1.4.76 2008/11/05 19:38:03 yched Exp $
+
+5--1.10
+=======
+
+IMPORTANT : this release fixes (minor) cross-site scripting (XSS) vulnerabilities
+in nodereference.module, userreference.module and content_copy.module.
+See the Security Annoucement on http://drupal.org/node/330546 for more information.
+
+Other changes
+- #316656 Default weight must be zero, not NULL, or form ordering will be incorrect.
+- #309558 by mroswell : fix PHP doc typo.
+- #281749 by asimmonds: fix '0' not parsed as an alias for allowed values.
+- #308215 by Reg - Nodereference: Do not filter on empty string when querying for referenceable nodes.
+- #318143 by Douggreen - Panels integration: make widget label translatable.
 
 5--1.9
 ======

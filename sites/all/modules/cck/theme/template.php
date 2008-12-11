@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: template.php,v 1.3.2.5 2008/09/03 13:45:05 yched Exp $
 
 function phptemplate_field(&$node, &$field, &$items, $teaser, $page) {
   $field_empty = TRUE;

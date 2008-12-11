@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: nodereference.module,v 1.39.2.43 2008/11/05 19:38:03 yched Exp $
 
 /**
  * @file
@@ -42,7 +42,7 @@ function nodereference_field_settings($op, $field) {
         '#title' => t('Content types that can be referenced'),
         '#multiple' => TRUE,
         '#default_value' => isset($field['referenceable_types']) ? $field['referenceable_types'] : array(),
-        '#options' => node_get_types('names'),
+        '#options' => array_map('check_plain', node_get_types('names')),
       );
       if (module_exists('views')) {
         $views = array('--' => '--');
@@ -456,7 +456,7 @@ function _nodereference_potential_references($field, $return_full_nodes = FALSE,
       return array();
     }
 
-    if (isset($string)) {
+    if ($string !== '') {
       $string_clause = $exact_string ? " AND n.title = '%s'" : " AND n.title LIKE '%%%s%'";
       $related_clause = "(". $related_clause .")". $string_clause;
       $args[] = $string;
@@ -535,7 +535,7 @@ function theme_nodereference_item_simple($item) {
 }
 
 /**
- * Provide a list of users to filter on.
+ * Provide a list of nodes to filter on.
  */
 function _nodereference_filter_handler($op, $filterinfo) {
   $options = array(0 => t('<empty>'));

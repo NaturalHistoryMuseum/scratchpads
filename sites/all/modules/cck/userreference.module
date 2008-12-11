@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: userreference.module,v 1.30.2.33 2008/11/05 19:38:03 yched Exp $
 
 /**
  * @file
@@ -426,7 +426,7 @@ function userreference_user($op, &$edit, &$account, $category = NULL) {
           }
           if (isset($values[$node_type])) {
             $links[$node_type] = array(
-              'title' => $node_types[$node_type]['name'],
+              'title' => check_plain($node_types[$node_type]['name']),
               'value' => theme('item_list', $values[$node_type])
             );
           }
