@@ -60,7 +60,6 @@ function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
  * 
  * This function looks over old node content, and tags it in the same way as if it had been
  * edited/created after this module was installed.
- */
 function autotag_cron(){
   // Get the last node to be updated with cron.
   $last_nid = variable_get('autotag_last_node',0);
@@ -80,6 +79,7 @@ function autotag_cron(){
   }
   variable_set('autotag_last_node', $last_nid);
 }
+ */
 
 // Simply save what was entered in the checkbox
 function autotag_submit_vocabulary_form($form, $form_values){
@@ -90,7 +90,9 @@ function autotag_submit_vocabulary_form($form, $form_values){
 
 // Receive the form after the first page
 function autotag_form_submit($form, &$form_state){
-  $form_state['storage']['formsubmitted'] = $form;
+  if(isset($form_state['storage']['formbuttons'])){
+    $form_state['storage']['formsubmitted'] = $form;
+  }
   return;
 }
 /**
@@ -98,16 +100,13 @@ function autotag_form_submit($form, &$form_state){
  * 
  * Changes the form so that it takes place over multiple pages, adding the necesary 
  * fields to do that.
- *
- * @param String $form_id
- * @param Array $form
  */
 function autotag_form_alter(&$form, &$form_state, $form_id){
   // If this is not a node form, check if it is the taxonomy vocabulary form.
   // If so, add stuff to it.
   if($form['#id'] != 'node-form'){
-    // check if this is the vocabulary edit form, if so, we want to add a checkbox
-    // to give users the option to ignore autotag
+    // check if this is the vocabulary edit form, if so, we want to add a 
+    // checkbox to give users the option to ignore autotag
     if($form['#id'] == 'taxonomy-form-vocabulary' && $form['module']['#value']=='taxonomy'){
       // Here we can add the extra field
       $form['settings']['disableautotag'] = array(
@@ -136,22 +135,19 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   if(in_array($form['type']['#value'], $node_types_to_ignore)){return;}
   
   // Lets change the form.
-  
-  // Hide the taxonomy fields -> this can greatly improve the rendering time for a page
-  // with a large classification on it.  We do this on all pages
-  foreach($form['taxonomy'] as $key=>$value){
-    if(in_array($key,$hide_vids)){
-      $form['taxonomy'][$key] = array(
-        '#type' => 'hidden',
-        '#default_value' => $form['taxonomy'][$key]['#default_value'],
-        '#theme' => 'autotag_hidden'
-      );
-    }
-  }
-  
+ 
   // If the form has NOT been submitted, we change the submit button name to
   // next, and remove submit functions from the form
   if(!$form_state['submitted'] && !$form_state['post']){
+    // Hide the taxonomy fields -> this can greatly improve the rendering time for
+    // a page with a large classification on it.  We do this on all pages
+    // First put the taxonomy in storage!
+    $form_state['storage']['oldtaxonomy'] = $form['taxonomy'];
+    foreach($form['taxonomy'] as $key=>$value){
+      if(in_array($key,$hide_vids)){
+        unset($form['taxonomy'][$key]);
+      }
+    }
     // Store the stubmit for use later
     $form_state['storage']['formbuttons'] = $form['buttons'];
     $form_state['storage']['formsubmit'] = $form['#submit']; 
@@ -164,21 +160,63 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     $form['#submit'] = array();
   } else {
     // Else we likely have either a submitted form, or one with post shit
-    if($form_state['storage']['formsubmitted']) {
+    if(count($form_state['storage']['formsubmitted'])){
       // Restore the values to the form from t' previous page.
       $form = $form_state['storage']['formsubmitted'];
+      unset($form_state['storage']['formsubmitted']);
       $form['buttons'] = $form_state['storage']['formbuttons'];
       $form['#submit'] = $form_state['storage']['formsubmit'];
     }
+    if(isset($form['buttons']['submit'])){
+      // Our submit needs to be executed first - before node submit
+      $new_submit = array('autotag_form_submit');
+      foreach($form['buttons']['submit']['#submit'] as $submit){
+        $new_submit[] = $submit;
+      }
+      $form['buttons']['submit']['#submit'] = $new_submit;
+    }
     // Add the CSS and JS necesary to style the form
+    jquery_ui_add(array('ui.draggable', 'ui.droppable'),'none');
     drupal_add_css(drupal_get_path('module','autotag').'/autotag.css');
-    jquery_ui_add(array('ui.draggable', 'ui.droppable', 'ui.sortable'), 'packed');
+    drupal_add_js(drupal_get_path('module','autotag').'/autotag.js');
     
-    // Add a javascript function to update the hidden field with the contents of the "Terms to ignore" div
+    // Add a javascript function to update the hidden field with the contents of
+    // the "Terms to ignore" div
     $form['submit']['#attributes']['onclick'] = 'autotag_update_form();';
 
     // Search the text of the form, and update the taxonomy accordingly
-    $form = _autotag_search_form($form);
+    if(isset($form_state['values'])){
+      $tids = _autotag_search_post($form_state['values']);
+      // Also put the old terms in there
+      if(is_array($form_state['storage']['oldtaxonomy'])){
+        foreach($form_state['storage']['oldtaxonomy'] as $vid => $form_array){
+          if(is_array($form_array['#default_value'])){
+            foreach($form_array['#default_value'] as $tid){
+              $tids[] = array('tid' => $tid, 'vid' => $vid);
+            }
+          }
+        }
+      }
+      // Add the tids to the form['#post'] dodah
+      foreach($tids as $tid){
+        // Check if we already have this vocab in the post
+        if(isset($form['#post']['taxonomy'][$tid['vid']])){
+          // Append on to the end of the array
+          $form['#post']['taxonomy'][$tid['vid']][] = $tid['tid'];
+        } else {
+          // Not set, create it
+          $form['#post']['taxonomy'][$tid['vid']] = array($tid['tid']);
+        }
+        // Also put stuff into form_state TODO - Is this needed?
+        if(isset($form_state['values']['taxonomy'][$tid['vid']])){
+          // Append on to the end of the array
+          $form_state['values']['taxonomy'][$tid['vid']][] = $tid['tid'];
+        } else {
+          // Not set, create it
+          $form_state['values']['taxonomy'][$tid['vid']] = array($tid['tid']);
+        }
+      }
+    }
     // Keep stuff as it is, just add the autotag bollocks to the top      
     $form['autotag']['#type'] = 'fieldset';
     $form['autotag']['#title'] = t(AUTOTAG_TITLE);
@@ -241,7 +279,8 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   </div> 
 </div>');
       
-    // Add an additional autocomplete field for adding any additional tags to the classification
+    // Add an additional autocomplete field for adding any additional tags to
+    // the classification
     $vocabs = _autotag_get_vids_for_type($form['type']['#value'], FALSE);
     $vocabs_string = '';
     $concater = '';
@@ -256,188 +295,10 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       '#autocomplete_path' => 'autotag/autocomplete/'.$form['type']['#value']
     );
   }
-    // If we've come this far, and no terms were found in the page, autosubmit the form.
-    // FIXME, this may well stop people from tagging the content of a page at all, not sure
-    // what the solution to this could be though, as a second page could become annoying, hence
-    // the reason for this additional JS.
-    /**
-     * Removed for now - I'm not keed on this - users can click submit if they want!!!    
-    if($lists == '' && $ignore_list == ''){
-      drupal_add_js('$("#edit-submit2").click();</script>','inline','footer');
-    }
-  }
-  /*
-  // Lets get the step that we're on
-  $step = isset($form_state['values']) ? (int)$form_state['storage']['step'] : 0;
-  if(isset($form_state['storage']['']))
-  $form_state['storage']['step'] = $step +1;
   
-  $form['autotag'] = array();
-  $button_name = t('Submit');
-  // If on the first page, simply change the button from submit to next, and
-  // also remove any redirects and submit functions that may have been on the form.
-  if($step<2){
-//    $form['#redirect'] = FALSE;
-    print_r($form_state);
-    $form['buttons']['submit']['#value'] = t('Next');    
-    $form['buttons']['submit']['#submit'] = array();
-    
-    // Store the stubmit for use later
-    $form_state['storage']['oldsubmit'] = $form['#submit']; 
-    $form['#submit'] = array('autotag_form_submit');
-  } 
-  // If on the second page, do a whole load of magic
-  else {
-    echo "We're on the second part";exit;
-    /*
-    // Add the hidden taxonomy fields to the post stuff (needed to ensure we don't lose tagged shit)
-    if(isset($form['#node']->taxonomy)){
-      foreach($form['#node']->taxonomy as $term){
-        if(!in_array($term->tid,$form['#post']['taxonomy'][$term->vid])){
-          if(isset($form['#post']['taxonomy'][$term->vid])){
-            if(!is_array($form['#post']['taxonomy'][$term->vid])){
-              $current_value = $form['#post']['taxonomy'][$term->vid];
-              $form['#post']['taxonomy'][$term->vid] = array();
-              $form['#post']['taxonomy'][$term->vid][] = $current_value;
-            }
-            $form['#post']['taxonomy'][$term->vid][] = $term->tid;
-          } else {
-            $form['#post']['taxonomy'][$term->vid] = $term->tid;
-          }
-        }
-      }
-    } else {
-      // New node - however, it could have had the term set by something like 
-      // view_controls - so we need to look for this
-      if(isset($form['taxonomy'])){
-        foreach($form['taxonomy'] as $vid => $values){
-          if(is_numeric($vid)){
-            foreach($values['#default_value'] as $tid){
-              if(isset($form['#post']['taxonomy'][$vid])){
-                if(!is_array($form['#post']['taxonomy'][$vid])){
-                  $current_value = $form['#post']['taxonomy'][$vid];
-                  $form['#post']['taxonomy'][$vid] = array();
-                  $form['#post']['taxonomy'][$vid][] = $current_value;
-                }
-                $form['#post']['taxonomy'][$vid][] = $tid;
-              } else {
-                $form['#post']['taxonomy'][$vid] = $tid;
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    // Add a javascript function to update the hidden field with the contents of the "Terms to ignore" div
-    $form['submit']['#attributes']['onclick'] = 'autotag_update_form();';
-    // Search the text of the form, and update the taxonomy accordingly
-    $form = _autotag_search_form($form);
-    // Keep stuff as it is, just add the autotag bollocks to the top      
-    $form['autotag']['#type'] = 'fieldset';
-    $form['autotag']['#title'] = t(AUTOTAG_TITLE);
-    $form['autotag']['#collapsed'] = true;
-    $form['autotag']['#collapsible'] = false;
-    $form['autotag']['#weight'] = -100;
-    $form['autotag']['#description'] = t(AUTOTAG_DESCRIPTION);
-    $form['autotag']['ignoreterms'] = array(
-      '#type' => 'hidden'
-    );
-    // Build the ignore and tag lists
-    $lists = '';
-    $ignore_list = '';
-    $vocabularies = taxonomy_get_vocabularies();      
-    if(isset($form['#node']->nid)){
-      $ignore_terms = _autotag_get_ignore_terms($form['#node']->nid);
-      foreach($ignore_terms as $term){
-        $ignore_list .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
-      }
-    } else {
-      $ignore_terms = array();
-    }
-    if(is_array($form['#post']['taxonomy'])){
-      foreach($form['#post']['taxonomy'] as $key => $terms){
-        if($key != 'tags'){
-          $place_holders = array();
-          if(is_array($terms)){
-            foreach($terms as $doesntmatter){
-              $place_holders[] = '%d';
-            }
-          } else {
-            $place_holders[] = '%d';
-            $terms = array($terms);
-          }
-          if(count($place_holders)){
-            $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
-            while($term=db_fetch_object($results)){
-              if(!in_array($term,$ignore_terms)){
-                $lists .= '<li class="autotag-dragable" tid="'.$term->tid.'">'.check_plain($term->name).' ('.check_plain($vocabularies[$term->vid]->name).')</li>';
-              }
-            }
-          }
-        }
-      }
-    }
-    // HTML shit for drag'n'droping
-    $form['autotag']['dragndropfields'] = array(
-      '#value' => '<div class="autotag-dnd" id="autotag-container">
-  <div id="autotag-dnd-left">
-    <h3>'.t(AUTOTAG_TAGGED).'</h3>
-    <ul>
-      '.$lists.'
-    </ul>
-  </div>
-  <div id="autotag-dnd-right">
-    <h3>'.t(AUTOTAG_IGNORE).'</h3>
-    <ul>
-      '.$ignore_list.'
-    </ul>
-  </div> 
-</div>');
-      
-    // Add an additional autocomplete field for adding any additional tags to the classification
-    $vocabs = _autotag_get_vids_for_type($form['type']['#value'], FALSE);
-    $vocabs_string = '';
-    $concater = '';
-    foreach($vocabs as $vocab){
-      $vocabs_string .= $concater.' '.check_plain($vocab->name);
-      $concater = ';';
-    }
-    $form['autotag']['additionaltags'] = array(
-      '#type' => 'textfield',
-      '#title' => t(AUTOTAG_ADDITIONAL_TERMS),
-      '#description' => t(AUTOTAG_ADDITIONAL_TERMS_DESC).$vocabs_string,
-      '#autocomplete_path' => 'autotag/autocomplete/'.$form['type']['#value']
-    );
-    // If we've come this far, and no terms were found in the page, autosubmit the form.
-    // FIXME, this may well stop people from tagging the content of a page at all, not sure
-    // what the solution to this could be though, as a second page could become annoying, hence
-    // the reason for this additional JS.
-    /**
-     * Removed for now - I'm not keed on this - users can click submit if they want!!!    
-    if($lists == '' && $ignore_list == ''){
-      drupal_add_js('$("#edit-submit2").click();</script>','inline','footer');
-    }
-    */
-    // END OF PAGE 2 EXTRAS
-  //}
-  // Hidden field which is updated by Javascript when the form is submitted
-  /*
-  $form['autotag']['hideterms'] = array(
-    '#type' => 'hidden',
-    '#default_value' => '|'
-  );
-  */
-  // Additional submit button higher up the page so that lazy f*&kers don't have to 
-  // scroll down.
-  /*
-  $form['buttons']['submit']['#value'] = $button_name;
-  if($step==2){
-    $form['autotag']['submit2'] = $form['submit'];
-    $form['autotag']['submit2']['#prefix'] = '<div class="description">'.t(AUTOTAG_SUBMIT2_TEXT).'</div>';
-  }
-  */
-  //print_r($form);exit;
+  // Add a hidden field for recording the location of ignore and add terms in
+  // the drag'n'drop interface.
+  
 }
 
 /**
@@ -610,6 +471,24 @@ function _autotag_get_vids_for_type($type, $just_vids = TRUE){
 }
 
 /**
+ * Following function takes the posted shit in a form, and searches it. EASY!
+ */
+function _autotag_search_post($values){
+  $vids = _autotag_get_vids_for_type($values['type']);
+  $fields = _autotag_fields_to_search_post($values, $values['type']);
+  $terms_to_return = array();
+  foreach($fields as $field){
+    // Lets split the fields up by spaces, and search on each word in the term_data table.
+    if(isset($values[$field])){
+      $terms = _autotag_search_field($values[$field], $vids);
+      if(count($terms)){
+        $terms_to_return = array_merge($terms_to_return, $terms);
+      }
+    }
+  }
+  return $terms_to_return;
+}
+/**
  * Following function gets the terms from the database, and does the tagging
  * 
  * This takes a node as a parameter, and returns the additional terms that the
@@ -643,6 +522,7 @@ function _autotag_search_form($form){
   // First get all vocabularies, and see which ones apply to this content type
   $vids = _autotag_get_vids_for_type($form['type']['#value']);
   // Get all the fields to search from this node  
+  //print_r($form);
   $fields = _autotag_fields_to_search_post($form['#post'], $form['type']['#value']);
   foreach($fields as $field){
     // Lets split the fields up by spaces, and search on each word in the term_data table.
@@ -801,12 +681,15 @@ function _autotag_fields_to_search_post($post_form, $type){
       $ignore_fields[] = $field;
     }
   }
-  foreach($post_form as $key=>$value){
-    if(!in_array($key, $ignore_fields)){
-      $fields[] = $key;
+  if(is_object($post_form) || is_array($post_form)){
+    foreach($post_form as $key=>$value){
+      if(!in_array($key, $ignore_fields)){
+        $fields[] = $key;
+      }
     }
+    return $fields;
   }
-  return $fields;
+  return array();
 }
 
 /**
