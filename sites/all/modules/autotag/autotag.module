@@ -31,7 +31,7 @@ define('AUTOTAG_IGNORE_FIELDS',"Fields to ignore in content type '%type'");
 define('AUTOTAG_IGNORE_FIELDS_DESC','Uncheck a field if you don\'t want it to be searched for taxonomy terms');
 define('AUTOTAG_ADDITIONAL_TERMS','Additional terms to tag this node with');
 define('AUTOTAG_ADDITIONAL_TERMS_DESC','Terms can be selected from (multiple terms seperated by a comma):');
-define('AUTOTAG_SUBMIT2_TEXT','Once finished reviewing the taxonomy terms, simply press submit.  You may also review what you have entered below, if you feel a tag hasn\'t been found');
+define('AUTOTAG_SUBMIT2_TEXT','Once finished reviewing the taxonomy terms, simply press save.  You may also review what you have entered below, if you feel a tag hasn\'t been found');
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
@@ -54,6 +54,17 @@ function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
           if(!isset($terms[$tid['vid']]) || !in_array($tid['tid'], $terms[$tid['vid']])){
             $terms[$tid['vid']][] = $tid['tid'];
           }
+        }
+      }
+      // We've also got additional tags
+      $vids = _autotag_get_vids_for_type($node->type);
+      $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
+      preg_match_all($regexp, $node->additionaltags, $matches);
+      $words = $matches[1];
+      $result = db_query("SELECT tid, name FROM {term_data} WHERE vid IN (%s) AND LOWER(name) IN ('%s')", implode(",",$vids), implode("','", $words));
+      while($row = db_fetch_array($result)){
+        if(!isset($terms[$row['vid']]) || !in_array($row['tid'], $terms[$row['vid']])){
+          $terms[$row['vid']][] = $row['tid'];
         }
       }
       taxonomy_node_save($node, $terms);
@@ -88,7 +99,9 @@ function autotag_cron(){
 }
  */
 
-// Simply save what was entered in the checkbox
+/**
+ * Simply save what was entered in the checkbox
+ */
 function autotag_submit_vocabulary_form($form, $form_values){
   // Merge the array with what is already there.
   $disable_vids = variable_get('autotag_disable_vids', array());
@@ -96,7 +109,9 @@ function autotag_submit_vocabulary_form($form, $form_values){
   variable_set('autotag_disable_vids', $disable_vids);
 }
 
-// Receive the form after the first page, nothing is done after the second.
+/**
+ * Receive the form after the first page, nothing is done after the second.
+ */
 function autotag_form_submit($form, &$form_state){
   if(isset($form_state['storage']['formbuttons'])){
     // After first page we store the form so that it can be restored on the 
@@ -125,7 +140,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
         '#type' => 'checkbox',
         '#title' => t('Disable Autotag'),
         '#default_value' => isset($diable_vids[$form['vid']['#value']]) ? $diable_vids[$form['vid']['#value']] : 0,  
-        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger')
+        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger (Vocabularies that are marked as "Multiple Select" and are NOT makred as "Tags" or "Required" will use autotagger)')
       );
       // Finally we need a submit function
       $form['#submit'][] = 'autotag_submit_vocabulary_form';
@@ -164,6 +179,18 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
         unset($form['taxonomy'][$key]);
       }
     }
+    // Hide the taxonomy fieldset if there is nothing left in it.
+    $taxonomy_keys = array_keys($form['taxonomy']);
+    $unset = true;
+    foreach($taxonomy_keys as $key){
+      if(substr($key, 0, 1)!='#'){
+        $unset = false;
+      }
+    }
+    if($unset){
+      $form['taxonomy']['#type'] = 'hidden';
+    }
+    
     // Store the stubmit for use later
     $form_state['storage']['formbuttons'] = $form['buttons'];
     $form_state['storage']['formsubmit'] = $form['#submit']; 
@@ -320,10 +347,11 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   );
   // Additional submit button higher up the page so that lazy f*&kers don't have to 
   // scroll down.
-  $form['submit']['#value'] = $button_name;
-  if($step==2){
-    $form['autotag']['submit2'] = $form['submit'];
-    $form['autotag']['submit2']['#prefix'] = '<div class="description">'.t(AUTOTAG_SUBMIT2_TEXT).'</div>';
+  
+  if(isset($form['autotag']['dragndropfields'])){
+    $form['autotag']['submit'] = $form['buttons']['submit'];
+    $form['autotag']['submit']['#prefix'] = '<div class="description">'.t(AUTOTAG_SUBMIT2_TEXT).'</div>';
+    $form['autotag']['submit']['#weight'] = 1000;
   }
 }
 
@@ -334,6 +362,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
  */
 function autotag_menu(){
   $items = array();
+  /*
   $items['admin/settings/autotag'] = array(
     'title' => AUTOTAG_SETTINGS,
     'description' => AUTOTAG_SETTINGS_DESC,
@@ -341,6 +370,7 @@ function autotag_menu(){
     'page arguments' => array('autotag_admin_settings'),
     'access arguments' => array('administer site configuration')
   );
+  */
   $items['autotag/autocomplete'] = array(
     'title' => 'Autocomplete autotag thingumy',
     'page callback' => 'autotag_autocomplete',
@@ -474,6 +504,7 @@ function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   foreach($vocabularies as $vocabulary){
     if(in_array($type,$vocabulary->nodes) && 
        $vocabulary->tags == 0 &&
+       $vocabulary->required == 0 &&
        $vocabulary->multiple == 1 &&
        $vocabulary->module == 'taxonomy' &&
        (
