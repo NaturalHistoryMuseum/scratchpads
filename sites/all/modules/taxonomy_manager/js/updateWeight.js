@@ -1,4 +1,4 @@
-// $Id$
+// $Id: updateWeight.js,v 1.2.2.2 2007/11/26 17:42:33 mh86 Exp $
 
 /**
  * @file js for changing weights of terms with Up and Down arrows
