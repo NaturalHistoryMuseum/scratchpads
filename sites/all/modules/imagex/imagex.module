@@ -79,97 +79,45 @@ function imagex_theme() {
  */
 function imagex_menu() {
   $items = array();
-
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-  if (!$may_cache) {  // Remove ! once finished development.
-    $items['admin/settings/imagex'] = array(
-      'title' => 'Multiple image settings',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('imagex_admin_settings'),
-      'access arguments' => array('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM,
-      'description' => 'Change the way that multiple image upload is handled');
-    $items['imagex/upload'] = array(
-      'access arguments' => array('create images'),
-      'title' => 'Imagex upload',
-      'page callback' => 'imagex_upload_image',
-      'type' => MENU_CALLBACK);
-    $items['imagex/get'] = array(
-      'title' => 'Imagex thumbs',
-      'access arguments' => array('create images'),
-      'type' => MENU_CALLBACK,
-      'page callback' => 'imagex_js'
-    );
-    $items['imagex/removeimages'] = array(
-      'title' => 'NOT NEEDED',
-      'access arguments' => array('create images'),
-      'type' => MENU_CALLBACK,
-      'page callback' => 'imagex_remove_images'
-    );
-  }
+  $items['admin/settings/imagex'] = array(
+    'title' => 'Multiple image settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('imagex_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'description' => 'Change the way that multiple image upload is handled');
+  $items['imagex/upload'] = array(
+    'access arguments' => array('create images'),
+    'title' => 'Imagex upload',
+    'page callback' => 'imagex_upload_image',
+    'type' => MENU_CALLBACK);
+  $items['imagex'] = array(
+    'access arguments' => array('create images'),
+    'title' => 'Imagex upload',
+    'page callback' => 'imagex_upload_page',
+    'type' => MENU_CALLBACK);
+  $items['imagex/get'] = array(
+    'title' => 'Imagex thumbs',
+    'access arguments' => array('create images'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'imagex_js'
+  );
   return $items;
-}
-
-function imagex_remove_images($args='|'){
-  // Remove images from the imagex table, and redirect to the node/add/image page
-  $images = explode('|',$_GET['images']);
-  foreach($images as $image){
-    db_query('DELETE FROM {imagex} WHERE nid = %d', $image);
-  }
-  drupal_goto('node/add/image','2');
-}
-
-/**
- * Implementation of hook_nodeapi
- */
-function imagex_nodeapi(&$node, $op){
-  switch ($op){
-    case 'delete':
-    case 'update':
-      db_query("DELETE FROM {imagex} WHERE nid = %d", $node->nid);
-      break;
-  }
 }
 
 /**
  * Admin settings callback.
  */
 function imagex_admin_settings() {
-  $options = array (
-    'menu' => 'menu'
-  );
-  $default_value = array();
-  foreach($options as $option){
-    if(variable_get('imagex_hide_menu_'.$option,true)){
-      $default_value[$option] = $option;
-    }
-  }
-  $form['hide_items'] = array(
-    '#title' => t('Remove following items from the Image form'),
-    '#type' => 'checkboxes',
-    '#options' => $options,
-    '#default_value' => $default_value
-  );
+  $form = array();
   return system_settings_form($form);
+}
+
+/**
+ * Applet page for adding images to the site
+ */
+function imagex_upload_page(){
+  return array();
 }
 
 function imagex_admin_settings_submit($form, &$form_state){

@@ -1,50 +1,41 @@
 <?php
 // $Id$
-
 /**
- * Installing and updating imagex.module.
+ * hook_install
  */
 function imagex_install() {
   // Increase the module's weight so that it is executed after location.
+  // FIXME - Is this necesary?
   db_query("UPDATE {system} SET weight = 20 WHERE name = 'imagex'");
   
-  // Create the database to link images with users.  
-  // Create tables.
-  drupal_install_schema('imagex');
-  
-  // Create an image gallery called Library (unless one already exists).
-  $tree = taxonomy_get_tree(_image_gallery_get_vid());
-  $library_present = false;
-  $vid = 0;
-  foreach ($tree as $branch){
-    if($branch->name == 'Library'){
-      $library_present = true;
-      break;
+  // If we have the image_gallery module installed, we'll use it to our
+  // advantage
+  if(function_exists('_image_gallery_get_vid')){
+    // Set a message to tell users that, because they have image_gallery
+    // installed, all images will be placed in to a default image gallery, which
+    // can of course be changed.
+    drupal_set_message(t('Imagex will work with the Image Gallery module to add all uploaded images to a default gallery called "Library".  This can be changed from the Imagex settings page'));
+    // Create an image gallery called Library (unless one already exists).
+    $tree = taxonomy_get_tree(_image_gallery_get_vid());
+    $library_present = false;
+    $vid = 0;
+    foreach ($tree as $branch){
+      if($branch->name == 'Library'){
+        $library_present = true;
+        break;
+      }
+      $vid = $branch->vid;
     }
-    $vid = $branch->vid;
+    if (!$library_present && $vid>0){
+      image_gallery_admin_form($pointless = array(
+          'vid' => $vid,
+          'name' => 'Library',
+          'description' => 'Default image gallery',
+          'weight' => 0
+        )
+      );
+    }
+  } else {
+    drupal_set_message(t('Imagex will work with the Image Gallery module to add all uploaded images to a default gallery called "Library".  Reinstalling this module, after installing "Image Gallery" will help users locate images uploaded using Imagex'), 'error');
   }
-  if (!$library_present && $vid>0){
-    image_gallery_admin_form($edit = array(
-        'vid' => $vid,
-        'name' => 'Library',
-        'description' => 'Default image gallery',
-        'weight' => 0
-      )
-    );
-  }
-  if ($result){    
-  	drupal_set_message(t('Imagex installed'));
-  }
-  else{    
-  	drupal_set_message(t('I\'m sorry Dave, I\'m afraid I can\'t do that. Imagex installation failed'), 'error');
-  }
-}
-
-/**
- * Kick that loser to touch.
- */
-function imagex_uninstall() {
-  // Remove tables.
-  drupal_uninstall_schema('imagex');
-
 }
