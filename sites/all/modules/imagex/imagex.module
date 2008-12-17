@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: imagex.module,v 1.6 2008/07/30 10:36:42 sdrycroft Exp $
 
 /* TODO Automatically add Drupal.settings.basePath
    In Drupal 5, you would have to add the base path to Drupal.settings yourself
@@ -8,6 +8,13 @@
    find it at Drupal.settings.basePath (actually, as soon as drupal_add_js() is
    called at least once, so this is similar to the way we automatically add
    drupal.js and jquery.js. */
+
+/* TODO db_next_id() is gone, and replaced as db_last_insert_id()
+   Since db_next_id() introduce some problems, and the use of this function
+   can be replaced by database level auto increment handling, db_next_id()
+   is now gone and replaced as db_last_insert_id() with help of serial type
+   under Schema API (check out http://drupal.org/node/149176 for more details).
+   Please refer to drupal_write_record() as demonstration. */
 
 /* TODO FormAPI image buttons are now supported.
    FormAPI now offers the 'image_button' element type, allowing developers to
@@ -20,16 +27,14 @@ $form['my_image_button'] = array(
   '#src'          => 'my/image/path.jpg',
 ); */
 
-/* TODO hook_nodeapi('submit') has been replaced by op='presave'
-   There is no longer a 'submit' op for nodeapi. Instead you may use the newly
-   created 'presave' op. Note, however, that this op is invoked at the beginning
-   of node_save(), in contrast to op='submit' which was invoked at the end of
-   node_submit(). Thus 'presave' operations will be performed on nodes that are
-   saved programatically via node_save(), while in Drupal 5.x op='submit' was
-   only applied to nodes saved via the node form. Note that the node form is now,
-   in effect, a multistep form (for example when previewing), so if you need to
-   fix up the data in the node for re-building the form, use a #submit function
-   added to the node form's $form array. */
+/* TODO Node previews and adding form fields to the node form.
+   There is a subtle but important difference in the way node previews (and other
+   such operations) are carried out when adding or editing a node. With the new
+   Forms API, the node form is handled as a multi-step form. When the node form
+   is previewed, all the form values are submitted, and the form is rebuilt with
+   those form values put into $form['#node']. Thus, form elements that are added
+   to the node form will lose any user input unless they set their '#default_value'
+   elements using this embedded node object. */
 
 /* TODO New user_mail_tokens() method may be useful.
    user.module now provides a user_mail_tokens() function to return an array
@@ -63,7 +68,12 @@ function example_watchdog($log = array()) {
 function imagex_theme() {
   return array(
   );
-} */
+}; */
+
+
+/* TODO
+   An argument for replacements has been added to format_plural(),
+   escaping and/or theming the values just as done with t().*/
 
 /* TODO You may want to take advantage of new form-specific alter hooks.
    The hook_form_alter() is complemented by hook_form_$form-id_alter().
@@ -75,68 +85,107 @@ function imagex_theme() {
    [your-module-name]_form_[$form_id]_alter. */
 
 /**
- * Implementation of hook_menu
+ * This is a complete rewrite of the imagex module.  The module
+ * allows a user to upload multiple images in one simple step.
+ * The module also provides an editing interface that makes 
+ * editing a large number of images also much easier.
  */
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
 function imagex_menu() {
   $items = array();
-  $items['admin/settings/imagex'] = array(
-    'title' => 'Multiple image settings',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('imagex_admin_settings'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_ITEM,
-    'description' => 'Change the way that multiple image upload is handled');
-  $items['imagex/upload'] = array(
-    'access arguments' => array('create images'),
-    'title' => 'Imagex upload',
-    'page callback' => 'imagex_upload_image',
-    'type' => MENU_CALLBACK);
-  $items['imagex'] = array(
-    'access arguments' => array('create images'),
-    'title' => 'Imagex upload',
-    'page callback' => 'imagex_upload_page',
-    'type' => MENU_CALLBACK);
-  $items['imagex/get'] = array(
-    'title' => 'Imagex thumbs',
-    'access arguments' => array('create images'),
-    'type' => MENU_CALLBACK,
-    'page callback' => 'imagex_js'
-  );
+
+/* TODO
+   Non menu code that was placed in hook_menu under the '!$may_cache' block
+   so that it could be run during initialization, should now be moved to hook_init.
+   Previously we called hook_init twice, once early in the bootstrap process, second
+   just after the bootstrap has finished. The first instance is now called boot
+   instead of init.
+   
+   In Drupal 6, there are now two hooks that can be used by modules to execute code
+   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
+   and runs on each page request, even for cached pages. hook_boot() now only runs
+   for non-cached pages and thus can be used for code that was previously placed in
+   hook_menu() with $may_cache = FALSE:
+   
+   Dynamic menu items under a '!$may_cache' block can often be simplified
+   to remove references to arg(n) and use of '%<function-name>' to check
+   conditions. See http://drupal.org/node/103114.
+   
+   The title and description arguments should not have strings wrapped in t(),
+   because translation of these happen in a later stage in the menu system.
+*/
+  if ($may_cache) {
+    $items['imagex/upload'] = array(
+      'access arguments' => array('create images'),
+      'title' => 'Imagex upload',
+      'page callback' => 'imagex_upload_image',
+      'type' => MENU_CALLBACK);
+    $items['imagex/get'] = array(
+      'title' => 'Imagex thumbs',
+      'access arguments' => array('create images'),
+      'type' => MENU_CALLBACK,
+      'page callback' => 'imagex_js'
+    );
+    $items['imagex/imagex'] = array(
+      'title' => 'Upload images',
+      'access arguments' => array('create images'),
+      'type' => MENU_CALLBACK,
+      'page callback' => 'imagex_upload_page'
+    );
+  }
   return $items;
 }
-
-/**
- * Admin settings callback.
- */
-function imagex_admin_settings() {
-  $form = array();
-  return system_settings_form($form);
-}
-
-/**
- * Applet page for adding images to the site
- */
-function imagex_upload_page(){
-  return array();
-}
-
-function imagex_admin_settings_submit($form, &$form_state){
-  //print_r($form_state['values']);exit;
-  if (isset($form_state['values']['hide_items']) && count($form_state['values']['hide_items'])>0){
-    $keys = array_keys($form_state['values']['hide_items']);
-    foreach ($keys as $hide_item){
-      if ($form_state['values']['hide_items'][$hide_item]==0){
-        variable_set('imagex_hide_menu_'.$hide_item,$form_state['values']['hide_items'][$hide_item]);
-      }
-      else {
-        variable_set('imagex_hide_menu_'.$hide_item, 1);
-      }
-    }
+function imagex_form_alter(&$form, &$form_state, $form_id){
+  // Lets add a small message to the top of the node/add/image form to point to the 
+  // multiple add image page
+  if($form_id == 'image_node_form'){
+    $form['imagex'] = array(
+      '#weight' => -100, // make sure it is at the top
+      '#value' => '<div class="messages"><p>'.t('You can add multiple images quickly to the site from the <a href="@uploadpage">multiple upload page</a>', array('@uploadpage'=>url('imagex/imagex'))).'</p></div>'
+    );
   }
 }
-
+/***********************************************************************************
+ * CALLBACKS
+ ***********************************************************************************/
 /**
- * Handle the file upload
+ * Callback for the imagex/imagex page which simply displays the applet for uploading
+ * of images
+ *
+ * @return String (Contains HTML for displaying of the applet)
+ */
+function imagex_upload_page(){
+  // If we're lookin' at this page, then chuffin heck, we need t'JavaScript & CSS
+  drupal_add_js(drupal_get_path('module','imagex').'/imagex.js');
+  drupal_add_css(drupal_get_path('module','imagex').'/imagex.css');
+  return '<div class="messages imagex header"><p>'.t('Drop images into the box below, or click the "Add" button, and select the images you\'d like to upload').'</p></div><div class="imagex postlet">
+	<applet name="postlet" code="Main.class" archive="'.base_path().drupal_get_path('module','imagex').'/postlet/postlet.jar" width="100%" height="300" mayscript>
+		<param name = "maxthreads"		value = "5" />
+		<param name = "language"		value = "EN" />
+		<param name = "type"			value = "application/x-java-applet;version=1.3.1" />
+		<param name = "destination"		value = "'.url('imagex/upload', array('absolute' => TRUE)).'" />
+		<param name = "backgroundcolour" value = "16777215" />
+		<param name = "tableheaderbackgroundcolour" value = "14079989" />
+		<param name = "tableheadercolour" value = "0" />
+		<param name = "warnmessage" value = "false" />
+		<param name = "autoupload" value = "true"/>
+		<param name = "helpbutton" value = "false"/>
+		<param name = "removebutton" value = "false" />
+		<param name = "addbutton" value = "true"/>
+		<param name = "uploadbutton" value = "true" />
+		<param name = "fileextensions" value = "Image Files,jpg,gif,jpeg,bmp,png" />
+	</applet>
+	<script type="text/javascript">
+	  imagesreturnurl ="'.url('imagex/get', array('absolute' => TRUE)).'";
+	</script>
+</div>
+<div id="imagexthumbs" class="imagex thumbs"></div>';
+}
+/**
+ * Callback for the upload destination.  This is where images are sent to by the applet.
+ * This page is NOT designed to be viewed by humans/browsers.
  */
 function imagex_upload_image(){
   global $user;
@@ -160,10 +209,13 @@ END POSTLET REPLY
     $image_node = image_create_node_from($temp_filename, $_FILES['userfile']['name']);
     if (!$image_node){
       // Lets work out why it wasn't uploaded and change the error accordingly.
+      
+      // For now we'll say this type isn't allowed
+      $uploaded = 2;
     }
     else {
       // Add the node to the imagex table
-      db_query("INSERT INTO {imagex} (uid,nid) VALUES (".$user->uid.",".$image_node->nid.");");
+      db_query("INSERT INTO {imagex} (uid,nid) VALUES (%d,%d)", $user->uid, $image_node->nid);
     }
     switch($uploaded){
       case 0:
@@ -204,222 +256,35 @@ END POSTLET REPLY
   }
   exit;
 }
-
 /**
  * Menu callback, ajax call to populate the page with the thumbnails
  */
 function imagex_js(){
   // Reurns HTML as JS for the thumbs of images uploaded
   // Does this for the user logged in only
-  print drupal_to_js(array('html' => imagex_get_thumbs_html()));
+  print drupal_to_js(array('html' => '<p>'.t('The following images have been uploaded by you in the last hour').'</p>'.imagex_get_thumbs_html(60)));
   exit();
 }
-
-function imagex_get_thumbs_html(){
+/***********************************************************************************
+ * HELPER FUNCTIONS
+ ***********************************************************************************/
+/**
+ * Following gets an HTML formatted list of images that the current user has uploaded,
+ * and not edited.  It can also optionally show only images uploaded in the last x minutes
+ *
+ * @return String (Formatted HTML)
+ */
+function imagex_get_thumbs_html($minutes = NULL){
   global $user;
-  $result = db_query("SELECT nid FROM {imagex} WHERE uid = ".$user->uid);
+  if(is_null($minutes)){
+    $result = db_query("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image'",$user->uid);
+  }else{
+    $result = db_query("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image' AND created>%d",$user->uid , time()-($minutes*60));
+  }
   $html = '';
   while($node = db_fetch_object($result)){
     $node = node_load($node->nid);
-    //$html .= node_view($node,TRUE);
-    //print_r($node);exit;
     $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'" onclick="imagexclick(\''.$node->nid.'\');">'.image_display($node,  $label = IMAGE_THUMBNAIL, array('alt'=>$node->title)).'</div>';
   }
   return $html;
-}
-
-function imagex_form_submit($form, &$form_state){
-  // Submit schtuff
-  // Is this multiple images, or a single upload?
-  if ($form_state['values']['selected_images']=='|'){
-    // Single - Do we have a file?
-    // We should only arrive here if editing an image page.
-    if(count($form_state['values']['files']>0)){
-      // We're editing or uploading a single image
-      return node_form_submit($form_state['values']['form_id'], $form_state['values']);
-    }
-    else {
-      // Error, explain to either select images, or upload a file (Wankers).
-      form_set_error('file', t('Either upload a single file, or select image(s) to annotate'));
-      return;
-    }
-  }
-  else {
-    // We're mucking about with loads of images.  Each one should have a node associated
-    // For each one change the $form_state['values'], and submit the bitch
-    $images = explode('|',$form_state['values']['selected_images']);
-    $num_images = 0;
-    foreach($images as $image_node){
-      // First and last probably blank
-      $image_node = trim($image_node);
-      if($image_node!=""){
-        $num_images ++;
-        $node = node_load($image_node);
-        // If title was sent blank, ignore it
-        $title_is_blank = false;
-        if(trim($form_state['values']['title'])==''){
-          $title_is_blank = true;
-          $form_state['values']['title'] = $node->title;
-        }
-        $form_state['values']['nid']=$node->nid;
-        $form_state['values']['vid']=$node->vid;
-        unset($form_state['values']['created']);
-        node_form_submit($form_state['values']['form_id'],$form_state['values']);
-        $form_state['values']['title'] = '';
-      }
-    }
-    // Delete the Drupal messages, only show errors
-    drupal_get_messages('status');
-    drupal_set_message($num_images.' image(s) have been annotated');
-    // Following is safe as no node can have nid of 0!
-    db_query("DELETE FROM {imagex} WHERE nid IN (0".str_replace("|",",",$form_state['values']['selected_images'])."0);");
-    drupal_goto('node/add/image','2');
-  }
-}
-
-/**
- * hook_form_alter blah blah blah.
- */
-function imagex_form_alter(&$form, &$form_state, $form_id) {
-  if($form_id!='image_node_form'){
-    return;
-  }
-  // If we're lookin' at the form, then chuffin heck, we need t'JavaScript & CSS
-  drupal_add_js(drupal_get_path('module','imagex').'/imagex.js');
-  drupal_add_css(drupal_get_path('module','imagex').'/imagex.css');
-
-  //print_r($form['#submit']);exit;
-  unset($form['#submit']['node_form_submit']);
-  $form['#submit'][] = 'imagex_form_submit';
-  
-  // Add descriptions explaining that Title, body etc will apply to ALL images
-  $form['apply_all_images'] = array(
-    '#value' => t('<div class="messages">Work through the steps below, and then press <strong>Submit</strong> to add images to your '.l('Image galleries','image').'.  If editing a single image, skip straight to step 3.<ol><li>Upload Images</li><li>Select uploaded images</li><li>Annotate Images</li></ol>Please be aware that annotations will apply to all images.</div>'),
-    '#weight' => -1000
-  );
-  $form['multiple'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('1. Upload Images'),
-    '#description' => t('Automatically upload one or more images by dropping them on the space below.'),
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#weight' => -900
-  );
-  
-  // Add the applet!
-  $form['multiple']['applet'] = array( // Before you say anything, YES, the method of getting the image URLs below is SHITE!
-    '#prefix' => '<div>',
-    '#suffix' => '</div>',
-    '#value' => '<div class="postlet">
-	<applet name="postlet" code="Main.class" archive="'.base_path().drupal_get_path('module','imagex').'/postlet/postlet-0-15.jar" width="400" height="200" mayscript>
-		<param name = "dropimage"		value = "'.url('', array('query' => null, 'fragment' => null, 'absolute' => TRUE)).drupal_get_path('module','imagex').'/postlet/image.jpg"/>
-		<param name = "dropimageupload"		value = "'.url('', array('query' => null, 'fragment' => null, 'absolute' => TRUE)).drupal_get_path('module','imagex').'/postlet/imageupload.jpg"/>
-		<param name = "maxthreads"		value = "5" />
-		<param name = "language"		value = "EMPTY" />
-
-		<param name = "type"			value = "application/x-java-applet;version=1.3.1" />
-		<param name = "destination"		value = "'.url('imagex/upload', array('absolute' => TRUE)).'" />
-		<param name = "backgroundcolour" value = "16777215" />
-		<param name = "tableheaderbackgroundcolour" value = "14079989" />
-		<param name = "tableheadercolour" value = "0" />
-		<param name = "warnmessage" value = "false" />
-		<param name = "autoupload" value = "true" />
-		<param name = "helpbutton" value = "false" />
-		<param name = "removebutton" value = "false" />
-		<param name = "addbutton" value = "false" />
-		<param name = "uploadbutton" value = "false" />
-		<param name = "fileextensions" value = "Image Files,jpg,gif,jpeg" />
-	</applet>
-	<script type="text/javascript">
-	  imagexSetURL(\''.url('imagex/get', array('absolute' => TRUE)).'\');
-	</script>
-</div>'
-  );
-  $collapse_field_2 = true;
-  if (isset($_GET['2'])){
-    $collapse_field_2 = false;
-  }
-  $form['thumbs_fieldset'] = array(
-    '#type' => 'fieldset',
-    '#title' => '2. Uploaded images',
-    '#description' => t('Click on one or more image to select those you will annotate in step 3.  Or, ').l(t('Mark selected images as annotated'), 'imagex/removeimages', array('attributes' => array('id'=>'imagexremove'))),
-    '#collapsible' => TRUE,
-    '#collapsed' => $collapse_field_2,
-    '#weight' => -800
-  );
-  
-  $form['thumbs_fieldset']['thumbs'] = array(
-    '#prefix' => '<div>',
-    '#suffix' => '</div>',
-    '#value' => '<div id="imagexthumbs">'.imagex_get_thumbs_html().'</div>'
-  );
-  $form['selected_images'] = array(
-    '#type' => 'hidden',
-    '#default_value' => '|'
-  );
-  $form['title']['#description'] = t('Leave this blank to use the original image filenames.');
-  
-  // Unset preview - it just isn't possible!
-  unset($form['preview']);
-  // Unset single image upload - no longer needed  
-  unset($form['image']);
-  
-  // Unset all the required shit
-  if(!function_exists('imagex_unset_required')){
-    function imagex_unset_required(&$param, $key){
-      if (is_array($param))
-        array_walk($param, 'imagex_unset_required');
-      else {
-        if ($key === '#required' && $param ==1){
-          $param = 0;
-        }
-      }
-    }
-  }
-  array_walk($form, 'imagex_unset_required');
-    
-  $collapse_field_three = true;
-  if (arg(0)=='node' && arg(2)=='edit'){
-    $collapse_field_three = false;
-  }
-  $form['third_stage'] = array(
-    '#title' => t('3. Annotate Images'),
-    '#weight' => -700,
-    '#description' => t('Tell us about these images. Annotations will apply to ALL selected images. You can change these annotations later from the '.l('Image Gallery.','image')),
-    '#collapsible' => TRUE,
-    '#collapsed' => $collapse_field_three,
-    '#type' => 'fieldset'
-  );
-  $keys = array_keys($form);
-  foreach ($keys as $key){
-    if ($key != 'apply_all_images'
-        && $key != 'third_stage'
-        && $key != 'multiple'
-        && $key != 'thumbs_fieldset'
-        && $key != 'submit'
-        && substr($key,0,1)!='#'){
-      if (isset($form[$key])){
-        $form['third_stage'][$key] = $form[$key];
-        unset($form[$key]);
-      }
-    }
-  }
-  
-  // Unset the validate bit, just for the node_form
-  unset($form['#validate']['node_form_validate']);
-  
-  $form['path']['#collapsed'] = 1;
-  $form['groups']['#collapsed'] = 1;
-  $form['creativecommons_lite']['#weight'] = -1;
-  unset($form['attachments']);
-  if(variable_get('imagex_hide_menu_menu',TRUE)){
-    unset($form['menu']);
-  }
-  
-  if (arg(0)=='node' && arg(2)=='edit'){
-    unset($form['multiple']);
-    unset($form['thumbs_fieldset']);
-    unset($form['apply_all_images']);
-    $form['third_stage']['#title']=t('Annotate single image');
-  }
 }

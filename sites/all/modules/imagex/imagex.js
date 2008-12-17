@@ -1,26 +1,17 @@
 // $id$
-var imagexremove_url = false;
-var imagesreturnurl = '';
-function imagexSetURL(url){
-  imagesreturnurl = url;  
-}
+var imagexremove_url;
+var imagesreturnurl;
 function postletFinished(){
   var imagexReturn = function (data) {
     var returnHtml = Drupal.parseJson(data);
     $('#imagexthumbs').hide();
-    $('#imagexthumbs').html(returnHtml['html']);
+    $('#imagexthumbs').html(returnHtml['html']+"<div style=\"clear:both\"></div>");
     $('#imagexthumbs').show();
   }
   $.get(imagesreturnurl, null, imagexReturn);
   if ($('#imagexthumbs').parent().parent().parent().parent().is('.collapsed')) {
     Drupal.toggleFieldset($('#imagexthumbs').parent().parent().parent().parent());
   }
-}
-function postletStatus(status){
-}
-function postletError(erroCode, errorString){
-}
-function postletFiles(filesString){
 }
 function imagexclick(nid){
   var selectedImages = $('#edit-selected-images').val();
