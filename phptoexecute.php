@@ -464,3 +464,13 @@ node_access_rebuild();*/
 
 // Set all sites to preprocess CSS
 /* variable_set('preprocess_css',1); */
+
+// Set the OpenURL image on all sites
+variable_set('biblio_openurlimage',"/sites/all/images/openurl.jpg");
+
+// Set the boost thingy to work
+variable_set('boost', 'CACHE_ENABLED');
+variable_set('boost_banner', '\n\n\n\n\n\n\n\n');
+variable_set('boost_file_path', 'cache');
+variable_set('preprocess_css', '1');
+variable_set('cache_lifetime', '86400');
