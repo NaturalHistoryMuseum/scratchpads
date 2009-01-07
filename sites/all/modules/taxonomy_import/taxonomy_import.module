@@ -518,8 +518,8 @@ function taxonomy_import_parse($text, $vid, $import_format) {
         }
     	}
     }
-    $term_hierarchy = "INSERT INTO {term_hierarchy} VALUES ".$term_hierarchy;
-    $term_data = "INSERT INTO {term_data} VALUES ".$term_data;
+    $term_hierarchy = "INSERT INTO {term_hierarchy} (tid, parent) VALUES ".$term_hierarchy;
+    $term_data = "INSERT INTO {term_data} (tid, vid, name, description, weight) VALUES ".$term_data;
     if ($synonym_data !=""){
       $synonym_data = "INSERT INTO {term_synonym} VALUES ".$synonym_data;
     }
