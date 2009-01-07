@@ -87,11 +87,11 @@ node_access_rebuild();
 */
 
 // Set file upload sizes.
-/*variable_set('upload_max_resolution', 0);
+variable_set('upload_max_resolution', 0);
 variable_set('upload_list_default', 1);
 variable_set('upload_extensions_default','jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp');
-variable_set('upload_uploadsize_default',10);
-variable_set('upload_usersize_default',100);
+variable_set('upload_uploadsize_default',25);
+variable_set('upload_usersize_default',1000);
 variable_set('upload_document',1);
 variable_set('upload_page',1);
 variable_set('upload_forum',1);
@@ -108,14 +108,14 @@ variable_set('upload_extensions_3','jpg jpeg gif png txt html doc xls pdf ppt pp
 variable_set('upload_extensions_4','jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp ai');
 variable_set('upload_extensions_5','jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp ai');
 variable_set('upload_extensions_6','jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp ai');
-variable_set('upload_uploadsize_3',10);
-variable_set('upload_uploadsize_4',10);
-variable_set('upload_uploadsize_5',10);
-variable_set('upload_uploadsize_6',10);
+variable_set('upload_uploadsize_3',25);
+variable_set('upload_uploadsize_4',25);
+variable_set('upload_uploadsize_5',25);
+variable_set('upload_uploadsize_6',25);
 variable_set('upload_usersize_3',1000);
 variable_set('upload_usersize_4',1000);
 variable_set('upload_usersize_5',1000);
-variable_set('upload_usersize_6',1000);*/
+variable_set('upload_usersize_6',1000);
 
 // Fix Lightbox shit
 /* variable_set('lightbox2_use_alt_layout',0);
@@ -466,11 +466,11 @@ node_access_rebuild();*/
 /* variable_set('preprocess_css',1); */
 
 // Set the OpenURL image on all sites
-variable_set('biblio_openurlimage',"/sites/all/images/openurl.jpg");
+/*variable_set('biblio_openurlimage',"/sites/all/images/openurl.jpg");*/
 
 // Set the boost thingy to work
-variable_set('boost', 'CACHE_ENABLED');
+/*variable_set('boost', 'CACHE_ENABLED');
 variable_set('boost_banner', '\n\n\n\n\n\n\n\n');
 variable_set('boost_file_path', 'cache');
 variable_set('preprocess_css', '1');
-variable_set('cache_lifetime', '86400');
+variable_set('cache_lifetime', '86400');*/
