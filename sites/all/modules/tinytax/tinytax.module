@@ -7,6 +7,16 @@
  */
 
 /**
+ * Implementation of hook_theme
+ */
+function tinytax_theme() {
+  return array(
+    'tinytax_term_list' => array(
+      'arguments' => array('parents', 'children', 'vid'),
+    ),
+  );
+}
+/**
  * Implementation of hook_block.
  */
 function tinytax_block($op = 'list', $delta = 0, $edit = array()){
@@ -16,7 +26,7 @@ function tinytax_block($op = 'list', $delta = 0, $edit = array()){
     case 'configure': // No need to add any extra configuration - Open to suggestions.
       return _tinytax_configure($delta);
     case 'view':
-      return _tinytax_view_blocks($delta, $edit);
+      return _tinytax_view_blocks($delta);
     case 'save':
       _tinytax_save($delta, $edit);
       break;    
@@ -28,39 +38,17 @@ function tinytax_block($op = 'list', $delta = 0, $edit = array()){
  */
 function tinytax_menu() {
   $items = array();
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-  if ($may_cache){
-    $items['tinytax/get'] = array(
-      'title' => 'tinytax',
-      'access arguments' => array('access content'),
-      'type' => MENU_CALLBACK,
-      'page callback' => 'tinytax_js'
-    );
-    $items['tinytax/autocomplete'] = array(
-      'access arguments' => true, 
-      'title' => 'Tinytax callback',
-      'page callback' => 'tinytax_autocomplete',
-      'type' => MENU_CALLBACK);  
-  }
+  $items['tinytax/get'] = array(
+    'title' => 'tinytax',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'tinytax_js'
+  );
+  $items['tinytax/autocomplete'] = array(
+    'access arguments' => array('access content'), 
+    'title' => 'Tinytax callback',
+    'page callback' => 'tinytax_autocomplete',
+    'type' => MENU_CALLBACK);
   return $items;
 }
 
@@ -319,52 +307,40 @@ function _theme_tinytax_term_list_link($term, $vid){
     }
   }
   if (substr($term->tid,0,3)!='vid'){
-    $return_string .= /* TODO
-   Please manually fix the parameters on the l() or url() function on the next line.
-   Typically, this was not changed because of a function call inside an array call like
-   array('title' => t('View user profile.')).*/
-l(
+    $return_string .= l(
       '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.gif'.'"/>',
       'taxonomy/term/'.$term->tid,
       array(
-        'title'=> t('Click to see the descendants of this name'),
-        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;"
-      ),
-      null,
-      null,
-      null,
-      TRUE
+        'attributes' => array(
+          'title'=> t('Click to see the descendants of this name'),
+          'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;"
+        ),
+        'html' => true
+      )
     );
   } else {
-    $return_string .= /* TODO
-   Please manually fix the parameters on the l() or url() function on the next line.
-   Typically, this was not changed because of a function call inside an array call like
-   array('title' => t('View user profile.')).*/
-l(
+    $return_string .= l(
       '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.gif'.'"/>',
       '',
       array(
-        'title'=> t('Click to see the descendants of this name'),
-        'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;"
-      ),
-      null,
-      null,
-      null,
-      TRUE
+        'attributes' => array(
+          'title'=> t('Click to see the descendants of this name'),
+          'onclick'=>"tinytaxalterroot('".url('tinytax/get/'.$term->tid)."');return false;",
+        ),
+        'html' => true
+      )
     );
   }
   $return_string .= ' ';
   if (substr($term->tid,0,3)!='vid'){
-    $return_string .= /* TODO
-   Please manually fix the parameters on the l() or url() function on the next line.
-   Typically, this was not changed because of a function call inside an array call like
-   array('title' => t('View user profile.')).*/
-l(
+    $return_string .= l(
       $term->name,
       'taxonomy/term/'.$term->tid,
       array(
-        'class'=>$class,
-        'title'=> t('Click to see all content tagged with this name')
+        'attributes' => array(
+          'class'=>$class,
+          'title'=> t('Click to see all content tagged with this name')
+        )
       )
     );
   }
