@@ -1,0 +1,104 @@
+<?php
+// $Id: fileshare.install 525 2008-06-05 12:10:19Z simor $
+
+/**
+ * Implementation of hook_schema().
+ */
+function fileshare_schema() {
+  $schema['node_fileshare'] = array(
+    'description' => t('TODO'),
+    'fields' => array(
+      'vid' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'unsigned' => 1,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'unsigned' => 1,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      '_filepath' => array(
+        'description' => t('TODO'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      '_basepath' => array(
+        'description' => t('TODO'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      '_whitelist' => array(
+        'description' => t('TODO'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      '_method' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      '_thumbs' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      '_modify' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      '_private' => array(
+        'description' => t('TODO'),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('vid', 'nid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Update to add _private table column
+ */
+/**
+ * Update to add _basepath, _method and _whitelist table columns
+ */
+/**
+ * Implementation of hook_install()
+ * Adding database table
+ */
+function fileshare_install() {
+  // Create tables.
+  drupal_install_schema('fileshare');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function fileshare_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('fileshare');
+
+}
+?>

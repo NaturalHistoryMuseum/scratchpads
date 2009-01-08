@@ -3,64 +3,52 @@
 /**
 * Implementation of hook_menu
 */
-function views_setup_wizard_menu(){
-	
-	if($may_cache){
-		
-		$items['admin/settings/views_setup_wizard'] = array(
-		'title' => 'View setup wizard',
-		'description' => 'Configuration of panel view setup wizard.',
-	  'page callback' => 'views_setup_wizard_list_views',
-		'access arguments' => array('Use the setup wizard'),
-		);
-	
-		$items['admin/settings/views_setup_wizard/settings'] = array(
-		'title' => 'Settings',
-		'page callback' => 'drupal_get_form',
-		'page arguments' => array('views_setup_wizard_admin_form'),
-		'access arguments' => array('Administer view wizard'),
-		'description' => 'Configuration of view setup wizard.',
-		'type' => MENU_LOCAL_TASK,
-		);
-		
-		$items[] = array(
-		  'title' => 'Views',	
-	      'path' => 'admin/settings/views_setup_wizard/list', 
-	      'access arguments' => array('Use the setup wizard'),
-		  'weight' => -10,
-	      'type' => MENU_DEFAULT_LOCAL_TASK,
-	    );
-	
-		$items[] = array(
-	      'title' => 'Create new view',
-	      'path' => 'admin/settings/views_setup_wizard/add',
-	      'page callback' => 'drupal_get_form', 
-	      'page arguments' => 'views_setup_wizard_add_panel_form', 
-	      'access arguments' => array('Use the setup wizard'),
-	      'type' => MENU_CALLBACK,
-	    );		
-		
-		$items['views_setup_wizard/get_fields/ajax'] = array(
-	      'page callback' => 'views_setup_wizard_get_fields_ajax', 
-	      'access arguments' => array('Use the setup wizard'),
-	      'type' => MENU_CALLBACK,
-	    );	
-	
-		$items['views_setup_wizard/plugin/ajax'] = array(
-	      'page callback' => 'views_setup_wizard_plugin_needs_field_ajax', 
-	      'access arguments' => array('Use the setup wizard'),
-	      'type' => MENU_CALLBACK,
-	    );
-
-		$items['admin/settings/views_setup_wizard/edit'] = array(
-	      'page callback' => 'drupal_get_form', 
-	      'page arguments' => array('views_setup_wizard_edit_panel_form'),
-	      'access arguments' => array('Use the setup wizard'),
-	      'type' => MENU_CALLBACK,
-	    );
-		
-	}
-	
+function views_setup_wizard_menu(){		
+	$items['admin/settings/views_setup_wizard'] = array(
+  	'title' => 'View setup wizard',
+  	'description' => 'Configuration of panel view setup wizard.',
+    'page callback' => 'views_setup_wizard_list_views',
+  	'access arguments' => array('Use the setup wizard'),
+	);
+	$items['admin/settings/views_setup_wizard/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('views_setup_wizard_admin_form'),
+    'access arguments' => array('Administer view wizard'),
+    'description' => 'Configuration of view setup wizard.',
+    'type' => MENU_LOCAL_TASK,
+	);	
+	$items[] = array(
+    'title' => 'Views',	
+    'path' => 'admin/settings/views_setup_wizard/list', 
+    'access arguments' => array('Use the setup wizard'),
+    'weight' => -10,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+	$items[] = array(
+    'title' => 'Create new view',
+    'path' => 'admin/settings/views_setup_wizard/add',
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => 'views_setup_wizard_add_panel_form', 
+    'access arguments' => array('Use the setup wizard'),
+    'type' => MENU_CALLBACK,
+  );
+	$items['views_setup_wizard/get_fields/ajax'] = array(
+    'page callback' => 'views_setup_wizard_get_fields_ajax', 
+    'access arguments' => array('Use the setup wizard'),
+    'type' => MENU_CALLBACK,
+  );
+	$items['views_setup_wizard/plugin/ajax'] = array(
+    'page callback' => 'views_setup_wizard_plugin_needs_field_ajax', 
+    'access arguments' => array('Use the setup wizard'),
+    'type' => MENU_CALLBACK,
+  );
+	$items['admin/settings/views_setup_wizard/edit'] = array(
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('views_setup_wizard_edit_panel_form'),
+    'access arguments' => array('Use the setup wizard'),
+    'type' => MENU_CALLBACK,
+  );	
 	return $items;
 	
 }
@@ -78,181 +66,154 @@ function views_setup_wizard_perm(){
 * Admin settings form
 */
 
-function views_setup_wizard_admin_form(){
-	
+function views_setup_wizard_admin_form(){	
 	$form['settings'] = array(
-	'#type' => 'fieldset',
-	'#title' => t('Settings'),
-	'#collapsible' => TRUE,
-	'#collapsed' => FALSE,
-	);
-	
+  	'#type' => 'fieldset',
+  	'#title' => t('Settings'),
+  	'#collapsible' => TRUE,
+  	'#collapsed' => FALSE,
+	);	
 	$form['settings']['views_setup_wizard_comments'] = array(
     '#type' => 'checkbox',
     '#title' => t('Allow comment fields.'),
     '#return_value' => 1,
     '#default_value' => variable_get('views_setup_wizard_comments', 0),
     '#description' => t('If checked, users will be able to add comment fields to the view.'),
-    );
-
+  );
 	$form['settings']['views_setup_wizard_hide_locked_views'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide locked views.'),
     '#return_value' => 1,
     '#default_value' => variable_get('views_setup_wizard_hide_locked_views', null),
     '#description' => t('If checked, locked views will not be visible on the wizard administration page.'),
-    );
-
+  );
 
 	//taxonomy settings	
 	
 	$form['taxonomy'] = array(
-	'#type' => 'fieldset',
-	'#title' => t('Taxonomy'),
-	'#collapsible' => TRUE,
-	'#collapsed' => FALSE,
-	);
-	
-	$vocabularies = taxonomy_get_vocabularies();
-	
-	$vocabulary_options = array('');
-	
-		foreach($vocabularies as $vocabulary){
-			$vocabulary_options[$vocabulary->vid] = $vocabulary->name;
-		}
-
+  	'#type' => 'fieldset',
+  	'#title' => t('Taxonomy'),
+  	'#collapsible' => TRUE,
+  	'#collapsed' => FALSE,
+	);	
+	$vocabularies = taxonomy_get_vocabularies();	
+	$vocabulary_options = array('');	
+	foreach($vocabularies as $vocabulary){
+		$vocabulary_options[$vocabulary->vid] = $vocabulary->name;
+	}
 	$form['taxonomy']['views_setup_wizard_vocab'] = array(
-		    '#type' => 'select',
-		    '#title' => t('Vocabulary'),
-		    '#options' => $vocabulary_options,
-		    '#default_value' => variable_get('views_setup_wizard_vocab', 0),
-		    '#description' => t('The vocabulary to use for the view. If selected, this will be added as an argument to the view. Leave blank if you do not want to apply a taxonomy argument.'),
+    '#type' => 'select',
+    '#title' => t('Vocabulary'),
+    '#options' => $vocabulary_options,
+    '#default_value' => variable_get('views_setup_wizard_vocab', 0),
+    '#description' => t('The vocabulary to use for the view. If selected, this will be added as an argument to the view. Leave blank if you do not want to apply a taxonomy argument.'),
 	);
-
 	$taxonomy_options = array(
-	'term' =>	t('Only display content matching the term'), 
-	'children' =>	t('Display matching item and its children.'),
+  	'term' =>	t('Only display content matching the term'), 
+  	'children' =>	t('Display matching item and its children.'),
 	);
-
 	$form['taxonomy']['views_setup_wizard_taxonomy_options'] = array(
-		    '#type' => 'radios',
-		    '#title' => t('Default taxonomy options'),
-				'#options' => $taxonomy_options,
-		    '#default_value' => variable_get('views_setup_wizard_taxonomy_options', null),
-		    '#description' => t('If a vocabulary is selected, what content do you want to be displayed?'),
-	 );
-	
+    '#type' => 'radios',
+    '#title' => t('Default taxonomy options'),
+  	'#options' => $taxonomy_options,
+    '#default_value' => variable_get('views_setup_wizard_taxonomy_options', null),
+    '#description' => t('If a vocabulary is selected, what content do you want to be displayed?'),
+	);	
 	$form['taxonomy']['views_setup_wizard_taxonomy_depth'] = array(
-		    '#type' => 'textfield',
-				'#size' => 10, 
-		    '#title' => t('Default taxonomy depth'),
-		    '#default_value' => variable_get('views_setup_wizard_taxonomy_depth', null),
-		    '#description' => t('The depth a taxonomy view should show.'),
-	 );
-
-	$taxonomy_user_options = array(
-	'term' =>	t('Allow users to select %taxop_term', array('%taxop_term' => $taxonomy_options['term'])), 
-	'children' =>	t('Allow users to select %taxop_children', array('%taxop_children' => $taxonomy_options['children'])), 
-	'depth' => t('Allow users to set the depth.')
+    '#type' => 'textfield',
+		'#size' => 10, 
+    '#title' => t('Default taxonomy depth'),
+    '#default_value' => variable_get('views_setup_wizard_taxonomy_depth', null),
+    '#description' => t('The depth a taxonomy view should show.'),
 	);
-	
+	$taxonomy_user_options = array(
+  	'term' =>	t('Allow users to select %taxop_term', array('%taxop_term' => $taxonomy_options['term'])), 
+  	'children' =>	t('Allow users to select %taxop_children', array('%taxop_children' => $taxonomy_options['children'])), 
+  	'depth' => t('Allow users to set the depth.')
+	);	
 	$form['taxonomy']['views_setup_wizard_taxonomy_user_options'] = array(
-		    '#type' => 'checkboxes',
-		    '#title' => t('Taxonomy user options'),
-				'#options' => $taxonomy_user_options,
-		    '#default_value' => variable_get('views_setup_wizard_taxonomy_user_options', null),
-		    '#description' => t('Allow users of the setup wizard to select what content is to be displayed in a taxonomical view. If %default is also selected, then it will be used as the default for these options.', array('%default' => $form['taxonomy']['views_setup_wizard_taxonomy_options']['#title'])),
-	 );
-	
-	// if taxonomy module is not installed, lock all of the fields
-	
+    '#type' => 'checkboxes',
+    '#title' => t('Taxonomy user options'),
+		'#options' => $taxonomy_user_options,
+    '#default_value' => variable_get('views_setup_wizard_taxonomy_user_options', null),
+    '#description' => t('Allow users of the setup wizard to select what content is to be displayed in a taxonomical view. If %default is also selected, then it will be used as the default for these options.', array('%default' => $form['taxonomy']['views_setup_wizard_taxonomy_options']['#title'])),
+	);	
+	// if taxonomy module is not installed, lock all of the fields	
 	$form = view_setup_wizard_lock_form_elements_by_module('taxonomy', $form);
 	
-	// taxonomy settings 
+	// taxonomy settings		
+	$form['panels_views'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => t('Panels'),
+  	'#collapsible' => TRUE,
+  	'#collapsed' => FALSE,
+	);
 		
-		$form['panels_views'] = array(
-		'#type' => 'fieldset',
-		'#title' => t('Panels'),
-		'#collapsible' => TRUE,
-		'#collapsed' => FALSE,
-		);
-		
-		$panel_views = panels_views_load_all();
-		
-		foreach ($panel_views as $panel_view) {
-			$view_options[$panel_view->name] = ($panel_view->title ? $panel_view->title.' ('.$panel_view->name.')' : $panel_view->name);
-		}
-		
-		$form['panels_views']['views_setup_wizard_panels'] = array(
-			    '#type' => 'checkbox',
-			    '#title' => t('Use panel views.'),
-			    '#return_value' => 1,
-			    '#default_value' => variable_get('views_setup_wizard_panels', false),
-			    '#description' => t('If checked, a panel view will be automatically created along with the view and only panel views will be available to be edited'),
-			    );
-			
-		$form['panels_views']['views_setup_wizard_panel_template'] = array(
-			    '#type' => 'select',
-			    '#title' => t('Panel view template.'),
-	    		'#options' => $view_options,
-			    '#default_value' => variable_get('views_setup_wizard_panels_template', null),
-			    '#description' => t('The panel view to use as a template for new views. All settings will be copied across - apart from the name, title and (if specified above), taxonomy settings.'),
-			    );
+	$panel_views = panels_views_load_all();
 	
-	$form = view_setup_wizard_lock_form_elements_by_module('panels_views', $form);
-					
-	// locked content 
+	foreach ($panel_views as $panel_view) {
+		$view_options[$panel_view->name] = ($panel_view->title ? $panel_view->title.' ('.$panel_view->name.')' : $panel_view->name);
+	}	
+	$form['panels_views']['views_setup_wizard_panels'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use panel views.'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('views_setup_wizard_panels', false),
+    '#description' => t('If checked, a panel view will be automatically created along with the view and only panel views will be available to be edited'),
+  );		
+	$form['panels_views']['views_setup_wizard_panel_template'] = array(
+    '#type' => 'select',
+    '#title' => t('Panel view template.'),
+		'#options' => $view_options,
+    '#default_value' => variable_get('views_setup_wizard_panels_template', null),
+    '#description' => t('The panel view to use as a template for new views. All settings will be copied across - apart from the name, title and (if specified above), taxonomy settings.'),
+  );
 
-	$form['content'] = array(
-	'#type' => 'fieldset',
-	'#title' => t('Locked content'),
-	'#collapsible' => TRUE,
-	'#collapsed' => FALSE,
-	);
+  $form = view_setup_wizard_lock_form_elements_by_module('panels_views', $form);
+				
+  //locked content
+  $form['content'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Locked content'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $node_types = node_get_types();
+  
+  //get all the node types
+  foreach($node_types as $node_type){
+  	$node_types_options[$node_type->type] = $node_type->name; 
+  }
+  $form['content']['views_setup_wizard_locked_nodes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Locked nodes'),
+    '#default_value' => variable_get('views_setup_wizard_locked_nodes', null),
+    '#options' => $node_types_options,
+    '#description' => t('Selected nodes will not be available in the setup wizard.'),
+  );
 
-	
-	$node_types = node_get_types();
-	
-	//get all the node types
-	foreach($node_types as $node_type){
-		$node_types_options[$node_type->type] = $node_type->name; 
-	}
-	
-	 $form['content']['views_setup_wizard_locked_nodes'] = array(
-	  '#type' => 'checkboxes',
-	  '#title' => t('Locked nodes'),
-	  '#default_value' => variable_get('views_setup_wizard_locked_nodes', null),
-	  '#options' => $node_types_options,
-	  '#description' => t('Selected nodes will not be available in the setup wizard.'),
-	);
-	
-	$plugin_options = views_setup_wizard_get_plugins();
+  $plugin_options = views_setup_wizard_get_plugins();
 
-	 $form['content']['views_setup_wizard_locked_plugins'] = array(
-	  '#type' => 'checkboxes',
-	  '#title' => t('Locked plugins'),
-	  '#default_value' => variable_get('views_setup_wizard_locked_plugins', null),
-	  '#options' => $plugin_options,
-	  '#description' => t('Selected plugins will not be available in the setup wizard.'),
-	);
-	
-	$views = views_setup_wizard_get_views(variable_get('views_setup_wizard_panels', false));
-	
-	foreach ($views as $name => $view){
-		$locked_view_options[$name] = ($view['title'] ? $view['title'] : $view['name']);
-	}
-	
-	
-	 $form['content']['views_setup_wizard_locked_views'] = array(
-	  '#type' => 'checkboxes',
-	  '#title' => t('Locked views'),
-	  '#default_value' => variable_get('views_setup_wizard_locked_views', null),
-	  '#options' => $locked_view_options,
-	  '#description' => t('Selected views will not be available in the setup wizard.'),
-	);
+  $form['content']['views_setup_wizard_locked_plugins'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Locked plugins'),
+    '#default_value' => variable_get('views_setup_wizard_locked_plugins', null),
+    '#options' => $plugin_options,
+    '#description' => t('Selected plugins will not be available in the setup wizard.'),
+  );
+  $views = views_setup_wizard_get_views(variable_get('views_setup_wizard_panels', false));
+  foreach ($views as $name => $view){
+	  $locked_view_options[$name] = ($view['title'] ? $view['title'] : $view['name']);
+  }
+  $form['content']['views_setup_wizard_locked_views'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Locked views'),
+    '#default_value' => variable_get('views_setup_wizard_locked_views', null),
+    '#options' => $locked_view_options,
+    '#description' => t('Selected views will not be available in the setup wizard.'),
+  );
 	
 	return system_settings_form($form);
-	
 }
 
 /**
@@ -303,8 +264,8 @@ function views_setup_wizard_get_plugins($titles = true){
  */
 function views_setup_wizard_get_views($panels) {
 	
-views_load_cache();
-$result = db_query("SELECT vid, name, page_title, description FROM {view_view}");
+//views_load_cache();
+$result = db_query("SELECT vid, name, tag, description FROM {views_view}");
 $views = array();
 $panel_views = array();
 
@@ -322,7 +283,7 @@ $panel_views = array();
 			$views[$view->name] = array(
 				'vid' => $view->vid,
 				'name' => check_plain($view->name),
-				'title' => check_plain($view->page_title),
+				'tag' => check_plain($view->page_title),
 				'description' => check_plain($view->description),
 			);
 
@@ -330,14 +291,14 @@ $panel_views = array();
 
 	}
 
-	$default_views = _views_get_default_views();
+	$default_views = views_discover_default_views();
 
 	foreach ($default_views as $view) {
 		if (!$views[$view->name] && (!$panels || $panel_views[$view->name])) {
 		 $views[$view->name] 	= array(
 			'vid' => $view->vid,
 			'name' => check_plain($view->name),
-			'title' => check_plain($view->page_title),
+			'tag' => check_plain($view->page_title),
 			'description' => check_plain($view->description),
 			);
 		}

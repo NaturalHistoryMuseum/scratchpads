@@ -54,15 +54,15 @@ function nodes(id, url){
     lastform = id;    
   }
 }
+
 function nodescancel(){
   $(".nodes-form").remove();
   lastform = false;
   return false;
 }
+
 function nodessubmit(url,id,field){
-  /*
   var nodesSubmitForm = function (data) {
-    alert(data);
     var returnHtml = Drupal.parseJson(data);
     $('#'+field+'_'+returnHtml['nid']).html(returnHtml['value']);
   }
@@ -71,13 +71,8 @@ function nodessubmit(url,id,field){
     valueToSend[valueToSend.length] = $(this).val();
   });
   $.post(url,{'formvalue[]':valueToSend,'formid':id,'field':field,'updated':$('#edit-changed').val()},nodesSubmitForm);
-  */
-  // This function requires a full rewrite to parse through all the fields in a form
-  // and look for the ones that aren't hidden.  This may not be too difficult, as we
-  // can probably use "input" to select all input boxes, make sure they're not hidden,
-  // get the values and names, and add them to the form
-  
 }
+
 var allselected = false;
 function nodesselectallrows(){
   if(!allselected){
@@ -102,6 +97,7 @@ function nodesselectallrows(){
     $('#selected').toggle();
   }
 }
+
 function nodesselectrow(nid){
   if($('#nodes-row-checkbox-'+nid).attr('checked')){
     $('#nodes-row-checkbox-'+nid).removeAttr('checked');

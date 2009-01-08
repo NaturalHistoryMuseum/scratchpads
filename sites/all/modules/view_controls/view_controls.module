@@ -328,16 +328,19 @@ function view_controls_node_selection_form(){
 		'#value' =>  t('Add content'),
 	);
 
+	/*
 	if(arg(4)){
 	$extra_info = array('tid'=>arg(4));
   }
+  */
 
-	$form['#submit'] = array('view_controls_node_selection_form_submit' => array($extra_info));
+	//$form['#submit'] = array('view_controls_node_selection_form_submit' => array($extra_info));
 	
 	return $form;
 	
 }
 
+/*
 function view_controls_node_selection_form_submit($form, &$form_state){
 	
 	$$form_state['redirect'] = _url = 'node/add/'.$form_state['values']['node_type'];
@@ -348,7 +351,16 @@ function view_controls_node_selection_form_submit($form, &$form_state){
 	
 	return $$form_state['redirect'] = _url;
 	
+	 
+  $return_url = 'node/add/'.$form_values['node_type'];
+  
+  if($extra_info['tid']){
+    $return_url .= '/'.$extra_info['tid'];
+  }
+  
+  return $return_url;
 }
+*/
 
 
 

@@ -1,89 +1,5 @@
 <?php
-// $Id: imagex.module,v 1.6 2008/07/30 10:36:42 sdrycroft Exp $
-
-/* TODO Automatically add Drupal.settings.basePath
-   In Drupal 5, you would have to add the base path to Drupal.settings yourself
-   if you needed it (it's needed for just about every AHAH/AJAX enabled module
-   if you did it right). Now in Drupal 6, it's added automatically. You can always
-   find it at Drupal.settings.basePath (actually, as soon as drupal_add_js() is
-   called at least once, so this is similar to the way we automatically add
-   drupal.js and jquery.js. */
-
-/* TODO db_next_id() is gone, and replaced as db_last_insert_id()
-   Since db_next_id() introduce some problems, and the use of this function
-   can be replaced by database level auto increment handling, db_next_id()
-   is now gone and replaced as db_last_insert_id() with help of serial type
-   under Schema API (check out http://drupal.org/node/149176 for more details).
-   Please refer to drupal_write_record() as demonstration. */
-
-/* TODO FormAPI image buttons are now supported.
-   FormAPI now offers the 'image_button' element type, allowing developers to
-   use icons or other custom images in place of traditional HTML submit buttons.
-
-$form['my_image_button'] = array(
-  '#type'         => 'image_button',
-  '#title'        => t('My button'),
-  '#return_value' => 'my_data',
-  '#src'          => 'my/image/path.jpg',
-); */
-
-/* TODO Node previews and adding form fields to the node form.
-   There is a subtle but important difference in the way node previews (and other
-   such operations) are carried out when adding or editing a node. With the new
-   Forms API, the node form is handled as a multi-step form. When the node form
-   is previewed, all the form values are submitted, and the form is rebuilt with
-   those form values put into $form['#node']. Thus, form elements that are added
-   to the node form will lose any user input unless they set their '#default_value'
-   elements using this embedded node object. */
-
-/* TODO New user_mail_tokens() method may be useful.
-   user.module now provides a user_mail_tokens() function to return an array
-   of the tokens available for the email notification messages it sends when
-   accounts are created, activated, blocked, etc. Contributed modules that
-   wish to make use of the same tokens for their own needs are encouraged
-   to use this function. */
-
-/* TODO
-   There is a new hook_watchdog in core. This means that contributed modules
-   can implement hook_watchdog to log Drupal events to custom destinations.
-   Two core modules are included, dblog.module (formerly known as watchdog.module),
-   and syslog.module. Other modules in contrib include an emaillog.module,
-   included in the logging_alerts module. See syslog or emaillog for an
-   example on how to implement hook_watchdog.
-function example_watchdog($log = array()) {
-  if ($log['severity'] == WATCHDOG_ALERT) {
-    mysms_send($log['user']->uid,
-      $log['type'],
-      $log['message'],
-      $log['variables'],
-      $log['severity'],
-      $log['referer'],
-      $log['ip'],
-      format_date($log['timestamp']));
-  }
-} */
-
-/* TODO Implement the hook_theme registry. Combine all theme registry entries
-   into one hook_theme function in each corresponding module file.
-function imagex_theme() {
-  return array(
-  );
-}; */
-
-
-/* TODO
-   An argument for replacements has been added to format_plural(),
-   escaping and/or theming the values just as done with t().*/
-
-/* TODO You may want to take advantage of new form-specific alter hooks.
-   The hook_form_alter() is complemented by hook_form_$form-id_alter().
-   Optionally, modules can implement form-specific alteration functions rather
-   than a single hook_form_alter() with many conditional switch statements.
-   This is optional, and is most useful for tidying the code of modules that
-   alter many forms to customize a site's operations.
-   The new function names are built using the following format:
-   [your-module-name]_form_[$form_id]_alter. */
-
+// $Id$
 /**
  * This is a complete rewrite of the imagex module.  The module
  * allows a user to upload multiple images in one simple step.
@@ -94,47 +10,23 @@ function imagex_theme() {
  * HOOKS
  ***********************************************************************************/
 function imagex_menu() {
-  $items = array();
-
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-  if ($may_cache) {
-    $items['imagex/upload'] = array(
-      'access arguments' => array('create images'),
-      'title' => 'Imagex upload',
-      'page callback' => 'imagex_upload_image',
-      'type' => MENU_CALLBACK);
-    $items['imagex/get'] = array(
-      'title' => 'Imagex thumbs',
-      'access arguments' => array('create images'),
-      'type' => MENU_CALLBACK,
-      'page callback' => 'imagex_js'
-    );
-    $items['imagex/imagex'] = array(
-      'title' => 'Upload images',
-      'access arguments' => array('create images'),
-      'type' => MENU_CALLBACK,
-      'page callback' => 'imagex_upload_page'
-    );
-  }
+  $items['imagex/upload'] = array(
+    'access arguments' => array('create images'),
+    'title' => 'Imagex upload',
+    'page callback' => 'imagex_upload_image',
+    'type' => MENU_CALLBACK);
+  $items['imagex/get'] = array(
+    'title' => 'Imagex thumbs',
+    'access arguments' => array('create images'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'imagex_js'
+  );
+  $items['imagex'] = array(
+    'title' => 'Upload images',
+    'access arguments' => array('create images'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'imagex_upload_page'
+  );
   return $items;
 }
 function imagex_form_alter(&$form, &$form_state, $form_id){
@@ -161,7 +53,7 @@ function imagex_upload_page(){
   drupal_add_js(drupal_get_path('module','imagex').'/imagex.js');
   drupal_add_css(drupal_get_path('module','imagex').'/imagex.css');
   return '<div class="messages imagex header"><p>'.t('Drop images into the box below, or click the "Add" button, and select the images you\'d like to upload').'</p></div><div class="imagex postlet">
-	<applet name="postlet" code="Main.class" archive="'.base_path().drupal_get_path('module','imagex').'/postlet/postlet.jar" width="100%" height="300" mayscript>
+	<applet name="postlet" code="Main.class" archive="'.url(base_path().drupal_get_path('module','imagex').'/postlet/postlet.jar', array('absolute' => TRUE)).'" width="100%" height="300" mayscript>
 		<param name = "maxthreads"		value = "5" />
 		<param name = "language"		value = "EN" />
 		<param name = "type"			value = "application/x-java-applet;version=1.3.1" />
@@ -188,7 +80,6 @@ function imagex_upload_page(){
  * This page is NOT designed to be viewed by humans/browsers.
  */
 function imagex_upload_image(){
-  global $user;
   // Output a postlet error if the user isn't allowed to upload.
   if (!user_access('create images')){
     ?>
@@ -212,10 +103,12 @@ END POSTLET REPLY
       
       // For now we'll say this type isn't allowed
       $uploaded = 2;
-    }
-    else {
-      // Add the node to the imagex table
-      db_query("INSERT INTO {imagex} (uid,nid) VALUES (%d,%d)", $user->uid, $image_node->nid);
+    } else {
+      // Image has been added, lets add it to the image_gallery
+      $gallery_tid = variable_get('imagex_gallery_tid', 0);
+      if($gallery_tid){
+        taxonomy_node_save($image_node, array($gallery_tid));
+      }
     }
     switch($uploaded){
       case 0:
@@ -284,7 +177,7 @@ function imagex_get_thumbs_html($minutes = NULL){
   $html = '';
   while($node = db_fetch_object($result)){
     $node = node_load($node->nid);
-    $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'" onclick="imagexclick(\''.$node->nid.'\');">'.image_display($node,  $label = IMAGE_THUMBNAIL, array('alt'=>$node->title)).'</div>';
+    $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'" onclick="imagexclick(\''.$node->nid.'\');">'.image_display($node,  IMAGE_THUMBNAIL, array('alt'=>$node->title)).'</div>';
   }
   return $html;
 }

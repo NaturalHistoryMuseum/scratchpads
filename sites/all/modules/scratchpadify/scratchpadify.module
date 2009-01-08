@@ -1,352 +1,17 @@
 <?php
 // $Id$
-
-/* TODO FormAPI image buttons are now supported.
-   FormAPI now offers the 'image_button' element type, allowing developers to
-   use icons or other custom images in place of traditional HTML submit buttons.
-
-$form['my_image_button'] = array(
-  '#type'         => 'image_button',
-  '#title'        => t('My button'),
-  '#return_value' => 'my_data',
-  '#src'          => 'my/image/path.jpg',
-); */
-
-/* TODO New user_mail_tokens() method may be useful.
-   user.module now provides a user_mail_tokens() function to return an array
-   of the tokens available for the email notification messages it sends when
-   accounts are created, activated, blocked, etc. Contributed modules that
-   wish to make use of the same tokens for their own needs are encouraged
-   to use this function. */
-
-/* TODO
-   There is a new hook_watchdog in core. This means that contributed modules
-   can implement hook_watchdog to log Drupal events to custom destinations.
-   Two core modules are included, dblog.module (formerly known as watchdog.module),
-   and syslog.module. Other modules in contrib include an emaillog.module,
-   included in the logging_alerts module. See syslog or emaillog for an
-   example on how to implement hook_watchdog.
-function example_watchdog($log = array()) {
-  if ($log['severity'] == WATCHDOG_ALERT) {
-    mysms_send($log['user']->uid,
-      $log['type'],
-      $log['message'],
-      $log['variables'],
-      $log['severity'],
-      $log['referer'],
-      $log['ip'],
-      format_date($log['timestamp']));
-  }
-} */
-
-/* TODO Implement the hook_theme registry. Combine all theme registry entries
-   into one hook_theme function in each corresponding module file.
-function scratchpadify_theme() {
-  return array(
-  );
-} */
-
-/* TODO You may want to take advantage of new form-specific alter hooks.
-   The hook_form_alter() is complemented by hook_form_$form-id_alter().
-   Optionally, modules can implement form-specific alteration functions rather
-   than a single hook_form_alter() with many conditional switch statements.
-   This is optional, and is most useful for tidying the code of modules that
-   alter many forms to customize a site's operations.
-   The new function names are built using the following format:
-   [your-module-name]_form_[$form_id]_alter. */
-
 /**
  * @file
  * Forces a site to include a footer which can only be changed by editing the source code
  */
 
 /**
- * Implemenation of fook_menu
+ * Removed the following function from the Drupal-5 version of this module.
+ * These should be repleced
+ * - Hiding of advanced menu items from users
+ * - All of the form tidying that cleans up node edit forms
  */
-function scratchpadify_menu(){
-  $hide_paths = array();
-  $hide_paths[] = array(
-    'path' => 'admin/settings/thickbox',
-    'title' => 'Thickbox',
-    'description' => 'Configure Thickbox behavior.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'thickbox_admin_settings',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/admin',
-    'title' => 'Administration theme',
-    'description' => 'Settings for how your administrative pages should look.',
-    'position' => 'left',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_admin_theme_settings'),
-    'block callback' => 'system_admin_theme_settings');
-  $hide_paths[]= array (
-    'path' => 'admin/settings/citation',
-    'title' => 'Citation',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('citation_admin_form'),
-    'description' => 'Configuration of citation.',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/clean-urls',
-    'title' => 'Clean URLs',
-    'description' => 'Enable or disable clean URLs for your site.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_clean_url_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/clone',
-    'title' => 'Clone module',
-    'description' => 'Allows users to clone (copy then edit) an existing node.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('clone_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/contemplate',
-    'title' => 'Content Template Settings',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('contemplate_system_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/error-reporting',
-    'title' => 'Error reporting',
-    'description' => 'Control how Drupal deals with errors including 403/404 errors as well as PHP error reporting.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_error_reporting_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/file-system',
-    'title' => 'File system',
-    'description' => 'Tell Drupal where to store uploaded files and how they are accessed.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_file_system_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/uploads',
-    'title' => 'File uploads',
-    'description' => 'Control how files may be attached to content.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('upload_admin_settings'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/hashcash',
-    'title' => 'Hashcash settings',
-    'description' => 'Change the default hashcash settings to include or exclude forms.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('hashcash_admin_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/image_attach',
-    'title' => 'Image attach',
-    'description' => 'Enable image attach for content',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('image_attach_admin_settings'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/image_import',
-    'title' => 'Image import',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('image_import_admin_settings'),
-    'type' => MENU_NORMAL_ITEM,
-    'description' => 'Change settings for the Image Import module.');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/image-toolkit',
-    'title' => 'Image toolkit',
-    'description' => 'Choose which image toolkit to use if you have installed optional toolkits.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_image_toolkit_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/imce',
-    'title' => 'IMCE settings',
-    'description' => 'Control how your image/file browser works.',
-    'page callback' => 'imce_form_admin');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/lightbox2',
-    'title' => 'Lightbox2',
-    'page callback' => 'lightbox2_settings_page',
-    'description' => 'Allows the user to configure the lightbox2 settings');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/mimemail',
-    'title' => 'Mail',
-    'description' => 'HTML E-mail settings',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'mimemail_settings',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/mollom',
-    'description' => 'Mollom is a webservice that helps you manage your community.',
-    'title' => 'Mollom',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mollom_admin_settings'),
-    'type' => MENU_NORMAL_ITEM
-    );
-  $hide_paths[] = array(
-    'path' => 'admin/settings/imagex',
-    'title' => 'Multiple image settings',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('imagex_admin_settings'),
-    'type' => MENU_NORMAL_ITEM,
-    'description' => 'Change the way that multiple image upload is handled');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/performance',
-    'title' => 'Performance',
-    'description' => 'Enable or disable page caching for anonymous users, and enable or disable CSS preprocessor.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_performance_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/quote',
-    'title' => 'Quote',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'quote_settings_form');
-  $hide_paths[] = array('path' => 'admin/settings/search_attachments',
-    'title' => 'Search attachments settings',
-    'description' => 'Configure searching attachments',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('search_attachments_admin_instructions'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/sitemenu',
-    'title' => 'Sitemenu',
-    'description' => 'Settings for the sitemenu module.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('sitemenu_settings'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/tabs',
-    'title' => 'Tabs',
-    'description' => 'Configuration for tabs',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('tabs_admin_settings'));
-  $hide_paths[] = array(
-    'path' => 'admin/settings/taxonomy-breadcrumb',
-    'title' => 'Taxonomy Breadcrumb',
-    'description' => 'Configure how taxonomy based breadcrumbs are displayed.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('taxonomy_breadcrumb_admin_settings'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/tinymce',
-    'title' => 'TinyMCE',
-    'page callback' => 'tinymce_admin',
-    'description' => 'Configure the rich editor.');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/userplus',
-    'title' => 'Userplus',
-    'description' => 'Settings for the userplus module.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('userplus_admin_settings'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[]= array (
-    'path' => 'admin/settings/view_controls',
-    'title' => 'View controls',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('view_controls_admin_form'),
-    'description' => 'Configuration of view controls.',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/settings/webform',
-    'title' => 'Webform',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'webform_admin_settings',
-    'description' => 'Global configuration of webform functionality.',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/reports/settings',
-    'title' => 'Access log settings',
-    'description' => 'Control details about what and how your site logs.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('statistics_access_logging_settings'),
-    'type' => MENU_NORMAL_ITEM,
-    'weight' => 3);
-  $hide_paths[] = array(
-    'path' => 'admin/reports/job_queue',
-    'title' => 'Queued jobs',
-    'description' => 'View a list of the queued jobs.',
-    'page callback' => 'job_queue_list');
-  $hide_paths[] = array(
-    'path' => 'admin/settings/job_queue',
-    'title' => 'Job queue',
-    'description' => 'Set queue priorities.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('job_queue_settings_form'));
-  $hide_paths[] = array(
-    'path' => 'admin/user/roles',
-    'title' => 'Roles',
-    'description' => 'List, edit, or add user roles.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('user_admin_new_role'),
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/user/roleassign',
-    'title' => 'Role assign',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('roleassign_admin'),
-    'description' => 'Allows site administrators to further delegate the task of managing user\'s roles.');
-  $hide_paths[] = array(
-    'path'     => 'admin/content/date',
-    'title'    => 'Date Import/Export',
-    'description' => 'Import and export date data.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'date_copy_import_ical_form',
-    'type' => MENU_NORMAL_ITEM);
-  $hide_paths[] = array(
-    'path' => 'admin/content/templates',
-    'title' => 'Content templates',
-    'description' => 'Create templates to customize output of teaser and body content.',
-    'page callback' => 'contemplate_edit_type');
-  $hide_paths[] = array(
-    'path' => 'admin/build/modules',
-    'title' => 'Modules',
-    'description' => 'Enable or disable add-on modules for your site.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_modules'));
-  $hide_paths[] = array(
-    'path' => 'admin/og/og_user_roles',
-    'title' => 'Organic groups user roles',
-    'description' => 'Allows group administrators to add members into group roles.  Also edit multinode access configuration.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => 'og_user_roles_admin_settings');
-  $items = array();
-  if($may_cache){
-    // Here we're simply deleting any sessions that are older than 24 hours.  We do this 
-    // under the cache portion of the site to try and restrict the number of times that
-    // this is pointlessly executed
-    db_query("DELETE FROM {sessions} WHERE timestamp < %d",(time()-86400) );    
-    foreach($hide_paths as $item){
-      // Take a copy of the menu item so that we can save it
-      // Delete the following menu items to stop folk from meddling
-      $items[$item['path']] = array(
-        'title' => 'Scratchpad Administrators Only',
-        'page callback' => 'drupal_not_found',
-        'type' => MENU_CALLBACK
-      );
-    }
-  }else {
-    // Reset the menus (ONLY FOR UID 1)
-    if(user_access('SCRATCHPADIFY')){
-      foreach($hide_paths as $item){
-        $items[] = $item;
-        $item['path'] = $item['path'].'-scratch';
-        $item['page callback'] = 'scratchpadify_forward';
-        $items[] = $item;
-      }
-    }
-    
-    // Have to add CSS here as hook_links is cached
-    drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
-  }
-  return $items;
-}
 
-/**
- * Callback to forward menus on to their correct locations
- */
-function scratchpadify_forward(){
-  $i = 0;
-  $goto_array = array();
-  while(arg($i)){
-    $goto_array[] = arg($i);
-    $i++;
-  }
-  // remove -scratch from the final arg
-  $final_arg = array_pop($goto_array);
-  $goto_array[] = substr($final_arg,0,strpos($final_arg,"-scratch"));
-  drupal_goto(implode("/",$goto_array));
-}
 /**
  * Implementation of hook_filter
  */
@@ -371,6 +36,7 @@ function scratchpadify_filter($op, $delta = 0, $format = -1, $text = '') {
  */
 function scratchpadify_link_alter(&$links, $node){
   // We need to delete the taxonomy modules created links here.
+  drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
   foreach ($node->taxonomy as $term) {
     if(isset($links['taxonomy_term_'. $term->tid])){
       unset($links['taxonomy_term_'. $term->tid]);
@@ -411,11 +77,11 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
  */
 function scratchpadify_footer($main=0){
   // Add the following HTML to the footer of ALL pages
-  $string = '<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
-href="http://e-taxonomy.eu/"><img src="/sites/all/images/edit_small.png" 
-alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="/sites/all/images/scratchpads.png"/></a><a rel="license" 
+  return '<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
+href="http://e-taxonomy.eu/"><img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit_small.png" 
+alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.base_path().drupal_get_path('module','scratchpadify').'/images/scratchpads.png"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
-style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="/sites/all/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
+style="border-width: 0pt;" src="'.base_path().drupal_get_path('module','scratchpadify').'/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
 <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
@@ -427,7 +93,6 @@ style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding
 _uacct = "UA-2428547-2";
 urchinTracker();
 </script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div>';
-  return $string;
 }
 
 /**
@@ -447,12 +112,15 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
         return array('subject'=>'Statistics','content'=>theme_item_list($items));
       } elseif($delta == 1){
         if(user_access('create node content')){
+          drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
           $node_types = node_get_types();
           $items = array();
           foreach($node_types as $node_type => $node_type_values){
-            $items[] = l($node_type_values->name,'node/add/'.$node_type);
+            $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.$node_type);
           }
-          $items[] = l(t('Import bibliography','biblio/import/form'));
+          $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
+          $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
+          ksort($items);
           return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
         }
       }
@@ -486,6 +154,7 @@ function scratchpadify_form_alter(&$form, &$form_state, $form_id) {
     drupal_set_message('Please change these settings from Quartz ONLY','error');
     drupal_goto('');
   }
+  /*
   if (isset($form['og_nodeapi']['#collapsed'])){
     $form['og_nodeapi']['#collapsed'] = true;
   }
@@ -528,4 +197,5 @@ function scratchpadify_form_alter(&$form, &$form_state, $form_id) {
   elseif ($form_id == $form['#node']->type .'_node_form') {
     scratchpadify_tidy($form);
   }
+*/
 }

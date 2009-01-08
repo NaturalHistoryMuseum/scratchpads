@@ -7,37 +7,43 @@
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
-function nodes_menu($maycache){
+function nodes_menu(){
   $items = array();
-  if($maycache){
-    $items['nodes'] = array(
-      'title' => 'Multiple node edit page',
-      'page callback' => 'nodes_edit_page',
-      'description' => 'Allows a user to quickly and easily edit multiple nodes at once',
-      'access arguments' => TRUE,
-      'type' => MENU_NORMAL_ITEM
-    );
-    $items['nodes-submit'] = array(
-      'title' => 'Submit target for "nodes"',
-      'page callback' => 'nodes_submit_form_part',
-      'access arguments' => TRUE,
-      'type' => MENU_CALLBACK       
-    );
-    $items['nodes-edit'] = array(
-      'title' => 'Edit field',
-      'page callback' => 'nodes_edit_field',
-      'access arguments' => TRUE,
-      'type' => MENU_CALLBACK
-    );
-  }
+  $items['nodes'] = array(
+    'title' => 'Multiple node edit page',
+    'page callback' => 'nodes_edit_page',
+    'description' => 'Allows a user to quickly and easily edit multiple nodes at once',
+    'access arguments' => array('create node content'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  $items['nodes-submit'] = array(
+    'title' => 'Submit target for "nodes"',
+    'page callback' => 'nodes_submit_form_part',
+    'access arguments' => array('create node content'),
+    'type' => MENU_CALLBACK       
+  );
+  $items['nodes-edit'] = array(
+    'title' => 'Edit field',
+    'page callback' => 'nodes_edit_field',
+    'access arguments' => array('create node content'),
+    'type' => MENU_CALLBACK
+  );
   return $items;
+}
+
+function nodes_theme() {
+  return array(
+    'nodes_table' => array(
+      'arguments' => array('node', 'form'),
+    ),
+  );
 }
 /***********************************************************************************
  * CALLBACKS
  ***********************************************************************************/
 /**
- * Returns the HTML for a multiple edit page.  This the work horse method of this
- * module
+ * Returns the HTML for a multiple edit page.  This is the work horse method of 
+ * the module
  */
 function nodes_edit_page($type = null, $count = 25){
   // $content_type enables the nodes edit page to filter by a particular content
@@ -77,7 +83,6 @@ function nodes_edit_page($type = null, $count = 25){
   }
   // We have an array, lets put it in our special themed table!
   $output = theme('nodes_table', $nodes, $form) . theme('pager', NULL , $count);
-  
   // Thanks to the panels module for showing me how to hide blocks
   drupal_set_title('');
   print theme('page', $output, FALSE);
@@ -129,7 +134,6 @@ function nodes_edit_field($nid , $field){
 function nodes_submit_form_part(){
   $nid = array_pop(explode("-",$_POST['formid']));
   $node = node_load($nid);
-  print_r($node->$_POST['field']);
   if(!is_array($node->$_POST['field'])){
     $value = $_POST['formvalue'][0];
   } else {
@@ -154,8 +158,6 @@ function nodes_submit_form_part(){
   if(is_array($value)){
     $value = t('Multiple values');
   }
-  print_r($node->$_POST['field']);
-  exit;
   print drupal_to_js(array('nid'=>$nid , 'value'=>$value , 'updated'=>$node->changed));
   exit;
 }
@@ -206,20 +208,28 @@ function nodes_get_form_for_type($type, $node = null){
     if(is_null($node)){
       $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
     }
-    $output = _nodes_get_form_no_render($type .'_node_form', $node);
+    $output = _nodes_get_form_no_render($type.'_node_form', array(), $node);
   }
   return $output;
 }
 
-function _nodes_get_form_no_render($form_id) {
+function _nodes_get_form_no_render($form_id, $form_state) {
   // We're coming in fresh; build things as they would be. If the
   // form's #multistep flag is set, store the build parameters so
   // the same form can be reconstituted for validation.
   $args = func_get_args();
+  
+  // Before we call the following method, we need to include the file that
+  // includes the method.  This can be found from the menu for editing this node
+  // type.
+  $menu = menu_get_item('node/add/'.substr($form_id, 0, strlen($form_id)-10));
+  if(isset($menu['file'])){
+     require_once('./'.$menu['file']);
+  }
   $form = call_user_func_array('drupal_retrieve_form', $args);
   
   // Process the form, submit it, and store any errors if necessary.
-  drupal_process_form($args[0], $form);
+  drupal_process_form($args[0], $form, $form_state = array());
 
   return $form;
 }
@@ -303,6 +313,9 @@ function theme_nodes_table($nodes, $form){
   // out if the input that is associated with it is one that we'll handle
   /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
   foreach($possible_fields as $possible_field){
+    if(is_array($possible_field)){
+      $possible_field = $possible_field[0]; // Guess work here FIXME
+    }
     $field_form = _nodes_handle_field($possible_field, $form);
     if($field_form){
       // Is this an array
@@ -329,7 +342,7 @@ function theme_nodes_table($nodes, $form){
   }
   $return_string .= '</tr><tr class="all"><td class="nohover" onclick="nodesselectallrows();"><span id="selected">'.t('Select all').'</span><span class="deselected" id="deselected">'.t('Deselect all').'</span></td><td class="nohover"></td>';
   foreach($fields as $field){
-    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$field).'\');"><span id="all-'.$field.'">'.t('Edit all').'</span></td>';
+    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$field).'\');"><span id="all-'.$field.'">'.t('Edit selected').'</span></td>';
   }
   $return_string .= '</tr>';
   foreach($nodes as $node){
