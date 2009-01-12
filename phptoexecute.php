@@ -469,7 +469,7 @@ node_access_rebuild();*/
 /*variable_set('biblio_openurlimage',"/sites/all/images/openurl.jpg");*/
 
 // Set the boost thingy to work
-variable_set('boost', '0');
+variable_set('boost', 'CACHE_ENABLED');
 variable_set('boost_banner', '');
 variable_set('boost_file_path', 'cache');
 variable_set('preprocess_css', '1'); // This may fuck up the Phasmid site AAAAAAAAAAAAAAAAAAAAAAAARRGH
