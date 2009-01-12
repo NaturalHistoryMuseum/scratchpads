@@ -472,7 +472,7 @@ node_access_rebuild();*/
 variable_set('boost', 'CACHE_ENABLED');
 variable_set('boost_banner', '');
 variable_set('boost_file_path', 'cache');
-variable_set('preprocess_css', '0'); // This may fuck up the Phasmid site AAAAAAAAAAAAAAAAAAAAAAAARRGH
+variable_set('preprocess_css', '1'); // This may fuck up the Phasmid site AAAAAAAAAAAAAAAAAAAAAAAARRGH
 variable_set('cache_lifetime', '3600');
 
 // Add an index to the location table
