@@ -97,7 +97,7 @@ function drush_bootstrap($argc, $argv) {
   if (DRUSH_URI) {
     $drupal_base_url = parse_url(DRUSH_URI);
     $_SERVER['HTTP_HOST'] = $drupal_base_url['host'];
-    $_SERVER['PHP_SELF'] = $drupal_base_url['path'].'/index.php';
+    $_SERVER['PHP_SELF'] = '/index.php';
   }
   else {
     $_SERVER['HTTP_HOST'] = NULL;
