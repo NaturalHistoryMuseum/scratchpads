@@ -1,5 +1,5 @@
 <?php
-// $Id: mollom.module,v 1.1.2.34 2008/11/03 16:38:45 dries Exp $
+// $Id: mollom.module,v 1.1.2.35 2008/12/01 06:49:16 dries Exp $
 
 define('MOLLOM_API_VERSION', '1.0');
 
@@ -666,7 +666,6 @@ function mollom_admin_settings() {
         '#type' => 'fieldset',
         '#title' => t('Server settings'),
         '#collapsible' => TRUE,
-        '#collapsed' => $keys,
         );
     $form['server']['mollom_fallback'] = array(
         '#type' => 'radios',
@@ -676,7 +675,7 @@ function mollom_admin_settings() {
           MOLLOM_FALLBACK_BLOCK  => t('Block all submissions on the protected forms until the server problems are resolved'),
           MOLLOM_FALLBACK_ACCEPT => t('Leave all forms unprotected and accept all submissions') 
          ),
-        '#description' => t('In the event that Mollom stopped servicing your requests, i.e. because a certain usage quota was reached, your Drupal site will use the configured fallback strategy.  You can choose to blindly accept all submissions without spam checking, or you can choose to block all submissions until this problem is resolved.')
+        '#description' => t('In the event that Mollom stopped servicing your requests, i.e. because a certain usage quota was reached, your Drupal site will use the configured fallback strategy.  You can choose to blindly accept all submissions without spam checking, or you can choose to block all submissions until this problem is resolved.  You can also <a href="@pricing">upgrade to Mollom Plus</a>: paying customers automatically get access to <a href="@sla">Mollom\'s high-availability backend infrastructure</a> not available to free users.', array('@pricing' => 'http://mollom.com/pricing', '@sla' => 'http://mollom.com/standard-service-level-agreement'))
         );
   }
   
