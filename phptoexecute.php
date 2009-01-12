@@ -476,6 +476,6 @@ variable_set('preprocess_css', '0'); // This may fuck up the Phasmid site AAAAAA
 variable_set('cache_lifetime', '3600');
 
 // Add an index to the location table
-db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)")
+db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");
 
 echo "Finished";
