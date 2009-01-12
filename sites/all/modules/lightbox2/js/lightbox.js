@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: lightbox.js,v 1.5.2.6.4.105 2009/01/05 14:21:40 snpower Exp $ */
 
 /**
  * jQuery Lightbox
@@ -20,11 +20,13 @@
 var Lightbox = {
   overlayOpacity : 0.8, // Controls transparency of shadow overlay.
   overlayColor : '000', // Controls colour of shadow overlay.
+  disableCloseClick : true,
   // Controls the order of the lightbox resizing animation sequence.
   resizeSequence: 0, // 0: simultaneous, 1: width then height, 2: height then width.
   resizeSpeed: 'normal', // Controls the speed of the lightbox resizing animation.
   fadeInSpeed: 'normal', // Controls the speed of the image and overlay appearance.
   slideDownSpeed: 'slow', // Controls the speed of the image details appearance.
+  minWidth: 240,
   borderSize : 10,
   boxColor : 'fff',
   fontColor : '000',
@@ -41,10 +43,16 @@ var Lightbox = {
   isZoomedIn : false,
   rtl : false,
   loopItems : false,
+  keysClose : ['c', 'x', 27],
+  keysPrevious : ['p', 37],
+  keysNext : ['n', 39],
+  keysZoom : ['z'],
+  keysPlayPause : [32],
 
   // Slideshow options.
   slideInterval : 5000, // In milliseconds.
   showPlayPause : true,
+  autoStart : true,
   autoExit : true,
   pauseOnNextClick : false, // True to pause the slideshow when the "Next" button is clicked.
   pauseOnPrevClick : true, // True to pause the slideshow when the "Prev" button is clicked.
@@ -56,6 +64,8 @@ var Lightbox = {
 
   // Video and modal options.
   enableVideo : false,
+  flvPlayer : '/flvplayer.swf',
+  flvFlashvars : '',
   isModal : false,
   isVideo : false,
   videoId : false,
@@ -79,6 +89,7 @@ var Lightbox = {
     var s = Drupal.settings.lightbox2;
     Lightbox.overlayOpacity = s.overlay_opacity;
     Lightbox.overlayColor = s.overlay_color;
+    Lightbox.disableCloseClick = s.disable_close_click;
     Lightbox.resizeSequence = s.resize_sequence;
     Lightbox.resizeSpeed = s.resize_speed;
     Lightbox.fadeInSpeed = s.fade_in_speed;
@@ -89,11 +100,16 @@ var Lightbox = {
     Lightbox.topPosition = s.top_position;
     Lightbox.rtl = s.rtl;
     Lightbox.loopItems = s.loop_items;
+    Lightbox.keysClose = s.keys_close.split(" ");
+    Lightbox.keysPrevious = s.keys_previous.split(" ");
+    Lightbox.keysNext = s.keys_next.split(" ");
+    Lightbox.keysZoom = s.keys_zoom.split(" ");
+    Lightbox.keysPlayPause = s.keys_play_pause.split(" ");
     Lightbox.disableResize = s.disable_resize;
     Lightbox.disableZoom = s.disable_zoom;
     Lightbox.slideInterval = s.slideshow_interval;
     Lightbox.showPlayPause = s.show_play_pause;
-    Lightbox.autoExit = s.slideshow_automatic_exit;
+    Lightbox.autoStart = s.slideshow_automatic_start;
     Lightbox.pauseOnNextClick = s.pause_on_next_click;
     Lightbox.pauseOnPrevClick = s.pause_on_previous_click;
     Lightbox.loopSlides = s.loop_slides;
@@ -102,6 +118,10 @@ var Lightbox = {
     Lightbox.iframe_height = s.iframe_height;
     Lightbox.iframe_border = s.iframe_border;
     Lightbox.enableVideo = s.enable_video;
+    if (s.enable_video) {
+      Lightbox.flvPlayer = s.flvPlayer;
+      Lightbox.flvFlashvars = s.flvFlashvars;
+    }
 
     // Attach lightbox to any links with lightbox rels.
     Lightbox.initList();
@@ -116,7 +136,7 @@ var Lightbox = {
       </div>';
     var loading = '<div id="loading"><a href="#" id="loadingLink"></a></div>';
     var modal = '<div id="modalContainer" style="display: none;"></div>';
-    var frame = '<div id="frameContainer" style="display: none;"><iframe id="lightboxFrame" style="display: none;"></iframe></div>';
+    var frame = '<div id="frameContainer" style="display: none;"></div>';
     var imageContainer = '<div id="imageContainer" style="display: none;"></div>';
     var details = '<div id="imageDetails"></div>';
     var bottomNav = '<div id="bottomNav"></div>';
@@ -140,14 +160,17 @@ var Lightbox = {
       $('#bottomNav').append(close + zoom + zoomOut + pause + play);
     }
     else {
-      $('#imageContainer').append(image + bottomNav);
+      $('#outerImageContainer').append(bottomNav);
+      $('#imageContainer').append(image);
       $('#bottomNav').append(close + zoom + zoomOut);
       $('#imageData').append(hoverNav + details);
       $('#imageDetails').append(caption + numberDisplay + pause + play);
     }
 
     // Setup onclick handlers.
-    $('#overlay').click(function() { Lightbox.end(); return false; } ).hide();
+    if (Lightbox.disableCloseClick) {
+      $('#overlay').click(function() { Lightbox.end(); return false; } ).hide();
+    }
     $('#loadingLink, #bottomNavClose').click(function() { Lightbox.end('forceClose'); return false; } );
     $('#prevLink, #framePrevLink').click(function() { Lightbox.changeData(Lightbox.activeImage - 1); return false; } );
     $('#nextLink, #frameNextLink').click(function() { Lightbox.changeData(Lightbox.activeImage + 1); return false; } );
@@ -157,14 +180,13 @@ var Lightbox = {
     $('#lightshowPlay').click(function() { Lightbox.togglePlayPause("lightshowPlay", "lightshowPause"); return false; } );
 
     // Fix positioning of Prev and Next links.
-    $('#prevLink, #nextLink, #framePrevLink, #frameNextLink').css({ paddingTop: Lightbox.borderSize + 'px'});
-    $('#imageContainer, #frameContainer, #modalContainer').css({ padding: Lightbox.borderSize + 'px'});
-    $('#outerImageContainer, #imageDataContainer, #bottomNavClose').css({backgroundColor: '#' + Lightbox.boxColor, color: '#'+Lightbox.fontColor});
-
-    if (!Lightbox.iframe_border) {
-      $('#lightboxFrame').css({border: 'none'});
-      $('#lightboxFrame').attr("frameborder", '0');
+    $('#prevLink, #nextLink, #framePrevLink, #frameNextLink').css({ 'paddingTop': Lightbox.borderSize + 'px'});
+    $('#imageContainer, #frameContainer, #modalContainer').css({ 'padding': Lightbox.borderSize + 'px'});
+    $('#outerImageContainer, #imageDataContainer, #bottomNavClose').css({'backgroundColor': '#' + Lightbox.boxColor, 'color': '#'+Lightbox.fontColor});
+    if (Lightbox.alternative_layout) {
+      $('#bottomNavZoom, #bottomNavZoomOut').css({'bottom': Lightbox.borderSize + 'px', 'right': Lightbox.borderSize + 'px'});
     }
+
 
     // Force navigation links to always be displayed
     if (s.force_show_nav) {
@@ -182,26 +204,40 @@ var Lightbox = {
     // Attach lightbox to any links with rel 'lightbox', 'lightshow' or
     // 'lightframe', etc.
     $("a[@rel^='lightbox'], area[@rel^='lightbox']").click(function() {
-      $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      if (Lightbox.disableCloseClick) {
+        $('#lightbox').unbind('click');
+        $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      }
       Lightbox.start(this, false, false, false, false);
       return false;
     });
     $("a[@rel^='lightshow'], area[@rel^='lightshow']").click(function() {
-      $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      if (Lightbox.disableCloseClick) {
+        $('#lightbox').unbind('click');
+        $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      }
       Lightbox.start(this, true, false, false, false);
       return false;
     });
     $("a[@rel^='lightframe'], area[@rel^='lightframe']").click(function() {
-      $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      if (Lightbox.disableCloseClick) {
+        $('#lightbox').unbind('click');
+        $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+      }
       Lightbox.start(this, false, true, false, false);
       return false;
     });
-    $("a[@rel^='lightvideo'], area[@rel^='lightvideo']").click(function() {
-      $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
-      Lightbox.start(this, false, false, true, false);
-      return false;
-    });
-    $("a[@rel^='lightmodal'], area[@rel^='lightmodal']").click(function() {
+    if (Lightbox.enableVideo) {
+      $("a[@rel^='lightvideo'], area[@rel^='lightvideo']").click(function() {
+        if (Lightbox.disableCloseClick) {
+          $('#lightbox').unbind('click');
+          $('#lightbox').click(function() { Lightbox.end('forceClose'); } );
+        }
+        Lightbox.start(this, false, false, true, false);
+        return false;
+      });
+    }
+    $("a[@rel^='lightmodal'], area[@rel^='lightmodal'], #lightboxAutoModal").click(function() {
       $('#lightbox').unbind('click');
       Lightbox.start(this, false, false, false, true);
       return false;
@@ -213,7 +249,7 @@ var Lightbox = {
   // imageArray.
   start: function(imageLink, slideshow, lightframe, lightvideo, lightmodal) {
 
-    Lightbox.isPaused = false;
+    Lightbox.isPaused = !Lightbox.autoStart;
 
     // Replaces hideSelectBoxes() and hideFlash() calls in original lightbox2.
     Lightbox.toggleSelectsFlash('hide');
@@ -221,12 +257,23 @@ var Lightbox = {
     // Stretch overlay to fill page and fade in.
     var arrayPageSize = Lightbox.getPageSize();
     $("#overlay").hide().css({
-      width: '100%',
-      zIndex: '10090',
-      height: arrayPageSize[1] + 'px',
-      backgroundColor : '#' + Lightbox.overlayColor,
-      opacity : Lightbox.overlayOpacity
-    }).fadeIn(Lightbox.fadeInSpeed);
+      'width': '100%',
+      'zIndex': '10090',
+      'height': arrayPageSize[1] + 'px',
+      'backgroundColor' : '#' + Lightbox.overlayColor
+    });
+    // Detect OS X FF2 opacity + flash issue.
+    if (lightvideo && this.detectMacFF2()) {
+      $("#overlay").removeClass("overlay_default");
+      $("#overlay").addClass("overlay_macff2");
+      $("#overlay").css({'opacity' : null});
+    }
+    else {
+      $("#overlay").removeClass("overlay_macff2");
+      $("#overlay").addClass("overlay_default");
+      $("#overlay").css({'opacity' : Lightbox.overlayOpacity});
+    }
+    $("#overlay").fadeIn(Lightbox.fadeInSpeed);
 
     Lightbox.isSlideshow = slideshow;
     Lightbox.isLightframe = lightframe;
@@ -244,55 +291,66 @@ var Lightbox = {
     var rel_style = null;
     var i = 0;
 
-
-    // Handle lightbox images with no grouping.
-    if ((rel == 'lightbox' || rel == 'lightshow') && !rel_group) {
-      Lightbox.imageArray.push([imageLink.href, title]);
+    // Set the title for image alternative text.
+    var alt = imageLink.title;
+    if (!alt) {
+      var img = $(imageLink).find("img");
+      if (img && $(img).attr("alt")) {
+        alt = $(img).attr("alt");
+      }
+      else {
+        alt = title;
+      }
     }
 
-    // Handle iframes with no grouping.
-    else if ((rel == 'lightframe' || rel == 'lightmodal') && !rel_group) {
-      rel_style = (!rel_parts["style"] ? 'width: '+ Lightbox.iframe_width +'px; height: '+ Lightbox.iframe_height +'px; scrolling: auto;' : rel_parts["style"]);
-      Lightbox.imageArray.push([imageLink.href, title, rel_style]);
+
+    if ($(imageLink).attr('id') == 'lightboxAutoModal') {
+      rel_style = rel_parts["style"];
+      Lightbox.imageArray.push(['#lightboxAutoModal > *', title, alt, rel_style, 1]);
     }
+    else {
+      // Handle lightbox images with no grouping.
+      if ((rel == 'lightbox' || rel == 'lightshow') && !rel_group) {
+        Lightbox.imageArray.push([imageLink.href, title, alt]);
+      }
 
-    // Handle video.
-    else if (rel == "lightvideo") {
-      // rel_group contains style information for videos.
-      rel_style = (!rel_group ? 'width: 400px; height: 400px;' : rel_group);
-      Lightbox.imageArray.push([imageLink.href, title, rel_style]);
-    }
+      // Handle other items with no grouping.
+      else if (!rel_group) {
+        rel_style = rel_parts["style"];
+        Lightbox.imageArray.push([imageLink.href, title, alt, rel_style]);
+      }
 
-    // Handle iframes and lightbox & slideshow images.
-    else if (rel == 'lightbox' || rel == 'lightshow' || rel == 'lightframe' || rel == 'lightmodal') {
+      // Handle grouped items
+      else {
 
-      // Loop through anchors and add them to imageArray.
-      for (i = 0; i < anchors.length; i++) {
-        anchor = anchors[i];
-        if (anchor.href && $(anchor).attr('rel')) {
-          var rel_data = Lightbox.parseRel(anchor);
-          var anchor_title = (rel_data["title"] ? rel_data["title"] : anchor.title);
-          if (rel_data["rel"] == rel) {
-            if (rel_data["group"] == rel_group) {
-              if (Lightbox.isLightframe || Lightbox.isModal) {
-                rel_style = (!rel_data["style"] ? 'width: '+ Lightbox.iframe_width +'px; height: '+ Lightbox.iframe_height +'px; scrolling: auto;' : rel_data["style"]);
+        // Loop through anchors and add them to imageArray.
+        for (i = 0; i < anchors.length; i++) {
+          anchor = anchors[i];
+          if (anchor.href && $(anchor).attr('rel')) {
+            var rel_data = Lightbox.parseRel(anchor);
+            var anchor_title = (rel_data["title"] ? rel_data["title"] : anchor.title);
+            if (rel_data["rel"] == rel) {
+              if (rel_data["group"] == rel_group) {
+                if (Lightbox.isLightframe || Lightbox.isModal) {
+                  rel_style = rel_data["style"];
+                }
+                Lightbox.imageArray.push([anchor.href, anchor_title, alt, rel_style]);
               }
-              Lightbox.imageArray.push([anchor.href, anchor_title, rel_style]);
             }
           }
         }
-      }
 
-      // Remove duplicates.
-      for (i = 0; i < Lightbox.imageArray.length; i++) {
-        for (j = Lightbox.imageArray.length-1; j > i; j--) {
-          if (Lightbox.imageArray[i][0] == Lightbox.imageArray[j][0]) {
-            Lightbox.imageArray.splice(j,1);
+        // Remove duplicates.
+        for (i = 0; i < Lightbox.imageArray.length; i++) {
+          for (j = Lightbox.imageArray.length-1; j > i; j--) {
+            if (Lightbox.imageArray[i][0] == Lightbox.imageArray[j][0]) {
+              Lightbox.imageArray.splice(j,1);
+            }
           }
         }
-      }
-      while (Lightbox.imageArray[Lightbox.imageNum][0] != imageLink.href) {
-        Lightbox.imageNum++;
+        while (Lightbox.imageArray[Lightbox.imageNum][0] != imageLink.href) {
+          Lightbox.imageNum++;
+        }
       }
     }
 
@@ -305,10 +363,14 @@ var Lightbox = {
     var arrayPageScroll = Lightbox.getPageScroll();
     var lightboxTop = arrayPageScroll[1] + (Lightbox.topPosition == '' ? (arrayPageSize[3] / 10) : Lightbox.topPosition) * 1;
     var lightboxLeft = arrayPageScroll[0];
+    $('#frameContainer, #modalContainer, #lightboxImage').hide();
+    $('#hoverNav, #prevLink, #nextLink, #frameHoverNav, #framePrevLink, #frameNextLink').hide();
+    $('#imageDataContainer, #numberDisplay, #bottomNavZoom, #bottomNavZoomOut').hide();
+    $('#outerImageContainer').css({'width': '250px', 'height': '250px'});
     $('#lightbox').css({
-      zIndex: '10500',
-      top: lightboxTop + 'px',
-      left: lightboxLeft + 'px'
+      'zIndex': '10500',
+      'top': lightboxTop + 'px',
+      'left': lightboxLeft + 'px'
     }).show();
 
     Lightbox.total = Lightbox.imageArray.length;
@@ -341,11 +403,11 @@ var Lightbox = {
 
 
       // Hide elements during transition.
-      $('#loading').css({zIndex: '10500'}).show();
+      $('#loading').css({'zIndex': '10500'}).show();
       if (!Lightbox.alternative_layout) {
         $('#imageContainer').hide();
       }
-      $('#frameContainer, #modalContainer, #lightboxImage, #lightboxFrame').hide();
+      $('#frameContainer, #modalContainer, #lightboxImage').hide();
       $('#hoverNav, #prevLink, #nextLink, #frameHoverNav, #framePrevLink, #frameNextLink').hide();
       $('#imageDataContainer, #numberDisplay, #bottomNavZoom, #bottomNavZoomOut').hide();
 
@@ -357,7 +419,7 @@ var Lightbox = {
         imgPreloader.onload = function() {
           var photo = document.getElementById('lightboxImage');
           photo.src = Lightbox.imageArray[Lightbox.activeImage][0];
-          photo.alt = Lightbox.imageArray[Lightbox.activeImage][1];
+          photo.alt = Lightbox.imageArray[Lightbox.activeImage][2];
 
           var imageWidth = imgPreloader.width;
           var imageHeight = imgPreloader.height;
@@ -375,7 +437,7 @@ var Lightbox = {
             if ((orig.w >= targ.w || orig.h >= targ.h) && orig.h && orig.w) {
               ratio = ((targ.w / orig.w) < (targ.h / orig.h)) ? targ.w / orig.w : targ.h / orig.h;
               if (!Lightbox.disableZoom && !Lightbox.isSlideshow) {
-                $('#bottomNavZoom').css({zIndex: '10500'}).show();
+                $('#bottomNavZoom').css({'zIndex': '10500'}).show();
               }
             }
 
@@ -390,7 +452,7 @@ var Lightbox = {
               // Only display zoom out button if not a slideshow and if the
               // buttons aren't disabled.
               if (!Lightbox.disableResize && Lightbox.isSlideshow === false && !Lightbox.disableZoom) {
-                $('#bottomNavZoomOut').css({zIndex: '10500'}).show();
+                $('#bottomNavZoomOut').css({'zIndex': '10500'}).show();
               }
             }
           }
@@ -404,19 +466,33 @@ var Lightbox = {
         };
 
         imgPreloader.src = Lightbox.imageArray[Lightbox.activeImage][0];
-        imgPreloader.alt = Lightbox.imageArray[Lightbox.activeImage][1];
+        imgPreloader.alt = Lightbox.imageArray[Lightbox.activeImage][2];
       }
 
       // Set up frame size, etc.
       else if (Lightbox.isLightframe) {
+        var src = Lightbox.imageArray[Lightbox.activeImage][0];
+        $('#frameContainer').html('<iframe id="lightboxFrame" style="display: none;" src="'+src+'"></iframe>');
+
+        // Enable swf support in Gecko browsers.
+        if ($.browser.mozilla && src.indexOf('.swf') != -1) {
+          setTimeout(function () {
+            document.getElementById("lightboxFrame").src = Lightbox.imageArray[Lightbox.activeImage][0];
+          }, 1000);
+        }
+
+        if (!Lightbox.iframe_border) {
+          $('#lightboxFrame').css({'border': 'none'});
+          $('#lightboxFrame').attr('frameborder', '0');
+        }
         var iframe = document.getElementById('lightboxFrame');
-        var iframeStyles = Lightbox.imageArray[Lightbox.activeImage][2];
+        var iframeStyles = Lightbox.imageArray[Lightbox.activeImage][3];
         iframe = Lightbox.setStyles(iframe, iframeStyles);
         Lightbox.resizeContainer(parseInt(iframe.width, 10), parseInt(iframe.height, 10));
       }
       else if (Lightbox.isVideo || Lightbox.isModal) {
         var container = document.getElementById('modalContainer');
-        var modalStyles = Lightbox.imageArray[Lightbox.activeImage][2];
+        var modalStyles = Lightbox.imageArray[Lightbox.activeImage][3];
         container = Lightbox.setStyles(container, modalStyles);
         if (Lightbox.isVideo) {
           Lightbox.modalHeight =  parseInt(container.height, 10);
@@ -451,6 +527,8 @@ var Lightbox = {
   // resizeContainer()
   resizeContainer: function(imgWidth, imgHeight) {
 
+    imgWidth = (imgWidth < Lightbox.minWidth ? Lightbox.minWidth : imgWidth);
+
     this.widthCurrent = $('#outerImageContainer').width();
     this.heightCurrent = $('#outerImageContainer').height();
 
@@ -466,6 +544,7 @@ var Lightbox = {
     wDiff = this.widthCurrent - widthNew;
     hDiff = this.heightCurrent - heightNew;
 
+    $('#modalContainer').css({'width': imgWidth, 'height': imgHeight});
     // Detect animation sequence.
     if (Lightbox.resizeSequence) {
       var animate1 = {width: widthNew};
@@ -478,7 +557,7 @@ var Lightbox = {
     }
     // Simultaneous.
     else {
-      $('#outerImageContainer').animate({width: widthNew, height: heightNew}, Lightbox.resizeSpeed, 'linear', function() { Lightbox.showData(); });
+      $('#outerImageContainer').animate({'width': widthNew, 'height': heightNew}, Lightbox.resizeSpeed, 'linear', function() { Lightbox.showData(); });
     }
 
     // If new and old image are same size and no scaling transition is
@@ -494,9 +573,9 @@ var Lightbox = {
 
     var s = Drupal.settings.lightbox2;
     if (!s.use_alt_layout) {
-      $('#prevLink, #nextLink').css({height: imgHeight + 'px'});
+      $('#prevLink, #nextLink').css({'height': imgHeight + 'px'});
     }
-    $('#imageDataContainer').css({width: widthNew + 'px'});
+    $('#imageDataContainer').css({'width': widthNew + 'px'});
   },
 
   // showData()
@@ -509,14 +588,11 @@ var Lightbox = {
       if (Lightbox.isLightframe) {
         $('#frameContainer').show();
         if ($.browser.safari) {
-          $('#lightboxFrame').css({zIndex: '10500'}).show();
+          $('#lightboxFrame').css({'zIndex': '10500'}).show();
         }
         else {
-          $('#lightboxFrame').css({zIndex: '10500'}).fadeIn(Lightbox.fadeInSpeed);
+          $('#lightboxFrame').css({'zIndex': '10500'}).fadeIn(Lightbox.fadeInSpeed);
         }
-        try {
-          document.getElementById("lightboxFrame").src = Lightbox.imageArray[Lightbox.activeImage][0];
-        } catch(e) {}
       }
       else {
         if (Lightbox.isVideo) {
@@ -524,10 +600,16 @@ var Lightbox = {
           $("#modalContainer").click(function() { return false; } );
         }
         else {
-          $('#modalContainer').load(Lightbox.imageArray[Lightbox.activeImage][0]);
+          var src = unescape(Lightbox.imageArray[Lightbox.activeImage][0]);
+          if (Lightbox.imageArray[Lightbox.activeImage][4]) {
+            $(src).appendTo("#modalContainer");
+          }
+          else {
+            $("#modalContainer").load(src);
+          }
           $('#modalContainer').unbind('click');
         }
-        $('#modalContainer').css({zIndex: '10500'}).show();
+        $('#modalContainer').css({'zIndex': '10500'}).show();
       }
     }
 
@@ -535,10 +617,10 @@ var Lightbox = {
     else {
       $('#imageContainer').show();
       if ($.browser.safari) {
-        $('#lightboxImage').css({zIndex: '10500'}).show();
+        $('#lightboxImage').css({'zIndex': '10500'}).show();
       }
       else {
-        $('#lightboxImage').css({zIndex: '10500'}).fadeIn(Lightbox.fadeInSpeed);
+        $('#lightboxImage').css({'zIndex': '10500'}).fadeIn(Lightbox.fadeInSpeed);
       }
       Lightbox.updateDetails();
       this.preloadNeighborImages();
@@ -553,7 +635,7 @@ var Lightbox = {
         }
       }
       else {
-        if (!Lightbox.isPaused) {
+        if (!Lightbox.isPaused && Lightbox.total > 1) {
           Lightbox.slideIdArray[Lightbox.slideIdCount++] = setTimeout(function () {Lightbox.changeData(Lightbox.activeImage + 1);}, Lightbox.slideInterval);
         }
       }
@@ -575,7 +657,7 @@ var Lightbox = {
       var lightboxTop = (Lightbox.topPosition == '' ? (arrayPageSize[3] / 10) : Lightbox.topPosition) * 1;
       pageHeight = pageHeight + arrayPageScroll[1] + lightboxTop;
     }
-    $('#overlay').css({height: pageHeight + 'px', width: arrayPageSize[0] + 'px'});
+    $('#overlay').css({'height': pageHeight + 'px', 'width': arrayPageSize[0] + 'px'});
 
     // Gecko browsers (e.g. Firefox, SeaMonkey, etc) don't handle pdfs as
     // expected.
@@ -596,25 +678,30 @@ var Lightbox = {
 
     var caption = Lightbox.imageArray[Lightbox.activeImage][1];
     if (!caption) caption = '&nbsp;';
-    $('#caption').html(caption).css({zIndex: '10500'}).show();
+    $('#caption').html(caption).css({'zIndex': '10500'}).show();
 
     // If image is part of set display 'Image x of x'.
     var s = Drupal.settings.lightbox2;
     var numberDisplay = null;
     if (Lightbox.total > 1) {
       var currentImage = Lightbox.activeImage + 1;
-      if (!Lightbox.isLightframe) {
+      if (!Lightbox.isLightframe && !Lightbox.isModal && !Lightbox.isVideo) {
         numberDisplay = s.image_count.replace(/\!current/, currentImage).replace(/\!total/, Lightbox.total);
+      }
+      else if (Lightbox.isVideo) {
+        numberDisplay = s.video_count.replace(/\!current/, currentImage).replace(/\!total/, Lightbox.total);
       }
       else {
         numberDisplay = s.page_count.replace(/\!current/, currentImage).replace(/\!total/, Lightbox.total);
       }
-      $('#numberDisplay').html(numberDisplay).css({zIndex: '10500'}).show();
+      $('#numberDisplay').html(numberDisplay).css({'zIndex': '10500'}).show();
     }
 
-    $("#imageDataContainer").hide().slideDown(Lightbox.slideDownSpeed);
-    if (Lightbox.rtl) {
-      $("#bottomNav").css({float: 'left'});
+    $("#imageDataContainer").hide().slideDown(Lightbox.slideDownSpeed, function() {
+      $("#bottomNav").show();
+    });
+    if (Lightbox.rtl == 1) {
+      $("#bottomNav").css({'float': 'left'});
     }
 
     Lightbox.updateNav();
@@ -624,14 +711,14 @@ var Lightbox = {
   // Display appropriate previous and next hover navigation.
   updateNav: function() {
 
-    $('#hoverNav').css({zIndex: '10500'}).show();
+    $('#hoverNav').css({'zIndex': '10500'}).show();
     var prevLink = '#prevLink';
     var nextLink = '#nextLink';
 
     // Slideshow is separated as we need to show play / pause button.
     if (Lightbox.isSlideshow) {
       if ((Lightbox.total > 1 && Lightbox.loopSlides) || Lightbox.activeImage !== 0) {
-        $(prevLink).css({zIndex: '10500'}).show().click(function() {
+        $(prevLink).css({'zIndex': '10500'}).show().click(function() {
           if (Lightbox.pauseOnPrevClick) {
             Lightbox.togglePlayPause("lightshowPause", "lightshowPlay");
           }
@@ -644,7 +731,7 @@ var Lightbox = {
 
       // If not last image in set, display next image button.
       if ((Lightbox.total > 1 && Lightbox.loopSlides) || Lightbox.activeImage != (Lightbox.total - 1)) {
-        $(nextLink).css({zIndex: '10500'}).show().click(function() {
+        $(nextLink).css({'zIndex': '10500'}).show().click(function() {
           if (Lightbox.pauseOnNextClick) {
             Lightbox.togglePlayPause("lightshowPause", "lightshowPlay");
           }
@@ -660,15 +747,15 @@ var Lightbox = {
     // All other types of content.
     else {
 
-      if (Lightbox.isLightframe && !Lightbox.alternative_layout) {
-        $('#hoverNav').css({zIndex: '10500'}).hide();
-        $('#frameHoverNav').css({zIndex: '10500'}).show();
+      if ((Lightbox.isLightframe || Lightbox.isModal || Lightbox.isVideo) && !Lightbox.alternative_layout) {
+        $('#hoverNav').css({'zIndex': '10500'}).hide();
+        $('#frameHoverNav').css({'zIndex': '10500'}).show();
         prevLink = '#framePrevLink';
         nextLink = '#frameNextLink';
       }
       // If not first image in set, display prev image button.
       if ((Lightbox.total > 1 && Lightbox.loopItems) || Lightbox.activeImage !== 0) {
-        $(prevLink).css({zIndex: '10500'}).show().click(function() {
+        $(prevLink).css({'zIndex': '10500'}).show().click(function() {
           Lightbox.changeData(Lightbox.activeImage - 1); return false;
         });
       }
@@ -679,7 +766,7 @@ var Lightbox = {
 
       // If not last image in set, display next image button.
       if ((Lightbox.total > 1 && Lightbox.loopItems) || Lightbox.activeImage != (Lightbox.total - 1)) {
-        $(nextLink).css({zIndex: '10500'}).show().click(function() {
+        $(nextLink).css({'zIndex': '10500'}).show().click(function() {
           Lightbox.changeData(Lightbox.activeImage + 1); return false;
         });
       }
@@ -719,26 +806,24 @@ var Lightbox = {
     key = String.fromCharCode(keycode).toLowerCase();
 
     // Close lightbox.
-    if (key == 'x' || key == 'o' || key == 'c' || keycode == escapeKey) {
+    if (Lightbox.checkKey(Lightbox.keysClose, key, keycode)) {
       Lightbox.end('forceClose');
-
-    // Display previous image (p, <-).
     }
-    else if (key == 'p' || keycode == 37) {
+    // Display previous image (p, <-).
+    else if (Lightbox.checkKey(Lightbox.keysPrevious, key, keycode)) {
       if ((Lightbox.total > 1 && ((Lightbox.isSlideshow && Lightbox.loopSlides) || (!Lightbox.isSlideshow && Lightbox.loopItems))) || Lightbox.activeImage !== 0) {
 
         Lightbox.changeData(Lightbox.activeImage - 1);
       }
-
-    // Display next image (n, ->).
     }
-    else if (key == 'n' || keycode == 39) {
+    // Display next image (n, ->).
+    else if (Lightbox.checkKey(Lightbox.keysNext, key, keycode)) {
       if ((Lightbox.total > 1 && ((Lightbox.isSlideshow && Lightbox.loopSlides) || (!Lightbox.isSlideshow && Lightbox.loopItems))) || Lightbox.activeImage != (Lightbox.total - 1)) {
         Lightbox.changeData(Lightbox.activeImage + 1);
       }
     }
     // Zoom in.
-    else if (key == 'z' && !Lightbox.disableResize && !Lightbox.disableZoom && !Lightbox.isSlideshow && !Lightbox.isLightframe) {
+    else if (Lightbox.checkKey(Lightbox.keysZoom, key, keycode) && !Lightbox.disableResize && !Lightbox.disableZoom && !Lightbox.isSlideshow && !Lightbox.isLightframe) {
       if (Lightbox.isZoomedIn) {
         Lightbox.changeData(Lightbox.activeImage, false);
       }
@@ -747,7 +832,7 @@ var Lightbox = {
       }
     }
     // Toggle play / pause (space).
-    else if (keycode == 32 && Lightbox.isSlideshow) {
+    else if (Lightbox.checkKey(Lightbox.keysPlayPause, key, keycode) && Lightbox.isSlideshow) {
       if (Lightbox.isPaused) {
         Lightbox.togglePlayPause("lightshowPlay", "lightshowPause");
       }
@@ -795,18 +880,10 @@ var Lightbox = {
       $('#lightshowPause, #lightshowPlay').hide();
     }
     else if (Lightbox.isLightframe) {
-      document.getElementById("lightboxFrame").src = '';
-      if ($.browser.safari) {
-        var iFrame = document.getElementById("lightboxFrame");
-        var parent = iFrame.parentNode;
-        parent.removeChild(iFrame);
-        parent.appendChild(iFrame);
-      }
-      $('#lightboxFrame, #frameContainer').hide();
+      $('#frameContainer').empty().hide();
     }
     else if (Lightbox.isVideo || Lightbox.isModal) {
-      $('#modalContainer').hide();
-      $('#modalContainer').html("");
+      $('#modalContainer').hide().html("");
     }
   },
 
@@ -926,8 +1003,9 @@ var Lightbox = {
   // parseRel()
   parseRel: function (link) {
     var parts = [];
+    parts["rel"] = parts["title"] = parts["group"] = parts["style"] = null;
+    if (!$(link).attr('rel')) return parts;
     parts["rel"] = $(link).attr('rel').match(/\w+/)[0];
-    parts["title"] = parts["group"] = parts["style"] = null;
 
     if ($(link).attr('rel').match(/\[(.*)\]/)) {
       var info = $(link).attr('rel').match(/\[(.*?)\]/)[1].split('|');
@@ -942,6 +1020,11 @@ var Lightbox = {
 
   // setStyles()
   setStyles: function(item, styles) {
+    item.width = Lightbox.iframe_width;
+    item.height = Lightbox.iframe_height;
+    item.srolling = "auto";
+
+    if (!styles) return item;
     var stylesArray = styles.split(';');
     for (var i = 0; i< stylesArray.length; i++) {
       if (stylesArray[i].indexOf('width:') >= 0) {
@@ -987,15 +1070,44 @@ var Lightbox = {
         Lightbox.changeData(Lightbox.activeImage + 1);
       }
     }
-    else {
+    else if (Lightbox.total > 1) {
       Lightbox.isPaused = true;
     }
+  },
+
+  triggerLightbox: function (rel_type, rel_group) {
+    if (rel_type.length) {
+      if (rel_group && rel_group.length) {
+        $("a[@rel^='" + rel_type +"\[" + rel_group + "\]'], area[@rel^='" + rel_type +"\[" + rel_group + "\]']").eq(0).trigger("click");
+      }
+      else {
+        $("a[@rel^='" + rel_type +"'], area[@rel^='" + rel_type +"']").eq(0).trigger("click");
+      }
+    }
+  },
+
+  detectMacFF2: function() {
+    var ua = navigator.userAgent.toLowerCase();
+    if (/firefox[\/\s](\d+\.\d+)/.test(ua)) {
+      var ffversion = new Number(RegExp.$1);
+      if (ffversion < 3 && ua.indexOf('mac') != -1) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  checkKey: function(keys, key, code) {
+    return (jQuery.inArray(key, keys) != -1 || jQuery.inArray(String(code), keys) != -1);
   }
+
+
 };
 
 // Initialize the lightbox.
 if (Drupal.jsEnabled) {
   $(document).ready(function(){
     Lightbox.initialize();
+    $('#lightboxAutoModal').triggerHandler('click');
   });
 }

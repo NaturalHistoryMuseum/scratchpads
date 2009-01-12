@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: lightbox_lite.js,v 1.1.2.2.4.17 2008/08/14 11:28:00 snpower Exp $ */
 
 /**
  * Lightbox JS: Fullsize Image Overlays
@@ -10,21 +10,6 @@
  * This script is distributed via Drupal.org with permission from Lokesh Dhakar.
  * Under GPL license.
  *    Mailto: bugzie@gmail.com
- *
- * Table of Contents
- * -----------------
- * Configuration
- *
- * Functions
- * - getPageScroll()
- * - getPageSize()
- * - pause()
- * - getKey()
- * - listenKey()
- * - showLightbox()
- * - hideLightbox()
- * - initLightbox()
- *
  */
 
 
@@ -165,8 +150,8 @@ function hideLightbox() {
     }
   }
 
-  // disable keypress listener
-  document.onkeypress = '';
+  // disable keydown listener
+  document.onkeydown = '';
 }
 
 
@@ -178,7 +163,7 @@ function getKey(e) {
     escapeKey = 27;
   }
   else { // mozilla
-    keycode = e.which;
+    keycode = e.keyCode;
     escapeKey = e.DOM_VK_ESCAPE;
   }
   key = String.fromCharCode(keycode).toLowerCase();
@@ -188,7 +173,7 @@ function getKey(e) {
 
 
 // listenKey()
-function listenKey () { document.onkeypress = getKey; }
+function listenKey () { document.onkeydown = getKey; }
 
 
 function imgLoadingError(image, objImage, objLink) {
@@ -218,7 +203,7 @@ function showLightbox(objLink) {
   objOverlay.style.height = (arrayPageSize[1] + 'px');
   objOverlay.style.display = 'block';
   objOverlay.style.opacity = settings.overlay_opacity;
-  objOverlay.style.backgroundColor = settings.overlay_color;
+  objOverlay.style.backgroundColor = '#' + settings.overlay_color;
 
   // preload image
   imgPreload = new Image();
@@ -286,7 +271,7 @@ function showLightbox(objLink) {
     arrayPageSize = getPageSize();
     objOverlay.style.height = (arrayPageSize[1] + 'px');
 
-    // Check for 'x' keypress
+    // Check for 'x' keydown
     listenKey();
 
     return false;

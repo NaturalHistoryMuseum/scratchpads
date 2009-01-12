@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: lightbox2.install,v 1.1.4.5.2.38 2009/01/05 03:19:33 snpower Exp $
 
 /**
  * @file
@@ -28,10 +28,14 @@ function lightbox2_uninstall() {
   variable_del('lightbox2_loop_items');
   variable_del('lightbox2_image_count_str');
   variable_del('lightbox2_page_count_str');
+  variable_del('lightbox2_video_count_str');
   variable_del('lightbox2_disable_resize');
   variable_del('lightbox2_disable_zoom');
   variable_del('lightbox2_enable_login');
+  variable_del('lightbox2_enable_contact');
   variable_del('lightbox2_enable_video');
+  variable_del('lightbox2_flv_player_path');
+  variable_del('lightbox2_flv_player_flashvars');
   variable_del('lightbox2_page_init_action');
   variable_del('lightbox2_page_list');
   variable_del('lightbox2_disable_these_urls');
@@ -43,9 +47,15 @@ function lightbox2_uninstall() {
   variable_del('lightbox2_border_size');
   variable_del('lightbox2_box_color');
   variable_del('lightbox2_font_color');
+  variable_del('lightbox2_keys_close');
+  variable_del('lightbox2_keys_previous');
+  variable_del('lightbox2_keys_next');
+  variable_del('lightbox2_keys_zoom');
+  variable_del('lightbox2_keys_play_pause');
   variable_del('lightbox2_top_position');
   variable_del('lightbox2_overlay_opacity');
   variable_del('lightbox2_overlay_color');
+  variable_del('lightbox2_disable_close_click');
   variable_del('lightbox2_resize_sequence');
   variable_del('lightbox2_resize_speed');
   variable_del('lightbox2_fadein_speed');
@@ -54,6 +64,7 @@ function lightbox2_uninstall() {
 
   // Remove slideshow settings.
   variable_del('lightbox2_slideshow_interval');
+  variable_del('lightbox2_slideshow_automatic_start');
   variable_del('lightbox2_slideshow_automatic_exit');
   variable_del('lightbox2_slideshow_show_play_pause');
   variable_del('lightbox2_slideshow_pause_on_next_click');

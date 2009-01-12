@@ -1,4 +1,4 @@
-/* $Id: auto_image_handling.js,v 1.1.2.18 2008/06/27 12:30:02 snpower Exp $ */
+/* $Id: auto_image_handling.js,v 1.1.2.22 2008/07/22 09:06:39 snpower Exp $ */
 
 // Image Node Auto-Format with Auto Image Grouping.
 // Original version by Steve McKenzie.
@@ -56,7 +56,7 @@ function lightbox2_init_triggers(classes, rel_type, custom_class) {
           lightframe = true;
         }
         else if (rel_type == "lightbox_ungrouped") {
-          lightframe = "lightbox[]";
+          rel = "lightbox[]";
         }
         if (rel_type != "lightbox_ungrouped" && rel_type != "lightframe_ungrouped") {
           rel = rel_type + "[" + $(child).attr("class") + "]";
@@ -77,7 +77,7 @@ function lightbox2_init_triggers(classes, rel_type, custom_class) {
         // Handle flickr images.
         if ($(child).attr("class").match("flickr-photo-img") ||
           $(child).attr("class").match("flickr-photoset-img")) {
-          href = $(child).attr("src").replace("_s", "").replace("_t", "").replace("_m", "").replace("_b", "");
+          href = $(child).attr("src").replace("_s.", ".").replace("_t.", ".").replace("_m.", ".").replace("_b.", ".");
           if (rel_type != "lightbox_ungrouped" && rel_type != "lightframe_ungrouped") {
             rel = rel_type + "[flickr]";
             if ($(child).parents("div.block-flickr").attr("class")) {
@@ -92,8 +92,13 @@ function lightbox2_init_triggers(classes, rel_type, custom_class) {
           // Image assist uses "+" signs for spaces which doesn't work for
           // normal links.
           orig_href = orig_href.replace(/\+/, " ");
-          frame_href = orig_href;
-          href = orig_href;
+          href = $(child).attr("src").replace(new RegExp("\\.img_assist_custom"), ((settings.display_image_size === "")?settings.display_image_size:"."+ settings.display_image_size));
+          if (rel_type != "lightbox_ungrouped" && rel_type != "lightframe_ungrouped") {
+            rel = rel_type + "[node_images]";
+          }
+          if (lightframe) {
+            frame_href = orig_href + "/lightbox2";
+          }
         }
 
         // Handle "inline" images.
