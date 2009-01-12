@@ -87,7 +87,7 @@ node_access_rebuild();
 */
 
 // Set file upload sizes.
-variable_set('upload_max_resolution', 0);
+/* variable_set('upload_max_resolution', 0);
 variable_set('upload_list_default', 1);
 variable_set('upload_extensions_default','jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp');
 variable_set('upload_uploadsize_default',25);
@@ -115,7 +115,7 @@ variable_set('upload_uploadsize_6',25);
 variable_set('upload_usersize_3',1000);
 variable_set('upload_usersize_4',1000);
 variable_set('upload_usersize_5',1000);
-variable_set('upload_usersize_6',1000);
+variable_set('upload_usersize_6',1000); */
 
 // Fix Lightbox shit
 /* variable_set('lightbox2_use_alt_layout',0);
@@ -472,7 +472,10 @@ node_access_rebuild();*/
 variable_set('boost', 'CACHE_ENABLED');
 variable_set('boost_banner', '');
 variable_set('boost_file_path', 'cache');
-variable_set('preprocess_css', '1');
+variable_set('preprocess_css', '0'); // This may fuck up the Phasmid site AAAAAAAAAAAAAAAAAAAAAAAARRGH
 variable_set('cache_lifetime', '3600');
+
+// Add an index to the location table
+db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)")
 
 echo "Finished";
