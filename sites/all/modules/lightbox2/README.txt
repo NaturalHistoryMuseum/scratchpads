@@ -12,17 +12,16 @@ CONTENTS OF THIS FILE
     - Inline Content Support
     - Turning the Image Caption into a Link
   * Keyboard Shortcuts
-  * Translation of Configured Strings
   * Known Issues
+    - Lightbox Lite in IE
     - Keyboard Shortcuts in Opera
 
 
 INTRODUCTION
 ------------
 Maintainers:
-  Stella Power (http://drupal.org/user/66894)
-  Daniel F. Kudwien (http://drupal.org/user/54136)
   Mark Ashmead (http://drupal.org/user/52392)
+  Stella Power (http://drupal.org/user/66894)
 
 Documentation: http://drupal.org/node/144469
 
@@ -56,9 +55,6 @@ INSTALLATION
 4. Configure the module at admin/settings/lightbox2.
 5. Modify your image links to open in a lightbox where necessary, see "Adding
    Lightbox Functionality to your Images' section below.
-6. If you need to play flv files, then you may need to install a FLV player.
-   There are a number of freely available ones on the Internet, including
-   http://www.jeroenwijering.com/
 
 
 ADDING LIGHTBOX FUNCTIONALITY TO YOUR IMAGES
@@ -109,11 +105,11 @@ slideshow by doing:
 Video
 =====
 It's possible to show video content in the lightbox.  In this case the "rel"
-attribute should be set to "lightvideo".  It's possible to group videos and 
-to control the size of the lightbox by setting the 'width' and 'height
-properties.  The properties can be configured like
-"lightvideo[group|width:300px; height: 200px;]" and
-"lightvideo[|width:300px; height: 200px;][my caption]".  The properties should
+attribute should be set to "lightvideo".  It's not possible to group
+videos but it is possible to control the size of the lightbox by setting the
+'width' and 'height' properties.  The properties can be configured like
+"lightvideo[width:300px; height: 200px;]" and
+"lightvideo[width:300px; height: 200px;][my caption]".  The properties should
 all be of the format "property: value;" - note the closing semi-colon.  If no
 properties are set, then the default width and height of 400px will be used.
 See below for more detailed examples.
@@ -126,15 +122,9 @@ Basic example with caption:
 <a href="http://video.google.com/videoplay?docid=1811233136844420765"
 rel="lightvideo[][my caption]">Google video example - default size</a>
 
-Grouped example:
-<a href="http://video.google.com/videoplay?docid=29023498723974239479"
-rel="lightvideo[group][caption 1]">Grouped example 1</a>
-<a href="http://video.google.com/videoplay?docid=1811233136844420765"
-rel="lightvideo[group][caption 2]">Grouped example 2</a>
-
 Controlling lightbox size example:
 <a href="http://video.google.com/videoplay?docid=1811233136844420765"
-rel="lightvideo[|width:400px; height:300px;][my caption]">Google video example -
+rel="lightvideo[width:400px; height:300px;][my caption]">Google video example -
 custom size</a>
 
 Supported Video Formats
@@ -221,16 +211,12 @@ following way:
 Note, the < and > characters have been changed to their HTML entities, and the "
 have been escaped.
 
-
 KEYBOARD SHORTCUTS
 ------------------
-Not all of the default keyboard shortcuts work in the Opera browser, for example
-'z' for toggling the zoom and 'spacebar' for toggling play / pause in
-slideshows.  This can be overcome by updating your shortcut settings in the
-Opera preferences editor.
-
-The default keyboard shortcuts are listed below.  You can override these on
-admin/settings/lightbox2.
+Not all of the keyboard shortcuts work in the Opera browser, for example 'z' for
+toggling the zoom and 'spacebar' for toggling play / pause in slideshows.  This
+can be overcome by updating your shortcut settings in the Opera preferences
+editor.
 
 Close : x, o, c, ESC
 Previous Image : p, Left Arrow
@@ -239,20 +225,28 @@ Toggle Zoom : z (not available in slideshow)
 Toggle Play / Pause : Spacebar (slideshow only)
 
 
-TRANSLATION OF CONFIGURED STRINGS
-----------------------------------
-In order to translate the lightbox2 configuration strings, such as the text for
-the "View Image Details" link and the image count, please install the i18n:
-internationalization module and follow the instructions at 
-http://drupal.org/node/134002.
-
-
 KNOWN ISSUES
 ------------
 
+Lightbox Lite in IE
+--------------------
+There is an issue with Lightbox Lite in IE browsers but only for sites where
+Drupal is installed in a subdirectory.  In such instances, the overlay.png image
+can not be found.  To overcome this issue you will need to edit the
+lightbox2/css/lightbox_lite.css file and change the path to this image.  By
+default the line is set to:
+
+filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../images/overlay.png", sizingMethod="scale");
+
+You will need to change the image path on this line to be the full path, e.g.
+
+filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src="/sites/all/modules/lightbox2/images/overlay.png", sizingMethod="scale");
+
+See http://drupal.org/node/185866 for more details.
+
 Keyboard Shortcuts in Opera
 ---------------------------
-Not all of the default keyboard shortcuts work in the Opera browser, for example
-'z' for toggling the zoom and 'spacebar' for toggling play / pause in
-slideshows.  This can be overcome by updating your shortcut settings in the
-Opera preferences editor.
+Not all of the keyboard shortcuts work in the Opera browser, for example 'z' for
+toggling the zoom and 'spacebar' for toggling play / pause in slideshows.  This
+can be overcome by updating your shortcut settings in the Opera preferences
+editor.

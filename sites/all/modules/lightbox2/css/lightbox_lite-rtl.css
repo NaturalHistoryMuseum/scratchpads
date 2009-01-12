@@ -1,4 +1,4 @@
-/* $Id: lightbox_lite-rtl.css,v 1.1.4.6 2008/08/15 11:29:23 snpower Exp $ */
+/* $Id$ */
 #lightbox {
   background-color: #eee;
   padding: 10px;
@@ -52,9 +52,18 @@
   clear: both;
 }
 
+#overlay img {
+  border: none;
+}
+
 #overlay {
+  background-image: url(../images/overlay.png);
+}
+
+* html #overlay {
   background-color: #333;
-  opacity: 0.6;
-  filter:alpha(opacity=60);
+  back\ground-color: transparent;
+  background-image: url(../images/blank.gif);
+  filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../images/overlay.png", sizingMethod="scale");
 }
 

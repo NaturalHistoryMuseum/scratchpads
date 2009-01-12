@@ -1,4 +1,4 @@
-/* $Id: lightbox.css,v 1.1.2.21 2009/01/01 14:06:23 snpower Exp $ */
+/* $Id$ */
 #lightbox {
   position: absolute;
   top: 40px;
@@ -162,14 +162,10 @@
   width: 100%;
   height: 500px;
   background-color: #000;
-}
-
-#overlay_default {
+  filter:alpha(opacity=60);
+  -moz-opacity: 0.6;
+  -khtml-opacity: 0.6;
   opacity: 0.6;
-}
-
-#overlay_macff2 {
-  background: transparent url(../images/overlay.png) repeat;
 }
 
 .clearfix:after {
@@ -196,7 +192,9 @@
 #bottomNavClose {
   display: block;
   background: url(../images/close.gif) left no-repeat;
-  margin-top: 33px;
+  position: relative;
+  top: 33px;
+  right: 0px;
   float: right;
   padding-top: 0.7em;
   height: 26px;
@@ -235,7 +233,8 @@
 }
 
 #lightshowPlay {
-  margin-top: 42px;
+  position: relative;
+  top: 42px;
   float: right;
   margin-right: 5px;
   margin-bottom: 1px;
@@ -245,7 +244,8 @@
 }
 
 #lightshowPause {
-  margin-top: 42px;
+  position: relative;
+  top: 42px;
   float: right;
   margin-right: 5px;
   margin-bottom: 1px;
