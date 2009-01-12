@@ -1,5 +1,10 @@
 <?php
-// $Id: file.inc,v 1.2.2.19.2.22 2008/10/08 19:51:44 quicksketch Exp $
+// $Id: file.inc,v 1.2.2.19.2.27 2009/01/10 01:32:21 quicksketch Exp $
+
+/**
+ * @file
+ *   Webform module file component.
+ */
 
 /**
  * Create a default file component.
@@ -39,8 +44,8 @@ function _webform_edit_file($currfield) {
     $edit_fields['#theme'] = 'webform_edit_file';
     $edit_fields['extra']['filtering'] = array(
       '#type' => 'fieldset',
-      '#collapsible' => true,
-      '#collapsed' => false,
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
       '#title' => t('Upload Filtering'),
       '#description' => t('Select the types of uploads you would like to allow.'),
       '#validate' => array('_webform_edit_file_filtering_validate' => array()),
@@ -91,7 +96,7 @@ function _webform_edit_file($currfield) {
 
     $edit_fields['extra']['filtering']['addextensions'] = array(
       '#type' => 'textfield',
-      '#title' => t("Additional Extensions"),
+      '#title' => t('Additional Extensions'),
       '#default_value' => $currfield['extra']['filtering']['addextensions'],
       '#description' => t('Enter a list of additional file extensions for this upload field, seperated by commas.<br /> Entered extensions will be appended to checked items above.'),
       '#size' => 60,
@@ -101,7 +106,7 @@ function _webform_edit_file($currfield) {
 
     $edit_fields['extra']['filtering']['size'] = array(
       '#type' => 'textfield',
-      '#title' => t("Max Upload Size"),
+      '#title' => t('Max Upload Size'),
       '#default_value' => $currfield['extra']['filtering']['size'],
       '#description' => t('Enter the max file size a user may upload (in KB).'),
       '#size' => 10,
@@ -110,16 +115,16 @@ function _webform_edit_file($currfield) {
     );
     $edit_fields['extra']['savelocation'] = array(
       '#type' => 'textfield',
-      '#title' => t("Upload Directory"),
+      '#title' => t('Upload Directory'),
       '#default_value' => $currfield['extra']['savelocation'],
-      '#description' => "<div style='display: block'>". t('Webform uploads are always saved in the site files directory. You may optionally specify a subfolder to store your files.') ."</div>",
+      '#description' => '<div style="display: block">'. t('Webform uploads are always saved in the site files directory. You may optionally specify a subfolder to store your files.') .'</div>',
       '#weight' => 3,
       '#validate' => array('_webform_edit_file_check_directory' => array()),
       '#after_build' => array('_webform_edit_file_check_directory'),
     );
     $edit_fields['extra']['width'] = array(
       '#type' => 'textfield',
-      '#title' => t("Width"),
+      '#title' => t('Width'),
       '#default_value' => $currfield['extra']['width'],
       '#description' => t('Width of the file field.') .' '. t('Leaving blank will use the default size.'),
       '#size' => 5,
@@ -130,7 +135,7 @@ function _webform_edit_file($currfield) {
 }
 
 function _webform_edit_file_check_directory($form_element) {
-  $base_dir = file_directory_path() ."/webform";
+  $base_dir = file_directory_path() .'/webform';
   $base_success = file_check_directory($base_dir, FILE_CREATE_DIRECTORY);
 
   $destination_dir = $base_dir .'/'. $form_element['#value'];
@@ -159,7 +164,7 @@ function _webform_edit_file_filtering_validate($form_element) {
   // Additional types.
   $additional_extensions = explode(',', $form_element['addextensions']['#value']);
   foreach ($additional_extensions as $extension) {
-    $clean_extension = strtolower(trim($extension));
+    $clean_extension = drupal_strtolower(trim($extension));
     if (!empty($clean_extension) && !in_array($clean_extension, $extensions)) {
       $extensions[] = $clean_extension;
     }
@@ -191,12 +196,12 @@ function theme_webform_edit_file($form) {
     if ($form['extra']['filtering']['types'][$filtergroup]['#type'] == 'checkboxes') {
       // Add the title.
       $row[] = $form['extra']['filtering']['types'][$filtergroup]['#title'];
-      $row[] = "&nbsp;";
+      $row[] = '&nbsp;';
       // Convert the checkboxes into individual form-items.
       $checkboxes = expand_checkboxes($form['extra']['filtering']['types'][$filtergroup]);
       // Render the checkboxes in two rows.
       $checkcount = 0;
-      $jsboxes = "";
+      $jsboxes = '';
       foreach ($checkboxes as $key => $checkbox) {
         if ($checkbox['#type'] == 'checkbox') {
           $checkcount++;
@@ -221,7 +226,7 @@ function theme_webform_edit_file($form) {
         $row[$current_cell + 1]['colspan'] = $colspan;
       }
       // Add the javascript links.
-      $jsboxes = substr($jsboxes, 0, strlen($jsboxes) - 1);
+      $jsboxes = drupal_substr($jsboxes, 0, drupal_strlen($jsboxes) - 1);
       $rows[] = array('data' => $row);
       $select_link = ' <a href="javascript:check_category_boxes(\''. $filtergroup .'\','. $jsboxes .')">(select)</a>';
       $rows[$first_row]['data'][1] = array('data' => $select_link, 'width' => 40);
@@ -249,7 +254,7 @@ function theme_webform_edit_file($form) {
   $output = drupal_render($form);
 
   // Prefix the upload location field with the default path for webform.
-  $output = str_replace("Upload Directory: </label>", "Upload Directory: </label>". file_directory_path() ."/webform/", $output);
+  $output = str_replace('Upload Directory: </label>', 'Upload Directory: </label>'. file_directory_path() .'/webform/', $output);
 
   return $output;
 }
@@ -263,20 +268,26 @@ function theme_webform_edit_file($form) {
  *   An array of a form item to be displayed on the client-side webform.
  */
 function _webform_render_file($component) {
-  $form_item = array(
+  $form_item[$component['form_key']] = array(
     '#type'          => $component['type'],
     '#title'         => $component['name'],
     //'#required'      => $component['mandatory'], // Drupal core bug with required file uploads.
     '#weight'        => $component['weight'],
     '#description'   => _webform_filter_descriptions($component['extra']['description']),
     '#attributes'    => $component['extra']['attributes'],
-    '#tree'          => false, // file_check_upload assumes a flat $_FILES structure.
+    '#tree'          => FALSE, // file_check_upload assumes a flat $_FILES structure.
     '#prefix'        => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix'        => '</div>',
     '#validate'      => array(
       '_webform_validate_file' => array($component['form_key'], $component['name'], $component['extra']['filtering']),
       '_webform_required_file' => array($component['form_key'], $component['name'], $component['mandatory']), // Custom required routine.
     ),
+  );
+  $form_item['new'] = array(
+    '#type' => 'hidden',
+    '#weight' => $component['weight'],
+    '#value' => $component['form_key'],
+    '#tree' => TRUE,
   );
   // Change the 'width' option to the correct 'size' option.
   if ($component['extra']['width'] > 0) {
@@ -286,17 +297,13 @@ function _webform_render_file($component) {
   return $form_item;
 }
 
-function _webform_required_file($form_element, $form_key, $fieldname, $required = false) {
+function _webform_required_file($form_element, $form_key, $fieldname, $required = FALSE) {
   if (empty($_FILES['files']['name'][$form_key]) && $required) {
     form_set_error($fieldname, t('%field field is required.', array('%field' => $fieldname)));
   }
 }
 
 function _webform_validate_file($form_element, $form_key, $fieldname, $filters) {
-  // Set the current file as the default.
-  if (isset($form_element['#webform_current_file'])) {
-    form_set_value(array('#parents' => $form_element['#parents']), serialize($form_element['#webform_current_file']));
-  }
 
   if (empty($_FILES['files']['name'][$form_key])) {
     return;
@@ -306,9 +313,9 @@ function _webform_validate_file($form_element, $form_key, $fieldname, $filters) 
   $extensions = $filters['types'];
   if (count($extensions) > 1) {
     for ($n = 0; $n < count($extensions) - 1; $n++) {
-      $extension_list .= $extensions[$n] .", ";
+      $extension_list .= $extensions[$n] .', ';
     }
-    $extension_list .= "or ". $extensions[count($extensions)-1];
+    $extension_list .= 'or '. $extensions[count($extensions)-1];
   }
   else {
     $extension_list = $extensions[0];
@@ -319,7 +326,7 @@ function _webform_validate_file($form_element, $form_key, $fieldname, $filters) 
   }
 
   $dot = strrpos($_FILES['files']['name'][$form_key], '.');
-  $extension = strtolower(substr($_FILES['files']['name'][$form_key], $dot+1));
+  $extension = drupal_strtolower(drupal_substr($_FILES['files']['name'][$form_key], $dot+1));
   if (!in_array($extension, $extensions)) {
     form_set_error($form_key, t("Files with the '%ext' extension are not allowed, please upload a file with a %exts extension.", array('%ext' => $extension, '%exts' => $extension_list)));
   }
@@ -342,28 +349,27 @@ function _webform_validate_file($form_element, $form_key, $fieldname, $filters) 
  *   Nothing.
  */
 function _webform_submit_file(&$data, $component) {
-
-  // Hack to get the form value for this file component (not necessary in D6).
-  global $form_values;
-  $data = $form_values[$component['form_key']];
-  $current_file = unserialize($data);
-
-  if ($file = file_check_upload($component['form_key'])) {
-    $upload_dir = file_directory_path() ."/webform/". $component['extra']['savelocation'];
+  if ($file = file_check_upload($data['new'])) {
+    $upload_dir = file_directory_path() .'/webform/'. $component['extra']['savelocation'];
 
     if (file_check_directory($upload_dir, FILE_CREATE_DIRECTORY)) {
-      $file_saved = file_save_upload($component['form_key'], $upload_dir);
+      $file_saved = file_save_upload($data['new'], $upload_dir);
       if (!$file_saved) {
         drupal_set_message(t("The uploaded file %filename was unable to be saved. The destination directory may not be writable.", array('%filename' => $file_saved['filename'])), "error");
       }
       else {
+        if (isset($data['existing']['filepath'])) {
+          file_delete($data['existing']['filepath']);
+        }
         $data = serialize((array)$file_saved);
-        file_delete($current_file['filepath']);
       }
     }
     else {
-      drupal_set_message(t("The uploaded file was unable to be saved. The destination directory does not exist."), "error");
+      drupal_set_message(t('The uploaded file was unable to be saved. The destination directory does not exist.'), 'error');
     }
+  }
+  else {
+    return serialize(array());
   }
 }
 
@@ -380,7 +386,7 @@ function _webform_submit_file(&$data, $component) {
  */
 function theme_webform_mail_file($data, $component) {
   $file = unserialize($data);
-  $output = $component['name'] .": ". (!empty($file['filepath']) ? webform_file_url($file['filepath']) : '') ."\n";
+  $output = $component['name'] .': '. (!empty($file['filepath']) ? webform_file_url($file['filepath']) : '') ."\n";
   return $output;
 }
 
@@ -393,23 +399,28 @@ function theme_webform_mail_file($data, $component) {
  * @param $component
  *   An array of information describing the component, directly correlating to
  *   the webform_component database schema.
+ * @param $enabled
+ *   If enabled, the value may be changed. Otherwise it will set to readonly.
  * @return
  *   Textual output formatted for human reading.
  */
-function _webform_submission_display_file($data, $component, $enabled = false) {
+function _webform_submission_display_file($data, $component, $enabled = FALSE) {
   $filedata = unserialize($data['value'][0]);
   $form_item = _webform_render_file($component);
   if (!$enabled) {
     $form_item['#type'] = 'textfield';
     $form_item['#tree'] = TRUE;
-    $form_item['#disabled'] = TRUE;
+    $form_item['#attributes']['readonly'] = 'readonly';
     $form_item['#default_value'] = empty($filedata['filepath']) ? $filedata['error'] : $filedata['filepath'];
   }
   if ($filedata['filename']) {
-    $form_item['#suffix'] = ' <a href="'. webform_file_url($filedata['filepath']) .'">Download '. $filedata['filename'] .'</a>' . $form_item['#suffix'];
+    $form_item['#suffix'] = ' <a href="'. webform_file_url($filedata['filepath']) .'">Download '. $filedata['filename'] .'</a>'. $form_item['#suffix'];
     if ($enabled) {
       $form_item['#description'] = t('Uploading a new file will replace the current file.');
-      $form_item['#webform_current_file'] = $filedata;
+      $form_item['existing'] = array(
+        '#type' => 'value',
+        '#value' => $filedata,
+      );
     }
   }
   return $form_item;
@@ -439,7 +450,7 @@ function _webform_delete_file($data, $component) {
 function _webform_help_file($section) {
   switch ($section) {
     case 'admin/settings/webform#file_description':
-      return t("Allow users to submit files of the configured types.");
+      return t('Allow users to submit files of the configured types.');
   }
 }
 
@@ -460,13 +471,13 @@ function _webform_analysis_rows_file($component) {
     ' WHERE nid = %d '.
     ' AND cid = %d';
   $nonblanks = 0;
+  $sizetotal = 0;
   $submissions = 0;
-  $wordcount = 0;
 
   $result = db_query($query, $component['nid'], $component['cid']);
   while ($data = db_fetch_array($result)) {
     $filedata = unserialize($data['data']);
-    if ($filedata['filesize']) {
+    if (isset($filedata['filesize'])) {
       $nonblanks++;
       $sizetotal += $filedata['filesize'];
     }
@@ -475,7 +486,7 @@ function _webform_analysis_rows_file($component) {
 
   $rows[0] = array(t('Left Blank'), ($submissions - $nonblanks));
   $rows[1] = array(t('User uploaded file'), $nonblanks);
-  $rows[2] = array(t('Average uploaded file size'), ($sizetotal !=0 ? (int)(($sizetotal/$nonblanks)/1024) ." KB" : '0'));
+  $rows[2] = array(t('Average uploaded file size'), ($sizetotal !=0 ? (int)(($sizetotal/$nonblanks)/1024) .' KB' : '0'));
   return $rows;
 }
 
@@ -489,16 +500,14 @@ function _webform_analysis_rows_file($component) {
  *   Textual output formatted for human reading.
  */
 function _webform_table_data_file($data) {
+  $output = '';
   $filedata = unserialize($data['value']['0']);
   if (!empty($filedata['filename'])) {
     $output = '<a href="'. base_path() . $filedata['filepath'] .'">'. $filedata['filename'] .'</a>';
-    $output .= " (". (int)($filedata['filesize']/1024) ." KB)";
+    $output .= ' ('. (int)($filedata['filesize']/1024) .' KB)';
   }
   elseif (!empty($filedata['error'])) {
     $output = $filedata['error'];
-  }
-  else {
-    $output = "";
   }
   return $output;
 }
@@ -538,7 +547,7 @@ function _webform_csv_data_file($data) {
   return empty($filedata['filename']) ? array('', '') : array($filedata['filename'], (int)($filedata['filesize']/1024));
 }
 /**
- * Helper function to create proper URLs for uploaded files.
+ * Helper function to create proper URLs for uploaded file.
  */
 function webform_file_url($filepath) {
   if (!empty($filepath)) {

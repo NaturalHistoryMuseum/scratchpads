@@ -1,5 +1,10 @@
 <?php
-// $Id: pagebreak.inc,v 1.1.2.3.2.6 2008/09/06 20:51:36 quicksketch Exp $
+// $Id: pagebreak.inc,v 1.1.2.3.2.7 2009/01/09 08:31:14 quicksketch Exp $
+
+/**
+ * @file
+ *   Webform module page break component.
+ */
 
 /**
  * Create a default pagebreak component.
@@ -51,7 +56,7 @@ function _webform_edit_pagebreak($currfield) {
 function _webform_help_pagebreak($section) {
   switch ($section) {
     case 'admin/settings/webform#pagebreak_description':
-      return t("Break up a multi-page form.");
+      return t('Break up a multi-page form.');
   }
 }
 
