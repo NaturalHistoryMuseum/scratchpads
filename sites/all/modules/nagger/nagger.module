@@ -1,77 +1,6 @@
 <?php
 // $Id$
 
-/* TODO FormAPI image buttons are now supported.
-   FormAPI now offers the 'image_button' element type, allowing developers to
-   use icons or other custom images in place of traditional HTML submit buttons.
-
-$form['my_image_button'] = array(
-  '#type'         => 'image_button',
-  '#title'        => t('My button'),
-  '#return_value' => 'my_data',
-  '#src'          => 'my/image/path.jpg',
-); */
-
-/* TODO node_access_rebuild($batch_mode = TRUE) / node_access_needs_rebuild()
-   To avoid PHP timeouts when rebuilding content access permissions (which can
-   critically leave the site's content half open), node_access_rebuild() now
-   accepts a $batch_mode boolean parameter (defaults to FALSE), letting it
-   operate in 'progressive' mode using the new D6 batch processing (progressbar
-   processing, à la update.php).
-   See http://api.drupal.org/api/function/node_access_needs_rebuild/6. */
-
-/* TODO Node access modules : simplified hook_enable / hook_disable / hook_node_access_records
-   In D5, modules defining node access permissions via hook_node_grants /
-   hook_node_access_records had to do a bit of hoop jumping : call
-   node_access_rebuild() in their hook_enable / hook_disable, check they're not
-   being disabled before actually returning their grants in hook_node_access_records()...
-   This is not required in D6 anymore : the system ensures the node grants are
-   rebuilt if needed when modules are enabled or disabled. Therefore, node access
-   modules should *not* call node_access_rebuild themselves on enable/disable.  */
-
-/* TODO New user_mail_tokens() method may be useful.
-   user.module now provides a user_mail_tokens() function to return an array
-   of the tokens available for the email notification messages it sends when
-   accounts are created, activated, blocked, etc. Contributed modules that
-   wish to make use of the same tokens for their own needs are encouraged
-   to use this function. */
-
-/* TODO
-   There is a new hook_watchdog in core. This means that contributed modules
-   can implement hook_watchdog to log Drupal events to custom destinations.
-   Two core modules are included, dblog.module (formerly known as watchdog.module),
-   and syslog.module. Other modules in contrib include an emaillog.module,
-   included in the logging_alerts module. See syslog or emaillog for an
-   example on how to implement hook_watchdog.
-function example_watchdog($log = array()) {
-  if ($log['severity'] == WATCHDOG_ALERT) {
-    mysms_send($log['user']->uid,
-      $log['type'],
-      $log['message'],
-      $log['variables'],
-      $log['severity'],
-      $log['referer'],
-      $log['ip'],
-      format_date($log['timestamp']));
-  }
-} */
-
-/* TODO Implement the hook_theme registry. Combine all theme registry entries
-   into one hook_theme function in each corresponding module file.
-function nagger_theme() {
-  return array(
-  );
-} */
-
-/* TODO You may want to take advantage of new form-specific alter hooks.
-   The hook_form_alter() is complemented by hook_form_$form-id_alter().
-   Optionally, modules can implement form-specific alteration functions rather
-   than a single hook_form_alter() with many conditional switch statements.
-   This is optional, and is most useful for tidying the code of modules that
-   alter many forms to customize a site's operations.
-   The new function names are built using the following format:
-   [your-module-name]_form_[$form_id]_alter. */
-
 /**
  * Implementation of hook_node_grants
  */
@@ -85,9 +14,6 @@ function nagger_node_grants($account, $op){
  * Implementation of hook_node_access_records
  */
 function nagger_node_access_records($node) {
-  if (nagger_disabling()) {
-    return;
-  }
   $set_access = false;
   if(isset($node->nagger) && is_array($node->nagger)){
     foreach($node->nagger as $nag){
@@ -122,37 +48,10 @@ function nagger_node_access_records($node) {
 }
 
 /**
- * Simple function to make sure we don't respond with grants when disabling
- * ourselves.
- */
-function nagger_disabling($set = NULL) {
-  static $disabling = false;
-  if ($set !== NULL) {
-    $disabling = $set;
-  }
-  return $disabling;
-}
-
-/**
- * Implementation of hook_disable
- */
-function nagger_disable() {
-  nagger_disabling(true);
-  node_access_rebuild();
-}
-
-/**
  * Implementation of hook_form_alter
  */
 function nagger_form_alter(&$form, &$form_state, $form_id) {  
   if ($form['#id'] == 'node-form') {
-    global $user;
-    /*if($form['#node']->uid != $user->uid){
-      $form['og_nodeapi']['visible']['nagger'] = array(
-        '#value' => '<p>'.t('Only the node author can change access permissions for this node').'</p>'
-      );
-      return;
-    }*/
     drupal_add_css(drupal_get_path('module','nagger').'/nagger.css');
     $roles = user_roles();
     $roles_ids = array_keys($roles);
@@ -199,7 +98,6 @@ function nagger_form_alter(&$form, &$form_state, $form_id) {
 function nagger_node_validate($form, &$form_state){
   // If we've selected a group, check it for stuff.
   if (count($form_state['og_groups'])>0) {
-    $error = false;
     foreach($form_state['nagger']['table'] as $role=>$value){
       if(in_array(1,$value)){
         form_set_error('og_groups', t('You\'ve selected a group, whilst also trying to restrict content access.  Either deselect the group, or uncheck all the access restriction boxes'));

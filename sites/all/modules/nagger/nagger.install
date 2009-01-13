@@ -1,38 +1,21 @@
 <?php
 // $Id$
-/**
- * Implementation of hook_schema().
- */
+
+// hook_schema
 function nagger_schema() {
   $schema['nagger'] = array(
-    'description' => t('TODO'),
     'fields' => array(
-      'nid' => array(
-        'description' => t('TODO'),
-        'type' => 'int',
-        'unsigned' => 1,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'settings' => array(
-        'description' => t('TODO'),
-        'type' => 'text',
-        'size' => 'medium',
-        'not null' => TRUE,
-      ),
-    ),
+      'nid' => array('type' => 'int','not null' => TRUE),
+      'settings' => array('type' => 'text','size' => 'medium','not null' => TRUE)),
     'primary key' => array('nid'),
   );
-
   return $schema;
 }
-
+// hook_install
 function nagger_install() {
-  // Create tables.
   drupal_install_schema('nagger');
 }
+// hook_uninstall
 function nagger_uninstall() {
-  // Remove tables.
   drupal_uninstall_schema('nagger');
-
 }
