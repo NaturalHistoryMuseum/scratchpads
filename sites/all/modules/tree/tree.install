@@ -14,5 +14,14 @@ function tree_install(){
 function tree_uninstall(){
   // Remove tables.
   drupal_uninstall_schema('tree');
+}
 
+function tree_schema(){
+  $tables['tree'] = array(
+    'fields' => array(
+      'vid' => array('type' => 'int', 'not null' => true),
+      'tree' => array('type' => 'text', 'not null' => true),
+      'publication' => array('type' => 'int')),
+    'primary key' => array('vid'));
+  return $tables;  
 }
