@@ -11,6 +11,7 @@
  */
 function taxtab_form_alter(&$form, &$form_state, $form_id){
   if ('search_block_form' == $form_id) {
+    $form['search_block_form']['#title'] = '';
     $form['tabs'] = _taxtab_tabs(true);
     unset($form['basic']['#title']);
     
@@ -32,8 +33,8 @@ function taxtab_menu(){
     'type' => MENU_CALLBACK,
     'page callback' => 'taxtab_normal_js');
   $items['taxtab/taxonomy'] = array(
-    'access arguments' => true, 
     'title' => 'search tab',
+    'access arguments' => array('search content'),
     'page callback' => 'taxtab_taxonomy_js',
     'type' => MENU_CALLBACK);  
   $items['taxtab/autocomplete'] = array(

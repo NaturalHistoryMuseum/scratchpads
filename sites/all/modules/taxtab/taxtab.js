@@ -5,13 +5,13 @@ function taxtabchangeform(){
       $('#search-block-form').parent().html(returnHtml['html']);
       $('#taxtab-create-form').parent().html(returnHtml['html']);
       $('a.taxtablink').click(taxtabchangeform);
-      Drupal.autocompleteAutoAttach();
+      Drupal.behaviors.autocomplete();
     }
   $.get(this.href, null, taxtabReturn);
   return false
 }
 if (Drupal.jsEnabled) {
   $(document).ready(function(){
-    $('a.taxtablink').click(taxtabchangeform);
+    $('.taxtablink').click(taxtabchangeform);
   });
 }
