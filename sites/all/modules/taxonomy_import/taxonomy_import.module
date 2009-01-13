@@ -12,49 +12,16 @@
  * @note See hook_menu for a description of parameters and return values.
  */
 function taxonomy_import_menu() {
-  if (!module_exists('taxonomy')){
-    return;
-  }
-  $items = array();
-/* TODO
-   Non menu code that was placed in hook_menu under the '!$may_cache' block
-   so that it could be run during initialization, should now be moved to hook_init.
-   Previously we called hook_init twice, once early in the bootstrap process, second
-   just after the bootstrap has finished. The first instance is now called boot
-   instead of init.
-   
-   In Drupal 6, there are now two hooks that can be used by modules to execute code
-   at the beginning of a page request. hook_boot() replaces hook_boot() in Drupal 5
-   and runs on each page request, even for cached pages. hook_boot() now only runs
-   for non-cached pages and thus can be used for code that was previously placed in
-   hook_menu() with $may_cache = FALSE:
-   
-   Dynamic menu items under a '!$may_cache' block can often be simplified
-   to remove references to arg(n) and use of '%<function-name>' to check
-   conditions. See http://drupal.org/node/103114.
-   
-   The title and description arguments should not have strings wrapped in t(),
-   because translation of these happen in a later stage in the menu system.
-*/
-  if ($may_cache) {
-    $items['admin/content/taxonomy/export'] = array(
-      'title' => 'Export',
-      'access arguments' => array('administer taxonomy'),
-      'page callback' => 'taxonomy_import_export',
-      'type' => MENU_LOCAL_TASK);
-    $items['admin/content/taxonomy/import'] = array(
-      'title' => 'Import',
-      'access arguments' => array('administer taxonomy'),
-      'page callback' => 'taxonomy_import_import',
-      'type' => MENU_LOCAL_TASK);
-  }
-  /*
-  $items['taxonomy_import'] = array(
-    'title' => 'Taxonomy import',
-    'page callback' => 'taxonomy_import_file',
-    'access arguments' => true,
-    'type' => MENU_CALLBACK);
-  */
+  $items['admin/content/taxonomy/export'] = array(
+    'title' => 'Export',
+    'access arguments' => array('administer taxonomy'),
+    'page callback' => 'taxonomy_import_export',
+    'type' => MENU_LOCAL_TASK);
+  $items['admin/content/taxonomy/import'] = array(
+    'title' => 'Import',
+    'access arguments' => array('administer taxonomy'),
+    'page callback' => 'taxonomy_import_import',
+    'type' => MENU_LOCAL_TASK);
   return $items;
 }
 
@@ -82,20 +49,13 @@ function taxonomy_import_import_form_validate($form, &$form_state) {
     if($form_state['values']['import_format'] == 0){
       form_set_error('import_format',t('Please select a File Format'));
     }
-/* TODO Modify the validators array to suit your needs.
-   This array is used in the revised file_save_upload */
-  $validators = array(
-    'file_validate_is_image' => array(),
-    'file_validate_image_resolution' => array('85x85')),
-    'file_validate_size' => array(30 * 1024),
-  );
-
-    if ($file = file_save_upload(file_check_upload, $validators){
+    
+    if ($file = file_save_upload('data')){
       $fd = fopen($file->filepath, "rb");
-	  $info = fstat($fd);
-	  $len = $info["size"];
-	  $text = fread($fd, $len);
-	  fclose($fd);
+  	  $info = fstat($fd);
+  	  $len = $info["size"];
+  	  $text = fread($fd, $len);
+	    fclose($fd);
       if(!$fd)
         form_set_error('data', t('Vocabulary import failed: file %filename cannot be read.', array('%filename' => $file->filename)));      
       else{
@@ -318,7 +278,7 @@ function taxonomy_import_parse($text, $vid, $import_format) {
   
   // Let's first get the lowest value for "tid", upon which we will build all the
   // other values.
-  $sql = "SELECT `id` FROM {sequences} WHERE `name`='term_data_tid';";
+  $sql = "SELECT tid FROM {term_data} ORDER BY tid DESC LIMIT 1;";
   $result = db_query($sql);
   $sequence = db_fetch_object($result);
   $sequence = $sequence->id+1;
@@ -546,24 +506,16 @@ function taxonomy_import_parse($text, $vid, $import_format) {
         }
     	}
     }
-    $term_hierarchy = "INSERT INTO {term_hierarchy} VALUES ".$term_hierarchy;
-    $term_data = "INSERT INTO {term_data} VALUES ".$term_data;
+    $term_hierarchy = "INSERT INTO {term_hierarchy} (tid, parent) VALUES ".$term_hierarchy;
+    $term_data = "INSERT INTO {term_data} (tid, vid, name, description, weight) VALUES ".$term_data;
     if ($synonym_data !=""){
-      $synonym_data = "INSERT INTO {term_synonym} VALUES ".$synonym_data;
+      $synonym_data = "INSERT INTO {term_synonym} (tid, name) VALUES ".$synonym_data;
     }
     db_query($term_data);
     db_query($term_hierarchy);
     if ($synonym_data !=""){
       db_query($synonym_data);
     }
-    
-    // Finally, increase the sequence value
-    $sql = "SELECT `tid` FROM {term_data} ORDER BY `tid` DESC LIMIT 1;";
-    $result = db_query($sql);
-    $sequence = db_fetch_object($result);
-    $sequence = $sequence->tid;
-    $sql = "UPDATE {sequences} SET `id` = ".$sequence." WHERE `name`='term_data_tid'";
-    $result = db_query($sql);
     return true;
   }
 }
