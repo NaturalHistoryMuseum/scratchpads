@@ -37,9 +37,11 @@ function scratchpadify_filter($op, $delta = 0, $format = -1, $text = '') {
 function scratchpadify_link_alter(&$links, $node){
   // We need to delete the taxonomy modules created links here.
   drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
-  foreach ($node->taxonomy as $term) {
-    if(isset($links['taxonomy_term_'. $term->tid])){
-      unset($links['taxonomy_term_'. $term->tid]);
+  if(isset($node->taxonomy) && is_array($node->taxonomy)){
+    foreach ($node->taxonomy as $term) {
+      if(isset($links['taxonomy_term_'. $term->tid])){
+        unset($links['taxonomy_term_'. $term->tid]);
+      }
     }
   }
 }
