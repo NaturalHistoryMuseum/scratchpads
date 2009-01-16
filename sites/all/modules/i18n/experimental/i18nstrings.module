@@ -1,11 +1,16 @@
 <?php
-// $Id: i18nstrings.module,v 1.1.2.1.2.1 2008/04/04 10:27:29 jareyero Exp $
+// $Id: i18nstrings.module,v 1.1.2.1.2.2 2009/01/04 01:24:48 jareyero Exp $
 
 /**
  * @file
  * Internationalization (i18n) package - translattable strings
  * 
  * @author Jose A. Reyero, 2007
+ * 
+ * This version uses a i18n_locale_strings table for storage which has:
+ * - strid
+ * - locale
+ * - text
  *
  */
 
@@ -13,14 +18,19 @@
  * Implementation of hook_menu().
  */
 function i18nstrings_menu($may_cache) {
-  $items[] = array(
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
       'path' => 'admin/settings/i18n/strings',
       'type' => MENU_LOCAL_TASK,
       'title' => t('Strings'),
       'description' => t('Translatable strings.'),
       'callback' => 'i18nstrings_admin',
        'access' => user_access('administer site configuration'),
-  );
+      );
+  } else {   
+
+  }
 
   return $items;
 }
@@ -43,7 +53,7 @@ function i18nstrings_admin($op = NULL, $strid = NULL) {
 function i18nstrings_admin_overview() {
   $output = '';
   $header = array(t('String Id'), t('Default'), '');
-  $result = db_query("SELECT DISTINCT(strid) FROM {i18n_strings} ORDER BY strid", i18n_default_language());
+  $result = db_query("SELECT DISTINCT(strid) FROM {i18n_locale_strings} ORDER BY strid", i18n_default_language());
   $rows = array();
   while($str = db_fetch_object($result)) {
     $rows[] = array(
@@ -97,7 +107,7 @@ function i18nstrings_admin_form_submit($form_id, $form_values) {
  */
 function i18nstrings_load($strid) {
   $strings = array();
-  $result = db_query("SELECT * FROM {i18n_strings} WHERE strid = '%s'", $strid);
+  $result = db_query("SELECT * FROM {i18n_locale_strings} WHERE strid = '%s'", $strid);
   while ($str = db_fetch_object($result)) {
     $strings[$str->locale] = $str->text;
   }
@@ -107,7 +117,7 @@ function i18nstrings_load($strid) {
  * Get string for a language
  */
 function i18nstrings_get_string($strid, $language) {
-  return db_result(db_query("SELECT text FROM {i18n_strings} WHERE strid = '%s' AND locale = '%s'", $strid, $language));
+  return db_result(db_query("SELECT text FROM {i18n_locale_strings} WHERE strid = '%s' AND locale = '%s'", $strid, $language));
 }
 
 /**
@@ -115,8 +125,8 @@ function i18nstrings_get_string($strid, $language) {
  */
 function i18nstrings_save_string($strid, $language, $value) {
   drupal_set_message("DEBUG: i18n_strings_save: $strid($language)= $value");
-  db_query("DELETE FROM {i18n_strings} WHERE strid = '%s' AND locale = '%s'", $strid, $language);
-  db_query("INSERT INTO {i18n_strings}(strid, locale, text) VALUES('%s', '%s', '%s')", $strid, $language, $value);
+  db_query("DELETE FROM {i18n_locale_strings} WHERE strid = '%s' AND locale = '%s'", $strid, $language);
+  db_query("INSERT INTO {i18n_locale_strings}(strid, locale, text) VALUES('%s', '%s', '%s')", $strid, $language, $value);
 }
  
 /**

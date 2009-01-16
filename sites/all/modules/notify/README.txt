@@ -5,13 +5,15 @@ NOTIFY MODULE README
 This is a simple notification module. It provides e-mail notifications to
 members about updates and changes to the Drupal web site.
 
-Send comments to the new maintainer Rob Barreca <rob@electronicinsight.com>.
+Send comments via the issues queue on drupal.org:
+http://drupal.org/project/issues/notify
 
 ------------------------
 REQUIREMENTS
 ------------------------
 
-This module requires Drupal 5 and cron to be running.
+This module requires a supported version of Drupal and cron to be 
+running.
 
 ------------------------
 INSTALLATION
@@ -23,10 +25,10 @@ INSTALLATION
 2. Enable the notify module on the Administer >> Site building >> Modules page.
    The database tables will be created automagically for you at this point.
 
-3. Modify permissions on the Administer >> User management >> Access control page.
+3. Modify permissions on the Administer >> Users >> Access control page.
 
-4. Go to Administer >> Site configuration >> Notification settings and modify the
-   settings to your liking.
+4. Go to Administer >> Content >> Notification settings and modify the settings
+   to your liking.
    Note: e-mail updates can only happen as frequently as the cron is setup to.
    Check your cron settings.
 
@@ -43,14 +45,19 @@ AUTHOR / MAINTAINER
 
 Kjartan Mannes <kjartan@drop.org> is the original author.
 
-Rob Barreca <rob@electronicinsight.com> is the new maintainer.
+Rob Barreca <rob@electronicinsight.com> was a previous maintainer.
+
+Matt Chapman <matt@ninjitsuhosting.com> is the current maintainer.
 
 ------------------------
-WISH LIST
+RELATED PROJECTS & ALTERNATIVES
 ------------------------
 
-This is in no particular order.
+http://drupal.org/project/notify_by_views
+http://drupal.org/project/subscriptions
 
-- Filters on what to notify about.
-- Options to get full text in mail.
-- Some way of detecting mail bounces.
+------------------------
+WISHLIST
+-----------------------
+
+-Templated emails

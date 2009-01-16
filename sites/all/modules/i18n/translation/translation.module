@@ -1,5 +1,5 @@
 <?php
-// $Id: translation.module,v 1.3.2.15.2.3 2008/04/28 11:59:10 jareyero Exp $
+// $Id: translation.module,v 1.3.2.15.2.5 2009/01/14 23:33:20 snpower Exp $
 
 /**
  * Internationalization (i18n) package.
@@ -78,8 +78,8 @@ function translation_menu($may_cache) {
       'type' => MENU_DEFAULT_LOCAL_TASK, 'weight' => -10);
   }
   else {
-    if (arg(0) == 'node' && is_numeric(arg(1)) && variable_get('i18n_node_'.translation_get_node_type(arg(1)), 0)) {
-      $access = translation_access(node_load(arg(1)));
+    if (arg(0) == 'node' && is_numeric(arg(1)) && ($node = node_load(arg(1))) && variable_get('i18n_node_'.translation_get_node_type(arg(1)), 0)) {
+      $access = translation_access($node) && node_access('view', $node);
       $type = MENU_LOCAL_TASK;      
       $items[] = array(
         'path' => 'node/'. arg(1) .'/translation', 
@@ -189,13 +189,14 @@ function translation_form_alter($form_id, &$form) {
     if ($node->nid && $node->translation) {
       $translations = $node->translation;
     }
-    elseif (isset($_GET['translation']) && translation_access(node_load($_GET['translation']))) {
-      // We are translating a node: node/add/type/translation/nid/lang
-      $translation_nid = $_GET['translation'];
-      $language = $_GET['language'];
-      
-      // Load the node to be translated and populate fields
-      $trans = node_load($translation_nid);
+    elseif (isset($node->translation_source) && translation_access($node->translation_source)) {
+      // We are translating a node: node/add/$type?translation=$nid&language=$language
+      $translation_nid = $node->translation_nid;
+      $language = $node->language;
+
+      // Get the node to be translated and populate fields
+      $trans = $node->translation_source;
+
       $form['i18n']['translation_nid'] = array('#type' => 'hidden', '#value' => $translation_nid);
       $form['i18n']['language']['#default_value'] = $language;
       
@@ -292,10 +293,10 @@ function translation_nodeapi(&$node, $op, $arg = 0) {
         }
         break;
       case 'prepare': // When creating a translation 
-        if (!$node->nid && isset($_GET['translation']) && ($nid = $_GET['translation']) && ($language = $_GET['language']) && user_access('translate nodes')) {
+        if (empty($node->nid) && isset($_GET['translation']) && is_numeric($_GET['translation']) && !empty($_GET['language'])) {
           // We are translating a node from a source node
           // Load the node to be translated and populate fields
-          translation_node_prepare($node, $nid, $language);
+          translation_node_prepare($node, $_GET['translation'], $_GET['language']);
         }
         break;        
     }
@@ -374,10 +375,21 @@ function translation_nat_get_terms($nid) {
  * Prepare node for translation
  */
 function translation_node_prepare(&$node, $sourcenid, $language) {
+  // Validate source and language.
+  $source = node_load($sourcenid);
+  if (empty($source) || !translation_access($source) || !node_access('view', $source)) {
+    // Source node not found or no access to view.
+    return;
+  }
+  $language_list = i18n_node_language_list($node);
+  if (!isset($language_list[$language]) || ($source->language == $language)) {
+    // If not supported language, or same language as source node, break.
+    return;
+  }
+
+  $node->translation_source = drupal_clone($source);
   $node->translation_nid = $sourcenid;
   $node->language = $language;
-  $source = $node->translation_source = node_load($node->translation_nid);
-  
   // Taxonomy translation
   if(is_array($source->taxonomy)) {
     // Set translated taxonomy terms
@@ -402,9 +414,14 @@ function translation_node_prepare(&$node, $sourcenid, $language) {
   // Translations are taken from source node          
   $node->translation = $source->translation;
   $node->translation[$source->language] = $source;
-  
+
+  // Only copy the body if the translator can access the format.
+  if (filter_access($source->format)) {
+    $node->body = $source->body;
+  }
   // Rest of fields. Unset some known ones not to be copied over
-  unset($source->nid, $source->vid, $source->path, $source->language, $source->files);
+  unset($source->nid, $source->vid, $source->path, $source->language, $source->files, $source->body);
+ 
   foreach($source as $field => $value) {
     if (!isset($node->$field)) {
       $node->$field = $value; 
@@ -515,15 +532,19 @@ function translation_admin_nodes() {
   $params = $filter['args'];
   $join = $filter['join'];
   
+  // Now we add in conditions from the node admin filter subform
   $filter = node_build_filter_query();
-  // Remove WHERE 
-  if($filter['where']) {
-  	$where += array(str_replace('WHERE', '', $filter['where']));
+
+  // Remove WHERE and merge all conditions. The WHERE part from node filter was a string with 'WHERE..'
+  if (!empty($filter['where'])) {
+    $where += array_merge($where, array(str_replace('WHERE', '', $filter['where'])));
   }
-
-  $params = array_merge($params, $filter['args']);
-
-  $join .= $filter['join'];
+  if (!empty($filter['args'])) {
+    $params = array_merge($params, $filter['args']);
+  }
+  if (!empty($filter['join'])) {
+    $join .= ' ' . $filter['join'];
+  }
   
   $sql = "SELECT n.nid, n.type, n.title, n.status, u.name, u.uid, i.language, i2.nid AS translation_nid, i2.status AS translation_status ".
     "FROM {node} n INNER JOIN {users} u ON n.uid = u.uid INNER JOIN {i18n_node} i ON n.nid = i.nid ".

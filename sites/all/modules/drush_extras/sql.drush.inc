@@ -1,5 +1,5 @@
 <?php
-// $Id: sql.drush.inc,v 1.2.2.3 2009/01/06 04:52:56 weitzman Exp $
+// $Id: sql.drush.inc,v 1.2.2.4 2009/01/14 23:59:16 weitzman Exp $
 
 /**
  * @file
@@ -47,7 +47,7 @@ function sql_drush_command() {
   $items['sql load'] = array(
     'callback' => 'drush_sql_load',
     'description' => 'Copy source database to target database.',
-    'bootstrap' => -1, // No bootstrap at all.
+    // 'bootstrap' => -1, // TODO: Bootstrap just to DB
   );
   return $items;
 }
@@ -149,11 +149,9 @@ function drush_sql_dump($db_url = NULL, $execute = TRUE, $skip = NULL) {
     return $exec;
   }
   
-  if (DRUSH_VERBOSE) {
-    drush_print(dt('Executing: !cmd', array('!cmd' => $exec)));
-  }
-
-  return drush_op('system', $exec) !== FALSE;
+  // Avoid the php memory of the $output array in drush_shell_exec().
+  $return = drush_op('system', $exec);
+  return $return;
 }
 
 /**
@@ -241,6 +239,15 @@ function drush_sql_load($source, $target, $skip = NULL) {
     }
   }
   
+  // Caller may specify --result-file where the dump is temporarily saved.
+  // If not specified, we just generate one.
+  if (!$file = drush_get_option('result-file')) {
+    $time = time();
+    $file = "drush_sql_dump.$time.sql";
+    // Hack to make sure that drush_sql_dump sees the option.
+    $GLOBALS['args']['options']['result-file'] = $file;
+  }
+  
   // Get command to export from source.
   if ($retrieve = drush_sql_dump($db_url_source, FALSE, $skip)) {
     // Get any arguments to be passed through to the mysqldump.
@@ -253,17 +260,16 @@ function drush_sql_load($source, $target, $skip = NULL) {
     $send = 'mysql' . (DRUSH_VERBOSE ? ' -v' : '');
     $send .= _drush_sql_get_credentials($db_url_target);
     
-    // Build pipe command and redirect output to the bit bucket.
-    // Redirection prevented loads of SQL from writing to screen.
-    $exec = "$retrieve | $send > /dev/null 2>&1";
-
-    if (DRUSH_VERBOSE) {
-      drush_print(dt('Executing: !cmd', array('!cmd' => $exec)));
+    $exec = "$retrieve; $send < $file";
+    $return = drush_shell_exec($exec);     
+    if (!DRUSH_SIMULATE) {
+      unlink($file);
+      if (DRUSH_VERBOSE) {
+        drush_print(dt('Deleted temporary file @file.', array('@file' => $file)));
+      }
     }
-    
-    $return = drush_op('system', $exec) !== FALSE;
+    return $return;
   }
-  return $return;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -296,6 +302,15 @@ function _drush_sql_get_database($db_url = NULL) {
 function _drush_sql_get_credentials($db_url = NULL) {
   if (is_null($db_url)) {
     $db_url = $GLOBALS['db_url'];
+  }
+  
+  // Caller may specify --result-file where the dump is temporarily saved.
+  // If not specified, we just generate one.
+  if (!$file = drush_get_option('result-file')) {
+    $time = time();
+    $file = "drush_sql_dump.$time.sql";
+    // Hack to make sure that drush_sql_dump sees the option.
+    $GLOBALS['args']['options']['result-file'] = $file;
   }
 
   // NOTE: this regex could also parse the connection string URL:
