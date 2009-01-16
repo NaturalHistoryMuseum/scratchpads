@@ -7,15 +7,11 @@
  * Implementation of hook_install
  */
 function leftandright_install(){
-  $results = array();
   // Create tables.
   drupal_install_schema('leftandright');
-  // Check the results, only going on if they're all alright  
-  if (count($result) != count(array_filter($result))) {
-  	drupal_set_message(t('Drupal was unable to install the database tables for the leftandright module.'), 'error');
-  	return;
-  }
+  
   // Lets now initiate a tree rebuild for all the vocabularies on the site
+  /* DISABLED TEMPORARILY
   $vocabularies = taxonomy_get_vocabularies();
   foreach($vocabularies as $vocabulary){
     // Rather annoyingly, at this point the module file isn't known to Drupal, so 
@@ -23,7 +19,27 @@ function leftandright_install(){
     include_once('leftandright.module');
     leftandright_rebuild_tree($vocabulary->vid);
   }
-  drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));
+  drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));*/
+}
+
+function leftandright_schema(){  
+  return array('leftandright' => array(
+    'fields' => array(
+      'lft' => array('type' => 'float', 'size' => 'big', 'not null' => 'true'),
+      'rgt' => array('type' => 'float', 'size' => 'big', 'not null' => 'true'),
+      'tid' => array('type' => 'int', 'not null' => true),
+      'vid' => array('type' => 'int', 'not null' => true),
+      'depth' => array('type' => 'int', 'size' => 'small'),
+      'lowername' => array('type' => 'varchar', 'length' => '255')),
+    'primary key' => array('tid'),
+    'unique keys' => array(
+      'lft_vid' => array('vid','lft'),
+      'rgt_vid' => array('vid','rgt')),
+    'indexes' => array(
+      'left_index' => array('lft'),
+      'right_index' => array('rgt'),
+      'vocab_index' => array('vid'),
+      'lowername' => array('lowername'))));
 }
 
 function leftandright_uninstall(){
