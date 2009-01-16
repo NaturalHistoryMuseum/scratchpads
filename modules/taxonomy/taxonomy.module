@@ -820,6 +820,9 @@ function taxonomy_get_children($tid, $vid = 0, $key = 'tid') {
  *   Results are statically cached.
  */
 function taxonomy_get_tree($vid, $parent = 0, $depth = -1, $max_depth = NULL) {
+  if(function_exists('leftandright_get_tree')){
+    return leftandright_get_tree($vid, $parent, $max_depth);
+  }
   static $children, $parents, $terms;
 
   $depth++;
@@ -1077,6 +1080,9 @@ function theme_taxonomy_term_select($element) {
  *   A resource identifier pointing to the query results.
  */
 function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.created DESC') {
+  if(function_exists('leftandright_select_nodes')){
+    return leftandright_select_nodes($tids, $operator, $depth, $pager, $order);
+  }
   if (count($tids) > 0) {
     // For each term ID, generate an array of descendant term IDs to the right depth.
     $descendant_tids = array();
