@@ -133,7 +133,7 @@ function _image_imagemagick_convert($source, $dest, $args) {
     escapeshellarg($source),
     escapeshellarg($dest),
   ));
-
+  watchdog('imagemagick','Executed the following command: '.$command);
   if (0 != _image_imagemagick_convert_exec($command, $output, $errors)) {
     return FALSE;
   }
