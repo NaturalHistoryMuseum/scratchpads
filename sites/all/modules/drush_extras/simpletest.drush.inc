@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.drush.inc,v 1.1 2008/12/07 05:12:11 weitzman Exp $
+// $Id: simpletest.drush.inc,v 1.1.2.2 2009/01/16 05:13:09 weitzman Exp $
 
 /**
  * @file Drush simpletest commands
@@ -10,10 +10,8 @@
  */
 function simpletest_drush_help($section) {
   switch ($section) {
-    case 'drush:test run':
-      return dt("Usage drush [options] test run<classes>.\n\nRun the specified specified unit tests. If <classes> is omitted, all tests are run. <classes> should be a list of classes separated by a comma. For example: PageCreationTest,PageViewTest.");
-    case 'drush:test list':
-      return dt("Usage drush [options] test list.\n\nList the available tests. Use drush test run command to run them.");
+    case 'drush:test mail':
+      return dt("Usage drush [options] test mail <recipients> <extra> <php>.\n\nRun tests and email the results.\n<recipients> should be a comma delimited list of email addresses.\n<extra> contanis any arguments which should be passed along to run-tests.sh. For example, the class of tests to run.\n<php> is rarely needed. Pass the full path to your php interpreter.");
   }
 }
 
@@ -21,57 +19,67 @@ function simpletest_drush_help($section) {
  * Implementation of hook_drush_command().
  */
 function simpletest_drush_command() {
-  $items['test run'] = array(
-    'callback' => 'drush_test_run',
-    'description' => 'Run one or more Simpletest tests.',
+  $items['test mail'] = array(
+    'callback' => 'drush_test_mail',
+    'description' => 'Run all tests and mail the results to your team.',
+    'bootstrap' => -1,
   );
-  $items['test list'] = array(
-    'callback' => 'drush_test_list',
-    'description' => 'List the available Simpletest test classes.',
-  );
+  
   return $items;
 }
 
-function drush_test_list() {
-  simpletest_load();
-  // TODO: Refactor simpletest.module so we don't copy code from DrupalUnitTests
-  $files = array();
-  foreach (module_list() as $module) {
-    $module_path = drupal_get_path('module', $module);
-    if (file_exists($module_path .'/tests/')) {
-      $dir = $module_path .'/tests';
-      $tests = file_scan_directory($dir, '\.test$');
-      $files = array_merge($files, $tests);
-    }
+// A Drush command callback.
+function drush_test_mail() {
+  $run_tests = './scripts/run-tests.sh';
+  if (!file_exists($run_tests)) {
+    drush_error(dt('You must put run-tests.sh in your /scripts directory under Drupal root. You may copy it from http://cvs.drupal.org/viewvc.py/drupal/drupal/scripts/run-tests.sh?revision=1.16&content-type=text%2Fplain'));
   }
-  $files = array_keys($files);
-
-  $existing_classes = get_declared_classes();
-  foreach ($files as $file) {
-    include_once($file);
+  
+  if ($recipients = drush_get_option('recipients')) {
+    $php = drush_simpletest_find_php();
+    $extra = drush_get_option('extra');
+    $url = escapeshellarg(url('', array('absolute' => TRUE)));
+    $exec = $php . " $run_tests --php '" . $php . '\' --url ' . $url . " $extra";
+    drush_shell_exec($exec);
+    $output =  implode("\n", drush_shell_exec_output());
+    $subject = 'Simpletest results - ' . drush_simpletest_format_results($output);
+    mail($recipients, $subject, $output);
   }
-  $classes = array_diff(get_declared_classes(), $existing_classes);
-  $rows[] = array(dt('Class'), dt('Name'), dt('Description'));
-  foreach ($classes as $class) {
-    $tmp = new $class;
-    if (method_exists($tmp, 'get_info')) {
-      $info =  $tmp->get_info();
-      $rows[] = array($class, $info['name'], truncate_utf8($info['desc'], 30, TRUE, TRUE));
-    }
-  }
-  return drush_print_table($rows, 0, TRUE);
 }
 
+// Copied from run-tests.sh
+function drush_simpletest_find_php() {
+  // Determine location of php command automatically, unless a comamnd line argument is supplied.
+  if (!$php = drush_get_option('php')) {
+    if (!empty($_ENV['_'])) {
+      // '_' is an environment variable set by the shell. It contains the command that was executed.
+      $php = $_ENV['_'];
+    }
+    elseif (!empty($_ENV['SUDO_COMMAND'])) {
+      // 'SUDO_COMMAND' is an environment variable set by the sudo program.
+      // Extract only the PHP interpreter, not the rest of the command.
+      list($php, ) = explode(' ', $_ENV['SUDO_COMMAND'], 2);
+    }
+    else {
+      drush_error(dt('Unable to automatically determine the path to the PHP interpreter. Please supply the --php argument.'));
+    }
+  }
+  return $php;
+}
 
-function drush_test_run($tests = NULL) {
-  simpletest_load();
-  if (is_null($tests)) {
-    drush_print(dt('Running all tests'));
-    $result = simpletest_run_tests();
+// Based on pifr_review_format_results().
+function drush_simpletest_format_results($output) {
+  if (preg_match_all('/^(.*?) (\d+) (?:pass|passes), (\d+) fails?, and (\d+) exceptions?$/m', $output, $matches, PREG_SET_ORDER)) {
+    $results = array('pass' => 0, 'fail' => 0, 'exception' => 0);
+    foreach ($matches as $match) {
+      // Add to results count array.
+      $results['pass'] += $match[2];
+      $results['fail'] += $match[3];
+      $results['exception'] += $match[4];
+    }
+    return $results['pass']  . ' pass, ' . $results['fail'] . ' failures, ' . $results['exceptions'] . '  exceptions';
   }
   else {
-    $tests = explode(',', $tests);
-    $result = simpletest_run_tests($tests, 'text');
+    return dt('Unknown.');
   }
-  return $result;
 }

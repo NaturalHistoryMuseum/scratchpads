@@ -83,7 +83,10 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
       case 'insert':
          module_load_include("functions.inc", "leftandright");
-         leftandright_hook_taxonomy_helper_insert($array);   
+         leftandright_hook_taxonomy_helper_insert($array);
+         // Finally update the variable storing the total number of terms in
+         // each of the vocabularies.
+         leftandright_update_totals_variable();
     }
   }
 }
@@ -102,6 +105,37 @@ function leftandright_descendant_used($tid){
   } else {
     return false;
   }
+}
+
+/**
+ * Following function returns true if a vocabulary has more than the minimum
+ * number of terms required to use "leftandright"
+ */
+function leftandright_use_leftandright($vid){
+  $totals = variable_get('leftandright_vocab_totals', false);
+  if(!$totals){
+    leftandright_update_totals_variable();
+    $totals = variable_get('leftandright_vocab_totals', false);    
+  }
+  if($totals){
+    if($totals[$vid]>variable_get('leftandright_minimum_terms', 1000)){
+      return true;
+    }
+  }
+  return false;
+}
+
+
+/**
+ * Update the variable
+ */
+function leftandright_update_totals_variable(){
+  $result = db_query("SELECT COUNT(*) count, vid FROM term_data GROUP BY vid");
+  $totals = array();
+  while($row = db_fetch_array($result)){
+    $totals[$row['vid']] = $row['count'];    
+  }
+  variable_set('leftandright_vocab_totals', $totals);
 }
 /*******************************************************************************
  * REPLACEMENT FUNCTIONS FOR taxonomy module

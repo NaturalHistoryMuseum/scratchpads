@@ -548,12 +548,12 @@ function _uploadform_submit($form, &$form_state) {
     case t('Upload'):
       // Get file upload info object
 /* TODO Modify the validators array to suit your needs.
-   This array is used in the revised file_save_upload */
+   This array is used in the revised file_save_upload
   $validators = array(
     'file_validate_is_image' => array(),
-    'file_validate_image_resolution' => array('85x85')),
+    'file_validate_image_resolution' => array('85x85'),
     'file_validate_size' => array(30 * 1024),
-  );
+  );*/
 
       $file = file_save_upload(file_check_upload, $validators);
       $file->filename = _sanitize_filename($file->filename);

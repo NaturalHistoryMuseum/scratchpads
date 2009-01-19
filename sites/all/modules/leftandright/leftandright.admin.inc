@@ -3,6 +3,12 @@
  * Following function is barely changed from the original, but just to make things simpler, it's recreated here.
  */
 function leftandright_overview_terms($vid){
+  // Lets make sure this vocabulary wants to use leftandright
+  if(!leftandright_use_leftandright($vid)){
+    $vocabulary = taxonomy_get_vocabularies();
+    module_load_include("admin.inc", "taxonomy");
+    return drupal_get_form('taxonomy_overview_terms',$vocabulary[$vid]);
+  }
   $header = array(t('Name'), t('Operations'));
   $vocabulary = taxonomy_vocabulary_load($vid);
   if (!$vocabulary) {

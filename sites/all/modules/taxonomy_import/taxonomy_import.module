@@ -280,8 +280,8 @@ function taxonomy_import_parse($text, $vid, $import_format) {
   // other values.
   $sql = "SELECT tid FROM {term_data} ORDER BY tid DESC LIMIT 1;";
   $result = db_query($sql);
-  $sequence = db_fetch_object($result);
-  $sequence = $sequence->id+1;
+  $sequence = array_pop(db_fetch_array($result));
+  $sequence++;
 
   $term_data = "";
   $term_hierarchy = "";
