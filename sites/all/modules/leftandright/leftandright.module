@@ -54,13 +54,17 @@ function leftandright_help($path, $arg) {
   switch ($path) {
     case 'admin/content/taxonomy/leftandright':
       return '<p>'. t('Click to rebuild a tree.  There is usually no need to rebuild a tree manually, however, if you\'ve been experiencing unusual results from taxonomic queries, then this may help.') .'</p>';
+      break;
+    case 'admin/content/taxonomy':
+      return '<p>'.t('Taxonomies with greater than @leftandright_minimum terms will use the <a href="http://drupal.org/project/leftandright">Left and right module</a> for improved performance.  Unfortunately this means that these taxonomies no longer support the reordering of terms.', array('@leftandright_minimum'=>variable_get('leftandright_minimum_terms',1000))).'</p>';
+      break;
   }
 }
 
 /**
- * The following function adds the data to the left and right table when a new term is
- * added to the site, or it alters the data if the parent of a term is changed, or if 
- * the name itself is changed.  etc
+ * The following function adds the data to the left and right table when a new
+ * term is added to the site, or it alters the data if the parent of a term is
+ * changed, or if the name itself is changed.  etc
  */
 // hook_taxonomy
 function leftandright_taxonomy($op, $type, $array = NULL){
@@ -71,7 +75,7 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
         break;
       case 'update':
-        // Delete then insert - FUCKING SHIT, but easy!
+        // Delete then insert - SHIT, but easy!
         if(function_exists('_split_field')){
           $parents = _split_field($array['parent-new'],$array['vid']);
           if(count(array_intersect($array['parent-old'],$parents))){
@@ -88,6 +92,18 @@ function leftandright_taxonomy($op, $type, $array = NULL){
          // each of the vocabularies.
          leftandright_update_totals_variable();
     }
+  }
+}
+
+/**
+ * Following function updates the numbers in the leftandright_something_blah
+ * variable
+ */
+// hook_form_alter
+function leftandright_form_alter($form, $form_state, $form_id){
+  // Rebuild the numbers if we're looking at the main taxonomy page
+  if($form_id == 'taxonomy_overview_vocabularies'){
+    leftandright_update_totals_variable();
   }
 }
 /*******************************************************************************
@@ -125,7 +141,6 @@ function leftandright_use_leftandright($vid){
   return false;
 }
 
-
 /**
  * Update the variable
  */
@@ -137,6 +152,7 @@ function leftandright_update_totals_variable(){
   }
   variable_set('leftandright_vocab_totals', $totals);
 }
+
 /*******************************************************************************
  * REPLACEMENT FUNCTIONS FOR taxonomy module
  ******************************************************************************/
@@ -168,18 +184,24 @@ function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=10
   }
   return $tree;
 }
+
+// FIXME - This doesn't use the max_depth variable
 function leftandright_get_tree_count($vid, $parent = 0, $max_depth = NULL){
   // Get parent left and right
-  $left = 0;
-  $right = 10000000000;// Is this big enough?
+  $lftandrgt_sql = '';
+  $arguments = array($vid);
   if($parent != 0){
-    $results = db_query("SELECT lft,rgt FROM {leftandright} WHERE tid = %d", $parent);
+    $results = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d", $parent);
     $row = db_fetch_array($results);
-    $left = $row['lft'];
-    $right = $row['rgt'];
+    $arguments[] = $row['lft'];
+    $arguments[] = $row['rgt'];
+    //$max_depth += $row['depth']; // Is this right???
+    $lftandrgt_sql = 'AND lft>=%d AND rgt <=%d';
   }
-  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d AND lft>=%d AND rgt <=%d", $vid, $left, $right)));
+  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d $lftandrgt_sql", $arguments)));
 }
+
+// Hmmm, does this need rewriting to use db_rewrite_query?? FIXME
 function leftandright_select_nodes($tids, $operator, $depth, $pager, $order) {
   if (count($tids) > 0) {
     if($depth =='all'){
@@ -227,118 +249,6 @@ function leftandright_rebuild_tree_page($args){
   drupal_goto('admin/content/taxonomy/leftandright');
 }
 function leftandright_rebuild_tree($vid){
-  // Lets load this vocabulary, firstly to make sure it exists, and secondly
-  // so that we know its name
-  $vocabulary = taxonomy_vocabulary_load($vid);
-  if(!$vocabulary){return;}
-  // Check that the vocabulary has terms, if not, just return
-  $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
-  $array_results = db_fetch_array($result);
-  if(!$array_results['c']){
-    drupal_set_message(check_plain($vocabulary->name).' has no terms');
-    return;
-  }
-  
-  // Get the DB connection shit in the same way as core does
-  global $db_url;  
-  $url = parse_url($db_url);
-  $url['user'] = urldecode($url['user']);
-  if(isset($url['pass'])) {
-    $url['pass'] = urldecode($url['pass']);
-  } else {
-    $url['pass'] = '';}
-  $url['host'] = urldecode($url['host']);
-  $url['path'] = urldecode($url['path']);
-  $url['port'] = $url['port'] ? $url['port'] : 3306;
-  
-  // Calculate the tid to start from (creating a parent if the vocabulary
-  // has multiple roots (forest not tree).
-  $results = db_query("SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
-  // Following query added as db_num_rows no longer exists GAH!
-  $results_count = db_query("SELECT COUNT(t.tid) FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
-  $num_rows = array_pop(db_fetch_array($results_count));
-  $tid;
-  $temporary_root_created = false;
-    
-  if($num_rows==1){
-    // Single tree, woot
-    $tid = array_pop(db_fetch_array($results));
-  } else {
-    $temporary_root_created = true;
-    // Either no results (Farp), Or we have a forest.  Lets tree it!
-    // Create new term to be the base of the tree.
-    // Because the term is temporary, we don't use taxonomy_ functions, but instead
-    // use trusty SQL.
-    // Create term
-    db_query("INSERT INTO {term_data} (vid, name) VALUES (%d , 'TEMPORARY TERM')", $vid);
-    $tid = db_last_insert_id('term_data','tid');
-    db_query("INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d , 0)", $tid);
-    // Set parent of current roots as this term
-    $result = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE t.tid = h.tid AND parent =0 AND vid = %d AND t.tid != %d",$vid, $tid);
-    $tids = array();
-    while($row=db_fetch_array($result)){
-      $tids[] = $row['tid'];
-    }
-    db_query("UPDATE {term_hierarchy} SET parent = %d WHERE tid IN (".implode(",",$tids).")",$tid,$tid);
-  }
-  
-  // Create the string which will become the PHP file to execute
-  /**
-   * FIXME - The following doesn't use Drupal's {table_name} shenanigans
-   */  
-  $tmp_php_file_string = '<?php
-mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
-mysql_select_db(\''.substr($url['path'], 1).'\');
-function rebuild_tree($tid, $left, $depth) {
-  $right = $left+1;
-  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY weight ASC , name ASC");
-  while ($row = mysql_fetch_array($results)){
-    $right = rebuild_tree($row[0], $right, $depth+1);
-  }  
-  echo "($tid , '.$vid.' , $left , $right, $depth)";
-  if($left != 1){
-    echo ",";
-  }
-  return $right+1;
-} 
-echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{leftandright}').' (tid, vid, lft, rgt, depth) VALUES ";
-rebuild_tree('.$tid.',1, ';
-  if($temporary_root_created){
-    $tmp_php_file_string .= '-1';
-  } else {
-    $tmp_php_file_string .= '0';    
-  }
-  $tmp_php_file_string .= ');
-echo ";";';
-  
-  // Add the deletion of the temporary term, if required, to the PHP file
-  if($temporary_root_created){
-    $tmp_php_file_string .= '
-echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_data}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_hierarchy}').' WHERE tid = '.$tid.';";
-echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
-  }
-  $tmp_php_file_string .= '
-echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";';
-  // Write this out to a temporary file which we'll EXEC!
-  $filepath = file_create_filename('leftandright.php', file_directory_temp());
-  file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
-  
-  // FIXME - TEST FOR WINDOWS HERE, IF WINDOWS, EXECUTE BAT FILE INSTEAD
-  // Lets try to execute the file
-  if($windoze){
-    
-  } else {
-    $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','leftandright').'/landr';
-    // FIXME - Needs port
-    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1).' '.$vid;
-    $pid = shell_exec("nohup $command > /dev/null & echo $!");
-    variable_set('leftandright_rebuild_pids',array_merge(variable_get('leftandright_rebuild_pids',array()),array($pid=>$pid)));
-  }
-  
-  // Finally delete the file
-  sleep(2); // Not sure if this sleep is necesary, but it seems to be
-  file_delete($filepath);
-  
-  // Set message to say that we're doing the rebuild
-  drupal_set_message(t('Rebuilding the tree for vocabulary:').' '.check_plain($vocabulary->name));
+  module_load_include("rebuild.inc", "leftandright");
+  _leftandright_rebuild_tree($vid);
 }

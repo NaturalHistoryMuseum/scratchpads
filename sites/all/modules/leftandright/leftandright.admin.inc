@@ -43,7 +43,7 @@ function leftandright_overview_terms($vid){
       if (($start_from && ($start_from * $page_increment) >= $total_entries) || ($displayed_count == $page_increment)) {
         continue;
       }
-      $rows[] = array(str_repeat('--', $term->depth) .' '. l($term->name, "taxonomy/term/$term->tid"), l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array('query' => $destination)));
+      $rows[] = array(str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $term->depth) .' '. l($term->name, "taxonomy/term/$term->tid"), l(t('edit'), "admin/content/taxonomy/edit/term/$term->tid", array('query' => $destination)));
       $displayed_count++; // we're counting tids displayed
     }
     if (!$total_entries) {

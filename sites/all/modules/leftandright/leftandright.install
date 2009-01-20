@@ -20,6 +20,9 @@ function leftandright_install(){
     leftandright_rebuild_tree($vocabulary->vid);
   }
   drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));*/
+  
+  // Set the default number of terms required before leftandright is used
+  variable_set('leftandright_minimum_terms', 1000);
 }
 
 function leftandright_schema(){  
