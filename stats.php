@@ -7,11 +7,15 @@ $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM informati
 $result = mysql_query($sql);
 $tables = array();
 while($row = mysql_fetch_array($result)){
-  $tables[] = 'SELECT mail FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
+  $tables[] = 'SELECT mail, login FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
 }
-$sql = 'SELECT COUNT(DISTINCT mail) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql;';
+$sql = 'SELECT COUNT(DISTINCT mail) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql';
 $result = mysql_query($sql);
-echo "Users: ".array_pop(mysql_fetch_array($result))."\n\n";
+echo "Users: ".array_pop(mysql_fetch_array($result))."\n";
+$result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-604800");
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in this week)\n";
+$result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-2592000");
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in this month)\n\n";
 // Total sites
 echo "Sites: ".(count(scandir("/var/www/html/sites"))-9)."\n\n";
 // Now calculate total nodes
