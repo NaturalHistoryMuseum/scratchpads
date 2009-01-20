@@ -516,6 +516,10 @@ function taxonomy_import_parse($text, $vid, $import_format) {
     if ($synonym_data !=""){
       db_query($synonym_data);
     }
+    // Finally, check that the update totals exists, and do it!
+    if (function_exists('leftandright_update_totals_variable')){
+      leftandright_update_totals_variable();
+    }
     return true;
   }
 }
