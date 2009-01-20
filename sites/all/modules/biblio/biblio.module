@@ -2527,6 +2527,7 @@ function _bibtex_export($results) {
     $bibtex .= ($pub->biblio_citekey)? $pub->biblio_citekey.",\n":",\n";
     if ($pub->title) $bibtex .= "\ttitle = {".$pub->title."},\n";
     if ($pub->nid) $bibtex .= "\tscratchpadid = {".$pub->nid."},\n";
+    if ($pub->biblio_doi) $bibtex .= "\tdoi = {".$pub->biblio_doi."},\n";
     if ($journal) $bibtex .= "\tjournal = {".$journal."},\n";
     if ($booktitle) $bibtex .= "\tbooktitle = {".$booktitle."},\n";
     if ($series) $bibtex .= "\tseries = {".$series."},\n";
