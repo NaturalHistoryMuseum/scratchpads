@@ -128,6 +128,14 @@ function leftandright_descendant_used($tid){
  * number of terms required to use "leftandright"
  */
 function leftandright_use_leftandright($vid){
+  if(is_array($vid)){
+    foreach($vid as $single_vid){
+      if(!leftandright_use_leftandright($single_vid)){
+        return false;
+      }
+    }
+    return true;
+  }
   $totals = variable_get('leftandright_vocab_totals', false);
   if(!$totals){
     leftandright_update_totals_variable();
