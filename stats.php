@@ -7,17 +7,31 @@ $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM informati
 $result = mysql_query($sql);
 $tables = array();
 while($row = mysql_fetch_array($result)){
-  $tables[] = 'SELECT mail, login FROM '.$row['tablename'].' WHERE '.$row['tablename'].'.status=1 ';
+  $tables[] = "SELECT '".$row['tablename']."' AS site, mail, login FROM ".$row['tablename']." WHERE ".$row['tablename'].".status=1 ";
 }
 $sql = 'SELECT COUNT(DISTINCT mail) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql';
 $result = mysql_query($sql);
-echo "Users: ".array_pop(mysql_fetch_array($result))."\n";
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Total activated)\n";
+$result = mysql_query($sql . ' WHERE login != 0');
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Active and have logged in)\n";
 $result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-604800");
-echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in this week)\n";
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in, in last 604800 seconds)\n";
 $result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-2592000");
-echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in this month)\n\n";
+echo "Users: ".array_pop(mysql_fetch_array($result))." (Logged in, in last 2592000 seconds)\n\n";
+
 // Total sites
-echo "Sites: ".(count(scandir("/var/www/html/sites"))-9)."\n\n";
+echo "Sites: ".(count(scandir("/var/www/html/sites"))-9)."\n";
+
+// Distinct sites/users
+$sql = 'SELECT COUNT(DISTINCT site) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql';
+$result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-604800");
+echo "Sites: ".array_pop(mysql_fetch_array($result))." (With users logged in, in last 604800 seconds)\n";
+// Distinct sites/users
+$sql = 'SELECT COUNT(DISTINCT site) FROM ('.implode(' UNION ',$tables).') AS bollocksingmysql';
+$result = mysql_query($sql . " WHERE login > UNIX_TIMESTAMP()-2592000");
+echo "Sites: ".array_pop(mysql_fetch_array($result))." (With users logged in, in last 2592000 seconds)\n\n";
+
+
 // Now calculate total nodes
 $sql = "SELECT CONCAT( table_schema,'.', table_name) AS tablename FROM information_schema.tables WHERE table_name = 'node';";
 $result = mysql_query($sql);
