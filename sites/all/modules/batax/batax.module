@@ -49,32 +49,34 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($edit['tid'])), $form['#vocabulary']['vid'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
     }
   } else if (substr($form_id, -10) == '_node_form'){
-    $were_using_batax = false;
-    foreach($form['taxonomy'] as $vid => $taxonomy_element){
-      if(is_array($taxonomy_element)){
-        if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select'){
-          // We have a select taxonomy, lets check if it should use batax
-          if(batax_use_batax($vid)){
-            // Set the following to true so that we know to add an extra submit
-            // function
-            $were_using_batax = true;
-            // Store the vid for use later
-            $form_state['storage']['batax'] = array_merge(array($vid), (array)$form_state['storage']['batax']);
-            // It should, lets replace the field
-            $form['taxonomy'][$vid] = array(
-              '#type' => 'textfield',
-              '#title' => $form['taxonomy'][$vid]['#title'],
-              '#description' => $form['taxonomy'][$vid]['#description'],
-              '#default_value' => batax_text_field_from_tids($form['taxonomy'][$vid]['#default_value']),
-              '#autocomplete_path' => 'batax/autocomplete/'.$vid
-            );
+    if(isset($form['taxonomy'])){
+      $were_using_batax = false;
+      foreach($form['taxonomy'] as $vid => $taxonomy_element){
+        if(is_array($taxonomy_element)){
+          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select'){
+            // We have a select taxonomy, lets check if it should use batax
+            if(batax_use_batax($vid)){
+              // Set the following to true so that we know to add an extra submit
+              // function
+              $were_using_batax = true;
+              // Store the vid for use later
+              $form_state['storage']['batax'] = array_merge(array($vid), (array)$form_state['storage']['batax']);
+              // It should, lets replace the field
+              $form['taxonomy'][$vid] = array(
+                '#type' => 'textfield',
+                '#title' => $form['taxonomy'][$vid]['#title'],
+                '#description' => $form['taxonomy'][$vid]['#description'],
+                '#default_value' => batax_text_field_from_tids($form['taxonomy'][$vid]['#default_value']),
+                '#autocomplete_path' => 'batax/autocomplete/'.$vid
+              );
+            }
           }
         }
       }
-    }
-    if($were_using_batax){
-      // Add an additional submit
-      $form['#submit'] = array_merge(array('batax_node_submit'),$form['#submit']);      
+      if($were_using_batax){
+        // Add an additional submit
+        $form['#submit'] = array_merge(array('batax_node_submit'),$form['#submit']);      
+      }
     }
   }
 }
@@ -90,7 +92,7 @@ function batax_node_submit($form, &$form_state){
   foreach($form_state['storage']['batax'] as $vid){
     $form_state['values']['taxonomy'][$vid] = batax_split_field($form_state['values']['taxonomy'][$vid], $vid);
   }
-  unset($form_state['storage']['batax']);  
+  unset($form_state['storage']['batax']);
 }
 
 /**
@@ -147,7 +149,12 @@ function batax_autocomplete($vid, $string = '') {
   $last_string = trim(array_pop($array));
   $matches = array();
   if ($last_string != '') {
-    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
+    // We can improve the speed here, if this vocabulary is using leftandright
+    if(function_exists('leftandright_use_leftandright') && leftandright_use_leftandright($vid)){      
+      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t , {leftandright} l WHERE t.vid = %d AND l.tid = t.tid AND lowername LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
+    } else {
+      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
+    }
     $prefix = count($array) ? implode(', ', $array) .', ' : '';
     while ($tag = db_fetch_object($result)) {
       $n = $tag->name;

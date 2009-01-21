@@ -820,7 +820,7 @@ function taxonomy_get_children($tid, $vid = 0, $key = 'tid') {
  *   Results are statically cached.
  */
 function taxonomy_get_tree($vid, $parent = 0, $depth = -1, $max_depth = NULL) {
-  if(function_exists('leftandright_get_tree')){
+  if(function_exists('leftandright_use_leftandright') && leftandright_use_leftandright($vid)){
     return leftandright_get_tree($vid, $parent, $max_depth);
   }
   static $children, $parents, $terms;

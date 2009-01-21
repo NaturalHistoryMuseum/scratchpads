@@ -1,9 +1,12 @@
 <?php
 function batax_install(){
   // Set the mythical 'taxonomy_override_selector'
-  variable_set('taxonomy_override_selector', FALSE);
+  variable_set('taxonomy_override_selector', TRUE);
 }
 // Reverse the install
 function batax_disable(){
+  variable_set('taxonomy_override_selector', FALSE);
+}
+function batax_enable(){
   variable_set('taxonomy_override_selector', FALSE);
 }

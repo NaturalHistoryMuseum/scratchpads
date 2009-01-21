@@ -62,6 +62,7 @@ function _leftandright_rebuild_tree($vid){
   $tmp_php_file_string = '<?php
 mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
 mysql_select_db(\''.substr($url['path'], 1).'\');
+mysql_query("'.db_prefix_tables("LOCK TABLES {term_data} READ, {term_hierarchy} READ, {leftandright} WRITE;").'");
 function rebuild_tree($tid, $left, $depth) {
   $right = $left+1;
   $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY name");
@@ -73,7 +74,9 @@ function rebuild_tree($tid, $left, $depth) {
     echo ",";
   }
   return $right+1;
-} 
+}
+mysql_query("UNLOCK TABLES;"); 
+echo "'.db_prefix_tables("LOCK TABLES {term_data} READ, {term_hierarchy} READ, {leftandright} WRITE;").'";
 echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{leftandright}').' (tid, vid, lft, rgt, depth) VALUES ";
 rebuild_tree('.$tid.',1, ';
   if($temporary_root_created){
@@ -91,7 +94,8 @@ echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE tid = '.$tid.';DE
 echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
   }
   $tmp_php_file_string .= '
-echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";';
+echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";
+echo "UNLOCK TABLES;";';
   // Write this out to a temporary file which we'll EXEC!
   $filepath = file_create_filename('leftandright.php', file_directory_temp());
   file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);

@@ -1,14 +1,5 @@
 <?php
 function leftandright_hook_taxonomy_helper_insert($array){
-  // I HATE DOING THE FOLLOWING - CHECKING FOR ANOTHER MODULE. AH WELL!     
-  if(function_exists('_split_field')){     
-    $parents = _split_field($array['parent-new'],$array['vid']);
-    if(count(array_intersect($array['parent-old'],$parents))){
-      $array['parent'] = array_intersect($array['parent-old'],$parents);
-    } else {
-      $array['parent'] = $parents;
-    }
-  }
   // Lets shove the stuff into leftandright.  Tricky bit here is getting the right
   // values
   // If the term is a root term we handle this completely differently

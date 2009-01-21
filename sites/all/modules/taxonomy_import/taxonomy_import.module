@@ -520,6 +520,6 @@ function taxonomy_import_parse($text, $vid, $import_format) {
     if (function_exists('leftandright_update_totals_variable')){
       leftandright_update_totals_variable();
     }
-    return true;
+    drupal_goto('admin/content/taxonomy/'.$vid);
   }
 }

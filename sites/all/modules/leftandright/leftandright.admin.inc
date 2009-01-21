@@ -87,10 +87,14 @@ function leftandright_overview_vocabularies() {
   $vocabularies = taxonomy_get_vocabularies();
   $rows = array();
   foreach ($vocabularies as $vocabulary) {
-    if(isset($rebuilding[$vocabulary->vid])){
+    if(array_search($vocabulary->vid,$rebuilding)){
       $rebuild = t('This tree is currently being rebuilt');
     } else {
-      $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
+      if(leftandright_use_leftandright($vocabulary->vid)){
+        $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
+      } else {
+        $rebuild = t('This vocabulary has fewer terms than is required (@leftandright_number)', array('@leftandright_number'=>variable_get('leftandright_minimum_terms',1000)));
+      }
     }
     $rows[] = array(
       'name' => check_plain($vocabulary->name),

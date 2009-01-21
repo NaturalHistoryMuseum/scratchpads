@@ -76,14 +76,14 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         break;
       case 'update':
         // Delete then insert - SHIT, but easy!
-        if(function_exists('_split_field')){
+        /*if(function_exists('_split_field')){
           $parents = _split_field($array['parent-new'],$array['vid']);
           if(count(array_intersect($array['parent-old'],$parents))){
             $array['parent'] = array_intersect($array['parent-old'],$parents);
           } else {
             $array['parent'] = $parents;
           }
-        }
+        }*/
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
       case 'insert':
          module_load_include("functions.inc", "leftandright");
@@ -232,20 +232,34 @@ function leftandright_select_nodes($tids, $operator, $depth, $pager, $order) {
  * REBUILD TREE
  ******************************************************************************/
 // Returns an indexed array of PIDs and the vocabularies associated with these PIDs
-function leftandright_trees_rebuilding(){  
+function leftandright_trees_rebuilding($vid = 0){
   exec('ps -ef | grep landr | grep -v grep',$exec_output);
   $rebuilding=array();
   foreach($exec_output as $process){
     // Split the process by " " as the last part should be the vocabulary ID
     $parts = explode(" ",preg_replace("/[\ ]*\ /"," ",$process));
-    $vid = array_pop($parts);
+    $exec_vid = array_pop($parts);
+    if($vid == $exec_vid){
+      return true;
+    }
     $pid = $parts[1];
-    $rebuilding[$pid]=$vid;
+    $rebuilding[$pid]=$exec_vid;
   }
+  if($vid){
+    return false;
+  } 
   return $rebuilding;
 }
-function leftandright_rebuild_tree_page($args){
-  leftandright_rebuild_tree($args);
+function leftandright_rebuild_tree_page($vid){
+  if(leftandright_trees_rebuilding($vid)){
+    drupal_set_message(t('Already rebuilding vocabulary'));
+  } else {
+    if(leftandright_use_leftandright($vid)){
+      leftandright_rebuild_tree($vid);
+    } else {
+      drupal_set_message(t('Vocabulary has too few terms to use Left and right'));
+    }
+  }
   drupal_goto('admin/content/taxonomy/leftandright');
 }
 function leftandright_rebuild_tree($vid){
