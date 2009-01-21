@@ -48,19 +48,24 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       $form['advanced']['parent'] = _taxonomy_term_select(t('Parents'), 'parent', $parent, $form['#vocabulary']['vid'], t('Parent terms') .'.', 1, '<'. t('root') .'>', $exclude);
       $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($edit['tid'])), $form['#vocabulary']['vid'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
     }
-  } else if (substr($form_id, -10) == '_node_form'){
+  } else if ($form['#id'] == 'node-form'){
     if(isset($form['taxonomy'])){
+      // Check for autotag module
+      $ignore_vids = array();
+      if(function_exists('_autotag_get_vids_for_type')){
+        $ignore_vids = _autotag_get_vids_for_type($form['type']['#value']);
+      }
       $were_using_batax = false;
       foreach($form['taxonomy'] as $vid => $taxonomy_element){
         if(is_array($taxonomy_element)){
-          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select'){
+          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select' && !in_array($vid, $ignore_vids)){
             // We have a select taxonomy, lets check if it should use batax
             if(batax_use_batax($vid)){
               // Set the following to true so that we know to add an extra submit
               // function
               $were_using_batax = true;
               // Store the vid for use later
-              $form_state['storage']['batax'] = array_merge(array($vid), (array)$form_state['storage']['batax']);
+              $form_state['storage']['batax'][$vid] = $vid;
               // It should, lets replace the field
               $form['taxonomy'][$vid] = array(
                 '#type' => 'textfield',
@@ -88,7 +93,7 @@ function batax_form_term_submit($form, &$form_state){
 }
 
 function batax_node_submit($form, &$form_state){
-  // At this point we need to change our text fields into arrays 
+  // At this point we need to change our text fields into arrays
   foreach($form_state['storage']['batax'] as $vid){
     $form_state['values']['taxonomy'][$vid] = batax_split_field($form_state['values']['taxonomy'][$vid], $vid);
   }
@@ -115,9 +120,9 @@ function batax_menu(){
   );
   return $items;
 }
-/***********************************************************************************
+/*******************************************************************************
  * SETTINGS FORM
- ***********************************************************************************/
+ ******************************************************************************/
 /**
  * Settings form
  */
@@ -134,9 +139,9 @@ function batax_admin_settings() {
   return system_settings_form($form);
 }
 
-/***********************************************************************************
+/*******************************************************************************
  * AUTOCOMPLETE FUNCTION
- ***********************************************************************************/
+ ******************************************************************************/
 function batax_autocomplete($vid, $string = '') {
   // The user enters a comma-separated list of tags. We only autocomplete the last tag.
   // This regexp allows the following types of user input:
@@ -210,6 +215,9 @@ function batax_split_field($string, $vid){
     $return_array = array();
     while($row = db_fetch_array($results)){
       $return_array[$row['tid']] = $row['tid'];
+    }
+    if(count($return_array)<2){
+      return array_pop($return_array);
     }
     return $return_array;
   }
