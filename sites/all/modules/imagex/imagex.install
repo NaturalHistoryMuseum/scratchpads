@@ -3,11 +3,7 @@
 /**
  * hook_install
  */
-function imagex_install() {
-  // Increase the module's weight so that it is executed after location.
-  // FIXME - Is this necesary?
-  db_query("UPDATE {system} SET weight = 20 WHERE name = 'imagex'");
-  
+function imagex_install() {  
   // If we have the image_gallery module installed, we'll use it to our
   // advantage
   if(function_exists('_image_gallery_get_vid')){
