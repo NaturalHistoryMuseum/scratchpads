@@ -2460,7 +2460,7 @@ function _biblio_export($format="tagged", $nid = null, $version = 7) {
      case "bib":
        header('Content-type: 	application/text charset=utf-8');
        header('Content-Disposition:  filename="Biblio-Bibtex.bib"');
-       print _bibtex_export($results);
+       _bibtex_export($results);
        exit;
      }
   }
@@ -2554,11 +2554,10 @@ function _bibtex_export($results) {
     $bibtex .= "\tauthor = {".$author."}\n";
 
     $bibtex.="}\n\n";
+    echo $bibtex;
+    $bibtex = '';
 
   }
-
-  return $bibtex;
-
 }
 function _endnote_XML_export($results, $version = 7) {
 
