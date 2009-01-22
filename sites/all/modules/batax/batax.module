@@ -69,6 +69,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
               // It should, lets replace the field
               $form['taxonomy'][$vid] = array(
                 '#type' => 'textfield',
+                '#maxlength' => 10000,
                 '#title' => $form['taxonomy'][$vid]['#title'],
                 '#description' => $form['taxonomy'][$vid]['#description'],
                 '#default_value' => batax_text_field_from_tids($form['taxonomy'][$vid]['#default_value']),
@@ -154,12 +155,7 @@ function batax_autocomplete($vid, $string = '') {
   $last_string = trim(array_pop($array));
   $matches = array();
   if ($last_string != '') {
-    // We can improve the speed here, if this vocabulary is using leftandright
-    if(function_exists('leftandright_use_leftandright') && leftandright_use_leftandright($vid)){      
-      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t , {leftandright} l WHERE t.vid = %d AND l.tid = t.tid AND lowername LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
-    } else {
-      $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
-    }
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, CONCAT(t.name,':',t.tid) AS name FROM {term_data} t , {term_lowername} l WHERE t.vid = %d AND l.tid = t.tid AND lowername LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
     $prefix = count($array) ? implode(', ', $array) .', ' : '';
     while ($tag = db_fetch_object($result)) {
       $n = $tag->name;
@@ -175,9 +171,9 @@ function batax_autocomplete($vid, $string = '') {
         foreach($parents as $parent){
           $parent_array[] = check_plain($parent->name);
         }
-        $matches[$prefix . $n . ':' . $tag->tid] = check_plain($tag->name) ." (".implode(" &raquo; ",$parent_array).")";
+        $matches[$prefix . $n] = check_plain($tag->name) ." (".implode(" &raquo; ",$parent_array).")";
       } else {
-        $matches[$prefix . $n . ':' . $tag->tid] = check_plain($tag->name);
+        $matches[$prefix . $n] = check_plain($tag->name);
       }
     }
   }
