@@ -2461,13 +2461,12 @@ function _biblio_export($format="tagged", $nid = null, $version = 7) {
        header('Content-type: 	application/text charset=utf-8');
        header('Content-Disposition:  filename="Biblio-Bibtex.bib"');
        print _bibtex_export($results);
-       break;
+       exit;
      }
   }
 }
 
 function _bibtex_export($results) {
-  header('Content-type: application/x-bibtex');
     if (!is_array($results))
     {
       $result_array[] = $results;
@@ -2481,7 +2480,7 @@ function _bibtex_export($results) {
     $journal = $series = $booktitle = $school = $organization = null;
     switch ($pub->biblio_type) {
       case 102:
-        $type = "article";
+        $type = "article	";
         $journal = $pub->biblio_secondary_title;
        break;
       case 100:
