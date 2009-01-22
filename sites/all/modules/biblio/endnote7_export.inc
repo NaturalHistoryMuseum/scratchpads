@@ -2,13 +2,12 @@
 // $Id$ 
 function _endnote7_XML_export($results){
 
-  echo '<?xml version="1.0" encoding="UTF-8"?>
-<XML><RECORDS>
-';
+  $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+  $xml .= "\n<XML><RECORDS>\n";
 
-  while ($rec = db_fetch_object($results)){
+  foreach ($results as $rec ){
 
-    $xml = "<RECORD>\n";
+    $xml .= "<RECORD>\n";
     switch ($rec->biblio_type) {
         case 1: $reftype = 0;
         case 102: $reftype = 0;
@@ -108,8 +107,9 @@ function _endnote7_XML_export($results){
     //    <AUTHOR_ADDRESS>author address</AUTHOR_ADDRESS>
     //    <CAPTION>caption</CAPTION>
     $xml .= "</RECORD>\n";
-    echo $xml;
   } //end while
     
-  echo "</RECORDS></XML>";
+  $xml .= "</RECORDS></XML>";
+
+  return $xml;
 }

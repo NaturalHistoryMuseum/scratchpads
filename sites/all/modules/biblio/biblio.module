@@ -1087,7 +1087,7 @@ function theme_biblio_tagged_link($base, $node = NULL)
 {
    $output = '<span hovertip="taggedExp">';
    if (module_exists('hovertip')) {
-     $output .= '<div id="taggedExp" class="hovertip"><h1>EndNote Tagged</h1>'.nl2br(_endnote_tagged_export(db_query("SELECT * FROM {node} n left join {biblio} b  on n.vid=b.vid WHERE n.nid=%d",$node->nid))) .'</div>';
+     $output .= '<div id="taggedExp" class="hovertip"><h1>EndNote Tagged</h1>'.nl2br(_endnote_tagged_export($node)) .'</div>';
    }
    $output .= l(t("Tagged"),"$base/export/tagged/$node->nid") .'</span>';
    return $output;
@@ -1097,7 +1097,7 @@ function theme_biblio_bibtex_link($base, $node = NULL)
 {
    $output = '<span hovertip="bibtexExp">';
    if (module_exists('hovertip')) {
-     $output .= '<div id="bibtexExp" class="hovertip"><h1>BibTex</h1>'.nl2br(_bibtex_export(db_query("SELECT * FROM {node} n left join {biblio} b  on n.vid=b.vid WHERE n.nid=%d",$node->nid))) .'</div>';
+     $output .= '<div id="bibtexExp" class="hovertip"><h1>BibTex</h1>'.nl2br(_bibtex_export($node)) .'</div>';
    }
    $output .= l(t("BibTex"),"$base/export/bib/$node->nid") .'</span>';
    return $output;
@@ -2441,28 +2441,41 @@ function _biblio_export($format="tagged", $nid = null, $version = 7) {
   }
 
   $result = db_query($query,$params);
-  switch($format) {
-  case "tagged":
-    header('Content-type: 	application/x-endnote-refer');
-    header('Content-Disposition:  filename="Drupal-Biblio.enw"');
-    _endnote_tagged_export($results);
-    break;
-  case "xml":
-    header('Content-type: application/xml; charset=utf-8');
-    header('Content-Disposition: attachment; filename="Biblio-EndNote'.$version.'.xml"');
-    _endnote_XML_export($results, $version );
-    break;
-  case "bib":
-    header('Content-type: 	application/text charset=utf-8');
-    header('Content-Disposition:  filename="Biblio-Bibtex.bib"');
-    _bibtex_export($result);
-    exit;
+  while ($node = db_fetch_object($result)) {
+    $results[] = $node;
+  }
+
+  if (count($results)) {
+     switch($format) {
+     case "tagged":
+       header('Content-type: 	application/x-endnote-refer');
+       header('Content-Disposition:  filename="Drupal-Biblio.enw"');
+       print _endnote_tagged_export($results);
+       break;
+     case "xml":
+       header('Content-type: application/xml; charset=utf-8');
+       header('Content-Disposition: attachment; filename="Biblio-EndNote'.$version.'.xml"');
+       print _endnote_XML_export($results, $version );
+       break;
+     case "bib":
+       header('Content-type: 	application/text charset=utf-8');
+       header('Content-Disposition:  filename="Biblio-Bibtex.bib"');
+       print _bibtex_export($results);
+       break;
+     }
   }
 }
 
 function _bibtex_export($results) {
-  while ($pub = db_fetch_object($results)) {
-    $bibtex = '';
+    if (!is_array($results))
+    {
+      $result_array[] = $results;
+    }else{
+      $result_array = $results;
+    }
+  $bibtex = '';
+
+  foreach ($result_array as $pub) {
     $type = "article";
     $journal = $series = $booktitle = $school = $organization = null;
     switch ($pub->biblio_type) {
@@ -2514,7 +2527,6 @@ function _bibtex_export($results) {
     $bibtex .= ($pub->biblio_citekey)? $pub->biblio_citekey.",\n":",\n";
     if ($pub->title) $bibtex .= "\ttitle = {".$pub->title."},\n";
     if ($pub->nid) $bibtex .= "\tscratchpadid = {".$pub->nid."},\n";
-    if ($pub->biblio_doi) $bibtex .= "\tdoi = {".$pub->biblio_doi."},\n";
     if ($journal) $bibtex .= "\tjournal = {".$journal."},\n";
     if ($booktitle) $bibtex .= "\tbooktitle = {".$booktitle."},\n";
     if ($series) $bibtex .= "\tseries = {".$series."},\n";
@@ -2541,168 +2553,180 @@ function _bibtex_export($results) {
     $bibtex .= "\tauthor = {".$author."}\n";
 
     $bibtex.="}\n\n";
-    print $bibtex;
+
   }
+
+  return $bibtex;
+
 }
 function _endnote_XML_export($results, $version = 7) {
-  if ($version == 8) {
-    require_once(drupal_get_path('module', 'biblio') . '/endnote8_export.inc');
-    _endnote8_XML_export($result);
-  } else {
-    require_once(drupal_get_path('module', 'biblio') . '/endnote7_export.inc');
-    _endnote7_XML_export($results);
-  }
+
+   if ($version == 8) {
+      require_once(drupal_get_path('module', 'biblio') . '/endnote8_export.inc');
+     $xml = _endnote8_XML_export($result);
+    }elseif ($version == 7) {
+      require_once(drupal_get_path('module', 'biblio') . '/endnote7_export.inc');
+     $xml = _endnote7_XML_export($results);
+    }
+    return $xml;
 }
 
 function _endnote_tagged_export($results) {
-  while($pub = db_fetch_object($results)){
-    $doc = '';
-    switch ($pub->biblio_type) {
-      case 6:
-      case 100:
-        $doc .= "%0 Book\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // book section
-      case 101:
-        $doc .= "%0 Book Section\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // book section
-      case 1:
-      case 102: $doc .= "%0 Journal Article\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%J " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // journal
-      case 2:
-      case 103: $doc .= "%0 Conference Paper\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break;
-      case 3: // are all
-      case 104: $doc .= "%0 Conference Proceedings\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // conference proceedings
-      case 105: $doc .= "%0  Newspaper Article\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break;
-      case 107: $doc .= "%0  Web Page\r\n";
-        break;
-      case 108:
-        $doc .= "%0 Thesis\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // thesis
-      case 5:
-      case 109:
-        $doc .= "%0 Report\r\n";
-        break; // report
-      case 110:
-      case 111:
-        $doc .= "%0  Film or Broadcast\r\n";
-        break;
-      case 112:
-        $doc .= "%0  Artwork\r\n";
-        break;
-      case 114:
-        $doc .= "%0  Audiovisual Material\r\n";
-        break;
-      case 115:
-        $doc .= "%0  Hearing\r\n";
-        break;
-      case 116:
-        $doc .= "%0  Case\r\n";
-        break;
-      case 117:
-        $doc .= "%0  Bill\r\n";
-        break;
-      case 118:
-        $doc .= "%0  Statute\r\n";
-        break;
-      case 119:
-        $doc .= "%0  Patent\r\n";
-        break;
-      case 120:
-        $doc .= "%0  Personal Communication\r\n";
-        break;
-      case 121:
-        $doc .= "%0  Manuscript\r\n";
-        break;
-      case 122:
-        $doc .= "%0  Map\r\n";
-        break;
-      case 123:
-        $doc .= "%0  Chart or Table\r\n";
-        break;
-      case 124:
-        $doc .= "%0  Unpublished Work\r\n";
-        break;
-      case 125:
-        $doc .= "%0  Online Database\r\n";
-        break;
-      case 126:
-        $doc .= "%0  Government Document\r\n";
-        break;
-      case 127:
-        $doc .= "%0  Classical Work\r\n";
-        break;
-      case 128:
-        $doc .= "%0  Legal Rule or Regulation\r\n";
-        break;
-      case 7:
-      case 8:
-      case 119:
-        $doc .= "%0 Patent\r\n";
-        if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
-        break; // patent
-      case 9:
-      default:
-        $doc .= "%0 Generic\r\n";
-        break; // generic
+    if (!is_array($results))
+    {
+      $result_array[] = $results;
+    }else{
+      $result_array = $results;
     }
-    $doc .= "%D " . trim($pub->biblio_year) . "\r\n";
-    $doc .= "%T " . trim($pub->title) . "\r\n";
-
-    $author_array = _parse_author_array(explode(';', $pub->biblio_authors));
-    foreach($author_array as $auth) {
-      $doc .= "%A " . $auth['last_name'] . ($auth['first_name'] ? (', ' . $auth['first_name']) : ($auth['initials'] ? (', ' . $auth['initials']) : '')) . "\r\n";
-    }
-
-    if ($pub->biblio_place_published) $doc .= "%C " . trim($pub->biblio_place_published) . "\r\n";
-    if ($pub->biblio_secondary_authors) {
-      $author_array = explode(";", $pub->biblio_secondary_authors);
-      foreach($author_array as $auth) {
-        $doc .= "%E " . trim($auth) . "\r\n";
+    $doc = "";
+    foreach ($result_array as $pub ) {
+      switch ($pub->biblio_type) {
+        case 6:
+        case 100:
+          $doc .= "%0 Book\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // book section
+        case 101:
+          $doc .= "%0 Book Section\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // book section
+        case 1:
+        case 102: $doc .= "%0 Journal Article\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%J " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // journal
+        case 2:
+        case 103: $doc .= "%0 Conference Paper\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break;
+        case 3: // are all
+        case 104: $doc .= "%0 Conference Proceedings\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // conference proceedings
+        case 105: $doc .= "%0  Newspaper Article\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break;
+        case 107: $doc .= "%0  Web Page\r\n";
+          break;
+        case 108:
+          $doc .= "%0 Thesis\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // thesis
+        case 5:
+        case 109:
+          $doc .= "%0 Report\r\n";
+          break; // report
+        case 110:
+        case 111:
+          $doc .= "%0  Film or Broadcast\r\n";
+          break;
+        case 112:
+          $doc .= "%0  Artwork\r\n";
+          break;
+        case 114:
+          $doc .= "%0  Audiovisual Material\r\n";
+          break;
+        case 115:
+          $doc .= "%0  Hearing\r\n";
+          break;
+        case 116:
+          $doc .= "%0  Case\r\n";
+          break;
+        case 117:
+          $doc .= "%0  Bill\r\n";
+          break;
+        case 118:
+          $doc .= "%0  Statute\r\n";
+          break;
+        case 119:
+          $doc .= "%0  Patent\r\n";
+          break;
+        case 120:
+          $doc .= "%0  Personal Communication\r\n";
+          break;
+        case 121:
+          $doc .= "%0  Manuscript\r\n";
+          break;
+        case 122:
+          $doc .= "%0  Map\r\n";
+          break;
+        case 123:
+          $doc .= "%0  Chart or Table\r\n";
+          break;
+        case 124:
+          $doc .= "%0  Unpublished Work\r\n";
+          break;
+        case 125:
+          $doc .= "%0  Online Database\r\n";
+          break;
+        case 126:
+          $doc .= "%0  Government Document\r\n";
+          break;
+        case 127:
+          $doc .= "%0  Classical Work\r\n";
+          break;
+        case 128:
+          $doc .= "%0  Legal Rule or Regulation\r\n";
+          break;
+        case 7:
+        case 8:
+        case 119:
+          $doc .= "%0 Patent\r\n";
+          if ($pub->biblio_secondary_title) $doc .= "%B " . trim($pub->biblio_secondary_title) . "\r\n";
+          break; // patent
+        case 9:
+        default:
+          $doc .= "%0 Generic\r\n";
+          break; // generic
       }
-    }
-    if ($pub->biblio_publisher) $doc .= "%I " . trim($pub->biblio_publisher) . "\r\n";
-    if (trim($pub->biblio_keywords)) $doc .= "%K " . trim($pub->biblio_keywords) . "\r\n";
-    if ($pub->biblio_call_number) $doc .= "%L " . trim($pub->biblio_call_number) . "\r\n";
-    if ($pub->biblio_accession_number) $doc .= "%M " . trim($pub->biblio_accession_number) . "\r\n";
-    if ($pub->biblio_issue) $doc .= "%N " . trim($pub->biblio_issue) . "\r\n";
-    if ($pub->biblio_pages) $doc .= "%P " . trim($pub->biblio_pages) . "\r\n";
-    if ($pub->biblio_tertiary_title) $doc .= "%S " . trim($pub->biblio_tertiary_title) . "\r\n";
-    if ($pub->biblio_url) $doc .= "%U " . trim($pub->biblio_url) . "\r\n";
-    if ($pub->biblio_volume) $doc .= "%V " . trim($pub->biblio_volume) . "\r\n";
-    $abst = "";
-    if ($pub->biblio_abst_e) $abst .= trim($pub->biblio_abst_e);
-    if ($pub->biblio_abst_f) $abst .= trim($pub->biblio_abst_f);
-    if ($abst) {
-      $search = array("/\r/", "/\n/");
-      $replace = " ";
-      $abst = preg_replace($search, $replace, $abst);
-      $doc .= "%X " . $abst . "\r\n";
-    }
-    if ($pub->biblio_tertiary_authors) {
-      $author_array = explode(";", $pub->biblio_tertiary_authors);
-      foreach($author_array as $auth) {
-        $doc .= "%Y " . trim($auth) . "\r\n";
-      }
-    }
-    if ($pub->biblio_notes) $doc .= "%Z " . trim($pub->biblio_notes) . "\r\n";
-    if ($pub->biblio_edition) $doc .= "%7 " . trim($pub->biblio_edition) . "\r\n";
-    if ($pub->biblio_date) $doc .= "%8 " . trim($pub->biblio_date) . "\r\n";
-    if ($pub->biblio_type_of_work) $doc .= "%9 " . trim($pub->biblio_type_of_work) . "\r\n";
-    if ($pub->biblio_isbn) $doc .= "%@ " . trim($pub->biblio_isbn) . "\r\n";
+      $doc .= "%D " . trim($pub->biblio_year) . "\r\n";
+      $doc .= "%T " . trim($pub->title) . "\r\n";
 
-    $doc .= "\r\n";
-    echo $doc;
-  }
+      $author_array = _parse_author_array(explode(';', $pub->biblio_authors));
+      foreach($author_array as $auth) {
+        $doc .= "%A " . $auth['last_name'] . ($auth['first_name'] ? (', ' . $auth['first_name']) : ($auth['initials'] ? (', ' . $auth['initials']) : '')) . "\r\n";
+      }
+
+      if ($pub->biblio_place_published) $doc .= "%C " . trim($pub->biblio_place_published) . "\r\n";
+      if ($pub->biblio_secondary_authors) {
+        $author_array = explode(";", $pub->biblio_secondary_authors);
+        foreach($author_array as $auth) {
+          $doc .= "%E " . trim($auth) . "\r\n";
+        }
+      }
+      if ($pub->biblio_publisher) $doc .= "%I " . trim($pub->biblio_publisher) . "\r\n";
+      if (trim($pub->biblio_keywords)) $doc .= "%K " . trim($pub->biblio_keywords) . "\r\n";
+      if ($pub->biblio_call_number) $doc .= "%L " . trim($pub->biblio_call_number) . "\r\n";
+      if ($pub->biblio_accession_number) $doc .= "%M " . trim($pub->biblio_accession_number) . "\r\n";
+      if ($pub->biblio_issue) $doc .= "%N " . trim($pub->biblio_issue) . "\r\n";
+      if ($pub->biblio_pages) $doc .= "%P " . trim($pub->biblio_pages) . "\r\n";
+      if ($pub->biblio_tertiary_title) $doc .= "%S " . trim($pub->biblio_tertiary_title) . "\r\n";
+      if ($pub->biblio_url) $doc .= "%U " . trim($pub->biblio_url) . "\r\n";
+      if ($pub->biblio_volume) $doc .= "%V " . trim($pub->biblio_volume) . "\r\n";
+      $abst = "";
+      if ($pub->biblio_abst_e) $abst .= trim($pub->biblio_abst_e);
+      if ($pub->biblio_abst_f) $abst .= trim($pub->biblio_abst_f);
+      if ($abst) {
+        $search = array("/\r/", "/\n/");
+        $replace = " ";
+        $abst = preg_replace($search, $replace, $abst);
+        $doc .= "%X " . $abst . "\r\n";
+      }
+      if ($pub->biblio_tertiary_authors) {
+        $author_array = explode(";", $pub->biblio_tertiary_authors);
+        foreach($author_array as $auth) {
+          $doc .= "%Y " . trim($auth) . "\r\n";
+        }
+      }
+      if ($pub->biblio_notes) $doc .= "%Z " . trim($pub->biblio_notes) . "\r\n";
+      if ($pub->biblio_edition) $doc .= "%7 " . trim($pub->biblio_edition) . "\r\n";
+      if ($pub->biblio_date) $doc .= "%8 " . trim($pub->biblio_date) . "\r\n";
+      if ($pub->biblio_type_of_work) $doc .= "%9 " . trim($pub->biblio_type_of_work) . "\r\n";
+      if ($pub->biblio_isbn) $doc .= "%@ " . trim($pub->biblio_isbn) . "\r\n";
+
+      $doc .= "\r\n";
+    }
+
+  return $doc;
 }
 
 function _biblio_admin_build_user_select($my_uid) {
