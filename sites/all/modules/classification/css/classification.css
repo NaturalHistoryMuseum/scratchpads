@@ -1,5 +1,5 @@
 #classification_list {
-	margin-top:10px;
+	margin-top:20px;
 }
 input.classification-buttons {
   border: thin solid;
@@ -61,33 +61,43 @@ input.hidden {
 	visibility:hidden;
 }
 
+button.classification-buttons {
+  border: thin solid;
+  border-color: #cccccc #555555 #555555 #cccccc;
+  background-color: #f2f2f2;
+  background-repeat: no-repeat;
+  background-position:3px;
+  padding-left: 25px;
+  padding-bottom: 3px;
+  height: 28px;
+}
+
+button.import {
+  background-image: url(../images/2downarrow.png);
+}
+
+button.save {
+  background-image: url(../images/document-save.png);
+  margin:10px;
+}
+
 .tree_wrapper {
   border:0;
 	float:left;
-	width:48%;
-	height:550px;
+	width:49%;
+	min-height:550px;
+	height:auto;
 	margin:0 5px 5px 0;
 	_display:inline;
 	overflow:hidden;
 	}
-.tree_wrapper div {
-	margin:5px 0 0 0;
-	padding:0;
-	width:100%;
-	overflow-x:auto;
-	overflow-y:auto;
+
+/* IE hack for height */
+* html .tree_wrapper {
+	height: 550px;
 }
 
-.tree_wrapper_viewer {
-  border:0;
-	float:left;
-	width:48%;
-	height:98%;
-	margin:0 5px 5px 0;
-	_display:inline;
-	overflow:hidden;
-	}
-.tree_wrapper_viewer div {
+.tree_wrapper div {
 	margin:5px 0 0 0;
 	padding:0;
 	width:100%;
@@ -341,11 +351,48 @@ html:first-child .tree ul {
   width:300px;
   text-align: center;
   position:absolute;
-  top:27%;
-  left:40%;
-  margin: auto;
+  left: 50%;
+  margin-left: -150px;
   z-index:1000;
   display:none;
+}
+
+#import_classification_button {
+	display:none;
+}
+
+/*
+ *   Messages
+ */ 
+.messages, .preview {
+  margin: .75em 0 .75em;
+  padding: .5em 1em;
+}
+
+.error {
+  background-color: #fdd;
+  border: 1px solid #daa;
+  color: #400;
+  padding: .5em 1em;
+}
+
+.status {
+  background-color: #ccffcc;
+  border: 1px solid #008800;
+}
+
+.preview {
+  background-color: #fcfce8;
+  border: 1px solid #e5e58f;
+}
+
+.warning {
+  background-color: #fcfce8;
+  border: 1px solid #e5e58f;
+}
+
+div.error, tr.error {
+  padding: .5em 1em;
 }
 
 .help_icon {
@@ -391,12 +438,14 @@ html:first-child .tree ul {
 }
 
 #classification_tree_alternate {
-	height: 460px;
+	height: 400px;
 }
 
+/*
 #classification_tree_viewer {
-  height:90%;
+  height:95%;
 }
+*/
 
 #tree_submit {
    width:50%;
@@ -482,7 +531,7 @@ li.spelling a {
 	overflow-y:hidden;
 }
 
-.leaf {
+._leaf {
 	list-style-type: none;
 }
 
@@ -495,6 +544,10 @@ li.spelling a {
 	display:none;
 }
 
+#edit-vern-lang-wrapper {
+	display:none;
+}
+
 #classification_settings {
 	display:none;
 }
@@ -503,18 +556,24 @@ li.spelling a {
 	width:95%;
 }
 
+#edit-vern-list {
+	width:95%;
+}
+
 .metadata_actions {
   border: solid 1px #CCC;
-  width: 100px;
+  width:95%;
 	background: #EEE;
 	padding: 0px;
 	margin: 0px;
+	margin-top:10px;
 }
 
 .metadata_actions li {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
+	background:none;
 }
 
 .metadata_actions a {
@@ -540,45 +599,51 @@ li.spelling a {
 	border-top: solid 1px #CCC;
 }
 
-.metadata_actions li.save a { background-image: url("../images/disk.png"); }
-.metadata_actions li.view a { background-image: url("../images/bug.png"); }
-.metadata_actions li.images a { background-image: url("../images/picture.png"); }
-.metadata_actions li.references a { background-image: url("../images/book_open.png"); }
+.metadata_actions li.classification_view a { background-image: url("../images/bug_grey.png"); }
+.metadata_actions li.classification_images a { background-image: url("../images/picture_grey.png"); }
+.metadata_actions li.classification_references a { background-image: url("../images/book_open_grey.png"); }
+
+.metadata_actions li.classification_view_enabled a { background-image: url("../images/bug.png"); }
+.metadata_actions li.classification_images_enabled a { background-image: url("../images/picture.png"); }
+.metadata_actions li.classification_references_enabled a { background-image: url("../images/book_open.png"); }
 
 .resizable-textarea .grippie {
 	width:95%;
 }
 
-ul.jd_menu {
+.jd_menu {
 	margin: 0px;
 	padding: 0px;
 	list-style-type: none;
 }
-ul.jd_menu ul {
+.jd_menu ul {
 	display: none;
 }
-ul.jd_menu li {
+
+.jd_menu li {
 	float: left;
+	background:none;
 }
 
-ul.jd_menu li.mainmenu a { background-image: url("../images/bullet_arrow_down.png"); }
-ul.jd_menu ul li.close a { background-image: url("../images/door.png"); }
-ul.jd_menu ul li.refresh a { background-image: url("../images/arrow_refresh.png"); }
-ul.jd_menu ul li.edit a { background-image: url("../images/page_white_edit.png"); }
-ul.jd_menu ul li.cut a { background-image: url("../images/cut.png"); }
-ul.jd_menu ul li.paste a { background-image: url("../images/page_white_paste.png"); }
-ul.jd_menu ul li.new a { background-image: url("../images/page_white_add.png"); }
-ul.jd_menu ul li.delete a { background-image: url("../images/bin_empty.png"); }
-ul.jd_menu ul li.help a { background-image: url("../images/help.png"); }
-ul.jd_menu ul li.filter a { background-image: url("../images/chart_organisation_add.png"); }
-ul.jd_menu ul li.remove_filter a { background-image: url("../images/chart_organisation_delete.png"); }
+.jd_menu li.mainmenu a { background-image: url("../images/bullet_arrow_down.png"); }
+.jd_menu ul li.close a { background-image: url("../images/door.png"); }
+.jd_menu ul li.refresh a { background-image: url("../images/arrow_refresh.png"); }
+.jd_menu ul li.edit a { background-image: url("../images/page_white_edit.png"); }
+.jd_menu ul li.cut a { background-image: url("../images/cut.png"); }
+.jd_menu ul li.paste a { background-image: url("../images/page_white_paste.png"); }
+.jd_menu ul li.new a { background-image: url("../images/page_white_add.png"); }
+.jd_menu ul li.newroot a { background-image: url("../images/page_add.png"); }
+.jd_menu ul li.delete a { background-image: url("../images/bin_empty.png"); }
+.jd_menu ul li.help a { background-image: url("../images/help.png"); }
+.jd_menu ul li.filter a { background-image: url("../images/chart_organisation_add.png"); }
+.jd_menu ul li.remove_filter a { background-image: url("../images/chart_organisation_delete.png"); }
 
-ul.jd_menu ul li.separator {
+.jd_menu ul li.separator {
   border-top:solid 1px #CCC;
 }
 
 /* -- Sub-Menus -- */
-ul.jd_menu ul {
+.jd_menu ul {
 	position: absolute;
 	display: none;
 	list-style-type: none;
@@ -586,32 +651,32 @@ ul.jd_menu ul {
 	padding: 0px;
 	z-index: 10000;
 }
-ul.jd_menu ul li {
+.jd_menu ul li {
 	float: none;
 	margin: 0px;
 }
 
-ul.jd_menu, ul.jd_menu ul {
+.jd_menu, .jd_menu ul {
   border: solid 1px #CCC;
 	background: #EEE;
 	height: 20px;
 }
-ul.jd_menu ul {
+.jd_menu ul {
 	height: auto;
 }
-* html ul.jd_menu ul {
+* html .jd_menu ul {
 	width: 1%;
 }
-ul.jd_menu li {
+.jd_menu li {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
 }
-ul.jd_menu li li {
+.jd_menu li li {
 	width: 90px;
 }
 
-ul.jd_menu li a {
+.jd_menu li a {
 	color: #333;
 	text-decoration: none;
 	line-height: 20px;
@@ -623,7 +688,7 @@ ul.jd_menu li a {
 	padding-left: 28px;
 }
 
-ul.jd_menu li.jdm_hover, ul.jd_menu li.jdm_active {
+.jd_menu .jdm_hover, .jd_menu .jdm_active {
 	background-color: #BEEBFF;
 	color:#333;
 }
@@ -634,4 +699,30 @@ ul.jd_menu li.jdm_hover, ul.jd_menu li.jdm_active {
 
 .throbber {
 	display:none;
+}
+
+#classification_list {
+	width:60%;
+}
+
+.classification_delete a { 
+	background-image: url("../images/delete.png");
+	background-position: 6px center;
+	background-repeat: no-repeat;
+	padding-left: 25px;
+	font-size:small;
+	text-decoration: none;
+}
+
+.classification_import a { 
+	background-image: url("../images/chart_organisation_add.png");
+	background-position: 6px center;
+	background-repeat: no-repeat;
+	padding-left: 25px;
+	font-size:small;
+	text-decoration: none;
+}
+
+.classification_help_links {
+	margin-left:20px;
 }

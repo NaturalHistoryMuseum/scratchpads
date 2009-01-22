@@ -40,7 +40,7 @@
                 				     EDIT.edit_name(NODE);
                 		  },
                 			onmove          : function(NODE,REF_NODE,TYPE,TREE_OBJ) {
-                				     EDIT.move_name(NODE,REF_NODE);
+                				     EDIT.move_name(NODE,REF_NODE,TYPE);
                 			},
                 			oncopy          : function(NODE,REF_NODE,TYPE,TREE_OBJ) { },
                 			oncreate        : function(NODE,REF_NODE,TYPE,TREE_OBJ) { },
@@ -64,7 +64,6 @@
 			$.hotkeys.add('f2',		{ disableInInput: true },	function() { TREE.rename(); });
 			$.hotkeys.add('c',    { disableInInput: true }, function() { TREE.close_all(); });
 			$.hotkeys.add('n',		{ disableInInput: true },	function() { TREE.create(); });
-  		$.hotkeys.add('d',		{ disableInInput: true },	function() { TREE.remove(); });
 			$.hotkeys.add('r',		{ disableInInput: true },	function() { TREE.refresh(); });
 			$.hotkeys.add('up',		{ disableInInput: true },	function() { TREE.get_prev(); });
 			$.hotkeys.add('down',	{ disableInInput: true },	function() { TREE.get_next(); });

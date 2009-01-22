@@ -1,125 +1,124 @@
 <?php
 
+/**
+ * Implementation of hook_install()
+ */
 function classification_install() {
+  drupal_install_schema('classification');
+  
   $vocab = array(
 	 'name' => 'Taxa',
 	 'hierarchy' => 1,
-	 'module' => 'taxon_description',
-	 'nodes' => array('taxon_description' => 1)
+	 'module' => 'taxonomy',
   );
   taxonomy_save_vocabulary($vocab);
-  drupal_install_schema('classification');
+  
+  // Save a few ranks and vernaculars to prevent future errors
+  // Sleep a bit to ensure tables are created
+  
+  sleep(4);
+  
+  $ranks = "Family Genus Species";
+  _classification_update_lists('rank','Rank',$ranks);
+  
+  $verns = "en es fr";
+  _classification_update_lists('vernacular_language','Vernacular Language',$verns);
 }
 
+/*
+ * Implementation of hook_uninstall()
+ */
 function classification_uninstall() {
-   // The following four lines should be removed in production to prevent classification from being deleted
-   $voc_name = 'Taxa';
-   $result = db_query(db_rewrite_sql("SELECT vid,name FROM {vocabulary} WHERE name = '%s'"), $voc_name);
-   $voc = db_fetch_object($result);
-   $vid = $voc->vid;
+   $vid = _classification_get_vid('Taxa');
    taxonomy_del_vocabulary($vid);
+   db_query('DELETE FROM {taxonomy_enhancer_fields} WHERE vid = %d AND fid = "%s"', $vid, 'field_rank');
+   db_query('DELETE FROM {taxonomy_enhancer_fields} WHERE vid = %d AND fid = "%s"', $vid, 'field_vernacular_language');
+   variable_del('classification_viewer_names');
+   variable_del('classification_viewer_canonicals');
+   variable_del('classification_autocomplete_size');
+   
+   // The following line should be removed in production to prevent classification from being deleted when this module is uninstalled
    drupal_uninstall_schema('classification');
-   variable_del('classification_view_names');
-   variable_del('classification_ranks');
 }
 
+/*
+ * Implementation of hook_schema()
+ */
 function classification_schema() {
 
-  $schema['classification_temp'] = array(
-    'description' => t('Stores a single row that gets updated during the import procedure'),
+  $schema['classification_node'] = array(
+    'description' => t('Stores the relationship of taxon names to nodes.'),
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {node}.nid of the node.'),
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {node}.vid of the node.'),
+      ),
+      'tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {term_data}.tid of a term assigned to the node.'),
+      ),
+    ),
+    'indexes' => array(
+      'vid' => array('vid'),
+      'nid' => array('nid'),
+    ),
+    'primary key' => array('tid', 'vid'),
+  );
+  
+  $schema['classification_node_types'] = array(
+    'description' => t('Stores which node types the default vocabulary called "Taxa" may be used with.'),
     'fields' => array(
       'cid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => t('The {classification_temp}.cid'),
-      ),
-      'count' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'description' => t('A counter for the term import'),
-      ),
-      'term' => array(
-        'type' => 'varchar',
-        'length' => '255',
-        'description' => t('A holder for a term'),
-      ),
-    ),
-    'primary key' => array('cid'),
-  );
-  
-  $schema['term_relation_has_type'] = array(
-    'description' => t('Stores term relation type information.'),
-    'fields' => array(
-      'trid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => t('The {term_relation}.trid'),
-      ),
-      'rtid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => t('The {term_realtion_types}.rtid.'),
-      ),
-    ),
-    'primary key' => array('trid', 'rtid'),
-  );
-  
-  $schema['term_relation_types'] = array(
-    'description' => t('Stores definitions for relation types'),
-    'fields' => array(
-      'rtid' => array(
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The primary key for relation types'),
+        'description' => t('Primary Key: the id of the node type association.'),
       ),
-      'name' => array(
+      'type' => array(
         'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'description' => t('The relation type name.'),
-      ),
-      'namespace' => array( 
-        'type' => 'varchar', 
-        'length' => 128, 
+        'length' => 32,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The {term_realtion_namespace}.namespaces'), 
+        'description' => t('The node type for which classification may be used.'),
       ),
-      'description' => array(
-        'type' => 'text',
+      'select_option' => array(
+        'type' => 'int',
         'not null' => TRUE,
-        'default' => '',
-        'size' => 'big',
-        'description' => t('A description for the relation type.'),
+        'default' => 1,
+        'size' => 'tiny',
+        'description' => t('The type of select option that may be used. Options are single = 1 or multiple = 2'),
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => t('A weight value to position the textfield on the node form submission page'),
+      ),
+      'required' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+        'description' => t('Select whether or not the name tag is required (1) or not (0)'),
       ),
     ),
-    'primary key' => array('rtid'),
-    'unique keys' => array('namespace_name' => array('namespace', 'name')),
+    'primary key' => array('cid','type'),
   );
   
-  $schema['term_relation_types_namespaces'] = array( 
-    'description' => t('Stores namespaces for relation types'), 
-    'fields' => array( 
-      'namespace' => array( 
-        'type' => 'varchar', 
-        'length' => 128,
-        'not null' => TRUE, 
-        'description' => t('The primary key for namespaces'),
-      ),
-      'uri' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'description' => t('The URI for the namespace'),
-      ),
-    ),
-    'primary key' => array('namespace'),
-  );
-
   $schema['taxonomy_enhancer_fields'] = array(
     'fields' => array(
       'vid' => array(
@@ -214,6 +213,147 @@ function classification_schema() {
      ),
     'primary key' => array('tid', 'fid', 'nid'),
   );
+  
+  $schema['term_relation_has_type'] = array(
+    'description' => t('Stores term relation type information.'),
+    'fields' => array(
+      'trid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The {term_relation}.trid'),
+      ),
+      'rtid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The {term_realtion_types}.rtid.'),
+      ),
+    ),
+    'primary key' => array('trid', 'rtid'),
+  );
+  
+  $schema['term_relation_types'] = array(
+    'description' => t('Stores definitions for relation types'),
+    'fields' => array(
+      'rtid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The primary key for relation types'),
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => t('The relation type name.'),
+      ),
+      'namespace' => array( 
+        'type' => 'varchar', 
+        'length' => 128, 
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('The {term_realtion_namespace}.namespaces'), 
+      ),
+      'description' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+        'size' => 'big',
+        'description' => t('A description for the relation type.'),
+      ),
+    ),
+    'primary key' => array('rtid'),
+    'unique keys' => array('namespace_name' => array('namespace', 'name')),
+  );
+  
+  $schema['term_relation_types_namespaces'] = array( 
+    'description' => t('Stores namespaces for relation types'), 
+    'fields' => array( 
+      'namespace' => array( 
+        'type' => 'varchar', 
+        'length' => 128,
+        'not null' => TRUE, 
+        'description' => t('The primary key for namespaces'),
+      ),
+      'uri' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => t('The URI for the namespace'),
+      ),
+    ),
+    'primary key' => array('namespace'),
+  );
 
   return $schema;
+}
+
+/**
+ * Implementation of hook_requirements().
+ */
+function classification_requirements($phase) {
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+
+    // File paths
+    $classification_path = file_create_path(rtrim(variable_get('classification_default_path', 'classification')));
+    $temp_path = rtrim($classification_path, '/') .'/temp';
+    if (!file_check_directory($classification_path, FILE_CREATE_DIRECTORY)) {
+      $requirements['classification_dir'] = array(
+        'value' => t('Missing directory'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t("The classification module's directory %classification-dir is missing.", array('%classification-dir' => $classification_path)),
+      );
+    }
+    else if (!file_check_directory($temp_path, FILE_CREATE_DIRECTORY)) {
+      $requirements['classification_dir'] = array(
+        'value' => t('Missing temp directory'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t("The classification module's temp directory %temp-dir is missing.", array('%temp-dir' => $temp_path)),
+      );
+    }
+    else {
+      $requirements['classification_dir'] = array(
+        'value' => t('Exists (%path)', array('%path' => $classification_path)),
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+    $requirements['classification_dir']['title'] = t('Classification module directory');
+  }
+
+  return $requirements;
+}
+
+/**
+ * Helper functions
+ */
+function _classification_get_vid($name) {
+  $voc = db_fetch_object(db_query(db_rewrite_sql("SELECT vid FROM {vocabulary} WHERE name = '%s'"), $name));
+  return $voc->vid;
+}
+
+function _classification_update_lists($fid,$title,$list) {
+	$vid = _classification_get_vid('Taxa');
+	
+ 	$list_arr = explode(" ",$list);
+ 	foreach ($list_arr as $item) {
+		 $opt[] = $item;
+  }
+  
+  $field = array(
+    'vid' => $vid,
+    'fid' => 'field_' . $fid,
+    'title' => $title,
+    'module' => 'classification',
+    'type' => 'options',
+    'weight' => 0,
+    'settings' => array(),
+  );
+  $field['settings']['allowed_values'] = $opt;
+  $field['settings']['options_type'] = 'select';
+  
+  db_query("INSERT INTO {taxonomy_enhancer_fields} (vid,fid,title,module,type,weight,settings) VALUES (%d,'%s','%s','%s','%s',%d,'%s')",$field['vid'],$field['fid'],$field['title'],$field['module'],$field['type'],$field['weight'],serialize($field['settings']));
+
 }

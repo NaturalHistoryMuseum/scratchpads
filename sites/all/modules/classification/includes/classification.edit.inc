@@ -54,6 +54,7 @@ function classification_edit_form(&$form_state) {
   drupal_add_js($module_path .'js/jquery.jdMenu/jquery.positionBy.js');
   drupal_add_js($module_path .'js/jquery.jdMenu/jquery.bgiframe.js');
   drupal_add_js($module_path .'js/jquery.jdMenu/jquery.jdMenu.js');
+  drupal_add_js($module_path .'js/jquery.vcenter.js');
   
   drupal_add_js($module_path . 'js/classification_editing.js');
   drupal_add_js($module_path .'js/classification.js');
@@ -63,11 +64,13 @@ function classification_edit_form(&$form_state) {
     '#value' => '<div id="message"></div>',
   );
 
+  $shortname = variable_get('shortname','');
+
   $tree_menu = '
     <ul id="tree_actions" class="jd_menu">
-      <li class="mainmenu accessible"><a href="#">' . t('File') . '</a>
+      <li id="_file" class="mainmenu accessible"><a href="#">' . t('File') . '</a>
         <ul>
-          <li class="new"><a href="#" onclick="javascript:TREE.create();return false">' . t('New') . '</a></li>
+          <li class="new"><a href="#" onclick="javascript:TREE.create();return false">' . t('New Child') . '</a></li>
         </ul>
       </li>
       <li class="mainmenu accessible"><a href="#">' . t('Edit') . '</a>
@@ -86,11 +89,6 @@ function classification_edit_form(&$form_state) {
           <li class="close"><a href="#" onclick="javascript:TREE.close_all();return false">' . t('Collapse') . '</a></li>
         </ul>
       </li>
-      <li class="mainmenu accessible"><a href="#">' . t('Help') . '</a>
-        <ul>
-          <li class="help"><a href="#" onclick="javascript:window.open(\'/help/classification/edit?popup=1\', \'advanced_help_window\', \'width=500,height=500,scrollbars,resizable\');return false">' . t('Help') . '</a></li>
-        </ul>
-      </li>
     </ul>';
       
   $form['tree_wrapper'] = array(
@@ -102,7 +100,7 @@ function classification_edit_form(&$form_state) {
   
   $form['tree_wrapper']['root'] = array(
     '#type' => 'textfield',
-    '#autocomplete_path' => 'admin/classification/autocomplete/' . $vid,
+    '#autocomplete_path' => 'classification/autocomplete/' . $vid,
     '#default_value' => '',
     '#size' => 40,
     '#title' => t('Parent Taxon'),
@@ -110,7 +108,7 @@ function classification_edit_form(&$form_state) {
     '#suffix' => '<div id="edit-root-save"><a href="#" onclick="javascript:EDIT.apply_filter(); return false;"><img src="/' . $module_path . 'images/chart_organisation_add.png" title="' . t('Apply Filter') . '"></a> <a href="#" onclick="javascript:EDIT.remove_filter(); return false;"><img src="/' . $module_path . 'images/chart_organisation_delete.png" title="' . t('Remove Filter') . '"></a></div>',
     '#ahah' => array(
      	'event' => 'blur',
-	    'path' => 'admin/classification/checkterm/' . $vid,
+	    'path' => 'classification/checkterm/' . $vid,
 	    'wrapper' => 'reroot_tid',
 	    'progress' => 'none',
     ),
@@ -183,55 +181,65 @@ function classification_metadata_form() {
      '#type' => 'markup',
      '#value' => '<div id="metadata_taxon_title"></div>',
   );
-  
-  $options = drupal_map_assoc(variable_get('classification_ranks',0));
 
   $form['name_metadata']['rank'] = array(
     '#type' => 'select',
-    '#options' => $options,
+    '#options' => classification_allowed_values('rank'),
     '#title' => t('Taxonomic Rank'),
-    '#prefix' => '<div style="width:70%;float:left">',
+    '#prefix' => '<div style="width:60%;float:left">',
+    '#suffix' => '</div>',
     '#description' => t('Leave unselected if not applicable'),
   );
 
+  $action_menu = '
+    <ul id="metadata_actions" class="metadata_actions">
+      <li class="classification_images"><a href="#" onclick="javascript:EDIT.go_url(\'image\');return false;">' . t('Images') . ' <span></span></a></li>
+      <li class="classification_references"><a href="#" onclick="javascript:EDIT.go_url(\'biblio\');return false;">' . t('References') . ' <span></span></a></li>
+      <li class="classification_view"><a href="#" onclick="javascript:EDIT.go_url(\'taxon\');return false;">' . t('Taxon Page') . '</a></li>
+    </ul>';
+      
+  $form['name_metadata']['action_menu'] = array(
+    '#type' => 'markup',
+    '#value' => $action_menu,
+    '#prefix' => '<div style="width:40%;float:right">',
+    '#suffix' => '</div><div style="clear:both"></div>',
+  );
+  
   $form['name_metadata']['relation_id'] = array(
     '#type' => 'hidden',
     '#value' => '',
   );
 
   $sql = db_query("SELECT rtid, name FROM {term_relation_types} ORDER BY rtid");
+  $relationships[''] = '--None--';
     while ($row = db_fetch_object($sql)) {
      $relationships[$row->rtid] = check_plain($row->name);
     }
-  $relationships[''] = '';
   	
   $form['name_metadata']['relation_type'] = array(
     '#type' => 'select',
     '#options' => $relationships,
+    '#attributes' => array('onchange' => 'javascript:EDIT.check_vern(this.value)'),
   	'#title' => t('Relationship to Parent'),
-  	'#suffix' => '</div>',
-  	'#description' => t('Leave unselected if not applicable'),
+  	'#description' => t('Leave unselected if not applicable. Taxonomic Rank must be set to "None".'),
   );
-  
-  $action_menu = '
-    <ul id="metadata_actions" class="metadata_actions">
-      <li class="images"><a href="#" onclick="javascript:EDIT.go_url(0);return false">' . t('Images') . '</a></li>
-      <li class="references"><a href="#" onclick="javascript:EDIT.go_url(1);return false">' . t('References') . '</a></li>
-      <li class="view"><a href="#" onclick="javascript:EDIT.go_url(2);return false">' . t('Taxon Page') . '</a></li>
-      <li class="save separator"><a href="#" onclick="javascript:EDIT.save_metadata();return false">' . t('Save') . '</a></li>
-    </ul>';
-      
-  $form['name_metadata']['action_menu'] = array(
-    '#type' => 'markup',
-    '#value' => $action_menu,
-    '#prefix' => '<div style="width:30%;float:right">',
-    '#suffix' => '</div><div style="clear:both"></div>',
+
+  $form['name_metadata']['vern_lang'] = array(
+    '#type' => 'select',
+    '#options' => classification_allowed_values('vernacular_language'),
+    '#title' => t('Vernacular Language'),
+    '#description' => t('Leave unselected if not applicable'),
   );
 
   $form['name_metadata']['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Taxonomic Notes'),
     '#cols' => 30,
+  );
+
+  $form['name_metadata']['button'] = array(
+    '#type' => 'markup',
+    '#value' => '<div style="width:200px; margin:0px auto;text-align:center"><button class="classification-buttons save" onclick="javascript:EDIT.save_metadata();return false">' . t('Save') . '</button></div>',
   );
 
 // Dummy submit button with AHAH to circumvent the Enter key from re-rendering the page
@@ -241,7 +249,7 @@ function classification_metadata_form() {
     '#attributes' => array('class' => 'classification-buttons hidden'),
     '#ahah' => array(
        'event' => 'click',
-       'path' => 'admin/classification/update_metadata',
+       'path' => 'classification/update_metadata',
        'wrapper' => 'message',
        'progress' => array('type' => 'none', 'message' => ''),
     ),
@@ -251,10 +259,34 @@ function classification_metadata_form() {
 }
 
 /**
+ * Allowed values from taxonomy_enhancer_fields table
+ */
+function classification_allowed_values($field) {
+  $vid = classification_get_vid('Taxa');
+  $result = db_fetch_object(db_query("SELECT settings FROM {taxonomy_enhancer_fields} WHERE fid = '%s' and vid = %d", 'field_' . strtolower($field), $vid));
+  $settings = drupal_unpack($result,'settings');
+  
+  $values = $settings->allowed_values;
+  $allowed_values[''] = '--None--';
+  foreach ($values as $value) {
+  	$allowed_values[$value] = $value;
+  }
+  
+  return $allowed_values;
+}
+
+/**
  * Form for handling additional classifications
  */
 function classification_additional_trees_form() {
-	
+
+  $form['trees'] = array(
+     '#type' => 'markup',
+     '#value' => ' ',
+     '#prefix' => '<div class="alternate_content" id="classification_alternate_trees">',
+     '#suffix' => '</div>',
+  );
+  
   $classifications = taxonomy_get_vocabularies();
   $classification_list[0] = 'None';
   	foreach($classifications as $classification) {
@@ -263,23 +295,16 @@ function classification_additional_trees_form() {
   	   }
     }
 
-
-  $form['alternate_classifications'] = array(
+  $form['trees']['selections'] = array(
      '#type' => 'select',
      '#title' => t('Select other classifications'),
      '#options' => $classification_list,
      '#default_value' => 0,
      '#description' => t('Source classification(s) from which you may drag names'),
-     '#attributes' => array('onchange' => 'javascript:EDIT.set_vid();'),
-     '#prefix' => '<div class="alternate_content" id="classification_alternate_trees">',
-     '#suffix' => '</div>',
+     '#attributes' => array('onchange' => 'javascript:EDIT.get_tree(this.value)'),
   );
-
-  $form['alternate_vid'] = array(
-  	'#type' => 'hidden',
-  );
-
-  $form['tree2'] = array(
+  
+  $form['trees']['classification_trees'] = array(
      '#type' => 'markup',
      '#value' => ' ',
      '#prefix' => '<div id="classification_tree_alternate">',
@@ -290,12 +315,28 @@ function classification_additional_trees_form() {
 }
 
 /**
+ * Get options for the settings form
+ */
+function classification_allowed_options($field) {
+	$vid = classification_get_vid('Taxa');
+  $result = db_fetch_object(db_query("SELECT settings FROM {taxonomy_enhancer_fields} WHERE fid = '%s' and vid = %d", 'field_' . strtolower($field), $vid));
+  if($result) {
+    $settings = drupal_unpack($result,'settings');
+    $allowed = $settings->allowed_values;
+    foreach ($allowed as $value) {
+  	  $_allowed .= $value . "\n";
+    }
+    return trim($_allowed);
+  }
+}
+
+/**
  * Form for handling settings
  */
 function classification_settings_form() {
 	
 	global $module_path;
-	
+  
   $form['settings'] = array(
      '#type' => 'markup',
      '#value' => '',
@@ -306,20 +347,29 @@ function classification_settings_form() {
   $form['settings']['ranks'] = array(
     '#type' => 'fieldset',
     '#title' => t('Taxonomic Ranks'),
-  );
-  
-  $ranks = variable_get('classification_ranks',array('Family' => 'Family', 'Genus' => 'Genus', 'Species' => 'Species'));
-  foreach ($ranks as $rank) {
-   $_ranks .= $rank . "\n";
-  }	
+  );	
   
   $form['settings']['ranks']['ranks_list'] = array(
     '#type' => 'textarea',
-    '#default_value' => $_ranks,
-    '#title' => t('One taxonomic rank per line'),
+    '#default_value' => classification_allowed_options('rank'),
+    '#title' => t('One taxonomic rank per line (in order of appearance)'),
     '#cols' => 30,
+    '#required' => TRUE,
   );
 
+  $form['settings']['verns'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Vernacular Languages'),
+  );
+  
+  $form['settings']['verns']['vern_list'] = array(
+    '#type' => 'textarea',
+    '#default_value' => classification_allowed_options('vernacular_language'),
+    '#title' => t('One language (<a href="http://www.loc.gov/standards/iso639-2/php/English_list.php" target="_blank">ISO 639-1</a>) per line'),
+    '#cols' => 30,
+    '#required' => TRUE,
+  );
+  
   $form['settings']['names_display_editor'] = array(
     '#type' => 'fieldset',
     '#title' => t('Classification Editor Display Options'),
@@ -334,10 +384,10 @@ function classification_settings_form() {
     '#options' => $options,
     '#default_value' => $default_editor,
   );
-
+  
   $form['settings']['settings_submit'] = array(
     '#type' => 'markup',
-    '#value' => '<div id="settings_submit"><a href="#" onclick="javascript:EDIT.update_settings();return false;"><img src="/' . $module_path . 'images/disk.png" title="' . t('Update Configuration') . '"></a> <a href="#" onclick="javascript:EDIT.update_settings();return false;">' . t('Update Configuration') . '</a></div>',
+    '#value' => '<div style="width:200px; margin:0px auto;text-align:center"><button class="classification-buttons save" onclick="javascript:EDIT.update_settings();return false">' . t('Update') . '</button></div>',
   );
   
   return $form;
@@ -365,92 +415,88 @@ function classification_settings_form() {
      	 case 0:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ({term_relation} tr 
+         	    JOIN {term_relation_has_type} trht ON (tr.trid=trht.trid) 
+         	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
+         	  ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d 
+		     ORDER BY 
+		       trt.rtid, td.name"),$vid,$tid);
          break;
        // Hide vernaculars
        case 1:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d AND ( a.rtid <> 9 OR a.rtid IS NULL ) 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       )  ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL ) 
+		     ORDER BY td.name"),$vid,$tid);
          break;
        // Hide all except valid
        case 2:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d AND a.rtid IS NULL 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid); 
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND trt.rtid IS NULL 
+		     ORDER BY 
+		       td.name"),$vid,$tid);
          break;
        // Show all names
        default:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);         
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d 
+		     ORDER BY 
+		       trt.rtid, td.name"),$vid,$tid);        
      }
 
      while ($object = db_fetch_object($result)) {
@@ -480,24 +526,23 @@ function classification_settings_form() {
      
      $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d 
+		     ORDER BY 
+		       td.name"),$vid,$tid);
 
      while ($object = db_fetch_object($result)) {
        $tid = $object->tid;
@@ -570,47 +615,45 @@ function classification_count_children($tid) {
        SELECT 
          COUNT(*) AS count 
        FROM 
-         {term_data} a 
-       INNER JOIN 
-         {term_hierarchy} b ON a.tid = b.tid 
+         {term_data} td 
+       JOIN 
+         {term_hierarchy} th ON (td.tid = th.tid) 
        WHERE 
-         a.vid = %d AND b.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d"), $vid,$tid);
        break;
      // Hide vernaculars
      case 1:
        $result = db_query(db_rewrite_sql("
-       SELECT 
-         COUNT(*) AS count 
-       FROM 
-         {term_relation_types} a 
-       INNER JOIN 
-         {term_relation_has_type} b ON a.rtid = b.rtid 
-       INNER JOIN 
-         {term_relation} c ON b.trid = c.trid 
-       RIGHT JOIN 
-         {term_data} d ON c.tid1 = d.tid 
-       INNER JOIN 
-         {term_hierarchy} e ON d.tid = e.tid 
-       WHERE 
-         d.vid = %d AND e.parent = %d AND ( a.rtid <> 9 OR a.rtid IS NULL )"), $vid,$tid);
+         SELECT 
+           COUNT(*) as count
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ({term_relation} tr 
+         	    JOIN {term_relation_has_type} trht ON (tr.trid=trht.trid) 
+         	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
+         	  ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )"),$vid,$tid);
        break;
      // Hide all except valid
      case 2:
        $result = db_query(db_rewrite_sql("
        SELECT 
-         COUNT(*) AS count 
-       FROM 
-         {term_relation_types} a 
-       INNER JOIN 
-         {term_relation_has_type} b ON a.rtid = b.rtid 
-       INNER JOIN 
-         {term_relation} c ON b.trid = c.trid 
-       RIGHT JOIN 
-         {term_data} d ON c.tid1 = d.tid 
-       INNER JOIN 
-         {term_hierarchy} e ON d.tid = e.tid 
+         COUNT(*) AS count
+       FROM
+         {term_data} td
+       JOIN 
+         {term_hierarchy} th on (td.tid=th.tid) 
+       LEFT JOIN 
+         ( {term_relation} tr 
+			     JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			     JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		     ) ON td.tid=tr.tid1 
        WHERE 
-         d.vid = %d AND e.parent = %d AND a.rtid IS NULL"), $vid,$tid);
+         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL"), $vid,$tid);
        break;
      // Show all names by default
      default:
@@ -618,11 +661,11 @@ function classification_count_children($tid) {
        SELECT 
          COUNT(*) AS count 
        FROM 
-         {term_data} a 
-       INNER JOIN 
-         {term_hierarchy} b ON a.tid = b.tid 
+         {term_data} td 
+       JOIN 
+         {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         a.vid = %d AND b.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d"), $vid,$tid);
    }
    
    $object = db_fetch_object($result);
@@ -634,15 +677,15 @@ function classification_count_children($tid) {
  */
 function classification_count_children_alternate($tid,$vid) {
    
-   $result = db_query(db_rewrite_sql("
+       $result = db_query(db_rewrite_sql("
        SELECT 
          COUNT(*) AS count 
        FROM 
-         {term_data} a 
-       INNER JOIN 
-         {term_hierarchy} b ON a.tid = b.tid 
+         {term_data} td 
+       JOIN 
+         {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         a.vid = %d AND b.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d"), $vid,$tid);
    
    $object = db_fetch_object($result);
    return $object->count;
@@ -736,6 +779,22 @@ function classification_checkterm($vid){
   
   drupal_json(array('status' => TRUE,'data' => $result->tid));
 }
+
+/**
+ * Callback to get parent tid for use in the editor
+ */
+function classification_get_parent(){
+  $form = array(
+    '#post' => $_POST,
+  );
+  $child = $_REQUEST['child'];
+  $child_parent = $_REQUEST['child_parent'];
+  
+  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d"), $child_parent));
+  
+  drupal_json(array('child' => $child, 'dest' => $result->tid));
+}
+
 /**
  * Callback for inline editing of name
  */
@@ -782,33 +841,35 @@ function classification_edit_name() {
   // Get name of taxon and ranks
   $result = db_fetch_object(db_query("
   SELECT 
-    a.name as name, 
-    a.description as description,
-    b.fid, 
-    CASE b.fid WHEN 'field_rank' THEN b.value END AS rank 
+    td.name as name, 
+    td.description as description,
+    tevt.fid, 
+    CASE tevt.fid WHEN 'field_rank' THEN tevt.value END AS rank,
+    CASE tevt.fid WHEN 'field_vernacular_language' THEN tevt.value END AS vern
   FROM 
-    {term_data} a 
+    {term_data} td 
   LEFT JOIN 
-    {taxonomy_enhancer_value_text} b ON a.tid = b.tid 
-  WHERE a.tid = %d", $tid));
+    {taxonomy_enhancer_value_text} tevt ON td.tid = tevt.tid 
+  WHERE td.tid = %d", $tid));
 
   $taxon = $result->name;
   $description = $result->description;
   $rank = $result->rank;
+  $vern = $result->vern;
 
   // Get parent, relationship identifier (trid) and relationship type (rtid)
   $result = db_fetch_object(db_query("
   SELECT 
-    a.trid as relation_id,
-    a.rtid as relation_type,
-    c.parent as parent_tid
+    trht.trid as relation_id,
+    trht.rtid as relation_type,
+    th.parent as parent_tid
   FROM 
-    {term_relation_has_type} a 
+    {term_relation_has_type} trht 
   INNER JOIN 
-    {term_relation} b ON a.trid = b.trid 
+    {term_relation} tr ON trht.trid = tr.trid 
   RIGHT JOIN
-    {term_hierarchy} c ON b.tid1 = c.tid
-  WHERE c.tid = %d", $tid));
+    {term_hierarchy} th ON tr.tid1 = th.tid
+  WHERE th.tid = %d", $tid));
 
   $parent_tid = $result->parent_tid;
   $relation_id = $result->relation_id;
@@ -830,7 +891,28 @@ function classification_edit_name() {
   	$taxon = $names->italicized_form($taxon);
   }
   
-  $output = array('tid' => $tid, 'parent_tid' => $parent_tid, 'taxon' => $taxon, 'rank' => $rank, 'description' => check_plain($description), 'relation_id' => $relation_id, 'relation_type' => check_plain($relation_type)); 
+  // Discover if nodes (and what kinds) are present (e.g. image, biblio, taxon_description)
+  $result = db_query("
+  SELECT 
+    n.nid, n.type, COUNT(*) AS count 
+  FROM {node} n 
+  JOIN {classification_node} tn ON (n.nid=tn.nid) 
+  WHERE tn.tid = %d 
+  GROUP BY type",$tid);
+  
+  $media = array();
+  while ($row = db_fetch_object($result)) {
+    $media[$row->type] = $row->count;
+  }
+  
+  if($result) {
+    $taxon_description = TRUE;
+  }
+  else {
+  	$taxon_description = FALSE;
+  }
+  
+  $output = array('tid' => $tid, 'parent_tid' => $parent_tid, 'taxon' => $taxon, 'rank' => $rank, 'vern_lang' => $vern, 'description' => check_plain($description), 'relation_id' => $relation_id, 'relation_type' => check_plain($relation_type), 'media' => $media); 
 
   drupal_json(array('status' => TRUE,'data' => $output));
 }
@@ -845,57 +927,80 @@ function classification_update_metadata() {
   );
   
 	$tid = $_REQUEST['tid'];
-	$parent_tid = $_REQUEST['parent_tid'];
+	$parent_tid = $_REQUEST['parent'];
 	$rank = $_REQUEST['rank'];
 	$relation_id = $_REQUEST['relation_id'];
 	$relation_type = $_REQUEST['relation_type'];
+	$vern_lang = $_REQUEST['vern_lang'];
 	$description = $_REQUEST['description'];
 	
  	$form_state = array('submitted' => FALSE);
  	
-  // Update or insert rank
- 	if ($rank) {
-   	// First discover if there is in fact a rank for this tid
- 	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT tid from {taxonomy_enhancer_value_text} WHERE tid = %d"), $tid));
- 	  if ($result->tid) {
- 	    db_query("UPDATE {taxonomy_enhancer_value_text} SET fid = 'field_rank', value = '%s' WHERE tid = %d", $rank,$tid);
- 	  }
- 	  else {
- 	    db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_rank','%s',%d)",$tid,$rank,0);
- 	  }
- 	}
- 	// Delete the rank if not present in POST
- 	else {
- 		db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
-  }
- 	
- 	// Need some sql here for setting vernacular language in term_enhancer_value_text table
- 	// Will also need to update this logic to wotk with newly added names
- 	
- 	// Update relationship
- 	if ($relation_id && $relation_type) {
- 	  db_query("UPDATE {term_relation_has_type} SET rtid = %d WHERE trid = %d",$relation_type,$relation_id);
- 	}
- 	// Add a relationship if one did not previously exist
- 	elseif (!$relation_id && $relation_type) {
- 	  db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
- 	  // Get the damn trid that was just inserted
- 	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d AND tid2 = %d"),$tid,$parent_tid));
- 	  db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,%d)",$result->trid,$relation_type);
-  }
- 	// Delete the relationship if not present in POST
- 	elseif ($relation_id && !$relation_type) {
+ 	//if a rank and a relationship, former takes precedence
+ 	if($rank && $relation_type) {
+ 		//First, clear out relationship metadata if the name already existed
  		db_query("DELETE FROM {term_relation} WHERE trid = %d",$relation_id);
- 		db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d",$relation_id);
+ 		db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d",$relation_id); 		
+ 		db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
+ 		
+ 		db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_rank','%s',%d)",$tid,$rank,0);
+ 		drupal_json(array('status' => 'failed', 'data' => '', 'message' => t('You have to set the rank to "None" if you want to modify the relationship.')));
+ 	}
+
+  //if a relationship and no rank, there are several possibilities
+  elseif(!$rank && $relation_type) {
+    switch($relation_type) {
+    	//vernacular name
+    	case 9:
+    	  //First, clear out the relationship metadata (except the term_relation) and add it again
+    	  db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d",$relation_id); 		
+ 		    db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
+ 		    //case where name didn't already exist, we need a $relation_id
+ 		     if(!$relation_id) {
+ 		     	  db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
+ 		     	  //Now we need the trid
+ 		     	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d"),$tid,$parent_tid));
+ 		     	  $relation_id = $result->trid;
+ 		     }
+ 		     //Now we add the relation metadata
+ 		     db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,%d)",$relation_id,$relation_type);
+ 		     db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_vernacular_language','%s',%d)",$tid,$vern_lang,0);
+ 		     drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Nomenclature successfully updated')));
+    	  break;
+    	//Anything other than a vernacular
+    	default:
+    	  //First we clear out the relationship metadata (except the term_relation) and add it again
+    	  db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d",$relation_id);
+    	  db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
+    	  //case where name didn't already exist, we need a $relation_id
+ 		     if(!$relation_id) {
+ 		     	  db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
+ 		     	  //Now we need the trid
+ 		     	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d"),$tid,$parent_tid));
+ 		     	  $relation_id = $result->trid;
+ 		     }
+ 		     //Now we add the relation metadata
+ 		     db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,%d)",$relation_id,$relation_type);
+ 		     drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Nomenclature successfully updated')));
+    }
+  
+  }
+  
+  //Just assign the rank
+  elseif($rank && !$relation_type) {
+  	//First, we remove the rank to accommodate a new name and also remove anything in term_relation in case this is elevated from synonym
+  	db_query("DELETE FROM {term_relation} WHERE tid1 = %d AND tid2 = %d",$tid,$parent_tid);
+ 		db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
+ 		db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_rank','%s',%d)",$tid,$rank,0);
+ 		drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Nomenclature successfully updated')));
   }
   else {
-  	// Do nothing
+  	// Do nothing if both $rank and $relation_type are blank
+  	drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('')));
   }
   
   db_query("UPDATE {term_data} SET description = '%s' WHERE tid = %d",$description,$tid);
   
-  // Blank data to present nothing as a result of Enter key form submission
-  drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Name data successfully updated')));
 }
 
 /**
@@ -910,17 +1015,46 @@ function classification_update_settings() {
   );
   
 	$ranks = $_REQUEST['ranks_list'];
+	$vern_lang = $_REQUEST['vern_list'];
 	$display_option = $_REQUEST['display_options_editor'];
+	
+	$vid = classification_get_vid('Taxa');
  	
- 	variable_set('classification_editor_names',$display_option);
- 	$ranks = explode("\n",$ranks);
-	for ($i=0;$i<=count($ranks);$i++) {
-		 $value = trim($ranks[$i]);
-		 $rank_arr['' . $value . ''] = $value;
+ 	if(!$ranks || !$vern_lang) {
+ 		drupal_json(array('status' => 'failed', 'message' => t('At least one rank or one language are required')));
+ 	}
+ 	else {
+ 	  variable_set('classification_editor_names',$display_option);
+ 	  classification_update_lists('rank','Rank',$ranks);
+ 	  classification_update_lists('vernacular_language','Vernacular Language',$vern_lang);
+    cache_clear_all();
+ 	
+    drupal_json(array('status' => 'updated','message' => t('Settings successfully updated')));
   }
-  variable_set('classification_ranks',$rank_arr);
- 	
-  drupal_json(array('status' => 'updated','message' => t('Settings successfully updated')));
+}
+
+function classification_update_lists($fid,$title,$list) {
+	$vid = classification_get_vid('Taxa');
+	
+ 	$list_arr = explode("\n",trim($list));
+ 	foreach ($list_arr as $list) {
+		 $opt[] = $list;
+  }
+  
+  $field = array(
+    'vid' => $vid,
+    'fid' => 'field_' . $fid,
+    'title' => $title,
+    'module' => 'classification',
+    'type' => 'options',
+    'weight' => 0,
+    'settings' => array(),
+  );
+  $field['settings']['allowed_values'] = $opt;
+  $field['settings']['options_type'] = 'select';
+  
+  db_query('DELETE FROM {taxonomy_enhancer_fields} WHERE vid = %d AND fid = "%s"', $vid, 'field_' . $fid);
+  drupal_write_record('taxonomy_enhancer_fields', $field);
 }
 
 /**
@@ -1006,7 +1140,7 @@ function classification_move_name() {
   
   $form_state = array('submitted' => FALSE);
   
-  if($child && $new_parent) {
+  if($child) {
      db_query("DELETE FROM {term_hierarchy} WHERE tid = %d", $child);
      db_query("INSERT INTO {term_hierarchy} (parent, tid) VALUES (%d, %d)", $new_parent, $child);
      // Update relationships if any
@@ -1022,12 +1156,12 @@ function classification_move_name() {
 /**
  * Callback to move a name during drag/drop from source tree into destination tree
  */
-function classification_move_name_alternate() {
+function classification_copy_name_alternate() {
 	$form = array(
     '#post' => $_POST,
   );
   
-  $child = $_REQUEST['child'];
+  $child = str_replace("_copy","",$_REQUEST['child']);
   $new_parent = $_REQUEST['new_parent'];
   
   $form_state = array('submitted' => FALSE);
@@ -1046,9 +1180,45 @@ function classification_move_name_alternate() {
        db_query("UPDATE {term_data} SET vid = %d WHERE tid = %d",$vid,$offspring->tid);
      }
 
-     drupal_json(array('status' => 'moved', 'message' => t('Name successfully moved')));
+     drupal_json(array('status' => 'moved', 'message' => t('Name successfully copied into your classification')));
   }
   else {
   	 drupal_json(array('status' => 'failed', 'message' => t('Failed to receive correct POST message')));
   }
+}
+
+/**
+ * Produce an array of child names other than vernaculars given a parent tid
+ */
+function classification_get_synonyms_json($tid=NULL) {
+  $output = array();
+  if($tid) {
+    $vid = classification_get_vid('Taxa');
+    $result = db_query(db_rewrite_sql("
+     SELECT 
+        td.tid as tid, 
+        td.name as name,
+        trt.name as relation 
+     FROM
+        {term_data} td 
+     JOIN 
+        {term_hierarchy} th on (td.tid=th.tid) 
+     LEFT JOIN 
+      	({term_relation} tr 
+     	    JOIN {term_relation_has_type} trht ON (tr.trid=trht.trid) 
+     	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
+     	  ) ON td.tid=tr.tid1 
+	   WHERE 
+	      td.vid = %d AND th.parent = %d AND trt.rtid <> 9  
+	   ORDER BY 
+	      td.name"),$vid,$tid);
+	      
+    while ($object = db_fetch_object($result)) {
+       $tid = $object->tid;
+       $name = $object->name;
+       $relation = $object->relation;
+       $output[] = array('tid' => $tid, 'name' => check_plain($name) , 'relation' => $relation);
+    }
+  }
+  drupal_json(array('status' => 'OK', 'content' => $output));
 }

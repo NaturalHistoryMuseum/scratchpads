@@ -9,6 +9,7 @@
  *
  * Date: 2008-11-04
  *
+ * Note: All classes "leaf" changed to "_leaf" by D. Shorthouse to prevent clashing with other Drupal themes (e.g. Garland)
  */
 function tree_component () {
 	// instance manager
@@ -231,17 +232,18 @@ function tree_component () {
 					} else str = this.parseJSON(this.settings.data.json);
 					this.container.html("<ul>" + str + "</ul>");
 					this.container.find("li:last-child").addClass("last").end().find("li:has(ul)").not(".open").addClass("closed");
-					this.container.find("li").not(".open").not(".closed").addClass("leaf");
+					this.container.find("li").not(".open").not(".closed").addClass("_leaf");
 					this.reselect();
 				}
 				else {
 					var _this = this;
 /*************************************************************************************
  Mod by David Shorthouse to work with Drupal callback using CleanURLs and with an AHAH wrapper div
+ and to accommodate a second tree with a different data url callback
  Original line:   $.getJSON(this.settings.data.url, { id : 0 }, function (data) {
  ************************************************************************************/ 
             var root = $('#reroot_tid div:first').text();
-    	      if(!root) { _root = ''; } else { _root = 'n' + root; }
+    	      if(!root || this.settings.data.url !== 'js_tree/') { _root = ''; } else { _root = 'n' + root; }
 					  $.getJSON(this.settings.data.url + _root, function (data) {
 /************************************************************************************/
 						var str = "";
@@ -252,14 +254,14 @@ function tree_component () {
 						} else str = _this.parseJSON(data);
 						_this.container.html("<ul>" + str + "</ul>");
 						_this.container.find("li:last-child").addClass("last").end().find("li:has(ul)").not(".open").addClass("closed");
-						_this.container.find("li").not(".open").not(".closed").addClass("leaf");
+						_this.container.find("li").not(".open").not(".closed").addClass("_leaf");
 						_this.reselect.apply(_this);
 					});
 				}
 			}
 			else {
 				this.container.find("li:last-child").addClass("last").end().find("li:has(ul)").not(".open").addClass("closed");
-				this.container.find("li").not(".open").not(".closed").addClass("leaf");
+				this.container.find("li").not(".open").not(".closed").addClass("_leaf");
 				this.reselect();
 			}
 		},
@@ -371,7 +373,7 @@ function tree_component () {
 			var _this = this;
 
 			var tmp = this.container.find("li.closed:eq(0)");
-			if(tmp.size() == 0) tmp = this.container.find("li.leaf:eq(0)");
+			if(tmp.size() == 0) tmp = this.container.find("li._leaf:eq(0)");
 			this.li_height = tmp.height();
 			if(!this.li_height) this.li_height = 18;
 
@@ -891,7 +893,7 @@ function tree_component () {
 					var str = (this.settings.data.url.indexOf("?") == -1) ? "?id=" + encodeURIComponent(obj.attr("id")) : "&id=" + encodeURIComponent(obj.attr("id"));
 					obj.children("ul:eq(0)").getTransform(this.path + xsl, this.settings.data.url + str, { repl : true, callback: function (str, json) { 
 							if(str.length < 10) {
-								obj.removeClass("closed").removeClass("open").addClass("leaf").children("ul").remove();
+								obj.removeClass("closed").removeClass("open").addClass("_leaf").children("ul").remove();
 								if(callback) callback.call();
 								return;
 							}
@@ -908,7 +910,7 @@ function tree_component () {
           $.getJSON(this.settings.data.url + obj.attr("id"),'', function (data, textStatus) {
 /***************************************************************************************************/
 						if(!data || data.length == 0) {
-							obj.removeClass("closed").removeClass("open").addClass("leaf").children("ul").remove();
+							obj.removeClass("closed").removeClass("open").addClass("_leaf").children("ul").remove();
 							if(callback) callback.call();
 							return;
 						}
@@ -921,7 +923,7 @@ function tree_component () {
 						else str = _this.parseJSON(data);
 						obj.children("ul:eq(0)").replaceWith("<ul>" + str + "</ul>");
 						obj.find("li:last-child").addClass("last").end().find("li:has(ul)").not(".open").addClass("closed");
-						obj.find("li").not(".open").not(".closed").addClass("leaf");
+						obj.find("li").not(".open").not(".closed").addClass("_leaf");
 						_this.open_branch.apply(_this, [obj]);
 						if(callback) callback.call();
 					});
@@ -1060,7 +1062,7 @@ function tree_component () {
 				}
 			}
 			else { $li.append("<a href='#'" + ( icn.length ? " style='background-image:url(\"" + icn + "\");' " : " ") + ">" + (data || this.settings.lang.new_node || "New folder") + "</a>"); }
-			$li.addClass("leaf");
+			$li.addClass("_leaf");
 			if(this.settings.rules.createat == "top" || obj.children("ul").size() == 0) {
 				this.moved($li,obj.children("a:eq(0)"),"inside", true);
 			}
@@ -1090,7 +1092,8 @@ function tree_component () {
 				c_wid = Math.min(w_max,c_wid);
 				*/
 
-        _this.inp = $("<input type='text' id='input_name' onkeyup = 'javascript:EDIT.adjust_name();' />");
+        /** Mod by D. Shorthouse to increase size of box and to have onkeyup function */
+        _this.inp = $("<input type='text' id='input_name' size='20' onkeyup = 'javascript:EDIT.adjust_name();' />");
 				_this.inp
 					.val(last_value)
 					.bind("mousedown",		function (event) { event.stopPropagation(); })
@@ -1130,7 +1133,7 @@ function tree_component () {
 					$parent.children("li:last").addClass("last");
 					if($parent.children("li").size() == 0) {
 						$li = $parent.parents("li:eq(0)");
-						$li.removeClass("open").removeClass("closed").addClass("leaf").children("ul").remove();
+						$li.removeClass("open").removeClass("closed").addClass("_leaf").children("ul").remove();
 						this.set_cookie("open");
 					}
 					this.settings.callback.ondelete.call(null, obj, this);
@@ -1149,7 +1152,7 @@ function tree_component () {
 				$parent.children("li:last").addClass("last");
 				if($parent.children("li").size() == 0) {
 					$li = $parent.parents("li:eq(0)");
-					$li.removeClass("open").removeClass("closed").addClass("leaf").children("ul").remove();
+					$li.removeClass("open").removeClass("closed").addClass("_leaf").children("ul").remove();
 					this.set_cookie("open");
 				}
 				this.selected = false;
@@ -1303,7 +1306,7 @@ function tree_component () {
 					}
 					else {
 						what.addClass("last");
-						$where.parent().append("<ul/>").removeClass("leaf").addClass("closed");
+						$where.parent().append("<ul/>").removeClass("_leaf").addClass("closed");
 						$where.parent().children("ul:first").prepend(what);
 					}
 					if(!this.settings.data.async) {
@@ -1316,7 +1319,7 @@ function tree_component () {
 			// CLEANUP OLD PARENT
 			if($parent.find("li").size() == 0) {
 				var $li = $parent.parent();
-				$li.removeClass("open").removeClass("closed").addClass("leaf").children("ul").remove();
+				$li.removeClass("open").removeClass("closed").addClass("_leaf").children("ul").remove();
 				$li.parents("ul:eq(0)").children("li.last").removeClass("last").end().children("li:last").addClass("last");
 				this.set_cookie("open");
 			}

@@ -15,7 +15,7 @@ $names = new Names;
         $tid = 0;
      }
      else {
-        $tid = str_replace("node_", "",$tid);
+        $tid = str_replace("n", "",$tid);
      }
  
      $names_options = variable_get('classification_viewer_names',2);
@@ -26,92 +26,88 @@ $names = new Names;
      	 case 0:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ({term_relation} tr 
+         	    JOIN {term_relation_has_type} trht ON (tr.trid=trht.trid) 
+         	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
+         	  ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d 
+		     ORDER BY 
+		       trt.rtid, td.name"),$vid,$tid);
          break;
        // Hide vernaculars
        case 1:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d AND ( a.rtid <> 9 OR a.rtid IS NULL ) 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       )  ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL ) 
+		     ORDER BY td.name"),$vid,$tid);
          break;
        // Hide all except valid
        case 2:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d AND a.rtid IS NULL 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid); 
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND trt.rtid IS NULL 
+		     ORDER BY 
+		       td.name"),$vid,$tid);
          break;
        // Show all names
        default:
          $result = db_query(db_rewrite_sql("
          SELECT 
-           d.tid as tid, 
-           d.name as name, 
-           a.name as relation, 
-           a.rtid as relation_type 
-         FROM 
-           {term_relation_types} a 
-         INNER JOIN 
-           {term_relation_has_type} b ON a.rtid = b.rtid 
-         INNER JOIN 
-           {term_relation} c ON b.trid = c.trid 
-         RIGHT JOIN 
-           {term_data} d ON c.tid1 = d.tid 
-         INNER JOIN 
-           {term_hierarchy} e ON d.tid = e.tid 
-         WHERE 
-           d.vid = %d AND e.parent = %d 
-         ORDER BY 
-           a.rtid, d.name"), $vid,$tid);         
+           td.tid as tid, 
+           td.name as name, 
+           trt.name as relation, 
+           trt.rtid as relation_type
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ( {term_relation} tr 
+			       JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			       JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		       ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d 
+		     ORDER BY 
+		       trt.rtid, td.name"),$vid,$tid);         
      }
 
      global $names;
@@ -146,7 +142,7 @@ function classification_to_js($vid,$var) {
    }
    foreach($var as $parent) {
       $str .= "{" . "\n";
-      $str .= "\"attributes\" : { \"id\" : \"node_" . $parent['tid'] . "\"";
+      $str .= "\"attributes\" : { \"id\" : \"n" . $parent['tid'] . "\"";
       if($parent['relation']) {
       	$str .= ", \"class\" : \"" . $parent['relation'] . "\"";
       }
@@ -188,47 +184,45 @@ function classification_count_children($vid,$tid) {
        SELECT 
          COUNT(*) AS count 
        FROM 
-         {term_data} a 
-       INNER JOIN 
-         {term_hierarchy} b ON a.tid = b.tid 
+         {term_data} td 
+       JOIN 
+         {term_hierarchy} th ON (td.tid = th.tid) 
        WHERE 
-         a.vid = %d AND b.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d"), $vid,$tid);
        break;
      // Hide vernaculars
      case 1:
        $result = db_query(db_rewrite_sql("
-       SELECT 
-         COUNT(*) AS count 
-       FROM 
-         {term_relation_types} a 
-       INNER JOIN 
-         {term_relation_has_type} b ON a.rtid = b.rtid 
-       INNER JOIN 
-         {term_relation} c ON b.trid = c.trid 
-       RIGHT JOIN 
-         {term_data} d ON c.tid1 = d.tid 
-       INNER JOIN 
-         {term_hierarchy} e ON d.tid = e.tid 
-       WHERE 
-         d.vid = %d AND e.parent = %d AND ( a.rtid <> 9 OR a.rtid IS NULL )"), $vid,$tid);
+         SELECT 
+           COUNT(*) as count
+         FROM
+           {term_data} td
+         JOIN 
+           {term_hierarchy} th on (td.tid=th.tid) 
+         LEFT JOIN 
+         	 ({term_relation} tr 
+         	    JOIN {term_relation_has_type} trht ON (tr.trid=trht.trid) 
+         	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
+         	  ) ON td.tid=tr.tid1 
+		     WHERE 
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )"),$vid,$tid);
        break;
      // Hide all except valid
      case 2:
        $result = db_query(db_rewrite_sql("
        SELECT 
-         COUNT(*) AS count 
-       FROM 
-         {term_relation_types} a 
-       INNER JOIN 
-         {term_relation_has_type} b ON a.rtid = b.rtid 
-       INNER JOIN 
-         {term_relation} c ON b.trid = c.trid 
-       RIGHT JOIN 
-         {term_data} d ON c.tid1 = d.tid 
-       INNER JOIN 
-         {term_hierarchy} e ON d.tid = e.tid 
+         COUNT(*) AS count
+       FROM
+         {term_data} td
+       JOIN 
+         {term_hierarchy} th on (td.tid=th.tid) 
+       LEFT JOIN 
+         ( {term_relation} tr 
+			     JOIN {term_relation_has_type} trht on (tr.trid=trht.trid) 
+			     JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
+		     ) ON td.tid=tr.tid1 
        WHERE 
-         d.vid = %d AND e.parent = %d AND a.rtid IS NULL"), $vid,$tid);
+         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL"), $vid,$tid);
        break;
      // Show all names by default
      default:
@@ -236,11 +230,11 @@ function classification_count_children($vid,$tid) {
        SELECT 
          COUNT(*) AS count 
        FROM 
-         {term_data} a 
-       INNER JOIN 
-         {term_hierarchy} b ON a.tid = b.tid 
+         {term_data} td 
+       JOIN 
+         {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         a.vid = %d AND b.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d"), $vid,$tid);
    }
    
    $object = db_fetch_object($result);

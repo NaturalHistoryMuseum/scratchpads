@@ -7,6 +7,7 @@ function classification_manage() {
 
   $module_path = drupal_get_path('module', 'classification') .'/';
   drupal_add_css($module_path .'css/classification.css');
+  drupal_add_js($module_path . 'js/classification_manage.js');
 
   $form = array(
     '#cache' => FALSE,
@@ -17,15 +18,17 @@ function classification_manage() {
     '#type' => 'markup',
     '#value' => '<div id="classification_delete"></div>',
   );
-  
+
+  $message = '<p>' . t('Create alternate classifications from which you may import new names.') . '</p><div class="messages warning">' . t('CAUTION: These additional classifications will not be used to help visitors navigate your site. Rather, create and later import names into these classifications for the sole purpose of managing names in your site\'s primary classification.') . '</div>';
+
   $form['title'] = array(
     '#type' => 'markup',
-    '#value' => '<h3>' . t('Manage Classification(s)') . '</h3>',
+    '#value' => '<h2>' . t('Alternate Classification') . '</h2>' . $message,
   );
   
   $form['add'] = array(
     '#type' => 'textfield',
-    '#title' => t('Add a New Classification'),
+    '#title' => t('Name of Classification'),
     '#size' => 30,
     '#maxlength' => 30,
     '#required' => TRUE,
@@ -34,7 +37,7 @@ function classification_manage() {
   $form['submit'] = array(
      '#type' => 'submit',
      '#attributes' => array('class' => 'classification-buttons add'),
-     '#value' => t('Create!'),
+     '#value' => t('Create'),
   );
 
   $vocabularies = taxonomy_get_vocabularies();
@@ -45,33 +48,18 @@ function classification_manage() {
       $node_type = node_get_types('name', $type);
       $types[] = $node_type ? check_plain($node_type) : check_plain($type);
     }
-    if( check_plain($vocabulary->name) !== 'Taxon Description Chapters' ) {
+    if( check_plain($vocabulary->name) !== 'Taxa' && check_plain($vocabulary->name) !== 'Taxon Description Chapters' && check_plain($vocabulary->name) !== 'Forums') {
        $form[$vocabulary->vid]['#vocabulary'] = (array)$vocabulary;
-       $form[$vocabulary->vid]['name'] = array('#value' => check_plain($vocabulary->name));
+       $form[$vocabulary->vid]['name'] = array('#value' => '<span id="classification-'.$vocabulary->vid.'">' . check_plain($vocabulary->name) . '</span>');
        $form[$vocabulary->vid]['vid'] = array('#type' => 'hidden', '#value' => $vocabulary->vid);
-       if(check_plain($vocabulary->name) !== 'Taxa') {
-          $form[$vocabulary->vid]['delete'] = array(
-             '#value' => t('Delete'),
-             '#type' => 'button',
-             '#attributes' => array('class' => 'classification-buttons delete'),
-             '#ahah' => array(
-                'event' => 'click',
-                'path' => 'admin/classification/delete_classification/' . $vocabulary->vid,
-                'wrapper' => 'classification_delete',
-                'method' => 'replace',
-                'effect' => 'fade',
-                'progress' => array('type' => 'none', 'message' => ''),
-             ),
-          );
-       }
-       else {
-          $form[$vocabulary->vid]['delete'] = array(
-             '#value' => t('Delete'),
-             '#type' => 'button',
-             '#attributes' => array('class' => 'classification-buttons delete'),
-             '#disabled' => TRUE,
-          );
-       }	
+       $form[$vocabulary->vid]['delete'] = array(
+          '#type' => 'markup',
+          '#value' => '<span class="classification_delete"><a href="#" onclick="deleteClassification('.$vocabulary->vid.');return false">'. t('Delete') . '</a></span>',
+       );
+       $form[$vocabulary->vid]['import'] = array(
+          '#type' => 'markup',
+          '#value' => '<span class="classification_import">'. l(t('Import Names'),'classification/import', array('query' => array('d' => $vocabulary->vid))) . '</span>',
+       );
     }
   }
     
@@ -90,15 +78,15 @@ function theme_classification_manage($form) {
 
       $row = array();
       $row[] = drupal_render($vocabulary['name']);
-      $row[] = drupal_render($vocabulary['delete']);
+      $row[] = drupal_render($vocabulary['import']) . ' ' . drupal_render($vocabulary['delete']);
       $rows[] = array('data' => $row);
     }
   }
   if (empty($rows)) {
-    $rows[] = array(array('data' => t('No vocabularies available.'), 'colspan' => '2'));
+    $rows[] = array(array('data' => t('No alternate classifications available.'), 'colspan' => '2'));
   }
 
-  $header = array(t('Name'), t('Operation'));
+  $header = array(t('Classification'), t('Operations'));
 
   return drupal_render($form) . theme('table', $header, $rows, array('id' => 'classification_list'));
 }
@@ -111,14 +99,20 @@ function classification_manage_submit($form,&$form_state) {
 	  'name' => check_plain($form_state['values']['add']),
 	);
 	taxonomy_save_vocabulary($vocabulary);
-  drupal_set_message(t('Your new classification was created.'));
+  drupal_set_message(t('Your new, temporary classification was created.'));
 }
 
 /**
  * Classification delete callback AHAH
  */
-function classification_delete_classification($vid) {
-	$form_state = array('submitted' => FALSE);
+function classification_delete_classification() {
+	$form = array(
+    '#post' => $_POST,
+  );
+
+  $form_state = array('submitted' => FALSE);
+
+  $vid = $_REQUEST['vid'];
 	$tree = taxonomy_get_tree($vid);
   foreach ($tree as $branch) {
   	db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$branch->tid);
@@ -128,7 +122,7 @@ function classification_delete_classification($vid) {
     }
   }
 	taxonomy_del_vocabulary($vid);
-	$refresh = l(t('Refresh list'),'admin/classification/manage');
-  $message = '<div class="messages status">' . t('Name metadata successfully updated. ') . $refresh . '.</div>';
+	$refresh = l(t('Refresh list'),'classification/manage');
+  $message = '<div class="messages status">' . t('Classification successfully deleted. ') . $refresh . '.</div>';
   drupal_json(array('status' => TRUE,'data' => $message));
 }

@@ -7,8 +7,8 @@ function classification_import_form(&$form_state) {
 
   $module_path = drupal_get_path('module', 'classification') .'/';
   drupal_add_css($module_path .'css/classification.css');
-  drupal_add_js($module_path . 'js/classification_editing.js');
-  drupal_add_js('$(function() { EDIT = new classification_edit(); });','inline');
+  drupal_add_js($module_path . 'js/classification_import.js');
+  drupal_add_js('$(function() { IMPORT = new classification_import(); });','inline');
 
   $form = array(
     '#cache' => TRUE,
@@ -19,36 +19,73 @@ function classification_import_form(&$form_state) {
   $form['status_bar'] = array(
     '#type' => 'markup',
     '#value' => ' ',
-    '#prefix' => '<div id="status_bar"><div id="message"></div><div class="help_icon">' . $help . '</div></div>',
-    '#suffix' => '<div class="clear"></div>',
+    '#prefix' => '<div id="message"></div>',
   );
 
+  $message = '<div class=\'messages status\'>' . t('You have three options to import your names and/or classification(s). Please see the ' . l(t('help page'), 'classification/help') . ' for instruction. If you create any ' . l(t('alternate classifications'),'classification/manage') . ' to help manage names in your site\'s classification, this page will be modified to include a drop-down menu to specify the destination for your import.') . '</div>';
+  
   $form['title'] = array(
     '#type' => 'markup',
-    '#value' => '<h3>' . t('Import Classification') . '</h3>',
+    '#value' => '<h2>' . t('Import') . '</h2>' . $message,
    );
 
   $vocabs = taxonomy_get_vocabularies();
   
+  $opt[''] = '--Choose--';
   foreach($vocabs as $voc) {
-  	if($voc->name !== 'Taxon Description Chapters') {
+  	if($voc->name !== 'Taxon Description Chapters' && $voc->name !== 'Forums' && $voc->name !== 'Taxa') {
   		$opt[$voc->vid] = $voc->name;
+  	}
+  	elseif ($voc->name == 'Taxa') {
+  		$opt[$voc->vid] = variable_get('site_name','Taxa') . ' classification';
+  	}
+  	else {
   	}
   }
 
-  $form['vocab'] = array(
+  if(count($opt)>2) {
+    $form['vocab'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Destination for Import'),
+    );
+    if($_GET["d"]) {
+    	$default = $_GET["d"];
+    }
+    else {
+    	$default = '';
+    }
+    $form['vocab']['vid'] = array(
+      '#type' => 'select',
+      '#title' => t('Destination Classification for Import'),
+      '#required' => TRUE,
+      '#options' => $opt,
+      '#default_value' => $default,
+    );
+  }
+  else {
+  	$form['vocab']['vid'] = array(
+  		'#type' => 'hidden',
+  		'#value' => classification_get_vid('Taxa'),
+  		);
+  }
+  
+  $form['batch_import'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Destination for Import'),
-    '#attributes' => array('style' => '  background-color: #ccffcc;border: 1px solid #008800;'),
+    '#title' => t('Batch Import (enter names manually)'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['batch_import']['name_list'] = array(
+    '#type' => 'textarea',
+    '#title' => t('One name per line'),
+    '#cols' => 30,
   );
 
-  $form['vocab']['vid'] = array(
-    '#type' => 'select',
-    '#title' => t('Destination Classification for Import'),
-    '#required' => TRUE,
-    '#options' => $opt,
-    '#default_value' => classification_get_vid('Taxa'),
-    '#description' => t('"Taxa" is your primary classification and is used for your site\'s navigation and organization of content.'),
+  $form['batch_import']['import_list'] = array(
+    '#type' => 'submit',
+    '#attributes' => array('class' => 'classification-buttons import'), 
+    '#value' => t('Import Names'),
   );
   
   $form['file_import'] = array(
@@ -94,10 +131,10 @@ function classification_import_form(&$form_state) {
   $form['eol_import']['search'] = array(
     '#type' => 'button',
     '#attributes' => array('class' => 'classification-buttons search'), 
-    '#value' => t('Search!'),
+    '#value' => t('Search'),
     '#ahah' => array(
          'event' => 'click',
-         'path' => 'admin/classification/import/search',
+         'path' => 'classification/import/search',
          'wrapper' => 'search_results',
          'method' => 'replace',
          'effect' => 'fade',
@@ -111,6 +148,10 @@ function classification_import_form(&$form_state) {
      '#value' => ' ',
      '#prefix' => '<div id="search_results">',
      '#suffix' => '</div>',
+  );
+
+  $form['eol_import']['total_names'] = array(
+     '#type' => 'hidden',
   );
 
   $form['eol_import']['status'] = array(
@@ -148,7 +189,12 @@ function classification_import_search() {
                     $ancestry = $values->ancestry;
                     $id = $values->id;
                     $children = $values->number_of_children;
-                    $options['' . $id . '|' . $children . ''] .= $ancestry . ' (<a href="' . $values->metadata->url . '" target="_blank">' . $values->metadata->title . '</a>)';
+                    $synonyms = $values->number_of_children_synonyms;
+                    $total_names = $children + $synonyms;
+                    if($values->metadata->url) {
+                    	$url = ' (<a href="' . $values->metadata->url . '" target="_blank">' . $values->metadata->title . '</a>)';
+                    }
+                    $options['' . $id . '|' . $total_names . ''] .= $ancestry . $url;
                  }
               }
               else {
@@ -197,13 +243,13 @@ function _classification_search_result_form($options) {
   	case 'error':
        $form['message'] = array(
           '#type' => 'markup',
-          '#value' => '<div class="messages error">' . t('Sorry, you must type a name before you may conduct a search.') . '</div>',
+          '#value' => '<div class="messages error">' . t('Sorry, the search and automatic import service is currently offline. Please try later.') . '</div>',
        );
        break;
     case 'nothing':
        $form['message'] = array(
           '#type' => 'markup',
-          '#value' => '<div class="messages error">' . t('Sorry, there was no search result.') . '</div>',
+          '#value' => '<div class="messages error">' . t('Sorry, there was no search result. Please try again.') . '</div>',
        );
        break;
     default:
@@ -211,11 +257,12 @@ function _classification_search_result_form($options) {
         '#type' => 'radios',
         '#title' => t('Possible hierarchies under which your name was found'),
         '#options' => $options,
+        '#attributes' => array('onclick' => 'javascript:IMPORT.get_total(this.value);'),
       );
       
       $form['ancestry_submit'] = array(
         '#type' => 'markup',
-        '#value' => '<div id="import_classification"><a href="#" onclick="javascript:EDIT.import_classification();return false">' . t('Import Classification!') . '</a></div>',
+        '#value' => '<div id="import_classification_button"><button class="classification-buttons import" onclick="javascript:IMPORT.import_classification();return false">' . t('Import Classification!') . '</button></div>',
       );
   }
   
@@ -227,6 +274,9 @@ function _classification_search_result_form($options) {
  */
 function classification_import_form_submit($form, &$form_state) {
   switch ($form_state['values']['op']) {
+    case t('Import Names'):
+      classification_import_names($form, $form_state);
+    break;
     case t('Import File'):
       classification_import_file($form, $form_state);
     break;
@@ -234,9 +284,7 @@ function classification_import_form_submit($form, &$form_state) {
       // Nothing here because we use AHAH framework
     break;
     case t('Import Classification!'):
-       $url = 'http://services.eol.org/lifedesk/service.php?function=details_tcs&id=' . $form_state['values']['results']['ancestry'];
-       $voc = $form_state['values']['vid'];
-       classification_import_tcs_init($url,$voc);
+    // Nothing here because we use a callback
     break;
     default:
     break;
@@ -253,42 +301,30 @@ function classification_import_classification() {
   
   $tid = $_REQUEST['tid'];
   $vid = $_REQUEST['vid'];
+  $tot_count = $_REQUEST['tot_count'];
   
   $form_state = array('submitted' => FALSE);
   
   if($tid && $vid) {
     $url = 'http://services.eol.org/lifedesk/service.php?function=details_tcs&id=' . $tid;
-    drupal_json(array('status' => 'success', 'message' => t('Import is underway...')));
-    classification_import_tcs_init($url,$vid);
+    classification_import_tcs_init($url,$vid,$tot_count);
   }
-  else {
-  	drupal_json(array('status' => 'fail', 'message' => t('Sorry, import failed')));
-  }
-}
-
-/**
- * Classification import status callback
- */
-function classification_import_status() {
-	  $record = db_fetch_object(db_query(db_rewrite_sql("SELECT count,term FROM {classification_temp} WHERE cid = 1")));
-	  $name = $record->term;
-	  $count = $record->count;
-	  
-	  drupal_json(array('status' => 'success', 'message' => array('count' => $count, 'name' => $name)));
 }
  
 /**
  * Start the loop process by first getting the highest tid in the {term_data} table
 **/
-function classification_import_tcs_init($url,$voc) {
+function classification_import_tcs_init($url,$voc,$tot_count) {
+
+   global $id, $vid, $counter, $user, $temp_table;
 
    if(!$voc) {
      drupal_set_message(t('Sorry, you need to select a classification before you may import names.'),'error');
      return;
    }
 
+   // These commands are repeated trice in the code: in TCS, text file and batch import
    // Now that we have the $vid, this init function could also be used to insert the potential relationships and extended fields
-
    $result_rtid = db_query("SELECT max(rtid) as rtid FROM {term_relation_types}");
    $seq_rtid = db_fetch_object($result_rtid);
    $rtid = $seq_rtid->rtid;
@@ -318,54 +354,80 @@ function classification_import_tcs_init($url,$voc) {
 
    $result_tid = db_query("SELECT max(tid) as tid FROM {term_data}");
    $seq_tid = db_fetch_object($result_tid);
-   global $id;
    $id = $seq_tid->tid;
    $id = $id+1;
-   
-   global $vid;
    $vid = $voc;
+   $counter = 1;
    
-   global $counter;
-   $counter = 0;
-   
-   // Initialize the counter table
-   db_query("DELETE FROM {classification_temp}");
-   db_query("INSERT INTO {classification_temp} (cid,count,term) VALUES (%d,%d,'%s')",1,0,'Starting');
+   /*
+    * Initialize the temporary counter table.
+    * Cannot use a true temporary table because the callback comes from another HTTP request
+    */
+   $temp_table = "classification_temp_" . $user->uid;
+   db_query("DROP TABLE IF EXISTS {" . $temp_table . "}");
+   db_query("CREATE TABLE {" . $temp_table . "} (cid INT, term VARCHAR(255), curr_count INT, tot_count INT) TYPE = HEAP");
+   db_query("INSERT INTO {" . $temp_table . "} (cid,term,curr_count,tot_count) VALUES (%d,'%s',%d,%d)",1,'Starting',1,$tot_count);
+
+   // Go to sleep for 3 seconds to ensure the temp table is there
+   sleep(3);
 
    classification_import_tcs_loop($url,'full',$id);
-   classification_create_enhanced_field($vid,'field_rank','Rank');
-   classification_create_enhanced_field($vid,'field_vernacular_language','Vernacular Language');
-   drupal_set_message(t('Congratulations, all names were successfully imported!'));
+   classification_create_enhanced_field($vid,'field_rank','Rank','options');
+   classification_create_enhanced_field($vid,'field_vernacular_language','Vernacular Language','options');
 
-   // Clear the counter table
-   db_query("DELETE FROM {classification_temp}");
+   // Clear the counter table after a short sleep
+   sleep(5);
+   db_query("DROP TABLE {" . $temp_table . "}");
 }
 
-function classification_create_enhanced_field($vid,$fid,$title){
-   $opt = "";
-   
-   db_query("DELETE FROM {taxonomy_enhancer_fields} WHERE fid = '%s'", $fid);
-   $sql = db_query("SELECT distinct(value) FROM {taxonomy_enhancer_value_text} WHERE fid = '%s'", $fid);
-      while ($obj = db_fetch_object($sql)) {
-	  		$opt = $opt."\n".$obj->value;
-	  		if($fid == 'field_rank') {
-	  		   $opt_arr['' . $obj->value . ''] = $obj->value;
-	  		}
-	  }
+/**
+ * Classification import status callback
+ */
+function classification_import_status() {
+	  // Cannot use global $temp_table here because this function is a callback from another HTTP request
+	  global $user;
 	  
-	  $len = strlen($opt);
-	  if ($fid == 'field_rank') {
-	  	  $vars = variable_get('classification_ranks',0);
-	  	  if ($vars == 0) {
-	  	  	variable_set('classification_ranks',$opt_arr);
-	  	  }
-	  }
+	  $form = array(
+      '#post' => $_POST,
+    );
 
-   // this is silly and needs to use the serialize function
+    $tot_count = $_REQUEST['tot_count'];
+  
+    $table = db_fetch_object(db_query(db_rewrite_sql("SHOW TABLES LIKE 'classification_temp_" . $user->uid ."'")));
+    if($table) {
+	     $record = db_fetch_object(db_query(db_rewrite_sql("SELECT curr_count, term FROM {classification_temp_" . $user->uid . "} WHERE cid = 1")));
+	     $name = check_plain($record->term);
+	     $curr_count = $record->curr_count;
+       drupal_json(array('status' => 'success', 'curr_count' => $curr_count ,'tot_count' => $tot_count, 'name' => $name));
+    }
+    else {
+    	 drupal_json(array('status' => 'fail'));
+    }
+}
+
+//Create the enhanced fields
+function classification_create_enhanced_field($vid,$fid,$title,$field_type){
+
+   $sql = db_query("SELECT distinct(value) FROM {taxonomy_enhancer_value_text} WHERE fid = '%s' AND value != ''", $fid);
+   while ($obj = db_fetch_object($sql)) {
+	   $opt[] = $obj->value;
+	 }
 	  
-   $settings = 'a:5:{s:8:"multiple";i:0;s:4:"rows";N;s:6:"format";N;s:14:"allowed_values";s:'.$len.':"'.$opt.'";s:12:"options_type";s:6:"select";}';
+	 $field = array(
+     'vid' => $vid,
+     'fid' => $fid,
+     'title' => $title,
+     'module' => 'classification',
+     'type' => $field_type,
+     'weight' => 0,
+     'settings' => array(),
+   );
+   $field['settings']['allowed_values'] = $opt;
+   $field['settings']['options_type'] = 'select';
    
-   db_query("INSERT INTO {taxonomy_enhancer_fields} (vid,fid,title,module,type,settings) VALUES (%d,'%s','%s','%s','%s','%s')",$vid,$fid,$title, 'taxonomy_enhancer_text','options',$settings);
+   if(count($opt) > 0) {
+   	  db_query(db_rewrite_sql("UPDATE {taxonomy_enhancer_fields} SET settings = '%s' WHERE vid = %d AND fid = '%s'"),serialize($field['settings']),$vid,$fid);
+   }
 }
 
 /**
@@ -374,7 +436,7 @@ function classification_create_enhanced_field($vid,$fid,$title){
  */
 function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
 
-   global $vid;
+   global $id, $vid, $counter, $temp_table;
 
    $response = drupal_http_request($url);
    if(!$response->code == 200) {
@@ -382,11 +444,7 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
       return;
    }
   
-   global $id;
    $id++;
-   
-   global $counter;
-   $counter++;
 
    if(!$pid) {
       $pid = 0;
@@ -409,7 +467,7 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
       db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
       db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$pid);
       db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value) VALUES (%d,'field_rank','%s')",$tid,$rank);
-      db_query("UPDATE {classification_temp} SET count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
+      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
     case 'syn':
       db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
@@ -417,7 +475,7 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
       db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$pid);
       $res = db_fetch_object(db_query("SELECT trid FROM {term_relation} where tid1 = %d AND tid2 = %d",$tid,$pid));
       db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,1)",$res->trid);
-      db_query("UPDATE {classification_temp} SET count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
+      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
     case 'vern':
       $simple_name = $TaxonConcept->Name;
@@ -428,9 +486,13 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
       db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$pid);
       $res = db_fetch_object(db_query("SELECT trid FROM {term_relation} where tid1 = %d AND tid2 = %d",$tid,$pid));
       db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,9)",$res->trid);
-      db_query("UPDATE {classification_temp} SET count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
+      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
   }
+
+  //Slow down the recursion a hundredth of a second
+  usleep(10000);
+  $counter++;
   
   if($type == 'full') { 
     foreach ($TaxonRelationships->TaxonRelationship as $relationships) {
@@ -455,9 +517,59 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
 }
 
 /**
-* File import
-*/
+ * Batch import function
+ */
+function classification_import_names($form,$form_state) {
 
+   // These commands are repeated trice in the code: in TCS, text file and batch import
+   // Now that we have the $vid, this init function could also be used to insert the potential relationships and extended fields
+   $result_rtid = db_query("SELECT max(rtid) as rtid FROM {term_relation_types}");
+   $seq_rtid = db_fetch_object($result_rtid);
+   $rtid = $seq_rtid->rtid;
+   $rtid = $rtid+1;
+
+   // The order of these cannot be changed
+   $relationTypes = array(
+     0 => "synonym",
+     1 => "synonym (objective = homotypic)",
+     2 => "synonym (subjective = heterotypic)",
+     3 => "lexical variant",
+     4 => "disputed synonym",
+     5 => "spelling alternative",
+     6 => "incorrect spelling",
+     7 => "incorrect authority information",
+     8 => "vernacular name",
+     9 => "usage reference",
+   );
+
+   foreach ($relationTypes as $key => $value) {
+      $sql = db_query("SELECT name FROM {term_relation_types} WHERE name = '%s'", $value);
+      $obj = db_fetch_object($sql);
+      if(!$obj) {
+         db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')",$key+$rtid,$value);
+      }
+   }    
+
+  $vid = $form_state['values']['vid'];
+  $whole = trim($form_state['values']['name_list']);
+  $temp = explode("\n",$whole);
+ 	foreach ($temp as $a) {
+		 $taxon[$a]['name'] = check_plain(trim($a));
+		 $taxon[$a]['parent'] = 0;
+		 $taxon[$a]['vid'] = $vid;
+		 taxonomy_save_term($taxon[$a]);
+  }
+  
+  classification_create_enhanced_field($vid,'field_rank','Rank','options');
+  classification_create_enhanced_field($vid,'field_vernacular_language','Vernacular Language','options');
+  
+  $link = l(t('View and Edit'),'classification/edit');
+  drupal_set_message(t('Success! Your names were imported. ' . $link . ' your classification'));
+}
+
+/**
+* File import function
+*/
 function classification_import_file($form, &$form_state) {
   if ($form_state['values']['vid'] == 0)
   {
@@ -499,6 +611,8 @@ function classification_import_parse($text, $vid, $import_format) {
 // Each line will have an entry in the term_data table, and term_hierarchy table 
 // (roots having a parent of 0)
 
+   // These commands are repeated trice in the code: in TCS, text file and batch import
+   // Now that we have the $vid, this init function could also be used to insert the potential relationships and extended fields
    $result_rtid = db_query("SELECT max(rtid) as rtid FROM {term_relation_types}");
    $seq_rtid = db_fetch_object($result_rtid);
    $rtid = $seq_rtid->rtid;
@@ -525,8 +639,6 @@ function classification_import_parse($text, $vid, $import_format) {
          db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')",$key+$rtid,$value);
       }
    }    
-
-classification_create_enhanced_field($vid,'field_rank','Rank');
 
 // Let's first get the lowest value for "tid", upon which we will build all the
 // other values.
@@ -602,7 +714,7 @@ class2	phylum1
       // Fill out the term_data first, filling out an array name=>parent_name
       // name=>number
       // which can then be converted into numbers.
-      drupal_set_message('Imported using Parent-child format');
+      $import_message=t("Imported using Parent-child format");
       $parents = array();
       $term_id = array();
       foreach($lines as $line){
@@ -624,7 +736,7 @@ class2	phylum1
       	$sequence_p = $sequence;
 	foreach($synonyms as $synonym){
 		if ($synonym_data!="") $synonym_data.=",";
-		$synonym_name = trim($synonym);
+		$synonym_name = trim($synonym, "\"\t\n\r .");
 		$synonym_data .= '('.$sequence_p.',\''.addslashes($synonym_name).'\')';
 	// Here starts the term_relation addition
 		if ($sequence == $sequence_p) $sequence++;
@@ -658,7 +770,7 @@ class2	phylum1
       }
     }
     elseif($import_format==2){
-      drupal_set_message('Imported using tabbed hierarchy format');
+      $import_message=t("Imported using tabbed hierarchy format");
       // File is in the format:
       /*
 kingdom1;descr1
@@ -739,7 +851,7 @@ kingdom1	phylum1	class1	order1	order	descr1	syn1,syn2
 kingdom1	phylum1	class1	order2	order		syn3,syn4
 kingdom1	phylum1	class2	order3	order	descr3	syn5
 */
-      drupal_set_message('Imported using full hierarchy format');
+      $import_message=t("Imported using full hierarchy format");
       $first_line = array_shift($lines);
       $first_line_parts = split("\t",$first_line);
       $number_of_ranks = 0;
@@ -773,7 +885,7 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 			if (!empty($synonyms[0])) foreach($synonyms as $synonym)
 				{
 				if ($synonym_data != "") $synonym_data .=",";
-				$synonym_name = trim($synonym);
+				$synonym_name = trim($synonym, "\"\t\n\r .");
 				if ($synonym_name != "") $synonym_data .= '('.$sequence_p.',\''.addslashes($synonym_name).'\')';
 				// Here starts the term_relation addition
 				if ($sequence == $sequence_p) $sequence++;
@@ -836,7 +948,7 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 	db_query($term_hierarchy);
 	if ($synonym_data !="")
 	{
-		db_query($synonym_data);
+		//db_query($synonym_data);  // We stop pupulating the term_synonym table
 		// Here starts the term_relation addition
 		db_query($synonym_term_data);
 		db_query($synonym_hierarchy);
@@ -858,5 +970,7 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 		$field_rank_data = db_query($field_rank_data);
 	}
     }
+    classification_create_enhanced_field($vid,'field_rank','Rank', 'options');
+    drupal_set_message($import_message);
     return true;
   }

@@ -1,9 +1,9 @@
 	$(function() {
 			TREE = new tree_component();
-			host = window.location.hostname;
-			vid = Drupal.settings['classification_vid']['vid'];
+			var host = window.location.hostname;
+			var vid = Drupal.settings['classification_vid']['vid'];
 			TREE.init($("#classification_tree_viewer"), {
-				data		: { type : "json", async : true, url : "admin/classification/js_tree_viewer/" + vid + "/", json : false },
+				data		: { type : "json", async : true, url : "classification/js_tree_viewer/" + vid + "/", json : false },
 				dflt		: false,
 				root    : 0,
 				path		: "/sites/" + host + "/modules/classification/jsTree/",
@@ -47,8 +47,15 @@
                 			error           : function(TEXT, TREE_OBJ) { },
                 			// onclk callback added by David Shorthouse to browse elsewhere
                 			onclk           : function(NODE, TREE_OBJ) {
-                				   alert(NODE.id);
-
+                				   var uri = parseUri(window.location.href);
+                				   var taxon = NODE.id.replace("n","");
+                				   
+                				   if(uri.directoryPath.length > 0) {
+                				   	  window.location.href = "http://" + uri.domain + uri.directoryPath.replace("front_page/","") + "pages/" + taxon;
+                				   }
+                				   else{
+                				      window.location.href = "http://" + uri.domain + "pages/" + taxon;
+                				   }
                 		  },
                 			ondblclk        : function(NODE, TREE_OBJ) {
                 			},
@@ -57,3 +64,21 @@
 				}
 			});
 	});
+	
+function parseUri(sourceUri){
+    var uriPartNames = ["source","protocol","authority","domain","port","path","directoryPath","fileName","query","anchor"];
+    var uriParts = new RegExp("^(?:([^:/?#.]+):)?(?://)?(([^:/?#]*)(?::(\\d*))?)?((/(?:[^?#](?![^?#/]*\\.[^?#/.]+(?:[\\?#]|$)))*/?)?([^?#/]*))?(?:\\?([^#]*))?(?:#(.*))?").exec(sourceUri);
+    var uri = {};
+    
+    for(var i = 0; i < 10; i++){
+        uri[uriPartNames[i]] = (uriParts[i] ? uriParts[i] : "");
+    }
+    
+    // Always end directoryPath with a trailing backslash if a path was present in the source URI
+    // Note that a trailing backslash is NOT automatically inserted within or appended to the "path" key
+    if(uri.directoryPath.length > 0){
+        uri.directoryPath = uri.directoryPath.replace(/\/?$/, "/");
+    }
+    
+    return uri;
+}
