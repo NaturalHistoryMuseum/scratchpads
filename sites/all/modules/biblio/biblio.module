@@ -2467,6 +2467,7 @@ function _biblio_export($format="tagged", $nid = null, $version = 7) {
 }
 
 function _bibtex_export($results) {
+  header('Content-type: application/x-bibtex');
     if (!is_array($results))
     {
       $result_array[] = $results;
