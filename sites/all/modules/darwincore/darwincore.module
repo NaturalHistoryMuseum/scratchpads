@@ -993,7 +993,7 @@ function darwincore_submit($form, &$form_state){
 /**
  * Implementation of hook_form_alter()
  */
-function darwincore_form_alter($form_id, &$form){
+function darwincore_form_alter($form, $form_state, &$form_id){
   // Change the locations form element as created by this form and the location module.
   if($form_id == 'darwincore_node_form' || $form_id == 'darwincorelocation_node_form'){
     foreach (_darwincore_get_vids() as $vid){
@@ -1022,29 +1022,18 @@ function darwincore_form_alter($form_id, &$form){
       $form['locations']['#weight'] = -100;
     }
   }
-  // hide critical options from forum vocabulary
-  // (Taken straight from the forum module - with an edit or two, oh you've got to do and edit or two)
-  elseif ($form_id == 'taxonomy_form_vocabulary') {
-    if (in_array($form['vid']['#value'], _darwincore_get_vids())) {
-      $form['help_forum_vocab'] = array(
-        '#value' => t('This is a Specimen vocabulary, some options have been removed.'),
-        '#weight' => -1,
-      );
-      $form['name']['#attributes'] = array('disabled' =>'');
-      $form['description']['#attributes'] = array('disabled' =>'');
-      $darwincore_form = array('#type' => 'checkbox', '#value' => 1, '#title' => t('Darwin Core'), '#attributes' => array('disabled' => '' ), '#description' => t('This vocabulary is fixed to one of the Darwin Core content types'));
-      $form['hierarchy'] = array('#type' => 'value', '#value' => 1);
-      if(in_array('darwincore',$form['nodes']['#default_value'])){
-        $form['nodes']['darwincore'] = $darwincore_form;
-      } else {
-        $form['nodes']['darwincorelocation'] = $darwincore_form;
-      }
-      unset($form['nodes']['#options']['darwincore']);
-      unset($form['nodes']['#options']['darwincorelocation']);
-      unset($form['relations']);
-      unset($form['tags']);
-      unset($form['multiple']);
+  /* First, we ensure the vocabulary called "Taxa" is not visible in the Drupal taxonomy listing because we don't want it to be deleted or modified */
+  elseif($form_id == 'taxonomy_overview_vocabularies') {
+    $vids = _darwincore_get_vids();
+    foreach($vids as $vid){
+      unset($form[$vid]);
     }
+  }
+  // Don't allow editing of darwincore vocabularies
+  elseif ($form_id == 'taxonomy_form_vocabulary' && ($form['module']['#value'] == 'darwincore' || $form['module']['#value'] == 'darwincorelocation')){
+    $vocabulary = check_plain($form['identification']['name']['#default_value']);
+    drupal_set_message(t('The %vocabulary vocabulary can not be edited', array('%vocabulary'=>$vocabulary)), 'error');
+    drupal_goto('admin/content/taxonomy');
   }
 }
 

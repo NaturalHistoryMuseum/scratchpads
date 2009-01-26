@@ -48,7 +48,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       $form['advanced']['parent'] = _taxonomy_term_select(t('Parents'), 'parent', $parent, $form['#vocabulary']['vid'], t('Parent terms') .'.', 1, '<'. t('root') .'>', $exclude);
       $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($edit['tid'])), $form['#vocabulary']['vid'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
     }
-  } else if ($form['#id'] == 'node-form'){
+  } elseif ($form['#id'] == 'node-form'){
     if(isset($form['taxonomy'])){
       // Check for autotag module
       $ignore_vids = array();
@@ -85,6 +85,28 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       }
     }
   }
+  elseif($form_id == 'taxonomy_form_vocabulary' && $form['module']['#value']=='taxonomy'){
+    // Here we can add the extra field
+    $disable_vids = variable_get('batax_disable_vids', array());
+    $form['settings']['disablebatax'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Disable Batax'),
+      '#default_value' => isset($disable_vids[$form['vid']['#value']]) ? $disable_vids[$form['vid']['#value']] : 0,  
+      '#description' => t('If checked, this Vocabulary will not use Batax for selecting terms on a node form')
+    );
+    // Finally we need a submit function
+    $form['#submit'][] = 'batax_vocabulary_form_submit';
+  }
+}
+
+/**
+ * Simply save what was entered in the checkbox
+ */
+function batax_vocabulary_form_submit($form, $form_values){
+  // Merge the array with what is already there.
+  $disable_vids = variable_get('batax_disable_vids', array());
+  $disable_vids[$form_values['vid']] = $form_values['values']['disablebatax'];
+  variable_set('batax_disable_vids', $disable_vids);
 }
 
 function batax_form_term_submit($form, &$form_state){
@@ -187,6 +209,10 @@ function batax_autocomplete($vid, $string = '') {
  * Check to see whether a vocabulary should use batax
  */
 function batax_use_batax($vid){
+  $vids = variable_get('batax_disable_vids', array());
+  if(isset($vids[$vid]) && $vids[$vid]){
+    return false;
+  }
   $num_terms = array_pop(db_fetch_array(db_query("SELECT COUNT(tid) FROM {term_data} WHERE vid = %d", $vid)));
   return $num_terms > variable_get('batax_max_options', 100);
 }
