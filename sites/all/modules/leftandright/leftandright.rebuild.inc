@@ -94,7 +94,6 @@ echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE tid = '.$tid.';DE
 echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
   }
   $tmp_php_file_string .= '
-echo "UPDATE '.db_prefix_tables('{leftandright}').' l SET lowername = (SELECT LOWER(name) FROM '.db_prefix_tables('{term_data}').' t WHERE l.tid = t.tid);";
 echo "UNLOCK TABLES;";';
   // Write this out to a temporary file which we'll EXEC!
   $filepath = file_create_filename('leftandright.php', file_directory_temp());

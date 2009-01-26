@@ -10,19 +10,21 @@ function leftandright_install(){
   // Create tables.
   drupal_install_schema('leftandright');
   
-  // Lets now initiate a tree rebuild for all the vocabularies on the site
-  /* DISABLED TEMPORARILY
-  $vocabularies = taxonomy_get_vocabularies();
-  foreach($vocabularies as $vocabulary){
-    // Rather annoyingly, at this point the module file isn't known to Drupal, so 
-    // we have to include it
-    include_once('leftandright.module');
-    leftandright_rebuild_tree($vocabulary->vid);
-  }
-  drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));*/
+  // Add an index on vid to the term_data table
+  db_add_index($ret = array(), 'term_data', 'vid', array('vid'));
   
   // Set the default number of terms required before leftandright is used
   variable_set('leftandright_minimum_terms', 1000);
+  
+  // Lets now initiate a tree rebuild for all the vocabularies on the site.
+  module_load_include("module", "leftandright");
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocabulary){
+    if(leftandright_use_leftandright($vocabulary->vid)){
+      leftandright_rebuild_tree($vocabulary->vid);
+    }
+  }
+  drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));
 }
 
 function leftandright_schema(){  
@@ -32,8 +34,7 @@ function leftandright_schema(){
       'rgt' => array('type' => 'float', 'size' => 'big', 'not null' => 'true'),
       'tid' => array('type' => 'int', 'not null' => true),
       'vid' => array('type' => 'int', 'not null' => true),
-      'depth' => array('type' => 'int', 'size' => 'small'),
-      'lowername' => array('type' => 'varchar', 'length' => '255')),
+      'depth' => array('type' => 'int', 'size' => 'small')),
     'primary key' => array('tid'),
     'unique keys' => array(
       'lft_vid' => array('vid','lft'),
@@ -41,8 +42,7 @@ function leftandright_schema(){
     'indexes' => array(
       'left_index' => array('lft'),
       'right_index' => array('rgt'),
-      'vocab_index' => array('vid'),
-      'lowername' => array('lowername'))));
+      'vocab_index' => array('vid'))));
 }
 
 function leftandright_uninstall(){
