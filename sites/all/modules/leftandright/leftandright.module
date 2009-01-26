@@ -19,13 +19,6 @@
  ******************************************************************************/
 // hook_menu
 function leftandright_menu(){
-  $items['admin/settings/leftandright'] = array(
-    'title' => '',
-    'description' => '',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('leftandright_admin_settings'),
-    'access arguments' => array('administer site configuration')
-  );
   $items['admin/content/taxonomy/leftandright'] = array(
     'title' => 'Rebuild Tree',
     'page callback' => 'leftandright_overview_vocabularies',
@@ -175,25 +168,19 @@ function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=10
     $depth_sql = 'AND depth<%d';
     $params[] = $max_depth;
   }
-  $results = db_query_range("SELECT tid, depth FROM {leftandright} WHERE vid = %d $lftandrgt_sql $depth_sql ORDER BY lft", $params, $offset, $count);
+  $params[] = $offset;
+  $params[] = $count;
+  db_query_temporary("SELECT lft, tid, depth FROM {leftandright} WHERE vid = %d $lftandrgt_sql $depth_sql ORDER BY lft LIMIT %d,%d", $params, 'leftandrighttemp');
   $tree = array();
   // FIXME - We're not returning the parents for a term - is this an issue?
-  $tids = array();
-  $depths = array();
-  $tids_place_holder = array();
+  // leftandrighttemp doesn't need {}
+  $results = db_query("SELECT t.*, depth FROM {term_data} t, leftandrighttemp l WHERE t.tid = l.tid ORDER BY lft", $tids);
   while($row = db_fetch_object($results)){
-    $tids[] = $row->tid;
-    $tids_place_holder[] = 'tid = %d';
-    $depths[$row->tid] = $row->depth;
+    $tree[] = $row;
   }
-  if(count($tids)){
-    $tids[] = $vid;
-    $results = db_query("SELECT * FROM {term_data} WHERE ".implode(" OR ", $tids_place_holder)." AND vid = %d", $tids);
-    while($row = db_fetch_object($results)){
-      $row->depth = $depths[$row->tid];
-      $tree[] = $row;
-    }
-  }
+  // Hmmm, we need to drop the temporary table - FFS, I thought the whole idea
+  // of a temporary table was I could just whack it in there! Oh well.
+  db_query("DROP TEMPORARY TABLE leftandrighttemp");
   return $tree;
 }
 
