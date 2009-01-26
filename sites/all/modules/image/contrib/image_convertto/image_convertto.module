@@ -46,6 +46,13 @@ function image_convertto_imagemagick_alter($op, $filepath, &$args) {
   $options = image_convertto_options();
   if($options['fileformat']){
     $args['convertto'] = $options['fileformat'];
+    
+    // Check if this image has layers, and if so, use the top one
+    $fext = substr($filepath, strrpos($filepath,".")+1);
+    //print_r($fext);
+    if(strtolower($fext) == "tiff" || strtolower($fext) == "tif"){
+      $args['delete'] = '-delete 1';
+    }    
   }
 }
 
