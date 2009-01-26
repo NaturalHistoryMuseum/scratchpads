@@ -142,6 +142,7 @@ function _image_imagemagick_convert($source, $dest, $args) {
 }
 
 function _image_imagemagick_convert_exec($command_args, &$output, &$errors) {
+  watchdog('imagemagick',"Command: " . variable_get('image_imagemagick_convert', '/usr/bin/convert')." ".$command_args);
   $convert_path = variable_get('image_imagemagick_convert', '/usr/bin/convert');
   if (!_image_imagemagick_check_path($convert_path)) {
     drupal_set_message(t("ImageMagick could not be found. The admin will need to set the path on the <a href='@image-toolkit-settings'>image toolkit page</a>.", array('@image-toolkit-settings' => url('admin/settings/image-toolkit'))), 'error');
