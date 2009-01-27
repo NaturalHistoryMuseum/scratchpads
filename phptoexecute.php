@@ -469,13 +469,17 @@ node_access_rebuild();*/
 /*variable_set('biblio_openurlimage',"/sites/all/images/openurl.jpg");*/
 
 // Set the boost thingy to work
-variable_set('boost', 'CACHE_ENABLED');
+/*variable_set('boost', 'CACHE_ENABLED');
 variable_set('boost_banner', '');
 variable_set('boost_file_path', 'cache');
 variable_set('preprocess_css', '1'); // This may fuck up the Phasmid site AAAAAAAAAAAAAAAAAAAAAAAARRGH
 variable_set('cache_lifetime', '3600');
 
 // Add an index to the location table
-db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");
+db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");*/
+
+// Delete robotstxt variable
+db_query("DELETE FROM {variable} WHERE name = 'robotstxt';");
+
 
 echo "Finished";
