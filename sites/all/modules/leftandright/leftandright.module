@@ -68,7 +68,6 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
         break;
       case 'update':
-        db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
       case 'insert':
          module_load_include("functions.inc", "leftandright");
          leftandright_hook_taxonomy_helper_insert($array);
@@ -88,6 +87,12 @@ function leftandright_form_alter($form, $form_state, $form_id){
   // Rebuild the numbers if we're looking at the main taxonomy page
   if($form_id == 'taxonomy_overview_vocabularies'){
     leftandright_update_totals_variable();
+  }
+  
+  // Remove the weight field if we're on a term edit page and this vocabulary
+  // uses leftandright
+  if($form_id == 'taxonomy_form_term'){
+    unset($form['advanced']['weight']);
   }
 }
 /*******************************************************************************
