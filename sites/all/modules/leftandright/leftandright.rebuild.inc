@@ -69,7 +69,7 @@ function rebuild_tree($tid, $left, $depth) {
   while ($row = mysql_fetch_array($results)){
     $right = rebuild_tree($row[0], $right, $depth+1);
   }  
-  echo "($tid , '.$vid.' , $left , $right, $depth)";
+  echo "($tid,'.$vid.',$left,$right,$depth)";
   if($left != 1){
     echo ",";
   }

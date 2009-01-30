@@ -164,7 +164,7 @@ function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=10
     if(isset($max_depth) && $max_depth != NULL){
       $max_depth += $row['depth']+1;
     }
-    $lftandrgt_sql = 'AND lft>%d AND rgt <%d';
+    $lftandrgt_sql = 'AND lft>%f AND rgt <%f';
     $params[] = $left;
     $params[] = $right; 
   }
@@ -200,7 +200,7 @@ function leftandright_get_tree_count($vid, $parent = 0, $max_depth = NULL){
     $arguments[] = $row['lft'];
     $arguments[] = $row['rgt'];
     //$max_depth += $row['depth']; // Is this right???
-    $lftandrgt_sql = 'AND lft>=%d AND rgt <=%d';
+    $lftandrgt_sql = 'AND lft>=%f AND rgt <=%f';
   }
   return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d $lftandrgt_sql", $arguments)));
 }
