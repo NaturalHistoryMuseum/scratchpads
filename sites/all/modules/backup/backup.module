@@ -54,7 +54,7 @@ function backup_form() {
   $previous_backups = previous_backup_files();
   $previous_backups_text = '';
   foreach($previous_backups as $file){
-    $previous_backups_text .= '<li>'.l($file,file_directory_path()."/$file").'</li>';
+    $previous_backups_text .= '<li>'.l($file,'/'.file_directory_path()."/$file").'</li>';
   }
   $form['previous_backups']['previous_backups_text'] = array(
     '#value' => '<ul>'.$previous_backups_text.'</ul>'
