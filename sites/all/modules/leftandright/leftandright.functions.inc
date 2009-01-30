@@ -77,25 +77,8 @@ function leftandright_hook_taxonomy_helper_insert($array){
           drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.', array('!url' => url("leftandright/update/".$array['vid'], array('absolute' => TRUE)))),'error');
         }
         drupal_set_message("Insert factor: $insert_factor - Current left: $current_left - Current right: $current_right - Left: $lft - Right: $rgt");
-        db_query("UPDATE {leftandright} SET lft = (lft - %f) * %f , rgt = (rgt - %f) * %f , depth = depth + %d WHERE lft > %f and rgt < %f", $lft, $insert_factor, $lft, $insert_factor, $depth_change, $current_left, $current_right);
+        db_query("UPDATE {leftandright} SET lft = ((lft - %f) * %f) + %f , rgt = ((rgt - %f) * %f) + %f , depth = depth + %d WHERE lft > %f and rgt < %f", $current_left, $insert_factor, $lft, $current_left, $insert_factor, $lft, $depth_change, $current_left, $current_right);
       }
     }
   }
-  // Finally we need to move the children, we can do this by calling this very
-  // function - YEAH!
-  // Lets get the direct descendants of this term
-  /*
-  $children = taxonomy_get_children($array['tid']);
-  foreach($children as $child){
-    // Need to call this function with $array set with tid,vid and parent values
-    // parent should be easy enough, as it's the current term (we DO NOT need to 
-    // worry about multiple parents here - WOOT!)
-    $child_array = array(
-      'tid' => $child->tid,
-      'vid' => $child->vid,
-      'parent' => $array['tid']    
-    );
-    leftandright_hook_taxonomy_helper_insert($child_array);
-  }
-  */
 }
