@@ -52,11 +52,13 @@ function scratchpadify_link_alter(&$links, $node){
 function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
   // This returns one BIG link which has lots of lickle links in it
   $terms = array();
-  foreach ($node->taxonomy as $term) {
-    if(!isset($terms[$term->vid])){
-      $terms[$term->vid] = array();
+  if(isset($node->taxonomy) && is_array($node->taxonomy)){
+    foreach ($node->taxonomy as $term) {
+      if(!isset($terms[$term->vid])){
+        $terms[$term->vid] = array();
+      }
+      $terms[$term->vid][] = $term;
     }
-    $terms[$term->vid][] = $term;
   }
     
   $return_html = '<div class="scratchpadify-terms">';
