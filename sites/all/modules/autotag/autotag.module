@@ -391,7 +391,6 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     $form['autotag']['submit']['#prefix'] = '<div class="description">'.t('Once finished reviewing the taxonomy terms, simply press save.  You may also review what you have entered below, if you feel a tag hasn\'t been found').'</div>';
     $form['autotag']['submit']['#weight'] = 1000;
   }
-  $form_state['storage'] = array();
 }
 /***********************************************************************************
  * AUTOCOMPLETE FUNCTION
