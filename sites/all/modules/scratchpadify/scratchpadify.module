@@ -338,16 +338,17 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
     $terms[$term->vid][] = $term;
   }
     
-  $return_html = '<ul class="scratchpadify-terms">';
+  $return_html = '<div class="scratchpadify-terms">';
   foreach($terms as $vid => $terms){
     $vocabulary = taxonomy_get_vocabulary($vid);
-    $return_html .= '<li>'.check_plain($vocabulary->name).'<ul>';
+    $return_html .= '<p><b>'.check_plain($vocabulary->name).':</b> <span>';
+    $terms_array = array();
     foreach($terms as $term){
-      $return_html .= '<li>'.l($term->name,'taxonomy/term/'.$term->tid).'</li>';
+      $terms_array[] = l($term->name,'taxonomy/term/'.$term->tid);
     }
-    $return_html .= '</ul></li>';
+    $return_html .= implode("; ",$terms_array).'</span></p>';
   }
-  $return_html .= '</ul>';
+  $return_html .= '</div>';
   $links = array();
   $links[] = array('title' => $return_html , 'html' => true);
   return $links;
