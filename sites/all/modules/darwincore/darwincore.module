@@ -379,7 +379,7 @@ function darwincore_form(&$node) {
   );
   $location_form = darwincorelocation_form($node, $param);
   $location_form['type']['#value'] = 'darwincorelocation';
-  location_form_alter(&$form, &$form_state, $form_id);
+  location_form_alter($form, $form_state, $form_id);
   $location_form['locationtitle'] = $location_form['title'];
   $location_form['locationtitle']['#required'] = 0;
   if($location_form['locationtitle']['#value']==$form['title']['#value']){
