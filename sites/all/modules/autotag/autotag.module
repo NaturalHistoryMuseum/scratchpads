@@ -529,7 +529,15 @@ function _autotag_search_field($field, $vids){
     // Only search if there is text
     if(trim($field)==''){return array();}
     // Field is raw text search it for stuff
-    $words = preg_split("/[^A-Za-z0-9]+/",strtolower($field));
+    $words_including_small = preg_split("/[^A-Za-z0-9]+/",strtolower($field));
+    // lets remove the shitty small words.
+    $words = array();
+    foreach($words_including_small as $word){
+      if(strlen($word)>3){
+        $words[] = $word;
+      }
+    }
+    
     $results;
     $words_placeholder = array();
     $new_words = array();
