@@ -52,7 +52,7 @@ function nodes_edit_page($type = null, $count = 25){
   // The type is essential, so make sure it is set
   if(is_null($type)){
     // Type is null, default to?
-    drupal_set_message(t('The content type to edit is not set'),'error');
+    drupal_set_message(t('The content type to edit is not set.  Please select it from the list below.'));
     // Return a list of links to this page.
     $types = node_get_types();
     $types_list = array();
@@ -63,9 +63,14 @@ function nodes_edit_page($type = null, $count = 25){
   }
   $form = nodes_get_form_for_type($type);
   
+  // FIXME - We could end up subtracting nodes from the list of nodes to edit
+  // as users won't be able to edit all (or possibly any) of the recent 25 nodes
+  // TEMP FIX - Only allow nodes edit to work with OWN nodes
+  
   // We'll start with 25 of the most recently created nodes
-  $order = 'created';
-  $results = pager_query("SELECT nid FROM {node} n WHERE type='%s' ORDER BY %s DESC",$count,0,NULL,$type, $order);
+  $order = 'nid';
+  global $user;
+  $results = pager_query("SELECT nid FROM {node} n WHERE type='%s' AND uid = %d ORDER BY %s DESC",$count,0,NULL,$type, $user->uid, $order);
   $nodes = array();
   while(($row = db_fetch_array($results))){
     // Check that we can actually edit this node
@@ -234,7 +239,7 @@ function _nodes_get_form_no_render($form_id, $form_state) {
   return $form;
 }
 function _nodes_get_fieldtypes(){
-  return array('textfield','textarea','select','checkbox','checkboxes','radio','radios');
+  return array('textfield','textarea','select','checkbox','checkboxes','radio','radios','date','password','file');
 }
 function _nodes_handle_field($field, $form){
   $fields = _nodes_get_fieldtypes();
@@ -289,13 +294,36 @@ function _nodes_search_form($form, $field, $field_types, $parent = false){
 /***********************************************************************************
  * THEME FUNCTIONS
  ***********************************************************************************/
-function theme_nodes_table($nodes, $form){
+function nodes_get_field_from_form($form, $field_types){
+  $fields = array();
+  if(is_array($form)){
+    foreach($form as $key => $form_part){
+      if(is_array($form_part)){
+        if(isset($form_part['#type']) && in_array($form_part['#type'], $field_types)){
+          $fields[$key] = $form_part;
+        } else {
+          $fields = array_merge($fields, nodes_get_field_from_form($form_part, $field_types));
+        }
+      }
+    }
+  }
+  return $fields;
+}
+function theme_nodes_table($nodes, $form){  
   // Add the javascript & css necesary to the page
   drupal_add_js(drupal_get_path('module','nodes').'/nodes.js');
   drupal_add_css(drupal_get_path('module','nodes').'/nodes.css');
   drupal_add_js('misc/collapse.js'); // Needed incase the page contains a fieldset in a popup
   
   $field_types = _nodes_get_fieldtypes();
+  // Lets process the form, and get each of the fields that we can handle
+  // as an array (basically removing each of the fieldsets and other shite.
+  $possible_fields = nodes_get_field_from_form($form, $field_types);
+  print_r($possible_fields);
+  print_r($nodes[0]);
+  exit;
+  
+  /*
   $return_string = '<table class="nodes"><tr class="header"><th>'.t('Select').'</th><th>'.t('Node').'</th>';
   // Put the headers on first
   // We need to analyze the form sent to see what fields we can handle
