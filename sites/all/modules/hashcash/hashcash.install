@@ -12,15 +12,12 @@ function hashcash_install() {
 
 function hashcash_schema(){
   $schema['hashcash'] = array(
-    'description' => t('Table of used hashcashs'),
     'fields' => array(
       'hashcash' => array(
-        'description' => t('The hashcash.'),
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE),
       'hcdate' => array(
-        'description' => t('Date the hashcash was used'),
         'type' => 'varchar',
         'length' => 6,
         'not null' => TRUE)
