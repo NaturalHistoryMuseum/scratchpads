@@ -294,15 +294,20 @@ function _nodes_search_form($form, $field, $field_types, $parent = false){
 /***********************************************************************************
  * THEME FUNCTIONS
  ***********************************************************************************/
-function nodes_get_field_from_form($form, $field_types){
+function nodes_get_field_from_form($form, $field_types, $ignore_fields, $form_path = ''){
   $fields = array();
   if(is_array($form)){
     foreach($form as $key => $form_part){
       if(is_array($form_part)){
-        if(isset($form_part['#type']) && in_array($form_part['#type'], $field_types)){
+        if( isset($form_part['#type']) && 
+            in_array($form_part['#type'], $field_types) && 
+            ( !isset($form_part['#disabled']) || !$form_part['#disabled']) && 
+            !in_array($key, $ignore_fields) &&
+            ( !isset($form_part['#parents']) || (count($form_part['#parents'])==1 && $form_part['#parents'][0] == $key))){
+          $form_part['nodes_path'] = $form_path;
           $fields[$key] = $form_part;
         } else {
-          $fields = array_merge($fields, nodes_get_field_from_form($form_part, $field_types));
+          $fields = array_merge($fields, nodes_get_field_from_form($form_part, $field_types, $ignore_fields, $form_path.'/'.$key));
         }
       }
     }
@@ -318,61 +323,29 @@ function theme_nodes_table($nodes, $form){
   $field_types = _nodes_get_fieldtypes();
   // Lets process the form, and get each of the fields that we can handle
   // as an array (basically removing each of the fieldsets and other shite.
-  $possible_fields = nodes_get_field_from_form($form, $field_types);
-  print_r($possible_fields);
-  print_r($nodes[0]);
-  exit;
-  
-  /*
-  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Select').'</th><th>'.t('Node').'</th>';
-  // Put the headers on first
-  // We need to analyze the form sent to see what fields we can handle
-  $fields = array();
-  $possible_fields = array();
-  // We'll use one of the nodes to ascertain all the possible fields
-  foreach($nodes[0] as $field=>$node_value){
-    if(is_array($node_value)){
-      $possible_fields[$field] = array($field);
-    } else {      
-      $possible_fields[$field] = $field;
-    }
-  }
-  // Lets find where each of the possible_fields is in the array, and find
-  // out if the input that is associated with it is one that we'll handle
+  $possible_fields = nodes_get_field_from_form($form, $field_types, array('teaser_include', 'revision', 'date'));
+  //print_r($possible_fields);
+  //print_r($nodes[0]);
+  //exit;
   /* ADD THE IGNORE FIELDS BIT -- FIXME -- */
+  $return_string = '<table class="nodes"><tr class="header"><th>'.t('Select').'</th><th>'.t('Node').'</th>';
   foreach($possible_fields as $possible_field){
-    if(is_array($possible_field)){
-      $possible_field = $possible_field[0]; // Guess work here FIXME
-    }
-    $field_form = _nodes_handle_field($possible_field, $form);
-    if($field_form){
-      // Is this an array
-      if(isset($field_form['nodes_array'])){
-        unset($field_form['nodes_array']);
-        $title_array = array();
-        foreach($field_form as $field_form_part){
-          $title_array[] = (isset($field_form_part['#title'])) ? $field_form_part['#title'] : $possible_field[0];
-        }
-        $title = implode(" / ",$title_array);
-      } else {
-        $title = (isset($field_form['#title'])) ? $field_form['#title'] : $possible_field;
-      }
-      $title = check_plain($title);
-      if($title){
-        $return_string .= '<th>'.$title.'</th>';
-        if(is_array($possible_field)){
-          $fields[] = $possible_field[0];
-        } else {
-          $fields[] = $possible_field;
-        }
-      }
-    }
+    $return_string .= '<th>'.$possible_field['#title'].'</th>';
   }
   $return_string .= '</tr><tr class="all"><td class="nohover" onclick="nodesselectallrows();"><span id="selected">'.t('Select all').'</span><span class="deselected" id="deselected">'.t('Deselect all').'</span></td><td class="nohover"></td>';
-  foreach($fields as $field){
-    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$field).'\');"><span id="all-'.$field.'">'.t('Edit selected').'</span></td>';
+  foreach($possible_fields as $field){
+    $return_string .= '<td ondblclick="nodes(\'all-'.$field.'\', \''.url('nodes-edit/'.$nodes[0]->type.'/'.$key).'\');"><span id="all-'.$field.'">'.t('Edit selected').'</span></td>';
   }
   $return_string .= '</tr>';
+  
+  // DEBUG
+  /*  $return_string .= '<tr><td></td><td></td>';
+  foreach($possible_fields as $field){
+    $return_string .= '<td>'.print_r($field,true).'</td>';
+  }
+  $return_string .= '</tr>'; */
+  
+  // Foreach node, work through the fields
   foreach($nodes as $node){
     if($class == 'odd'){
       $class = 'even';
@@ -390,14 +363,20 @@ function theme_nodes_table($nodes, $form){
       }
     }
     $return_string .= '<td class="nohover">'.l($link_text, 'node/'.$node->nid, array('attributes' => array('target'=>'_blank'), 'html' => TRUE)).'</td>';
-    foreach($fields as $field){
+    foreach($possible_fields as $key => $field){
       $id = $field."_".$node->nid;
-      if(is_array($node->$field)){
+      if(is_array($node->$key)){
         $node->$field = t('Multiple values');
       }
-      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$field).'\');">'.strip_tags(substr($node->$field,0,100)).'</td>';
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$key).'\');">'.strip_tags(substr($node->$key,0,100));
+      $return_string .= $key;
+      if(!isset($node->$key)){
+        $return_string .= print_r($node, true);
+      }
+      $return_string .= '</td>';
     }
     $return_string .= '</tr>';
+    //$return_string .= '<tr><td colspan="13">'.print_r($form,true).'</td></tr>';
   }
   return $return_string .'</table>';
 }
