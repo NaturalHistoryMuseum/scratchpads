@@ -290,7 +290,7 @@ function scratchpadify_menu($may_cache){
  */
 function scratchpadify_comment_feed() {
   global $base_url, $locale;
-  $comments = db_query_range('SELECT cid,nid,subject,comment FROM {comments} ORDER BY timestamp DESC', 0, variable_get('feed_default_items', 20));
+  $comments = db_query_range(db_rewrite_sql('SELECT cid,nid,subject,comment FROM {comments} ORDER BY timestamp DESC','c','cid'), 0, variable_get('feed_default_items', 20));
 
   $namespaces = array('xmlns:dc="http://purl.org/dc/elements/1.1/"');
 
@@ -299,14 +299,13 @@ function scratchpadify_comment_feed() {
     $items .= format_rss_item($comment->subject, $link, $comment->comment);
   }
 
-  $channel_defaults = array(
+  $channel = array(
     'version'     => '2.0',
-    'title'       => variable_get('site_name', 'Drupal') . (variable_get('site_slogan', '') ? ' - '. variable_get('site_slogan', '') : ''),
+    'title'       => variable_get('site_name', 'Drupal') . ((variable_get('site_slogan', '') ? ' - '. variable_get('site_slogan', '') : '')) . ' ' . t('Recent comments'),
     'link'        => $base_url,
     'description' => variable_get('site_mission', ''),
     'language'    => $locale
   );
-  $channel = array_merge($channel_defaults, $channel);
 
   $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
   $output .= "<rss version=\"". $channel["version"] ."\" xml:base=\"". $base_url ."\" ". implode(' ', $namespaces) .">\n";
