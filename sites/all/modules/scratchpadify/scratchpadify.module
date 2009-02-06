@@ -290,7 +290,7 @@ function scratchpadify_menu($may_cache){
  */
 function scratchpadify_comment_feed() {
   global $base_url, $locale;
-  $comments = db_query_range(db_rewrite_sql('SELECT cid,nid,subject,comment FROM {comments} ORDER BY timestamp DESC','c','cid'), 0, variable_get('feed_default_items', 20));
+  $comments = db_query_range(db_rewrite_sql('SELECT cid,nid,subject,comment FROM {comments} c ORDER BY timestamp DESC','c','cid'), 0, variable_get('feed_default_items', 20));
 
   $namespaces = array('xmlns:dc="http://purl.org/dc/elements/1.1/"');
 
