@@ -262,6 +262,12 @@ function scratchpadify_menu($may_cache){
         'type' => MENU_CALLBACK
       );
     }
+    $items[] = array(
+      'path' => 'comments_rss.xml',
+      'title' => t('RSS feed'),
+      'callback' => 'scratchpadify_comment_feed',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK);
   }else {
     // Reset the menus (ONLY FOR UID 1)
     if(user_access('SCRATCHPADIFY')){
@@ -279,6 +285,37 @@ function scratchpadify_menu($may_cache){
   return $items;
 }
 
+/**
+ * scratchpadify_comment_feed
+ */
+function scratchpadify_comment_feed() {
+  global $base_url, $locale;
+  $comments = db_query_range('SELECT cid,nid,subject,comment FROM {comments} ORDER BY timestamp DESC', 0, variable_get('feed_default_items', 20));
+
+  $namespaces = array('xmlns:dc="http://purl.org/dc/elements/1.1/"');
+
+  while ($comment = db_fetch_object($comments)) {
+    $link = url("node/$comment->nid", NULL, NULL, 1);
+    $items .= format_rss_item($comment->subject, $link, $comment->comment);
+  }
+
+  $channel_defaults = array(
+    'version'     => '2.0',
+    'title'       => variable_get('site_name', 'Drupal') . (variable_get('site_slogan', '') ? ' - '. variable_get('site_slogan', '') : ''),
+    'link'        => $base_url,
+    'description' => variable_get('site_mission', ''),
+    'language'    => $locale
+  );
+  $channel = array_merge($channel_defaults, $channel);
+
+  $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  $output .= "<rss version=\"". $channel["version"] ."\" xml:base=\"". $base_url ."\" ". implode(' ', $namespaces) .">\n";
+  $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $items, $channel['language']);
+  $output .= "</rss>\n";
+
+  drupal_set_header('Content-Type: application/rss+xml; charset=utf-8');
+  print $output;
+}
 /**
  * Callback to forward menus on to their correct locations
  */
