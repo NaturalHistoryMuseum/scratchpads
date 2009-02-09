@@ -104,7 +104,7 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
     // Alter validation to check the hashcash once submitted
     $form['#validate'][] = 'hashcash_validate';
     // Javascript which produces the hashcash
-    $form['#attributes'] = array('onsubmit'=>'hashcash_create("hashcash-'.$form_id.'")');
+    $form['#attributes'] = array('onsubmit'=>'return hashcash_create("hashcash-'.$form_id.'");');
     
     // Finally, and VERY importantly, prevent caching of the form
     $form['#cache'] = FALSE;    

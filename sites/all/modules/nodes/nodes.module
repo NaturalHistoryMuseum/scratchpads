@@ -211,31 +211,38 @@ function nodes_get_form_for_type($type, $node = null){
   if (isset($types[$type]) && node_access('create', $type)) {
     // Initialize settings:
     if(is_null($node)){
-      $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type);
+      $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type, 'language' => '');
     }
-    $output = _nodes_get_form_no_render($type.'_node_form', array(), $node);
+    $output = nodes_get_form_no_render($type.'_node_form', $node);
   }
   return $output;
 }
 
-function _nodes_get_form_no_render($form_id, $form_state) {
-  // We're coming in fresh; build things as they would be. If the
-  // form's #multistep flag is set, store the build parameters so
-  // the same form can be reconstituted for validation.
-  $args = func_get_args();
+function nodes_get_form_no_render($form_id) {
+  // Get the form from a form_id.  This is a rip off of drupal_get_form from
+  // form.inc with a few tweaks.
   
-  // Before we call the following method, we need to include the file that
-  // includes the method.  This can be found from the menu for editing this node
-  // type.
-  $menu = menu_get_item('node/add/'.substr($form_id, 0, strlen($form_id)-10));
-  if(isset($menu['file'])){
-     require_once('./'.$menu['file']);
-  }
-  $form = call_user_func_array('drupal_retrieve_form', $args);
-  
-  // Process the form, submit it, and store any errors if necessary.
-  drupal_process_form($args[0], $form, $form_state = array());
+  // We're almost certainly going to need node.pages.inc, so lets get it
+  module_load_include('pages.inc','node');
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
 
+  $args = func_get_args();
+  $args_temp = $args;
+  $args_temp[0] = &$form_state;
+  array_unshift($args_temp, $form_id);
+
+  $form = call_user_func_array('drupal_retrieve_form', $args_temp);
+  $form_build_id = 'form-'. md5(uniqid(mt_rand(), true));
+  $form['#build_id'] = $form_build_id;
+  drupal_prepare_form($form_id, $form, $form_state);
+  // Store a copy of the unprocessed form for caching and indicate that it
+  // is cacheable if #cache will be set.
+  unset($form_state['post']);
+  $form['#post'] = $_POST;
+  drupal_process_form($form_id, $form, $form_state);
+  if (!empty($form_state['rebuild']) || !empty($form_state['storage'])) {
+    $form = drupal_rebuild_form($form_id, $form_state, $args);
+  }
   return $form;
 }
 function _nodes_get_fieldtypes(){
@@ -303,7 +310,9 @@ function nodes_get_field_from_form($form, $field_types, $ignore_fields, $form_pa
             in_array($form_part['#type'], $field_types) && 
             ( !isset($form_part['#disabled']) || !$form_part['#disabled']) && 
             !in_array($key, $ignore_fields) &&
-            ( !isset($form_part['#parents']) || (count($form_part['#parents'])==1 && $form_part['#parents'][0] == $key))){
+            ( !isset($form_part['#parents']) ||
+              (count($form_part['#parents'])==1 && $form_part['#parents'][0] == $key) || 
+              (count($form_part['#parents'])==2 && $form_part['#parents'][0] == 'taxonomy'))){
           $form_part['nodes_path'] = $form_path;
           $fields[$key] = $form_part;
         } else {
@@ -323,7 +332,7 @@ function theme_nodes_table($nodes, $form){
   $field_types = _nodes_get_fieldtypes();
   // Lets process the form, and get each of the fields that we can handle
   // as an array (basically removing each of the fieldsets and other shite.
-  $possible_fields = nodes_get_field_from_form($form, $field_types, array('teaser_include', 'revision', 'date'));
+  $possible_fields = nodes_get_field_from_form($form, $field_types, array('teaser_include', 'revision', 'date', 'image'));
   //print_r($possible_fields);
   //print_r($nodes[0]);
   //exit;
@@ -368,15 +377,25 @@ function theme_nodes_table($nodes, $form){
       if(is_array($node->$key)){
         $node->$field = t('Multiple values');
       }
-      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$key).'\');">'.strip_tags(substr($node->$key,0,100));
-      $return_string .= $key;
-      if(!isset($node->$key)){
-        $return_string .= print_r($node, true);
+      if(isset($node->$key)){
+        $value = $node->$key;
+      } else {
+        // We need to find the value - nodes_path comes in handy here
+        $paths = explode("/",substr($field['nodes_path'],1));
+        $temp_node = $node;
+        foreach($paths as $path_part){
+          if(isset($temp_node->$path_part)){
+            $temp_node = $temp_node->$path_part;
+          }
+        }
+        $value = print_r($temp_node, true);
       }
+      $return_string .= '<td class="nodes-content" id="'.$id.'" ondblclick="nodes(\''.$id.'\', \''.url('nodes-edit/'.$node->nid.'/'.$key).'\');"><pre>'.$value.'</pre>'.strip_tags(substr($value,0,100));
       $return_string .= '</td>';
     }
     $return_string .= '</tr>';
-    //$return_string .= '<tr><td colspan="13">'.print_r($form,true).'</td></tr>';
+    $return_string .= '<tr><td colspan="100"><pre>'.print_r($node,true).'</pre></td></tr>';
   }
+  $return_string .= '<tr><td colspan="100"><pre>'.print_r($form,true).'</pre></td></tr>';
   return $return_string .'</table>';
 }
