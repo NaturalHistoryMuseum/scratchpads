@@ -479,7 +479,15 @@ variable_set('cache_lifetime', '3600');
 db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");*/
 
 // Delete robotstxt variable
-db_query("DELETE FROM {variable} WHERE name = 'robotstxt';");
+/* db_query("DELETE FROM {variable} WHERE name = 'robotstxt';"); */
 
+// Add mollom to all the sites
+db_query("DELETE FROM {variable} WHERE name LIKE '%mollom%'");
+db_query("INSERT INTO {variable} (name, value) VALUES 
+('mollom_fallback','s:20:\"MOLLOM_STATUS_ACCEPT\";'),
+('mollom_servers','a:2:{i:0;s:20:\"http://88.151.243.81\";i:1;s:21:\"http://82.103.131.136\";}'),
+('mollom_comment_form','i:1;'),
+('mollom_private_key','s:32:\"f86117722dcd1d12aa1a1065edfb0fb2\";'),
+('mollom_public_key','s:32:\"ebe52536e33b662497bad0f451187161\";')");
 
 echo "Finished";
