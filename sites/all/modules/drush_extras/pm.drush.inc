@@ -1,5 +1,5 @@
 <?php
-// $Id: pm.drush.inc,v 1.3.2.2 2008/12/31 04:49:53 weitzman Exp $
+// $Id: pm.drush.inc,v 1.3.2.3 2009/01/23 22:24:59 weitzman Exp $
 
 /**
  * @file
@@ -68,14 +68,17 @@ function pm_drush_command() {
   $items['pm install'] = array(
     'callback' => 'drush_pm_install',
     'description' => 'Install one or more modules',
+    'core' => array(5),
   );
   $items['pm refresh'] = array(
     'callback' => 'drush_pm_refresh',
     'description' => 'Refresh update status information',
+    'core' => array(5),
   );
   $items['pm update'] = array(
     'callback' => 'drush_pm_update',
     'description' => 'Update your modules',
+    'core' => array(5),
   );
   return $items;
 }

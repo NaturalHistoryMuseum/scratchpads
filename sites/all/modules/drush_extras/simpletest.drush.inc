@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.drush.inc,v 1.2.2.1 2008/12/31 04:49:53 weitzman Exp $
+// $Id: simpletest.drush.inc,v 1.2.2.2 2009/01/23 22:24:59 weitzman Exp $
 
 /**
  * @file Drush simpletest commands
@@ -24,10 +24,12 @@ function simpletest_drush_command() {
   $items['test run'] = array(
     'callback' => 'drush_test_run',
     'description' => 'Run one or more Simpletest tests.',
+    'core' => array(5),
   );
   $items['test list'] = array(
     'callback' => 'drush_test_list',
     'description' => 'List the available Simpletest test classes.',
+    'core' => array(5),
   );
   return $items;
 }

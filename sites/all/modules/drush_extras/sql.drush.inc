@@ -1,5 +1,5 @@
 <?php
-// $Id: sql.drush.inc,v 1.2.2.4 2009/01/14 23:59:16 weitzman Exp $
+// $Id: sql.drush.inc,v 1.2.2.8 2009/02/06 01:29:05 weitzman Exp $
 
 /**
  * @file
@@ -27,27 +27,33 @@ function sql_drush_command() {
   $items['sql url'] = array(
     'callback' => 'drush_sql_url',
     'description' => 'Print database connection details.',
+    'core' => array(5),
   );
   $items['sql version server'] = array(
     'callback' => 'drush_sql_version_server',
     'description' => 'Print database server version number.',
+    'core' => array(5),
   );
   $items['sql version client'] = array(
     'callback' => 'drush_sql_version_client',
     'description' => 'Print database client library version number.',
+    'core' => array(5),
   );
   $items['sql dump'] = array(
     'callback' => 'drush_sql_dump',
     'description' => 'Exports the Drupal DB as SQL using mysqldump or pg_dump.',
+    'core' => array(5),
   );
   $items['sql query'] = array(
     'callback' => 'drush_sql_query',
     'description' => 'Execute a query against the site database.',
+    'core' => array(5),
   );
   $items['sql load'] = array(
     'callback' => 'drush_sql_load',
     'description' => 'Copy source database to target database.',
     // 'bootstrap' => -1, // TODO: Bootstrap just to DB
+    'core' => array(5),
   );
   return $items;
 }
@@ -57,7 +63,7 @@ function sql_drush_command() {
  * Command callback. Displays the Drupal site's database connection string.
  */
 function drush_sql_url() {
-  drush_print($GLOBALS['db_url']);
+  print_r($GLOBALS['db_url']);
 }
 
 /**
@@ -118,7 +124,7 @@ function drush_sql_dump($db_url = NULL, $execute = TRUE, $skip = NULL) {
     case 'mysqli':
       $exec = 'mysqldump' . (DRUSH_VERBOSE ? ' -v' : '');
       if ($file = drush_get_option('result-file')) {
-        $exec .= ' --result-file '. $file;
+        $exec .= ' --single-transaction --result-file '. $file;
       }
       $exec .= ' --opt -Q' . _drush_sql_get_credentials($db_url);
       break;
@@ -304,13 +310,9 @@ function _drush_sql_get_credentials($db_url = NULL) {
     $db_url = $GLOBALS['db_url'];
   }
   
-  // Caller may specify --result-file where the dump is temporarily saved.
-  // If not specified, we just generate one.
-  if (!$file = drush_get_option('result-file')) {
-    $time = time();
-    $file = "drush_sql_dump.$time.sql";
-    // Hack to make sure that drush_sql_dump sees the option.
-    $GLOBALS['args']['options']['result-file'] = $file;
+  // Lame, but better than nothing.
+  if (is_array($db_url)) {
+    $db_url = $db_url['default'];
   }
 
   // NOTE: this regex could also parse the connection string URL:

@@ -480,4 +480,6 @@ db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");*/
 
 // Delete robotstxt variable
 /* db_query("DELETE FROM {variable} WHERE name = 'robotstxt';"); */
+
+echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {comments} WHERE comment LIKE '%http%http%'")));
 echo "Finished";

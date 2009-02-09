@@ -1,5 +1,5 @@
 <?php
-// $Id: tools.drush.inc,v 1.2.2.2 2009/01/05 00:47:33 weitzman Exp $
+// $Id: tools.drush.inc,v 1.2.2.3 2009/01/23 22:24:59 weitzman Exp $
 
 /**
  * @file
@@ -28,19 +28,23 @@ function tools_drush_help($section) {
 function tools_drush_command() {
   $items['watchdog show'] = array(
     'callback' => 'drush_tools_watchdog_show',
-    'description' => 'Show the most recent watchdog log messages'
+    'description' => 'Show the most recent watchdog log messages',
+    'core' => array(5),
   );
   $items['watchdog delete'] = array(
     'callback' => 'drush_tools_watchdog_delete',
-    'description' => 'Delete all messages of a certain type'
+    'description' => 'Delete all messages of a certain type',
+    'core' => array(5),
   );
   $items['sync'] = array(
     'callback' => 'drush_tools_sync',
-    'description' => 'Rsync the Drupal tree to/from another server using ssh'
+    'description' => 'Rsync the Drupal tree to/from another server using ssh',
+    'core' => array(5),
   );
   $items['eval'] = array(
     'callback' => 'drush_tools_eval',
     'description' => 'Evaluate a command',
+    'core' => array(5),
   );
   return $items;
 }
