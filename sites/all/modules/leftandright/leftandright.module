@@ -62,18 +62,21 @@ function leftandright_help($path, $arg) {
 // hook_taxonomy
 function leftandright_taxonomy($op, $type, $array = NULL){
   if($type=='term'){
-    switch($op){
-      case 'delete':
-        // Easy, just delete the term from leftandright!
-        db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
-        break;
-      case 'update':
-      case 'insert':
-         module_load_include("functions.inc", "leftandright");
-         leftandright_hook_taxonomy_helper_insert($array);
-         // Finally update the variable storing the total number of terms in
-         // each of the vocabularies.
-         leftandright_update_totals_variable();
+    // First check that this terms vocabulary uses leftandright
+    if(leftandright_use_leftandright($array['vid'])){
+      switch($op){
+        case 'delete':
+          // Easy, just delete the term from leftandright!
+          db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
+          break;
+        case 'update':
+        case 'insert':
+           module_load_include("functions.inc", "leftandright");
+           leftandright_hook_taxonomy_helper_insert($array);
+           // Finally update the variable storing the total number of terms in
+           // each of the vocabularies.
+           leftandright_update_totals_variable();
+      }
     }
   }
 }
