@@ -1,5 +1,5 @@
 <?php
-// $Id: endnote8_parser.inc,v 1.10.2.13 2009/02/06 03:09:39 rjerome Exp $
+// $Id: endnote8_parser.inc,v 1.10.2.14 2009/02/10 20:19:02 rjerome Exp $
 function en8_startElement($parser, $name, $attrs) {
   global $node, $element, $contributors, $contrib_count, $titles, $periodical, $dates, $urls, $keyword_count;
   switch ($name) {
@@ -69,6 +69,9 @@ function en8_endElement($parser, $name) {
     case 'image-urls' :
       $urls = '';
       break;
+    case 'ref-type':
+       $node['biblio_type'] = en8_type_map($node['biblio_type']);
+       break;
     case 'style' :
       break;
     default :
@@ -85,7 +88,7 @@ function en8_characterData($parser, $data) {
       case 'rec-number' :
         break;
       case 'ref-type' :
-        $node['biblio_type'] = en8_type_map((int)$data);
+        $node['biblio_type'] .= $data;
         break;
 
         //Author information

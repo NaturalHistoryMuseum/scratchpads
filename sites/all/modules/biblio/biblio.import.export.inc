@@ -1,6 +1,6 @@
 <?PHP
 
-// $Id: biblio.import.export.inc,v 1.7.2.41 2009/02/06 03:09:39 rjerome Exp $
+// $Id: biblio.import.export.inc,v 1.7.2.43 2009/02/10 20:23:03 rjerome Exp $
 /**
  * @file
  * Functions that are used to import and export biblio data.
@@ -75,8 +75,9 @@ function biblio_import_form() {
         'ris'    => t('RIS'),
         'xml'    => t('EndNote 7 XML (and previous versions)'),
         'xml8'   => t('EndNote 8 XML (and versions upto X2)'),
-        'bib'    => t('BibTex')
-      )
+        'bib'    => t('BibTex'),
+        'marc'    => t('MARC')
+    )
     );
     $form ['userid'] = _biblio_admin_build_user_select($user->uid);
     // Get the vocabularies  attached to the biblio node type ...
@@ -309,7 +310,10 @@ function biblio_import($import_file, $type, $userid = 1, $terms = NULL, $batch =
     case 'bib' : // BibTex
       $node_ids = biblio_bibtex_import($import_file, $terms, $batch_proc, $session_id);
       break;
-    case 'csv' : // comma separated variable file
+    case 'marc' : // MARC
+      $node_ids = biblio_marc_import($import_file, $terms, $batch_proc, $session_id);
+      break;
+      case 'csv' : // comma separated variable file
       //        $file_content = @ file_get_contents($import_file->filepath);
       //        $parsed = biblio_csv_import($file_content, $node_template, $node_array);
       break;
@@ -427,7 +431,6 @@ function biblio_export($format = "tagged", $nid = null, $popup = false, $version
 function biblio_bibtex_import($file, $terms, $batch, $session_id) {
   $nids = array();
   module_load_include('php', 'biblio', 'bibtexParse/PARSEENTRIES');
-  //require_once (drupal_get_path('module', 'biblio') .'/bibtexParse/PARSEENTRIES.php');
   $bibtex = new PARSEENTRIES();
   //$bibtex->loadBibtexString($data);
   $bibtex->openBib($file->filepath);
@@ -435,6 +438,14 @@ function biblio_bibtex_import($file, $terms, $batch, $session_id) {
   if ($bibtex->count) {
     $nids = $bibtex->bib2node($terms, $batch, $session_id);
   }
+  return $nids;
+}
+function biblio_marc_import($file, $terms, $batch, $session_id) {
+  $nids = array();
+  module_load_include('php', 'biblio', 'marcParse/php-marc');
+  $marcfile = new File($file->filepath);
+  $record = $marcfile->next();
+
   return $nids;
 }
 /**
@@ -546,7 +557,7 @@ function biblio_bibtex_export($results) {
     }
     if (!empty($pub->biblio_keywords)) {
       foreach($pub->biblio_keywords as $term){
-        $kw_array[] = $term;
+        $kw_array[] = $term->word;
       }
     }
     if (!empty($kw_array)){
@@ -832,7 +843,7 @@ function biblio_endnote_tagged_export($results) {
     }
     if (!empty($pub->biblio_keywords)) {
       foreach($pub->biblio_keywords as $term){
-        $kw_array[] = $term;
+        $kw_array[] = $term->word;
       }
     }   
     if (!empty($kw_array)){

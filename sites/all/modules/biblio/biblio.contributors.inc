@@ -1,5 +1,5 @@
 <?php
-//$Id: biblio.contributors.inc,v 1.1.2.25 2009/02/06 03:09:39 rjerome Exp $
+//$Id: biblio.contributors.inc,v 1.1.2.26 2009/02/10 20:18:15 rjerome Exp $
 /**
  * @param $aid
  * @return unknown_type
@@ -113,7 +113,7 @@ function _save_contributors($contributors, $nid, $vid, $update = FALSE) {
         'nid' => $nid,
         'vid' => $vid,
         'cid' => $cid,
-        'rank' => $author['rank'],
+        'rank' => $key,
         'auth_type' => $author['auth_type'],
         'auth_category' => $cat,
       );

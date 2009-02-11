@@ -1,5 +1,5 @@
 <?php
-// $Id: print_pdf.module,v 1.1.2.30 2009/02/02 19:47:13 jcnventura Exp $
+// $Id: print_pdf.module,v 1.1.2.31 2009/02/09 20:20:20 jcnventura Exp $
 
 /**
  * @file
@@ -252,7 +252,9 @@ function print_pdf_nodeapi(&$node, $op = 'view', $teaser, $page) {
       _print_pdf_set_node_fields($node);
       break;
     case 'update':
+      if (user_access('administer print') || user_access('node-specific print configuration')) {
       _print_pdf_node_conf_modify($node->nid, $node->print_pdf_display, $node->print_pdf_display_comment, $node->print_pdf_display_urllist);
+      }
       break;
     case 'delete':
       db_query("DELETE FROM {print_pdf_node_conf} WHERE nid = %d", $node->nid);

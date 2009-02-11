@@ -1,5 +1,5 @@
 <?php
-// $Id: print_pdf.pages.inc,v 1.3.2.25 2009/02/02 19:47:13 jcnventura Exp $
+// $Id: print_pdf.pages.inc,v 1.3.2.26 2009/02/09 20:25:20 jcnventura Exp $
 
 /**
  * @file
@@ -125,6 +125,9 @@ function _print_pdf_dompdf($print, $html, $filename) {
   $special_entities = get_html_translation_table(HTML_SPECIALCHARS, ENT_NOQUOTES);
   $no_tags = array_diff($all_entities, $special_entities);
   $html = strtr(utf8_decode($html), $no_tags);
+
+  //must get rid of tbody (dompdf goes into recursion)
+  $html = preg_replace('!<tbody>|</tbody>!', '', $html);
 
   $dompdf->load_html($html);
 

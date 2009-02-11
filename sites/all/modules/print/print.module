@@ -1,5 +1,5 @@
 <?php
-// $Id: print.module,v 1.25.2.57 2009/02/05 00:37:43 jcnventura Exp $
+// $Id: print.module,v 1.25.2.58 2009/02/09 20:20:20 jcnventura Exp $
 
 /**
  * @file
@@ -308,7 +308,9 @@ function print_nodeapi(&$node, $op = 'view', $teaser, $page) {
       _print_set_node_fields($node);
       break;
     case 'update':
+      if (user_access('administer print') || user_access('node-specific print configuration')) {
       _print_node_conf_modify($node->nid, $node->print_display, $node->print_display_comment, $node->print_display_urllist);
+      }
       break;
     case 'delete':
       db_query("DELETE FROM {print_node_conf} WHERE nid = %d", $node->nid);

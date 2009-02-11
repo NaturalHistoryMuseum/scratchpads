@@ -1,5 +1,5 @@
 <?php
-// $Id: print_mail.module,v 1.1.2.25 2009/02/05 17:22:39 jcnventura Exp $
+// $Id: print_mail.module,v 1.1.2.27 2009/02/09 20:59:32 jcnventura Exp $
 
 /**
  * @file
@@ -77,27 +77,6 @@ function print_mail_menu() {
   );
 
   return $items;
-}
-
-/**
- * Implementation of hook_requirements().
- */
-function print_mail_requirements($phase) {
-  $requirements = array();
-  $t = get_t();
-  switch ($phase) {
-    case 'runtime':
-      if (module_exists('mimemail') && variable_get('mimemail_alter', 0) && (variable_get('mimemail_format', FILTER_FORMAT_DEFAULT) != '3')) {
-        $requirements['print_mail_mimemail'] = array(
-	  'title' => $t('Send by e-mail'),
-	  'value' => l($t('Mime Mail configuration'), 'admin/settings/mimemail'),
-	  'description' => $t("The current configuration of the Mime Mail module creates problems with the 'Send to Friend' function. Please set Mime Mail's input format to 'PHP code' to avoid them."),
-	  'severity' => REQUIREMENT_WARNING,
-	);
-      }
-      break;
-  }
-  return $requirements;
 }
 
 /**
@@ -227,7 +206,9 @@ function print_mail_nodeapi(&$node, $op = 'view', $teaser, $page) {
       _print_mail_set_node_fields($node);
       break;
     case 'update':
+      if (user_access('administer print') || user_access('node-specific print configuration')) {
       _print_mail_node_conf_modify($node->nid, $node->print_mail_display, $node->print_mail_display_comment, $node->print_mail_display_urllist);
+      }
       break;
     case 'delete':
       db_query("DELETE FROM {print_mail_node_conf} WHERE nid = %d", $node->nid);
