@@ -1,42 +1,27 @@
 <?php
 
 function citation_install(){
-	
-  switch ($GLOBALS['db_type']) {
-    
-  case 'mysqli':
-  case 'mysql':
-    	db_query("CREATE TABLE if not exists {citation} (
-      cid int(10) unsigned NOT NULL AUTO_INCREMENT,
-			title TEXT,
-			page_data LONGBLOB,
-			reference_data TEXT,
-			created INTEGER,
-			PRIMARY KEY (cid)
-	) /*!40100 DEFAULT CHARACTER SET utf8 */");
+  drupal_install_schema('citation');
+}
 
-  	db_query("CREATE TABLE if not exists {citation_nodes} (
-			cid int(10) unsigned NOT NULL default '0',
-			nid int(10) unsigned NOT NULL default '0'
-			) /*!40100 DEFAULT CHARACTER SET utf8 */");
-
-    break;
-
-	}	
-
+function citation_schema(){  
+  $tables['citation_nodes'] = array(
+    'fields' => array(
+      'cid' => array('type' => 'int', 'not null' => true),
+      'nid' => array('type' => 'int', 'not null' => true)),
+    'primary key' => array('cid', 'nid'));  
+  $tables['citation'] = array(
+    'fields' => array(
+      'cid' => array('type' => 'int', 'not null' => true),
+      'title' => array('type' => 'text'),
+      'page_data' => array('type' => 'blob', 'size' => 'big'),
+      'reference_data' => array('type' => 'text'),
+      'created' => array('type' => 'int'),
+    ),
+    'primary key' => array('cid'));
+  return $tables;
 }
 
 function citation_uninstall(){
-  // Remove tables.
   drupal_uninstall_schema('citation');
-
-	
-	if (db_table_exists('citation')) {
-  }
- 
-  if (db_table_exists('citation_nodes')) {
-  } 
-	
 }
-
-	
