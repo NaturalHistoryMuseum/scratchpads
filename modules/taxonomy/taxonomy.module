@@ -936,10 +936,10 @@ function taxonomy_term_count_nodes($tid, $type = 0) {
 function _taxonomy_term_children($tid) {
   static $children;
 
-  if (!isset($children)) {
-    $result = db_query('SELECT tid, parent FROM {term_hierarchy}');
+  if (!isset($children[$tid])) {
+    $result = db_query('SELECT tid FROM {term_hierarchy} WHERE parent = %d', $tid);
     while ($term = db_fetch_object($result)) {
-      $children[$term->parent][] = $term->tid;
+      $children[$tid][] = $term->tid;
     }
   }
   return isset($children[$tid]) ? $children[$tid] : array();
