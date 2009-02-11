@@ -1,0 +1,55 @@
+// $Id: INSTALL.txt,v 1.1.2.1.2.3.2.4 2008/10/25 15:29:26 arto Exp $
+
+REQUIREMENTS
+------------
+This version of Boost is designed for Drupal 6.x running on a Unix platform.
+Drupal's clean URLs MUST be enabled and working properly.
+
+The `path' and `pathauto' modules are recommended.
+
+In order for the static files to be correctly expired, the Drupal cron job
+must be correctly setup to execute more often than, or as often as, the
+cache lifetime interval you specify.
+
+Since the static page caching is implemented with mod_rewrite directives,
+Apache version 1.3 or 2.x with mod_rewrite enabled is required (if Drupal's
+clean URLs work for you, you're fine; if not, get them working first).
+Other web servers, such as Lighttpd, are NOT supported at present.
+
+INSTALLATION
+------------
+
+  1. Go to [Administer >> Site configuration >> Clean URLs] and ensure that
+     Drupal's clean URLs are enabled and working correctly on your site.
+
+  2. Copy all the module files into a subdirectory called
+     sites/all/modules/boost/ under your Drupal installation directory.
+
+  3. Go to [Administer >> Site building >> Modules] and enable the Boost
+     module. You will find it in the section labelled "Caching".
+
+  4. Go to [Administer >> Site configuration >> Performance], specify the
+     cache directory (must be writable by the web server) and enable static
+     caching.
+
+  5. Log out from Drupal (or use another browser) to browse around your site
+     as the anonymous user. Ensure that static files are indeed being
+     generated into the Boost cache directory you specified above.
+
+  6. IMPORTANT: after backing up the original .htaccess file in your Drupal
+     installation directory, replace it with the template file from
+     sites/all/modules/boost/htaccess/boosted1.txt, customizing the
+     mod_rewrite rules to your particular setup if needed. (If you fail to
+     do this, static page caching will NOT work!)
+
+     Note that there is in the same directory also another .htaccess
+     template called boosted2.txt. Should you have any trouble getting
+     static pages served using the boosted1.txt configuration, do try this
+     other file before posting a support issue on drupal.org.
+
+     (For the technically inclined, the difference between the two supplied
+     .htaccess templates is due to boosted1.txt relying on SERVER_NAME
+     versus boosted2.txt using HTTP_HOST. There exist valid use cases for
+     both, especially in more advanced, multi-site Drupal installations.)
+
+  7. (See README.txt for information on submitting bug reports.)

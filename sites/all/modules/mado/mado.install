@@ -1,0 +1,9 @@
+<?php
+
+function mado_install(){
+  
+  // We'll increase the weight so that it is executed _AFTER_ the taxonomy
+  // module.  
+  $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='mado'", $taxonomy_weight+10);
+}

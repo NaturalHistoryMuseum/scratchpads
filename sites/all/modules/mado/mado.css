@@ -1,0 +1,52 @@
+/* Row */
+.mado_row{
+ width:99%;
+ border:0;
+ margin:3px 0;
+ padding:0;
+}
+/* Half width blocks */
+.mado_block_2{
+ width:49%;
+ float:left;
+ margin:0;
+ padding:0;
+ border:0;
+}
+/* Full width blocks */
+.mado_block_1{
+ width:98%;
+ float:left;
+ margin:0;
+ padding:0;
+ border:0;
+}
+/* Within blocks */
+.mado_block{
+ border: solid 1px black;
+ margin: 0 0.5em 0.5em 0;
+ overflow-y:auto;
+ background-color:white;
+}
+.mado_block h1{
+ background-color:black;
+ color:white;
+ padding:5px;
+}
+.mado_block .content{
+ padding:5px;
+}
+.mado_scroll{
+ height:300px;
+}
+.mado_images p,.mado_images h2,.mado_images span,.mado_images hr,.mado_images .clear-block{
+ display:none;
+}
+.mado_images .content,.mado_images .node{
+ display:inline;
+ float:left;
+}
+/* The following shows how we can set the blocks in a row
+.mado_red .mado_block{
+ border: solid 1px red;
+}*/

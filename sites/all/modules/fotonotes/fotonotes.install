@@ -1,0 +1,62 @@
+<?php
+// $Id: fotonotes.install,v 1.1.2.1 2008/03/30 11:33:33 romka Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function fotonotes_install() {
+  // Create tables.
+  drupal_install_schema('fotonotes');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function fotonotes_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('fotonotes');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function fotonotes_schema() {
+
+  $schema['fotonotes'] = array(
+    'description' => t('This table relate to "Magazine" content type and containf fid of the image – cover of the magazine issue.'),
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'annotation_id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => 0,
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => 0,
+      ),
+      'content' => array(
+        'type' => 'text',
+      ),
+      'xml' => array(
+        'type' => 'text',
+      ),
+    ),
+  );
+ 
+  return $schema;
+}
+
+

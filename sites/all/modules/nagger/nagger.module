@@ -59,6 +59,8 @@ function nagger_form_alter(&$form, &$form_state, $form_id) {
       '#weight'=>100,
       '#tree' => 1,
       '#type' => 'fieldset',
+      '#collapsible' => 1,
+      '#collapsed' => 1,
       '#title'=>t('Access by role'),
       '#description'=>t('Edit below, only if this node hasn\'t been added to a group. Leave the boxes unchecked to use the default access permissions')
     );

@@ -1,0 +1,83 @@
+<?php
+// $Id: views_bonus_panels.module,v 1.2 2009/01/03 04:50:45 neclimdul Exp $
+/**
+ * @file
+ * Base module file for views bonus panels plugins.
+ */
+
+/**
+ * Implementation of hook_views_api().
+ */
+function views_bonus_panels_views_api() {
+  return array(
+    'api' => 2,
+  );
+}
+
+function template_preprocess_views_bonus_panels_threecol(&$vars) {
+  $vars['panel_name'] = 'threecol_33_34_33_stacked';
+  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 3, false);
+}
+
+function template_preprocess_views_bonus_panels_threecol_stack(&$vars) {
+  $vars['panel_name'] = 'threecol_33_34_33_stacked';
+  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 3, true);
+}
+
+function template_preprocess_views_bonus_panels_twocol(&$vars) {
+  $vars['panel_name'] = 'twocol';
+  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 2, true);
+}
+
+function template_preprocess_views_bonus_panels_twocol_stack(&$vars) {
+  $vars['panel_name'] = 'twocol_stacked';
+  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 2, true);
+}
+
+function template_preprocess_views_bonus_panels_threecol_term(&$vars) {
+  //
+  dpm('threecol term');
+  dpm($vars);
+}
+
+/**
+ * Shared preprocess to devide out rendered rows into panel sections.
+ *
+ * @param $rows
+ * An array of rendered views rows.
+ * @param $columns
+ * Number of columns to use. Valid values are 2 and 3.
+ * @param $stacked
+ * Whether this is a stacked layout on not(does it have a top section?)
+ * @return
+ * Panels content array.
+ */
+function views_bonus_panels_shared_preprocess($rows, $columns = 2, $stacked = false) {
+  $content = array(
+    'left' => '',
+    'right' => '',
+  );
+
+  // If this is stacked, drop the first entry into the top slot.
+  if ($stacked) {
+    $content['top'] = array_shift($rows);
+  }
+
+  if ($columns == 2) {
+    // Setup the left and right column.
+    $col_names = array('left', 'right');
+  }
+  else {
+    // Assume its 3 and add the middle column.
+    $col_names = array('left', 'middle', 'right');
+    $content['middle'] = '';
+  }
+
+  // iterate over remaining rows and fill columns.
+  foreach ($rows as $offset => $row) {
+    $r = $offset % $columns;
+    $content[$col_names[$r]] .= $row;
+  }
+
+  return $content;
+}

@@ -1,0 +1,13 @@
+<?php
+function node_term_edit_form_alter(&$form, &$form_state, $form_id){
+  // Return if this isn't a node form  
+  if($form['#id'] != 'node-form'){return;}  
+  // Check that the tid is set and is numeric
+  if(isset($_GET['tid']) && is_numeric($_GET['tid'])){
+    // Add it to the form
+    $term = taxonomy_get_term($_GET['tid']);
+    if($term){
+      $form['#node']->taxonomy[$_GET['tid']] = $term;
+    }
+  }
+}
