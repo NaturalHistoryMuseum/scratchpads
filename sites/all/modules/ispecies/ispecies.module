@@ -1394,16 +1394,14 @@ function ispecies_bhl_get_data($term_name, $limit){
 /**
  * Thickbox display breaks bhl view layout - but not if we use an inline iframe 
  */
-function ispecies_bhl_viewer(){
-	
-	$url = str_replace('/bhl_viewer/', 'http://', request_uri());
-	
-	$link_url = l($url,$url);
-	
-	print '<iframe hspace="0" frameborder="0" id="TB_iframeContent" style="width: 800px; height: 600px;" align="center" src="'.$url.'">'.$link_url.'</iframe>';
-	
-	exit;
-	
+function ispecies_bhl_viewer(){	
+  $url = str_replace('/bhl_viewer/', 'http://', request_uri());		
+  $url_parts = parse_url($url);
+  parse_str($url_parts['query']);
+  $url = "http://".$url_parts['host'].$url_parts['path']."?imageURL=$imageURL&imageDetailURL=$imageDetailURL";
+  $link_url = l($url,$url);
+  print '<iframe hspace="0" frameborder="0" id="TB_iframeContent" style="width: 800px; height: 600px;" align="center" src="'.$url.'">'.$link_url.'</iframe>';
+  exit;
 }
 
 
