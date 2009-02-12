@@ -1,5 +1,5 @@
 <?php
-// $Id: ris_parser.inc,v 1.4.2.15 2009/02/10 20:22:24 rjerome Exp $
+// $Id: ris_parser.inc,v 1.4.2.16 2009/02/12 02:32:09 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *
@@ -154,7 +154,8 @@ function _ris_tagged_import($file, $terms = array(), $batch = FALSE, $session_id
               $node['biblio_secondary_title'] = $value;
               break;
             case 'KW' :
-              if ($vid = variable_get('biblio_keyword_vocabulary', 0) && variable_get('biblio_keyword_freetagging', 1)) {
+              $vid = variable_get('biblio_keyword_vocabulary', 0);
+              if ($vid && variable_get('biblio_keyword_freetagging', 0)) {
                 $node['taxonomy']['tags'][$vid] .= (empty($node['taxonomy']['tags'][$vid])) ? "\"$value\"" : ",\"$value\"";
               }
               $node['biblio_keywords'][] = $value;

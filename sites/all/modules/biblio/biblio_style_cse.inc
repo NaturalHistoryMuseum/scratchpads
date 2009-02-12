@@ -1,6 +1,6 @@
 <?php
 
-// $Id: biblio_style_cse.inc,v 1.9.2.12 2009/02/06 03:09:39 rjerome Exp $
+// $Id: biblio_style_cse.inc,v 1.9.2.13 2009/02/10 21:58:22 rjerome Exp $
 /**
  * Get the style information
  *
@@ -39,7 +39,7 @@ function biblio_style_cse($node, $base = 'biblio', $inline = false) {
       }
       $output .= '<span class="biblio-title">';
       $output .= $inline ? l("$node->title", "$base/viewinline/$node->nid") : l("$node->title", "node/$node->nid");
-      $output .= ". </span> \n";
+      $output .= (strpos($node->title, '?'))? " </span>" : ". </span>";  // if the title ends in a question mark, don't put a period after it.
       $output .= (!empty ($node->biblio_secondary_title)) ? check_plain($node->biblio_secondary_title) . '. ' : '';
       $output .= (!empty ($node->biblio_volume))          ? check_plain($node->biblio_volume) : '';
       $output .= (!empty ($node->biblio_issue))           ? '(' . check_plain($node->biblio_issue) . ')' : '';

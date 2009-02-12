@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.install,v 1.30.2.75 2009/02/08 22:47:36 rjerome Exp $
+// $Id: biblio.install,v 1.30.2.76 2009/02/11 23:44:02 rhaschke Exp $
 function biblio_install() {
   $result = array();
 
@@ -1516,7 +1516,7 @@ function biblio_update_6014() {
     3 => 'biblio_tertiary_authors',
     4 => 'biblio_subsidiary_authors',
     5 => 'biblio_corp_authors');
-  if (db_result(db_query('SELECT COUNT(*) FROM biblio_fields WHERE type="contrib_widget"')) == 1) {
+  if (db_result(db_query('SELECT COUNT(*) FROM {biblio_fields} WHERE type="contrib_widget"')) == 1) {
     // create space for new contributor fields
     $result[] = update_sql("UPDATE {biblio_fields} f SET fid=fid + 4 WHERE fid>1 ORDER BY fid DESC");
     update_sql("UPDATE {biblio_fields} f SET name='biblio_authors' WHERE fid=1");
