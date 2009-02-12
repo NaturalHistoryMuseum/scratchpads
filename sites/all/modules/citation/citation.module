@@ -1,0 +1,119 @@
+<?php
+
+/**
+ * @file
+ *
+ * This is the module file for the citation module.
+ */
+
+/**
+ * Adds any nodes nid which is being "VIEWED".
+ * 
+ * Implementation of hook_nodeapi
+ */
+function citation_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  if($op == 'view'){
+    citation_add_nid($node->nid);
+  }
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function citation_theme() {
+  return array(
+    'citation_nids' => array(
+      'arguments' => array('nids' => array()),
+    ),
+    'citation_user_cite' => array(
+      'arguments' => array('user' => NULL)
+    )
+  );
+}
+
+/**
+ * Adds any nodes nid which is being "VIEWED" as part of a view.
+ *
+ * Implementation of hook_views_pre_execute
+ */
+function citation_views_pre_execute(&$view){
+  $query = db_rewrite_sql($view->build_info['query'], $view->base_table, $view->base_field, array('view' => &$view));
+  $args = $view->build_info['query_args'];
+  $replacements = module_invoke_all('views_query_substitutions', $view);
+  $query = str_replace(array_keys($replacements), $replacements, $query);     
+  if (is_array($args)) {
+    foreach ($args as $id => $arg) {
+      $args[$id] = str_replace(array_keys($replacements), $replacements, $arg);
+    }
+  }
+  $result = db_query_range($query, $args, 0, $view->pager['items_per_page']);
+  while($row = db_fetch_array($result)){
+    if(isset($row['nid'])){
+      citation_add_nid($row['nid']);
+    }
+  }
+}
+
+/**
+ * Add the nid to a global variable
+ */
+function citation_add_nid($nid){
+  global $citation;  
+  $citation[$nid] = $nid;
+}
+
+/**
+ * Implementation of hook_block
+ */
+function citation_block($op = 'list', $delta = 0, $edit = array()){
+  $blocks = array();
+  switch($op){
+    case 'list' :
+      $blocks[] = array(
+        'info' => t('Authors & Sources'),
+        'description' => t('A generated list of all authors and sources for the page being viewed.'),
+        'cache' => BLOCK_NO_CACHE
+      );
+      break;
+    case 'view' :
+      if(user_access('create citations')){
+        global $citation;
+        $blocks = array(
+          'title' => t('Authors & Sources'),
+          'content' => '<div id="citation">'.theme('citation_nids',$citation).'</div>'
+        );
+      }
+      break;
+  }
+  return $blocks;
+}
+
+function theme_citation_user_cite($user){
+  if(is_object($user)){
+    if(isset($user->family_name) && isset($user->given_names)){
+      $given_names = explode(" ",$user->given_names);
+      $initials = array();
+      foreach($given_names as $name){
+        $initials[] = strtoupper(substr($name,0,1)).".";
+      }
+      return $user->family_name .", ".implode(" ",$initials);
+    } else {
+      return $user->name;
+    }
+  }
+}
+
+function theme_citation_nids($nids){
+  if(is_array($nids) && count($nids)>0){
+    $output = '<ul>';
+    $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$nids));
+    while($row = db_fetch_array($results)){
+      $user = user_load($row['uid']);
+      $output .= '<li>'.l(theme('citation_user_cite',$user),'user/'.$user->uid).'</li>';
+    }
+    drupal_add_js(drupal_get_path('module','citation')."/citation.js");
+    return $output.'</ul><p>'.l('Create Citation','/citation/create',array('attributes' => array('onclick'=>'citation_create();return false;'))).'</p>';   
+  } else {
+    return t('We have no information about the Authors and Sources on this page');
+  }
+}
