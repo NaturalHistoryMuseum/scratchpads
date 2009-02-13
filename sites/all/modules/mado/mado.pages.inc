@@ -65,26 +65,51 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 /**
  * These are simply provided so that they can be overridden
  */
-function theme_mado_block($block_content, $arguments, $view) {
-  if($block_content){
-    $output = '<div';
-    if(isset($arguments['#css'])){
-      $output .= ' class="'.$arguments['#css'].'"';
-    }
-    $output .= "><div class=\"mado_block";
-    if(isset($arguments['#scroll']) && $arguments['#scroll']){
-      $output .= " mado_scroll";
-    }
-    $output .='">';
-    if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
-      $output .="<h1>".$view->display['default']->display_options['title']."</h1>";
-    }
-    if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
-      $output .= "<h1>".l(t('Add'), 'node/add/'.array_pop($view->display['default']->display_options['filters']['type']['value']), array('query'=>array('tid'=>arg(2))))."</h1>";
-    }
-    return $output."<div class=\"content\">$block_content</div></div></div>";
-  } else {
-    return false;
+function theme_mado_block($block) {
+  $output = '<div';
+  if(isset($block['#css'])){
+    $output .= ' class="'.$block['#css'].'"';
+  }
+  $output .= "><div class=\"mado_block";
+  if(isset($block['#scroll']) && $block['#scroll']){
+    $output .= " mado_scroll";
+  }
+  $output .='">';
+  switch($block['#type']){
+    case 'view':
+      $view = views_get_view($block['#name']);
+      if($view){
+        if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
+          $output .="<h1>".$view->display['default']->display_options['title']."</h1>";
+        }
+        if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
+          $output .= "<h1>".l(t('Add'), 'node/add/'.$view->display['default']->display_options['filters']['type']['value'][0], array('query'=>array('tid'=>arg(2))))."</h1>";
+        }
+        if(isset($view->display['page_1'])){
+          $display_id = 'page_1';
+        }
+        return $output.'<div class="content">'.$view->preview($display_id, array(arg(2))).'</div></div></div>';
+      } else {
+        return false;
+      }
+      break;
+    case 'block':
+      $name_parts = explode(".",$block['#name']);
+      if(count($names_parts == 2)){
+        $module = $name_parts[0];
+        $delta = $name_parts[1];
+        $module_block = module_invoke($module,'block','view',$delta);
+        if(isset($module_block['subject']) && $module_block['subject']!=''){
+          $output .= "<h1>".$module_block['subject']."</h1>";
+        }
+        return $output.'<div class="content">'.$module_block['content'].'</div></div></div>';
+      } else {
+        return false;
+      }
+      break;
+    default:
+      return false;
+      break;
   }
 }
 
@@ -95,9 +120,8 @@ function theme_mado_row($theme_row){
     $output .= ' class="'.$theme_row['#css'].'"';
   }
   $output .='>';
-  foreach($blocks as $block){
-    $view = views_get_view($theme_row[$block]['#view']);
-    $output .= theme('mado_block', $view->preview(NULL, array(arg(2))), $theme_row[$block], $view); // Add arguments    
+  foreach($blocks as $block){    
+    $output .= theme('mado_block', $theme_row[$block]); // Add arguments    
   }
   return $output."</div>";
 }

@@ -29,7 +29,7 @@ function mado_menu(){
 function mado_theme() {
   return array(
     'mado_block' => array(
-      'arguments' => array('content' => FALSE, 'arguments' => array(), 'view' => FALSE),
+      'arguments' => array('block' => array()),
     ),
     'mado_row' => array(
       'arguments' => array('theme_row' => array()),
@@ -50,27 +50,38 @@ function mado_get_theme($vid){
     'top' => array(
       // '#css' => 'mado_red',
       // '#title' => '' // CURRENTLY UNUSED
-      'topleft' => array(
-        '#title' => t('Top left'),
-        '#view' => 'comments_recent',
+      'left' => array(
+        //'#title' => t('Top left'),
+        '#type' => 'view',
+        '#name' => 'comments_recent',
         '#css' => 'mado_block_2',
         '#scroll' => 1
       ),      
-      'topright' => array(
-        '#title' => t('Top right'),
-        '#view' => 'taxonomy_images',
+      'right' => array(
+        //'#title' => t('Top right'),
+        '#type' => 'view',
+        '#name' => 'taxonomy_images',
         '#css' => 'mado_block_2 mado_images',
         '#scroll' => 1
       ),    
     ),
-    'bottom' => array(
+    'middle' => array(
       //'#title' => '',
       //'#css' => '',
-      'bottom' => array(
-        '#title' => t('Bottom'),
-        '#view' => 'taxonomy_pages',
+      'middle' => array(
+        //'#title' => t('Bottom'),
+        '#type' => 'view',
+        '#name' => 'taxonomy_pages',
         '#css' => 'mado_block_1'    
       )
-    )    
+    ),
+    'bottom' => array(
+      'middle' => array(
+        //'#title' => ''
+        '#type' => 'block',
+        '#name' => 'boost.status',
+        '#css' => 'mado_block_1'
+      )
+    )
   );
 }
