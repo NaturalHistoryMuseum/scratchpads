@@ -114,7 +114,7 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
         // We need to create an array of "citations", lets get the UIDs from
         // the nids and create the list
         $citations = array();
-        module_invoke_all('citation', $citations, $);
+        module_invoke_all('citation', $citations, $javascript);
         if(is_array($citation) && count($citation)>0){
           $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$citation));
           while($row = db_fetch_array($results)){
