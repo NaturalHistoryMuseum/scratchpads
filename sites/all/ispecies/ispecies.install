@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * Implementation of hook_install
+ */
+function ispecies_install(){
+  // Create tables.
+  drupal_install_schema('ispecies');
+												
+}	
+
+/**
+ * Implementation of hook_uninstall
+ */
+function ispecies_uninstall(){
+  // Remove tables.
+  drupal_uninstall_schema('ispecies');
+
+	
+	if (db_table_exists('ispecies')) {
+  }
+
+}	
