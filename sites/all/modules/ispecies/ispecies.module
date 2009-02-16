@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * 
+ * Provides the views which can be added as blocks to any page.
+ * 
+ * Inorder to make it easier to additional iSpecies blocks, we'll implement our
+ * own hook hook_ispecies.  This hook should return an array which gives info
+ * on how a block can be build (callback, arguments, etc).
+ * 
+ * hook_ispecies();
+ */
+
+/**
+ * Implementation of hook_node_info
+ */
+function ispecies_node_info() {  
+  return array (
+    'ispecies' => array (
+      'name' => t('iSpecies Cache'), 
+      'module' => 'ispecies', 
+      'description' => t('Cached iSpecies content.'), 
+      'locked' => true
+    )
+  );
+}
+
+/**
+ * Implementation of hook_form
+ * 
+ * POSSIBLY NOT REQUIRED
+function ispecies_form(&$node, $form_state){
+  
+}
+ */
+
+/**
+ * Implementation of hook_form_alter
+ * 
+ * POSSIBLY NOT REQUIRED
+function ispecies_form_alter(&$form, $form_state, $form_id){
+}
+ */
+
+/**
+ * Implementation of hook_ispecies 
+ */
+function ispecies_ispecies(){
+  return array(
+    'ispecies_1' => array(
+      'name' => 'ispecies'
+    )
+  );
+}
+
+/**
+ * Implementation of hook_viewsapi
+ */
+function ispecies_views_api(){
+  return array('api' => 2);
+}

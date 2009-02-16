@@ -1,0 +1,19 @@
+<?php
+function ispecies_install(){
+  drupal_install_schema('ispecies');  
+}
+
+function ispecies_uninstall(){
+  drupal_uninstall_schema('ispecies');
+}
+
+function ispecies_schema(){
+  $tables['autotag'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'not null' => true),
+      'url' => array('type' => 'text'),
+      'type' => array('type' => 'varcahr', 'length' => 128)
+    ),
+    'primary key' => array('nid'));
+  return $tables;
+}
