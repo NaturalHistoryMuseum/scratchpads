@@ -96,6 +96,17 @@ function citation_add_nid($nid){
 }
 
 /**
+ * Implementation of hook_ispecies 
+ */
+function citation_ispecies(){
+  return array(
+    'citation_1' => array(
+      'name' => 'citation'
+    )
+  );
+}
+
+/**
  * Implementation of hook_block
  */
 function citation_block($op = 'list', $delta = 0, $edit = array()){

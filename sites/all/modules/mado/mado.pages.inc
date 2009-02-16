@@ -88,7 +88,7 @@ function theme_mado_block($block) {
         if(isset($view->display['page_1'])){
           $display_id = 'page_1';
         }
-        return $output.'<div class="content">'.$view->preview($display_id, array(arg(2))).'</div></div></div>';
+        $output .= '<div class="content">'.$view->preview($display_id, array(arg(2))).'</div></div></div>';
       } else {
         return false;
       }
@@ -102,7 +102,7 @@ function theme_mado_block($block) {
         if(isset($module_block['subject']) && $module_block['subject']!=''){
           $output .= "<h1>".$module_block['subject']."</h1>";
         }
-        return $output.'<div class="content">'.$module_block['content'].'</div></div></div>';
+        $output .= '<div class="content">'.$module_block['content'].'</div></div></div>';
       } else {
         return false;
       }
@@ -111,6 +111,9 @@ function theme_mado_block($block) {
       return false;
       break;
   }
+  // finally, give other modules an opportunity to mangle output
+  module_invoke_all('mado_block_alter', $output);
+  return $output;
 }
 
 function theme_mado_row($theme_row){
