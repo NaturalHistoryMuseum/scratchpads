@@ -47,7 +47,7 @@ function citation_theme() {
     'citations' => array(
       'arguments' => array('citations' => array()),
     ),
-    'citation_user_cite' => array(
+    'citation_user' => array(
       'arguments' => array('user' => NULL)
     )
   );
@@ -92,18 +92,15 @@ function citation_views_pre_execute(&$view){
  */
 function citation_add_nid($nid){
   global $citation;  
-  $citation[$nid] = $nid;
+  $citation['nids'][$nid] = $nid;
 }
 
 /**
- * Implementation of hook_ispecies 
+ * Add the URL to a global variable
  */
-function citation_ispecies(){
-  return array(
-    'citation_1' => array(
-      'name' => 'citation'
-    )
-  );
+function citation_add_url($url_array){
+  global $citation;
+  $citation['urls'][$url_array['name']] = $url_array;
 }
 
 /**
@@ -121,16 +118,15 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
       break;
     case 'view' :
       if(user_access('create citations')){
-        global $citation;
+        /* global $citation;
         // We need to create an array of "citations", lets get the UIDs from
         // the nids and create the list
         $citations = array();
-        module_invoke_all('citation', $citations, $javascript);
         if(is_array($citation) && count($citation)>0){
           $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$citation));
           while($row = db_fetch_array($results)){
             $user = user_load($row['uid']);
-            $citations[] = l(theme('citation_user_cite',$user),'user/'.$user->uid);
+            $citations[] = l(theme('citation_user',$user),'user/'.$user->uid);
           }
         }
         if(count($citations)){
@@ -138,7 +134,8 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
           $output = theme('citations',$citations).'<p>'.l('Create Citation','citation/create_no_js',array('attributes' => array('onclick'=>'citation_create();return false;'))).'</p>';   
         } else {
           $output = t('We have no information about the Authors and Sources on this page');
-        }        
+        }*/
+        drupal_add_js(drupal_get_path('module', 'citation').'/citation.js');
         $blocks = array(
           'title' => t('Authors & Sources'),
           'content' => '<div id="citation">'.$output.'</div>'
@@ -149,7 +146,11 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
   return $blocks;
 }
 
-function theme_citation_user_cite($user){
+function theme_citation_url($url){
+  
+}
+
+function theme_citation_user($user){
   if(is_object($user)){
     if(isset($user->family_name) && isset($user->given_names)){
       $given_names = explode(" ",$user->given_names);
