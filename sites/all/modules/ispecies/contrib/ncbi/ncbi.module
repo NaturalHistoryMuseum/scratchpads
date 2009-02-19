@@ -1,0 +1,97 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function ncbi_ispecies(){
+  return array (
+    'ncbi' => array (
+      'name' => 'ncbi', 
+      'title' => t ( 'National Center for Biotechnology Information' ), 
+      'description' => t ( 'Some info about NCBI' ), 
+      'callback_url' => url ( 'ispecies/ncbi', array (
+        'absolute' => TRUE ) ) ) );
+}
+
+function ncbi_menu(){
+  $items = array ();
+  $items ['ispecies/ncbi'] = array (
+    'page callback' => 'ncbi_ajax_callback', 
+    'access arguments' => array (
+      'access content' ), 
+    'type' => MENU_CALLBACK );
+  return $items;
+}
+
+function ncbi_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'ncbi' ) . '/ncbi.css' );
+}
+
+function ncbi_ajax_callback($tid = FALSE, $limit = 20){
+  if (! $tid) {
+    // Get the referer and use the final part of that as the tid
+    $tid = array_pop ( explode ( "/", referer_uri () ) );
+  }
+  $term = taxonomy_get_term ( $tid );
+  $term_name = $term->name;
+  $items = array ();
+  $db = 'taxonomy';
+  $esearch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=' . $db . '&term=' . $term_name . '&retmax=' . $limit );
+  $esearch_xml = file_get_contents ( $esearch_request );
+  if ($esearch_xml) {
+    $esearch_results = new SimpleXMLElement ( $esearch_xml );
+  }
+  if ($esearch_results) {
+    if ($esearch_results->IdList->Id) {
+      foreach ( $esearch_results->IdList->Id as $id ) {
+        $efetch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=' . $db . '&retmode=xml&id=' . $id );
+        $sequence_xml = file_get_contents ( $efetch_request );
+        if ($sequence_xml) {
+          $item = new stdClass ( );
+          $sequence = new SimpleXMLElement ( $sequence_xml );
+          $sequence_data = ( array ) $sequence->DocSum;
+          $name = $sequence_data ['Item'] [2];
+          //add the common name
+          if (is_string ( $sequence_data ['Item'] [3] )) {
+            $name .= ' [' . $sequence_data ['Item'] [3] . ']';
+          } elseif (count ( $esearch_results->IdList->Id ) > 1) { //if there's no common name and more than one item we need to differentiate
+            $name .= ' [' . $sequence_data ['Item'] [1] . ']';
+          }
+          ($sequence_data ['Item'] [4] ? $tid = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' . $sequence_data ['Item'] [4] . '&lvl=3&p=mapview&p=has_linkout&p=blast_url&p=genome_blast&lin=f&keep=1&srchmode=1&unlock">' . $sequence_data ['Item'] [4] . '</a>' : $tid = '');
+          ($sequence_data ['Item'] [5] ? $nucleotide = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=nucleotide&cmd=Search&dopt=DocSum&term=txid' . $sequence_data ['Item'] [4] . '%5BOrganism%3Aexp%5D">' . $sequence_data ['Item'] [5] . '</a>' : $nucleotide = '');
+          ($sequence_data ['Item'] [6] ? $protein = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=protein&cmd=Search&dopt=DocSum&term=txid' . $sequence_data ['Item'] [4] . '%5BOrganism%3Aexp%5D">' . $sequence_data ['Item'] [6] . '</a>' : $protein = '');
+          $item->body .= sprintf ( '<table id="ncbi-sequence">
+          <tr><th colspan="2">%s</th></tr>
+          <tr><td>Taxonomy ID:</td><td>%s</td></tr>
+          <tr><td>Nucleotide sequences:</td><td>%s</td></tr>
+          <tr><td>Protein sequences:</td><td>%s</td></tr>
+          </table>', $name, $tid, $nucleotide, $protein );
+        }
+        $elink_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=taxonomy&db=all&id=' . $id . '&cmd=llinks' );
+        $elink_request_xml = file_get_contents ( $elink_request );
+        if ($elink_request_xml) {
+          $elinks = new SimpleXMLElement ( $elink_request_xml );
+          $item->body .= '<h3>External links</h3><ul id="elinks" />';
+          foreach ( $elinks->LinkSet->IdUrlList->IdUrlSet->ObjUrl as $link ) {
+            if ($link->LinkName) {
+              if ($link->Provider->NameAbbr == 'taxresource') {
+                $name = 'GBIF bookmark: ' . $link->LinkName;
+              } else {
+                $name = $link->Provider->NameAbbr . ': ' . $link->LinkName;
+              }
+              $title = $link->Provider->Name . ': ' . $link->LinkName;
+            } else {
+              $name = $link->Provider->Name;
+              $title = $name;
+            }
+            $item->body .= sprintf ( '<li><a href="%s" title="%s" />%s</a></li>', $link->Url, $title, $name );
+          }
+          $item->body .= '</ul>';
+        }
+        $item->page_url = 'http://eutils.ncbi.nlm.nih.gov/';
+        $items [strval ( $id )] = $item;
+      } //end of foreach $id  
+    }
+  }
+  print json_encode ( $items );
+  exit ();
+}

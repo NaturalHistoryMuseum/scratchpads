@@ -1,0 +1,60 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function googlescholar_ispecies(){
+  return array (
+    'googlescholar' => array (
+      'name' => 'googlescholar', 
+      'title' => t ( 'Google Scholar' ), 
+      'description' => t ( 'Some info about Google Scholar' ), 
+      'callback_url' => url ( 'ispecies/googlescholar', array (
+        'absolute' => TRUE ) ) ) );
+}
+
+function googlescholar_menu(){
+  $items = array ();
+  $items ['ispecies/googlescholar'] = array (
+    'page callback' => 'googlescholar_ajax_callback', 
+    'access arguments' => array (
+      'access content' ), 
+    'type' => MENU_CALLBACK );
+  return $items;
+}
+
+function googlescholar_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'googlescholar' ) . '/googlescholar.css' );
+}
+
+function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
+  if (! $tid) {
+    // Get the referer and use the final part of that as the tid
+    $tid = array_pop ( explode ( "/", referer_uri () ) );
+  }
+  $term = taxonomy_get_term ( $tid );
+  $term_name = $term->name;
+  $items = array ();
+  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://darwin.zoology.gla.ac.uk/cgi-bin/gsaJSON.cgi?q=' . $term_name );
+  $json_str = file_get_contents ( $request );
+  $json_str = substr ( $json_str, strpos ( $json_str, 'gs_results' ) );
+  $json_obj = json_decode ( $json_str );  
+  //the json string returned includes a functon call which we do not want
+  $json_str = str_replace ( 'gs_results({', '{', $json_str );
+  $json_str = str_replace ( '})', '}', $json_str );  
+  $json_obj = json_decode ( strval ( $json_str ) );  
+  $counter = 0;  
+  if (is_array ( $json_obj->Result )) {    
+    foreach ( $json_obj->Result as $key => $result ) {      
+      $counter ++;      
+      $item = new stdClass ( );
+      $item->body = sprintf ( '<a target="_blank" href="%s" title="%s">%s</a>', $result->link, $result->title, $result->title );
+      $item->page_url = 'http://scholar.google.co.uk/scholar?q=' . $term_name;
+      $items [strval ( $result->link )] = $item;      
+      if ($counter >= $limit) {
+        break;
+      }    
+    }  
+  }  
+  print json_encode ( $items );
+  exit ();
+}

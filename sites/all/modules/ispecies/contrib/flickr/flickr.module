@@ -1,0 +1,51 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function flickr_ispecies(){
+  return array (
+    'flickr' => array (
+      'name' => 'flickr', 
+      'title' => t ( 'Flickr Images' ), 
+      'description' => t ( 'Flickr, the trendy web 2 image site' ), 
+      'callback_url' => url ( 'ispecies/flickr', array (
+        'absolute' => TRUE ) ) ) );
+}
+
+function flickr_menu(){
+  $items = array ();
+  $items ['ispecies/flickr'] = array (
+    'page callback' => 'flickr_ajax_callback', 
+    'access arguments' => array (
+      'access content' ), 
+    'type' => MENU_CALLBACK );
+  return $items;
+}
+
+function flickr_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'flickr' ) . '/flickr.css' );
+}
+
+function flickr_ajax_callback($tid = FALSE, $limit = 50){
+  if (! $tid) {
+    // Get the referer and use the final part of that as the tid
+    $tid = array_pop ( explode ( "/", referer_uri () ) );
+  }
+  $term = taxonomy_get_term ( $tid );
+  $term_name = $term->name;
+  $items = array ();
+  $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&text=' . $term_name );
+  $results = unserialize ( file_get_contents ( $url ) );
+  if ($results ['photos'] ['total'] > 0) {
+    $photos = $results ['photos'] ['photo'];
+    foreach ( $photos as $photo ) {
+      $item = new stdClass ( );
+      $photo_url = 'http://fencedine.myspecies.info/?url=' . urlencode ('http://static.flickr.com/' . $photo ['server'] . '/' . $photo ['id'] . '_' . $photo ['secret']);
+      $item->body = '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>';
+      $item->page_url = 'http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id'];
+      $items ['http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']] = $item;
+    }
+  }  
+  print json_encode ( $items );
+  exit ();
+}

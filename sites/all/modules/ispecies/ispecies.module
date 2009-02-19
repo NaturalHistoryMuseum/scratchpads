@@ -27,6 +27,13 @@ function ispecies_node_info() {
 }
 
 /**
+ * Implementation of hook_init
+ */
+function ispecies_init(){
+  drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
+}
+
+/**
  * Implementation of hook_form
  * 
  * POSSIBLY NOT REQUIRED
@@ -42,17 +49,6 @@ function ispecies_form(&$node, $form_state){
 function ispecies_form_alter(&$form, $form_state, $form_id){
 }
  */
-
-/**
- * Implementation of hook_ispecies 
- */
-function ispecies_ispecies(){
-  return array(
-    'ispecies_1' => array(
-      'name' => 'ispecies'
-    )
-  );
-}
 
 /**
  * Implementation of hook_viewsapi

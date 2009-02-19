@@ -20,7 +20,7 @@ function ispecies_views_default_views() {
     $view->base_table = 'node';
     $view->is_cacheable = FALSE;
     $view->api_version = 2;
-    $view->disabled = TRUE;
+    $view->disabled = FALSE;
     $handler = $view->new_display('default', $ispecies_view['title'], 'default');
     $handler->override_option('fields', array(
       'title' => array(
@@ -199,7 +199,7 @@ function ispecies_views_default_views() {
       'type' => 'none',
     ));
     $handler->override_option('title', $ispecies_view['title']);
-    $handler->override_option('empty', '<script type="text/javascript">ispecies_callback(\''.$ispecies_view['callback_url'].'\');</script>');
+    $handler->override_option('empty', '<div id="'.$ispecies_view['name'].'"></div><script type="text/javascript">ispecies_callback(\''.$ispecies_view['callback_url'].'\', \''.$ispecies_view['name'].'\');</script>');
     $handler->override_option('empty_format', '2'); // FIXME - this could change
     
     $views[$view->name] = $view;
