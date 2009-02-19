@@ -83,7 +83,10 @@ function theme_mado_block($block) {
           $output .="<h1>".$view->display['default']->display_options['title']."</h1>";
         }
         if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
-          $output .= "<h1>".l(t('Add'), 'node/add/'.$view->display['default']->display_options['filters']['type']['value'][0], array('query'=>array('tid'=>arg(2))))."</h1>";
+          $keys = array_keys($view->display['default']->display_options['filters']['type']['value']);
+          if($keys[0] != 'ispecies'){
+            $output .= "<h1>".l(t('Add'), 'node/add/'.$view->display['default']->display_options['filters']['type']['value'][$keys[0]], array('query'=>array('tid'=>arg(2))))."</h1>";
+          }
         }
         if(isset($view->display['page_1'])){
           $display_id = 'page_1';
@@ -94,7 +97,7 @@ function theme_mado_block($block) {
       }
       break;
     case 'block':
-      $name_parts = explode(".",$block['#name']);
+      $name_parts = explode("/",$block['#name']);
       if(count($names_parts == 2)){
         $module = $name_parts[0];
         $delta = $name_parts[1];

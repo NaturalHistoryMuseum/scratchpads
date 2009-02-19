@@ -79,9 +79,72 @@ function mado_get_theme($vid){
       'middle' => array(
         //'#title' => ''
         '#type' => 'block',
-        '#name' => 'boost.status',
+        '#name' => 'boost/status',
         '#css' => 'mado_block_1'
       )
-    )
+    ),
+    'yahoo' => array(
+      'left' => array(
+        //'#title' => ''
+        '#type' => 'view',
+        '#name' => 'yahooimages',
+        '#css' => 'mado_block_2',
+        '#scroll' => 1
+      ),
+      'right' => array(
+        '#type' => 'view',
+        '#name' => 'flickr',
+        '#scroll' => 1,
+        '#css' => 'mado_block_2')),
+    'gbif' => array(
+      'middle' => array(
+        //'#title' => ''
+        '#type' => 'view',
+        '#name' => 'gbifmap',
+        '#css' => 'mado_block_1'
+      )
+    ),
+    'googlescholar' => array(
+      'middle' => array(
+        //'#title' => ''
+        '#type' => 'view',
+        '#name' => 'googlescholar',
+        '#css' => 'mado_block_1'
+      )
+    ),
+    'bhl' => array(
+      'middle' => array(
+        '#type' => 'view',
+        '#scroll' => 1,
+        '#name' => 'bhl',
+        '#css' => 'mado_block_1')),
+    'wiki' => array(
+      'middle' => array(
+        '#type' => 'view',
+        '#name' => 'wikipedia',
+        '#css' => 'mado_block_1')),
+    'ncbi' => array(
+      'middle' => array(
+        '#type' => 'view',
+        '#name' => 'ncbi',
+        '#css' => 'mado_block_1')),
+    'abovetop' => array(
+      // '#css' => 'mado_red',
+      // '#title' => '' // CURRENTLY UNUSED
+      'left' => array(
+        //'#title' => t('Top left'),
+        '#type' => 'block',
+        '#scroll' => 1,
+        '#name' => 'tinytax/tinytax-6',
+        '#css' => 'mado_block_2',
+      ),      
+      'right' => array(
+        //'#title' => t('Top right'),
+        '#type' => 'block',
+        '#name' => 'citation/0',
+        '#scroll' => 1,
+        '#css' => 'mado_block_2',
+      ),    
+    ),
   );
 }
