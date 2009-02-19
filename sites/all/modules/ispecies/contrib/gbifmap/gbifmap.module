@@ -35,7 +35,7 @@ function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
   $xml_response = file_get_contents ( $request );  
   if ($xml_response) {    
     $response = new SimpleXMLElement ( $xml_response );    
-    $item->body = '<img id="gbif-map" width="360" height="180" src="http://fencedine.myspecies.info/?url='.urlencode ('http://data.gbif.org/'.$response->taxon->url).'" alt="'.$term_name.'" />';
+    $item->body = '<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" />';
     $item->page_url = 'http://data.gbif.org/species/' . $response->taxon->key;    
     $items [strval ( $response->taxon->url )] = $item;  
   }  

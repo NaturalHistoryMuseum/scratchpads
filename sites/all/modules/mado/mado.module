@@ -43,6 +43,8 @@ function mado_theme() {
  */
 function mado_get_theme($vid){
   
+  if($vid!=6){return false;}
+  
   // THIS FUNCTION IS TEMPORARY, IT NEEDS FULLY WRITING WITH A WORKFLOW TO
   // ENABLE A USER TO ALTER A THEME.
   drupal_add_css(drupal_get_path('module','mado').'/mado.css');

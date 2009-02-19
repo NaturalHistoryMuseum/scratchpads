@@ -23,6 +23,12 @@ function citation_menu(){
     'type' => MENU_CALLBACK,
     'access arguments' => array('create citations'),
   );
+  $items['citation/get_citations'] = array(
+    'title' => '',
+    'page callback' => 'citation_get_citations',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('create citations')
+  );
   return $items;
 }
 
@@ -30,6 +36,13 @@ function citation_menu(){
  * Creates a page for users without JS.
  */
 function citation_create_no_js(){
+}
+
+/**
+ * Callback to return the ajax for citations
+ */
+function citation_get_citations(){
+  
 }
 
 /**
@@ -138,7 +151,7 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
         drupal_add_js(drupal_get_path('module', 'citation').'/citation.js');
         $blocks = array(
           'title' => t('Authors & Sources'),
-          'content' => '<div id="citation">'.$output.'</div>'
+          'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\''.url('citation/get_citations',array('absolute'=>TRUE)).'\');</script></div>'
         );
       }
       break;
