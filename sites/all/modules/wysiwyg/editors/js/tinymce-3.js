@@ -1,4 +1,4 @@
-// $Id: tinymce-3.js,v 1.9 2008/12/01 14:14:41 sun Exp $
+// $Id: tinymce-3.js,v 1.9.2.2 2009/02/04 02:55:10 sun Exp $
 
 /**
  * Initialize editor instances.
@@ -34,11 +34,9 @@ Drupal.wysiwyg.editor.init.tinymce = function(settings) {
  */
 Drupal.wysiwyg.editor.attach.tinymce = function(context, params, settings) {
   // Configure editor settings for this input format.
-  for (var setting in settings) {
-    tinyMCE.settings[setting] = settings[setting];
-  }
+  var ed = new tinymce.Editor(params.field, settings);
   // Attach editor.
-  tinyMCE.execCommand('mceAddControl', true, params.field);
+  ed.render();
 };
 
 /**
@@ -48,18 +46,18 @@ Drupal.wysiwyg.editor.attach.tinymce = function(context, params, settings) {
  */
 Drupal.wysiwyg.editor.detach.tinymce = function(context, params) {
   if (typeof params != 'undefined') {
-    var editor = tinyMCE.get(params.field);
-    if (editor) {
-      editor.save();
-      editor.remove();
+    var instance = tinyMCE.get(params.field);
+    if (instance) {
+      instance.save();
+      instance.remove();
     }
   }
   else {
     // Save contents of all editors back into textareas.
     tinyMCE.triggerSave();
     // Remove all editor instances.
-    for (var instanceId in tinyMCE.editors) {
-      tinyMCE.editors[instanceId].remove();
+    for (var instance in tinyMCE.editors) {
+      tinyMCE.editors[instance].remove();
     }
   }
 };

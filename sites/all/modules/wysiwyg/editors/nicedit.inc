@@ -1,5 +1,5 @@
 <?php
-// $Id: nicedit.inc,v 1.3 2008/11/02 16:26:51 sun Exp $
+// $Id: nicedit.inc,v 1.4 2008/12/05 15:35:23 sun Exp $
 
 
 /**
@@ -15,7 +15,7 @@ function wysiwyg_nicedit_editor() {
     'libraries' => array(
       '' => array(
         'title' => 'Source',
-        'files' => array('nicedit.js'),
+        'files' => array('nicEdit.js'),
       ),
     ),
     'version callback' => 'wysiwyg_nicedit_version',
@@ -40,7 +40,6 @@ function wysiwyg_nicedit_editor() {
  *   The installed editor version.
  */
 function wysiwyg_nicedit_version($editor) {
-  $script = wysiwyg_get_path('nicedit') . '/nicedit.js';
   // @see http://nicedit.com/forums/viewtopic.php?t=425
   return '0.9';
 }

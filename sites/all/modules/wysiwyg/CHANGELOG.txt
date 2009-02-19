@@ -1,11 +1,43 @@
-// $Id: CHANGELOG.txt,v 1.71 2008/12/01 14:36:12 sun Exp $
+// $Id: CHANGELOG.txt,v 1.76.2.22 2009/02/13 19:05:29 sun Exp $
 
 Wysiwyg x.x-x.x, xxxx-xx-xx
 ---------------------------
 
 
-Wysiwyg 6.x-x.x, xxxx-xx-xx
+Wysiwyg 6.x-1.x, xxxx-xx-xx
 ---------------------------
+
+
+Wysiwyg 6.x-1.0, 2009-02-13
+---------------------------
+#319363 by sun: Fixed missing spacer.gif for Teaser break plugin.
+#373672 by chawl: Added (native) xhtmlextras plugin for TinyMCE 3.
+#287025 by sun: Fixed native editor plugin options for TinyMCE and FCKeditor.
+#373542 by sun: Fixed TinyMCE: entity_encoding 'raw' removes HTML entities.
+#372806 by sun: Fixed block format configuration form element description.
+#367632 by sun: Fixed "Unexpected identifier, string or number" error in IE.
+#367632 by sun: Fixed invalid JavaScript syntax.
+#319363 by sun: Follow-up: Synced 1.x with 2.x where possible.
+#364782 by sun: Fixed theme stylesheets not properly loaded.
+#352938 by sun: Fixed JS error (blank page) in IE when plugins are loaded.
+#331089 by wwalc, sun: Added custom toolbar configuration support for FCKeditor.
+#331089 by sun: Fixed PHP notice for 'user_choose'; FCKeditor clean-up.
+#344230 by wwalc: Fixed wrong editor base path setting for FCKeditor.
+#361289 by sun: Fixed CSS files do not need to use media 'screen'.
+#360696 by sun: Fixed IE does not trigger onChange event when selecting an input
+  format.
+#342376 by sun: Extended API to allow "preprocess" JavaScript option for some
+  editors.
+#352295 by sun: Added markItUp editor support.
+#352703 by sun: Fixed wrong default configuration options for TinyMCE 3.2.1+.
+#348317 by sun: Fixed TinyMCE's extended_valid_elements for advlink/advimage
+  plugin.
+#348986 by sun: Added CSS class for toggle link container.
+#342864 by davexoxide, sun: Added YUI editor support.
+#343217 by sun: Fixed improperly capitalized library script name for nicEdit.
+#341267 by sun: Fixed improper test for internal editor plugins.
+#341996 by sun: Fixed editor cannot be re-enabled with one input format only.
+#341267 by sun: Added support for extensions that do not need to be loaded.
 
 
 Wysiwyg 6.x-0.5, 2008-12-01

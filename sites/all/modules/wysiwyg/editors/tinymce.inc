@@ -1,5 +1,5 @@
 <?php
-// $Id: tinymce.inc,v 1.15 2008/11/17 00:15:29 sun Exp $
+// $Id: tinymce.inc,v 1.17.2.10 2009/02/13 03:31:49 sun Exp $
 
 
 /**
@@ -48,7 +48,9 @@ function wysiwyg_tinymce_editor() {
         'libraries' => array(
           '' => array(
             'title' => 'Minified',
-            'files' => array('tiny_mce.js'),
+            'files' => array(
+              'tiny_mce.js' => array('preprocess' => FALSE),
+            ),
           ),
           'jquery' => array(
             'title' => 'jQuery',
@@ -109,12 +111,12 @@ function wysiwyg_tinymce_settings($editor, $config, $theme) {
   $init = array(
     'button_tile_map' => TRUE, // @todo Add a setting for this.
     'document_base_url' => base_path(),
-    'entity_encoding' => 'raw',
     'mode' => 'none',
     'plugins' => array(),
     'relative_urls' => FALSE,
     'theme' => $theme,
     'width' => '100%',
+    'strict_loading_mode' => TRUE,
   );
   if (isset($config['apply_source_formatting'])) {
     $init['apply_source_formatting'] = $config['apply_source_formatting'];
@@ -144,10 +146,7 @@ function wysiwyg_tinymce_settings($editor, $config, $theme) {
 
   if (isset($config['css_setting'])) {
     if ($config['css_setting'] == 'theme') {
-      $css = path_to_theme() .'/style.css';
-      if (file_exists($css)) {
-        $init['content_css'] = base_path() . $css;
-      }
+      $init['content_css'] = implode(',', wysiwyg_get_css());
     }
     else if ($config['css_setting'] == 'self' && isset($config['css_path'])) {
       $init['content_css'] = strtr($config['css_path'], array('%b' => base_path(), '%t' => path_to_theme()));
@@ -184,15 +183,15 @@ function wysiwyg_tinymce_settings($editor, $config, $theme) {
             $init['buttons'][] = $button;
           }
           // Add external plugins to the list of extensions.
-          if ($type == 'buttons' && !isset($plugins[$plugin]['internal'])) {
+          if ($type == 'buttons' && empty($plugins[$plugin]['internal'])) {
             $init['extensions'][_wysiwyg_tinymce_plugin_name('add', $plugin)] = 1;
           }
           // Add internal buttons that also need to be loaded as extension.
-          else if ($type == 'buttons' && isset($plugins[$plugin]['load'])) {
+          else if ($type == 'buttons' && !empty($plugins[$plugin]['load'])) {
             $init['extensions'][$plugin] = 1;
           }
           // Add plain extensions.
-          else if ($type == 'extensions') {
+          else if ($type == 'extensions' && !empty($plugins[$plugin]['load'])) {
             $init['extensions'][$plugin] = 1;
           }
           // Allow plugins to add valid HTML elements.
@@ -222,31 +221,23 @@ function wysiwyg_tinymce_settings($editor, $config, $theme) {
       $init += array(
         'theme_advanced_resize_horizontal' => FALSE,
         'theme_advanced_resizing_use_cookie' => FALSE,
+        'theme_advanced_path_location' => isset($config['path_loc']) ? $config['path_loc'] : 'bottom',
+        'theme_advanced_resizing' => isset($config['resizing']) ? $config['resizing'] : 1,
+        'theme_advanced_toolbar_location' => isset($config['toolbar_loc']) ? $config['toolbar_loc'] : 'top',
+        'theme_advanced_toolbar_align' => isset($config['toolbar_align']) ? $config['toolbar_align'] : 'left',
       );
       if (isset($config['block_formats'])) {
         $init['theme_advanced_blockformats'] = $config['block_formats'];
       }
-      if (isset($config['path_loc'])) {
-        $init['theme_advanced_path_location'] = $config['path_loc'];
-      }
-      if (isset($config['resizing'])) {
-        $init['theme_advanced_resizing'] = $config['resizing'];
-      }
-      if (isset($config['toolbar_loc'])) {
-        $init['theme_advanced_toolbar_location'] = $config['toolbar_loc'];
-      }
-      if (isset($config['toolbar_align'])) {
-        $init['theme_advanced_toolbar_align'] = $config['toolbar_align'];
-      }
-
       if (isset($init['buttons'])) {
-        // Note: These rows need to be set to NULL otherwise TinyMCE loads its
-        // own buttons as defined in advanced theme.
+        // These rows explicitly need to be set to be empty, otherwise TinyMCE
+        // loads its default buttons of the advanced theme for each row.
         $init += array(
           'theme_advanced_buttons1' => array(),
           'theme_advanced_buttons2' => array(),
           'theme_advanced_buttons3' => array(),
         );
+        // @todo Allow to sort/arrange editor buttons.
         for ($i = 0; $i < count($init['buttons']); $i++) {
           $init['theme_advanced_buttons1'][] = $init['buttons'][$i];
         }
@@ -299,16 +290,18 @@ function wysiwyg_tinymce_themes($editor, $profile) {
 }
 
 /**
- * Build a JS settings array of external plugins that need to be loaded separately.
+ * Build a JS settings array of native external plugins that need to be loaded separately.
  *
  * TinyMCE requires that external plugins (i.e. not residing in the editor's
- * directory) are loaded (once) after the editor has been initialized.
+ * directory) are loaded (once) upon initializing the editor.
  */
 function wysiwyg_tinymce_plugin_settings($editor, $profile, $plugins) {
   $settings = array();
   foreach ($plugins as $name => $plugin) {
-    if (!isset($plugin['internal'])) {
-      $settings[$name] = base_path() . $plugin['path'];
+    if (empty($plugin['internal'])) {
+      if (isset($plugin['path'])) {
+        $settings[$name] = base_path() . $plugin['path'];
+      }
     }
   }
   return $settings;
@@ -379,7 +372,7 @@ function wysiwyg_tinymce_plugins($editor) {
     'advimage' => array(
       'path' => $editor['library path'] .'/plugins/advimage',
       'extensions' => array('advimage' => t('Advanced image')),
-      'extended_valid_elements' => array('img[class|src|alt|title|hspace|vspace|width|height|align|onmouseover|onmouseout|name]'),
+      'extended_valid_elements' => array('img[src|alt|title|align|width|height|hspace|vspace|border|style|class|onmouseover|onmouseout|id|name]'),
       'url' => 'http://wiki.moxiecode.com/index.php/TinyMCE:Plugins/advimage',
       'internal' => TRUE,
       'load' => TRUE,
@@ -387,7 +380,7 @@ function wysiwyg_tinymce_plugins($editor) {
     'advlink' => array(
       'path' => $editor['library path'] .'/plugins/advlink',
       'extensions' => array('advlink' => t('Advanced link')),
-      'extended_valid_elements' => array('a[name|href|target|title|onclick]'),
+      'extended_valid_elements' => array('a[name|href|target|title|class|onfocus|onblur|onclick|ondlbclick|onmousedown|onmouseup|onmouseover|onmouseout|onkeypress|onkeydown|onkeyup|id|style|rel]'),
       'url' => 'http://wiki.moxiecode.com/index.php/TinyMCE:Plugins/advlink',
       'internal' => TRUE,
       'load' => TRUE,
@@ -404,6 +397,7 @@ function wysiwyg_tinymce_plugins($editor) {
       'extensions' => array('contextmenu' => t('Context menu')),
       'url' => 'http://wiki.moxiecode.com/index.php/TinyMCE:Plugins/contextmenu',
       'internal' => TRUE,
+      'load' => TRUE,
     ),
     'directionality' => array(
       'path' => $editor['library path'] .'/plugins/directionality',
@@ -513,6 +507,13 @@ function wysiwyg_tinymce_plugins($editor) {
     ),
   );
   if ($editor['installed version'] > 3) {
+    $plugins['xhtmlxtras'] = array(
+      'path' => $editor['library path'] .'/plugins/xhtmlxtras',
+      'buttons' => array('cite' => t('Citation'), 'del' => t('Deleted'), 'abbr' => t('Abbreviation'), 'acronym' => t('Acronym'), 'ins' => t('Inserted')),
+      'url' => 'http://wiki.moxiecode.com/index.php/TinyMCE:Plugins/xhtmlxtras',
+      'internal' => TRUE,
+      'load' => TRUE,
+    );
     $plugins['safari'] = array(
       'path' => $editor['library path'] .'/plugins/safari',
       'extensions' => array('safari' => t('Safari compatibility')),

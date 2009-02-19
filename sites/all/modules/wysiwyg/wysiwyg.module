@@ -1,5 +1,5 @@
 <?php
-// $Id: wysiwyg.module,v 1.16 2008/12/01 14:32:41 sun Exp $
+// $Id: wysiwyg.module,v 1.17.2.5 2009/02/01 10:05:20 sun Exp $
 
 /**
  * @file
@@ -124,10 +124,10 @@ function wysiwyg_process_form(&$form) {
               // Check editor theme (and reset it if not/no longer available).
               $theme = wysiwyg_get_editor_themes($profile, (isset($profile->settings['theme']) ? $profile->settings['theme'] : ''));
 
+              // Add plugin settings (first) for this input format.
+              wysiwyg_add_plugin_settings($profile);
               // Add profile settings for this input format.
               wysiwyg_add_editor_settings($profile, $theme);
-              // Add plugin settings for this input format.
-              wysiwyg_add_plugin_settings($profile);
             }
 
             // Use a prefix/suffix for a single input format, or attach to input
@@ -209,16 +209,27 @@ function wysiwyg_load_editor($profile) {
       // @todo Allow to configure the library/execMode to use.
       if (isset($profile->settings['library']) && isset($editor['libraries'][$profile->settings['library']])) {
         $library = $profile->settings['library'];
-        $files = $editor['libraries'][$profile->settings['library']]['files'];
+        $files = $editor['libraries'][$library]['files'];
       }
       else {
-        // Fallback to the first by default (external libraries can change).
+        // Fallback to the first defined library by default (external libraries can change).
         $library = key($editor['libraries']);
         $files = array_shift($editor['libraries']);
         $files = $files['files'];
       }
-      foreach ($files as $file) {
-        drupal_add_js($editor['library path'] . '/' . $file);
+      foreach ($files as $file => $options) {
+        if (is_array($options)) {
+          $options += array('type' => 'module', 'scope' => 'header', 'defer' => FALSE, 'cache' => TRUE, 'preprocess' => TRUE);
+          drupal_add_js($editor['library path'] . '/' . $file, $options['type'], $options['scope'], $options['defer'], $options['cache'], $options['preprocess']);
+        }
+        else {
+          drupal_add_js($editor['library path'] . '/' . $options);
+        }
+      }
+      // If editor defines an additional load callback, invoke it.
+      // @todo Isn't the settings callback sufficient?
+      if (isset($editor['load callback']) && function_exists($editor['load callback'])) {
+        $editor['load callback']($editor, $library);
       }
       // Load JavaScript integration files for this editor.
       $files = array();
@@ -234,7 +245,7 @@ function wysiwyg_load_editor($profile) {
         $files = $editor['css files'];
       }
       foreach ($files as $file) {
-        drupal_add_css($editor['css path'] . '/' . $file, 'module', 'screen');
+        drupal_add_css($editor['css path'] . '/' . $file);
       }
 
       drupal_add_js(array('wysiwyg' => array(
@@ -309,26 +320,35 @@ function wysiwyg_add_editor_settings($profile, $theme) {
 function wysiwyg_add_plugin_settings($profile) {
   static $plugins_added = array();
   
-  if (!isset($plugins_added[$profile->editor])) {
-    $plugins = array();
-    $editor = wysiwyg_get_editor($profile->editor);
-    // Collect editor plugins provided via hook_wysiwyg_plugin().
-    $info = module_invoke_all('wysiwyg_plugin', $editor['name'], $editor['installed version']);
-    // Only keep enabled plugins in this profile.
-    foreach ($info as $plugin => $meta) {
-      if (!isset($profile->settings['buttons'][$plugin])) {
-        unset($info[$plugin]);
-      }
-    }
-
-    if (isset($editor['plugin settings callback']) && function_exists($editor['plugin settings callback'])) {
-      $plugins = $editor['plugin settings callback']($editor, $profile, $info);
-    }
-
-    drupal_add_js(array('wysiwyg' => array('plugins' => array($profile->editor => $plugins))), 'setting');
-
-    $plugins_added[$profile->editor] = TRUE;
+  // External plugins must only be loaded once.
+  // @todo Actually, each native plugin must not be added twice, but different
+  //   profiles can have different plugin-sets for the same editor.  We should
+  //   check each plugin for each editor.
+  if (isset($plugins_added[$profile->editor])) {
+    return;
   }
+  $plugins_added[$profile->editor] = TRUE;
+
+  $editor = wysiwyg_get_editor($profile->editor);
+  // Assume that this editor does not support neither native external plugins
+  // nor Drupal plugins if it does not provide a callback.
+  if (!(isset($editor['plugin settings callback']) && function_exists($editor['plugin settings callback']))) {
+    return;
+  }
+
+  // Collect native editor plugins provided via hook_wysiwyg_plugin().
+  $plugins = module_invoke_all('wysiwyg_plugin', $editor['name'], $editor['installed version']);
+  // Only keep enabled native plugins in this profile.
+  foreach ($plugins as $plugin => $meta) {
+    if (!isset($profile->settings['buttons'][$plugin])) {
+      unset($plugins[$plugin]);
+    }
+  }
+  // Invoke the editor's plugin settings callback, so it can populate the
+  // settings for external plugins with custom, required values.
+  $plugins = $editor['plugin settings callback']($editor, $profile, $plugins);
+
+  drupal_add_js(array('wysiwyg' => array('plugins' => array($profile->editor => $plugins))), 'setting');
 }
 
 /**
@@ -409,6 +429,32 @@ function wysiwyg_get_editor_config($profile, $theme) {
 }
 
 /**
+ * Retrieve stylesheets for HTML/IFRAME-based editors.
+ *
+ * This assumes that the content editing area only needs stylesheets defined
+ * for the scope 'theme'.
+ *
+ * @return
+ *   An array containing CSS files, including proper base path.
+ */
+function wysiwyg_get_css() {
+  static $files;
+
+  if (isset($files)) {
+    return $files;
+  }
+  $files = array();
+  foreach (drupal_add_css() as $media => $css) {
+    if ($media != 'print') {
+      foreach ($css['theme'] as $filepath => $preprocess) {
+        $files[] = base_path() . $filepath;
+      }
+    }
+  }
+  return $files;
+}
+
+/**
  * Load all profiles. Just load one profile if $name is passed in.
  */
 function wysiwyg_load_profile($format = '') {
@@ -459,7 +505,7 @@ function wysiwyg_user($type, &$edit, &$user, $category = NULL) {
 function wysiwyg_user_get_status($profile) {
   global $user;
 
-  if ($profile->settings['user_choose'] && isset($user->wysiwyg_status)) {
+  if (!empty($profile->settings['user_choose']) && isset($user->wysiwyg_status)) {
     $status = $user->wysiwyg_status;
   }
   else {

@@ -1,25 +1,24 @@
 <?php
-// $Id: fckeditor.inc,v 1.6 2008/11/02 16:26:51 sun Exp $
+// $Id: fckeditor.inc,v 1.6.2.5 2009/02/13 02:22:29 sun Exp $
+
+/**
+ * @file
+ * Editor integration functions for FCKeditor.
+ */
 
 
 /**
  * Plugin implementation of hook_editor().
- *
- * - Function signature and returned editor name nust match include filename.
- * - Returns an array of supported editor versions along with support files.
- *
- * @todo wysiwyg_<editor>_alter() to add/inject optional libraries like gzip.
  */
 function wysiwyg_fckeditor_editor() {
   $editor = array();
   $editor['fckeditor'] = array(
-    // Required properties
     'title' => 'FCKeditor',
     'vendor url' => 'http://www.fckeditor.net',
     'download url' => 'http://www.fckeditor.net/download',
     'library path' => wysiwyg_get_path('fckeditor'),
-    'libraries' => array( // We cannot assume that all editors need just one js library.
-      '' => array( // Key may be used in wysiwyg_fckeditor_settings() for exec mode.
+    'libraries' => array(
+      '' => array(
         'title' => 'Default',
         'files' => array('fckeditor.js'),
       ),
@@ -28,19 +27,11 @@ function wysiwyg_fckeditor_editor() {
     'themes callback' => 'wysiwyg_fckeditor_themes',
     'settings callback' => 'wysiwyg_fckeditor_settings',
     'plugin callback' => 'wysiwyg_fckeditor_plugins',
-    'plugin settings callback' => 'wysiwyg_fckeditor_plugin_settings',
-    'versions' => array( // Each version can override global editor properties.
+    'versions' => array(
       2.6 => array(
-        // 'include files' => array('fckeditor-2.inc'),
         'js files' => array('fckeditor-2.6.js'),
       ),
     ),
-    // Optional properties
-    // 'editor path' => wysiwyg_get_path('fckeditor'),
-    // 'js path' => wysiwyg_get_path('js'),
-    // 'css path' => wysiwyg_get_path('css'),
-    // @todo Not yet implemented.
-    // 'css files' => array('fckeditor.css'),
   );
   return $editor;
 }
@@ -57,12 +48,15 @@ function wysiwyg_fckeditor_editor() {
 function wysiwyg_fckeditor_version($editor) {
   $library = $editor['library path'] .'/fckeditor.js';
   $library = fopen($library, 'r');
-  while ($line = fgets($library, 60)) {
+  $max_lines = 100;
+  while ($max_lines && $line = fgets($library, 60)) {
     if (preg_match('@^FCKeditor.prototype.Version\s*= \'([\d\.]+)@', $line, $version)) {
       fclose($library);
       return $version[1];
     }
+    $max_lines--;
   }
+  fclose($library);
 }
 
 /**
@@ -80,16 +74,11 @@ function wysiwyg_fckeditor_version($editor) {
  *   Drupal.settings.wysiwyg.configs.{editor}
  */
 function wysiwyg_fckeditor_settings($editor, $config, $theme) {
-  $init = array(
-    'BasePath' => base_path() . $editor['editor path'] .'/',
-    'SkinPath' => base_path() . $editor['editor path'] .'/editor/skins/default/',
+  $settings = array(
+    'EditorPath' => base_path() . $editor['library path'] .'/',
+    'SkinPath' => base_path() . $editor['library path'] .'/editor/skins/'. $theme .'/',
     'Width' => '100%',
     'Height' => 420,
-    'DefaultLanguage' => 'en',
-    'AutoDetectLanguage' => TRUE,
-    'ToolbarStartExpanded' => TRUE,
-    'EnterMode' => 'p',
-    'ShiftEnterMode' => 'br',
     'LinkBrowser' => FALSE,
     'LinkUpload' => FALSE,
     'ImageBrowser' => FALSE,
@@ -98,28 +87,57 @@ function wysiwyg_fckeditor_settings($editor, $config, $theme) {
     'FlashUpload' => FALSE,
   );
   if (isset($config['block_formats'])) {
-    $init['FontFormats'] = strtr($config['block_formats'], array(',' => ';'));
+    $settings['FontFormats'] = strtr($config['block_formats'], array(',' => ';'));
   }
   if (isset($config['apply_source_formatting'])) {
-    $init['FormatSource'] = $config['apply_source_formatting'];
+    $settings['FormatSource'] = $config['apply_source_formatting'];
   }
   if (isset($config['preformatted'])) {
-    $init['FormatOutput'] = $config['preformatted'];
+    $settings['FormatOutput'] = $config['preformatted'];
   }
 
   if (isset($config['css_setting'])) {
     if ($config['css_setting'] == 'theme') {
-      $css = path_to_theme() .'/style.css';
-      if (file_exists($css)) {
-        $init['EditorAreaCSS'] = base_path() . $css;
-      }
+      $settings['EditorAreaCSS'] = implode(',', wysiwyg_get_css());
     }
     else if ($config['css_setting'] == 'self' && isset($config['css_path'])) {
-      $init['EditorAreaCSS'] = strtr($config['css_path'], array('%b' => base_path(), '%t' => path_to_theme()));
+      $settings['EditorAreaCSS'] = strtr($config['css_path'], array('%b' => base_path(), '%t' => path_to_theme()));
     }
   }
 
-  return $init;
+  if (!empty($config['buttons'])) {
+    // Use our custom toolbar set.
+    $settings['CustomConfigurationsPath'] = wysiwyg_get_path('editors/js/fckeditor.config.js', TRUE);
+    $settings['ToolbarSet'] = 'Wysiwyg';
+    // Populate our custom toolbar set for fckeditor.config.js.
+    $settings['buttons'] = array();
+    $plugins = wysiwyg_get_plugins($editor['name']);
+    foreach ($config['buttons'] as $plugin => $buttons) {
+      foreach ($buttons as $button => $enabled) {
+        // Iterate separately over buttons and extensions properties.
+        foreach (array('buttons', 'extensions') as $type) {
+          // Skip unavailable plugins.
+          if (!isset($plugins[$plugin][$type][$button])) {
+            continue;
+          }
+          // Add buttons.
+          if ($type == 'buttons') {
+            $settings['buttons'][] = $button;
+          }
+          // Allow plugins to add or override global configuration settings.
+          if (!empty($plugins[$plugin]['options'])) {
+            $settings = array_merge($settings, $plugins[$plugin]['options']);
+          }
+        }
+      }
+    }
+    // For now, all buttons are placed into one row.
+    if (!empty($settings['buttons'])) {
+      $settings['buttons'] = array($settings['buttons']);
+    }
+  }
+
+  return $settings;
 }
 
 /**
@@ -139,21 +157,41 @@ function wysiwyg_fckeditor_themes($editor, $profile) {
 }
 
 /**
- * Build a JS settings array of external plugins that need to be loaded separately.
- *
- * TinyMCE requires that external plugins (i.e. not residing in the editor's
- * directory) are loaded (once) after the editor has been initialized.
- */
-function wysiwyg_fckeditor_plugin_settings($editor, $profile, $info) {
-  $plugins = array();
-  return $plugins;
-}
-
-/**
  * Return internal plugins for FCKeditor; semi-implementation of hook_wysiwyg_plugin().
  */
 function wysiwyg_fckeditor_plugins($editor) {
   return array(
+    'default' => array(
+      'buttons' => array(
+        'Bold' => t('Bold'), 'Italic' => t('Italic'), 'Underline' => t('Underline'),
+        'StrikeThrough' => t('Strike-through'),
+        'JustifyLeft' => t('Align left'), 'JustifyCenter' => t('Align center'), 'JustifyRight' => t('Align right'), 'JustifyFull' => t('Justify'),
+        'UnorderedList' => t('Bullet list'), 'OrderedList' => t('Numbered list'),
+        'Outdent' => t('Outdent'), 'Indent' => t('Indent'),
+        'Undo' => t('Undo'), 'Redo' => t('Redo'),
+        'Link' => t('Link'), 'Unlink' => t('Unlink'), 'Anchor' => t('Anchor'),
+        'Image' => t('Image'),
+        'TextColor' => t('Forecolor'), 'BGColor' => t('Backcolor'),
+        'Superscript' => t('Superscript'), 'Subscript' => t('Subscript'),
+        'Blockquote' => t('Blockquote'), 'Source' => t('Source code'),
+        'Rule' => t('Horizontal rule'),
+        'Cut' => t('Cut'), 'Copy' => t('Copy'), 'Paste' => t('Paste'),
+        'PasteText' => t('Paste Text'), 'PasteWord' => t('Paste from Word'),
+        'ShowBlocks' => t('Show blocks'),
+        'RemoveFormat' => t('Remove format'),
+        'SpecialChar' => t('Character map'),
+        'About' => t('About'),
+
+        'FontFormat' => t('HTML block format'), 'FontName' => t('Font'), 'FontSize' => t('Font size'), 'Style' => t('Font style'),
+        'Table' => t('Table'),
+        'Find' => t('Search'), 'Replace' => t('Replace'), 'SelectAll' => t('Select all'),
+        'CreateDiv' => t('Create DIV container'),
+        'Flash' => t('Flash'), 'Smiley' => t('Smiley'),
+        'FitWindow' => t('FitWindow'),
+        'SpellCheck' => t('Check spelling'),
+      ),
+      'internal' => TRUE,
+    ),
   );
 }
 

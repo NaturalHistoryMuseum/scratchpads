@@ -1,4 +1,4 @@
-// $Id: whizzywig.js,v 1.3 2008/12/01 14:14:41 sun Exp $
+// $Id: whizzywig.js,v 1.3.2.1 2009/02/05 01:34:52 sun Exp $
 
 var wysiwygWhizzywig = { currentField: null, fields: {} };
 var buttonPath = null;
@@ -87,7 +87,7 @@ Drupal.wysiwyg.editor.detach.whizzywig = function(context, params) {
     // Remove editor instance.
     $('#' + whizzies[id] + '-whizzywig').remove();
     whizzies.splice(id, 1);
-  }
+  };
 
   if (typeof params != 'undefined') {
     for (var id in whizzies) {

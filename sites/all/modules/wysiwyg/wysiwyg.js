@@ -1,4 +1,4 @@
-// $Id: wysiwyg.js,v 1.4 2008/12/01 14:14:41 sun Exp $
+// $Id: wysiwyg.js,v 1.5.2.5 2009/02/05 01:34:51 sun Exp $
 
 /**
  * Initialize editor libraries.
@@ -11,7 +11,7 @@ Drupal.wysiwygInit = function() {
     // Clone, so original settings are not overwritten.
     this(Drupal.wysiwyg.clone(Drupal.settings.wysiwyg.configs[editor]));
   });
-}
+};
 
 /**
  * Attach editors to input formats and target elements (f.e. textareas).
@@ -48,10 +48,16 @@ Drupal.behaviors.attachWysiwyg = function(context) {
         Drupal.wysiwygDetach(context, params);
         Drupal.wysiwygAttach(context, params);
       });
+      // IE triggers onChange after blur only.
+      if ($.browser.msie) {
+        $this.click(function () {
+          this.blur();
+        });
+      }
     }
     $this.addClass('wysiwyg-processed');
   });
-}
+};
 
 /**
  * Attach an editor to a target element.
@@ -70,8 +76,8 @@ Drupal.wysiwygAttach = function(context, params) {
   if (typeof Drupal.wysiwyg.editor.attach[params.editor] == 'function') {
     // (Re-)initialize field instance.
     Drupal.wysiwyg.instances[params.field] = {};
-    // Store new editor name and status for this field.
-    Drupal.wysiwyg.instances[params.field].editor = params.editor;
+    // Provide all input format parameters to editor instance.
+    jQuery.extend(Drupal.wysiwyg.instances[params.field], params);
     // Attach or update toggle link.
     Drupal.wysiwygAttachToggleLink(context, params);
     // Attach editor, if enabled by default or last state was enabled.
@@ -84,7 +90,7 @@ Drupal.wysiwygAttach = function(context, params) {
       Drupal.wysiwyg.instances[params.field].editor = 'none';
     }
   }
-}
+};
 
 /**
  * Detach all editors from a target element.
@@ -99,7 +105,7 @@ Drupal.wysiwygDetach = function(context, params) {
   if (jQuery.isFunction(Drupal.wysiwyg.editor.detach[editor])) {
     Drupal.wysiwyg.editor.detach[editor](context, params);
   }
-}
+};
 
 /**
  * Append or update an editor toggle link to a target element.
@@ -115,7 +121,7 @@ Drupal.wysiwygAttachToggleLink = function(context, params) {
     var a = document.createElement('a');
     $(a).attr({id: 'wysiwyg-toggle-' + params.field, href: 'javascript:void(0);'}).append(text);
     var div = document.createElement('div');
-    $(div).append(a);
+    $(div).addClass('wysiwyg-toggle-wrapper').append(a);
     $('#' + params.field).after(div);
   }
   $('#wysiwyg-toggle-' + params.field).html(params.status ? Drupal.settings.wysiwyg.disable : Drupal.settings.wysiwyg.enable).show().unbind('click').click(function() {
@@ -124,6 +130,7 @@ Drupal.wysiwygAttachToggleLink = function(context, params) {
       params.status = false;
       Drupal.wysiwygDetach(context, params);
       // After disabling the editor, re-attach default behaviors.
+      // @todo We HAVE TO invoke Drupal.wysiwygAttach() here.
       Drupal.wysiwyg.editor.attach.none(context, params);
       Drupal.wysiwyg.instances[params.field].editor = 'none';
       $(this).html(Drupal.settings.wysiwyg.enable).blur();
@@ -132,7 +139,7 @@ Drupal.wysiwygAttachToggleLink = function(context, params) {
       // Before enabling the editor, detach default behaviors.
       Drupal.wysiwyg.editor.detach.none(context, params);
       // Attach new editor using parameters of the currently selected input format.
-      Drupal.wysiwyg.getParams($('.wysiwyg-field-' + params.field + ':checked', context).get(0), params);
+      Drupal.wysiwyg.getParams($('.wysiwyg-field-' + params.field + ':checked, div.wysiwyg-field-' + params.field, context).get(0), params);
       params.status = true;
       Drupal.wysiwygAttach(context, params);
       $(this).html(Drupal.settings.wysiwyg.disable).blur();
@@ -142,7 +149,7 @@ Drupal.wysiwygAttachToggleLink = function(context, params) {
   if (params.editor == 'none') {
     $('#wysiwyg-toggle-' + params.field).hide();
   }
-}
+};
 
 /**
  * Parse the CSS classes of an input format DOM element into parameters.
@@ -167,10 +174,10 @@ Drupal.wysiwyg.getParams = function(element, params) {
   // Convert format id into string.
   params.format = 'format' + params.format;
   // Convert numeric values.
-  params.status = parseInt(params.status);
-  params.resizable = parseInt(params.resizable);
+  params.status = parseInt(params.status, 10);
+  params.resizable = parseInt(params.resizable, 10);
   return params;
-}
+};
 
 /**
  * Clone a configuration object recursively.
@@ -192,7 +199,7 @@ Drupal.wysiwyg.clone = function(obj) {
     }
   }
   return clone;
-}
+};
 
 /**
  * Allow certain editor libraries to initialize before the DOM is loaded.
