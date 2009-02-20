@@ -42,7 +42,28 @@ function citation_create_no_js(){
  * Callback to return the ajax for citations
  */
 function citation_get_citations(){
-  
+  global $_SESSION;
+  $citations = array();
+  if(isset($_SESSION['citation'][$_GET['page']]['urls']) && is_array($_SESSION['citation'][$_GET['page']]['urls'])){
+    foreach($_SESSION['citation'][$_GET['page']]['urls'] as $url_array){
+      $citations[] = theme('citation_url', $url_array);
+    }
+  }
+  if(isset($_SESSION['citation'][$_GET['page']]['nids']) && is_array($_SESSION['citation'][$_GET['page']]['nids']) && count($_SESSION['citation'][$_GET['page']]['nids'])){
+    $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$_SESSION['citation'][$_GET['page']]['nids']));
+    while($row = db_fetch_array($results)){
+      $user = user_load($row['uid']);
+      $citations[] = l(theme('citation_user',$user),'user/'.$user->uid);      
+    }
+  }
+  unset($_SESSION['citation'][$_GET['page']]);
+  if(count($citations)){
+    $output = theme('citations',$citations).'<p>'.l('Create Citation','citation/create_no_js',array('attributes' => array('onclick'=>'citation_create();return false;'))).'</p>';   
+  } else {
+    $output = t('We have no information about the Authors and Sources on this page');
+  }
+  print json_encode(array('content' => $output));
+  exit;
 }
 
 /**
@@ -62,6 +83,9 @@ function citation_theme() {
     ),
     'citation_user' => array(
       'arguments' => array('user' => NULL)
+    ),
+    'citation_url' => array(
+      'arguments' => array('urls' => array())
     )
   );
 }
@@ -103,17 +127,30 @@ function citation_views_pre_execute(&$view){
 /**
  * Add the nid to a global variable
  */
-function citation_add_nid($nid){
-  global $citation;  
-  $citation['nids'][$nid] = $nid;
+function citation_add_nid($nid, $url = false){
+  global $_SESSION;
+  if(!$url){
+    $url = request_uri();
+  }
+  $_SESSION['citation'][$url]['nids'][$nid] = $nid;
 }
 
 /**
  * Add the URL to a global variable
  */
-function citation_add_url($url_array){
-  global $citation;
-  $citation['urls'][$url_array['name']] = $url_array;
+function citation_add_url($url_array, $url = false){
+  global $_SESSION;
+  watchdog('citation', 'Setting URL');
+  if(!$url){
+    $url = request_uri();
+  }
+  if(strpos($url, "http")===0){
+    $url = substr($url, strpos($url, "/", 10));
+  }
+  watchdog('citation', 'URL is: '.print_r($url, true));
+  watchdog('citation', 'URL array is: '.print_r($url_array, true));
+  $_SESSION['citation'][$url]['urls'][$url_array['name']] = $url_array;
+  watchdog('citation', print_r($_SESSION['citation'], true));  
 }
 
 /**
@@ -131,27 +168,10 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
       break;
     case 'view' :
       if(user_access('create citations')){
-        /* global $citation;
-        // We need to create an array of "citations", lets get the UIDs from
-        // the nids and create the list
-        $citations = array();
-        if(is_array($citation) && count($citation)>0){
-          $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$citation));
-          while($row = db_fetch_array($results)){
-            $user = user_load($row['uid']);
-            $citations[] = l(theme('citation_user',$user),'user/'.$user->uid);
-          }
-        }
-        if(count($citations)){
-          drupal_add_js(drupal_get_path('module','citation')."/citation.js");
-          $output = theme('citations',$citations).'<p>'.l('Create Citation','citation/create_no_js',array('attributes' => array('onclick'=>'citation_create();return false;'))).'</p>';   
-        } else {
-          $output = t('We have no information about the Authors and Sources on this page');
-        }*/
         drupal_add_js(drupal_get_path('module', 'citation').'/citation.js');
         $blocks = array(
           'title' => t('Authors & Sources'),
-          'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\''.url('citation/get_citations',array('absolute'=>TRUE)).'\');</script></div>'
+          'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\''.url('citation/get_citations',array('absolute'=>TRUE, 'query'=>array('page' => request_uri()))).'\');</script></div>'
         );
       }
       break;
@@ -159,8 +179,16 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
   return $blocks;
 }
 
-function theme_citation_url($url){
-  
+function theme_citation_url($url_array){
+  $output = l($url_array['name'], $url_array['url']);
+  $urls = array();
+  $i = 1;
+  foreach($url_array['urls'] as $url){
+    $urls[] = l($i, $url);
+    $i ++;
+  }
+  $output .= " (". implode(", ", $urls).")";
+  return $output;
 }
 
 function theme_citation_user($user){

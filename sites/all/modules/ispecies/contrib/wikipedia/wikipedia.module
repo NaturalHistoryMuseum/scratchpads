@@ -21,10 +21,6 @@ function wikipedia_menu() {
   return $items;
 }
 
-function wikipedia_init(){
-  drupal_add_css(drupal_get_path('module','wikipedia').'/wikipedia.css');
-}
-
 function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
   watchdog('ispecies','Wikipedia ajax called');
   if(!$tid){
@@ -77,6 +73,7 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
     }
     $item->body = '<div><p style="padding: 0px 5px;text-align: justify">' . $output_text . '</p></div>';
     $item->page_url = 'http://en.wikipedia.org/wiki/' . ucfirst ( strtolower ( str_replace ( ' ', '_', $term_name ) ) );
+    citation_add_url(array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url)), $_GET['url']);
     $items [$response->page->revision->id . ':' . $url] = $item;
   }
   print json_encode($items);
