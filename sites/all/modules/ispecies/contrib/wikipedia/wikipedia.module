@@ -53,6 +53,8 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
     if (strlen ( trim ( $output_text ) ) < 10) {
       return array ();
     }
+    // Works in all PHP versions
+	ini_set('include_path', dirname(__FILE__));
     require_once('PEAR.php');
     require_once('Text/Wiki.php');
     if (class_exists ( 'Text_Wiki' )) {
