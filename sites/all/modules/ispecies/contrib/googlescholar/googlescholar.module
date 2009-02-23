@@ -42,7 +42,8 @@ function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
   $json_str = str_replace ( 'gs_results({', '{', $json_str );
   $json_str = str_replace ( '})', '}', $json_str );  
   $json_obj = json_decode ( strval ( $json_str ) );  
-  $counter = 0;  
+  $counter = 0;
+  $urls = array();
   if (is_array ( $json_obj->Result )) {    
     foreach ( $json_obj->Result as $key => $result ) {      
       $counter ++;      
@@ -52,9 +53,11 @@ function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
       $items [strval ( $result->link )] = $item;      
       if ($counter >= $limit) {
         break;
-      }    
+      }
+      $urls[] = $item->page_url;    
     }  
-  }  
+  }
+  $items['citation'] = theme('citation_url', array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.com', 'urls' => $urls));
   print json_encode ( $items );
   exit ();
 }

@@ -37,8 +37,10 @@ function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
     $response = new SimpleXMLElement ( $xml_response );    
     $item->body = '<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" />';
     $item->page_url = 'http://data.gbif.org/species/' . $response->taxon->key;    
-    $items [strval ( $response->taxon->url )] = $item;  
-  }  
+    $items [strval ( $response->taxon->url )] = $item;
+    $urls = array($item->page_url);
+  }
+  $items['citation'] = theme('citation_url', array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls));
   print json_encode ( $items );
   exit ();
 }

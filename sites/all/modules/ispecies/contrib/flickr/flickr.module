@@ -34,6 +34,7 @@ function flickr_ajax_callback($tid = FALSE, $limit = 50){
   $term = taxonomy_get_term ( $tid );
   $term_name = $term->name;
   $items = array ();
+  $urls = array();
   $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&text=' . $term_name );
   $results = unserialize ( file_get_contents ( $url ) );
   if ($results ['photos'] ['total'] > 0) {
@@ -44,8 +45,10 @@ function flickr_ajax_callback($tid = FALSE, $limit = 50){
       $item->body = '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>';
       $item->page_url = 'http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id'];
       $items ['http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']] = $item;
+      $urls[] = $item->page_url;
     }
-  }  
+  }
+  $items['citation'] = theme('citation_url', array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls));
   print json_encode ( $items );
   exit ();
 }

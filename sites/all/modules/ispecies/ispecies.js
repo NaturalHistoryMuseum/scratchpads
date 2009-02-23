@@ -18,10 +18,16 @@ function ispecies_success(data, viewname){
   var resultObj = eval('(' + data + ')');
   var output = '';
   $.each(resultObj, function() {
-    output += this['body'];
+    if(this['body']){
+      output += this['body'];
+    }
   });
   // Replace the output already set
   $('#'+viewname).html(output);
+  // Get the citations
+  if(resultObj['citation']){
+    citation_add_citation_html(resultObj['citation']);
+  }
 }
 
 function add_event_handlers(alteredobject){  

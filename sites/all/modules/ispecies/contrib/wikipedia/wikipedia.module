@@ -54,7 +54,7 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
       return array ();
     }
     // Works in all PHP versions
-	ini_set('include_path', dirname(__FILE__));
+    ini_set('include_path', dirname(__FILE__));
     require_once('PEAR.php');
     require_once('Text/Wiki.php');
     if (class_exists ( 'Text_Wiki' )) {
@@ -75,8 +75,8 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
     }
     $item->body = '<div><p style="padding: 0px 5px;text-align: justify">' . $output_text . '</p></div>';
     $item->page_url = 'http://en.wikipedia.org/wiki/' . ucfirst ( strtolower ( str_replace ( ' ', '_', $term_name ) ) );
-    citation_add_url(array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url)), $_GET['url']);
     $items [$response->page->revision->id . ':' . $url] = $item;
+    $items['citation'] = theme('citation_url', array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url)));
   }
   print json_encode($items);
   exit;

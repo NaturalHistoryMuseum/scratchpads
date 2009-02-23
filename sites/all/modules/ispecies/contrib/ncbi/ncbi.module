@@ -83,7 +83,7 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
               $name = $link->Provider->Name;
               $title = $name;
             }
-            $item->body .= sprintf ( '<li><a href="%s" title="%s" />%s</a></li>', $link->Url, $title, $name );
+            $item->body .= sprintf ( '<li><a href="%s" title="%s">%s</a></li>', $link->Url, $title, $name );
           }
           $item->body .= '</ul>';
         }
@@ -92,6 +92,7 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
       } //end of foreach $id  
     }
   }
+  $items['citation'] = theme('citation_url', array('name' => 'NCBI', 'url' => 'http://eutils.ncbi.nlm.nih.gov/'));
   print json_encode ( $items );
   exit ();
 }

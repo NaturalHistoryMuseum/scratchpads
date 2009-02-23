@@ -29,6 +29,12 @@ function citation_menu(){
     'type' => MENU_CALLBACK,
     'access arguments' => array('create citations')
   );
+  $items['citation/create_citation'] = array(
+    'title' => '',
+    'page callback' => 'citation_create_citation',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('create citations')
+  );
   return $items;
 }
 
@@ -39,16 +45,19 @@ function citation_create_no_js(){
 }
 
 /**
+ * Create the citation
+ */
+function citation_create_citation(){
+  print json_encode($_REQUEST);
+  exit;
+}
+
+/**
  * Callback to return the ajax for citations
  */
 function citation_get_citations(){
   global $_SESSION;
   $citations = array();
-  if(isset($_SESSION['citation'][$_GET['page']]['urls']) && is_array($_SESSION['citation'][$_GET['page']]['urls'])){
-    foreach($_SESSION['citation'][$_GET['page']]['urls'] as $url_array){
-      $citations[] = theme('citation_url', $url_array);
-    }
-  }
   if(isset($_SESSION['citation'][$_GET['page']]['nids']) && is_array($_SESSION['citation'][$_GET['page']]['nids']) && count($_SESSION['citation'][$_GET['page']]['nids'])){
     $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",",$_SESSION['citation'][$_GET['page']]['nids']));
     while($row = db_fetch_array($results)){
@@ -58,11 +67,12 @@ function citation_get_citations(){
   }
   unset($_SESSION['citation'][$_GET['page']]);
   if(count($citations)){
-    $output = theme('citations',$citations).'<p>'.l('Create Citation','citation/create_no_js',array('attributes' => array('onclick'=>'citation_create();return false;'))).'</p>';   
+    $output = theme('citations',$citations).'<p>'.l('Create Citation','citation/create_no_js',array('attributes' => array('onclick'=>'citation_create("'.url('citation/create_citation',array('absolute'=>TRUE)).'");return false;'))).'</p>';   
   } else {
     $output = t('We have no information about the Authors and Sources on this page');
   }
   print json_encode(array('content' => $output));
+  unset($_SESSION['citation']);
   exit;
 }
 
@@ -140,17 +150,13 @@ function citation_add_nid($nid, $url = false){
  */
 function citation_add_url($url_array, $url = false){
   global $_SESSION;
-  watchdog('citation', 'Setting URL');
   if(!$url){
     $url = request_uri();
   }
   if(strpos($url, "http")===0){
     $url = substr($url, strpos($url, "/", 10));
   }
-  watchdog('citation', 'URL is: '.print_r($url, true));
-  watchdog('citation', 'URL array is: '.print_r($url_array, true));
-  $_SESSION['citation'][$url]['urls'][$url_array['name']] = $url_array;
-  watchdog('citation', print_r($_SESSION['citation'], true));  
+  $_SESSION['citation'][$url]['urls'][$url_array['name']] = $url_array;  
 }
 
 /**
@@ -183,11 +189,13 @@ function theme_citation_url($url_array){
   $output = l($url_array['name'], $url_array['url']);
   $urls = array();
   $i = 1;
-  foreach($url_array['urls'] as $url){
-    $urls[] = l($i, $url);
-    $i ++;
+  if(is_array($url_array['urls']) && count($url_array['urls'])){
+    foreach($url_array['urls'] as $url){
+      $urls[] = l($i, $url);
+      $i ++;
+    }
+    $output .= " (". implode(", ", $urls).")";
   }
-  $output .= " (". implode(", ", $urls).")";
   return $output;
 }
 
