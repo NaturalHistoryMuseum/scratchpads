@@ -71,7 +71,6 @@ function yahooimages_ajax_callback($tid = FALSE, $limit = 20){
       $urls[] = $item->page_url;
     }
   }
-  watchdog('citation', print_r($urls, true));
   $items['citation'] = theme('citation_url', array('name'=> 'Yahoo! Images', 'url' => 'http://images.search.yahoo.com/', 'urls' => $urls));
   print json_encode ( $items );
   exit ();

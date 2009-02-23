@@ -22,7 +22,6 @@ function wikipedia_menu() {
 }
 
 function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
-  watchdog('ispecies','Wikipedia ajax called');
   if(!$tid){
     // Get the referer and use the final part of that as the tid
     $tid = array_pop(explode("/",referer_uri()));
