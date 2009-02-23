@@ -462,8 +462,8 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
 function scratchpadify_form_alter($form_id, &$form) {
   if(substr($_SERVER['HTTP_HOST'],0,16) != 'quartz.nhm.ac.uk' &&
      substr($_SERVER['HTTP_HOST'],0,16) != 'monkey.nhm.ac.uk' &&
-     substr($_SERVER['HTTP_HOST'],0,19) != 'vocabularies.gbif.org' &&
-     substr($_SERVER['HTTP_HOST'],0,18) != 'vocabularies.gbif.dev' &&
+     substr($_SERVER['HTTP_HOST'],0,21) != 'vocabularies.gbif.org' &&
+     substr($_SERVER['HTTP_HOST'],0,21) != 'vocabularies.gbif.dev' &&
     ($form_id == 'user_admin_perm' || 
      substr($form_id,0,12) == 'filter_admin')){
     drupal_set_message('Please change these settings from Quartz ONLY','error');
