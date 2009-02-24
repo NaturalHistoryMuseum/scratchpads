@@ -92,7 +92,9 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
       } //end of foreach $id  
     }
   }
-  $items['citation'] = theme('citation_url', array('name' => 'NCBI', 'url' => 'http://eutils.ncbi.nlm.nih.gov/'));
+  $urls = array('name' => 'NCBI', 'url' => 'http://eutils.ncbi.nlm.nih.gov/');
+  $items['urls'] = $urls;
+  $items['citation'] = theme('citation_url', $urls);
   print json_encode ( $items );
   exit ();
 }

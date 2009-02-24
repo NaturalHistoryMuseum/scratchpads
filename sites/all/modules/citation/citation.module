@@ -71,7 +71,7 @@ function citation_create_citation(){
     // Get the citation number
     $row = db_fetch_array(db_query("SELECT cid FROM {citation} ORDER BY cid DESC LIMIT 1"));
     if($row){
-      $citation_number = $row['cid'];
+      $citation_number = $row['cid'] + 1;
     } else {
       $citation_number = 1;
     }
@@ -118,7 +118,9 @@ function citation_create_citation(){
     unset ( $_SESSION ['citations'] );
     
     // Insert the stuff into the database
-    db_query("INSERT INTO {citation} (cid, created, reference) VALUES (%d, %d, '%s')", $citation_number, time(), print_r($_REQUEST, true));
+    $plain_text_citation = $_POST;
+    unset($plain_text_citation['page']);
+    db_query("INSERT INTO {citation} (cid, created, reference) VALUES (%d, %d, '%s')", $citation_number, time(), file_get_contents("php://input"));
     exit ();
   }
 }

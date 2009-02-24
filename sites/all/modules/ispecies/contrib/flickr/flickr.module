@@ -48,7 +48,9 @@ function flickr_ajax_callback($tid = FALSE, $limit = 50){
       $urls[] = $item->page_url;
     }
   }
-  $items['citation'] = theme('citation_url', array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls));
+  $urls = array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls);
+  $items['urls'] = $urls;
+  $items['citation'] = theme('citation_url', $urls);
   print json_encode ( $items );
   exit ();
 }

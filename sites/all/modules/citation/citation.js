@@ -52,7 +52,6 @@ function citation_started(){
 function citation_success(callback, cid){
   // We've got the data, parse it and work some magic    
   var url = callback+"/"+cid;
-  alert(url);
   $('#TB_overlay').remove();
   $('#TB_load').hide();//show loader
   tb_show(null, url, false);
@@ -71,7 +70,7 @@ function citation_create(callback, callback_success){
     beforeSend:function(data, textStatus){
       citation_started();
     },
-    data:{page:page_data,nids:citation_nids,urls:citation_urls},
+    data:{citation_nids:citation_nids,citation_urls:citation_urls,page:page_data},
     cache:false
   };
   $.ajax(ajax_options);  

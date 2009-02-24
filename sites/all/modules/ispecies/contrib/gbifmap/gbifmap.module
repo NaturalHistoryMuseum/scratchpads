@@ -40,7 +40,9 @@ function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
     $items [strval ( $response->taxon->url )] = $item;
     $urls = array($item->page_url);
   }
-  $items['citation'] = theme('citation_url', array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls));
+  $urls = array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls);
+  $items['urls'] = $urls;
+  $items['citation'] = theme('citation_url', $urls);
   print json_encode ( $items );
   exit ();
 }

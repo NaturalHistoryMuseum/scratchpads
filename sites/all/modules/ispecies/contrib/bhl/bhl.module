@@ -128,7 +128,9 @@ function bhl_ajax_callback($tid = FALSE, $limit = 20){
       }
     }
   }
-  $items['citation'] = theme('citation_url', array('name' => 'BHL', 'url'=>'http://www.biodiversitylibrary.org/'));
+  $urls = array('name' => 'BHL', 'url'=>'http://www.biodiversitylibrary.org/');
+  $items['citation'] = theme('citation_url', $urls);
+  $items['urls'] = $urls;
   print json_encode($items);
   exit;
 }
