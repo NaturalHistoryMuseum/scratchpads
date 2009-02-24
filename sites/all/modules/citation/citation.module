@@ -116,6 +116,9 @@ function citation_create_citation(){
     
     print $citation_number; // Probably change this to return a link
     unset ( $_SESSION ['citations'] );
+    
+    // Insert the stuff into the database
+    db_query("INSERT INTO {citation} (cid, created, reference) VALUES (%d, %d, '%s')", $citation_number, time(), print_r($_REQUEST, true));
     exit ();
   }
 }
