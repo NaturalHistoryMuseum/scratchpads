@@ -26,7 +26,7 @@ function ispecies_success(data, viewname){
   $('#'+viewname).html(output);
   // Get the citations
   if(resultObj['citation']){
-    citation_add_citation_html(resultObj['citation']);
+    citation_add_citation_url(resultObj);
   }
 }
 

@@ -53,11 +53,11 @@ function mado_get_theme($vid){
       // '#css' => 'mado_red',
       // '#title' => '' // CURRENTLY UNUSED
       'left' => array(
-        //'#title' => t('Top left'),
-        '#type' => 'view',
-        '#name' => 'comments_recent',
+        //'#title' => t('Top right'),
+        '#type' => 'block',
+        '#name' => 'citation/0',
+        '#scroll' => 1,
         '#css' => 'mado_block_2',
-        '#scroll' => 1
       ),      
       'right' => array(
         //'#title' => t('Top right'),
@@ -141,11 +141,10 @@ function mado_get_theme($vid){
         '#css' => 'mado_block_2',
       ),      
       'right' => array(
-        //'#title' => t('Top right'),
-        '#type' => 'block',
-        '#name' => 'citation/0',
-        '#scroll' => 1,
+        '#type' => 'view',
+        '#name' => 'comments_recent',
         '#css' => 'mado_block_2',
+        '#scroll' => 1
       ),    
     ),
   );

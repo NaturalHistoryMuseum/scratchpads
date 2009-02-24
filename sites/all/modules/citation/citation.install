@@ -7,19 +7,12 @@ function citation_install(){
   db_query("UPDATE {system} SET weight = 1000 WHERE name = 'citation'");
 }
 
-function citation_schema(){  
-  $tables['citation_nodes'] = array(
-    'fields' => array(
-      'cid' => array('type' => 'int', 'not null' => true),
-      'nid' => array('type' => 'int', 'not null' => true)),
-    'primary key' => array('cid', 'nid'));  
+function citation_schema(){
   $tables['citation'] = array(
     'fields' => array(
-      'cid' => array('type' => 'int', 'not null' => true),
-      'title' => array('type' => 'text'),
-      'page_data' => array('type' => 'blob', 'size' => 'big'),
-      'reference_data' => array('type' => 'text'),
+      'cid' => array('type' => 'serial', 'not null' => true, 'unsigned' => true),
       'created' => array('type' => 'int'),
+      'reference' => array('type' => 'text')
     ),
     'primary key' => array('cid'));
   return $tables;
