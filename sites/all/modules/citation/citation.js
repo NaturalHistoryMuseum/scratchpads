@@ -14,6 +14,19 @@ function citation_get_citations(callback){
   $.ajax(ajax_options); 
 }
 
+function citation_email(callback, cid, uid){
+  var ajax_options = {
+    type:"POST",
+    url:callback,
+    success:function(data){
+      alert(data);
+    },
+    data:{cid:cid,uid:uid},
+    cache:false
+  };
+  $.ajax(ajax_options);  
+}
+
 function citation_got_citations(citations){
   var resultObj = eval('(' + citations + ')');
   $('#citation').html(resultObj['content']);

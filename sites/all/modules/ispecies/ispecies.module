@@ -30,9 +30,10 @@ function ispecies_node_info() {
  * Implementation of hook_init
  */
 function ispecies_init(){
-  // We only need to include this on pages which are using iSpecies blocks. FIXME
-  drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
-  drupal_add_js('page_tid = '.arg(2).';' , 'inline');
+  if(is_numeric(arg(2)) && arg(0)=='taxonomy' && arg(1)=='term'){
+    drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
+    drupal_add_js('page_tid = '.arg(2).';' , 'inline');
+  }
 }
 
 /**

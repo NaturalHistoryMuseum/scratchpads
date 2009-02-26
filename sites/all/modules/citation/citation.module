@@ -47,6 +47,12 @@ function citation_menu(){
     'type' => MENU_CALLBACK, 
     'access arguments' => array (
       'create citations' ) );
+  $items ['citation/email'] = array (
+    'title' => '', 
+    'page callback' => 'citation_email', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'create citations' ) );
   return $items;
 }
 
@@ -80,8 +86,68 @@ function citation_popup_html($cid=1){
   // Return the reference, we shouldn't get here without a cid, but just in case
   // we'll default to 1
   $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
-  echo theme('citation_popup', $row);
+  print '<div class="citation-popup">';
+  print theme('citation_popup', $row);
+  global $user;
+  if($user->uid){
+    print '<div class="form"><form action="'.url('citation/create_no_js').'"><input type="button" value="'.t('Email me this').'" onclick="';
+    print "citation_email('".url('citation/email', array('absolute'=>1))."'," . $cid . ", '".$user->uid."');return false";
+    print '"/></form></div>';
+  }
+  print '</div>';
+  exit;
 }
+
+function citation_email() {
+  global $user;
+  $params['to'] = $user->mail;
+  //example_mail() will be called based on the first drupal_mail() parameter.
+  drupal_mail('citation', 'notice', $account->mail, user_preferred_language($account), $params);
+}
+
+function citation_mail($key, &$message, $params) {
+  switch($key) { 
+    case 'notice': 
+      $message['subject'] = t('Notification from site');
+      $message['body'] = t("Dear User, there is new content on the site");
+      $message['to'] = $params['to'];
+      break;
+  }
+} 
+
+/**
+ * hook_mail
+function citaion_mail($key, &$message, $params) {
+  // We only have one mail, so no need to check key
+  $message = array(
+    'mail_id' => time(),
+    'to' => $params['to'],
+    'subject' => 'Some shit here',
+    'body' => array('Some more stuff in here'),
+    'from' => $params['from']
+  );
+}
+ */
+
+/**
+ * Ajax callback for the citation_email
+function citation_email(){
+  if($_POST['cid'] && $_POST['uid']){
+    $cid = $_POST['cid'];
+    $uid = $_POST['uid'];
+    global $user;
+    if($uid == $user->uid){      
+      $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
+      $variables = array(
+        '!site' => variable_get ( 'site_name', 'drupal' ) 
+      );
+      $variables = array('to' => 'simon@rycroft.name', 'from' => 'simon@rycroft.name');
+      drupal_mail('citation', 'citation', $user->mail, user_preferred_language($user), $variables, $user->mail);
+    }
+    print 1;
+  }
+}
+ */
 
 /**
  * Create the citation
@@ -149,6 +215,8 @@ function citation_create_citation(){
   }
 }
 
+// FIXME - There is an issue with saving of files within CSS files which are
+// enclosed by double quotes (at least that is what I believe the issue to be)
 function citation_save_file($file, $citation_number){
   $citation_directory = file_directory_path () ."/citations/$citation_number";
   $previous_citation_directory = file_directory_path () ."/citations/".($citation_number-1);
@@ -200,6 +268,7 @@ function citation_save_file($file, $citation_number){
     preg_match_all ( '/url\((.+?)\)/i', file_get_contents ( $new_file ), $css_files );
     if (is_array ( $css_files [1] )) {
       foreach ( $css_files [1] as $css_file ) {
+        $css_file = str_replace('"','',$css_file);
         $new_filename = citation_save_file ( dirname ( $get_file ) . "/$css_file", $citation_number );
         file_put_contents ( $new_file, str_replace ( $css_file, $new_filename, file_get_contents ( $new_file ) ) );
       }
@@ -207,8 +276,8 @@ function citation_save_file($file, $citation_number){
   }
   // Return the new filename so that reference to $file in the $page string can
   // be changed
-  $_SESSION ['citations'] [$file] = $new_file;
-  return url ( $new_file );
+  $_SESSION ['citations'] [$file] = url($new_file, array('absolute'=>1));
+  return $_SESSION['citations'][$file];
 }
 /**
  * Callback to return the ajax for citations
@@ -359,10 +428,8 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
 }
 
 function theme_citation_popup($row){
-  $output  = '<div class="citation-popup">';
   $output .= '<div><h2>Reference</h2><div><p>'.$row['reference'].'</p></div></div>';
   $output .= '<div><h2>Permalink</h2><div><p>'.l(url('citations/'.$row['cid'], array('absolute'=>1)),'citations/'.$row['cid']).'</p></div></div>';
-  $output .= '</div>';
   return $output;
 }
 
