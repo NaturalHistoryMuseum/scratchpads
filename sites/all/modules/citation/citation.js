@@ -26,9 +26,9 @@ function citation_got_citations(citations){
 
 function citation_add_citation_url(citations){
   citation_add_citation_html(citations['citation']);
-  $.each(citations['urls'], function() {
-    citation_urls[citation_urls.length] = this;
-  });
+  //$.each(citations['urls'], function() {
+  citation_urls[citation_urls.length] = citations['urls']['name']
+  //});
 }
 
 function citation_add_citation_html(html){
@@ -45,7 +45,7 @@ function citation_add_citation_html(html){
 
 function citation_started(){
   //borrow some of the thickbox stuff to show something is working
-  $("body").append('<div id="TB_overlay" class="TB_overlayBG"></div><div id="TB_load"></div>');//add loader to the page
+  $("body").append('<div id="TB_overlay" class="TB_overlayBG"></div><div id="TB_load"><h1 style="margin:50px 0;color:white;">Please&nbsp;be&nbsp;patient, this&nbsp;can&nbsp;take&nbsp;a&nbsp;little&nbsp;time<h1></div>');//add loader to the page
   $('#TB_load').show();//show loader
 }
 
@@ -70,7 +70,7 @@ function citation_create(callback, callback_success){
     beforeSend:function(data, textStatus){
       citation_started();
     },
-    data:{citation_nids:citation_nids,citation_urls:citation_urls,page:page_data},
+    data:{url:location.href,"citation_nids[]":citation_nids,"citation_urls[]":citation_urls,page:page_data},
     cache:false
   };
   $.ajax(ajax_options);  

@@ -41,9 +41,31 @@ function citation_menu(){
     'type' => MENU_CALLBACK, 
     'access arguments' => array (
       'create citations' ) );
+  $items ['citations'] = array (
+    'title' => '', 
+    'page callback' => 'citation_get_files', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'create citations' ) );
   return $items;
 }
 
+/**
+ * Return files (simply makes URLs nice - Hmmm, there must be a better way of
+ * doing this)
+ */
+function citation_get_files(){
+  $file_name = arg(1);
+  if(arg(2)){
+    $file_name .= "/".arg(2);
+  } else {
+    $file_name .=".html";
+  }
+  $file_name = file_directory_path()."/citations/$file_name";
+  $file = fopen($file_name, "rb");
+  fpassthru($file);
+  exit;
+}
 /**
  * Creates a page for users without JS.
  */
@@ -55,8 +77,10 @@ function citation_create_no_js(){
  * Popup html inserting into thickbox once the citations have been created
  */
 function citation_popup_html($cid=1){
+  // Return the reference, we shouldn't get here without a cid, but just in case
+  // we'll default to 1
   $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
-  print_r($row);
+  echo theme('citation_popup', $row);
 }
 
 /**
@@ -118,9 +142,9 @@ function citation_create_citation(){
     unset ( $_SESSION ['citations'] );
     
     // Insert the stuff into the database
-    $plain_text_citation = $_POST;
-    unset($plain_text_citation['page']);
-    db_query("INSERT INTO {citation} (cid, created, reference) VALUES (%d, %d, '%s')", $citation_number, time(), file_get_contents("php://input"));
+    $retrieved = time();
+    $reference = theme('citation_plain', $_POST['citation_nids'], $_POST['citation_urls'], $retrieved, $citation_number);
+    db_query("INSERT INTO {citation} (cid, created, reference, url) VALUES (%d, %d, '%s', '%s')", $citation_number, $retrieved, $reference, $_POST['url']);
     exit ();
   }
 }
@@ -202,10 +226,10 @@ function citation_get_citations(){
   }
   unset ( $_SESSION ['citation'] [$_GET ['page']] );
   if (count ( $citations )) {
-    $output = theme ( 'citations', $citations ) . '<p>' . l ( 'Create Citation', 'citation/create_no_js', array (
-      'attributes' => array (
-        'onclick' => 'citation_create("' . url ( 'citation/create_citation', array (
-          'absolute' => TRUE ) ) . '", "'.url ( 'citation/popup').'");return false;' ) ) ) . '</p>';
+    $output = theme ( 'citations', $citations );
+    $output .= '<form action="'.url('citation/create_no_js').'"><input type="button" value="'.t('Create Citation').'" onclick="';
+    $output .= "citation_create('" . url ( 'citation/create_citation', array ('absolute' => TRUE ) ) . "', '".url ( 'citation/popup')."');return false";
+    $output .='"/></form>';
   } else {
     $output = t ( 'We have no information about the Authors and Sources on this page' );
   }
@@ -235,9 +259,15 @@ function citation_theme(){
     'citation_user' => array (
       'arguments' => array (
         'user' => NULL ) ), 
+    'citation_plain' => array (
+      'arguments' => array (
+        'nids' => array(), 'urls' => array(), 'retrieved' => time(), 'citation_number' => 1)), 
     'citation_url' => array (
       'arguments' => array (
-        'urls' => array () ) ) );
+        'urls' => array () ) ),
+    'citation_popup' => array (
+      'arguments' => array (
+        'row' => array () ) ) );
 }
 
 /**
@@ -315,6 +345,7 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
     case 'view' :
       if (user_access ( 'create citations' )) {
         drupal_add_js ( drupal_get_path ( 'module', 'citation' ) . '/citation.js' );
+        drupal_add_css( drupal_get_path ( 'module', 'citation' ) . '/citation.css' );
         $blocks = array (
           'title' => t ( 'Authors & Sources' ), 
           'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\'' . url ( 'citation/get_citations', array (
@@ -325,6 +356,41 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
       break;
   }
   return $blocks;
+}
+
+function theme_citation_popup($row){
+  $output  = '<div class="citation-popup">';
+  $output .= '<div><h2>Reference</h2><div><p>'.$row['reference'].'</p></div></div>';
+  $output .= '<div><h2>Permalink</h2><div><p>'.l(url('citations/'.$row['cid'], array('absolute'=>1)),'citations/'.$row['cid']).'</p></div></div>';
+  $output .= '</div>';
+  return $output;
+}
+
+function theme_citation_plain($nids, $urls, $retrieved, $citation_number){
+  // List:
+  // - Users
+  // - URLS
+  // - Retrieved time/data
+  // - Site title
+  // - Link to this citation
+  $results = db_query ( "SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode ( ",", $nids));
+  $users_and_urls = array();
+  while ( $row = db_fetch_array ( $results ) ) {
+    $user = user_load ( $row ['uid'] );
+    $users_and_urls[] = theme('citation_user', $user);
+  }
+  // Add URLs
+  foreach($urls as $url){
+    $users_and_urls[] = $url;
+  }
+  $output = implode(", ", $users_and_urls);
+  $title = variable_get('site_name', 'Drupal');
+  $slogan = variable_get('site_slogan','');
+  if(trim($slogan) != ''){
+    $title .= " | $slogan";
+  }
+  $output .= ". ".t('Retrieved on ').format_date ( $retrieved, 'long' ).". <b>$title</b> <span style=\"text-decoration:underline\">".url('citations/'.$citation_number, array('absolute' => TRUE))."</span>";
+  return $output; 
 }
 
 function theme_citation_url($url_array){

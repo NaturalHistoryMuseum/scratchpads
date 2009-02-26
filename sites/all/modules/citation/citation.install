@@ -12,7 +12,8 @@ function citation_schema(){
     'fields' => array(
       'cid' => array('type' => 'serial', 'not null' => true, 'unsigned' => true),
       'created' => array('type' => 'int'),
-      'reference' => array('type' => 'text')
+      'reference' => array('type' => 'text'),
+      'url' => array('type' => 'text')
     ),
     'primary key' => array('cid'));
   return $tables;
