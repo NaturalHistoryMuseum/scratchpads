@@ -2,6 +2,8 @@ var citations_on_page = false;
 var additional_citations = new Array();
 var citation_nids = Array();
 var citation_urls = Array();
+var citation_email_success;
+var citation_email_failure;
 
 function citation_get_citations(callback){
   var ajax_options = {
@@ -19,7 +21,12 @@ function citation_email(callback, cid, uid){
     type:"POST",
     url:callback,
     success:function(data){
-      alert(data);
+      var result = eval('(' + data + ')');
+      if(result){
+        alert(citation_email_success);
+      } else {
+        alert(citation_email_failure);
+      }
     },
     data:{cid:cid,uid:uid},
     cache:false

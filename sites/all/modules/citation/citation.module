@@ -99,55 +99,40 @@ function citation_popup_html($cid=1){
 }
 
 function citation_email() {
-  global $user;
-  $params['to'] = $user->mail;
-  //example_mail() will be called based on the first drupal_mail() parameter.
-  drupal_mail('citation', 'notice', $account->mail, user_preferred_language($account), $params);
-}
-
-function citation_mail($key, &$message, $params) {
-  switch($key) { 
-    case 'notice': 
-      $message['subject'] = t('Notification from site');
-      $message['body'] = t("Dear User, there is new content on the site");
-      $message['to'] = $params['to'];
-      break;
-  }
-} 
-
-/**
- * hook_mail
-function citaion_mail($key, &$message, $params) {
-  // We only have one mail, so no need to check key
-  $message = array(
-    'mail_id' => time(),
-    'to' => $params['to'],
-    'subject' => 'Some shit here',
-    'body' => array('Some more stuff in here'),
-    'from' => $params['from']
-  );
-}
- */
-
-/**
- * Ajax callback for the citation_email
-function citation_email(){
   if($_POST['cid'] && $_POST['uid']){
     $cid = $_POST['cid'];
     $uid = $_POST['uid'];
     global $user;
     if($uid == $user->uid){      
       $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
-      $variables = array(
-        '!site' => variable_get ( 'site_name', 'drupal' ) 
-      );
-      $variables = array('to' => 'simon@rycroft.name', 'from' => 'simon@rycroft.name');
-      drupal_mail('citation', 'citation', $user->mail, user_preferred_language($user), $variables, $user->mail);
+      global $user;
+      $params['user'] = $user;
+      $params['citation'] = $row;
+      drupal_mail('citation', 'popup', $account->mail, user_preferred_language($account), $params);
+      print json_encode(true);
+      exit;
     }
-    print 1;
+  }
+  print json_encode(false);
+}
+
+function citation_mail($key, &$message, $params) {
+  switch($key) { 
+    case 'popup':
+      $user = $params['user'];
+      $citation = $params['citation']; 
+      $message['subject'] = t('Citation');
+      $message['body'] = array(
+        $user->name."!",
+        'The following citation was requested by you:',
+        strip_tags($citation['reference']),
+        variable_get ( 'site_name', 'drupal' ),
+        "--\r\nScratchpad powered"
+      );
+      $message['to'] = $user->mail;
+      break;
   }
 }
- */
 
 /**
  * Create the citation
@@ -414,6 +399,8 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
     case 'view' :
       if (user_access ( 'create citations' )) {
         drupal_add_js ( drupal_get_path ( 'module', 'citation' ) . '/citation.js' );
+        drupal_add_js("citation_email_success = \"".t('Your email has been sent.')."\";
+citation_email_failure = \"".t('Your email has not been sent, the administrator of this site has been notified.')."\";" , 'inline');
         drupal_add_css( drupal_get_path ( 'module', 'citation' ) . '/citation.css' );
         $blocks = array (
           'title' => t ( 'Authors & Sources' ), 
