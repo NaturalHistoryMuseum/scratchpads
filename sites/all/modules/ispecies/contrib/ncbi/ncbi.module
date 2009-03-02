@@ -5,21 +5,9 @@
 function ncbi_ispecies(){
   return array (
     'ncbi' => array (
-      'name' => 'ncbi', 
       'title' => t ( 'National Center for Biotechnology Information' ), 
       'description' => t ( 'Some info about NCBI' ), 
-      'callback_url' => url ( 'ispecies/ncbi', array (
-        'absolute' => TRUE ) ) ) );
-}
-
-function ncbi_menu(){
-  $items = array ();
-  $items ['ispecies/ncbi'] = array (
-    'page callback' => 'ncbi_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'ncbi_ajax_callback' ) );
 }
 
 function ncbi_init(){
@@ -95,6 +83,5 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
   $urls = array('name' => 'NCBI', 'url' => 'http://eutils.ncbi.nlm.nih.gov/');
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
-  print json_encode ( $items );
-  exit ();
+  return $items;
 }

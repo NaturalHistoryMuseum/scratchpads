@@ -26,16 +26,41 @@ function ispecies_node_info() {
   );
 }
 
+function ispecies_menu(){
+  $items = array();
+  $items['ispecies'] = array(
+    'page callback' => 'ispecies_ajax_callback', 
+    'access arguments' => array (
+      'access content' ), 
+    'type' => MENU_CALLBACK );
+  return $items;
+}
+
+function ispecies_ajax_callback($module, $tid = false){
+  if(!$tid){
+    // If tid is not set, get the referer and use the final part of that as the
+    // tid
+    $tid = array_pop(explode("/",referer_uri()));
+  }
+  $ispecies_views = module_invoke_all('ispecies');
+  print json_encode(call_user_func($ispecies_views[$module]['callback'], $tid));
+  exit;
+}
+
 /**
  * Implementation of hook_init
  */
 function ispecies_init(){
   if(is_numeric(arg(2)) && arg(0)=='taxonomy' && arg(1)=='term'){
-    drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
-    drupal_add_js('page_tid = '.arg(2).';' , 'inline');
+    ispecies_add_js(arg(2));
   }
 }
 
+function ispecies_add_js($tid){
+  drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
+  drupal_add_js(drupal_get_path('module','citation')."/citation.js");
+  drupal_add_js('page_tid = '.$tid.';' , 'inline');
+}
 /**
  * Implementation of hook_form
  * 

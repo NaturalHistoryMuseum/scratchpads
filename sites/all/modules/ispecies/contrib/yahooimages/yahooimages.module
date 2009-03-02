@@ -4,22 +4,10 @@
  */
 function yahooimages_ispecies(){
   return array (
-    'yahooimages' => array (
-      'name' => 'yahooimages', 
+    'yahooimages' => array ( 
       'title' => t ( 'Yahoo! Images' ), 
       'description' => t ( 'Yahoo! search api images' ), 
-      'callback_url' => url ( 'ispecies/yahooimages', array (
-        'absolute' => TRUE ) ) ) );
-}
-
-function yahooimages_menu(){
-  $items = array ();
-  $items ['ispecies/yahooimages'] = array (
-    'page callback' => 'yahooimages_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'yahooimages_ajax_callback' ) );
 }
 
 function yahooimages_init(){
@@ -74,6 +62,5 @@ function yahooimages_ajax_callback($tid = FALSE, $limit = 20){
   $urls = array('name'=> 'Yahoo! Images', 'url' => 'http://images.search.yahoo.com/', 'urls' => $urls);
   $items['citation'] = theme('citation_url', $urls);
   $items['urls'] = $urls;
-  print json_encode ( $items );
-  exit ();
+  return $items;
 }

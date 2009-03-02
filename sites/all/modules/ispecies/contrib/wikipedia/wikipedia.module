@@ -5,20 +5,9 @@
 function wikipedia_ispecies() {
   return array (
     'wikipedia' => array (
-      'name' => 'wikipedia', 
       'title' => 'Wikipedia', 
       'description' => t('Inserts text from a wikipedia article onto a page'), 
-      'callback_url' => url('ispecies/wikipedia', array('absolute' => TRUE))));
-}
-
-function wikipedia_menu() {
-  $items = array ();
-  $items ['ispecies/wikipedia'] = array (
-    'page callback' => 'wikipedia_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'wikipedia_ajax_callback'));
 }
 
 function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
@@ -78,8 +67,7 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
     $items['urls'] = array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url));
     $items['citation'] = theme('citation_url', $urls);
   }
-  print json_encode($items);
-  exit;
+  return $items;
 }
 
 function _get_wiki_text($wiki_text, $term) {

@@ -5,21 +5,9 @@
 function gbifmap_ispecies(){
   return array (
     'gbifmap' => array (
-      'name' => 'gbifmap', 
       'title' => t ( 'Global Biodiverstiy Information Facility' ), 
       'description' => t ( 'Some info about GBIF' ), 
-      'callback_url' => url ( 'ispecies/gbifmap', array (
-        'absolute' => TRUE ) ) ) );
-}
-
-function gbifmap_menu(){
-  $items = array ();
-  $items ['ispecies/gbifmap'] = array (
-    'page callback' => 'gbifmap_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'gbifmap_ajax_callback' ) );
 }
 
 function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
@@ -43,6 +31,5 @@ function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
   $urls = array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls);
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
-  print json_encode ( $items );
-  exit ();
+  return $items;
 }

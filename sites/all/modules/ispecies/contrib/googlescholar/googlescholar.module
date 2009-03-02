@@ -5,21 +5,9 @@
 function googlescholar_ispecies(){
   return array (
     'googlescholar' => array (
-      'name' => 'googlescholar', 
       'title' => t ( 'Google Scholar' ), 
       'description' => t ( 'Some info about Google Scholar' ), 
-      'callback_url' => url ( 'ispecies/googlescholar', array (
-        'absolute' => TRUE ) ) ) );
-}
-
-function googlescholar_menu(){
-  $items = array ();
-  $items ['ispecies/googlescholar'] = array (
-    'page callback' => 'googlescholar_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'googlescholar_ajax_callback' ) );
 }
 
 function googlescholar_init(){
@@ -60,6 +48,5 @@ function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
   $urls = array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.com', 'urls' => $urls);
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
-  print json_encode ( $items );
-  exit ();
+  return $items;
 }

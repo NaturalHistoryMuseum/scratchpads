@@ -5,21 +5,9 @@
 function flickr_ispecies(){
   return array (
     'flickr' => array (
-      'name' => 'flickr', 
       'title' => t ( 'Flickr Images' ), 
       'description' => t ( 'Flickr, the trendy web 2 image site' ), 
-      'callback_url' => url ( 'ispecies/flickr', array (
-        'absolute' => TRUE ) ) ) );
-}
-
-function flickr_menu(){
-  $items = array ();
-  $items ['ispecies/flickr'] = array (
-    'page callback' => 'flickr_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
-  return $items;
+      'callback' => 'flickr_ajax_callback' ) );
 }
 
 function flickr_init(){
@@ -27,10 +15,6 @@ function flickr_init(){
 }
 
 function flickr_ajax_callback($tid = FALSE, $limit = 50){
-  if (! $tid) {
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop ( explode ( "/", referer_uri () ) );
-  }
   $term = taxonomy_get_term ( $tid );
   $term_name = $term->name;
   $items = array ();
@@ -51,6 +35,5 @@ function flickr_ajax_callback($tid = FALSE, $limit = 50){
   $urls = array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls);
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
-  print json_encode ( $items );
-  exit ();
+  return $items;
 }

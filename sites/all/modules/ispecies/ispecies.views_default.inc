@@ -13,7 +13,7 @@ function ispecies_views_default_views() {
   foreach($ispecies_views as $module => $ispecies_view){
     // Begin copy and paste of output from the Export tab of a view.
     $view = new view;
-    $view->name = $ispecies_view['name'];
+    $view->name = $module;
     $view->description = $ispecies_view['description'];
     $view->tag = '';
     $view->view_php = '';
@@ -181,7 +181,7 @@ function ispecies_views_default_views() {
       ),
       'ispecies' => array(
         'operator' => '=',
-        'value' => $ispecies_view['name'],
+        'value' => $module,
         'group' => '0',
         'exposed' => FALSE,
         'expose' => array(
@@ -199,7 +199,7 @@ function ispecies_views_default_views() {
       'type' => 'none',
     ));
     $handler->override_option('title', $ispecies_view['title']);
-    $handler->override_option('empty', '<div id="'.$ispecies_view['name'].'"></div><script type="text/javascript">ispecies_callback(\''.$ispecies_view['callback_url'].'\', \''.$ispecies_view['name'].'\');</script>');
+    $handler->override_option('empty', '<div id="'.$module.'"></div><script type="text/javascript">ispecies_callback(\''.url('ispecies',array('absolute' => TRUE)).'\',\''.$module.'\');</script>');
     $handler->override_option('empty_format', '2'); // FIXME - this could change
     
     $views[$view->name] = $view;

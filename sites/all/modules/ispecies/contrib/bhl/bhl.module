@@ -5,19 +5,13 @@
 function bhl_ispecies() {
   return array (
     'bhl' => array (
-      'name' => 'bhl', 
       'title' => t('Biodiversity Heritage Library'), 
-      'description' => t('Some info about BHL'), 
-      'callback_url' => url('ispecies/bhl', array('absolute' => TRUE))));
+      'description' => t('Some info about BHL'),
+      'callback' => 'bhl_ajax_callback'));
 }
 
 function bhl_menu() {
   $items = array ();
-  $items ['ispecies/bhl'] = array (
-    'page callback' => 'bhl_ajax_callback', 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK );
   $items ['bhl_viewer'] = array (
     'page callback' => 'ispecies_bhl_viewer', 
     'access arguments' => array (
@@ -70,10 +64,6 @@ function _bhl_get_namebank_titles($term_name) {
 }
 
 function bhl_ajax_callback($tid = FALSE, $limit = 20){
-  if(!$tid){
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop(explode("/",referer_uri()));
-  }
   $term = taxonomy_get_term($tid);
   $term_name = $term->name;  
   $items = array ();
@@ -131,8 +121,7 @@ function bhl_ajax_callback($tid = FALSE, $limit = 20){
   $urls = array('name' => 'BHL', 'url'=>'http://www.biodiversitylibrary.org/');
   $items['citation'] = theme('citation_url', $urls);
   $items['urls'] = $urls;
-  print json_encode($items);
-  exit;
+  return $items;
 }
 /**
  * Thickbox display breaks bhl view layout - but not if we use an inline iframe 
