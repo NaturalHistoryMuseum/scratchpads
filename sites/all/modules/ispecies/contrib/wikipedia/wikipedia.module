@@ -10,13 +10,7 @@ function wikipedia_ispecies() {
       'callback' => 'wikipedia_ajax_callback'));
 }
 
-function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
-  if(!$tid){
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop(explode("/",referer_uri()));
-  }
-  $term = taxonomy_get_term($tid);
-  $term_name = $term->name;  
+function wikipedia_ajax_callback($term_name, $limit = false, $offset = false){
   $wikipedia_url = 'http://en.wikipedia.org/wiki/Special:Export/';
   
   $items = array ();
@@ -61,8 +55,9 @@ function wikipedia_ajax_callback($tid = FALSE, $limit = 20){
     if (strlen ( trim ( $output_text ) ) < 10) {
       return array ();
     }
-    $item->body = '<div><p style="padding: 0px 5px;text-align: justify">' . $output_text . '</p></div>';
-    $item->page_url = 'http://en.wikipedia.org/wiki/' . ucfirst ( strtolower ( str_replace ( ' ', '_', $term_name ) ) );
+    $item = array(
+      'body' => '<div><p style="padding: 0px 5px;text-align: justify">' . $output_text . '</p></div>',
+      'page_url' => 'http://en.wikipedia.org/wiki/' . ucfirst ( strtolower ( str_replace ( ' ', '_', $term_name ) )));
     $items [$response->page->revision->id . ':' . $url] = $item;
     $items['urls'] = array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url));
     $items['citation'] = theme('citation_url', $urls);

@@ -1,5 +1,5 @@
 <?php
-// $Id: node.inc,v 1.12.2.15 2008/12/16 13:55:06 robrechtj Exp $
+// $Id: node.inc,v 1.12.2.21 2009/02/06 09:36:31 robrechtj Exp $
 
 /**
  * @file
@@ -61,8 +61,7 @@ function node_import_can_create_node($type) {
 /**
  * Create a new node by submitting $type_node_form.
  */
-function node_import_create_node($type, $values, $preview) {
-  $can_continue = TRUE;
+function node_import_create_node($type, &$values, $preview) {
   $output = $preview ? '' : FALSE;
 
   if (($node_type = node_import_type_is_node($type)) !== FALSE) {
@@ -75,13 +74,21 @@ function node_import_create_node($type, $values, $preview) {
       'values' => $values,
     );
 
-    $node = (object)array('type' => $node_type);
+    $node = (object)array(
+      'type' => $node_type,
+      'name' => isset($values['name']) ? $values['name'] : '',
+    );
     node_import_drupal_execute($form_id, $form_state, $node);
 
-    $output = $preview ? $form_state['node_preview'] : $form_state['nid'];
+    if ($preview) {
+      $output = isset($form_state['node_preview']) ? $form_state['node_preview'] : '';
+    }
+    else {
+      $output = $values['nid'] = $form_state['nid'];
+    }
   }
 
-  return array($can_continue, $output);
+  return $output;
 }
 
 /**
@@ -99,6 +106,7 @@ function node_node_import_fields($type) {
 
     $fields['type'] = array(
       'title' => t('Content type'),
+      'module' => 'node',
       'is_mappable' => FALSE,
       'default_value' => $node_type,
     );
@@ -106,6 +114,8 @@ function node_node_import_fields($type) {
     if ($type_info->has_title) {
       $fields['title'] = array(
         'title' => $type_info->title_label,
+        'module' => 'node',
+        'weight' => -5,
         'map_required' => TRUE,
         'default_value' => '',
       );
@@ -114,12 +124,16 @@ function node_node_import_fields($type) {
     if ($type_info->has_body) {
       $fields['body'] = array(
         'title' => $type_info->body_label,
+        'group' => $type_info->body_label,
+        'module' => 'node',
         'map_required' => ($type_info->min_word_count > 0),
         'default_value' => '',
       );
 
       $fields['format'] = array(
         'title' => t('Input format'),
+        'group' => $type_info->body_label,
+        'module' => 'node',
         'allowed_values' => node_import_extract_property(filter_formats(), 'name'),
         'default_value' => filter_resolve_format(FILTER_FORMAT_DEFAULT),
       );
@@ -128,16 +142,20 @@ function node_node_import_fields($type) {
     $fields['uid'] = array(
       'title' => t('Authored by'),
       'group' => t('Authoring information'),
+      'module' => 'node',
+      'weight' => 20,
       'is_mappable' => $administer_nodes,
-      'input_format' => 'user',
+      'input_format' => 'user_reference',
       'default_value' => $user->uid,
     );
     $fields['created'] = array(
       'title' => t('Authored on'),
       'group' => t('Authoring information'),
+      'module' => 'node',
+      'weight' => 20,
       'is_mappable' => $administer_nodes,
       'input_format' => 'date',
-      'date_format' => DATE_UNIX,
+      'output_format' => DATE_UNIX,
     );
 
     //TODO: language
@@ -145,12 +163,16 @@ function node_node_import_fields($type) {
     $fields['log'] = array(
       'title' => t('Log message'),
       'group' => t('Revision information'),
+      'module' => 'node',
+      'weight' => 20,
       'is_mappable' => FALSE,
       'default_value' => '',
     );
     $fields['revision'] = array(
       'title' => t('Create new revision'),
       'group' => t('Revision information'),
+      'module' => 'node',
+      'weight' => 20,
       'is_mappable' => FALSE,
       'default_value' => in_array('revision', $node_options) ? '1' : '0',
     );
@@ -164,6 +186,8 @@ function node_node_import_fields($type) {
       $fields[$key] = array(
         'title' => $title,
         'group' => t('Publishing options'),
+        'module' => 'node',
+        'weight' => 25,
         'is_mappable' => $administer_nodes,
         'input_format' => 'boolean',
         'default_value' => in_array($key, $node_options) ? '1' : '0',
@@ -186,11 +210,10 @@ function node_node_import_defaults($type, $defaults, $fields, $map) {
     $type_info = node_get_types('type', $node_type);
 
     if ($type_info->has_body) {
-      $formats = node_import_extract_property(filter_formats(), 'name');
       $form['format'] = array(
         '#title' => t('Input format'),
         '#type' => 'radios',
-        '#options' => $formats,
+        '#options' => node_import_extract_property(filter_formats(), 'name'),
         '#default_value' => isset($defaults['format']) ? $defaults['format'] : filter_resolve_format(FILTER_FORMAT_DEFAULT),
       );
     }
@@ -256,12 +279,18 @@ function node_node_import_values($type, $defaults, $options, $fields, $preview) 
  */
 function node_node_import_values_alter(&$values, $type, $defaults, $options, $fields, $preview) {
   if (($node_type = node_import_type_is_node($type)) !== FALSE) {
-    if (isset($values['uid']) && strlen($values['uid']) > 0) {
-      $account = user_load(array('uid' => $values['uid']));
-      $values['name'] = $account->name;
+    if (isset($values['uid']) && drupal_strlen($values['uid']) > 0) {
+      if (($name = node_import_get_object('user:name', $values['uid'])) ||
+          ($name = db_result(db_query("SELECT name FROM {users} WHERE uid = %d", $values['uid'])))) {
+        $values['name'] = $name;
+        node_import_set_object('user:name', $values['uid'], $name);
+      }
+    }
+    else {
+      $values['name'] = '';
     }
 
-    if (isset($values['created']) && strlen($values['created']) > 0) {
+    if (isset($values['created']) && drupal_strlen($values['created']) > 0) {
       $values['date'] = format_date($values['created'], 'custom', 'Y-m-d H:i:s O');
     }
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: user.inc,v 1.1.2.6 2008/12/11 22:15:07 robrechtj Exp $
+// $Id: user.inc,v 1.1.2.9 2009/02/25 22:18:35 robrechtj Exp $
 
 /**
  * @file
@@ -39,7 +39,6 @@ function node_import_can_create_user($type) {
  * Create a new user.
  */
 function node_import_create_user($type, $values, $preview) {
-  $can_continue = TRUE;
   $output = $preview ? '' : FALSE;
 
   if ($preview) {
@@ -66,7 +65,7 @@ function node_import_create_user($type, $values, $preview) {
     $output = $form_state['user']->uid;
   }
 
-  return array($can_continue, $output);
+  return $output;
 }
 
 /**
@@ -78,22 +77,31 @@ function user_node_import_fields($type) {
   if ($type === 'user') {
     $fields['name'] = array(
       'title' => t('Username'),
+      'module' => 'user',
       'map_required' => TRUE,
     );
+
     $fields['mail'] = array(
       'title' => t('E-mail address'),
-      'input_format' => 'mail',
+      'module' => 'user',
+      'input_format' => 'email',
       'map_required' => TRUE,
     );
+
     $fields['pass'] = array(
       'title' => t('Password'),
+      'module' => 'user',
     );
+
     $fields['status'] = array(
       'title' => t('Status'),
+      'module' => 'user',
       'allowed_values' => array('1' => t('Active'), '0' => t('Blocked')),
     );
+
     $fields['notify'] = array(
       'title' => t('Notify user of new account'),
+      'module' => 'user',
       'is_mappable' => FALSE,
     );
   }
@@ -157,6 +165,13 @@ function user_node_import_values_alter(&$values, $type, $defaults, $options, $fi
   if ($type === 'user') {
     if ($options['generate_pass'] === 'always' || ($options['generate_pass'] === 'empty' && strlen($values['pass']) == 0)) {
       $values['pass'] = user_password();
+    }
+
+    if (!$preview) {
+      $values['pass'] = array(
+        'pass1' => $values['pass'],
+        'pass2' => $values['pass'],
+      );
     }
   }
 }

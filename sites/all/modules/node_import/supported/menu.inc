@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.inc,v 1.1.2.6 2008/12/16 13:55:06 robrechtj Exp $
+// $Id: menu.inc,v 1.1.2.8 2009/01/15 20:05:52 robrechtj Exp $
 
 /**
  * @file
@@ -11,24 +11,30 @@
  */
 function menu_node_import_fields($type) {
   $fields = array();
-  return $fields; //TODO: reenable this
+  return $fields; //TODO: reenable
 
   if (($node_type = node_import_type_is_node($type)) !== FALSE) {
-    $fields['menu'] = array(
-      'title' => t('Menu settings'),
+    $fields['menu:link_title'] = array(
+      'title' => t('Menu link title'),
       'group' => t('Menu settings'),
+      'module' => 'menu',
       'is_mappable' => user_access('administer menu'),
-      'columns' => array(
-        'link_title' => array(
-          'title' => t('Menu link title'),
-        ),
-        'parent' => array(
-          'title' => t('Parent item'),
-        ),
-        'weight' => array(
-          'title' => t('Weight'),
-        ),
-      ),
+    );
+
+    $fields['menu:parent'] = array(
+      'title' => t('Parent item'),
+      'group' => t('Menu settings'),
+      'module' => 'menu',
+      'is_mappable' => user_access('administer menu'),
+    );
+
+    $fields['menu:weight'] = array(
+      'title' => t('Weight'),
+      'group' => t('Menu settings'),
+      'module' => 'menu',
+      'input_format' => 'weight',
+      'delta' => 50,
+      'is_mappable' => user_access('administer menu'),
     );
   }
 
@@ -40,24 +46,24 @@ function menu_node_import_fields($type) {
  */
 function menu_node_import_defaults($type, $defaults, $fields, $map) {
   $form = array();
-  return $form; //TODO: reenable this
+  return $form; //TODO: reenable
 
   if (($node_type = node_import_type_is_node($type)) !== FALSE) {
     if (user_access('administer menu')) {
       $menu_options = menu_parent_options(menu_get_menus(), array('mlid' => 0));
-      $form['menu'] = array(
-        '#title' => t('Menu settings'),
-        'parent' => array(
-          '#title' => t('Parent'),
-          '#type' => 'select',
-          '#options' => $menu_options,
-          '#default_value' => isset($defaults['menu']['parent']) ? $defaults['menu']['parent'] : 'primary-links:0',
-        ),
-        'weight' => array(
-          '#title' => t('Weight'),
-          '#type' => 'weight',
-          '#default_value' => isset($defaults['menu']['weight']) ? $defaults['menu']['weight'] : 0,
-        ),
+
+      $form['menu:parent'] = array(
+        '#title' => t('Parent'),
+        '#type' => 'select',
+        '#options' => $menu_options,
+        '#default_value' => isset($defaults['menu:parent']) ? $defaults['menu:parent'] : 'primary-links:0',
+      );
+
+      $form['menu:weight'] = array(
+        '#title' => t('Weight'),
+        '#type' => 'weight',
+        '#delta' => 50,
+        '#default_value' => isset($default['menu:weight']) ? $defaults['menu:weight'] : 0,
       );
     }
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.inc,v 1.7.2.8 2008/12/16 22:12:23 robrechtj Exp $
+// $Id: taxonomy.inc,v 1.7.2.10 2009/01/15 20:05:52 robrechtj Exp $
 
 /**
  * @file
@@ -56,7 +56,6 @@ function node_import_can_create_taxonomy($type) {
  * form.
  */
 function node_import_create_taxonomy($type, $values, $preview) {
-  $can_continue = TRUE;
   $output = $preview ? '' : FALSE;
 
   if ($preview) {
@@ -149,11 +148,12 @@ function node_import_create_taxonomy($type, $values, $preview) {
 
       // As a term can refer to other terms (parent, relation), we
       // can not continue if we have created a term.
-      $can_continue = FALSE;
+      global $node_import_can_continue;
+      $node_import_can_continue = FALSE;
     }
   }
 
-  return array($can_continue, $output);
+  return $output;
 }
 
 /**
@@ -192,23 +192,27 @@ function taxonomy_node_import_fields($type) {
     $fields['name'] = array(
       'title' => t('Vocabulary name'),
       'group' => t('Identification'),
+      'module' => 'taxonomy',
       'map_required' => TRUE,
       'default_value' => '',
     );
     $fields['description'] = array(
       'title' => t('Description'),
       'group' => t('Identification'),
+      'module' => 'taxonomy',
       'default_value' => '',
     );
     $fields['help'] = array(
       'title' => t('Help text'),
       'group' => t('Identification'),
+      'module' => 'taxonomy',
       'default_value' => '',
     );
 
     $fields['nodes'] = array(
       'title' => t('Content types'),
       'group' => t('Content types'),
+      'module' => 'taxonomy',
       'has_multiple' => TRUE,
       'is_checkboxes' => TRUE,
       'allowed_values' => node_get_types('names'),
@@ -217,28 +221,33 @@ function taxonomy_node_import_fields($type) {
     $fields['tags'] = array(
       'title' => t('Tags'),
       'group' => t('Settings'),
+      'module' => 'taxonomy',
       'input_format' => 'boolean',
     );
     $fields['multiple'] = array(
       'title' => t('Multiple select'),
       'group' => t('Settings'),
+      'module' => 'taxonomy',
       'input_format' => 'boolean',
     );
     $fields['required'] = array(
       'title' => t('Required'),
       'group' => t('Settings'),
+      'module' => 'taxonomy',
       'input_format' => 'boolean',
     );
 
     $fields['weight'] = array(
       'title' => t('Weight'),
       'group' => t('Settings'),
+      'module' => 'taxonomy',
       'input_format' => 'weight',
     );
 
     $fields['hierarchy'] = array(
       'title' => t('Hierarchy'),
       'group' => t('Advanced settings'),
+      'module' => 'taxonomy',
       'allowed_values' => array(
         '0' => t('Disabled'),
         '1' => t('Single'),
@@ -260,18 +269,21 @@ function taxonomy_node_import_fields($type) {
     $fields['name'] = array(
       'title' => t('Term name'),
       'group' => t('Identification'),
+      'module' => 'taxonomy',
       'map_required' => TRUE,
       'default_value' => '',
     );
     $fields['description'] = array(
       'title' => t('Description'),
       'group' => t('Identification'),
+      'module' => 'taxonomy',
       'default_value' => '',
     );
 
     $fields['parent'] = array(
       'title' => t('Parents'),
       'group' => t('Advanced options'),
+      'module' => 'taxonomy',
       'has_multiple' => FALSE, // Although all vocabs in Drupal6.x allow for multiple parents, we only allow one.
       'has_hierarchy' => TRUE,
       'input_format' => 'taxonomy_term',
@@ -280,6 +292,7 @@ function taxonomy_node_import_fields($type) {
     $fields['relations'] = array(
       'title' => t('Related terms'),
       'group' => t('Advanced options'),
+      'module' => 'taxonomy',
       'has_multiple' => TRUE,
       'has_hierarchy' => TRUE,
       'input_format' => 'taxonomy_term',
@@ -288,6 +301,7 @@ function taxonomy_node_import_fields($type) {
     $fields['synonyms'] = array(
       'title' => t('Synonyms'),
       'group' => t('Advanced options'),
+      'module' => 'taxonomy',
       'has_multiple' => TRUE,
       'multiple_separator' => ',',
     );
@@ -295,6 +309,7 @@ function taxonomy_node_import_fields($type) {
     $fields['weight'] = array(
       'title' => t('Weight'),
       'group' => t('Advanced options'),
+      'module' => 'taxonomy',
       'input_format' => 'weight',
     );
   }
@@ -309,6 +324,7 @@ function taxonomy_node_import_fields($type) {
       $fields['taxonomy:'. $vocabulary->vid] = array(
         'title' => $vocabulary->name,
         'group' => t('Vocabularies'),
+        'module' => 'taxonomy',
         'input_format' => 'taxonomy_term',
         'vocabulary' => $vocabulary,
         'has_multiple' => $vocabulary->multiple || $vocabulary->tags,

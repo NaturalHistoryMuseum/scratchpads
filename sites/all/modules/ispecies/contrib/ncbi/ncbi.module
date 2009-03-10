@@ -14,13 +14,7 @@ function ncbi_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'ncbi' ) . '/ncbi.css' );
 }
 
-function ncbi_ajax_callback($tid = FALSE, $limit = 20){
-  if (! $tid) {
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop ( explode ( "/", referer_uri () ) );
-  }
-  $term = taxonomy_get_term ( $tid );
-  $term_name = $term->name;
+function ncbi_ajax_callback($term_name, $limit = false, $offset = false){
   $items = array ();
   $db = 'taxonomy';
   $esearch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=' . $db . '&term=' . $term_name . '&retmax=' . $limit );
@@ -47,7 +41,7 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
           ($sequence_data ['Item'] [4] ? $tid = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=' . $sequence_data ['Item'] [4] . '&lvl=3&p=mapview&p=has_linkout&p=blast_url&p=genome_blast&lin=f&keep=1&srchmode=1&unlock">' . $sequence_data ['Item'] [4] . '</a>' : $tid = '');
           ($sequence_data ['Item'] [5] ? $nucleotide = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=nucleotide&cmd=Search&dopt=DocSum&term=txid' . $sequence_data ['Item'] [4] . '%5BOrganism%3Aexp%5D">' . $sequence_data ['Item'] [5] . '</a>' : $nucleotide = '');
           ($sequence_data ['Item'] [6] ? $protein = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=protein&cmd=Search&dopt=DocSum&term=txid' . $sequence_data ['Item'] [4] . '%5BOrganism%3Aexp%5D">' . $sequence_data ['Item'] [6] . '</a>' : $protein = '');
-          $item->body .= sprintf ( '<table id="ncbi-sequence">
+          $body = sprintf ( '<table id="ncbi-sequence">
           <tr><th colspan="2">%s</th></tr>
           <tr><td>Taxonomy ID:</td><td>%s</td></tr>
           <tr><td>Nucleotide sequences:</td><td>%s</td></tr>
@@ -58,7 +52,7 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
         $elink_request_xml = file_get_contents ( $elink_request );
         if ($elink_request_xml) {
           $elinks = new SimpleXMLElement ( $elink_request_xml );
-          $item->body .= '<h3>External links</h3><ul id="elinks" />';
+          $body .= '<h3>External links</h3><ul id="elinks" />';
           foreach ( $elinks->LinkSet->IdUrlList->IdUrlSet->ObjUrl as $link ) {
             if ($link->LinkName) {
               if ($link->Provider->NameAbbr == 'taxresource') {
@@ -71,16 +65,19 @@ function ncbi_ajax_callback($tid = FALSE, $limit = 20){
               $name = $link->Provider->Name;
               $title = $name;
             }
-            $item->body .= sprintf ( '<li><a href="%s" title="%s">%s</a></li>', $link->Url, $title, $name );
+            $body .= sprintf ( '<li><a href="%s" title="%s">%s</a></li>', $link->Url, $title, $name );
           }
-          $item->body .= '</ul>';
+          $body .= '</ul>';
         }
-        $item->page_url = 'http://eutils.ncbi.nlm.nih.gov/';
+        $item = array(
+          'body' => $body,
+          'page_url' => 'http://eutils.ncbi.nlm.nih.gov/'
+        ); 
         $items [strval ( $id )] = $item;
       } //end of foreach $id  
     }
   }
-  $urls = array('name' => 'NCBI', 'url' => 'http://eutils.ncbi.nlm.nih.gov/');
+  $urls = array('name' => 'NCBI', 'url' => 'http://www.ncbi.nlm.nih.gov/sites/gquery?term='.$term_name);
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
   return $items;

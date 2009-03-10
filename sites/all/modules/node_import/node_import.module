@@ -1,5 +1,5 @@
 <?php
-// $Id: node_import.module,v 1.51.2.13 2008/12/15 11:09:08 robrechtj Exp $
+// $Id: node_import.module,v 1.51.2.15 2009/02/14 10:23:16 robrechtj Exp $
 
 /**
  * @file
@@ -39,7 +39,7 @@ function node_import_menu() {
 
   $items['admin/content/node_import'] = array(
     'title' => 'Import content',
-    'description' => 'Import content from a CSV or TSV file.',
+    'description' => 'Import content from a <abbr title="Comma Separated Values">CSV</abbr> or <abbr title="Tab Separated Values">TSV</abbr> file.',
     'access callback' => 'user_access',
     'access arguments' => array('import content'),
     'page callback' => 'drupal_get_form',
@@ -50,12 +50,11 @@ function node_import_menu() {
   $items['admin/content/node_import/list'] = array(
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
-    'title' => 'Lists',
+    'title' => 'List',
   );
 
   $items['admin/content/node_import/add'] = array(
     'type' => MENU_LOCAL_TASK,
-    'weight' => 0,
     'title' => 'New import',
     'access callback' => 'user_access',
     'access arguments' => array('import content'),
@@ -66,8 +65,8 @@ function node_import_menu() {
 
   $items['admin/content/node_import/settings'] = array(
     'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
     'title' => 'Settings',
+    'weight' => 10,
     'access callback' => 'user_access',
     'access arguments' => array('administer imports'),
     'page callback' => 'drupal_get_form',
@@ -85,6 +84,12 @@ function node_import_menu() {
     'file' => 'node_import.admin.inc',
   );
 
+  $items['admin/content/node_import/%node_import/view'] = array(
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'View',
+    'weight' => -10,
+  );
+
   $items['admin/content/node_import/%node_import/continue'] = array(
     'type' => MENU_CALLBACK,
     'title' => 'Continue import',
@@ -95,16 +100,6 @@ function node_import_menu() {
     'file' => 'node_import.inc',
   );
 
-  $items['admin/content/node_import/%node_import/delete'] = array(
-    'type' => MENU_CALLBACK,
-    'title' => 'Delete',
-    'access callback' => 'node_import_access',
-    'access arguments' => array(3),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('node_import_delete_form', 3),
-    'file' => 'node_import.admin.inc',
-  );
-
   $items['admin/content/node_import/%node_import/debug'] = array(
     'type' => MENU_CALLBACK,
     'title' => 'Debug report',
@@ -112,6 +107,17 @@ function node_import_menu() {
     'access arguments' => array(3),
     'page callback' => 'node_import_debug_report',
     'page arguments' => array(3),
+    'file' => 'node_import.admin.inc',
+  );
+
+  $items['admin/content/node_import/%node_import/delete'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Delete',
+    'weight' => 10,
+    'access callback' => 'node_import_access',
+    'access arguments' => array(3),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('node_import_delete_form', 3),
     'file' => 'node_import.admin.inc',
   );
 
@@ -141,9 +147,11 @@ function node_import_load($taskid) {
 
       $values['file'] = db_fetch_object(db_query("SELECT * FROM {files} WHERE fid = %d", $values['fid']));
 
+      module_invoke_all('node_import_task', $values, 'load');
       return $values;
     }
   }
+
   return FALSE;
 }
 

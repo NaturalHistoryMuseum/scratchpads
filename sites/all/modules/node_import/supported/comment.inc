@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.inc,v 1.1.4.7 2008/12/16 13:55:06 robrechtj Exp $
+// $Id: comment.inc,v 1.1.4.9 2009/01/15 20:51:37 robrechtj Exp $
 
 /**
  * @file
@@ -16,6 +16,8 @@ function comment_node_import_fields($type) {
     $fields['comment'] = array(
       'title' => t('Comment settings'),
       'group' => t('Comment settings'),
+      'module' => 'comment',
+      'weight' => 30,
       'is_mappable' => user_access('administer comments'),
       'allowed_values' => array(
         COMMENT_NODE_DISABLED => t('Disabled'),

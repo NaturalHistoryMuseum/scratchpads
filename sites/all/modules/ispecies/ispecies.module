@@ -42,9 +42,25 @@ function ispecies_ajax_callback($module, $tid = false){
     // tid
     $tid = array_pop(explode("/",referer_uri()));
   }
-  $ispecies_views = module_invoke_all('ispecies');
-  print json_encode(call_user_func($ispecies_views[$module]['callback'], $tid));
+  if (! $tid) {
+    // Get the referer and use the final part of that as the tid
+    $tid = array_pop ( explode ( "/", referer_uri () ) );
+  }
+  print json_encode(ispecies_get_data($module, $tid));
   exit;
+}
+
+function ispecies_get_data($module, $tid){
+  $term = taxonomy_get_term ( $tid );
+  $term_name = $term->name;
+  $ispecies_views = module_invoke_all('ispecies');  
+  $sort_orders = variable_get('view_sort-limits', array());
+  if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
+    return call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
+  } else {
+    //print_r(call_user_func($ispecies_views[$module]['callback'], $term_name)); exit;
+    return call_user_func($ispecies_views[$module]['callback'], $term_name);
+  }
 }
 
 /**
@@ -61,23 +77,6 @@ function ispecies_add_js($tid){
   drupal_add_js(drupal_get_path('module','citation')."/citation.js");
   drupal_add_js('page_tid = '.$tid.';' , 'inline');
 }
-/**
- * Implementation of hook_form
- * 
- * POSSIBLY NOT REQUIRED
-function ispecies_form(&$node, $form_state){
-  
-}
- */
-
-/**
- * Implementation of hook_form_alter
- * 
- * POSSIBLY NOT REQUIRED
-function ispecies_form_alter(&$form, $form_state, $form_id){
-}
- */
-
 /**
  * Implementation of hook_viewsapi
  */

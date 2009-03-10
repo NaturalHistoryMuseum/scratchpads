@@ -1,4 +1,5 @@
 var citations_on_page = false;
+var local_citations = false;
 var additional_citations = new Array();
 var citation_nids = Array();
 var citation_urls = Array();
@@ -39,6 +40,7 @@ function citation_got_citations(citations){
   $('#citation').html(resultObj['content']);
   citations_on_page = true;
   $.each(resultObj['nids'], function() {
+    local_citations = true;
     citation_nids[citation_nids.length] = this;
   });
   citation_add_citation_html(false);
@@ -46,9 +48,7 @@ function citation_got_citations(citations){
 
 function citation_add_citation_url(citations){
   citation_add_citation_html(citations['citation']);
-  //$.each(citations['urls'], function() {
   citation_urls[citation_urls.length] = citations['urls']['name']
-  //});
 }
 
 function citation_add_citation_html(html){
@@ -56,6 +56,10 @@ function citation_add_citation_html(html){
     additional_citations[additional_citations.length] = html;
   }
   if(citations_on_page){
+    if(!local_citations){
+      local_citations = true;
+      $('#citation').html('<ul></ul>');
+    }
     $.each(additional_citations, function() {
       $('#citation > ul').append('<li>'+this+'</li>');
     });

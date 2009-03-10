@@ -1,5 +1,5 @@
 <?php
-// $Id: node_import.inc,v 1.1.2.22 2008/12/16 22:12:23 robrechtj Exp $
+// $Id: node_import.inc,v 1.1.2.41 2009/02/25 21:43:13 robrechtj Exp $
 
 /**
  * @file
@@ -8,6 +8,17 @@
 
 /**
  * @mainpage Public API of Node import
+ *
+ * Global variable: $node_import_can_continue
+ *
+ *   Boolean. Some imports may not be able to do more then one row at a
+ *   time because of all kinds of (static) caching in Drupal. For example
+ *   if you import a node with taxonomy terms and select to create the
+ *   non-existing terms on import, taxonomy_get_tree() will not have an
+ *   up-to-date internal list of terms and so the submission of the form
+ *   will fail due to "An illegal choice has been detected. Please contact
+ *   the site administrator.".
+ *
  * TODO
  */
 
@@ -135,6 +146,8 @@ function node_import_fields($type, $reset = FALSE) {
     $defaults = array(
       'title' => '',
       'group' => '',
+      'module' => '',
+      'weight' => 0,
 
       'is_mappable' => TRUE,
       'map_required' => FALSE,
@@ -160,7 +173,7 @@ function node_import_fields($type, $reset = FALSE) {
 
     foreach ($fields[$type] as $fieldname => $fieldinfo) {
       // Merge sane defaults.
-      $fields[$type][$fieldname] = array_merge($defaults, $fieldinfo);
+      $fields[$type][$fieldname] = $fieldinfo = array_merge($defaults, $fieldinfo);
 
       // Add preprocessors for builtin input_formats.
       if (!empty($fieldinfo['allowed_values'])) {
@@ -168,12 +181,8 @@ function node_import_fields($type, $reset = FALSE) {
       }
 
       switch ($fieldinfo['input_format']) {
-        case 'user': // Could be in supported/user.inc instead.
-          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_user';
-          break;
-
-        case 'node': // Could be in supported/node.inc instead.
-          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_node';
+        case 'boolean':
+          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_boolean';
           break;
 
         case 'date':
@@ -184,17 +193,28 @@ function node_import_fields($type, $reset = FALSE) {
           $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_email';
           break;
 
-        case 'weight':
-          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_weight';
+        case 'filepath':
+          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_filepath';
           break;
 
-        case 'boolean':
-          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_boolean';
+        case 'node_reference':
+          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_node_reference';
+          break;
+
+        case 'user_reference':
+          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_user_reference';
+          break;
+
+        case 'weight':
+          $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_weight';
           break;
       }
     }
 
     drupal_alter('node_import_fields', $fields[$type], $type);
+
+    // Sort by weight.
+    uasort($fields[$type], 'node_import_sort');
   }
 
   return $fields[$type];
@@ -229,6 +249,11 @@ function node_import_defaults($type, $defaults, $fields, $map) {
     // Set #node_import-group if not set.
     if (isset($form[$fieldname]) && !isset($form[$fieldname]['#node_import-group'])) {
       $form[$fieldname]['#node_import-group'] = $fieldinfo['group'];
+    }
+
+    // Set #weight if not set.
+    if (isset($form[$fieldname]) && !isset($form[$fieldname]['#weight'])) {
+      $form[$fieldname]['#weight'] = $fieldinfo['weight'];
     }
 
     // Set default_value as value.
@@ -270,10 +295,27 @@ function node_import_options($type, $options, $fields, $map) {
 
   $form = (array)module_invoke_all('node_import_options', $type, $options, $fields, $map);
 
+  // Copy from modules/system/system.admin.inc
+  $date_short = array('Y-m-d H:i', 'm/d/Y - H:i', 'd/m/Y - H:i', 'Y/m/d - H:i',
+     'd.m.Y - H:i', 'm/d/Y - g:ia', 'd/m/Y - g:ia', 'Y/m/d - g:ia',
+     'M j Y - H:i', 'j M Y - H:i', 'Y M j - H:i',
+     'M j Y - g:ia', 'j M Y - g:ia', 'Y M j - g:ia');
+  $date_short_choices = array();
+  foreach ($date_short as $f) {
+    $date_short_choices[$f] = format_date(time(), 'custom', $f);
+  }
+  $date_short_choices['custom'] = t('Custom format');
+  $timezones = date_timezone_names(TRUE);
+
   foreach ((array)$fields as $fieldname => $fieldinfo) {
-    // Add the group so all wizard pages look the same.
+    // Set #node_import-group if not set.
     if (isset($form[$fieldname]) && !isset($form[$fieldname]['#node_import-group'])) {
       $form[$fieldname]['#node_import-group'] = $fieldinfo['group'];
+    }
+
+    // Set #weight if not set.
+    if (isset($form[$fieldname]) && !isset($form[$fieldname]['#weight'])) {
+      $form[$fieldname]['#weight'] = $fieldinfo['weight'];
     }
 
     $map_count = node_import_field_map_count($fieldname, $map);
@@ -355,11 +397,78 @@ function node_import_options($type, $options, $fields, $map) {
         );
       }
 
+      $form[$fieldname]['timezone'] = array(
+        '#type' => 'select',
+        '#title' => t('Timezone'),
+        '#default_value' => isset($options[$fieldname]['timezone']) ? $options[$fieldname]['timezone'] : date_default_timezone_name(),
+        '#options' => $timezones,
+        '#description' => t('Select the default time zone. If in doubt, choose the timezone that is closest to your location which has the same rules for daylight saving time.'),
+      );
+
+      $form[$fieldname]['date_format'] = array(
+        '#type' => 'select',
+        '#title' => t('Date format'),
+        '#default_value' => isset($options[$fieldname]['date_format']) ? $options[$fieldname]['date_format'] : variable_get('date_format_short', 'm/d/Y - H::i'),
+        '#options' => $date_short_choices,
+        '#description' => t('Select the date format for import. If you choose <em>Custom format</em> enter the custom format below.'),
+      );
       $form[$fieldname]['date_custom'] = array(
         '#type' => 'textfield',
-        '#title' => t('Date input format'),
+        '#title' => t('Custom date format'),
+        '#attributes' => array('class' => 'custom-format'),
         '#default_value' => isset($options[$fieldname]['date_custom']) ? $options[$fieldname]['date_custom'] : variable_get('date_format_short', 'm/d/Y - H::i'),
+        '#description' => t('See the <a href="@url" target="_blank">PHP manual</a> for available options.', array('@url' => 'http://php.net/manual/function.date.php')),
       );
+    }
+
+    // Add directory selection for fields that are filepaths.
+    if ($fieldinfo['input_format'] == 'filepath' && $map_count > 0) {
+      if (!isset($form[$fieldname])) {
+        $form[$fieldname] = array(
+          '#title' => $fieldinfo['title'],
+          '#node_import-group' => $fieldinfo['group'],
+        );
+      }
+
+      $form[$fieldname][] = array(
+        '#value' => t('You need to FTP the files you reference in this field manually to the correct location (%path) before doing the import.', array('%path' => file_create_path(isset($fieldinfo['to_directory']) ? $fieldinfo['to_directory'] : ''))),
+      );
+      $form[$fieldname]['manually_moved'] = array(
+        '#type' => 'hidden',
+        '#value' => TRUE,
+      );
+
+/*
+TODO: we disable this until I get the time to figure out why files are not
+moved to the correct location if you do not move them manually.
+
+//TODO: as the directory must be relative... we could let the user choose from a select box
+//TODO: we might use the sample data to find the correct directory
+      $form[$fieldname]['from_directory'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Copy from'),
+        '#field_prefix' => file_create_path(variable_get('node_import:ftp:directory', 'imports')) .'/',
+        '#field_suffix' => '/',
+        '#default_value' => isset($options[$fieldname]['from_directory']) ? $options[$fieldname]['from_directory'] : '',
+        '#description' => t('Fill in the directory which contains the files.'),
+      );
+
+      $form[$fieldname]['manually_moved'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Files have been manually moved'),
+        '#default_value' => isset($options[$fieldname]['manually_moved']) ? $options[$fieldname]['manually_moved'] : 0,
+        '#description' => t('Check this box if you have already moved the files to the correct location on your server (%path).', array('%path' => file_create_path(isset($fieldinfo['to_directory']) ? $fieldinfo['to_directory'] : ''))),
+      );
+*/
+
+/* TODO
+      $form[$fieldname]['delete_on_success'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Delete files after import'),
+        '#default_value' => isset($options[$fieldname]['delete_on_success']) ? $options[$fieldname]['delete_on_success'] : 1,
+        '#description' => t('Check this box if you want to delete the files from the server after a succesful import.'),
+      );
+*/
     }
   }
 
@@ -420,8 +529,8 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
       if ($map_count > 0) {
         $fieldvalues = array();
         foreach ($map[$fieldname] as $col) {
-          $value = isset($data[$col]) ? $data[$col] : '';
-          if ($map_count == 1) {
+          $value = isset($data[$col]) ? (string)$data[$col] : '';
+          if ($map_count == 1 && strlen($mseparator) > 0) {
             $fieldvalues = strlen($value) > 0 ? array_map('trim', explode($mseparator, $value)) : array();
             break;
           }
@@ -429,10 +538,10 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
         }
 
         if (!$fieldinfo['allow_empty']) {
-          $fieldvalues = array_filter($fieldvalues, 'strlen');
+          $fieldvalues = array_filter($fieldvalues, 'drupal_strlen');
         }
 
-        if ($fieldinfo['has_hierarchy']) {
+        if ($fieldinfo['has_hierarchy'] && strlen($hseparator) > 0) {
           foreach ($fieldvalues as $i => $value) {
             $fieldvalues[$i] = strlen($value) > 0 ? array_map('trim', explode($hseparator, $value)) : array($value);
           }
@@ -445,8 +554,8 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
       if ($map_count > 0 && $fieldinfo['has_hierarchy']) {
         $fieldvalues = array();
         foreach ($map[$fieldname] as $col) {
-          $value = isset($data[$col]) ? $data[$col] : '';
-          if ($map_count == 1) {
+          $value = isset($data[$col]) ? (string)$data[$col] : '';
+          if ($map_count == 1 && strlen($hseparator) > 0) {
             $fieldvalues = strlen($value) > 0 ? array_map('trim', explode($hseparator, $value)) : array();
             break;
           }
@@ -454,7 +563,7 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
         }
 
         if (!$fieldinfo['allow_empty']) {
-          $fieldvalues = array_filter($fieldvalues, 'strlen');
+          $fieldvalues = array_filter($fieldvalues, 'drupal_strlen');
         }
 
         if ($hreverse) {
@@ -464,23 +573,24 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
         $values[$fieldname] = empty($fieldvalues) ? $values[$fieldname] : $fieldvalues;
       }
       else if ($map_count == 1) {
-        $value = isset($data[$map[$fieldname]]) ? $data[$map[$fieldname]] : '';
-        $values[$fieldname] = strlen($value) > 0 ? $value : $values[$fieldname];
+        $value = isset($data[$map[$fieldname]]) ? (string)$data[$map[$fieldname]] : '';
+        $values[$fieldname] = strlen($value) > 0 ? $value : (isset($values[$fieldname]) ? $values[$fieldname] : '');
       }
 
-      $values[$fieldname] = array($values[$fieldname]);
+      $values[$fieldname] = array(isset($values[$fieldname]) ? $values[$fieldname] : '');
     }
 
     // Preprocess the data as long as the value is not empty and it
     // validates.
     foreach ((array)$values[$fieldname] as $i => $value) {
       foreach ($fieldinfo['preprocess'] as $function) {
-        if (strlen($value) > 0) {
-          $return = $function($values[$fieldname][$i], $fieldinfo, $options[$fieldname], $preview);
+        if (drupal_strlen($values[$fieldname][$i]) > 0) {
+          $return = $function($values[$fieldname][$i], $fieldinfo, isset($options[$fieldname]) ? $options[$fieldname] : array(), $preview);
           if ($return === FALSE) {
             $values[$fieldname][$i] = '';
+            continue 2;
           }
-          if ($return === TRUE) {
+          else if ($return === TRUE) {
             continue 2;
           }
         }
@@ -489,7 +599,36 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
 
     // If empty values are not allowed, filter them out.
     if (!$fieldinfo['allow_empty']) {
-      $values[$fieldname] = array_filter((array)$values[$fieldname], 'strlen');
+      $values[$fieldname] = array_filter((array)$values[$fieldname], 'drupal_strlen');
+    }
+
+    // Handle files specially. The preprocess function only returns
+    // the path - we need to make sure we save the file now into the
+    // db and set the value to the fid. We need to do this here instead
+    // of in the preprocess function because we need $values['uid'].
+    if ($fieldinfo['input_format'] == 'filepath') {
+      foreach ($values[$fieldname] as $i => $value) {
+        if (drupal_strlen($value) > 0) {
+          $result = db_result(db_query("SELECT fid FROM {files} WHERE filepath = '%s'", $value));
+          if ($result) {
+            $values[$fieldname][$i] = $result;
+          }
+          else {
+            // TODO: don't we need more stuff - eg run the validators?
+            global $user;
+            $file = new stdClass();
+            $file->uid = isset($values['uid']) ? $values['uid'] : $user->uid;
+            $file->filename = basename($value);
+            $file->filepath = $value;
+            $file->filesize = filesize($value);
+            $file->filemime = file_get_mimetype($file->filename);
+            $file->status = FILE_STATUS_TEMPORARY;
+            $file->timestamp = time();
+            drupal_write_record('files', $file);
+            $values[$fieldname][$i] = $file->fid;
+          }
+        }
+      }
     }
 
     // If only a single value is allowed, get the first one.
@@ -507,6 +646,34 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
   drupal_alter('node_import_values', $values, $type, $defaults, $options, $fields, $preview);
 
   return $values;
+}
+
+/**
+ * Get a list of options for different stuff presented to the
+ * user in the wizard form such as 'record separators', ...
+ *
+ * @param $op
+ *   String. See hook_node_import_format_options().
+ *
+ * @param $reset
+ *   Boolean. If TRUE, the internal cache is reset.
+ *
+ * @return
+ *   Array.
+ */
+function node_import_format_options($op, $reset = FALSE) {
+  static $options;
+
+  if (!isset($options) || ($reset && !isset($op))) {
+    $options = array();
+  }
+
+  if (isset($op) && (!isset($options[$op]) || $reset)) {
+    $options[$op] = module_invoke_all('node_import_format_options', $op);
+    drupal_alter('node_import_format_options', $options[$op], $op);
+  }
+
+  return isset($op) ? $options[$op] : array();
 }
 
 /**
@@ -535,10 +702,10 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
  *   exactly one row will be imported if $unit != 'all').
  *
  * @return
- *   Boolean. See node_import_do_task().
+ *   Nothing.
  */
 function node_import_do_all_tasks($unit = 'all', $count = 0) {
-  $can_continue = TRUE;
+  global $node_import_can_continue;
 
   $byte_count = 0;
   $row_count = 0;
@@ -548,12 +715,12 @@ function node_import_do_all_tasks($unit = 'all', $count = 0) {
     $bytes = $task['offset'];
     $rows = $task['row_done'] + $task['row_error'];
 
-    $can_continue = node_import_do_task($task, $unit, $count);
+    node_import_do_task($task, $unit, $count);
 
     $byte_count += $task['offset'] - $bytes;
     $row_count += $task['row_done'] + $task['row_error'] - $rows;
 
-    if ($can_continue && ($unit == 'all'
+    if ($node_import_can_continue && ($unit == 'all'
         || ($unit == 'bytes' && $byte_count < $count)
         || ($unit == 'rows' && $row_count < $count)
         || ($unit == 'ms' && timer_read('node_import:do_all_tasks') < $count))) {
@@ -564,7 +731,6 @@ function node_import_do_all_tasks($unit = 'all', $count = 0) {
   }
 
   timer_stop('node_import:do_all_tasks');
-  return $can_continue;
 }
 
 /**
@@ -594,19 +760,12 @@ function node_import_do_all_tasks($unit = 'all', $count = 0) {
  *   exactly one row will be imported if $unit != 'all').
  *
  * @return
- *   Boolean. Some imports may not be able to do more then one row at a
- *   time because of all kinds of (static) caching in Drupal. For example
- *   if you import a node with taxonomy terms and select to create the
- *   non-existing terms on import, taxonomy_get_tree() will not have an
- *   up-to-date internal list of terms and so the submission of the form
- *   will fail due to "An illegal choice has been detected. Please contact
- *   the site administrator.".
- *
  *   The status of each imported row (error or not) is stored in the
  *   database. @see node_import_constants.
  */
 function node_import_do_task(&$task, $unit = 'all', $count = 0) {
-  $can_continue = TRUE;
+  global $node_import_can_continue;
+  $node_import_can_continue = TRUE;
 
   if ($task['status'] != NODE_IMPORT_STATUS_DONE && node_import_lock_acquire()) {
     global $user;
@@ -639,6 +798,8 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
         break;
     }
 
+    module_invoke_all('node_import_task', $task, 'continue');
+
     while ($task['status'] != NODE_IMPORT_STATUS_DONE) {
       list($new_offset, $data) = node_import_read_from_file($task['file']->filepath, $offset, $task['file_options']);
 
@@ -657,7 +818,7 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
         db_query("UPDATE {node_import_tasks} SET offset = %d, changed = %d WHERE taskid = %d", $new_offset, time(), $taskid);
         $task['offset'] = $new_offset;
 
-        list($can_continue, $errors) = node_import_create($task['type'], $data, $task['map'], $task['defaults'], $task['options'], FALSE);
+        $errors = node_import_create($task['type'], $data, $task['map'], $task['defaults'], $task['options'], FALSE);
 
         if (is_array($errors)) {
           db_query("UPDATE {node_import_status} SET status = %d, errors = '%s' WHERE taskid = %d AND offset = %d", NODE_IMPORT_STATUS_ERROR, serialize($errors), $taskid, $offset);
@@ -689,7 +850,7 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
           break;
       }
 
-      if ($can_continue && ($unit == 'all'
+      if ($node_import_can_continue && ($unit == 'all'
           || ($unit == 'bytes' && $byte_count < $count)
           || ($unit == 'rows' && $row_count < $count)
           || ($unit == 'ms' && timer_read('node_import:do_task:'. $taskid) < $count))) {
@@ -699,14 +860,14 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
       break;
     }
 
+    module_invoke_all('node_import_task', $task, 'pause');
+
     // Cleanup before exit.
     $user = $backup_user;
     session_save_session(TRUE);
     timer_stop('node_import:do_task:'. $taskid);
     node_import_lock_release();
   }
-
-  return $can_continue;
 }
 
 /**
@@ -752,16 +913,11 @@ function node_import_js($task) {
  *   Boolean.
  *
  * @return
- *   array($can_continue, $output).
- *
- *   For an explanation of $can_continue, see node_import_do_task().
- *
- *   The $output is: if $preview is TRUE, a string with the preview of
- *   the object is returned. If $preview is FALSE, an unique identifier
+ *   The return value is: if $preview is TRUE, a string with the preview
+ *   of the object is returned. If $preview is FALSE, an unique identifier
  *   is returned or an array with errors if failed.
  */
 function node_import_create($type, $data, $map, $defaults, $options, $preview) {
-  $can_continue = TRUE;
   $output = $preview ? '' : array();
 
   // Reset execution time. Note that this only works when SAFE_MODE is OFF but
@@ -780,8 +936,9 @@ function node_import_create($type, $data, $map, $defaults, $options, $preview) {
 
   // Submit it for preview or creation.
   if (function_exists($function = $types[$type]['create'])) {
-    list($can_continue, $output) = $function($type, $values, $preview);
+    $output = $function($type, $values, $preview);
   }
+  module_invoke_all('node_import_postprocess', $type, $values, $options, $preview);
 
   // Check for errors and clear them again.
   if ($preview) {
@@ -798,7 +955,7 @@ function node_import_create($type, $data, $map, $defaults, $options, $preview) {
   form_set_error(NULL, '', TRUE);
   drupal_get_messages(NULL, TRUE); // Otherwise they are still showed.
 
-  return array($can_continue, $output);
+  return $output;
 }
 
 /**
@@ -830,6 +987,7 @@ function node_import_save_task($values) {
   }
 
   if (drupal_write_record('node_import_tasks', $values) === SAVED_NEW) {
+    module_invoke_all('node_import_task', $values, 'insert');
     return $values['taskid'];
   }
   return FALSE;
@@ -880,6 +1038,8 @@ function node_import_list_tasks($all = FALSE) {
 function node_import_delete_task($taskid) {
   db_query("DELETE FROM {node_import_tasks} WHERE taskid = %d", $taskid);
   db_query("DELETE FROM {node_import_status} WHERE taskid = %d", $taskid);
+
+  module_invoke_all('node_import_task', $taskid, 'delete');
 }
 
 /**
@@ -890,24 +1050,6 @@ function node_import_delete_task($taskid) {
  * @defgroup node_import_preprocess Node import preprocess functions
  * @{
  */
-
-/**
- * Check if the value is in the list of allowed values (by key or value).
- *
- * Uses: $field['allowed_values'].
- */
-function node_import_check_values(&$value, $field, $options, $preview) {
-  foreach ($field['allowed_values'] as $key => $title) {
-    $tmp = drupal_strtolower($value);
-    if ($tmp === drupal_strtolower($key) || $tmp === drupal_strtolower($title)) {
-      $value = $key;
-      return TRUE;
-    }
-  }
-
-  node_import_input_error(t('Input error: %value is not allowed for %name (not in allowed values list).', array('%value' => $value, '%name' => $field['title'])));
-  return FALSE;
-}
 
 /**
  * Check if the value is a valid boolean (1, 0, true, false, yes, no, on, off).
@@ -933,11 +1075,11 @@ function node_import_check_boolean(&$value, $field, $options, $preview) {
     );
   }
 
-  if (in_array($value, $trues, TRUE)) {
+  if (in_array(drupal_strtolower($value), $trues, TRUE)) {
     $value = '1';
     return TRUE;
   }
-  else if (in_array($value, $falses, TRUE)) {
+  else if (in_array(drupal_strtolower($value), $falses, TRUE)) {
     $value = '0';
     return TRUE;
   }
@@ -947,54 +1089,35 @@ function node_import_check_boolean(&$value, $field, $options, $preview) {
 }
 
 /**
- * Check if the value is a valid weight (integer between -X and X).
- *
- * Uses: $field['max_weight'].
- */
-function node_import_check_weight(&$value, $field, $options, $preview) {
-  $weight = isset($field['max_weight']) ? $field['max_weight'] : 10;
-
-  if (is_numeric($value) && intval($value) <= $weight && intval($value) >= -$weight) {
-    $value = intval($value);
-    return TRUE;
-  }
-
-  node_import_input_error(t('Input error: %value is not allowed for %name (not a weight).', array('%value' => $value, '%name' => $field['title'])));
-  return FALSE;
-}
-
-/**
  * Check if the value is a valid date.
  *
- * Uses: $field['date_format'] (output format type - defaults to DATE_DATETIME).
- * Uses: $options['date_custom'] (custom input format).
+ * Uses: $field['output_format'] (output format type - defaults to DATE_UNIX).
+ * Uses: $options['date_format'], $options['date_custom'] and $options['timezone'] (default to date_default_timezone_name()).
  */
 function node_import_check_date(&$value, $field, $options, $preview) {
-  static $timezone;
-  if (!isset($timezone)) {
-    $timezone = date_default_timezone_name();
-  }
+  $timezone = isset($options['timezone']) ? $options['timezone'] : date_default_timezone_name();
+  $input_format = $options['date_format'] == 'custom' ? $options['date_custom'] : $options['date_format'];
+  $output_format = isset($field['output_format']) ? $field['output_format'] : DATE_UNIX;
 
-  $date_format = isset($field['date_format']) ? $field['date_format'] : DATE_DATETIME;
-
-  if (date_is_valid($value, DATE_DATETIME)) {
-    $value = date_convert($value, DATE_DATETIME, $date_format, $timezone);
+  if (date_is_valid($value, DATE_UNIX)) {
+    $value = date_convert($value, DATE_UNIX, $output_format, $timezone);
     return TRUE;
   }
 
   if (date_is_valid($value, DATE_ISO)) {
-    $value = date_convert($value, DATE_ISO, $date_format, $timezone);
+    $value = date_convert($value, DATE_ISO, $output_format, $timezone);
     return TRUE;
   }
 
-  if (isset($options['date_custom']) && strlen($options['date_custom']) > 0
-      && ($date = date_convert_from_custom($value, $options['date_custom']))) {
+  module_load_include('inc', 'date_api', 'date_api_elements');
+
+  if (($date = date_convert_from_custom($value, $input_format))) {
     // It is useless to check for date_is_valid() as it is a DATE_DATETIME already.
-    $value = date_convert($date, DATE_DATETIME, $date_format, $timezone);
+    $value = date_convert($date, DATE_DATETIME, $output_format, $timezone);
     return TRUE;
   }
 
-  node_import_input_error(t('Input error: %value is not allowed for %name (not a date).', array('%value' => $value, '%name' => $field['title'])));
+  node_import_input_error(t('Input error: %value is not allowed for %name (not a date in %date format).', array('%value' => $value, '%name' => $field['title'], '%date' => format_date(time(), 'custom', $input_format))));
   return FALSE;
 }
 
@@ -1012,27 +1135,63 @@ function node_import_check_email(&$value, $field, $options, $preview) {
 }
 
 /**
- * Check if the value is a valid user (by uid, name or email).
+ * Check if the value points to a valid filepath.
  *
- * Uses: nothing.
+ * Uses: $field['to_directory'], $options['from_directory'], $options['manually_moved'].
  */
-function node_import_check_user(&$value, $field, $options, $preview) {
-  if (($uid = db_result(db_query("SELECT uid FROM {users} WHERE uid = %d OR LOWER(name) = '%s' OR LOWER(mail) = '%s'", is_numeric($value) && intval($value) > 0 ? $value : -1, drupal_strtolower($value), drupal_strtolower($value))))) {
-    $value = $uid;
+function node_import_check_filepath(&$value, $field, $options, $preview) {
+  // No need to check empty values.
+  if (drupal_strlen($value) == 0) {
     return TRUE;
   }
 
-  node_import_input_error(t('Input error: %value is not allowed for %name (not an user).', array('%value' => $value, '%name' => $field['title'])));
+  // Where should be file be located?
+  $find_in = isset($options['from_directory']) ? $options['from_directory'] : '';
+  $find_in = variable_get('node_import:ftp:directory', 'imports') . (strlen($find_in) > 0 ? '/'. $find_in : '');
+  if (isset($options['manually_moved']) && $options['manually_moved']) {
+    $find_in = isset($field['to_directory']) ? $field['to_directory'] : '';
+  }
+  $find_in = file_create_path($find_in);
+
+  // Check if the file exists.
+  $filepath = $find_in .'/'. $value;
+  if (file_check_location($filepath, $find_in) && file_exists($filepath)) {
+    $value = $filepath;
+    return TRUE;
+  }
+
+  node_import_input_error(t('Input error: %value is not allowed for %name (not a file in %path).', array('%value' => $value, '%name' => $field['title'], '%path' => $find_in)));
+  $value = '';
   return FALSE;
 }
 
 /**
  * Check if the value is a valid node reference (by nid or title).
  *
- * Uses: nothing.
+ * Uses: $field['output_format']. Either 'nid' (default) or 'title'.
  */
-function node_import_check_node(&$value, $field, $options, $preview) {
-  if (is_numeric($value) && intval($value) > 0) {
+function node_import_check_node_reference(&$value, $field, $options, $preview) {
+  if (($nid = node_import_get_object('node', $value)) !== NULL ||
+      ($nid = db_result(db_query("SELECT nid FROM {node} WHERE nid = %d OR LOWER(title) = '%s' LIMIT 1", is_numeric($value) && intval($value) > 0 ? $value : -1, drupal_strtolower($value))))) {
+
+    node_import_set_object('node', $value, $nid);
+    $value = $nid;
+
+    $field['output_format'] = isset($field['output_format']) ? $field['output_format'] : 'nid';
+    switch ($field['output_format']) {
+      case 'title':
+        if (($title = node_import_get_object('node:title', $nid)) ||
+            ($title = db_result(db_query("SELECT title FROM {node} WHERE nid = %d LIMIT 1", $nid)))) {
+          $value = $title;
+          node_import_set_object('node:title', $nid, $title);
+        }
+        break;
+
+      case 'nid':
+      default:
+        break;
+    }
+
     return TRUE;
   }
 
@@ -1041,8 +1200,178 @@ function node_import_check_node(&$value, $field, $options, $preview) {
 }
 
 /**
+ * Check if the value is a valid user (by uid, name or email).
+ *
+ * Uses: $field['output_format']. Either 'uid' (default), 'name' or 'email'.
+ */
+function node_import_check_user_reference(&$value, $field, $options, $preview) {
+  if (($uid = node_import_get_object('user', $value)) !== NULL ||
+      ($uid = db_result(db_query("SELECT uid FROM {users} WHERE uid = %d OR LOWER(name) = '%s' OR LOWER(mail) = '%s' LIMIT 1", is_numeric($value) && intval($value) > 0 ? $value : -1, drupal_strtolower($value), drupal_strtolower($value))))) {
+
+    node_import_set_object('user', $value, $uid);
+    $value = $uid;
+
+    $field['output_format'] = isset($field['output_format']) ? $field['output_format'] : 'uid';
+    switch ($field['output_format']) {
+      case 'name':
+        if (($name = node_import_get_object('user:name', $uid)) ||
+            ($name = db_result(db_query("SELECT name FROM {users} WHERE uid = %d LIMIT 1", $uid)))) {
+          $value = $name;
+          node_import_set_object('user:name', $uid, $name);
+        }
+        break;
+
+      case 'email':
+        if (($email = node_import_get_object('user:email', $uid)) ||
+            ($email = db_result(db_query("SELECT mail FROM {users} WHERE uid = %d LIMIT 1", $uid)))) {
+          $value = $email;
+          node_import_set_object('user:email', $uid, $email);
+        }
+        break;
+
+      case 'uid':
+      default:
+        break;
+    }
+
+    return TRUE;
+  }
+
+  node_import_input_error(t('Input error: %value is not allowed for %name (not an user).', array('%value' => $value, '%name' => $field['title'])));
+  return FALSE;
+}
+
+/**
+ * Check if the value is in the list of allowed values (by key or value).
+ *
+ * Uses: $field['allowed_values'].
+ */
+function node_import_check_values(&$value, $field, $options, $preview) {
+  foreach ($field['allowed_values'] as $key => $title) {
+    $tmp = drupal_strtolower($value);
+    if ($tmp === drupal_strtolower($key) || $tmp === drupal_strtolower($title)) {
+      $value = $key;
+      return TRUE;
+    }
+  }
+
+  node_import_input_error(t('Input error: %value is not allowed for %name (not in allowed values list).', array('%value' => $value, '%name' => $field['title'])));
+  return FALSE;
+}
+
+/**
+ * Check if the value is a valid weight (integer between -X and X).
+ *
+ * Uses: $field['delta'].
+ */
+function node_import_check_weight(&$value, $field, $options, $preview) {
+  $weight = isset($field['delta']) ? $field['delta'] : 10;
+
+  if (is_numeric($value) && intval($value) <= $weight && intval($value) >= -$weight) {
+    $value = intval($value);
+    return TRUE;
+  }
+
+  node_import_input_error(t('Input error: %value is not allowed for %name (not a weight).', array('%value' => $value, '%name' => $field['title'])));
+  return FALSE;
+}
+
+/**
  * @}
  */
+
+/**
+ * @defgroup node_import_util Various node import utility functions.
+ * @{
+ */
+
+/**
+ * Store an object-id in the node_import cache.
+ *
+ * As some string->object-id lookups can be expensive (in db queries) and
+ * most of the time the same strings are looked up (eg users), we have a
+ * cache of object-ids we already have looked up.
+ *
+ * This function is used to store an object-id in the cache.
+ *
+ * @param $type
+ *   String. The type of object (eg 'user').
+ *
+ * @param $value
+ *   String or array. The value we haved looked up.
+ *
+ * @param $oid
+ *   Integer. The looked-up object-id. If NULL, the currently stored
+ *   object-id is returned without setting the $type/$value to NULL.
+ *   If you want to reset (eg make it NULL) a value, use
+ *   @code
+ *   node_import_set_object($type, $value, NULL, TRUE);
+ *   @endcode
+ *
+ * @param $reset
+ *   Boolean. Whether to reset the cache. If $type is NULL, the whole
+ *   cache is reset. If $value is not NULL only the cache for that
+ *   specific $type/$value is reset.
+ *
+ * @return
+ *   Integer. The looked-up object-id. NULL if not found.
+ *
+ * @see node_import_get_object().
+ */
+function node_import_set_object($type, $value, $oid = NULL, $reset = FALSE) {
+  static $cache;
+
+  if (!isset($cache)) {
+    $cache = array();
+  }
+  if (isset($type) && !isset($cache[$type])) {
+    $cache[$type] = array();
+  }
+
+  $stored_value = NULL;
+  if (isset($value)) {
+    $stored_value = is_array($value) ? implode("\n", array_map('drupal_strtolower', $value)) : drupal_strtolower($value);
+  }
+
+  if ($reset) {
+    if (isset($type)) {
+      if (isset($value)) {
+        unset($cache[$type][$stored_value]);
+      }
+      else {
+        $cache[$type] = array();
+      }
+    }
+    else {
+      $cache = array();
+    }
+    return;
+  }
+
+  if (isset($oid)) {
+    $cache[$type][$stored_value] = $oid;
+  }
+
+  return isset($cache[$type][$stored_value]) ? $cache[$type][$stored_value] : NULL;
+}
+
+/**
+ * Get an object-id from the node_import cache.
+ *
+ * @param $type
+ *   String. The type of object (eg 'user').
+ *
+ * @param $value
+ *   String or array. The value to get the object-id of.
+ *
+ * @return
+ *   NULL if not yet in cache. Otherwise an integer.
+ *
+ * @see node_import_set_object().
+ */
+function node_import_get_object($type, $value) {
+  return node_import_set_object($type, $value);
+}
 
 /**
  * Get a property from each element of an array.
@@ -1068,6 +1397,18 @@ function node_import_extract_property($array, $property = 'title') {
     }
   }
   return $result;
+}
+
+/**
+ * Function used by uasort to sort structured arrays by weight.
+ */
+function node_import_sort($a, $b) {
+  $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+  $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
+  if ($a_weight == $b_weight) {
+    return 0;
+  }
+  return ($a_weight < $b_weight) ? -1 : 1;
 }
 
 /**
@@ -1102,15 +1443,20 @@ function node_import_field_map_count($fieldname, $map) {
 /**
  * Set an error on a random form element.
  */
-function node_import_input_error($message) {
+function node_import_input_error($message, $args = array()) {
   static $count = 0;
   form_set_error('node_import-'. $count, $message, $args);
   $count++;
 }
 
 /**
+ * @}
+ */
+
+/**
  * @defgroup node_import_files Node import file functions
  * @{
+ */
 
 /**
  * Returns a list of available files.
@@ -1121,13 +1467,16 @@ function node_import_list_files($reset = FALSE) {
 
   if (!isset($files) || $reset) {
     $files = array();
+    $path = file_create_path(variable_get('node_import:ftp:directory', 'imports'));
 
     // If FTP uploads of files is allowed, rescan the directory.
     if (variable_get('node_import:ftp:enabled', 0)) {
-      $path = file_create_path(variable_get('node_import:ftp:directory', 'imports'));
       $ftp_user = user_load(array('name' => variable_get('node_import:ftp:user', '')));
       //TODO: use the $validators functionality of file_save_upload() ?
-      $extensions = array_filter(explode(' ', variable_get('node_import:ftp:extensions', 'csv tsv txt')));
+      $extensions = array_map('drupal_strtolower', array_filter(explode(' ', variable_get('node_import:ftp:extensions', 'csv tsv txt'))));
+      foreach ($extensions as $extension) {
+        $extensions[] = drupal_strtoupper($extension);
+      }
 
       if (!empty($extensions)) {
         $existing_files = array();
@@ -1195,14 +1544,14 @@ function node_import_automap($type, $headers) {
   }
 
   $map = array();
-  $headers = array_map('strtolower', $headers);
+  $headers = array_map('drupal_strtolower', $headers);
 
-  foreach (node_import_fields($type) as $field => $info) {
-    if ($info['is_mappable']) {
-      $map[$field] = '';
-      if (($col = array_search(strtolower($field), $headers)) !== FALSE
-          || ($col = array_search(strtolower($info->title), $headers))) {
-        $map[$field] = $col;
+  foreach (node_import_fields($type) as $fieldname => $fieldinfo) {
+    if ($fieldinfo['is_mappable']) {
+      $map[$fieldname] = '';
+      if (($col = array_search(drupal_strtolower($fieldname), $headers)) !== FALSE
+          || ($col = array_search(drupal_strtolower($fieldinfo['title']), $headers)) !== FALSE) {
+        $map[$fieldname] = $col;
       }
     }
   }
@@ -1222,7 +1571,7 @@ function node_import_automap($type, $headers) {
  */
 function node_import_autodetect($filepath) {
   //TODO: really implement this.
-  $file_formats = (array)module_invoke_all('node_import_file_formats', 'file formats');
+  $file_formats = node_import_format_options('file formats');
   return $file_formats['csv'] + array('file_format' => 'csv');
 }
 
@@ -1258,26 +1607,12 @@ function node_import_read_from_file($filepath, $offset, $file_options) {
   }
 
   // File options.
-  $replaces = array('<newline>' => "\n", '<tab>' => "\t", '<none>' => '');
-  $options = array(
-    'record separator' => '<newline>',
-    'field separator' => ',',
-    'text delimiter' => '"',
-    'escape character' => '"',
-  );
-  foreach ($options as $key => $default) {
-    if (isset($file_options[$key]) && strlen($file_options[$key]) > 0) {
-      $options[$key] = $file_options[$key];
-    }
-    else if (isset($file_options['other '. $key]) && strlen($file_options['other '. $key]) > 0) {
-      $options[$key] = $file_options['other '. $key];
-    }
-  }
-  $options = str_replace(array_keys($replaces), array_values($replaces), $options);
-  $rs = $options['record separator'];
-  $fs = $options['field separator'];
-  $td = $options['text delimiter'];
-  $ec = $options['escape character'];
+  _node_import_sanitize_file_options($file_options);
+
+  $rs = $file_options['record separator'];
+  $fs = $file_options['field separator'];
+  $td = $file_options['text delimiter'];
+  $ec = $file_options['escape character'];
 
   // The current record is stored in the $fields array. The $new_offset
   // contains the file position of the end of the returned record. Note
@@ -1375,13 +1710,87 @@ function node_import_read_from_file($filepath, $offset, $file_options) {
     $new_offset += strlen($buffer);
   }
 
-  // Cleanup and return.
+  // Remove extra white space.
   $fields = array_map('trim', $fields);
+
+  // Check whether the whole row is empty.
+  $empty_row = TRUE;
+  foreach ($fields as $field) {
+    if (strlen($field) > 0) {
+      $empty_row = FALSE;
+      break;
+    }
+  }
+  if ($empty_row && !feof($fp) && !empty($fields)) {
+    return node_import_read_from_file($filepath, $new_offset, $file_options);
+  }
+
+  // Cleanup and return.
   $result = (!feof($fp) || !empty($fields)) ? array($new_offset, $fields) : FALSE;
   unset($buffer);
   fclose($fp);
 
   return $result;
+}
+
+function _node_import_sanitize_file_options(&$file_options) {
+  // File options.
+  $replaces = array('<newline>' => "\n", '<tab>' => "\t", '<none>' => '');
+  $options = array(
+    'record separator' => '<newline>',
+    'field separator' => ',',
+    'text delimiter' => '"',
+    'escape character' => '"',
+  );
+  foreach ($options as $key => $default) {
+    if (isset($file_options[$key]) && strlen($file_options[$key]) > 0) {
+      $options[$key] = $file_options[$key];
+    }
+    else if (isset($file_options['other '. $key]) && strlen($file_options['other '. $key]) > 0) {
+      $options[$key] = $file_options['other '. $key];
+    }
+  }
+  $file_options = str_replace(array_keys($replaces), array_values($replaces), $options);
+}
+
+/**
+ * Returns one line in the specified file format of the array of
+ * values.
+ *
+ * @param $values
+ *   Array of strings.
+ *
+ * @param $file_options
+ *   Array with 'record separator', 'field separator', 'text delimiter'
+ *   and 'escape character'. If not set, the options default to the
+ *   CSV options ("\n", ',', '"', '"').
+ *
+ * @return
+ *   String.
+ */
+function node_import_write_to_string($values, $file_options) {
+  // File options.
+  _node_import_sanitize_file_options($file_options);
+
+  $rs = $file_options['record separator'];
+  $fs = $file_options['field separator'];
+  $td = $file_options['text delimiter'];
+  $ec = $file_options['escape character'];
+
+  // Write data.
+  $output = '';
+
+  if (is_array($values) && !empty($values)) {
+    // TODO: we could avoid writing $td if the $value does not contain $td, $fs or $rs.
+    if (drupal_strlen($td) > 0) {
+      foreach ($values as $i => $value) {
+        $values[$i] = $td . str_replace($td, $ec . $td, $value) . $td;
+      }
+    }
+    $output = implode($fs, $values);
+  }
+
+  return $output . $rs;
 }
 
 /**

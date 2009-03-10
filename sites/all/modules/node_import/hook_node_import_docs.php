@@ -1,5 +1,5 @@
 <?php
-// $Id: hook_node_import_docs.php,v 1.1.2.2 2008/12/16 22:12:23 robrechtj Exp $
+// $Id: hook_node_import_docs.php,v 1.1.2.7 2009/01/16 10:09:08 robrechtj Exp $
 
 /**
  * @file
@@ -53,19 +53,8 @@
  * \par create callback
  *
  * @code
- * list($can_continue, $output) = function callback($type, $values, $preview);
+ * $output = function callback($type, $values, $preview);
  * @endcode
- *
- * $can_continue is a boolean describing whether the import can continue
- * to do the next row. Some imports may not be able to do more then one
- * row at a time because of all kinds of (static) caching in Drupal. For
- * example if you import a node with taxonomy terms and select to create
- * the non-existing terms on import, taxonomy_get_tree() will not have an
- * up-to-date internal list of terms and so the submission of the form
- * will fail due to "An illegal choice has been detected. Please contact
- * the site administrator.".
- *
- * You should try to avoid setting $can_continue to FALSE.
  *
  * In case of $preview == TRUE, $output should be a HTML string that shows
  * a preview of the content the user is trying to import.
@@ -131,6 +120,14 @@ function hook_node_import_types_alter(&$types) {
  *   information".
  *
  *   Defaults to ''.
+ *
+ * - \b "module" : String. Module that added the field.
+ *
+ *   Defaults to ''.
+ *
+ * - \b "weight" : Integer. Weight of the form elements.
+ *
+ *   Defaults to 0.
  *
  * - \b "is_mappable" : Boolean. Whether the field can be mapped by
  *   the current user. Rather set this to FALSE then omitting the
@@ -272,8 +269,11 @@ function hook_node_import_types_alter(&$types) {
  *
  *   Defaults to array().
  *
- * Some more information about what happens if a field is both
- * "has_multiple" and "has_hierarchy":
+ * \par Multiple and hierarchical fields
+ *
+ * When a field is both "has_multiple" and "has_hierarchy" the
+ * user can map multiple columns to the field, but if he does, the
+ * has_multiple will take precedence.
  *
  * If the user maps the field to exactly one column, the expected
  * format is:
@@ -472,7 +472,9 @@ function hook_node_import_values($type, $defaults, $options, $fields, $preview) 
  * Change the list of values to use to create the content type.
  *
  * @param $values
- *   Array of values as will be passed to the create function.
+ *   Array of values as will be passed to the create function. This
+ *   does not only contain the values of hook_node_import_values()
+ *   but the already mapped values as well.
  *
  * @param $type
  *   String. The content type as returned as a key by
@@ -490,35 +492,82 @@ function hook_node_import_values($type, $defaults, $options, $fields, $preview) 
  *
  * @ingroup node_import_hooks
  */
-function hook_node_import_values_alter(&$values, $type, $options, $preview) {
+function hook_node_import_values_alter(&$values, $type, $defaults, $options, $fields, $preview) {
 }
 
 /**
- * List the available file options.
+ * This hook is invoked after the form to create the $type has been
+ * submitted. You can use this hook to do stuff after the node has
+ * (or has not) been created, eg use the nid to store some additional
+ * information in the db tables.
  *
- * Use this hook if you want to extend the available record separators,
- * field separators, text delimiters, escape characters or predefined
- * file formats.
+ * @param $type
+ *   String. The content type as returned as a key by
+ *   hook_node_import_types().
  *
- * @param $op
- *   What to return. One of 'record separators', 'field separators',
- *   'text delimiters', 'escape characters' or 'file formats'.
+ * @param $values
+ *   Array of the submitted values.
+ *
+ * @param $options
+ *   Array of filled in options.
+ *
+ * @param $preview
+ *   Boolean.
  *
  * @return
- *   Array with record separators, field separators, text delimiters,
- *   or escape characters. These arrays are of the form:
- *   @code
- *     $char => $title
- *   @endcode
- *   where $char is the character (or \c <none>, \c <newline>) and $title
- *   the human-readable form.
+ *   Nothing.
  *
- *   For $op == 'file formats' you need to return:
- *   @code
- *     $key => $info
- *   @encode
- *   where $key is a unique key to identify the predefined file format
- *   and $info is an array with following keys:
+ * @ingroup node_import_hooks
+ */
+function hook_node_import_postprocess($type, $values, $options, $preview) {
+}
+
+/**
+ * This hook is invoked when a task is loaded, inserted, deleted,
+ * resumed or suspended.
+ *
+ * It allows other modules to act on these events.
+ *
+ * @param $task
+ *   Task object or task ID (for 'delete').
+ *
+ * @param $op
+ *   Operation. One of: 'load', 'insert', 'delete', 'continue', 'pause'.
+ *
+ * @return
+ *   Nothing.
+ *
+ * @ingroup node_import_hooks
+ */
+function hook_node_import_task($task, $op) {
+}
+
+/**
+ * This hook allows users to change some of the options the user is
+ * presented with on the wizard form.
+ *
+ * @param $op
+ *   String.
+ *
+ *   - \b 'record separators'
+ *   - \b 'field separators'
+ *   - \b 'text delimiters'
+ *   - \b 'escape characters'
+ *     Extend the options presented on the "Set file options" page.
+ *
+ *   - \b 'file formats'
+ *     Extend the available file formats.
+ *
+ *   - \b 'date input formats'
+ *     Builtin date formats.
+ *
+ * @return
+ *   For all $ops except 'file formats' you need to return an array
+ *   ($key => $title).
+ *
+ *   For the 'file formats' $op you need to return:
+ *   ($key => $info) where $key is a unique key to identify the predefined
+ *   file format and $info is an array with following keys:
  *
  *   - \b 'title' : Human readable form. Required.
  *
@@ -532,6 +581,24 @@ function hook_node_import_values_alter(&$values, $type, $options, $preview) {
  *
  * @ingroup node_import_hooks
  */
-function hook_node_import_file_formats($op) {
+function hook_node_import_format_options($op) {
+}
+
+/**
+ * Change the format options.
+ *
+ * @param $formats
+ *   Return value of hook_node_import_format_options().
+ *
+ * @param $op
+ *   See hook_node_import_format_options().
+ *
+ * @return
+ *   Just like with any Drupal _alter() hook, you need to change the
+ *   array passed to this function.
+ *
+ * @ingroup node_import_hooks
+ */
+function hook_node_import_format_options_alter(&$formats, $op) {
 }
 

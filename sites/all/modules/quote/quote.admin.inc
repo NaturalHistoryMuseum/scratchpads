@@ -1,5 +1,5 @@
 <?php
-// $Id: quote.admin.inc,v 1.1.2.1 2008/03/28 22:59:59 karthik Exp $
+// $Id: quote.admin.inc,v 1.1.2.2 2008/05/13 06:20:53 karthik Exp $
 
 /**
  * @file
@@ -28,27 +28,27 @@ function quote_settings_form() {
   $form = array();
   $form['quote'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Quote module settings',
-    '#tree' => TRUE,
+    '#title' => t('Quote module settings'),
+    '#tree' => TRUE
   );
   $form['quote']['node_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Node associations'),
     '#description' => t('Select the node types to associate with the quote filter.'),
     '#options' => _quote_get_node_types(),
-    '#default_value' => _quote_variable_get('node_types'),
+    '#default_value' => _quote_variable_get('node_types')
   );
   $form['quote']['node_link_display'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display the quote link for nodes'),
     '#description' => t('Leave this option disabled if you use a PHP or similar filter in your nodes. The quote link is always displayed for comments.'),
-    '#default_value' => _quote_variable_get('node_link_display'),
+    '#default_value' => _quote_variable_get('node_link_display')
   );
   $form['quote']['subject_required'] = array(
     '#type' => 'checkbox',
     '#title' => t('Make the comment subject field a required field'),
     '#description' => t('Making the comment subject field a required field will ensure that unsightly [quote] tags are not displayed.'),
-    '#default_value' => _quote_variable_get('subject_required'),
+    '#default_value' => _quote_variable_get('subject_required')
   );
 
   return system_settings_form($form);

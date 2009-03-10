@@ -10,22 +10,17 @@ function gbifmap_ispecies(){
       'callback' => 'gbifmap_ajax_callback' ) );
 }
 
-function gbifmap_ajax_callback($tid = FALSE, $limit = 20){
-  if (! $tid) {
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop ( explode ( "/", referer_uri () ) );
-  }
-  $term = taxonomy_get_term ( $tid );
-  $term_name = $term->name;
-  $items = array ();  
-  $item = new stdClass ( );  
+function gbifmap_ajax_callback($term_name, $limit = 20){
+  $items = array ();   
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://data.gbif.org/species/taxonName/ajax/returnType/concept/view/ajaxMapUrls/provider/1/?query=' . $term_name );
   $xml_response = file_get_contents ( $request );  
   if ($xml_response) {    
     $response = new SimpleXMLElement ( $xml_response );    
-    $item->body = '<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" />';
-    $item->page_url = 'http://data.gbif.org/species/' . $response->taxon->key;    
-    $items [strval ( $response->taxon->url )] = $item;
+    $item = array(
+      'body' => '<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" />',
+      'page_url' => 'http://data.gbif.org/species/' . $response->taxon->key
+    );    
+    $items[] = $item;
     $urls = array($item->page_url);
   }
   $urls = array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls);

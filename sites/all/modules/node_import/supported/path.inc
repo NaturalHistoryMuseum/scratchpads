@@ -1,5 +1,5 @@
 <?php
-// $Id: path.inc,v 1.2.2.8 2008/12/16 22:12:23 robrechtj Exp $
+// $Id: path.inc,v 1.2.2.10 2009/01/15 20:51:37 robrechtj Exp $
 
 /**
  * @file
@@ -16,6 +16,8 @@ function path_node_import_fields($type) {
     $fields['path'] = array(
       'title' => t('URL path settings'),
       'group' => t('URL path settings'),
+      'module' => 'path',
+      'weight' => 30,
       'is_mappable' => user_access('create url aliases'),
       'default_value' => '',
     );

@@ -14,13 +14,7 @@ function googlescholar_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'googlescholar' ) . '/googlescholar.css' );
 }
 
-function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
-  if (! $tid) {
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop ( explode ( "/", referer_uri () ) );
-  }
-  $term = taxonomy_get_term ( $tid );
-  $term_name = $term->name;
+function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0){
   $items = array ();
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://darwin.zoology.gla.ac.uk/cgi-bin/gsaJSON.cgi?q=' . $term_name );
   $json_str = file_get_contents ( $request );
@@ -35,17 +29,18 @@ function googlescholar_ajax_callback($tid = FALSE, $limit = 20){
   if (is_array ( $json_obj->Result )) {    
     foreach ( $json_obj->Result as $key => $result ) {      
       $counter ++;      
-      $item = new stdClass ( );
-      $item->body = sprintf ( '<a target="_blank" href="%s" title="%s">%s</a>', $result->link, $result->title, $result->title );
-      $item->page_url = 'http://scholar.google.co.uk/scholar?q=' . $term_name;
-      $items [strval ( $result->link )] = $item;      
+      $item = array(
+        'body' => sprintf ( '<a target="_blank" href="%s" title="%s">%s</a>', $result->link, $result->title, $result->title ),
+        'page_url' => $result->link
+      );
+      $urls[] = $item['page_url'];
+      $items[] = $item;
       if ($counter >= $limit) {
         break;
-      }
-      $urls[] = $item->page_url;    
+      }    
     }  
   }
-  $urls = array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.com', 'urls' => $urls);
+  $urls = array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.co.uk/scholar?q=' . $term_name, 'urls' => $urls);
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
   return $items;

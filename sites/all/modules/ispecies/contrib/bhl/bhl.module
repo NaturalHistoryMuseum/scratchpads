@@ -63,9 +63,7 @@ function _bhl_get_namebank_titles($term_name) {
   return $titles;
 }
 
-function bhl_ajax_callback($tid = FALSE, $limit = 20){
-  $term = taxonomy_get_term($tid);
-  $term_name = $term->name;  
+function bhl_ajax_callback($term_name, $limit = 20, $offset = 0){
   $items = array ();
   $titles = _bhl_get_namebank_titles($term_name);
   $count_titles = count ( $titles );
@@ -106,19 +104,15 @@ function bhl_ajax_callback($tid = FALSE, $limit = 20){
       }
       $number_of_pages = format_plural ( $page_counter, '@count page', '@count pages' );
       if ($number_of_pages) {
-        $item = new stdClass ( );
-        $item->body = sprintf ( '<a href="%s" title="%s">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages );
-        $item->body .= '<ul class="bhl-pages">' . $page_output . '</ul>';
-        $stripped_term_name = str_replace ( ' ', '_', $term_name );
-        $item->page_url = 'http://www.biodiversitylibrary.org/name/' . $stripped_term_name;
-        if (! $items [$title ['title_url']]) {
-          $items [$title ['title_url']] = $item;
-          $counter ++;
-        }
+        $item = array(
+          'body' => sprintf ( '<a href="%s" title="%s">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul>',
+          'page_url' => 'http://www.biodiversitylibrary.org/name/' . str_replace ( ' ', '_', $term_name )
+        );
+        $items[] = $item;
       }
     }
   }
-  $urls = array('name' => 'BHL', 'url'=>'http://www.biodiversitylibrary.org/');
+  $urls = array('name' => 'BHL', 'url'=>'http://biodiversitylibrary.org/name/'.$term_name);
   $items['citation'] = theme('citation_url', $urls);
   $items['urls'] = $urls;
   return $items;

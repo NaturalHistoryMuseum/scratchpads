@@ -14,13 +14,7 @@ function yahooimages_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'yahooimages' ) . '/yahooimages.css' );
 }
 
-function yahooimages_ajax_callback($tid = FALSE, $limit = 20){
-  if (! $tid) {
-    // Get the referer and use the final part of that as the tid
-    $tid = array_pop ( explode ( "/", referer_uri () ) );
-  }
-  $term = taxonomy_get_term ( $tid );
-  $term_name = $term->name;
+function yahooimages_ajax_callback($term_name, $limit = 20, $offset = 0){
   $items = array ();  
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://search.yahooapis.com/ImageSearchService/V1/imageSearch?appid=oKvSo97V34Fj_xvmgvJCiVFF6sRd60NyUSxNJ5jijiuSKaAV3Hf_IoFiouBDm_c&query=' . $term_name . '&results=' . $limit . '&output=php' );
   $response = file_get_contents ( $request );  
@@ -52,9 +46,10 @@ function yahooimages_ajax_callback($tid = FALSE, $limit = 20){
         // set x side to max
         $y = 95;      
       }      
-      $item = new stdClass ( );      
-      $item->body = sprintf ( '<div class="panel-grid-image"><a class="lightbox" rel="lightbox[yahoo]" href="%s"><img src="%s" width="%s" height="%s" alt="%s" title="%s" /></a></div>', $image ['ClickUrl'], $image ['Thumbnail'] ['Url'], $x, $y, $image ['Title'], $image ['Title'] );      
-      $item->page_url = $image ['RefererUrl'];      
+      $item = array(
+        'body' => sprintf ( '<div class="panel-grid-image"><a class="lightbox" rel="lightbox[yahoo]" href="%s"><img src="%s" width="%s" height="%s" alt="%s" title="%s" /></a></div>', $image ['ClickUrl'], $image ['Thumbnail'] ['Url'], $x, $y, $image ['Title'], $image ['Title'] ),
+        'page_url' => $image ['RefererUrl']
+      );      
       $items [$image ['ClickUrl']] = $item;    
       $urls[] = $item->page_url;
     }

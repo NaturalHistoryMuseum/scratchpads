@@ -1,5 +1,5 @@
 <?php
-// $Id: node_import.admin.inc,v 1.1.2.22 2008/12/12 15:32:11 robrechtj Exp $
+// $Id: node_import.admin.inc,v 1.1.2.31 2009/02/14 10:23:16 robrechtj Exp $
 
 /**
  * @file
@@ -113,6 +113,7 @@ function node_import_add_form(&$form_state) {
   $pages = array(
     'intro' => array(
       'title' => t('Introduction'),
+      'description' => t('The <em>Node import</em> module allows you to import content (such as users, vocabularies, terms or nodes) into your site from a tabular file (such as Comma or Tab Separated Values files). This wizard guides you through a number of steps to configure such an import.') .' '. theme('advanced_help_topic', 'node_import', 'new-import', t('[more help]')),
     ),
     'type' => array(
       'title' => t('Select content type'),
@@ -150,7 +151,6 @@ function node_import_add_form(&$form_state) {
 
   $titles = node_import_extract_property($pages, 'title');
   array_shift($titles);
-  $pages['intro']['description'] = t('<p>The <em>Node import</em> module allows you to import content (such as users, vocabularies, terms or nodes) into your site from a tabular file (such as Comma or Tab Separated Values files). This wizard guides you through a number of steps to configure such an import.</p>') .'<ol><li>'. implode('</li><li>', $titles) .'</li></ol>'. t('<div class="warning"><p><strong>The <em>Node import</em> module is still in development</strong>. Check on the <a href="http://drupal.org/project/node_import" title="Node import project page">project page</a> to see if support for a specific module has been added. You can help the developers by</p><ul><li>writing documentation,</li><li><a href="http://drupal.org/node/add/project-issue/4840">reporting bugs</a> (please read the issue submission instructions),</li><li><a href="http://drupal.org/project/node_import" title="Node import project page">donating some money</a> to fund the development.</li></ul></div>');
 
   $page_keys = array_keys($pages);
   $first_page = $page_keys[0];
@@ -170,7 +170,20 @@ function node_import_add_form(&$form_state) {
   }
   $form['help'] = array(
     '#value' => '<div class="help">'. $pages[$page]['description'] .'</div>',
+    '#weight' => -50,
   );
+
+  // ------------------------------------------------------------
+  // Introduction page.
+  if ($page == 'intro') {
+    $form['intro'] = array(
+      '#value' => /* t('<h3>Wizard pages</h3>') .'<ol><li>'. implode('</li><li>', $titles) .'</li></ol>'. */ t('<h3>Buttons</h3><dl><dt>%back</dt><dd>Go to the previous page.</dd><dt>%reload</dt><dd>Reload the page without resetting the already filled in values.</dd><dt>%reset</dt><dd>Reset the values of the current page to their defaults.</dd><dt>%next</dt><dd>Go to the next page.</dd></dl>', array('%next' => t('Next'), '%back' => t('Back'), '%reset' => t('Reset page'), '%reload' => t('Reload page'))),
+    );
+
+    if (variable_get('node_import:annoy', 1)) {
+      $form['intro']['#value'] .= t('<div class="warning"><p><strong>The <em>Node import</em> module is still in development</strong>. Check on the <a href="http://drupal.org/project/node_import" title="Node import project page">project page</a> to see if support for a specific module has been added. You can help the developers by</p><ul><li><a href="@documentation-path">writing documentation</a>,</li><li><a href="http://drupal.org/node/add/project-issue/4840">reporting bugs</a> (please read the issue submission instructions),</li><li><a href="http://drupal.org/project/node_import" title="Node import project page">fund the development by donating some money</a>.</li></ul></div>', array('@documentation-path' => url('admin/advanced_help/node_import')));
+    }
+  }
 
   // ------------------------------------------------------------
   // Select or upload a file.
@@ -229,10 +242,10 @@ function node_import_add_form(&$form_state) {
   // ------------------------------------------------------------
   // Select file options.
   if ($page == 'file_options') {
-    $record_separators = (array)module_invoke_all('node_import_file_formats', 'record separators') + array('' => t('Other'));
-    $field_separators = (array)module_invoke_all('node_import_file_formats', 'field separators') + array('' => t('Other'));
-    $text_delimiters = (array)module_invoke_all('node_import_file_formats', 'text delimiters') + array('' => t('Other'));
-    $escape_characters = (array)module_invoke_all('node_import_file_formats', 'escape characters') + array('' => t('Other'));
+    $record_separators = node_import_format_options('record separators') + array('' => t('Other'));
+    $field_separators = node_import_format_options('field separators') + array('' => t('Other'));
+    $text_delimiters = node_import_format_options('text delimiters') + array('' => t('Other'));
+    $escape_characters = node_import_format_options('escape characters') + array('' => t('Other'));
 
     $file_options = isset($values['file_options']) ? $values['file_options'] : array();
     $has_headers = isset($values['has_headers']) ? $values['has_headers'] : 1;
@@ -250,7 +263,7 @@ function node_import_add_form(&$form_state) {
       '#theme' => 'node_import_file_format_select',
     );
 
-    $file_formats = (array)module_invoke_all('node_import_file_formats', 'file formats');
+    $file_formats = node_import_format_options('file formats');
     $file_format_options = node_import_extract_property($file_formats, 'title');
     $file_format_options[''] = t('Delimiter Separated Values');
 
@@ -279,7 +292,7 @@ function node_import_add_form(&$form_state) {
       $form['file_options']['other '. $key] = array(
         '#type' => 'textfield',
         '#size' => 6,
-        '#default_value' => $file_options['other '. $key],
+        '#default_value' => isset($file_options['other '. $key]) ? $file_options['other '. $key] : '',
       );
     }
 
@@ -311,7 +324,7 @@ function node_import_add_form(&$form_state) {
     $form['map'] = array(
       '#tree' => TRUE,
       '#theme' => 'node_import_field_table',
-      '#node_import-columns' => array(t('Field name'), t('Maps to')),
+      '#node_import-columns' => array(t('Content field'), t('Maps to column')),
       '#node_import-empty' => t('There are no content fields you can map.'),
     );
 
@@ -368,9 +381,10 @@ function node_import_add_form(&$form_state) {
     $form['defaults'] = array(
       '#tree' => TRUE,
       '#theme' => 'node_import_field_table',
-      '#node_import-columns' => array(t('Field name'), t('Default value')),
+      '#node_import-columns' => array(t('Content field'), t('Default value')),
       '#node_import-empty' => t('There are no default values you can set.'),
     );
+    $values['defaults'] = isset($values['defaults']) ? $values['defaults'] : array();
     $form['defaults'] = array_merge($form['defaults'], node_import_defaults($values['type'], $values['defaults'], $fields, $values['map']));
   }
 
@@ -381,9 +395,10 @@ function node_import_add_form(&$form_state) {
     $form['options'] = array(
       '#tree' => TRUE,
       '#theme' => 'node_import_field_table',
-      '#node_import-columns' => array(t('Field name'), t('Options')),
+      '#node_import-columns' => array(t('Content field'), t('Options')),
       '#node_import-empty' => t('There are no additional options you can set.'),
     );
+    $values['options'] = isset($values['options']) ? $values['options'] : array();
     $form['options'] = array_merge($form['options'], node_import_options($values['type'], $values['options'], $fields, $values['map']));
   }
 
@@ -426,27 +441,37 @@ function node_import_add_form(&$form_state) {
 
   // ------------------------------------------------------------
   // Add Back, Next and/or Start buttons.
-  $form['buttons'] = array(
+  $form['buttons-bottom'] = array(
     '#weight' => 50,
   );
-  $form['buttons']['back_button'] = array(
+  $form['buttons-bottom']['back_button'] = array(
     '#type' => 'submit',
     '#value' => t('Back'),
     '#submit' => array('node_import_add_form_submit_back'),
     '#disabled' => ($page == $first_page),
   );
-  $form['buttons']['reload_button'] = array(
+  $form['buttons-bottom']['reload_button'] = array(
     '#type' => 'submit',
-    '#value' => t('Reload'),
+    '#value' => t('Reload page'),
     '#submit' => array('node_import_add_form_submit_reload'),
+    '#disabled' => ($page == $first_page),
   );
-  $form['buttons']['next_button'] = array(
+  $form['buttons-bottom']['reset_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset page'),
+    '#submit' => array('node_import_add_form_submit_reset'),
+    '#disabled' => ($page == $first_page),
+  );
+  $form['buttons-bottom']['next_button'] = array(
     '#type' => 'submit',
     '#value' => ($page == $last_page) ? t('Start import') : t('Next'),
     '#validate' => array('node_import_add_form_validate_next'),
     '#submit' => array('node_import_add_form_submit_next'),
     '#disabled' => empty($types),
   );
+
+  $form['buttons-top'] = $form['buttons-bottom'];
+  $form['buttons-top']['#weight'] = -40;
 
   return $form;
 }
@@ -562,6 +587,13 @@ function node_import_add_form_submit_back($form, &$form_state) {
   node_import_add_form_submit_reload($form, $form_state);
 }
 
+function node_import_add_form_submit_reset($form, &$form_state) {
+  $page = $form_state['storage']['page'];
+  unset($form_state['values'][$page]);
+  unset($form_state['storage'][$page]);
+  node_import_add_form_submit_reload($form, $form_state);
+}
+
 function node_import_add_form_submit_reload($form, &$form_state) {
   $page = $form_state['storage']['page'];
 
@@ -584,7 +616,7 @@ function node_import_add_form_submit_reload($form, &$form_state) {
     // If the user has chosen a predefined format, make sure
     // all options are correct.
     if ($form_state['storage']['file_options']['file_format'] != '') {
-      $file_formats = (array)module_invoke_all('node_import_file_formats', 'file formats');
+      $file_formats = node_import_format_options('file formats');
       $form_state['storage']['file_options'] = array_merge($form_state['storage']['file_options'], $file_formats[$form_state['storage']['file_options']['file_format']]);
     }
 
@@ -645,18 +677,28 @@ function node_import_add_form_submit_reload($form, &$form_state) {
       list($offset, $data) = node_import_read_from_file($file->filepath, $offset, $form_state['storage']['file_options']);
     }
 
-    $can_continue = TRUE;
-    while ($preview_count > 0 && is_array($data) && $can_continue) {
+    global $node_import_can_continue;
+    $node_import_can_continue = TRUE;
+
+    $form_state['storage']['defaults'] = isset($form_state['storage']['defaults']) ? $form_state['storage']['defaults'] : array();
+    $form_state['storage']['options'] = isset($form_state['storage']['options']) ? $form_state['storage']['options'] : array();
+
+    while ($preview_count > 0 && is_array($data) && $node_import_can_continue) {
       $preview_count--;
       list($offset, $data) = node_import_read_from_file($file->filepath, $offset, $form_state['storage']['file_options']);
       if (is_array($data)) {
-        list($can_continue, $preview) = node_import_create($form_state['storage']['type'], $data, $form_state['storage']['map'], $form_state['storage']['defaults'], $form_state['storage']['options'], TRUE);
-        $previews[] = $preview;
+        $previews[] = node_import_create($form_state['storage']['type'], $data, $form_state['storage']['map'], $form_state['storage']['defaults'], $form_state['storage']['options'], TRUE);
       }
+    }
+
+    if (!$node_import_can_continue) {
+      $previews[] = t('It is impossible to show more previews as a new object has been created that can be referenced by other rows.');
     }
 
     $form_state['storage']['previews'] = $previews;
   }
+
+  unset($form_state['values'][$page]);
 }
 
 function node_import_task_details($values) {
@@ -703,7 +745,7 @@ function node_import_task_details($values) {
         $rows[] = array($title, check_plain($values['file_options']['other '. $key]));
       }
       else {
-        $stuff = (array)module_invoke_all('node_import_file_formats', $key .'s');
+        $stuff = node_import_format_options($key .'s');
         $rows[] = array($title, $stuff[$values['file_options'][$key]]);
       }
     }
@@ -765,12 +807,48 @@ function node_import_view_form(&$form_state, $task) {
     $form['row_done'] = array(
       '#type' => 'item',
       '#title' => t('Rows imported'),
-      '#value' => '<div id="node_import-row_done">'. format_plural($task['row_done'], t('1 row'), t('@count rows')) .'</div>',
+      '#prefix' => '<div id="node_import-row_done">',
+      '#suffix' => '</div>',
+      '#value' => format_plural($task['row_done'], t('1 row'), t('@count rows')),
     );
     $form['row_error'] = array(
       '#type' => 'item',
       '#title' => t('Rows with errors'),
-      '#value' => '<div id="node_import-row_error">'. format_plural($task['row_error'], t('1 row'), t('@count rows')) .'</div>',
+      '#prefix' => '<div id="node_import-row_error">',
+      '#suffix' => '</div>',
+      '#value' => format_plural($task['row_error'], t('1 row'), t('@count rows')),
+    );
+
+    $form['download'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Download rows'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+    $form['download']['what_rows'] = array(
+      '#type' => 'radios',
+      '#title' => t('Rows to download'),
+      '#options' => array(
+        'all' => t('All rows'),
+        'error' => t('Rows with errors'),
+        'done' => t('Rows without errors'),
+      ),
+      '#default_value' => 'error',
+    );
+    $form['download']['what_cols'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Extra columns'),
+      '#options' => array(
+        'objid' => t('Object identifier'),
+        'errors' => t('Errors'),
+      ),
+      '#default_value' => array('objid', 'errors'),
+    );
+    $form['download']['download_button'] = array(
+      '#type' => 'submit',
+      '#value' => t('Download'),
+      '#submit' => array('node_import_view_form_submit_download'),
     );
   }
   else {
@@ -790,7 +868,7 @@ function node_import_view_form(&$form_state, $task) {
 
   $form['details'] = array_merge(array(
     '#type' => 'fieldset',
-    '#title' => t('Details'),
+    '#title' => t('Task details'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   ), node_import_task_details($task));
@@ -809,7 +887,7 @@ function node_import_view_form(&$form_state, $task) {
     ),
   );
 
-  if (variable_get('node_import:debug', 1)) {
+  if (variable_get('node_import:annoy', 1)) {
     $form['report'] = array(
       '#type' => 'markup',
       '#value' => '<div class="warning">'. t('When you <a href="http://drupal.org/node/add/project-issue/node_import" title="Report an issue with the Node import module">report a bug</a> for the <em>Node import</em> module, it helps the developers a lot if you attach <a href="!node_import-debug" title="Node import debug report">a <em>Node import</em> debug report</a> to the issue. This report contains - in plain text - <ul><li>the Drupal and PHP version,</li><li>the enabled modules and their versions,</li><li>the permissions of the user,</li><li>the task and content fields details,</li><li>the error messages and data of @count non-imported rows.</li></ul><strong>You should not submit this data if you are concerned about the content of the file you try to import</strong>, for example if the file contains e-mail addresses or passwords. You could create another task with the same parameters but with a file with content that can be publically viewed in this case or e-mail the author directly. Thanks!', array('!node_import-debug' => url('admin/content/node_import/'. $task['taskid'] .'/debug'), '@count' => variable_get('node_import:debug:row_count', 5))) .'</div>',
@@ -817,6 +895,73 @@ function node_import_view_form(&$form_state, $task) {
   }
 
   return $form;
+}
+
+function node_import_view_form_submit_download($form, &$form_state) {
+  $task = $form['#task'];
+
+  $file_formats = node_import_format_options('file formats');
+  $file_options = $task['file_options'];
+
+  $mime = 'text/plain';
+  if (isset($file_options['file_format']) && isset($file_formats[$file_options['file_format']]) && isset($file_formats[$file_options['file_format']]['mime'])) {
+    $mime = $file_formats[$file_options['file_format']]['mime'];
+  }
+
+  $suffix = pathinfo($task['file']->filename, PATHINFO_EXTENSION);
+  $filename = basename($task['file']->filename, '.'. $suffix);
+
+  $sql = "SELECT * FROM {node_import_status} WHERE taskid = %d";
+
+  switch ($form_state['values']['download']['what_rows']) {
+    case 'error':
+      $filename = $filename .'-reject.'. $suffix;
+      $sql .= " AND status = ". NODE_IMPORT_STATUS_ERROR;
+      break;
+
+    case 'done':
+      $filename = $filename .'-done.'. $suffix;
+      $sql .= " AND status = ". NODE_IMPORT_STATUS_DONE;
+      break;
+
+    default:
+    case 'all':
+      $filename = $filename .'-all.'. $suffix;
+      break;
+  }
+
+  $sql .= " ORDER BY offset ASC";
+
+  header('Content-Type: '. $mime);
+  header('Content-Disposition: attachment; filename='. $filename);
+
+  $objid = in_array('objid', $form_state['values']['download']['what_cols']);
+  $errors = in_array('errors', $form_state['values']['download']['what_cols']);
+
+  if ($task['has_headers']) {
+    $headers = $task['headers'];
+    if ($objid) {
+      array_unshift($headers, t('Object'));
+    }
+    if ($errors) {
+      array_unshift($headers, t('Errors'));
+    }
+    print node_import_write_to_string($headers, $file_options);
+  }
+
+  $result = db_query($sql, $task['taskid']);
+  while (($row = db_fetch_object($result))) {
+    list($offset, $data) = node_import_read_from_file($task['file']->filepath, $row->offset, $file_options);
+    if ($objid) {
+      array_unshift($data, $row->objid);
+    }
+    if ($errors) {
+      array_unshift($data, implode("\n", (array)unserialize($row->errors)));
+    }
+    print node_import_write_to_string($data, $file_options);
+  }
+
+  exit();
 }
 
 function node_import_view_form_submit_delete($form, &$form_state) {
@@ -890,7 +1035,7 @@ function node_import_settings_form(&$form_state) {
 
   $form['ftp']['node_import:ftp:enabled'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Allow FTP uploads.'),
+    '#title' => t('Allow FTP uploads'),
     '#description' => t('If checked users can upload files to the import directory by using FTP (or other means) in addition to uploading files using the form. If unsure, uncheck this option.'),
     '#default_value' => variable_get('node_import:ftp:enabled', 0),
   );
@@ -1052,9 +1197,9 @@ function theme_node_import_field_table($form) {
   $groups = array();
 
   foreach (element_children($form) as $child) {
-    if ($form[$child]['#type'] != 'value') {
+    if (!isset($form[$child]['#type']) || $form[$child]['#type'] != 'value') {
       $title = check_plain($form[$child]['#title']);
-      $group = $form[$child]['#node_import-group'];
+      $group = isset($form[$child]['#node_import-group']) ? $form[$child]['#node_import-group'] : '';
       unset($form[$child]['#title']);
 
       if (!isset($groups[$group])) {

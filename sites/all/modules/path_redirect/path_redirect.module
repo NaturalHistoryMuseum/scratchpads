@@ -1,5 +1,5 @@
 <?php
-// $Id: path_redirect.module,v 1.3.2.7.2.20 2009/01/27 19:17:00 davereid Exp $
+// $Id: path_redirect.module,v 1.3.2.7.2.35 2009/02/28 00:16:08 davereid Exp $
 
 /**
  * Implementation of hook_help().
@@ -7,64 +7,21 @@
 function path_redirect_help($path, $arg) {
   switch ($path) {
     case 'admin/build/path-redirect':
+    case 'admin/build/path-redirect/list':
       return '<p>'. t('Here you can set up URL redirecting for this site. Any existing or non-existing path within this site can redirect to any internal or external URL.') .'</p>';
-    case 'admin/build/path-redirect/'. $arg[2]:
-    case 'admin/build/path-redirect/edit/'. $arg[3]:
-      return '<p>'. t("The <strong>from</strong> path must be an internal Drupal path in the form of 'node/123', 'admin/reports', or 'taxonomy/term/123'. The <strong>to</strong> path can be either an internal Drupal path as above or a complete external URL such as http://www.example.com/. Furthermore, the <strong>to</strong> path may contain query arguments (such as 'page=2') and fragment anchors, to make it possible to redirect to 'admin/user?page=1#help'. Most redirects will not contain queries or anchors.") .'</p>';
+    //case 'admin/build/path-redirect/add':
+    //case 'admin/build/path-redirect/edit/'. $arg[3]:
+    //case 'admin/build/path-redirect/settings':
   }
 }
 
 /**
- * Implementation of hook_init().
- *
- * Early checking of URL requested.
- * If a match is found, user is redirected using drupal_goto()
- *
- * @todo Massive revision needed. Split into sub-functions if necessary.
+ * Implementation of hook_perm().
  */
-function path_redirect_init() {
-  // see if this page has a redirect path
-  $path = substr(request_uri(), strlen(base_path()));
-  if (preg_match('/^\?q=/', $path)) {
-    $path = preg_replace(array('/^\?q=/', '/&/'), array('', '?'), $path, 1);
-  }
-
-  // Remove trailing slash from path.
-  $path = preg_replace('/\/\?|\/$/', '', $path);
-
-  $r = db_fetch_object(db_query("SELECT rid, redirect, query, fragment, type FROM {path_redirect} WHERE path = '%s' OR path = '%s'", $path, utf8_encode($path)));
-  if (!$r) {
-    $path = preg_replace('/\?.*/', '', $path);
-    $r = db_fetch_object(db_query("SELECT rid, redirect, query, fragment, type FROM {path_redirect} WHERE path = '%s' OR path = '%s'", $path, utf8_encode($path)));
-  }
-
-  if ($r) {
-    $redirect = url($r->redirect, array('query' => $r->query, 'fragment' => $r->fragment, 'absolute' => TRUE));
-    if (url($r->redirect) == url($path)) {
-      // Prevent infinite loop redirection.
-      watchdog('path_redirect', 'Redirect to <code>%redirect</code> is causing an infinite loop; redirect cancelled.', array('%redirect' => $r->redirect), WATCHDOG_WARNING, l(t('edit'), 'admin/build/path-redirect/edit/'. $r->rid));
-    }
-    elseif (variable_get('path_redirect_allow_bypass', 0) && isset($_GET['redirect']) && $_GET['redirect'] === 'no') {
-      // If the user has requested not to be redirected, show a message.
-      drupal_set_message(t('This page has been redirected to <a href="@redirect">@redirect</a>.', array('@redirect' => $redirect)));
-    }
-    elseif (variable_get('path_redirect_redirect_warning', 0)) {
-      drupal_set_message(t('This page has been moved to <a href="@redirect">@redirect</a> and will redirect in 5 seconds. You may want to update your bookmarks.', array('@redirect' => $redirect)), 'error');
-      drupal_set_html_head("<meta http-equiv=\"refresh\" content=\"5;url=$redirect\" />");
-    }
-    else {
-      // @todo Clean the redirection code up. Do we need to duplicate code?
-      if (function_exists('drupal_goto')) {
-        // if there's a result found, do the redirect
-        unset($_REQUEST['destination']);
-        drupal_goto($r->redirect, $r->query, $r->fragment, $r->type);
-      }
-      else {
-        // page caching is turned on so drupal_goto() (common.inc) hasn't been loaded
-        path_redirect_goto($r->redirect, $r->query, $r->fragment, $r->type);
-      }
-    }
-  }
+function path_redirect_perm() {
+  return array(
+    'administer redirects',
+  );
 }
 
 /**
@@ -112,122 +69,227 @@ function path_redirect_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'path_redirect.admin.inc',
   );
-  $items['admin/settings/path-redirect'] = array(
-    'title' => 'URL redirects',
+  $items['admin/build/path-redirect/settings'] = array(
+    'title' => 'Settings',
     'description' => 'Configure behavior for URL redirects',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('path_redirect_settings'),
     'access arguments' => array('administer redirects'),
+    'type' => MENU_LOCAL_TASK,
     'file' => 'path_redirect.admin.inc',
   );
+  $items['admin/build/path-redirect/autocomplete'] = array(
+    'page callback' => 'path_redirect_autocomplete',
+    'access arguments' => array('administer redirects'),
+    'type' => MENU_CALLBACK,
+    'file' => 'path_redirect.admin.inc',
+  );
+
   return $items;
 }
 
 /**
- * Implementation of hook_perm().
+ * Implementation of hook_init().
  */
-function path_redirect_perm() {
-  return array('administer redirects');
-}
-
-function path_redirect_save($edit) {
-  $edit += array(
-    'type' => variable_get('path_redirect_default_status', 301),
-    'query' => '',
-    'fragment' => '',
-  );
-
-  if (!empty($edit['rid'])) {
-    $return = db_query("UPDATE {path_redirect} SET path = '%s', redirect = '%s', query = '%s', fragment = '%s', type = %d WHERE rid = %d", $edit['path'], $edit['redirect'], $edit['query'], $edit['fragment'], $edit['type'], $edit['rid']);
-  }
-  else {
-    $return = db_query("INSERT INTO {path_redirect} (path, redirect, query, fragment, type) VALUES ('%s', '%s', '%s', '%s', '%s')", $edit['path'], $edit['redirect'], $edit['query'], $edit['fragment'], $edit['type']);
-  }
-  return $return;
+function path_redirect_init() {
+  path_redirect_check();
 }
 
 /**
- * Retrieve the specified URL redirect
+ * Implementation of hook_cron().
  */
-function path_redirect_load($rid = NULL, $from = NULL) {
-  if (!empty($rid)) {
-    $result = db_fetch_array(db_query("SELECT rid, path, redirect, query, fragment, type FROM {path_redirect} WHERE rid = %d", $rid));
+function path_redirect_cron() {
+  // Purge inactive redirects from the database.
+  if ($purge = path_redirect_var('purge_inactive')) {
+    db_query("DELETE FROM {path_redirect} WHERE last_used < %d", array(':timestamp' => time() - $purge));
+    if ($count = db_affected_rows()) {
+      watchdog('path_redirect', 'Removed @count from the database.', array('@count' => format_plural($count, '1 inactive redirect', '@count inactive redirects')));
+    }
   }
-  elseif (!empty($from)) {
-    $result = db_fetch_array(db_query("SELECT rid, path, redirect, query, fragment, type FROM {path_redirect} WHERE path = '%s'", $from));
-  }
-  return $result;
 }
 
 /**
- * Delete the specified path redirect. This will delete as specifically as
- * possible, in order: by $rid, by ($from, $to), by $from, or by $to.
- * Multiple redirects may be deleted if the $to parameter matches more than
- * one entry.
- *
- * This function is part of an API available for external code to use.
- *
- * @param $from
- *   Source path of redirect to delete.
- * @param $to
- *   Destination path or URL of redirect to delete.
- * @param $rid
- *   Unique ID of redirect to delete.
- * @return
- *   The result of the deletion query.
+ * If a redirect is found for the current path, perform the redirect.
  */
-function path_redirect_delete($from = NULL, $to = NULL, $rid = NULL) {
-  if (!empty($rid)) {
-    $result = db_query("DELETE FROM {path_redirect} WHERE rid = %d", $rid);
+function path_redirect_check() {
+  global $language;
+
+  // @todo Rewrite the redirect lookup code here.
+  $r = path_redirect_load(array('path' => $_GET['q']));
+  if (!$r) {
+    $path = drupal_substr(urldecode(request_uri()), drupal_strlen(base_path()));
+    if (preg_match('/^\?q=/', $path)) {
+      $path = preg_replace(array('/^\?q=/', '/&/'), array('', '?'), $path, 1);
+    }
+    if (strpos($path, '?') !== FALSE) {
+      // Remove trailing slash from path.
+      $path = preg_replace('/^'. $language->language . '|\/\?|\/$/', '', $path);
+      $r = path_redirect_load(array('path' => $path));
+    }
   }
-  elseif (!empty($from)) {
-    if (!empty($to)) {
-      $result = db_query("DELETE FROM {path_redirect} WHERE path = '%s' AND redirect = '%s'", $from, $to);
+
+  if ($r) {
+    // Update the last used timestamp so that unused redirects can be purged.
+    db_query("UPDATE {path_redirect} SET last_used = %d WHERE rid = %d", array(':timestamp' => time(), ':rid' => $r->rid));
+
+    $redirect = url($r->redirect, array('query' => $r->query, 'fragment' => $r->fragment, 'absolute' => TRUE));
+
+    if (url($r->redirect) == url($_GET['q'])) {
+      // Prevent infinite loop redirection.
+      watchdog('path_redirect', 'Redirect to <code>%redirect</code> is causing an infinite loop; redirect cancelled.', array('%redirect' => $r->redirect), WATCHDOG_WARNING, l(t('edit'), 'admin/build/path-redirect/edit/'. $r->rid));
+    }
+    elseif (path_redirect_var('allow_bypass') && isset($_GET['redirect']) && $_GET['redirect'] === 'no') {
+      // If the user has requested not to be redirected, show a message.
+      drupal_set_message(t('This page has been moved to <a href="@redirect">@redirect</a>.', array('@redirect' => $redirect)));
+    }
+    elseif (path_redirect_var('redirect_warning')) {
+      // Show a message and automatically redirect after 10 seconds.
+      drupal_set_message(t('This page has been moved to <a href="@redirect">@redirect</a>. You will be automatically redirected in 10 seconds.', array('@redirect' => $redirect)), 'error');
+      drupal_set_html_head("<meta http-equiv=\"refresh\" content=\"10;url=$redirect\" />");
     }
     else {
-      $result = db_query("DELETE FROM {path_redirect} WHERE path = '%s'", $from);
+      // Perform the redirect.
+      unset($_REQUEST['destination']);
+      drupal_goto($r->redirect, $r->query, $r->fragment, $r->type);
     }
   }
-  elseif (!empty($to)) {
-    $result = db_query("DELETE FROM {path_redirect} WHERE redirect = '%s'", $to);
-  }
-  return $result;
 }
 
 /**
- * This is a copy of drupal_goto() redesigned for use during the bootstrap
+ * Implementation of hook_nodeapi().
+ * @todo Remove in Drupal 7.
  */
-function path_redirect_goto($path = '', $query = NULL, $fragment = NULL, $http_response_code = 302) {
+function path_redirect_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'presave':
+    case 'delete':
+      $func = 'path_redirect_nodeapi_'. $op;
+      return $func($node, $a3, $a4);
+  }
+}
 
-  $url = $path;
+/**
+ * Implementation of hook_nodeapi_presave().
+ *
+ * Creates automatic redirects when URL aliases are manually changed.
+ */
+function path_redirect_nodeapi_presave(&$node, $a3 = NULL, $a4 = NULL) {
+  /*if (path_redirect_var('auto_redirect') && empty($node->pathauto_perform_alias) && !empty($node->path)) {
+    $node_path = 'node/'. $node->nid;
+    $old_alias = drupal_get_path_alias($node_path, ($node->language ? $node->language : ''));
+    if ($node->path != $old_alias && $old_alias != $node_path) {
+      // If the user is manually changing the path alias, add a redirect from the old alias to the node.
+      path_redirect_save(array('path' => $old_alias, 'redirect' => $node_path));
+    }
+  }*/
+}
 
-  // Make the given path or URL absolute
-  if (!preg_match('/^[a-z]+:\/\//', $url)) {
-    global $base_url;
-    $url = $base_url .'/'. $url;
+/**
+ * Implementation of hook_nodeapi_presave().
+ */
+function path_redirect_nodeapi_delete(&$node, $a3 = NULL, $a4 = NULL) {
+  // When a node is deleted, also delete the redirects to it (they will result in a 404).
+  path_redirect_delete(array('redirect' => 'node/'. $node->nid));
+}
+
+/**
+ * Save an URL redirect to the database.
+ */
+function path_redirect_save($edit) {
+  // Merge default values.
+  $edit += array(
+    'language' => '',
+    'type' => path_redirect_var('default_status'),
+    'last_used' => time(),
+  );
+
+  // Remove beginning and trailing slashes from path.
+  // @todo Move to validation.
+  $edit['path'] = preg_replace('/^\/|\/\?|\/$/', '', $edit['path']);
+
+  return drupal_write_record('path_redirect', $edit, (!empty($edit['rid']) ? 'rid' : array()));
+}
+
+/**
+ * Retrieve a specific URL redirect from the database.
+ */
+function path_redirect_load($array = array(), $join = 'AND') {
+  global $language;
+
+  if (is_numeric($array)) {
+    $array = array('rid' => $array);
   }
 
-  $url .= (empty($query)    ? '' : '?'. $query);
-  $url .= (empty($fragment) ? '' : '#'. $fragment);
+  if (!empty($array) && is_array($array)) {
+    $query = array();
+    foreach ($array as $key => $value) {
+      $query[] = $key .' = '. (is_numeric($value) ? '%d' : "'%s'");
+    }
 
-  // Remove newlines from the URL to avoid header injection attacks.
-  $url = str_replace(array("\n", "\r"), '', $url);
+    // Match based on language if the language or rid key are not specified.
+    if (!isset($array['language']) && !isset($array['rid'])) {
+      $query[] = "(language = '%s' OR language = '')";
+      $array['language'] = $language->language;
+    }
 
-  // Allow modules to react to the end of the page request before redirecting.
-  // We do not want this while running update.php.
-  if (!defined('MAINTENANCE_MODE') || MAINTENANCE_MODE != 'update') {
-    module_invoke_all('exit', $url);
+    return db_fetch_object(db_query_range("SELECT * FROM {path_redirect} WHERE ". implode(" $join ", $query) . " ORDER BY language DESC", $array, 0, 1));
+  }
+}
+
+/**
+ * Delete a specific URL redirect from the database.
+ */
+function path_redirect_delete($array = array(), $join = 'AND') {
+  if (is_numeric($array)) {
+    $array = array('rid' => $array);
   }
 
-  // Even though session_write_close() is registered as a shutdown function, we
-  // need all session data written to the database before redirecting.
-  session_write_close();
+  // @todo Remove legacy path_redirect_delete support for pathauto.
+  if (is_string($array) && is_string($join)) {
+    $array = array('path' => $array, 'redirect' => $join);
+    $join = 'AND';
+  }
 
-  header('Location: '. $url, TRUE, $http_response_code);
+  if (!empty($array) && is_array($array)) {
+    $query = array();
+    foreach ($array as $key => $value) {
+      $query[] = $key .' = '. (is_numeric($value) ? '%d' : "'%s'");
+    }
+    return db_query("DELETE FROM {path_redirect} WHERE ". implode(" $join ", $query), $array);
+  }
+}
 
-  // The "Location" header sends a redirect status code to the HTTP daemon. In
-  // some cases this can be wrong, so we make sure none of the code below the
-  // drupal_goto() call gets executed upon redirection.
-  exit();
+/**
+ * Internal default variables for template_var().
+ */
+function path_redirect_variables() {
+  return array(
+    'path_redirect_redirect_warning' => 0,
+    'path_redirect_allow_bypass' => 0,
+    'path_redirect_auto_redirect' => 0,
+    'path_redirect_purge_inactive' => 0,
+    'path_redirect_default_status' => 301,
+    // Unused variables set to NULL so they will still be uninstalled.
+    'path_redirect_nodeapi_enabled' => NULL,
+  );
+}
 
+/**
+ * Internal implementation of variable_get().
+ */
+function path_redirect_var($name, $default = NULL) {
+  static $defaults = NULL;
+  if (!isset($defaults)) {
+    $defaults = path_redirect_variables();
+  }
+
+  $name = 'path_redirect_'. $name;
+
+  // @todo Remove when stable.
+  if (!isset($defaults[$name])) {
+    drupal_set_message(t('Default variable for %variable not found.', array('%variable' => $name)), 'error');
+    watchdog('path_redirect', 'Default variable for %variable not found.', array('%variable' => $name), WATCHDOG_WARNING);
+  }
+
+  return variable_get($name, isset($default) || !isset($defaults[$name]) ? $default : $defaults[$name]);
 }
