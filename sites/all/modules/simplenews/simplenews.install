@@ -1,5 +1,5 @@
 <?php
-// $Id: simplenews.install,v 1.8.2.22 2009/01/15 19:20:51 sutharsan Exp $
+// $Id: simplenews.install,v 1.8.2.24 2009/03/09 07:45:19 sutharsan Exp $
 
 /**
  * @file
@@ -236,8 +236,7 @@ function _simplenews_install_nodetype() {
  */
 function _simplenews_install_vocabulary() {
   // Create the simplenews vocabulary. If it exists, set it as the simplenews_vid.
-  if (db_result(db_query("SELECT * FROM {vocabulary} WHERE name = '%s'", t('Newsletter')))) {
-    $vocabulary = db_fetch_array($result);
+ if ($vocabulary = db_fetch_array(db_query("SELECT * FROM {vocabulary} WHERE name = '%s'", t('Newsletter')))) {
     $vocabulary['nodes'] = variable_get('simplenews_content_types', array('simplenews' => 'simplenews'));
   }
   else {
@@ -573,4 +572,14 @@ function simplenews_update_6007() {
     }
   }
   return $ret;
+}
+
+/**
+ * Make vocabulary required.
+ */
+function simplenews_update_6008() {
+  $vocabulary = (array)taxonomy_vocabulary_load(variable_get('simplenews_vid', ''));
+  $vocabulary['required'] = TRUE;
+  taxonomy_save_vocabulary($vocabulary);
+  return array();
 }

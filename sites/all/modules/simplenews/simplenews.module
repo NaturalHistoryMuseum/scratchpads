@@ -1,5 +1,5 @@
 <?php
-// $Id: simplenews.module,v 1.76.2.123 2009/02/07 12:54:45 sutharsan Exp $
+// $Id: simplenews.module,v 1.76.2.129 2009/03/09 07:45:19 sutharsan Exp $
 
 /**
  * @defgroup simplenews
@@ -71,7 +71,7 @@ function simplenews_perm() {
 function simplenews_init() {
   drupal_add_css(drupal_get_path('module', 'simplenews') .'/simplenews.css', 'module', 'all', TRUE);
 
-  // Simpelnews can not work without this variable.
+  // Simplenews can not work without this variable.
   if ((variable_get('simplenews_vid', '')) == '') {
     drupal_set_message(t('Missing newsletter vocabulary. Please set a vocabulary at <a href="@settings">Simplenews settings</a>.', array('@settings' => url('admin/settings/simplenews/general'))), 'error');
   }
@@ -308,7 +308,7 @@ function simplenews_node_type($op, $info) {
       break;
     case 'update':
       $simplenews_types = variable_get('simplenews_content_types', array());
-      if (isset($simplenews_types[$info->old_type]) && !empty($info->old_type) && $info->old_type != $info->type) {
+      if (isset($info->old_type) && isset($simplenews_types[$info->old_type]) && $info->old_type != $info->type) {
         unset($simplenews_types[$info->old_type]);
         $simplenews_types[$info->type] = $info->type;
         variable_set('simplenews_content_types', $simplenews_types);
@@ -344,16 +344,11 @@ function simplenews_nodeapi(&$node, $op, $teaser, $page) {
       }
       break;
     case 'validate':
-      global $_simplenews_valid_mails;
-      if ($node->simplenews['send'] == SIMPLENEWS_COMMAND_SEND_NOW) {
-        if (!isset($node->taxonomy)) {
-          form_set_error('', t('You should assign content type %content_type to the !newsletter_vocabulary before you can send this newsletter.', array('%content_type' => $node->type, '!newsletter_vocabulary' => l(t('Newsletter vocabulary'), 'admin/content/taxonomy'))));
-        }
-        elseif (!simplenews_validate_taxonomy($node->taxonomy)) {
-          form_set_error('taxonomy', t('You should select a newsletter term before you can send this newsletter issue.'));
-        }
+      $vid = variable_get('simplenews_vid', '');
+      if (!isset($node->taxonomy[$vid]) || (isset($node->taxonomy[$vid]) && !empty($node->taxonomy[$vid]) && simplenews_validate_taxonomy($node->taxonomy) == FALSE)) {
+        form_set_error('taxonomy', t('No newsletter term is selected, the newsletter taxonomy term is probably not configured correctly.<br /> Check and <strong>save</strong> the <a href="@settings">Simplenews general settings</a>.', array('%name' => $vocabulary->name, '@settings' => url('admin/settings/simplenews/general'))));
       }
-      elseif ($node->simplenews['send'] == SIMPLENEWS_COMMAND_SEND_TEST) {
+      elseif (isset($node->simplenews['send']) && $node->simplenews['send'] == SIMPLENEWS_COMMAND_SEND_TEST) {
         if (!empty($node->simplenews['test_address'])) {
           $mails = explode(',', $node->simplenews['test_address']);
           foreach ($mails as $mail) {
@@ -506,6 +501,7 @@ function simplenews_form_alter(&$form, $form_state, $form_id) {
     $form['settings']['tags'] = array('#type' => 'value', '#value' => FALSE);
     // Multiple select does not work with simplenews.
     $form['settings']['multiple'] = array('#type' => 'value', '#value' => FALSE);
+    $form['settings']['required'] = array('#type' => 'value', '#value' => TRUE);
   }
 
   // Simplenews newsletter node form
@@ -532,114 +528,125 @@ function simplenews_form_alter(&$form, $form_state, $form_id) {
         '#collapsed' => FALSE,
         '#tree' => TRUE,
       );
-      // Show newsletter sending options if newsletter has not been send yet.
-      // If send a nodification is shown.
-      if (!isset($simplenews_values['s_status']) || (isset($simplenews_values['s_status']) && $simplenews_values['s_status'] == SIMPLENEWS_STATUS_SEND_NOT)) {
 
-        // Add dynamic text for send button.
-        drupal_add_js(drupal_get_path('module', 'simplenews') .'/simplenews.js', 'module');
-
-        if (user_access('send newsletter')) {
-          $options[SIMPLENEWS_COMMAND_SEND_NONE] = t("Don't send now");
-          $options[SIMPLENEWS_COMMAND_SEND_TEST] = t('Send one test newsletter to the test address');
-          $options[SIMPLENEWS_COMMAND_SEND_NOW] = t('Send newsletter');
-          $form['simplenews']['send'] = array(
-            '#type' => 'radios',
-            '#title' => t('Send action'),
-            '#default_value' => isset($simplenews_values['send']) ? $simplenews_values['send'] : variable_get('simplenews_send', SIMPLENEWS_COMMAND_SEND_NONE),
-            '#options' => $options,
-            '#attributes' => array('class' => 'simplenews-command-send'),
-          );
-        }
-        else {
-          $options[SIMPLENEWS_COMMAND_SEND_NONE] = t("Don't send now");
-          $options[SIMPLENEWS_COMMAND_SEND_TEST] = t('Send one test newsletter to the test address');
-          $form['simplenews']['send'] = array(
-            '#type' => 'radios',
-            '#title' => t('Sending'),
-            '#default_value' => isset($simplenews_values['send']) ? $simplenews_values['send'] : SIMPLENEWS_COMMAND_SEND_NONE,
-            '#options' => $options,
-            '#description' => t('You have no privileges to send this newsletter'),
-            '#attributes' => array('class' => 'simplenews-command-send'),
-          );
-        }
-        if (module_exists('translation') && translation_supported_type($form['#node']->type)) {
-          $form['simplenews']['send']['#description'] = t('This newsletter issue is part of a translation set. All translations in this set will be send when you send this node.');
-        }
-
-        $address_default = variable_get('site_mail', ini_get('sendmail_from'));
-        if (variable_get('simplenews_test_address_override', 0)) {
-          $form['simplenews']['test_address'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Test email addresses'),
-            '#description' => t('Supply a comma-separated list of email addresses to be used as test addresses.'),
-            '#default_value' => isset($simplenews_values['test_address']) ? $simplenews_values['test_address'] : variable_get('simplenews_test_address', $address_default),
-            '#size' => 60,
-            '#maxlength' => 128,
-          );
-        }
-        else {
-          $form['simplenews']['test_address'] = array(
-            '#type' => 'hidden',
-            '#value' => variable_get('simplenews_test_address', $address_default),
-          );
-        }
-
-        $form['simplenews']['advanced'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('Email options'),
-          '#collapsible' => TRUE,
-          '#collapsed' => TRUE,
-        );
-           // Hide format selection if there is nothing to choose.
-        // The default format is plain text.
-        $format_options = _simplenews_format_options();
-        if (count($format_options) > 1) {
-          $form['simplenews']['advanced']['s_format'] = array(
-            '#type' => 'select',
-            '#title' => t('Email format'),
-            '#default_value' => isset($simplenews_values['s_format']) ? $simplenews_values['s_format'] : variable_get('simplenews_format', 'plain'),
-            '#options' => _simplenews_format_options(),
-          );
-        }
-        else {
-          $form['simplenews']['advanced']['s_format'] = array(
-            '#type' => 'hidden',
-            '#value' => key($format_options),
-          );
-        }
-
-        $form['simplenews']['advanced']['priority'] = array(
-          '#type' => 'select',
-          '#title' => t('Email priority'),
-          '#default_value' => isset($simplenews_values['priority']) ? $simplenews_values['priority'] : variable_get('simplenews_priority', SIMPLENEWS_PRIORITY_NONE),
-          '#options' => array(
-            SIMPLENEWS_PRIORITY_NONE => t('none'),
-            SIMPLENEWS_PRIORITY_HIGHEST => t('highest'),
-            SIMPLENEWS_PRIORITY_HIGH => t('high'),
-            SIMPLENEWS_PRIORITY_NORMAL => t('normal'),
-            SIMPLENEWS_PRIORITY_LOW => t('low'),
-            SIMPLENEWS_PRIORITY_LOWEST => t('lowest'),
-          ),
-        );
-        $form['simplenews']['advanced']['receipt'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Request receipt'),
-          '#return_value' => 1,
-          '#default_value' => isset($simplenews_values['receipt']) ? $simplenews_values['receipt'] : variable_get('simplenews_receipt', 0),
-        );
-
+      // Translations of newsletters don't have send and format options. Only the
+      // translation source (and non translated) newsletters will get these options.
+      if (module_exists('translation') && translation_supported_type($form['#node']->type) &&
+          (isset($form['#node']->translation_source) || ($form['#node']->tnid && $form['#node']->tnid != $form['#node']->nid))) {
+        $form['simplenews']['#description'] = t('This newsletter issue is part of a translation set. Sending this set is controlled from the <a href="@link">translation source newsletter</a>.', array('@link' => '/node/'. $form['tnid']['#value']));
+        // Send option of translated newsletters are not used, but a default is
+        // required to prevent errors when data is stored in the database.
+        $form['simplenews']['send'] = array('#type' => 'hidden', '#value' => SIMPLENEWS_COMMAND_SEND_NONE);
+        $form['simplenews']['advanced']['s_format'] = array('#type' => 'hidden', '#value' => variable_get('simplenews_format', 'plain'));
+        $form['simplenews']['advanced']['priority'] = array('#type' => 'hidden', '#value' => variable_get('simplenews_priority', SIMPLENEWS_PRIORITY_NONE));
+        $form['simplenews']['advanced']['receipt'] = array('#type' => 'hidden', '#value' => variable_get('simplenews_receipt', 0));
       }
       else {
-        $form['simplenews']['none'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('This newsletter has been sent'),
-          '#return_value' => 0,
-          '#attributes' => array('checked' => 'checked', 'disabled' => 'disabled'),
-        );
-        $form['simplenews']['advanced']['s_format'] = array('#type' => 'hidden', '#value' => $simplenews_values['s_format']);
-        $form['simplenews']['advanced']['priority'] = array('#type' => 'hidden', '#value' => $simplenews_values['priority']);
-        $form['simplenews']['advanced']['receipt'] = array('#type' => 'hidden', '#value' => $simplenews_values['receipt']);
+        // Show newsletter sending options if newsletter has not been send yet.
+        // If send a nodification is shown.
+        if (!isset($simplenews_values['s_status']) || (isset($simplenews_values['s_status']) && $simplenews_values['s_status'] == SIMPLENEWS_STATUS_SEND_NOT)) {
+  
+          // Add dynamic text for send button.
+          drupal_add_js(drupal_get_path('module', 'simplenews') .'/simplenews.js', 'module');
+  
+          if (user_access('send newsletter')) {
+            $options[SIMPLENEWS_COMMAND_SEND_NONE] = t("Don't send now");
+            $options[SIMPLENEWS_COMMAND_SEND_TEST] = t('Send one test newsletter to the test address');
+            $options[SIMPLENEWS_COMMAND_SEND_NOW] = t('Send newsletter');
+            $form['simplenews']['send'] = array(
+              '#type' => 'radios',
+              '#title' => t('Send action'),
+              '#default_value' => isset($simplenews_values['send']) ? $simplenews_values['send'] : variable_get('simplenews_send', SIMPLENEWS_COMMAND_SEND_NONE),
+              '#options' => $options,
+              '#attributes' => array('class' => 'simplenews-command-send'),
+            );
+          }
+          else {
+            $options[SIMPLENEWS_COMMAND_SEND_NONE] = t("Don't send now");
+            $options[SIMPLENEWS_COMMAND_SEND_TEST] = t('Send one test newsletter to the test address');
+            $form['simplenews']['send'] = array(
+              '#type' => 'radios',
+              '#title' => t('Sending'),
+              '#default_value' => isset($simplenews_values['send']) ? $simplenews_values['send'] : SIMPLENEWS_COMMAND_SEND_NONE,
+              '#options' => $options,
+              '#description' => t('You have no privileges to send this newsletter'),
+              '#attributes' => array('class' => 'simplenews-command-send'),
+            );
+          }
+  
+          $address_default = variable_get('site_mail', ini_get('sendmail_from'));
+          if (variable_get('simplenews_test_address_override', 0)) {
+            $form['simplenews']['test_address'] = array(
+              '#type' => 'textfield',
+              '#title' => t('Test email addresses'),
+              '#description' => t('Supply a comma-separated list of email addresses to be used as test addresses.'),
+              '#default_value' => isset($simplenews_values['test_address']) ? $simplenews_values['test_address'] : variable_get('simplenews_test_address', $address_default),
+              '#size' => 60,
+              '#maxlength' => 128,
+            );
+          }
+          else {
+            $form['simplenews']['test_address'] = array(
+              '#type' => 'hidden',
+              '#value' => variable_get('simplenews_test_address', $address_default),
+            );
+          }
+  
+          $form['simplenews']['advanced'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Email options'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+          );
+             // Hide format selection if there is nothing to choose.
+          // The default format is plain text.
+          $format_options = _simplenews_format_options();
+          if (count($format_options) > 1) {
+            $form['simplenews']['advanced']['s_format'] = array(
+              '#type' => 'select',
+              '#title' => t('Email format'),
+              '#default_value' => isset($simplenews_values['s_format']) ? $simplenews_values['s_format'] : variable_get('simplenews_format', 'plain'),
+              '#options' => _simplenews_format_options(),
+            );
+          }
+          else {
+            $form['simplenews']['advanced']['s_format'] = array(
+              '#type' => 'hidden',
+              '#value' => key($format_options),
+            );
+          }
+  
+          $form['simplenews']['advanced']['priority'] = array(
+            '#type' => 'select',
+            '#title' => t('Email priority'),
+            '#default_value' => isset($simplenews_values['priority']) ? $simplenews_values['priority'] : variable_get('simplenews_priority', SIMPLENEWS_PRIORITY_NONE),
+            '#options' => array(
+              SIMPLENEWS_PRIORITY_NONE => t('none'),
+              SIMPLENEWS_PRIORITY_HIGHEST => t('highest'),
+              SIMPLENEWS_PRIORITY_HIGH => t('high'),
+              SIMPLENEWS_PRIORITY_NORMAL => t('normal'),
+              SIMPLENEWS_PRIORITY_LOW => t('low'),
+              SIMPLENEWS_PRIORITY_LOWEST => t('lowest'),
+            ),
+          );
+          $form['simplenews']['advanced']['receipt'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Request receipt'),
+            '#return_value' => 1,
+            '#default_value' => isset($simplenews_values['receipt']) ? $simplenews_values['receipt'] : variable_get('simplenews_receipt', 0),
+          );
+        }
+        else {
+          $form['simplenews']['none'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('This newsletter has been sent'),
+            '#return_value' => 0,
+            '#attributes' => array('checked' => 'checked', 'disabled' => 'disabled'),
+          );
+          $form['simplenews']['advanced']['s_format'] = array('#type' => 'hidden', '#value' => $simplenews_values['s_format']);
+          $form['simplenews']['advanced']['priority'] = array('#type' => 'hidden', '#value' => $simplenews_values['priority']);
+          $form['simplenews']['advanced']['receipt'] = array('#type' => 'hidden', '#value' => $simplenews_values['receipt']);
+        }
       }
       $form['simplenews']['s_status'] = array(
         '#type' => 'hidden',
@@ -665,9 +672,10 @@ function simplenews_cron() {
  */
 function simplenews_taxonomy($op, $type, $term = NULL) {
   if ($op == 'delete' && $term['vid'] == variable_get('simplenews_vid', '')) {
-    switch ($term) {
+    switch ($type) {
       case 'term':
-        db_query('DELETE FROM {simplenews_snid_tid} WHERE tid = %d', $array['tid']);
+        //TODO subscriber is not deleted when last subscription is removed.
+        db_query('DELETE FROM {simplenews_snid_tid} WHERE tid = %d', $term['tid']);
         db_query("DELETE FROM {blocks} WHERE module = '%s' AND delta = '%s'", 'simplenews', $term['tid']);
         drupal_set_message(t('All subscriptions to newsletter %newsletter have been deleted.', array('%newsletter' => $term['name'])));
         break;
@@ -752,8 +760,9 @@ function simplenews_user($op, &$edit, &$account, $category = NULL) {
     case 'categories':
       if (user_access('subscribe to newsletters')) {
         $output[] = array('name' => 'newsletter', 'title' => t('My newsletters'), 'weight' => 10);
+        return $output;
       }
-      return $output;
+      break;
     case 'view':
       global $user;
       if ($user->uid == $account->uid || user_access('administer users')) {
@@ -789,7 +798,7 @@ function simplenews_user($op, &$edit, &$account, $category = NULL) {
             '#weight' => -1,
           );
         }
-        return array(t('Newsletters') => $items);
+        return array(t('Newsletters') => $subscriptions);
       }
       break;
   }
@@ -1108,7 +1117,7 @@ function simplenews_get_subscription($account) {
     $subscription = db_fetch_object(db_query("SELECT s.* FROM {simplenews_subscriptions} s LEFT JOIN {users} u ON u.uid = s.uid WHERE s.uid = %d", $account->uid));
   }
 
-  if ($subscription) {
+  if (!empty($subscription)) {
     $result = db_query("SELECT tid FROM {simplenews_snid_tid} t WHERE t.snid = %d", $subscription->snid);
     $subscription->tids = array();
     while ($newsletter = db_fetch_object($result)) {
@@ -1559,7 +1568,7 @@ function simplenews_mail($key, &$message, $params) {
       // Build message body.
       // Replace tokens with user specific data and
       // Convert to plain text if required.
-      $variables =  simplenews_mail_tokens($context['account'], $context, $context['account']->language);
+      $variables =  simplenews_mail_tokens($context['account'], $context, is_object($context['account']->language) ? $context['account']->language : language_default());
       $body = strtr($body, $variables);
       if ($context['node']->simplenews['s_format'] == 'plain') {
         $body = simplenews_html_to_text($body, variable_get('simplenews_hyperlinks_'. $context['node']->simplenews['tid'], 1));
@@ -1578,7 +1587,7 @@ function simplenews_mail($key, &$message, $params) {
       // Use formatted from address "name" <mail_address>
       $message['headers']['From'] = $params['from']['formatted'];
 
-      $variables =  simplenews_mail_tokens($context['account'], $context, $context['account']->language);
+      $variables =  simplenews_mail_tokens($context['account'], $context, is_object($context['account']->language) ? $context['account']->language : language_default());
       $message['subject'] = _simplenews_subscription_confirmation_text('subscribe_subject', $context['account']->language, $variables);
       if (simplenews_user_is_subscribed($context['account']->mail, $context['newsletter']->tid)) {
         $message['body'] = _simplenews_subscription_confirmation_text('subscribe_subscribed', $context['account']->language, $variables);
@@ -1591,7 +1600,7 @@ function simplenews_mail($key, &$message, $params) {
       // Use formatted from address "name" <mail_address>
       $message['headers']['From'] = $params['from']['formatted'];
 
-      $variables =  simplenews_mail_tokens($context['account'], $context, $context['account']->language);
+      $variables =  simplenews_mail_tokens($context['account'], $context, is_object($context['account']->language) ? $context['account']->language : language_default());
       $message['subject'] = _simplenews_subscription_confirmation_text('subscribe_subject', $context['account']->language, $variables);
       if (simplenews_user_is_subscribed($context['account']->mail, $context['newsletter']->tid)) {
         $message['body'] = _simplenews_subscription_confirmation_text('unsubscribe_subscribed', $context['account']->language, $variables);
@@ -1772,6 +1781,8 @@ function simplenews_save_spool($message) {
  *  $message['time']
  */
 function simplenews_get_spool($status, $nid = NULL, $vid = NULL, $limit = 999999) {
+  $messages = array();
+
   $result = db_query_range("SELECT * FROM {simplenews_mail_spool} s WHERE s.status = %d ORDER BY s.timestamp ASC", $status, 0, $limit);
   while ($data = db_fetch_array($result)) {
     $message = array();
@@ -2107,7 +2118,7 @@ function simplenews_mail_tokens($subscription, $context, $language) {
   }
 
   // Get tokens from user_mail_tokens() and add simplenews variables.
-  $vars = user_mail_tokens($subscription, $language);
+  $vars = $subscription->uid ? user_mail_tokens($subscription, $language) : array();
   // Replace existing uri and uri_brief to cope with multilingual sites.
   $vars['!uri'] = url('', array('absolute' => TRUE, 'language' => $language));
   $vars['!uri_brief'] = preg_replace('!^https?://!', '', $vars['!uri']);
@@ -2388,7 +2399,7 @@ function theme_simplenews_newsletter_subject($name, $title, $language) {
 }
 
 /**
- * Process variables to format the simplenews newsletter footer.
+ * Process variables to format the simplenews newsletter body.
  *
  * $variables contains:
  * - $node

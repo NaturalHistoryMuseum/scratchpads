@@ -1,0 +1,136 @@
+<?php
+
+function view_sort_menu(){
+  $items = array();
+  $items['views-sort/popup'] = array (
+    'title' => 'Sort', 
+    'page callback' => 'views_sort_popup_html', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'assign node weight' ) );
+  $items['views-sort/callback'] = array (
+    'title' => '', 
+    'page callback' => 'views_sort_callback', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'assign node weight' ) );
+  return $items;
+}
+function view_sort_views_pre_render(&$view){
+  // Check to see if the view is being filtered by node type, and if it is being
+  // sorted by weight.  If so, we add the links.
+  if(((
+      isset($view->display['default']->display_options['filters']['type']) && 
+      $view->display['default']->display_options['filters']['type']['table'] == 'node'
+    ) || (
+      isset($view->display['page_1']->display_options['filters']['type']) && 
+      $view->display['page_1']->display_options['filters']['type']['table'] == 'node'
+    )) && (
+        isset($view->display['page_1']->display_options['sorts']['weight']) || 
+        isset($view->display['default']->display_options['sorts']['weight'])
+    )){
+    $view->attachment_before = "<div style=\"background-color:red\"><p>".l("Sort this view :: ".$view->name, "views-sort/popup/".$view->name."/".urlencode(json_encode($view->args)), array('attributes' => array('class'=>'thickbox')))."</p></div>";
+    drupal_add_js(drupal_get_path('module', 'view_sort')."/view_sort.js");
+    drupal_add_css(drupal_get_path('module', 'view_sort')."/view_sort.css");
+    jquery_ui_add(array('ui.sortable'),'none');    
+  }
+}
+
+function view_sort_views_query_alter(&$view, &$query){
+  // We don't alter if the URL is for the popup
+  if(arg(0)!='views-sort'){
+    $sort_orders = variable_get('view_sort-limits', array());
+    if(isset($sort_orders[$view->name])){
+      $view->pager['items_per_page'] = $sort_orders[$view->name]; 
+      $view->pager['use_pager'] = false;
+    }
+  }
+}
+/**
+ * Implementation of hook_views_api().
+ */
+function view_sort_views_api() {
+  return array('api' => 2);
+}
+
+function views_sort_callback($viewname=false){
+  // We keep things simple, and use the variable table to save limits
+  if($viewname){
+    $sort_orders = variable_get('view_sort-limits', array());
+    // Split up the order variable that we've been sent
+    $order = split(" ",trim($_GET['order']));
+    // Find the divider
+    $divider_position = array_search("divider", $order);
+    // if the divider is at the end, we don't set it
+    if($divider_position < count($order)-1 && $divider_position){
+      $sort_orders[$viewname] = $divider_position;
+    } else {
+      unset($sort_orders[$viewname]);
+    }
+    variable_set('view_sort-limits', $sort_orders);
+  } else {
+    watchdog('view_sort', 'ERROR sorting views, no viewname set (Referer: '.referer_uri().') : '.print_r($_REQUEST));
+  }
+  exit;
+}
+
+function views_sort_popup_html($view_name = "", $view_args = ""){
+  // Get the view
+  $view = views_get_view($view_name);
+  $view->args = json_decode(urldecode($view_args));
+  $view->execute();
+  $items = array();
+  if(count($view->result)){
+    foreach($view->result as $item){
+      $items[$item->nid] = node_view(node_load($item->nid), true);
+    }
+  } else {
+    if(function_exists('ispecies_ajax_callback')){
+      if(isset($view->display['default']->display_options['filters']['ispecies']['value'])){
+        $items_temp = ispecies_get_data($view->display['default']->display_options['filters']['ispecies']['value'] , array_pop($view->args));
+        foreach($items_temp as $item){
+          if(is_array($item) && isset($item['body'])){
+            $items[$item['page_url']] = $item['body'];
+          } 
+        }
+      }
+    }
+  }
+  $output = '<div class="view-sort-drag">';
+  $i = 0;
+  $sort_orders = variable_get('view_sort-limits', array());
+  $divider = '<div view-sort="divider" class="sort-div divider">Divider</div>';
+  if (isset($sort_orders[$view_name])){
+    $divider_position = $sort_orders[$view_name];
+  } else {
+    $divider_position = false;
+  }
+  foreach($items as $id => $item){
+    // Remove links from the output (we don't want users clicking, just dragging
+    $output .= '<div view-sort="'.$i.'" class="sort-div">'.preg_replace("/<[\/]*a[\ ]*[^>]*>/","", $item).'</div>';
+    $i ++;
+    if($divider_position && $divider_position == $i){
+      $output .= $divider;
+    }
+  }
+  if(!$divider_position){
+    $output .= $divider;
+  }
+  $output .= "</div><script type=\"text/javascript\">
+    view_sort_add_draggable('".url('views-sort/callback', array('absolute'=>1))."', '$view_name', '".url('ispecies', array('absolute'=>1))."');
+  </script>";
+  print $output;
+  exit;
+}
+
+function view_sort_theme(){
+  return array(
+    'view_sort' => array()
+  );
+}
+
+function theme_view_sort(){
+  $args = func_get_args();
+  return print_r($args, 1);
+  //theme_views_view_field($view, $field, $row)
+}

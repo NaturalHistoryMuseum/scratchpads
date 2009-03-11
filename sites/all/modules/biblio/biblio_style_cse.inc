@@ -1,6 +1,6 @@
 <?php
 
-// $Id: biblio_style_cse.inc,v 1.9.2.13 2009/02/10 21:58:22 rjerome Exp $
+// $Id: biblio_style_cse.inc,v 1.9.2.16 2009/03/01 01:59:10 rjerome Exp $
 /**
  * Get the style information
  *
@@ -26,10 +26,33 @@ function biblio_style_cse_info() {
  * @return
  *   The styled biblio entry
  */
+function biblio_style_cse_author_options() {
+  $author_options = array(
+    'BetweenAuthorsDelimStandard'     =>', ',      //4
+    'BetweenAuthorsDelimLastAuthor'   => ', ', //5
+    'AuthorsInitialsDelimFirstAuthor' => ', ',     //7
+    'AuthorsInitialsDelimStandard'    => ' ',      //8
+    'betweenInitialsDelim'            => '',     //9
+    'initialsBeforeAuthorFirstAuthor' => false,    //10
+    'initialsBeforeAuthorStandard'    => FALSE,     //11
+    'shortenGivenNames'               => TRUE,    //12
+    'numberOfAuthorsTriggeringEtAl'   => 10,       //13
+    'includeNumberOfAuthors'          => 10,       //14
+    'customStringAfterFirstAuthors'   => ' et al.',//15
+    'encodeHTML'                      => true
+  );
+  return $author_options;
+}
+
 function biblio_style_cse($node, $base = 'biblio', $inline = false) {
-  $authors = theme('biblio_authors', $node->biblio_contributors[1], 'cse', 1, $inline);
-  if (empty($authors)) $authors = theme('biblio_authors', $node->biblio_contributors[5], 'cse', 5, $inline);  // if no authors substitute corp author if available
+  $author_options = biblio_style_cse_author_options();
+  $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
+
+  if (empty($authors)) $authors = theme('biblio_format_authors', $node->biblio_contributors[5], $author_options, $inline);  // if no authors substitute corp author if available
   if (empty($authors)) $authors = '[' . t('Anonymous') . ']';  // use anonymous if we still have nothing.
+  if (!empty ($node->biblio_citekey)&&(variable_get('biblio_display_citation_key',0))) {
+    $output .= '[' . check_plain($node->biblio_citekey) . '] ';
+  }
   $output .= '<span class="biblio-authors">' . $authors . "</span>.&nbsp; \n";
   switch ($node->biblio_type) {
 
@@ -48,7 +71,7 @@ function biblio_style_cse($node, $base = 'biblio', $inline = false) {
   }
   /*  if ($node->biblio_date) $output .= ', '. check_plain($node->biblio_date);
     if ($node->biblio_number) $output .= ', Number '. check_plain($node->biblio_number);
-  
+
     if ($node->biblio_place_published) $output .= ', '. check_plain($node->biblio_place_published);
   */
   return $output;

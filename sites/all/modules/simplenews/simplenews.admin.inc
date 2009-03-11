@@ -1,5 +1,5 @@
 <?php
-// $Id: simplenews.admin.inc,v 1.5.2.46 2009/02/06 18:53:35 sutharsan Exp $
+// $Id: simplenews.admin.inc,v 1.5.2.49 2009/03/09 07:45:19 sutharsan Exp $
 
 /**
  * @file
@@ -26,14 +26,15 @@ function simplenews_admin_news(&$form_state, $action = 'sent') {
   $header = array(t('Title'), t('Newsletter'), t('Date created'), t('Published'), t('Sent'), t('Edit'));
   list($names, $queries) = array_values(simplenews_get_filter('simplenews_newsletters_filter'));
   $filter = isset($_SESSION['simplenews_newsletters_filter']) ? $_SESSION['simplenews_newsletters_filter'] : '';
+  $queryfilter = isset($queries[$filter]) ? $queries[$filter] : '';
   if ($action == 'notsent') {
     $form['simplenews_issue_filter']['filter'] = array(
       '#type' => 'select',
       '#options' => $names,
       '#default_value' => $filter,
     );
-    $query = "SELECT DISTINCT n.*, s.s_status FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status = %d". $queries[$filter] ." ORDER BY n.created DESC";
-    $count_query = "SELECT COUNT(n.nid) FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status = %d". $queries[$filter];
+    $query = "SELECT DISTINCT n.*, s.s_status FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status = %d". $queryfilter ." ORDER BY n.created DESC";
+    $count_query = "SELECT COUNT(n.nid) FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status = %d". $queryfilter;
   }
   else {
     $form['simplenews_issue_filter']['filter'] = array(
@@ -41,8 +42,8 @@ function simplenews_admin_news(&$form_state, $action = 'sent') {
       '#options' => $names,
       '#default_value' => $filter,
     );
-    $query = "SELECT n.*, s.s_status FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status > %d". $queries[$filter] ." ORDER BY n.created DESC";
-    $count_query = "SELECT COUNT(n.nid) FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status > %d". $queries[$filter];
+    $query = "SELECT n.*, s.s_status FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status > %d". $queryfilter ." ORDER BY n.created DESC";
+    $count_query = "SELECT COUNT(n.nid) FROM {node} n INNER JOIN {simplenews_newsletters} s ON n.nid = s.nid WHERE s.s_status > %d". $queryfilter;
   }
   $result = pager_query(db_rewrite_sql($query, 'n', 'nid', array(SIMPLENEWS_STATUS_SEND_NOT)), 10, 0, db_rewrite_sql($count_query, 'n', 'nid', array(SIMPLENEWS_STATUS_SEND_NOT)), 0);
   $rows = array();
@@ -774,6 +775,12 @@ function simplenews_admin_settings_submit($form, &$form_state) {
   $vocabulary = (array)taxonomy_vocabulary_load($form_state['values']['simplenews_vid']);
   $form_state['values']['simplenews_content_types'] = array_filter($form_state['values']['simplenews_content_types']);
   $vocabulary['nodes'] = $form_state['values']['simplenews_content_types'];
+
+  // Set vocabulary required values
+  $vocabulary['multiple'] = FALSE;
+  $vocabulary['required'] = TRUE;
+  $vocabulary['tags'] = FALSE;
+
   taxonomy_save_vocabulary($vocabulary);
   variable_set('simplenews_content_types', $form_state['values']['simplenews_content_types']);
 
@@ -1060,7 +1067,7 @@ function simplenews_subscription_filters() {
 function simplenews_subscription_filter_form() {
   // Current filter selections in $session var; stored at form submission
   // Example: array('newsletter' => 'all', 'email' => 'hotmail')
-  $session = $_SESSION['simplenews_subscriptions_filter'];
+  $session = isset($_SESSION['simplenews_subscriptions_filter']) ? $_SESSION['simplenews_subscriptions_filter'] : '';
   $session = is_array($session) ? $session : _simplenews_subscription_filter_default();
   $filters = simplenews_subscription_filters();
 

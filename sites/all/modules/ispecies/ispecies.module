@@ -56,10 +56,17 @@ function ispecies_get_data($module, $tid){
   $ispecies_views = module_invoke_all('ispecies');  
   $sort_orders = variable_get('view_sort-limits', array());
   if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
-    return call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
+    if(function_exists($ispecies_views[$module]['callback'])){
+      return call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
+    } else {
+      watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
+    }
   } else {
-    //print_r(call_user_func($ispecies_views[$module]['callback'], $term_name)); exit;
-    return call_user_func($ispecies_views[$module]['callback'], $term_name);
+    if(function_exists($ispecies_views[$module]['callback'])){
+      return call_user_func($ispecies_views[$module]['callback'], $term_name);
+    } else {
+      watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
+    }
   }
 }
 

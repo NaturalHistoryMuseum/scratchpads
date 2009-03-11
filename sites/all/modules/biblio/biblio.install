@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.install,v 1.30.2.76 2009/02/11 23:44:02 rhaschke Exp $
+// $Id: biblio.install,v 1.30.2.81 2009/03/02 02:40:37 rjerome Exp $
 function biblio_install() {
   $result = array();
 
@@ -209,7 +209,7 @@ function biblio_schema() {
   ),
       'biblio_number' => array (
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '24',
         'description' =>'',
   ),
       'biblio_other_number' => array (
@@ -250,7 +250,7 @@ function biblio_schema() {
   ),
       'biblio_volume' => array (
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '24',
         'description' =>'',
   ),
       'biblio_pages' => array (
@@ -294,7 +294,7 @@ function biblio_schema() {
   ),
       'biblio_issue' => array (
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '24',
         'description' =>'',
   ),
       'biblio_type_of_work' => array (
@@ -350,7 +350,7 @@ function biblio_schema() {
   ),
       'biblio_number_of_volumes' => array (
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '24',
         'description' =>'',
   ),
       'biblio_short_title' => array (
@@ -380,7 +380,7 @@ function biblio_schema() {
   ),
       'biblio_section' => array (
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '24',
         'description' =>'',
   ),
       'biblio_citekey' => array (
@@ -394,7 +394,7 @@ function biblio_schema() {
   ),
       'biblio_doi' => array (
         'type' => 'varchar',
-        'length' => '100',
+        'length' => '255',
         'description' =>'',
   ),
       'biblio_issn' => array (
@@ -1319,7 +1319,10 @@ function _move_field_data(&$result)
       $new_ftdid = variable_get('biblio_last_ftdid',100);
       variable_set('biblio_last_ftdid',$new_ftdid + 1);
       $fieldtype = array('ftdid' => $new_ftdid, 'title' => $row['title'], 'hint' => $row['hint']);
-      drupal_write_record('biblio_field_type_data',$fieldtype);
+    // write_record may not work if module is diabled.  
+    //drupal_write_record('biblio_field_type_data',$fieldtype); 
+      db_query("INSERT INTO {biblio_field_type_data} (ftdid, title, hint) 
+                  VALUES('" . implode("', '", $fieldtype) . "')");
     }
     // update ftdid in linking table to new field type
     $ftdid=$fieldtype['ftdid'];
@@ -1397,6 +1400,12 @@ function _parse_authors(&$biblio_contributors, $authors, $cat = 1)
 
 function _move_authors(&$result)
 {
+  $disable = FALSE;
+  if (!module_exists('biblio')) { // if the module is disabled, enable it so drupal_get_schema will work
+    module_enable(array('biblio'));
+    $disable = TRUE;
+  }
+  drupal_get_schema('biblio_contributor', TRUE);
   drupal_get_schema('biblio_contributor_data', TRUE);
   // this update will move author information from existing biblio table to the new
   // biblio_contributor_data table and make the appropriate links in the biblio_contributor table
@@ -1431,11 +1440,31 @@ function _move_authors(&$result)
 		INNER JOIN {biblio_contributor_type_data} ctd ON ctd.title=otd.title
 		/* update auth_type in biblio_contributor table */
 		SET c.auth_type=ctd.auth_type");
-
+  if ($count_success == $count) {
+    $mesg = 'Moved authors from '.$count_success.' / '.$count.' publications to the new database structure';
+    $contributors = array(
+      1 => 'biblio_authors',
+      2 => 'biblio_secondary_authors',
+      3 => 'biblio_tertiary_authors',
+      4 => 'biblio_subsidiary_authors',
+      5 => 'biblio_corp_author');
+      // if the were sucessfully moved, remove obsolete D5 columns from biblio table (if they are present)
+      foreach($contributors as $column) {
+      if (db_column_exists('biblio', $column)) db_drop_field($result,'biblio', $column);
+    }
+  }
+  else {
+    $count_fail = $count - $count_success;
+    $mesg = 'There was a problem moving authors from '. $count_fail .' / '. $count .' publications to the new database structure. The existing author fields have been retained in the database, go to the "admin/settings/biblio/author" page to try again.';
+  }
   $result[] = array('success' => ($count_success == $count), 
-                    'query' => 'Moved authors from '.$count_success.' / '.$count.' publications to the new database stucture');
-
-  return $result;
+                    'query' => $mesg);
+  
+  if ($disable) { // if the module was disabled, then set it back that way.
+    module_disable(array('biblio'));
+  }
+  
+  return;
 }
 
 function biblio_update_6000()
@@ -1449,8 +1478,8 @@ function biblio_update_6000()
   $result[] = update_sql("ALTER TABLE {biblio}  MODIFY biblio_citekey varchar(255) ");
 
   // move biblio_fields to biblio_fields_old for later usage
-  update_sql("ALTER TABLE {biblio_fields} RENAME TO {biblio_fields_old}");
-  update_sql("UPDATE {biblio_fields_old} SET name='biblio_corp_authors' WHERE name='biblio_corp_author'");
+  $result[] = update_sql("ALTER TABLE {biblio_fields} RENAME TO {biblio_fields_old}");
+  $result[] = update_sql("UPDATE {biblio_fields_old} SET name='biblio_corp_authors' WHERE name='biblio_corp_author'");
   // drop obsolete tables
   db_drop_table($result, 'biblio_author_index');
   db_drop_table($result, 'biblio_has_author');
@@ -1519,7 +1548,7 @@ function biblio_update_6014() {
   if (db_result(db_query('SELECT COUNT(*) FROM {biblio_fields} WHERE type="contrib_widget"')) == 1) {
     // create space for new contributor fields
     $result[] = update_sql("UPDATE {biblio_fields} f SET fid=fid + 4 WHERE fid>1 ORDER BY fid DESC");
-    update_sql("UPDATE {biblio_fields} f SET name='biblio_authors' WHERE fid=1");
+    $result[] = update_sql("UPDATE {biblio_fields} f SET name='biblio_authors' WHERE fid=1");
     // add new contributor fields
     $row = array('fid' => 0, 'name' => '', 'type' => 'contrib_widget', 'size' => 60, 'maxsize' => 255);
     foreach($contributors as $fid => $name) {
@@ -1534,7 +1563,7 @@ function biblio_update_6014() {
     // add new field titles from author type + appended 's'
     $result[] = update_sql("INSERT INTO {biblio_field_type_data} 
     												SELECT auth_type AS ftdid, CONCAT(TRIM(ctd.title),'s') AS title, NULL AS hint
-    												FROM biblio_contributor_type_data ctd WHERE auth_type>1 AND auth_type<6");
+    												FROM {biblio_contributor_type_data} ctd WHERE auth_type>1 AND auth_type<6");
     // create space for new fields in linking table
     $result[] = update_sql("UPDATE {biblio_field_type} ft SET fid=fid+4 WHERE fid>1 ORDER BY fid DESC");
     // shift ftdid and cust_tdid for non-custom ftids
@@ -1550,11 +1579,6 @@ function biblio_update_6014() {
 														SELECT auth_type,0,auth_type FROM {biblio_contributor_type_data} ctd WHERE auth_type<10");
   }
   // remove obsolete D5 columns from biblio table (if they are present)
-  $contributors[1] = 'biblio_authors';
-  $contributors[5] = 'biblio_corp_author';
-  foreach($contributors as $column) {
-    if (db_column_exists('biblio', $column)) db_drop_field($result,'biblio', $column);
-  }
   return $result;
 }
 function biblio_update_6015() {
@@ -1581,5 +1605,17 @@ function biblio_update_6015() {
   $result[] = array('success' => TRUE, 
                     'query' => "Moved $count keywords to the new database stucture");
   db_drop_field($result,'biblio', 'biblio_keywords');
+  return $result;
+}
+
+function biblio_update_6016() {
+  $result = array();
+  $result[] = update_sql("ALTER TABLE {biblio} 
+                          MODIFY COLUMN biblio_number             VARCHAR(24),
+                          MODIFY COLUMN biblio_section            VARCHAR(24),
+                          MODIFY COLUMN biblio_volume             VARCHAR(24),
+                          MODIFY COLUMN biblio_number_of_volumes  VARCHAR(24),
+                          MODIFY COLUMN biblio_issue              VARCHAR(24),
+                          MODIFY COLUMN biblio_doi                VARCHAR(255)");
   return $result;
 }

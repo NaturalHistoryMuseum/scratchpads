@@ -1,6 +1,6 @@
 <?php
 
-// $Id: biblio_style_ieee.inc,v 1.8.2.8 2009/02/06 03:09:39 rjerome Exp $
+// $Id: biblio_style_ieee.inc,v 1.8.2.10 2009/03/01 01:59:10 rjerome Exp $
 // by Jeffrey Dwoskin
 // A style closer to IEEE format
 // see http://standards.ieee.org/guides/style/section7.html#992
@@ -15,6 +15,24 @@ function biblio_style_ieee_info() {
     'ieee' => 'Institute of Electrical and Electronics Engineers (IEEE)'
   );
 }
+function biblio_style_ieee_author_options() {
+  $author_options = array(
+    'BetweenAuthorsDelimStandard'     =>  ', ',      //4
+    'BetweenAuthorsDelimLastAuthor'   =>  ', and ',    //5
+    'AuthorsInitialsDelimFirstAuthor' =>  ', ',      //7
+    'AuthorsInitialsDelimStandard'    =>  ' ',       //8
+    'betweenInitialsDelim'            =>  '. ',      //9
+    'initialsBeforeAuthorFirstAuthor' =>  FALSE,     //10
+    'initialsBeforeAuthorStandard'    =>  TRUE,      //11
+    'shortenGivenNames'               =>  TRUE,      //12
+    'numberOfAuthorsTriggeringEtAl'   =>  10,        //13
+    'includeNumberOfAuthors'          =>  10,        //14
+    'customStringAfterFirstAuthors'   =>  ', et al.',//15
+    'encodeHTML'                      =>  true
+  );
+  return $author_options;
+}
+
 /**
  * Apply a bibliographic style to the node
  *
@@ -30,7 +48,11 @@ function biblio_style_ieee_info() {
  *   The styled biblio entry
  */
 function biblio_style_ieee($node, $base = 'biblio', $inline = false) {
-  $authors = theme('biblio_authors', $node->biblio_contributors[1], 'ieee', 1, $inline);
+  $author_options = biblio_style_ieee_author_options();
+  $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
+  if (!empty ($node->biblio_citekey)&&(variable_get('biblio_display_citation_key',0))) {
+    $output .= '[' . check_plain($node->biblio_citekey) . '] ';
+  }
   $output .= '<span class="biblio-authors">' . $authors . ", </span> \n";
   switch ($node->biblio_type) {
     default :

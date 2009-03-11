@@ -28,7 +28,7 @@ function flickr_ajax_callback($term_name, $limit = 20, $offset = 0){
         'body' => '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>',
         'page_url' => 'http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']);
       $items ['http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']] = $item;
-      $urls[] = $item->page_url;
+      $urls[] = $item['page_url'];
     }
   }
   $urls = array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls);

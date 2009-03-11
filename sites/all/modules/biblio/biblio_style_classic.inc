@@ -1,6 +1,6 @@
 <?PHP
 
-// $Id: biblio_style_classic.inc,v 1.8.2.6 2009/02/06 03:09:39 rjerome Exp $
+// $Id: biblio_style_classic.inc,v 1.8.2.8 2009/03/01 01:59:10 rjerome Exp $
 /**
  * Get the style information
  *
@@ -12,6 +12,24 @@ function biblio_style_classic_info() {
     'classic' => 'Classic - This is the original biblio style'
   );
 }
+function biblio_style_classic_author_options() {
+  $author_options = array(
+    'BetweenAuthorsDelimStandard'     =>  ', ',      //4
+    'BetweenAuthorsDelimLastAuthor'   =>  ', and ',    //5
+    'AuthorsInitialsDelimFirstAuthor' =>  ', ',      //7
+    'AuthorsInitialsDelimStandard'    =>  ' ',       //8
+    'betweenInitialsDelim'            =>  '. ',      //9
+    'initialsBeforeAuthorFirstAuthor' =>  FALSE,     //10
+    'initialsBeforeAuthorStandard'    =>  FALSE,      //11
+    'shortenGivenNames'               =>  FALSE,      //12
+    'numberOfAuthorsTriggeringEtAl'   =>  10,        //13
+    'includeNumberOfAuthors'          =>  10,        //14
+    'customStringAfterFirstAuthors'   =>  ', et al.',//15
+    'encodeHTML'                      =>  true
+  );
+  return $author_options;
+}
+
 /**
  * Apply a bibliographic style to the node
  *
@@ -27,8 +45,12 @@ function biblio_style_classic_info() {
  *   The styled biblio entry
  */
 function biblio_style_classic($node, $base = 'biblio', $inline = false) {
-  $authors = theme('biblio_authors', $node->biblio_contributors[1], 'classic', 1, $inline);
-  $output = '<span class="biblio-title">';
+  $author_options = biblio_style_classic_author_options();
+  $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
+  if (!empty ($node->biblio_citekey)&&(variable_get('biblio_display_citation_key',0))) {
+    $output .= '[' . check_plain($node->biblio_citekey) . '] ';
+  }
+  $output .= '<span class="biblio-title">';
   $output .= $inline ? l("$node->title", "$base/viewinline/$node->nid") : l("$node->title", "node/$node->nid");
   $output .= "</span>, \n";
   $output .= '<span class="biblio-authors">' . $authors . "</span> \n";

@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.admin.inc,v 1.9.2.44 2009/02/12 02:38:14 rjerome Exp $
+// $Id: biblio.admin.inc,v 1.9.2.50 2009/03/06 03:12:57 rjerome Exp $
 /**
  *   biblio.admin.inc
  *
@@ -26,14 +26,14 @@
 
 function biblio_admin_ahah($form, $element, $value) {
   switch ($form) {
-  
+
   }
 }
 /**
 * Implementation of hook_settings().
 */
 function biblio_admin_settings() {
-  $version = '$Revision: 1.9.2.44 $ $Date: 2009/02/12 02:38:14 $';
+  $version = '$Revision: 1.9.2.50 $ $Date: 2009/03/06 03:12:57 $';
   $version = str_replace('$', '', $version);
   $form['biblio_rev'] = array(
     '#value' => $version,
@@ -53,7 +53,7 @@ function biblio_admin_settings() {
     '#default_value' => variable_get('biblio_base_title', 'Biblio'),
     '#description' => t('The page title shown on the base URL.')
   );
-  
+
   $form['biblio_rowsperpage'] = array(
     '#type' => 'textfield',
     '#title' => t('Number of results per page'),
@@ -119,6 +119,13 @@ function biblio_admin_settings() {
     '#title' => t('Citekey'),
     '#description' => t('You can alter citekey related settings here.')
   );
+  $form['citekey']['biblio_display_citation_key'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show citation key in results'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('biblio_display_citation_key', 0),
+    '#description' => t('This will output the citekey as the first item in the citation string')
+  );
   $form['citekey']['biblio_auto_citekey'] = array(
     '#type' => 'checkbox',
     '#title' => t('Auto generate citekeys if not given'),
@@ -157,7 +164,7 @@ function biblio_admin_settings() {
     	'#description' => t('Advanced usage only: PHP code that returns the citekey. Should not include &lt;?php ?&gt; delimiters.')
     );
   }
-  
+
   $form['footnotes'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -196,6 +203,13 @@ function biblio_admin_settings() {
     '#default_value' => variable_get('biblio_keyword_sep', ','),
     '#description' => t('Enter the character which will be used to separate multiple keywords in the keyword field')
   );
+  $form['keywords']['biblio_keyword_orphan_autoclean'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Automatically remove orphaned keywords'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('biblio_keyword_orphan_autoclean', 1),
+    '#description' => t('This option automatically deletes keywords which are no longer associated with any publications (primarily due to the due to the removal of a publication or editing a keyword).')
+  );
   $form['keywords']['biblio_keyword_freetagging'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use keywords from biblio entries as taxonomy "free tags"'),
@@ -223,7 +237,7 @@ function biblio_admin_settings() {
       '#weight' => 15
     );
   }
-  
+
   $form['links'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -403,7 +417,7 @@ function biblio_admin_settings() {
   $form['style']['biblio_style'] = array(
     '#type' => 'radios',
     '#title' => t('Style'),
-    '#default_value' => variable_get('biblio_style', 'cse'),
+    '#default_value' => variable_get('biblio_style', 'classic'),
     '#options' => _biblio_admin_get_styles(),
     '#description' => t('This alters the layout of the "list" (short) view.')
   );
@@ -482,8 +496,8 @@ function biblio_admin_types_edit_form() {
       $contrib_options[$contrib_type->auth_type] = $contrib_type->title;
       $contrib_hints[$contrib_type->auth_type] = $contrib_type->hint;
   }
-  
-  // first get all of the field info  
+
+  // first get all of the field info
   if ($tid) {
     $result = db_query("SELECT bf.*, bftd.*, bft.common, bft.visible, bft.autocomplete, bft.weight, bft.required, bt.name AS type_name
                         FROM {biblio_fields} AS bf
@@ -509,7 +523,7 @@ function biblio_admin_types_edit_form() {
       '#type' => 'value',
       '#title' => 'tid',
       '#value' => $typename
-      
+
     );
     $form['top_message'] = array(
       '#value' => t('Field settings related to @type publications',array('@type' => $typename))
@@ -523,7 +537,7 @@ function biblio_admin_types_edit_form() {
     $form['top_message'] = array(
       '#value' => t('Field settings common to all publication types')
     );
-    
+
   }
   uasort($fields, "biblio_form_sort"); // resort the fields since the weight may have changed
   $vis_comm = $tid ? 'visible' : 'common';
@@ -601,7 +615,7 @@ function biblio_admin_types_edit_form() {
     '#type' => 'submit',
     '#value' => t('Save')
   );
-  
+
   return $form;
 }
 
@@ -615,7 +629,7 @@ function biblio_admin_types_edit_form_submit($form, & $form_state) {
     $link['auth_category'] = $i;
     $auth_types = (array)$form_state['values']['configured_flds'][$i]['auth_type'];
     // if default values have not changed, do not store to the database explicitly
-    if ($link['biblio_type'] && 
+    if ($link['biblio_type'] &&
         (array_values($auth_types) == array_values((array)$form['configured_flds'][$i]['auth_type']['#default_value']))) continue;
     foreach ($auth_types as $type) {
       $link['auth_type'] = $type;
@@ -665,10 +679,10 @@ function biblio_admin_types_edit_form_submit($form, & $form_state) {
       $val['ftdid'] = $fid;
       drupal_write_record('biblio_field_type_data', $val, 'ftdid');
     }
-    
+
     drupal_write_record('biblio_field_type', $link, array('fid','tid'));
-    
-    if($tid == 0) {  
+
+    if($tid == 0) {
       if ($link['common']) {
         $query = "UPDATE {biblio_field_type} SET ftdid = %d, common = %d, visible = %d WHERE fid = %d";
         db_query($query, array($fid, 1, 1, $fid));
@@ -765,8 +779,8 @@ function biblio_admin_types_add_form_submit($form, & $form_state) {
       'auth_type' => $type,
       );
     drupal_write_record('biblio_contributor_type', $ct_vals);
-  }   
-  
+  }
+
   drupal_goto('admin/settings/biblio/fields/type');
 }
 function biblio_admin_types_hide() {
@@ -833,7 +847,7 @@ function _biblio_get_user_profile_form(& $form, $profile_user = FALSE) {
   global $user;
   $allow_edit = variable_get('biblio_show_user_profile_form', '1');
   $allow_edit = $allow_edit || user_access('administer biblio');
-  
+
   $form['profile'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -880,7 +894,7 @@ function _biblio_get_user_profile_form(& $form, $profile_user = FALSE) {
             ORDER by cd.lastname ASC ");
     $options = array();
     $options[0] = t('(none)');
-    
+
     while ($row = db_fetch_object($db_result)) {
         $options[$row->cid] =  "$row->lastname, $row->firstname $row->initials ";
     }
@@ -926,13 +940,14 @@ function biblio_form_sort($a, $b) {
 function biblio_admin_get_query($name) {
   switch ($name) {
     case "author_dup" :
-      return ('SELECT lastname, firstname, initials, COUNT(lastname) as cnt  FROM {biblio_contributor_data} GROUP BY lastname HAVING cnt>1 ORDER BY lastname ASC, firstname ASC, initials ASC ');
+      return ('SELECT lastname, firstname, initials, COUNT(lastname) as cnt  FROM {biblio_contributor_data} GROUP BY lastname, firstname, initials HAVING COUNT(*)>1 ORDER BY lastname ASC, firstname ASC, initials ASC ');
       break;
     case "author_by_name" :
-      return ('SELECT lastname, cid FROM {biblio_contributor_data} where lastname LIKE "%s"');
+      return ("SELECT lastname, cid FROM {biblio_contributor_data} where lastname LIKE '%s'");
       break;
     case 'author_pub_count' :
-      return ('SELECT bd.lastname, b.cid,COUNT(*) AS cnt FROM {biblio_contributor} b, {biblio_contributor_data} bd WHERE bd.cid=b.cid GROUP BY b.cid HAVING cnt > 0 ORDER BY lastname ASC');
+//      return ('SELECT bd.lastname, b.cid,COUNT(*) AS cnt FROM {biblio_contributor} b, {biblio_contributor_data} bd WHERE bd.cid=b.cid GROUP BY b.cid HAVING cnt > 0 ORDER BY lastname ASC');
+      return ('SELECT bd.lastname, b.cid,COUNT(*) AS cnt FROM {biblio_contributor} b, {biblio_contributor_data} bd WHERE bd.cid=b.cid GROUP BY b.cid, bd.lastname HAVING COUNT(*) > 0 ORDER BY lastname ASC');
       break;
   }
 }
@@ -1014,7 +1029,7 @@ function theme_biblio_admin_author_types_form($form) {
 function biblio_admin_author_types_form_submit($form, $form_state) {
   $record->title = $form_state['values']['title'];
   $record->hint = $form_state['values']['hint'];
-  
+
   switch($form['#id']) {
     case 'biblio-admin-author-types-form-new':
       $record->title = $form_state['values']['title'];
@@ -1025,7 +1040,7 @@ function biblio_admin_author_types_form_submit($form, $form_state) {
       $record->auth_type = $form_state['values']['auth_type'];
       drupal_write_record('biblio_contributor_type_data',$record,'auth_type');
       break;
-   
+
   }
 }
 function biblio_admin_author_type_delete_confirm(&$form_state, $type_id) {
@@ -1043,23 +1058,27 @@ function biblio_admin_author_type_delete_confirm(&$form_state, $type_id) {
     t('Delete'),
     t('Cancel')
   );
-    
+
 }
 function biblio_admin_author_type_delete_confirm_submit($form, &$form_state) {
 
   db_query("DELETE FROM {biblio_contributor_type_data} WHERE auth_type=%d", $form_state['values']['auth_type']);
   db_query("DELETE FROM {biblio_contributor_type} WHERE auth_type=%d", $form_state['values']['auth_type']);
-  
+
   drupal_goto('admin/settings/biblio/author/type');
 }
 
 function biblio_admin_author_edit_form($form_state, $author_id) {
   $author = db_fetch_object(db_query('SELECT * FROM {biblio_contributor_data} b WHERE b.cid = %d ', $author_id));
+  if (!$author) {
+    drupal_not_found();
+    return;
+  }
 
-  $base = variable_get('biblio_base', 'biblio');  
+  $base = variable_get('biblio_base', 'biblio');
   $menu = menu_get_active_title();
   if ($menu == 'Edit author information') $path = $base.'/authors';
-  if ($menu == 'Biblio settings') $path = 'admin/settings/biblio/author/list'; 
+  if ($menu == 'Biblio settings') $path = 'admin/settings/biblio/author/list';
   $form['#redirect'] = $path;
 
   $form['cid'] = array(
@@ -1142,8 +1161,7 @@ function biblio_admin_author_edit_form($form_state, $author_id) {
     '#required' => FALSE,
     '#maxlength' => 256
   );
-
-  $authors = db_query("SELECT * FROM {biblio_contributor_data} cd WHERE LOCATE('%s', name) AND cid!=%d",array($author->lastname, $author_id));
+ $authors = db_query("SELECT * FROM {biblio_contributor_data} cd WHERE name LIKE '%%%s%%' AND cid != %d",$author->lastname, $author_id);
   unset($options);
   $base = variable_get('biblio_base', 'biblio');
   while($author=db_fetch_array($authors)) {
@@ -1193,13 +1211,6 @@ function biblio_admin_author_edit_form_submit($form, &$form_state) {
 
 function biblio_admin_orphans_form($form_state) {
   $base = variable_get('biblio_base', 'biblio');
-  
-  $form['submit'] = array(
-  	'#type' => 'submit',
-    '#value' => t('Delete'),
-    '#submit' => array('biblio_admin_orphans_form_submit'),
-  );
-
   $result = pager_query('SELECT * FROM {biblio_contributor_data} WHERE cid NOT IN (SELECT cid FROM {biblio_contributor} GROUP BY cid)', 50);
   $authors = array();
   while ($author = db_fetch_object($result)) {
@@ -1210,25 +1221,66 @@ function biblio_admin_orphans_form($form_state) {
   $form['authors'] = array('#type' => 'checkboxes', '#options' => $authors);
   $form['pager']   = array('#value' => theme('pager', NULL, 50, 0));
   $form['#theme'] = 'biblio_admin_orphans_form';
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#disabled' => (!count($authors)),
+    '#submit' => array('biblio_admin_orphans_form_submit'),
+  );
   return $form;
 }
 function biblio_admin_orphans_form_validate($form, &$form_state) {
-  $authors = array_filter($form_state['values']['authors']);
-  if (count($authors) == 0) {
+  $check_count = array_filter($form_state['values']['authors']);
+  if (count($check_count) == 0) {
     form_set_error('', t('No items selected.'));
   }
 }
 
 function biblio_admin_orphans_form_submit($form, &$form_state) {
-  // Filter out unchecked authors
   $authors = array_filter($form_state['values']['authors']);
   update_sql('DELETE FROM {biblio_contributor_data} WHERE cid IN ('.implode(',',$authors).')');
   drupal_set_message(t('The orphaned authors ('.implode(',',$authors).') have been deleted.'));
+
+}
+function biblio_admin_keyword_orphans_form($form_state) {
+  $base = variable_get('biblio_base', 'biblio');
+  $result = pager_query('SELECT * FROM {biblio_keyword_data} WHERE kid NOT IN (SELECT kid FROM {biblio_keyword} GROUP BY kid)', 50);
+  $keywords = array();
+  while ($keyword = db_fetch_object($result)) {
+    $keywords[$keyword->kid] = '';
+    $form['keyword'][$keyword->kid] = array('#value' => l($keyword->word, $base.'/keyword/'.$keyword->kid.'/edit'));
+  }
+  $form['keywords'] = array('#type' => 'checkboxes', '#options' => $keywords);
+
+  $form['pager']   = array('#value' => theme('pager', NULL, 50, 0));
+  $form['#theme'] = 'biblio_admin_keyword_orphans_form';
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#disabled' => (!count($keywords)),
+    '#submit' => array('biblio_admin_keyword_orphans_form_submit'),
+  );
+  return $form;
+}
+function biblio_admin_keyword_orphans_form_validate($form, &$form_state) {
+  $check_count = array_filter($form_state['values']['keywords']);
+  if (count($check_count) == 0) {
+    form_set_error('', t('No items selected.'));
+  }
+}
+
+function biblio_admin_keyword_orphans_form_submit($form, &$form_state) {
+ 
+  $keywords = array_filter($form_state['values']['keywords']);
+  update_sql('DELETE FROM {biblio_keyword_data} WHERE kid IN ('.implode(',',$keywords).')');
+  $count = count($keywords);
+  drupal_set_message(t('%count orphaned keywords have been deleted.', array('%count' => $count)));
+
 }
 
 function biblio_admin_keyword_edit_form($form_state, $keyword_id) {
   $base = variable_get('biblio_base', 'biblio');
-  
+
   $keyword = db_fetch_object(db_query('SELECT * FROM {biblio_keyword_data} bkd WHERE bkd.kid = %d ', $keyword_id));
 
   $base = variable_get('biblio_base', 'biblio');
@@ -1248,7 +1300,8 @@ function biblio_admin_keyword_edit_form($form_state, $keyword_id) {
     '#maxlength' => 255
   );
 
-  $keywords = db_query("SELECT * FROM {biblio_keyword_data} kd WHERE LOCATE('%s', word) AND kid!=%d", drupal_substr($keyword->word,1,5), $keyword_id);
+  $keywords = db_query("SELECT * FROM {biblio_keyword_data} kd WHERE word LIKE '%%%s%%' AND kid!=%d", drupal_substr($keyword->word,1,5), $keyword_id);
+
   unset($options);
   $base = variable_get('biblio_base', 'biblio');
   while($kw=db_fetch_object($keywords)) {
@@ -1278,9 +1331,9 @@ function biblio_admin_keyword_edit_form($form_state, $keyword_id) {
     '#value' => t('Save')
   );
   $form['delete'] = array(
-    '#value' => l(t('Delete'), $base.'/keyword/'.$keyword_id.'/delete') 
+    '#value' => l(t('Delete'), $base.'/keyword/'.$keyword_id.'/delete')
   );
-  
+
   return $form;
 }
 
@@ -1299,24 +1352,24 @@ function biblio_admin_keyword_delete_confirm(&$form_state, $keyword_id) {
     t('Delete'),
     t('Cancel')
   );
-    
+
 }
 
 function biblio_admin_keyword_delete_confirm_submit($form, &$form_state) {
   $base = variable_get('biblio_base', 'biblio');
   module_load_include('inc','biblio','biblio.keywords');
-  biblio_delete_keyword($form_state['values']['kid']);  
+  biblio_delete_keyword($form_state['values']['kid']);
   drupal_goto($base.'/keywords');
 }
 
 function biblio_admin_keyword_edit_form_submit($form, &$form_state) {
-   if ($form_state['values']['op'] == 'Save') {
-     drupal_write_record('biblio_keyword_data', $form_state['values'], 'kid');
-   }
-   if (count($form_state['values']['merge_keywords'])) {
-     $kids = implode(',', $form_state['values']['merge_keywords']);
-     update_sql("UPDATE {biblio_keyword} SET kid={$form_state['values']['kid']} WHERE kid IN ($kids)");
-     update_sql("DELETE FROM {biblio_keyword_data} WHERE kid IN ($kids)");
-   }
-   
+  if ($form_state['values']['op'] == t('Save')) {
+    drupal_write_record('biblio_keyword_data', $form_state['values'], 'kid');
+
+    if (count($form_state['values']['merge_keywords'])) {
+      $kids = implode(',', $form_state['values']['merge_keywords']);
+      update_sql("UPDATE {biblio_keyword} SET kid={$form_state['values']['kid']} WHERE kid IN ($kids)");
+      update_sql("DELETE FROM {biblio_keyword_data} WHERE kid IN ($kids)");
+    }
+  }
 }

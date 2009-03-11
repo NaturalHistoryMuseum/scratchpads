@@ -14,6 +14,8 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
   if ($terms['operator'] != 'and' && $terms['operator'] != 'or') {
     drupal_not_found();
   }
+  
+  drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
 
   if ($terms['tids']) {
     $result = db_query(db_rewrite_sql('SELECT t.vid, t.tid, t.name FROM {term_data} t WHERE t.tid IN ('. db_placeholders($terms['tids']) .')', 't', 'tid'), $terms['tids']);
@@ -51,12 +53,12 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       $breadcrumb = array_reverse($breadcrumb);
       drupal_set_breadcrumb($breadcrumb);
       
-      $output = '';
+      $output = '<div id="mado">';
       
       foreach($theme as $theme_row){
         $output .= theme('mado_row', $theme_row);
       }      
-      return $output;
+      return $output."</div>";
     }
   }
   drupal_not_found();
@@ -126,8 +128,10 @@ function theme_mado_row($theme_row){
     $output .= ' class="'.$theme_row['#css'].'"';
   }
   $output .='>';
+  $output = "";
   foreach($blocks as $block){    
     $output .= theme('mado_block', $theme_row[$block]); // Add arguments    
   }
+  return $output;
   return $output."</div>";
 }

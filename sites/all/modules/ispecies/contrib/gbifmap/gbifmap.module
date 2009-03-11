@@ -21,7 +21,7 @@ function gbifmap_ajax_callback($term_name, $limit = 20){
       'page_url' => 'http://data.gbif.org/species/' . $response->taxon->key
     );    
     $items[] = $item;
-    $urls = array($item->page_url);
+    $urls = array($item['page_url']);
   }
   $urls = array('name' => 'GBIF', 'url' => 'http://www.gbif.org/', 'urls'=> $urls);
   $items['urls'] = $urls;

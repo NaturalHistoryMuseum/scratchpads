@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.keywords.inc,v 1.6.2.2 2009/02/06 03:09:39 rjerome Exp $
+// $Id: biblio.keywords.inc,v 1.6.2.3 2009/02/20 03:11:38 rjerome Exp $
 /**
  *   biblio.module for Drupal
  *
@@ -131,7 +131,7 @@ function biblio_delete_node_keywords($node) {
  * @return none
  */
 function biblio_delete_revision_keywords($node) {
-  db_query('DELETE FROM {biblio_keywords} WHERE vid = %d', $node->vid);
+  db_query('DELETE FROM {biblio_keyword} WHERE vid = %d', $node->vid);
 }
 
 function biblio_delete_keyword($keyword_id) {

@@ -67,6 +67,7 @@ function bhl_ajax_callback($term_name, $limit = 20, $offset = 0){
   $items = array ();
   $titles = _bhl_get_namebank_titles($term_name);
   $count_titles = count ( $titles );
+  $urls = array();
   if ($count_titles) {
     // loop through all the titles   
     $counter = 0;
@@ -106,13 +107,18 @@ function bhl_ajax_callback($term_name, $limit = 20, $offset = 0){
       if ($number_of_pages) {
         $item = array(
           'body' => sprintf ( '<a href="%s" title="%s">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul>',
-          'page_url' => 'http://www.biodiversitylibrary.org/name/' . str_replace ( ' ', '_', $term_name )
+          'page_url' => $title ['title_url']
         );
+        $urls = $item['page_url'];
         $items[] = $item;
+      }
+      $counter ++;
+      if($counter > $limit){
+        break;
       }
     }
   }
-  $urls = array('name' => 'BHL', 'url'=>'http://biodiversitylibrary.org/name/'.$term_name);
+  $urls = array('name' => 'BHL', 'url'=>'http://biodiversitylibrary.org/name/'.$term_name, 'urls' => $urls);
   $items['citation'] = theme('citation_url', $urls);
   $items['urls'] = $urls;
   return $items;

@@ -59,8 +59,9 @@ function wikipedia_ajax_callback($term_name, $limit = false, $offset = false){
       'body' => '<div><p style="padding: 0px 5px;text-align: justify">' . $output_text . '</p></div>',
       'page_url' => 'http://en.wikipedia.org/wiki/' . ucfirst ( strtolower ( str_replace ( ' ', '_', $term_name ) )));
     $items [$response->page->revision->id . ':' . $url] = $item;
-    $items['urls'] = array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item->page_url));
+    $urls = array('name' => 'Wikipedia', 'url'=> 'http://en.wikipedia.org/', 'urls' => array($item['page_url']));
     $items['citation'] = theme('citation_url', $urls);
+    $items['urls'] = $urls;
   }
   return $items;
 }

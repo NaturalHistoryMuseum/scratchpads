@@ -1,5 +1,5 @@
 <?php
-// $Id: tagged_parser.inc,v 1.8.2.16 2009/02/12 02:32:09 rjerome Exp $
+// $Id: tagged_parser.inc,v 1.8.2.17 2009/02/23 22:04:12 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *
@@ -204,7 +204,10 @@ function _endnote_tagged_import($file, $terms = array(), $batch = FALSE, $sessio
     else {
       $incite = false;
       if (!empty($node)) {
-        if (!empty($terms)) $node['taxonomy'] = array_merge($terms,$node['taxonomy']);
+        if (!empty($terms)) {
+          if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
+          $node['taxonomy'] = array_merge($terms,$node['taxonomy']);
+        }
         $nids[] = biblio_save_node($node, $batch, $session_id);
       }
 
