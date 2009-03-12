@@ -20,8 +20,10 @@ function ispecies_node_info() {
     'ispecies' => array (
       'name' => t('iSpecies Cache'), 
       'module' => 'ispecies', 
-      'description' => t('Cached iSpecies content.'), 
-      'locked' => true
+      'description' => t('Cached iSpecies content.'),
+      'has_body' => TRUE,
+      'has_title' => TRUE,
+      'locked' => TRUE
     )
   );
 }
