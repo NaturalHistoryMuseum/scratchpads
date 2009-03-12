@@ -55,8 +55,8 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       
       $output = '<div id="mado">';
       
-      foreach($theme as $theme_row){
-        $output .= theme('mado_row', $theme_row);
+      foreach($theme as $block){
+        $output .= theme('mado_block', $block);
       }      
       return $output."</div>";
     }
@@ -119,19 +119,4 @@ function theme_mado_block($block) {
   // finally, give other modules an opportunity to mangle output
   module_invoke_all('mado_block_alter', $output);
   return $output;
-}
-
-function theme_mado_row($theme_row){
-  $blocks = element_children($theme_row);
-  $output = '<div';
-  if(isset($theme_row['#css']) && $theme_row['#css']!=''){
-    $output .= ' class="'.$theme_row['#css'].'"';
-  }
-  $output .='>';
-  $output = "";
-  foreach($blocks as $block){    
-    $output .= theme('mado_block', $theme_row[$block]); // Add arguments    
-  }
-  return $output;
-  return $output."</div>";
 }

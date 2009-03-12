@@ -30,9 +30,6 @@ function mado_theme() {
   return array(
     'mado_block' => array(
       'arguments' => array('block' => array()),
-    ),
-    'mado_row' => array(
-      'arguments' => array('theme_row' => array()),
     )
   );
 }
@@ -49,55 +46,40 @@ function mado_get_theme($vid){
   // ENABLE A USER TO ALTER A THEME.
   drupal_add_css(drupal_get_path('module','mado').'/mado.css');
   return array(
-    'top' => array(
-      // '#css' => 'mado_red',
-      // '#title' => '' // CURRENTLY UNUSED
-      'left' => array(
-        //'#title' => t('Top right'),
-        '#type' => 'block',
-        '#name' => 'citation/0',
-        '#scroll' => 1,
-        '#css' => 'mado_block_2',
-      ),      
-      'right' => array(
-        //'#title' => t('Top right'),
-        '#type' => 'view',
-        '#name' => 'taxonomy_images',
-        '#css' => 'mado_block_2 mado_images',
-        '#scroll' => 1
-      ),    
+    array(
+      '#type' => 'block',
+      '#name' => 'citation/0',
+      '#scroll' => 1,
+      '#css' => 'mado_block_2',
+    ),      
+    array(
+      '#type' => 'view',
+      '#name' => 'taxonomy_images',
+      '#css' => 'mado_block_2 mado_images',
+      '#scroll' => 1   
     ),
-    'middle' => array(
-      //'#title' => '',
-      //'#css' => '',
-      'middle' => array(
-        //'#title' => t('Bottom'),
-        '#type' => 'view',
-        '#name' => 'taxonomy_pages',
-        '#css' => 'mado_block_1'    
-      )
+    array(
+      '#type' => 'view',
+      '#name' => 'taxonomy_pages',
+      '#css' => 'mado_block_1'
     ),
-    'bottom' => array(
-      'middle' => array(
-        //'#title' => ''
-        '#type' => 'block',
-        '#name' => 'boost/status',
-        '#css' => 'mado_block_1'
-      )
+    array(
+      '#type' => 'block',
+      '#name' => 'boost/status',
+      '#css' => 'mado_block_1'
     ),
-    'yahoo' => array(
-      'left' => array(
-        //'#title' => ''
-        '#type' => 'view',
-        '#name' => 'yahooimages',
-        '#css' => 'mado_block_2',
-        '#scroll' => 1
-      ),
-      'right' => array(
-        '#type' => 'view',
-        '#name' => 'flickr',
-        '#scroll' => 1,
-        '#css' => 'mado_block_2')),
+    array(
+      '#type' => 'view',
+      '#name' => 'yahooimages',
+      '#css' => 'mado_block_2',
+      '#scroll' => 1
+    ),
+    array(
+      '#type' => 'view',
+      '#name' => 'flickr',
+      '#scroll' => 1,
+      '#css' => 'mado_block_2'
+    ),
       /*
     'gbif' => array(
       'middle' => array(
@@ -106,48 +88,36 @@ function mado_get_theme($vid){
         '#name' => 'gbifmap',
         '#css' => 'mado_block_1'
       )
+    ),*/
+    array(
+      '#type' => 'view',
+      '#name' => 'googlescholar',
+      '#css' => 'mado_block_1'
     ),
-      */
-    'googlescholar' => array(
-      'middle' => array(
-        //'#title' => ''
-        '#type' => 'view',
-        '#name' => 'googlescholar',
-        '#css' => 'mado_block_1'
-      )
-    ),
-    'bhl' => array(
-      'middle' => array(
-        '#type' => 'view',
-        '#scroll' => 1,
-        '#name' => 'bhl',
-        '#css' => 'mado_block_1')),
-    'wiki' => array(
-      'middle' => array(
-        '#type' => 'view',
-        '#name' => 'wikipedia',
-        '#css' => 'mado_block_1')),
-    'ncbi' => array(
-      'middle' => array(
-        '#type' => 'view',
-        '#name' => 'ncbi',
-        '#css' => 'mado_block_1')),
-    'abovetop' => array(
-      // '#css' => 'mado_red',
-      // '#title' => '' // CURRENTLY UNUSED
-      'left' => array(
-        //'#title' => t('Top left'),
-        '#type' => 'block',
-        '#scroll' => 1,
-        '#name' => 'tinytax/tinytax-6',
-        '#css' => 'mado_block_2',
-      ),      
-      'right' => array(
-        '#type' => 'view',
-        '#name' => 'comments_recent',
-        '#css' => 'mado_block_2',
-        '#scroll' => 1
-      ),    
-    ),
+    array(
+      '#type' => 'view',
+      '#scroll' => 1,
+      '#name' => 'bhl',
+      '#css' => 'mado_block_1'),
+    array(
+      '#type' => 'view',
+      '#name' => 'wikipedia',
+      '#css' => 'mado_block_1'),
+    array(
+      '#type' => 'view',
+      '#name' => 'ncbi',
+      '#css' => 'mado_block_1'),
+    array(
+      '#type' => 'block',
+      '#scroll' => 1,
+      '#name' => 'tinytax/tinytax-6',
+      '#css' => 'mado_block_2'
+    ),      
+    array(
+      '#type' => 'view',
+      '#name' => 'comments_recent',
+      '#css' => 'mado_block_2',
+      '#scroll' => 1
+    )
   );
 }
