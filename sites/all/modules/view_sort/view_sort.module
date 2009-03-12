@@ -14,6 +14,12 @@ function view_sort_menu(){
     'type' => MENU_CALLBACK, 
     'access arguments' => array (
       'assign node weight' ) );
+  $items['views-sort/pin'] = array (
+    'title' => '', 
+    'page callback' => 'views_sort_pin', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'assign node weight' ) );
   return $items;
 }
 function view_sort_views_pre_render(&$view){
@@ -46,6 +52,14 @@ function view_sort_views_query_alter(&$view, &$query){
     }
   }
 }
+
+function views_sort_pin(){
+  $data = explode("---", $_GET['pin']);
+  print_r($data);
+  $items = view_sort_get_items($data[0], array($data[1]));
+  print_r($items[$data[2]]);
+  exit;
+}
 /**
  * Implementation of hook_views_api().
  */
@@ -75,27 +89,8 @@ function views_sort_callback($viewname=false){
 }
 
 function views_sort_popup_html($view_name = "", $view_args = ""){
-  // Get the view
-  $view = views_get_view($view_name);
-  $view->args = json_decode(urldecode($view_args));
-  $view->execute();
-  $items = array();
-  if(count($view->result)){
-    foreach($view->result as $item){
-      $items[$item->nid] = node_view(node_load($item->nid), true);
-    }
-  } else {
-    if(function_exists('ispecies_ajax_callback')){
-      if(isset($view->display['default']->display_options['filters']['ispecies']['value'])){
-        $items_temp = ispecies_get_data($view->display['default']->display_options['filters']['ispecies']['value'] , array_pop($view->args));
-        foreach($items_temp as $item){
-          if(is_array($item) && isset($item['body'])){
-            $items[$item['page_url']] = $item['body'];
-          } 
-        }
-      }
-    }
-  }
+  $view_args = json_decode(urldecode($view_args));
+  $items = view_sort_get_items($view_name, $view_args);
   $output = '<div class="view-sort-drag">';
   $i = 0;
   $sort_orders = variable_get('view_sort-limits', array());
@@ -107,7 +102,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   }
   foreach($items as $id => $item){
     // Remove links from the output (we don't want users clicking, just dragging
-    $output .= '<div view-sort="'.$i.'" class="sort-div">'.preg_replace("/<[\/]*a[\ ]*[^>]*>/","", $item).'</div>';
+    $output .= "<div view-sort=\"$view_name---{$view_args[0]}---$id\" class=\"sort-div\">".preg_replace("/<[\/]*a[\ ]*[^>]*>/","", $item).'</div>';
     $i ++;
     if($divider_position && $divider_position == $i){
       $output .= $divider;
@@ -117,12 +112,37 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
     $output .= $divider;
   }
   $output .= "</div><script type=\"text/javascript\">
-    view_sort_add_draggable('".url('views-sort/callback', array('absolute'=>1))."', '$view_name', '".url('ispecies', array('absolute'=>1))."');
+    view_sort_add_draggable('".url('views-sort/callback', array('absolute'=>1))."', '$view_name', '".url('ispecies', array('absolute'=>1))."','".url('views-sort/pin', array('absolute'=>1))."');
   </script>";
   print $output;
   exit;
 }
 
+function view_sort_get_items($view_name, $view_args){
+  // Get the view
+  $view = views_get_view($view_name);
+  $view->args = $view_args;
+  $view->execute();
+  $items = array();
+  if(count($view->result)){
+    foreach($view->result as $item){
+      $items[$item->nid] = node_view(node_load($item->nid), true);
+    }
+  } else {
+    if(function_exists('ispecies_ajax_callback')){
+      if(isset($view->display['default']->display_options['filters']['ispecies']['value'])){
+        //echo array_pop($view->args);exit;
+        $items_temp = ispecies_get_data($view->display['default']->display_options['filters']['ispecies']['value'] , $view->args[0]);
+        foreach($items_temp as $item){
+          if(is_array($item) && isset($item['body'])){
+            $items[$item['page_url']] = $item['body'];
+          } 
+        }
+      }
+    }
+  }
+  return $items;
+}
 function view_sort_theme(){
   return array(
     'view_sort' => array()
