@@ -1,5 +1,5 @@
 <?php
-// $Id: pm_svn.drush.inc,v 1.1 2008/12/07 05:12:11 weitzman Exp $
+// $Id: pm_svn.drush.inc,v 1.1.4.1 2009/02/28 21:41:24 grugnog Exp $
 
 /**
  * @file Drush pm SVN extension
@@ -87,15 +87,11 @@ function drush_pm_svn_sync($project, $info, $path = '.') {
         }
       }
       if (!empty($errors)) {
-        drush_print(dt("Problems were encountered adding or removing files to/from subversion.\nThe specific errors are below:"));
-        drush_print($errors);
-        return FALSE;
+        return drush_set_error('DRUSH_PM_SVN_SYNC_PROBLEMS', dt("Problems were encountered adding or removing files to/from subversion.\nThe specific errors are below:\n!errors", array('!errors' => $errors)));
       }
     }
     else {
-      drush_print(dt("Drush was unable to get the svn status. Check that you have Subversion \ninstalled and that the site is a subversion working copy.\nThe specific errors are below:"));
-      drush_print(implode("\n", drush_shell_exec_output()));
-      return FALSE;
+      return drush_set_error('DRUSH_PM_SVN_NOT_FOUND', dt("Drush was unable to get the svn status. Check that you have Subversion \ninstalled and that the site is a subversion working copy.\nThe specific errors are below:\n!errors", array('!errors' => implode("\n", drush_shell_exec_output()))));
     }
     return TRUE;
   }
@@ -114,8 +110,7 @@ function drush_pm_svn_commit($project, $info, $path = '.') {
       drush_print(dt('Project committed to Subversion successfully'));
     }
     else {
-      drush_print(dt("'Problems were encountered committing your changes to Subversion.\nThe specific errors are below:"));
-      drush_print(implode("\n", drush_shell_exec_output()));
+      drush_set_error('DRUSH_PM_SVN_COMMIT_PROBLEMS', dt("Problems were encountered committing your changes to Subversion.\nThe specific errors are below:\n!errors", array('!errors' => implode("\n", drush_shell_exec_output()))));
     }
   }
   else {

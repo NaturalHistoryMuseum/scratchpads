@@ -1,5 +1,5 @@
 <?php
-// $Id: pm_cvs.drush.inc,v 1.1 2008/12/07 05:12:11 weitzman Exp $
+// $Id: pm_cvs.drush.inc,v 1.1.4.1 2009/02/28 21:41:24 grugnog Exp $
 
 /**
  * @file Drush PM CVS extension
@@ -54,7 +54,8 @@ function drush_pm_cvs_install_project($project, $info, $path = '.') {
     return TRUE;
   }
   else {
-    return drush_error("Unable to check out $filename to $path from cvs.drupal.org");
+    drush_set_error('DRUSH_PM_CVS_CHECKOUT_PROBLEMS', dt("Unable to check out !filename to !path from cvs.drupal.org", array('!filename' => $filename, '!path' => $path)));
+    return FALSE;
   }
 }
 
@@ -100,7 +101,7 @@ function drush_pm_cvs_update_project($project, $info, $path = '.') {
     return TRUE;
   }
   else {
-    return drush_error("Unable to update $project from cvs.drupal.org");
+    return drush_set_error('DRUSH_PM_CVS_UPDATE_PROBLEMS', dt("Unable to update !project from cvs.drupal.org", array('!project' => $project)));
   }
 }
 

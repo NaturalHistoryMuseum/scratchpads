@@ -153,12 +153,12 @@ function notify_menu($may_cache) {
  */
 function notify_user_settings_form($uid = 0) {
   global $user;
-  if ($user->uid != $arg->uid && $user->uid != 1) {
+  if ($user->uid != $uid && $user->uid != 1) {
     drupal_access_denied();
     return;
   }
   
-  $account = user_load(array('uid' => $arg->uid));
+  $account = user_load(array('uid' => $uid));
   if (!is_object($account)) {
     drupal_not_found();
     return;

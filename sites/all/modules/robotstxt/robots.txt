@@ -1,4 +1,4 @@
-# $Id: robots.txt,v 1.2.2.3 2007/08/05 09:56:41 hass Exp $
+# $Id: robots.txt,v 1.2.2.4 2008/11/04 09:13:53 hass Exp $
 #
 # robots.txt
 #
@@ -17,36 +17,30 @@
 # For syntax checking, see:
 # http://www.sxw.org.uk/computing/robots/check.html
 
-User-agent: Fasterfox
-Disallow: /
-
 User-agent: *
 Crawl-delay: 10
 # Directories
-Disallow: /database/
 Disallow: /includes/
 Disallow: /misc/
 Disallow: /modules/
+Disallow: /profiles/
+Disallow: /scripts/
 Disallow: /sites/
 Disallow: /themes/
-Disallow: /scripts/
-Disallow: /updates/
-Disallow: /profiles/
 # Files
-Disallow: /xmlrpc.php
+Disallow: /CHANGELOG.txt
 Disallow: /cron.php
-Disallow: /update.php
-Disallow: /install.php
-Disallow: /INSTALL.txt
 Disallow: /INSTALL.mysql.txt
 Disallow: /INSTALL.pgsql.txt
-Disallow: /CHANGELOG.txt
-Disallow: /MAINTAINERS.txt
+Disallow: /install.php
+Disallow: /INSTALL.txt
 Disallow: /LICENSE.txt
+Disallow: /MAINTAINERS.txt
+Disallow: /update.php
 Disallow: /UPGRADE.txt
+Disallow: /xmlrpc.php
 # Paths (clean URLs)
 Disallow: /admin/
-Disallow: /aggregator/
 Disallow: /comment/reply/
 Disallow: /contact/
 Disallow: /logout/
@@ -57,7 +51,6 @@ Disallow: /user/password/
 Disallow: /user/login/
 # Paths (no clean URLs)
 Disallow: /?q=admin/
-Disallow: /?q=aggregator/
 Disallow: /?q=comment/reply/
 Disallow: /?q=contact/
 Disallow: /?q=logout/

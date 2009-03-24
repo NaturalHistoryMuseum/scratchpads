@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: tasks.module,v 1.18.4.3 2009/03/18 20:27:09 scor Exp $
 
 // Implementation of hook_help()
 function tasks_help($section) {
@@ -178,7 +178,7 @@ function tasks_form(&$node) {
   );
 
   if ($node->task_parent) {
-    $result = db_query("SELECT n.*, t.* FROM {node} n, {tasks} t WHERE n.type='tasks' AND t.nid = n.nid AND t.completed = '0000-00-00' AND t.task_parent = $node->task_parent ORDER BY t.order_by ASC");
+    $result = db_query("SELECT n.*, t.* FROM {node} n, {tasks} t WHERE n.type='tasks' AND t.nid = n.nid AND t.completed = '0000-00-00' AND t.task_parent = %d ORDER BY t.order_by ASC", $node->task_parent);
 
     while ($tasklist = db_fetch_object($result)) {
       if ($tasklist->nid == $node->nid) {
@@ -369,7 +369,9 @@ function tasks_view(&$node, $teaser = FALSE, $page = FALSE) {
         $assigned_name = $task->assigned_name;
         //$tasks_colour = drupal_unpack($task)->tasks_colour;
         $extra = drupal_unpack($task);
-        $tasks_colour = $extra->tasks_colour;
+        // Only color codes or color names are accepted.
+        preg_match('/#?[a-zA-Z0-9]*/', $extra->tasks_colour, $matches);
+        $tasks_colour = isset($matches[0]) ? $matches[0] : NULL;
         $task = node_load(array('nid'=>$task->nid));
         $rows[] = array(
           'data' => array(

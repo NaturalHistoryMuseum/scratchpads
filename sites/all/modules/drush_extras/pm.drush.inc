@@ -1,5 +1,5 @@
 <?php
-// $Id: pm.drush.inc,v 1.3.2.3 2009/01/23 22:24:59 weitzman Exp $
+// $Id: pm.drush.inc,v 1.3.2.4 2009/02/28 21:41:24 grugnog Exp $
 
 /**
  * @file
@@ -137,7 +137,7 @@ function drush_pm_install() {
   foreach($requests as $project => $request) {
     if (isset($releases[$project]) && $release = drush_pm_get_release($request, $releases[$project])) {
       if (is_dir($modulepath . $project)) {
-        drush_error(dt('Project !project is already installed. Skipping.', array('!project' => $project)));
+        drush_set_error('DRUSH_PM_PROJECT_ALREADY_INSTALLED', dt('Project !project is already installed. Skipping.', array('!project' => $project)));
       }
       elseif ($package_handler($project, $release, $modulepath)) {
         drush_print(dt("Project !project successfully installed (version !version).",
@@ -146,7 +146,7 @@ function drush_pm_install() {
       }
     }
     else {
-      drush_error(dt('Project !project doesn\' exist or has no releases that are compatible with your Drupal version. Skipping.', array('!project' => $project)));
+      drush_set_error('DRUSH_PM_NO_RELEASES_FOUND', dt('Project !project doesn\' exist or has no releases that are compatible with your Drupal version. Skipping.', array('!project' => $project)));
     }
   }
 
@@ -321,11 +321,11 @@ function drush_pm_update_packages($releases) {
     $project_parent_path = DRUSH_DRUPAL_ROOT. '/'. implode('/', $basepath). '/';
     if (!$package_handler($release['name'], $release['releases'][$release['candidate_version']], $project_parent_path)) {
       if (!count($skip_backup)) {
-        drush_error(dt('Updating project !project failed. Restoring previously installed version.', array('!project' => $release['name'])));
+        drush_set_error('DRUSH_PM_UPDATING_FAILED_BACKUP_RESTORE', dt('Updating project !project failed. Restoring previously installed version.', array('!project' => $release['name'])));
         drush_op('rename', $backup_target, $source);
       }
       else {
-        drush_error(dt('Updating project !project failed. Please revert to the previously installed version.', array('!project' => $release['name'])));
+        drush_set_error('DRUSH_PM_UPDATING_FAILED_NO_BACKUP', dt('Updating project !project failed. Please revert to the previously installed version.', array('!project' => $release['name'])));
       }
     }
     else {
