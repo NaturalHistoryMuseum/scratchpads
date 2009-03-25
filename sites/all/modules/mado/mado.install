@@ -6,4 +6,21 @@ function mado_install(){
   // module.  
   $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
   db_query("UPDATE {system} SET weight=%d WHERE name='mado'", $taxonomy_weight+10);
+  
+  // Install the mado schema so that we can save page layouts
+  drupal_install_schema('mado');
+}
+
+function mado_uninstall(){
+  drupal_uninstall_schema('mado');
+}
+
+function mado_schema(){
+  $tables['mado'] = array(
+    'fields' => array(
+      'mid' => array('type' => 'serial', 'unsigned' => true, 'not null' => true),
+      'identifier' => array('type' => 'varchar', 'length' => '256', 'not null' => true),
+      'blocks' => array('type' => 'text', 'not null' => true)),
+    'primary key' => array('mid'));
+  return $tables;
 }

@@ -23,30 +23,6 @@ function ispecies_views_default_views() {
     $view->disabled = FALSE;
     $handler = $view->new_display('default', $ispecies_view['title'], 'default');
     $handler->override_option('fields', array(
-      'title' => array(
-        'label' => '',
-        'alter' => array(
-          'alter_text' => 0,
-          'text' => '',
-          'make_link' => 0,
-          'path' => '',
-          'alt' => '',
-          'prefix' => '',
-          'suffix' => '',
-          'help' => '',
-          'trim' => 0,
-          'max_length' => '',
-          'word_boundary' => 1,
-          'ellipsis' => 1,
-          'html' => 0,
-        ),
-        'link_to_node' => 1,
-        'exclude' => 0,
-        'id' => 'title',
-        'table' => 'node',
-        'field' => 'title',
-        'relationship' => 'none',
-      ),
       'body' => array(
         'label' => '',
         'alter' => array(
@@ -179,7 +155,7 @@ function ispecies_views_default_views() {
         'field' => 'type',
         'relationship' => 'none',
       ),
-      'ispecies' => array(
+      'ispeciestype' => array(
         'operator' => '=',
         'value' => $module,
         'group' => '0',
@@ -189,9 +165,9 @@ function ispecies_views_default_views() {
           'label' => '',
         ),
         'case' => 1,
-        'id' => 'ispecies',
+        'id' => 'ispeciestype',
         'table' => 'ispecies',
-        'field' => 'ispecies',
+        'field' => 'ispeciestype',
         'relationship' => 'none',
       ),
     ));

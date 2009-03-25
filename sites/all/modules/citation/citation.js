@@ -12,7 +12,9 @@ function citation_get_citations(callback){
     success:function(data){
       citation_got_citations(data);
     },
-    cache:false
+    cache:false,
+    async:false,
+    type:"POST"
   };
   $.ajax(ajax_options); 
 }

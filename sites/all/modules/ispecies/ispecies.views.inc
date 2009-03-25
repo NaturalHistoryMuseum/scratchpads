@@ -3,23 +3,24 @@
  * Implementation of hook_views_data()
  */
 function ispecies_views_data() {
-  $data['ispecies'] = array(
-    'table' => array(
-      'group' => t('iSpecies'),
-      'join' => array(
-        'node' => array(
-          'table' => 'node',
-          'left_field' => 'nid',
-          'field' => 'nid',
-        ),
-      ),
-    ),
+  $data = array(
     'ispecies' => array(
-      'real field' => 'type',
-      'title' => t('iSpecies provider'),
-      'filter' => array(
-        'help' => t('Select the remote provider that you require'),
-        'handler' => 'views_handler_filter_string',
+      'table' => array(
+        'group' => 'iSpecies',
+        'title' => 'iSpecies',
+        'join' => array(
+          'node' => array(
+            'left_field' => 'nid',
+            'field' => 'nid',
+            //'handler' => 'views_handler_filter_string'
+          )
+        )
+      ),
+      'ispeciestype' => array(
+        'title' => t('Type'),
+        'filter' => array(
+          'handler' => 'views_handler_filter_string'
+        )
       )
     )
   );

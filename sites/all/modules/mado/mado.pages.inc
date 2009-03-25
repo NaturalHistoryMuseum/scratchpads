@@ -29,16 +29,21 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
     }    
     // We'll get the vid from the first term, we can't start pissing about
     // checking every bloody term
-    $theme = mado_get_theme($vids[0]);
+    $theme = mado_get_theme($vids[0], $tids[0]);
     if(!$theme || $op != 'page'){
-      module_load_include("pages.inc", "taxonomy"); 
+      module_load_include("pages.inc", "taxonomy");
       return taxonomy_term_page($str_tids, $depth, $op);
     }
-
     if ($names) {
+      // Add mado CSS
+      drupal_add_css(drupal_get_path('module','mado').'/mado.css');
+      // Add the callback URL for sorting
+      drupal_add_js('mado_callback_url="'.url('mado/save',array('absolute'=>TRUE)).'"; mado_ident = "'.$vids[0].'/'.$tids[0].'"', 'inline');
+      // Add jquery_ui
+      jquery_ui_add(array('ui.sortable', 'effects.scale.'),'none');
       // Set the page title      
       $title = check_plain(implode(', ', $names));
-      drupal_set_title($title);
+      drupal_set_title('');
       // Adds a feed URL - pretty neat
       drupal_add_feed(url('taxonomy/term/'. $str_tids .'/'. $depth .'/feed'), 'RSS - '. $title);
       
@@ -53,10 +58,14 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       $breadcrumb = array_reverse($breadcrumb);
       drupal_set_breadcrumb($breadcrumb);
       
-      $output = '<div id="mado">';
+      if(user_access('mado sort')){
+        $output .= '<div class="mado_sort"><h1 id="mado-start-sort"><a>'.t('Sort this page').'</a></h1></div>';
+      }
       
-      foreach($theme as $block){
-        $output .= theme('mado_block', $block);
+      $output .= '<div id="mado">';
+      
+      foreach($theme as $id => $block){
+        $output .= theme('mado_block', $block, $id);
       }      
       return $output."</div>";
     }
@@ -67,33 +76,28 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 /**
  * These are simply provided so that they can be overridden
  */
-function theme_mado_block($block) {
-  $output = '<div';
-  if(isset($block['#css'])){
-    $output .= ' class="'.$block['#css'].'"';
-  }
-  $output .= "><div class=\"mado_block";
-  if(isset($block['#scroll']) && $block['#scroll']){
-    $output .= " mado_scroll";
-  }
-  $output .='">';
+function theme_mado_block($block, $id) {
+  $title = '&nbsp;';
+  $content = '';
   switch($block['#type']){
     case 'view':
+      
       $view = views_get_view($block['#name']);
       if($view){
+        $view_content = $view->preview($display_id, array(arg(2)));
+        // A little messy (Shit, VERY MESSY), but here we pull out the added
+        // links for "Sort" and "Add" if they have been added by the views-sort
+        // module.
+        $start_of_links = strpos($view_content, '<ul class="view_sort-links">');
+        $end_of_links = strpos($view_content, "</ul>", $start_of_links);
+        $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
+        $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);/*
+        $output .= '<ul class="mado-links">'.$list_of_links;
+        $output .= '<li>Resize</li>';
+        $output .= '</ul>';*/
         if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
-          $output .="<h1>".$view->display['default']->display_options['title']."</h1>";
+          $title = $view->display['default']->display_options['title'];
         }
-        if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
-          $keys = array_keys($view->display['default']->display_options['filters']['type']['value']);
-          if($keys[0] != 'ispecies'){
-            $output .= "<h1>".l(t('Add'), 'node/add/'.$view->display['default']->display_options['filters']['type']['value'][$keys[0]], array('query'=>array('tid'=>arg(2))))."</h1>";
-          }
-        }
-        if(isset($view->display['page_1'])){
-          $display_id = 'page_1';
-        }
-        $output .= '<div class="content">'.$view->preview($display_id, array(arg(2))).'</div></div></div>';
       } else {
         return false;
       }
@@ -105,17 +109,46 @@ function theme_mado_block($block) {
         $delta = $name_parts[1];
         $module_block = module_invoke($module,'block','view',$delta);
         if(isset($module_block['subject']) && $module_block['subject']!=''){
-          $output .= "<h1>".$module_block['subject']."</h1>";
+          $title = $module_block['subject'];
         }
-        $output .= '<div class="content">'.$module_block['content'].'</div></div></div>';
+        $content = $module_block['content'];
       } else {
         return false;
       }
+      break;
+    case 'divider':
+      $id = 'divider';
+      $block['#css'] = 'mado_block_2';
+      $content = t('Sort the blocks');
       break;
     default:
       return false;
       break;
   }
+  if (trim($content)==''){
+    return false;
+  }
+  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block"><div>
+    <div class="boxtop">
+      <div class="bc ctr"></div>
+      <div class="bc ctl"></div>
+    </div>
+    <div class="boxcontent">
+      <div class="boxtitle">
+        <h1>'.$title.'</h1>
+      </div>
+      <div class="subboxcontent">
+        <div class="mado_content'. ((isset($block['scroll']) && $block['scroll']) ? "": " mado_scroll") .'">
+          <div class="links"><ul>'.$list_of_links.'<li>Resize</li></ul></div>
+          '.$content.'
+        </div>
+      </div>
+    </div>
+    <div class="boxbtm">
+      <div class="bc cbr"></div>
+      <div class="bc cbl"></div>
+    </div>
+  </div></div>';
   // finally, give other modules an opportunity to mangle output
   module_invoke_all('mado_block_alter', $output);
   return $output;

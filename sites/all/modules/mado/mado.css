@@ -1,13 +1,6 @@
-/* Row */
-.mado_row{
- width:99%;
- border:0;
- margin:3px 0;
- padding:0;
-}
 /* Half width blocks */
 .mado_block_2{
- width:49%;
+ width:48%;
  float:left;
  margin:0;
  padding:0;
@@ -15,30 +8,63 @@
 }
 /* Full width blocks */
 .mado_block_1{
- width:98%;
+ width:96%;
  float:left;
  margin:0;
  padding:0;
  border:0;
 }
+/* Sort */
+.mado_sort {
+ position:absolute;
+ top: 5px;
+ right: 10px;
+ border: dashed 1px #aaa;
+ padding: 10px;
+}
 /* Within blocks */
 .mado_block{
- border: solid 1px black;
- margin: 0 0.5em 0.5em 0;
- overflow-y:auto;
- background-color:white;
-}
-.mado_block h1{
- background-color:black;
- color:white;
- padding:5px;
-}
-.mado_block .content{
- padding:5px;
+ /*border: solid 1px black;*/
+ margin: 0 7px 7px 0 !important;
+ padding: 0 !important;
+ overflow: auto;
+ background-color:inherit;
 }
 .mado_scroll{
  height:300px;
 }
+.mado_content{
+ margin: 0 0 0 5px;
+ padding: 10px;
+ overflow-y:auto;
+}
+/* Mado divider */
+#divider{
+ display:none;
+}
+
+/* Links */
+.mado-links{
+  display:block;
+  width:100%;
+  margin:0;
+  display:hidden;
+  text-align:right;
+  background-color:#aaa;
+  /*border-bottom: solid 1px #666;*/
+}
+.mado-links li a {
+  color:black;
+  text-decoration:underline;
+}
+.mado-links li{
+  background-image:none;
+  display:inline;
+  padding:0 5px;
+  margin:0;
+}
+
+/* Images */
 .mado_images p,.mado_images h2,.mado_images span,.mado_images hr,.mado_images .clear-block{
  display:none;
 }
@@ -46,7 +72,34 @@
  display:inline;
  float:left;
 }
-/* The following shows how we can set the blocks in a row
-.mado_red .mado_block{
- border: solid 1px red;
-}*/
+/***************************************************************
+ * CURVY BOX
+ ***************************************************************/
+.bc  {position: relative;width: 8px;height: 8px;font-size: 1px;background-repeat: no-repeat;margin-bottom: -1px;z-index: 2;line-height: 0px;}
+.ctr {float: right;background-image: url(images/ctr.gif);margin-right: -1px;margin-top: -1px;line-height: 0px;}
+.ctl {float: left;background-image: url(images/ctl.gif);margin-left: -1px;margin-top: -1px;line-height: 0px;}
+.cbr {float: right;background-image: url(images/cbr.gif);margin-right: -1px;margin-top: 1px;line-height: 0px;}
+.cbl {float: left;background-image: url(images/cbl.gif);margin-left: -1px;margin-top: 1px;line-height: 0px;}
+.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;z-index:100;}
+.subboxcontent{/*min-height: 50px;*/}
+.subboxcontent .links {
+  font-size: 80%;
+}
+.boxtitle{
+  position: relative;
+  top: -9px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px 0px 0 0px;
+  background-image: url('images/main_header_back.gif');
+}
+.boxtitle h1,.boxtitle-sticky h1{
+  font-size: 100%;
+  padding: 5px 20px;
+  margin: 0;
+  line-height: 100%;
+	color:333;
+	text-align: center;
+}

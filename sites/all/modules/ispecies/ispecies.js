@@ -2,6 +2,7 @@ var page_tid;
 
 function ispecies_callback(callback, viewname){
   var ajax_options = {
+    cache:false,
     url:callback+"/"+viewname+"/"+page_tid,
     success:function(data){
       ispecies_success(data, viewname);

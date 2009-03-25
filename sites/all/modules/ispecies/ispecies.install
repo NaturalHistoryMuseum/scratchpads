@@ -12,7 +12,7 @@ function ispecies_schema(){
     'fields' => array(
       'nid' => array('type' => 'int', 'not null' => true),
       'url' => array('type' => 'text'),
-      'type' => array('type' => 'varcahr', 'length' => 128)
+      'ispeciestype' => array('type' => 'varchar', 'length' => 128)
     ),
     'primary key' => array('nid'));
   return $tables;

@@ -19,10 +19,18 @@ function mado_menu(){
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
     'file' => 'mado.pages.inc',
+  );
+  $items['mado/save'] = array(
+    'title' => '',
+    'page callback' => 'mado_save_layout',
+    'access arguments' => array('layout mado'),
+    'type' => MENU_CALLBACK
   );  
   return $items;
 }
 
+function mado_perm(){
+}
 /**
  * Implementation of hook_theme()
  */
@@ -35,89 +43,73 @@ function mado_theme() {
 }
 
 /**
+ * Returns an array of all the possible blocks a page can have
+ *
+ */
+function mado_get_blocks(){
+  $blocks_and_views = array();
+  $views = views_get_all_views();
+  $i = 0;
+  foreach($views as $view){
+    if($view->display['default']->display_options['arguments']['tid']){
+      $blocks_and_views['view-'.$i] = array(
+        '#type' => 'view',
+        '#name' => $view->name,
+        '#scroll' => TRUE,
+        '#css' => 'mado_block_2'
+      );
+      $i++;
+    }
+  }
+  $i = 0;
+  foreach(module_implements('block') as $module){
+    $blocks = call_user_func($module.'_block','list');
+    foreach($blocks as $id => $block){
+      $blocks_and_views['block-'.$i] = array(
+        '#type' => 'block',
+        '#name' => "$module/$id",
+        '#scroll' => TRUE,
+        '#css' => 'mado_block_2'
+      );
+      $i++;
+    }
+  }
+  $blocks_and_views['divider'] = array(
+    '#type' => 'divider'
+  );
+  return $blocks_and_views;
+}
+
+/**
+ * Save the theme - ajax callback
+ */
+function mado_save_layout(){
+  $blocks = array();
+  $all_blocks = mado_get_blocks();
+  foreach($_GET['blocks'] as $block){
+    $blocks[$block] = $all_blocks[$block];
+    if($block == 'divider'){
+      break;
+    }
+  }
+  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
+  db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
+}
+
+/**
  * Get the theme that this vocabulary is set to use.  Returns false if this 
  * vocabulary should use the standard layout.
  */
-function mado_get_theme($vid){
-  
+function mado_get_theme($vid, $tid = false){
+  // FIXME - Change the following:
   if($vid!=6){return false;}
   
-  // THIS FUNCTION IS TEMPORARY, IT NEEDS FULLY WRITING WITH A WORKFLOW TO
-  // ENABLE A USER TO ALTER A THEME.
-  drupal_add_css(drupal_get_path('module','mado').'/mado.css');
-  return array(
-    array(
-      '#type' => 'block',
-      '#name' => 'citation/0',
-      '#scroll' => 1,
-      '#css' => 'mado_block_2',
-    ),      
-    array(
-      '#type' => 'view',
-      '#name' => 'taxonomy_images',
-      '#css' => 'mado_block_2 mado_images',
-      '#scroll' => 1   
-    ),
-    array(
-      '#type' => 'view',
-      '#name' => 'taxonomy_pages',
-      '#css' => 'mado_block_1'
-    ),
-    array(
-      '#type' => 'block',
-      '#name' => 'boost/status',
-      '#css' => 'mado_block_1'
-    ),
-    array(
-      '#type' => 'view',
-      '#name' => 'yahooimages',
-      '#css' => 'mado_block_2',
-      '#scroll' => 1
-    ),
-    array(
-      '#type' => 'view',
-      '#name' => 'flickr',
-      '#scroll' => 1,
-      '#css' => 'mado_block_2'
-    ),
-      /*
-    'gbif' => array(
-      'middle' => array(
-        //'#title' => ''
-        '#type' => 'view',
-        '#name' => 'gbifmap',
-        '#css' => 'mado_block_1'
-      )
-    ),*/
-    array(
-      '#type' => 'view',
-      '#name' => 'googlescholar',
-      '#css' => 'mado_block_1'
-    ),
-    array(
-      '#type' => 'view',
-      '#scroll' => 1,
-      '#name' => 'bhl',
-      '#css' => 'mado_block_1'),
-    array(
-      '#type' => 'view',
-      '#name' => 'wikipedia',
-      '#css' => 'mado_block_1'),
-    array(
-      '#type' => 'view',
-      '#name' => 'ncbi',
-      '#css' => 'mado_block_1'),
-    array(
-      '#type' => 'block',
-      '#scroll' => 1,
-      '#name' => 'tinytax/tinytax-6',
-      '#css' => 'mado_block_2'
-    ),      
-    array(
-      '#type' => 'view',
-      '#name' => 'comments_recent',
-      '#css' => 'mado_block_2',
-      '#scroll' => 1
-    )
-  );
+  // try and get the blocks
+  $blocks = db_fetch_array(db_query("SELECT blocks FROM {mado} WHERE identifier = '%s' OR identifier = '%s' ORDER BY identifier DESC", $vid, "$vid/$tid"));
+  if($blocks){
+    return unserialize(array_pop($blocks));
+  } else {
+    return mado_get_blocks();
+  }
+  return false;
 }
