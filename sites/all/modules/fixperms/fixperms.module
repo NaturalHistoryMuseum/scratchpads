@@ -1,0 +1,50 @@
+<?php
+
+// We need a single settings page to edit the defaults, and then a function
+// which can be executed manually, or on cron to apply these defaults.
+
+function fixperms_menu(){
+  $menu = array();
+  $menu['admin/settings/fixperms'] = array(
+    'title' => 'Fixperms settings',
+    'description' => 'Change the default fixperms settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('fixperms_admin_settings'),
+    'access arguments' => array('administer site configuration')  
+  );
+  return $menu;
+}
+
+/**
+ * Fixperms settings form
+ */
+function fixperms_admin_settings(){
+  // We need a table like input with four rows, and as many columns as there
+  // are roles.
+  $roles = user_roles();
+  $perms = array('create' => "Create [type] content",'edit' => "Edit [type] content",'editany'=>"Edit any [type] content",'delete'=>"Delete [type] content");
+  foreach($perms as $perm => $label){
+    foreach($roles as $role){      
+      $form['fixperms'][$perm][$role] = array(
+        '#type' => 'checkbox',
+        '#default_value'=> 0,
+        '#prefix' => '<tr><td>'.$label.'</td><td>',
+        '#suffix' => '</td>'          
+      );
+      $form['fixperms'][$perm][$role] = array(
+        '#type' => 'checkbox',
+        '#default_value'=> 0,
+        '#prefix' => '<td>',
+        '#suffix' => '</td>'
+      );
+      $form['fixperms'][$perm][$role] = array(
+        '#type' => 'checkbox',
+        '#default_value'=> 0,
+        '#prefix' => '<td>',
+        '#suffix' => '</td></tr>'
+      );
+    }
+  }
+  // isset($form['#node']->nagger[$role_id]['delete'])?$form['#node']->nagger[$role_id]['delete']:0,
+  return system_settings_form($form);
+}
