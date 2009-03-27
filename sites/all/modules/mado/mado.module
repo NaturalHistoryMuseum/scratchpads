@@ -84,16 +84,32 @@ function mado_get_blocks(){
  * Save the theme - ajax callback
  */
 function mado_save_layout(){
-  $blocks = array();
-  $all_blocks = mado_get_blocks();
-  foreach($_GET['blocks'] as $block){
-    $blocks[$block] = $all_blocks[$block];
-    if($block == 'divider'){
-      break;
+  if(isset($_GET['blocks'])){
+    $blocks = array();
+    $all_blocks = mado_get_blocks();
+    $current_blocks = mado_get_theme($_GET['identifier']);
+    foreach($_GET['blocks'] as $block){
+      if(isset($current_blocks[$block])){
+        $blocks[$block] = $current_blocks[$block];
+      } else {
+        $blocks[$block] = $all_blocks[$block];
+      }
+      if($block == 'divider'){
+        break;
+      }
     }
+    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
+    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
+  } else if (isset($_GET['resize'])) {
+    print_r($_REQUEST);
+    $class = str_replace(" mado_block", "", $_GET['class']);
+    $scroll = $_GET['scroll'];     
+    $blocks = mado_get_theme($_GET['identifier']);
+    $blocks[$_GET['resize']]['#scroll'] = $scroll;
+    $blocks[$_GET['resize']]['#css'] = $class;
+    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
+    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
   }
-  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
-  db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
 }
 
 /**

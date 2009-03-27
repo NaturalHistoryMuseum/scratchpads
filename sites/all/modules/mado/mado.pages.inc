@@ -39,11 +39,12 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_css(drupal_get_path('module','mado').'/mado.css');
       // Add the callback URL for sorting
       drupal_add_js('mado_callback_url="'.url('mado/save',array('absolute'=>TRUE)).'"; mado_ident = "'.$vids[0].'/'.$tids[0].'"', 'inline');
+      drupal_add_js('mado_finished_sorting="'.addslashes(l(t('Finished sorting'),$_GET['q'])).'"', 'inline');
       // Add jquery_ui
-      jquery_ui_add(array('ui.sortable', 'effects.scale.'),'none');
+      jquery_ui_add(array('ui.sortable'),'none');
       // Set the page title      
       $title = check_plain(implode(', ', $names));
-      drupal_set_title('');
+      drupal_set_title($title);
       // Adds a feed URL - pretty neat
       drupal_add_feed(url('taxonomy/term/'. $str_tids .'/'. $depth .'/feed'), 'RSS - '. $title);
       
@@ -89,12 +90,13 @@ function theme_mado_block($block, $id) {
         // links for "Sort" and "Add" if they have been added by the views-sort
         // module.
         $start_of_links = strpos($view_content, '<ul class="view_sort-links">');
-        $end_of_links = strpos($view_content, "</ul>", $start_of_links);
-        $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
-        $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);/*
-        $output .= '<ul class="mado-links">'.$list_of_links;
-        $output .= '<li>Resize</li>';
-        $output .= '</ul>';*/
+        if($start_of_links){
+          $end_of_links = strpos($view_content, "</ul>", $start_of_links);
+          $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
+          $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
+        } else {
+          $content = $view_content;
+        }
         if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
           $title = $view->display['default']->display_options['title'];
         }
@@ -135,11 +137,16 @@ function theme_mado_block($block, $id) {
     </div>
     <div class="boxcontent">
       <div class="boxtitle">
-        <h1>'.$title.'</h1>
-      </div>
+        <h1>'.$title.'</h1>';
+  if(user_access('mado sort')){
+    $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'"/></a></li>';
+  }
+  if($list_of_links != ''){
+    $output .= '<ul>'.$list_of_links.'</ul>';
+  }
+  $output .= '</div>
       <div class="subboxcontent">
-        <div class="mado_content'. ((isset($block['scroll']) && $block['scroll']) ? "": " mado_scroll") .'">
-          <div class="links"><ul>'.$list_of_links.'<li>Resize</li></ul></div>
+        <div class="mado_content'. ((isset($block['#scroll']) && $block['#scroll']) ? " mado_scroll": "") .'">
           '.$content.'
         </div>
       </div>

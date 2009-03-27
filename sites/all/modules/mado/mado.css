@@ -1,35 +1,23 @@
+.mado_block{
+ margin: 1px;
+ padding: 0 !important;
+ overflow: auto;
+ background-color:inherit;
+ width:96%;
+ float:left;
+}
 /* Half width blocks */
 .mado_block_2{
  width:48%;
- float:left;
- margin:0;
- padding:0;
- border:0;
-}
-/* Full width blocks */
-.mado_block_1{
- width:96%;
- float:left;
- margin:0;
- padding:0;
- border:0;
 }
 /* Sort */
 .mado_sort {
  position:absolute;
  top: 5px;
  right: 10px;
- border: dashed 1px #aaa;
  padding: 10px;
 }
 /* Within blocks */
-.mado_block{
- /*border: solid 1px black;*/
- margin: 0 7px 7px 0 !important;
- padding: 0 !important;
- overflow: auto;
- background-color:inherit;
-}
 .mado_scroll{
  height:300px;
 }
@@ -72,6 +60,12 @@
  display:inline;
  float:left;
 }
+.resize{
+	display:block;
+}
+.resize img{
+ padding-top:5px !important;
+}
 /***************************************************************
  * CURVY BOX
  ***************************************************************/
@@ -93,13 +87,30 @@
   height: auto;
   overflow: hidden;
   margin: 0px 0px 0 0px;
-  background-image: url('images/main_header_back.gif');
+  background-image: url('images/header.gif');
+}
+.boxtitle ul{
+	position:absolute;
+	right:0;
+	top:0;
+	padding:0;
+	margin:0 4px 0 0;
+}
+.boxtitle li,.boxtitle li a{
+	display:inline;
+	background-image:none;
+	padding:0;
+	margin:0;
+	margin-right:4px;
+	color:#999;
 }
 .boxtitle h1,.boxtitle-sticky h1{
-  font-size: 100%;
+	display:block;
+	float:left;
+  font-size: 110%;
+  font-weight:800;
   padding: 5px 20px;
   margin: 0;
   line-height: 100%;
 	color:333;
-	text-align: center;
 }
