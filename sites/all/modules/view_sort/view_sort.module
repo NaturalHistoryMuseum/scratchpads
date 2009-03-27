@@ -34,8 +34,10 @@ function view_sort_views_pre_render(&$view){
     )) && (
         isset($view->display['page_1']->display_options['sorts']['weight']) || 
         isset($view->display['default']->display_options['sorts']['weight'])
+    ) && (
+      user_access('view sort sort')    
     )){
-    $view->attachment_before = '<ul class="view_sort-links"><li>'.l(t("Sort"), "views-sort/popup/".$view->name."/".urlencode(json_encode($view->args)), array('attributes' => array('class'=>'thickbox')))."</li>";    
+    $view->attachment_before = '<ul class="view_sort-links"><li>'.l(t("Sort"), "views-sort/popup/".$view->name."/".urlencode(json_encode($view->args)), array('attributes' => array('class'=>'thickbox'), 'query'=>array('height'=>'600','width'=>'600')))."</li>";    
     if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
       $keys = array_keys($view->display['default']->display_options['filters']['type']['value']);
       if($keys[0] != 'ispecies'){
@@ -88,7 +90,7 @@ function views_sort_callback($viewname=false, $tid=false){
     // First we set the limit according to where the divider was
     $sort_orders = variable_get('view_sort-limits', array());
     // Split up the order variable that we've been sent
-    $order = split(" ",trim($_GET['order']));
+    $order = split(" ",trim($_POST['order']));
     // Find the divider
     $divider_position = array_search("divider", $order);
     // if the divider is at the end, we don't set it
@@ -110,14 +112,16 @@ function views_sort_callback($viewname=false, $tid=false){
         continue;      
       }
       $node = node_load(array_pop(explode("---", $item)));
-      if($set_weight_as_zero){
-        $node->node_weight = 0;
-      } else {
-        $node->sticky = 1;
-        $node->node_weight = $weight;
-        $weight ++;
+      if($node){
+        if($set_weight_as_zero){
+          $node->node_weight = 0;
+        } else {
+          $node->sticky = 1;
+          $node->node_weight = $weight;
+          $weight ++;
+        }
+        node_save($node);
       }
-      node_save($node);
     }
   } else {
     watchdog('view_sort', 'ERROR sorting views, no viewname set (Referer: '.referer_uri().') : '.print_r($_REQUEST));
@@ -177,16 +181,15 @@ function view_sort_get_items($view_name, $view_args){
     foreach($view->result as $item){
       $items[$item->nid] = array('body' => node_view(node_load($item->nid), true), 'local'=> 1);
     }
-  } else {
-    if(function_exists('ispecies_ajax_callback')){
-      if(isset($view->display['default']->display_options['filters']['ispeciestype']['value'])){
-        //echo array_pop($view->args);exit;
-        $items_temp = ispecies_get_data($view->display['default']->display_options['filters']['ispeciestype']['value'] , $view->args[0]);
-        foreach($items_temp as $item){
-          if(is_array($item) && isset($item['body'])){
-            $items[$item['page_url']] = array('body' => $item['body']);
-          } 
-        }
+  }
+  if(function_exists('ispecies_ajax_callback')){
+    if(isset($view->display['default']->display_options['filters']['ispeciestype']['value'])){
+      //echo array_pop($view->args);exit;
+      $items_temp = ispecies_get_data($view->display['default']->display_options['filters']['ispeciestype']['value'] , $view->args[0]);
+      foreach($items_temp as $item){
+        if(is_array($item) && isset($item['body'])){
+          $items[$item['page_url']] = array('body' => $item['body']);
+        } 
       }
     }
   }

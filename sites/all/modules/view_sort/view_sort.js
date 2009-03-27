@@ -15,6 +15,7 @@ function view_sort_sorted(callback, viewname, callback2){
     items += " "+$(this).attr('view-sort');
   });
   var ajax_options = {
+    type:"POST",
     url:callback+"/"+viewname+"/"+page_tid,
     success:function(data){
       ispecies_callback(callback2,viewname);
