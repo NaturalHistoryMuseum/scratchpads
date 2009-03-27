@@ -16,95 +16,61 @@ function fixperms_menu(){
 }
 
 /**
- * Fixperms settings form
+ * Implementation of hook_perm
  */
-function fixperms_admin_settings(){
-  // We need a table like input with four rows, and as many columns as there
-  // are roles.
-  $roles = user_roles();
-  $perms = array('create' => "Create [type] content",'edit own' => "Edit own [type] content",'edit any'=>"Edit any [type] content",'delete own'=>"Delete own [type] content",'delete any'=>"Delete any [type] content");
-  $form['fixperms'] = array(
-    '#tree' => TRUE
-  );
-  $current_perms = variable_get('fixperms',array());
-  $form['fixperms']['beforetable'] = array(
-    '#value' => '<table><thead><tr><th></th><th>'.implode("</th><th>",$roles).'</th></tr></thead><tbody>'
-  );
-  foreach($perms as $perm => $label){
-    $form['fixperms'][$perm]['label'] = array(
-      '#value' => '<tr><td>'.$label.'</td>',
-    );
-    foreach($roles as $rid => $role){      
-      $form['fixperms'][$perm][$rid] = array(
-        '#type' => 'checkbox',
-        '#default_value'=> isset($current_perms[$perm][$rid]) ? $current_perms[$perm][$rid] : 0,
-        '#prefix' => '<td>',
-        '#suffix' => '</td>'     
-      );
-    }
-    $form['fixperms'][$perm]['endrow'] = array(
-      '#value' => '</tr>',
-    );
-  }
-  $form['fixperms']['aftertable'] = array(
-    '#value' => '</tbody></table>'
-  );
-  $form['#submit'][] = 'fixperms_submit'; // Set 99 as this needs to execute last
-  return system_settings_form($form);
+function fixperms_perm(){
+  return array('create type content','edit own type content','edit any type content','delete own type content','delete any type content');
 }
 
+/**
+ * Implementation of hook_form_alter
+ */
+function fixperms_form_alter(&$form, $form_state, $form_id){
+  if($form_id != 'user_admin_perm'){
+    return;
+  }
+  $form['#submit'][] = 'fixperms_submit';
+}
 /**
  * Fix the perms on cron.
  */
 function fixperms_cron(){
-  fixperms_apply();
+  fixperms_submit();
 }
 
 /**
  * Receive the form, and update the perms
  */
-function fixperms_submit($form, &$form_state){
-  fixperms_apply($form_state['values']['fixperms']);  
-}
-
-/**
- * Apply the default permissions to all content types
- */
-function fixperms_apply($perms = FALSE){
-  if(!$perms){
-    $perms = variable_get('fixperms', FALSE);
+function fixperms_submit(){
+  $current_permissions = array();
+  $result = db_query("SELECT rid, perm FROM {permission}");
+  while($row = db_fetch_array($result)){
+    $current_permissions[$row['rid']] = $row['perm'].", ";
   }
-  if($perms){
-    // Get all the content types
-    $content_types = array_keys(content_types());
-    $current_permissions = array();
-    $result = db_query("SELECT rid, perm FROM {permission}");
-    while($row = db_fetch_array($result)){
-      $current_permissions[$row['rid']] = $row['perm'].", ";
-    }
-    // Foreach content type, set the perms
-    foreach($content_types as $type){
-      foreach($perms as $perm => $roles){
-        foreach($roles as $rid => $value){
-          $permission = "$perm $type content, ";
-          if($value){
-            // Make sure it's there, if not, add it
-            if(strpos($current_permissions[$rid], $permission) === FALSE){
-              $current_permissions[$rid] .= $permission;
-            }
-          } else {
-            // Remove it, if it is there.
-            if(strpos($current_permissions[$rid], $permission) !== FALSE){
-              $current_permissions[$rid] = str_replace($permission, "", $current_permissions[$rid]);
-            }          
-          }
+  $content_types = array_keys(content_types());
+  $perms = fixperms_perm();
+  foreach($current_permissions as $rid => $permission){
+    foreach($perms as $perm){
+      // If the perm is in the current_permission, then we need to set all the
+      // content type permissions, else we need to remove them.
+      if(strpos($permission,$perm) === FALSE){
+        // The string isn't in there, we need to remove all the content type 
+        foreach($content_types as $type){
+          $type = str_replace("type", $type, $perm).", ";
+          $permission = str_replace($type, "", $permission);
+        }
+      } else {
+        // String is in there, lets add all the content type values 
+        foreach($content_types as $type){
+          $type = str_replace("type", $type, $perm).", ";
+          // First remove
+          $permission = str_replace($type, "", $permission);
+          // Then add
+          $permission .= $type;
         }
       }
     }
-    // Finally remove the trailing ", " and save
-    foreach($current_permissions as $rid => $permission){
-      $permission = substr($permission, 0, -2);
-      db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", $permission, $rid);
-    }
+    // Save the permission
+    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", substr($permission,0,-2), $rid);
   }
 }
