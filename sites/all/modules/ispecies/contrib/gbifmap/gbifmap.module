@@ -17,7 +17,7 @@ function gbifmap_ajax_callback($term_name, $limit = 20){
   if ($xml_response) {    
     $response = new SimpleXMLElement ( $xml_response );    
     $item = array(
-      'body' => '<img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" />',
+      'body' => '<p style="text-align:center"><img id="gbif-map" width="360" height="180" src="http://data.gbif.org/'.$response->taxon->url.'" alt="'.$term_name.'" /></p>',
       'page_url' => 'http://data.gbif.org/species/' . $response->taxon->key
     );    
     $items[] = $item;
