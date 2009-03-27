@@ -30,7 +30,11 @@ function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
       $all_tids = _autotag_search_node($node);
       $tids_to_ignore = explode("|",$node->hideterms);      
       // Remove the ignore ones from the add ones
-      $terms = $node->taxonomy;
+      if(!isset($node->taxonomy)){
+        $terms = array();
+      } else {
+        $terms = $node->taxonomy;
+      }
       // Check to see whether or not we have objects
       $terms_are_objects = false;
       foreach($terms as $term){
