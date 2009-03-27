@@ -289,7 +289,6 @@ function citation_get_citations(){
   unset ( $_SESSION ['citation']);
   session_write_close();
   
-  watchdog('citation', print_r($_SESSION['citation'], 1));
   if (count ( $citations )) {
     $output = theme ( 'citations', $citations );
     $output .= '<form action="' . url ( 'citation/create_no_js' ) . '"><input type="button" value="' . t ( 'Create Citation' ) . '" onclick="';
