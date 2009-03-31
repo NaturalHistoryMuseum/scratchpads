@@ -10,6 +10,9 @@
  * Implementation of hook_requirements().
  */
 function jquery_ui_requirements($phase) {
+  if ($phase == 'install') {
+    return;
+  }
   $requirements = array();
   $t = get_t();
   $jquery_ui_version = 0;
