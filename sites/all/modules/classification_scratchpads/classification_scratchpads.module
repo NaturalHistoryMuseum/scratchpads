@@ -42,19 +42,6 @@ $items['classification/edit/%'] = array(
    'file path' => drupal_get_path('module', 'classification').'/includes/', 	
 );
 
-
-$items['admin/settings/classification_scratchpads'] = array(
-  'title' => 'Scratchpad classification settings',
-  'description' => 'Configure Scratchpad classification settings.',
-  'page callback' => 'drupal_get_form',
-  'page arguments' => array('classification_scratchpads_admin_settings'),
-  'access arguments' => array('administer classification scratchpads'),
-  'file' => 'classification_scratchpads.admin.inc',
-  'file path' => drupal_get_path('module', 'classification_scratchpads').'/includes/', 
-
-);
-
-
 /**
  * Callbacks
  */
