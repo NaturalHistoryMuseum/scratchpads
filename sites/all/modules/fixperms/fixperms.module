@@ -1,20 +1,4 @@
 <?php
-
-// We need a single settings page to edit the defaults, and then a function
-// which can be executed manually, or on cron to apply these defaults.
-
-function fixperms_menu(){
-  $menu = array();
-  $menu['admin/settings/fixperms'] = array(
-    'title' => 'Fixperms settings',
-    'description' => 'Change the default fixperms settings.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('fixperms_admin_settings'),
-    'access arguments' => array('administer site configuration')  
-  );
-  return $menu;
-}
-
 /**
  * Implementation of hook_perm
  */
@@ -26,10 +10,9 @@ function fixperms_perm(){
  * Implementation of hook_form_alter
  */
 function fixperms_form_alter(&$form, $form_state, $form_id){
-  if($form_id != 'user_admin_perm'){
-    return;
+  if($form_id == 'user_admin_perm'){
+    $form['#submit'][] = 'fixperms_submit';
   }
-  $form['#submit'][] = 'fixperms_submit';
 }
 /**
  * Fix the perms on cron.
