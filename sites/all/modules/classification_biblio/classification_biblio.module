@@ -1,6 +1,6 @@
 <?php
 
-DEFINE('FIELD_NAME', 'field_biblio_citation');
+DEFINE('FIELD_NAME', 'field_biblio_citation_original');
 
 /**
  * Implementation of hook_help
@@ -58,9 +58,9 @@ function classification_biblio_callback_update_citation(){
 
     $result = db_query("SELECT n.nid 
                         FROM {node} n
-                        INNER JOIN {biblio_contributor} bc ON bc.nid = n.nid 
-                        INNER JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
-                        INNER JOIN {biblio} b ON b.nid = n.nid  
+                        LEFT JOIN {biblio_contributor} bc ON bc.nid = n.nid 
+                        LEFT JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
+                        LEFT JOIN {biblio} b ON b.nid = n.nid  
                         WHERE bcd.name = '%s' AND b.biblio_year = '%s' AND n.title = '%s'
                         LIMIT 1", $citation);
 
@@ -108,9 +108,9 @@ function classification_biblio_callback_autocomplete($string = ''){
     
     $sql = "SELECT n.title, b.biblio_year AS year, bcd.name 
             FROM {node} n
-            INNER JOIN {biblio_contributor} bc ON bc.nid = n.nid 
-            INNER JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
-            INNER JOIN {biblio} b ON b.nid = n.nid
+            LEFT JOIN {biblio_contributor} bc ON bc.nid = n.nid 
+            LEFT JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
+            LEFT JOIN {biblio} b ON b.nid = n.nid
             WHERE ";
     
     if(is_numeric($string)){
@@ -199,10 +199,14 @@ function theme_classification_biblio_citation($name, $year, $title){
  
 function classification_biblio_form_alter(&$form, $form_state, $form_id) {
 
+ module_load_include('class', 'classification', '/includes/classification_functions');
+ global $names;
+ $names = new Names;
+	
  switch ($form_id){
    
    	case 'classification_edit_multiple_form':
-		case 'classification_edit_form':
+	case 'classification_edit_form':
 
     if($form['message']){
       return;
@@ -223,23 +227,23 @@ function classification_biblio_form_alter(&$form, $form_state, $form_id) {
       'setting'
     );
     
-  drupal_add_js(array(
-    'classification_biblio_edit_link' => array(
-      'href' => '/node/%nid/edit/classification/%tid', 
-      'text' => t('Edit this citation'))), 
-    'setting'
-  );
+    drupal_add_js(array(
+      'classification_biblio_edit_link' => array(
+        'href' => base_path().'/node/%nid/edit/classification/?tid=%tid', 
+        'text' => t('Edit Citation'))), 
+      'setting'
+    );
   
-  drupal_add_js(array(
-    'classification_biblio_add_link' => array(
-      'href' => '/node/add/biblio/classification/%tid',
-      'text' => t('Create a new citation for this record'))), 
+    drupal_add_js(array(
+     'classification_biblio_add_link' => array(
+       'href' => base_path().'/node/add/biblio/classification/?tid=%tid',
+       'text' => t('Add Citation'))), 
     'setting'
-  );
+    );
 
     $form['name_metadata']['bibliographic_citation'] = array(
       '#type' => 'textfield',
-      '#title' => t('Citation'),
+      '#title' => t('Original Published Description'),
       '#maxlength' => 60,
       '#autocomplete_path' => 'classification_biblio/callback/autocomplete',
       '#weight' => 8,
@@ -257,9 +261,19 @@ function classification_biblio_form_alter(&$form, $form_state, $form_id) {
 		
 		  if(arg(3) == 'classification'){ 
 		    
-		  // If user is coming from the classification editor, hide the taxa look up otherwise it'll be confusing  
-      unset($form['classification']); 
+	  // If user is coming from the classification editor, hide the taxa look up otherwise it'll be confusing  
+      unset($form['classification']);
+      unset($form['classification_tree']);
       
+      $term = taxonomy_get_term($_GET['tid']);
+      $taxon = $names->italicized_form($term->name);
+
+      $form['name'] = array(
+	    '#type' => 'markup',
+	    '#value' => '<h3>' . t('Original Description for: ') . $taxon . '</h3>',
+	    '#weight' => -20,
+	  );
+
       $form['is_classification'] = array(
         '#type' => 'hidden',
         '#value' => TRUE,
@@ -267,7 +281,7 @@ function classification_biblio_form_alter(&$form, $form_state, $form_id) {
       
       $form['tid'] = array(
         '#type' => 'hidden',
-        '#value' => arg(4),
+        '#value' => $_GET['tid'],
       );
 
 		  $form['destination'] = array(
