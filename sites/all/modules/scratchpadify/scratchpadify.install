@@ -5,5 +5,5 @@
  */
 function scratchpadify_install(){
   // Place it almost last (before Devel).
-  db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");  
+  db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");
 }

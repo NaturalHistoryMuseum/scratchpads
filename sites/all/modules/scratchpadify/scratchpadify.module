@@ -109,27 +109,33 @@ urchinTracker();
 function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
   switch ($op){
     case 'list':
-      return array(array('info'=>t('Scratchpad statistics')),array('info'=>t('Create Content')));
+      return array(array('info'=>t('Scratchpad statistics')),array('info'=>t('Create Content')),array('info'=>t('About this site')));
     case 'view':
-      if($delta == 0){
-        $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
-        $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
-        $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
-        $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
-        return array('subject'=>'Statistics','content'=>theme_item_list($items));
-      } elseif($delta == 1){
-        if(user_access('create node content')){
-          drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
-          $node_types = node_get_types();
-          $items = array();
-          foreach($node_types as $node_type => $node_type_values){
-            $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.$node_type);
+      switch($delta){
+        case 0:
+          $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
+          $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
+          $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
+          $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
+          return array('subject'=>'Statistics','content'=>theme_item_list($items));
+        case 1:
+          if(user_access('create node content')){
+            drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
+            $node_types = node_get_types();
+            $items = array();
+            foreach($node_types as $node_type => $node_type_values){
+              $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.$node_type);
+            }
+            $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
+            $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
+            ksort($items);
+            return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           }
-          $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
-          $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
-          ksort($items);
-          return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
-        }
+          break;
+        case 2:
+          $uid = array_pop(db_fetch_array(db_query("SELECT uid FROM users WHERE uid > 1 ORDER BY uid ASC LIMIT 1")));
+          $maintainer = user_load(array('uid'=>$uid));
+          return array('subject'=>'About this site','content'=>'<p>This site is moderated by <span style="text-decoration:underline">'.$maintainer->name.'</span> on behalf of the  contributors who retain copyright.</p><p>Content can be used in accordance with a <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Licence</a>.</p><p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu/">Scratcpad</a> team at the Natural History Museum, London.</p>');
       }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
@@ -139,7 +145,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           '#title' => t('Additional text'),
           '#type' => 'textfield',
           '#weight' => -9,
-          '#default_value' => variable_get('scratchpadify-stats-block-text')
+          '#default_value' => variable_get('scratchpadify-stats-block-text','')
         );
         return $form;
       }
