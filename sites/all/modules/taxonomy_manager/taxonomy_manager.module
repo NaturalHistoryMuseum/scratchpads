@@ -1525,7 +1525,8 @@ function theme_taxonomy_manager_form($form) {
   $output .= '<div id="taxonomy-term-data">';
   $output .= $term_data;
   $output .= '</div>';
-  $output .= '<div class="clear" />';
+  $output .= '<div class="clear" /></div>';
+  
   $output .= '</div>';
   
   return $output;
