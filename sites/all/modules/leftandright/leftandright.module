@@ -29,7 +29,8 @@ function leftandright_menu(){
     'title' => '',
     'description' => '',
     'page callback' => 'leftandright_rebuild_tree_page',
-    'access arguments' => array('administer site configuration')
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK
   );
   $items['admin/content/taxonomy/%'] = array(
     'title' => 'List terms',
