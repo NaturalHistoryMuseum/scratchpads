@@ -13,15 +13,6 @@ function classification_scratchpads_help($path, $arg) {
 }
 
 /**
- * Implementation of hook_perm
- */
-function classification_scratchpads_perm() {
-  return array(
-    'administer classification scratchpads', 
-  );
-}
-
-/**
  * Implementation of hook_menu
  */
 function classification_scratchpads_menu() {
