@@ -39,15 +39,15 @@ function countriesmap_node_info() {
  */
 function countriesmap_access($op, $node, $account) {
   if ($op == 'create') {
-    return user_access('create node content', $account);
+    return user_access('create countriesmap content', $account);
   }
   if ($op == 'update') {
-    if (user_access('edit any node content', $account) || (user_access('edit own node content', $account) && ($account->uid == $node->uid))) {
+    if (user_access('edit any countriesmap content', $account) || (user_access('edit own countriesmap content', $account) && ($account->uid == $node->uid))) {
       return TRUE;
     }
   }
   if ($op == 'delete') {
-    if (user_access('delete any node content', $account) || (user_access('delete own node content', $account) && ($account->uid == $node->uid))) {
+    if (user_access('delete any countriesmap content', $account) || (user_access('delete own countriesmap content', $account) && ($account->uid == $node->uid))) {
       return TRUE;
     }
   }
@@ -58,11 +58,11 @@ function countriesmap_access($op, $node, $account) {
  */
 function countriesmap_perm() {
   return array(
-    'create node content',
-    'delete own node content',
-    'delete any node content',
-    'edit own node content',
-    'edit any node content',
+    'create countriesmap content',
+    'delete own countriesmap content',
+    'delete any countriesmap content',
+    'edit own countriesmap content',
+    'edit any countriesmap content',
   );
 }
 
