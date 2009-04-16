@@ -332,7 +332,7 @@ function classification_edit_multiple_form(&$form_state){
   }
   
   // Update the jstree callback
-  drupal_add_js ( 'Drupal.settings.classification_callback_jstree = "' . base_path () . 'classification/js_tree/' . $vid . '"', 'inline' );
+  drupal_add_js ( 'Drupal.settings.classification_callback_jstree = "' . url('classification/js_tree/' . $vid ).'/";', 'inline' );
   
   global $module_path;
   $module_path = drupal_get_path ( 'module', 'classification' ) . '/';
