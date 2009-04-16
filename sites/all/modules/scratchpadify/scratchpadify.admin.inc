@@ -255,7 +255,7 @@ function scratchpadify_admin_page(){
           array(
             'localized_options' => array(),
             'href' => 'admin/content/node',
-            'description' => t('The pages/nodes of content on your site'),
+            'description' => t('List the pages/nodes of content on your Scratchpad, and perform bulk operartions'),
             'title' => t('List')
           ),
           array(
@@ -281,15 +281,21 @@ function scratchpadify_admin_page(){
       )
     ),
     array(
-      'title' => t('Scratchpad user management'),
+      'title' => t('User management'),
       'position' => 'left',
       'description' => t(" Manage your Scratchpad's users, groups and access to features"),
       'content' => theme('admin_block_content', array(
           array(
             'localized_options' => array(),
             'href' => 'admin/user/user',
-            'description' => t('List, add, and edit users'),
-            'title' => t('Users')
+            'description' => t('List users, and perform bulk operations'),
+            'title' => t('List')
+          ),
+          array(
+            'localized_options' => array(),
+            'href' => 'admin/user/user',
+            'description' => t('Add a new user'),
+            'title' => t('Add')
           ),
           array(
             'localized_options' => array(),
@@ -307,15 +313,15 @@ function scratchpadify_admin_page(){
       'content' => theme('admin_block_content', array(
           array(
             'localized_options' => array(),
-            'href' => 'admin/content/taxonomy/add/vocabulary',
-            'description' => t("Add a new Vocabulary to your Scratchpad"),
-            'title' => t('Add')
-          ),
-          array(
-            'localized_options' => array(),
             'href' => 'admin/content/taxonomy',
             'description' => t("List the vocabularies on your Scratchpad"),
             'title' => t('List')
+          ),
+          array(
+            'localized_options' => array(),
+            'href' => 'admin/content/taxonomy/add/vocabulary',
+            'description' => t("Add a new Vocabulary to your Scratchpad"),
+            'title' => t('Add')
           ),
           array(
             'localized_options' => array(),

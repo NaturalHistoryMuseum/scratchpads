@@ -31,6 +31,43 @@ function scratchpadify_menu(){
     'file' => 'scratchpadify.admin.inc',
     'type' => MENU_NORMAL_ITEM
   );
+  return $items;
+}
+
+function scratchpadify_menu_alter(&$items){
+  $items['admin/settings/uploads']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/admin']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/build/modules']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/clean-urls']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/clone']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/error-reporting']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/file-system']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/uploads']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/gmap_location']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/globalredirect']['access arguments'] = 'SCRATCHPADIFY';  
+  $items['admin/settings/hashcash']['access arguments'] = 'SCRATCHPADIFY';  
+  $items['admin/settings/image-toolkit']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/image']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/image/image_gallery']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/lightbox2']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/location']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/logging']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/logging/syslog']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/mollom']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/performance']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/robotstxt']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/tabs']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/thickbox']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/weight']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/jquery_update']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/site-maintenance']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/og/og_access']['access arguments'] = 'SCRATCHPADIFY';
+  // All the print ones
+  foreach($items as $item => $value){
+    if(substr($item,0,20) == 'admin/settings/print'){
+      $items[$item]['access arguments'] = 'SCRATCHPADIFY';
+    }
+  }
   $items['node'] = array(
     'title' => 'Content',
     'page callback' => 'scratchpadify_node_page_default',
@@ -44,7 +81,52 @@ function scratchpadify_menu(){
     'type' => MENU_CALLBACK,
     'file' => 'scratchpadify.admin.inc'
   );
-  return $items;
+}
+
+function scratchpadify_form_alter($form, $form_state, $form_id){
+  //print_r($form_id);
+  // Prevent displaying of admin user on user list.
+  if($form_id == 'user_admin_account'){
+    $form_parts = array('status','name','roles','member_for','last_access','operations');
+    foreach($form_parts as $form_part){
+      unset($form[$form_part][1]);
+    }
+    unset($form['accounts']['#options'][1]);
+  }
+  // Prevent editing admin user
+  else if($form_id == 'user_profile_form'){
+    if($form['#uid'] == 1){
+      drupal_set_message(t('You can not edit the admin user'),'error');
+      if(isset($_GET['destination'])){
+        drupal_goto($_GET['destination']);
+      } else {
+        drupal_goto(referer_uri());
+      }      
+    }
+  }
+  // Following prevents editing/deleting of hidden fields
+  else if($form_id == 'profile_field_delete' || $form_id == 'profile_field_form'){
+    if(isset($form['fid']['#value']) && is_numeric($form['fid']['#value'])){
+      $name = array_pop(db_fetch_array(db_query("SELECT name FROM {profile_fields} WHERE fid = %d", $form['fid']['#value'])));
+      $hidden_fields = variable_get('scratchpad_profile_fields', array());
+      if(in_array($name, $hidden_fields)){
+        drupal_set_message(t('You can not edit or delete standard profile fields'),'error');
+        drupal_goto(referer_uri());
+      }
+    }
+  }
+  // Prevents viewing of hidden fields
+  else if($form_id == 'profile_admin_overview'){
+    $hidden_fields = variable_get('scratchpad_profile_fields', array());
+    foreach($form as $key => $values){
+      if(isset($values['name']['#value'])){
+        if(in_array($values['name']['#value'], $hidden_fields)){
+          $form[$key]['edit']['#value'] = "<strike>".t('edit')."</strike>";
+          $form[$key]['delete']['#value'] = "<strike>".t('delete')."</strike>";
+        }
+      }
+    }
+  }
 }
 
 function scratchpadify_node_page_default(){
