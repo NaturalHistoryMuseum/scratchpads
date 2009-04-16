@@ -8,11 +8,6 @@ function classification_administration_form(&$form_state) {
   drupal_add_css($module_path .'css/classification.css');
 
   $form['#cache'] = FALSE;
-
-  $form['title'] = array(
-    '#type' => 'markup',
-    '#value' => '<h2>' . t('Content Settings') . '</h2>',
-  );
   
   $form['content_types'] = array(
     '#type' => 'fieldset',
@@ -95,7 +90,7 @@ function classification_administration_form(&$form_state) {
 
   $form['names_display_viewer'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Frontpage Classification Browser'),
+    '#title' => t('Classification Browser on the Frontpage and on Taxon Pages'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -120,34 +115,32 @@ function classification_administration_form(&$form_state) {
     '#default_value' => $default_canonicals,
   );
 
-/*
-
-Relationships configuration commented out because we don't yet know how to deal with these
-There are instances in the editor where relationship types are hard-coded
-
-  $form['relationships'] = array(
+  $form['names_display_elements'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Name Relationship Options'),
+    '#title' => t('Classification Browser on Data Entry Forms'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
 
-  $sql = db_query("SELECT rtid, name FROM {term_relation_types} ORDER BY rtid");
-  while ($row = db_fetch_object($sql)) {
-     $_relationships .= $row->name . "<br>";
-  }
-  
-  $form['relationships']['relationships_list'] = array(
-    '#type' => 'markup',
-    '#value' => '<p>' . $_relationships . '</p>',
+  $default_elements = variable_get('classification_elements_names',1);
+  $options_elements = array(0 => t('Show all names (vernaculars, synonyms, <em>etc.</em>)'), 1 => t('Show valid names and synonyms (hide vernaculars)'), 2 => t('Only show valid names'));
+  $default_elements_canonicals = variable_get('classification_elements_canonicals',0);
+  $options_elements_canonicals = array(1 => t('Yes'), 0 => t('No'));
+
+  $form['names_display_elements']['display_options_elements'] = array(
+    '#type' => 'radios',
+    '#title' => t('Visibility of names'),
+    '#options' => $options_elements,
+    '#default_value' => $default_elements,
   );
-  
-  $form['relationships']['relationships_add'] = array(
-    '#title' => t('One relationship per line'),
-    '#type' => 'textarea',
-    '#disabled' => TRUE,
+
+  $form['names_display_elements']['display_canonicals_elements'] = array(
+    '#type' => 'radios',
+    '#title' => t('Convert names to canonical versions?'),
+    '#description' => t('Canonical names are versions of names without the authority information.'),
+    '#options' => $options_elements_canonicals,
+    '#default_value' => $default_elements_canonicals,
   );
-*/
 
   $form['submit'] = array(
   	'#type' => 'submit',
@@ -168,24 +161,18 @@ function classification_administration_form_submit($form, &$form_state) {
 		  variable_set('classification_viewer_names',$form_state['values']['display_options_viewer']);
 		  variable_set('classification_viewer_canonicals',$form_state['values']['display_canonicals']);
 		  variable_set('classification_autocomplete_size',$form_state['values']['autocomplete_size']);
-/*
-      Commented out here until the above is resolved
-
-      $relationships = explode("\n",$form_state['values']['relationships_list']);
-      for ($i=0;$i<=count($relationships);$i++) {
-      	$value = str_replace("\r","",trim($relationships[$i]));
-      	db_query("INSERT INTO {term_relation_types} (name,namespace,description) VALUES ('%s', ' ', ' ')",$value);
-      }
-*/
-      db_query("DELETE FROM {classification_node_types}");
-      $node_types = node_get_types('names');
+          variable_set('classification_elements_names',$form_state['values']['display_options_elements']);
+          variable_set('classification_elements_canonicals',$form_state['values']['display_canonicals_elements']);
       
-      foreach ($node_types as $key => $node) {
-      	$node_form = $form_state['values'][$key];
-      	if($node_form['option'] != 0) {
-      		db_query("INSERT INTO {classification_node_types} (type,select_option,weight,required) VALUES ('%s',%d,%d,%d)",$key,$node_form['option'],$node_form['weight'], $node_form['required']);
-      	}
-      }
+          db_query("DELETE FROM {classification_node_types}");
+          $node_types = node_get_types('names');
+      
+          foreach ($node_types as $key => $node) {
+      	    $node_form = $form_state['values'][$key];
+      	    if($node_form['option'] != 0) {
+      		  db_query("INSERT INTO {classification_node_types} (type,select_option,weight,required) VALUES ('%s',%d,%d,%d)",$key,$node_form['option'],$node_form['weight'], $node_form['required']);
+      	    }
+          }
       
 		  drupal_set_message(t('Configuration options have been saved.'),'status');
       break;

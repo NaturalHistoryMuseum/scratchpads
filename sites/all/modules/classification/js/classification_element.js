@@ -35,16 +35,16 @@
 			TREE = new tree_component();
 			var vid = Drupal.settings['classification_vid']['vid'];
 			var nid = Drupal.settings['nid'];
-			var _url = (!nid) ? false : "/classification/js_tree_checked/" + vid + "/" + nid;
+			var _url = (!nid) ? false : Drupal.settings.basePath + "classification/js_tree_checked/" + vid + "/" + nid;
 			var ancestors = Drupal.settings['ancestry'];
 			var checked = Drupal.settings['checked'];
 			TREE.init($("#classification_tree_viewer"), {
-				data    : { type : "json", async : true, url : "/classification/js_tree_viewer/" + vid + "/", json : false },
+				data    : { type : "json", async : true, url : Drupal.settings.classification_callback_jstree_elements + vid + "/", json : false },
 				dflt    : false,
 				ancestry: ancestors, 
 				checked : { url : _url, data : checked },
 				root    : 0,
-				path	: "/sites/all/modules/classification/jsTree/",
+				path	: Drupal.settings.classification_module_path + "/jsTree/",
 				ui		: {dots : true, rtl : false, animation : 10, hover_mode : true},
                 lang    : {new_node : "Taxon", loading : "&nbsp;&nbsp;&nbsp;&nbsp;"},
 				rules		: {

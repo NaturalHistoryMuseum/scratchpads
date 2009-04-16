@@ -1,6 +1,7 @@
 <?php
 
 require_once("classification_functions.class");
+require_once("classification.help.inc");
 global $names;
 $names = new Names;
 
@@ -19,7 +20,7 @@ $names = new Names;
  * Placed as is in a folder called jsTree within this classification module along with some modifications
  * see comments within tree_component.js
  */
-function classification_edit_form(&$form_state) {
+function classification_edit_form(&$form_state,$tid='') {
 
   $vid = classification_get_vid('Taxa');
 
@@ -55,9 +56,14 @@ function classification_edit_form(&$form_state) {
   drupal_add_js($module_path .'js/jquery.jdMenu/jquery.bgiframe.js');
   drupal_add_js($module_path .'js/jquery.jdMenu/jquery.jdMenu.js');
   drupal_add_js($module_path .'js/jquery.vcenter.js');
+  drupal_add_js($module_path .'js/jquery.scrollTo.js');
   
   drupal_add_js($module_path . 'js/classification_editing.js');
   drupal_add_js($module_path .'js/classification.js');
+
+  if($tid) {
+    drupal_add_js(array('classification_default' => '#n' . $tid), 'setting');	
+  }
   
   $form['status_bar'] = array(
     '#type' => 'markup',
@@ -125,7 +131,7 @@ function classification_edit_form(&$form_state) {
   $form['tabs_opener'] = array(
      '#type' => 'markup',
      '#value' => ' ',
-     '#prefix' => '<div class="tree_wrapper"><div id="tabs-wrapper"><ul class="tabs primary"><li class="active"><a href="#" onclick="javascript:EDIT.tab_selector(1);return false;">Name Data</a></li><li><a href="#" onclick="javascript:EDIT.tab_selector(2);return false;">Other Classifications</a></li><li><a href="#" onclick="javascript:EDIT.tab_selector(3);return false;">Settings</a></li></ul></div>',
+     '#prefix' => '<div class="tree_wrapper"><div id="tabs-wrapper" class="classification_tabs"><ul class="tabs primary classification_tabs"><li class="active"><a href="#" onclick="javascript:EDIT.tab_selector(1);return false;">Name Data</a></li><li><a href="#" onclick="javascript:EDIT.tab_selector(2);return false;">Other Classifications</a></li><li><a href="#" onclick="javascript:EDIT.tab_selector(3);return false;">Settings</a></li></ul></div>',
   );
 
   $form['alternate_wrapper_opener'] = array(
@@ -189,9 +195,9 @@ function classification_metadata_form() {
 
   $action_menu = '
     <ul id="metadata_actions" class="metadata_actions">
-      <li class="classification_images">' . l(t('Images'), 'pages/tid') . ' <span></span></li>
-      <li class="classification_references">' . l(t('References'), 'pages/tid') . ' <span></span></li>
-      <li class="classification_view">' . l(t('Description'),'pages/tid') . '<span></span></li>
+      <li class="classification_images">' . l(t('Images'), '') . ' <span></span></li>
+      <li class="classification_references">' . l(t('References'), '') . ' <span></span></li>
+      <li class="classification_view">' . l(t('Description'),'') . '<span></span></li>
     </ul>';
       
   $form['name_metadata']['action_menu'] = array(
@@ -227,9 +233,15 @@ function classification_metadata_form() {
     '#description' => t('Leave unselected if not applicable'),
   );
 
-  $form['name_metadata']['description'] = array(
+  $form['name_metadata']['notes'] = array(
+	'#type' => 'fieldset',
+	'#title' => t('Taxonomic Notes'),
+	'#collapsible' => TRUE,
+	'#collapsed' => TRUE,
+  );
+
+  $form['name_metadata']['notes']['description'] = array(
     '#type' => 'textarea',
-    '#title' => t('Taxonomic Notes'),
     '#cols' => 30,
   );
 
@@ -286,8 +298,8 @@ function classification_additional_trees_form() {
   $classifications = taxonomy_get_vocabularies();
   $classification_list[0] = 'None';
   	foreach($classifications as $classification) {
-  		 if($classification->name !== 'Taxa' && $classification->name !== 'Taxon Description Chapters' && $classification->name !== 'Orphan Chapters' && $classification->name !== 'Forums') {
-  		 	 $classification_list['' . $classification->vid . ''] = $classification->name;
+  		 if (preg_match("/alternate_/i", $classification->name)) {
+  		 	 $classification_list['' . $classification->vid . ''] = str_replace("alternate_","",check_plain($classification->name));
   	   }
     }
 
@@ -314,16 +326,31 @@ function classification_additional_trees_form() {
  * Get options for the settings form
  */
 function classification_allowed_options($field) {
-	$vid = classification_get_vid('Taxa');
+  if ($field != "rank")
+  {
+  $vid = classification_get_vid('Taxa');
   $result = db_fetch_object(db_query("SELECT settings FROM {taxonomy_enhancer_fields} WHERE fid = '%s' and vid = %d", 'field_' . strtolower($field), $vid));
-  if($result) {
+  if($result) 
+    {
     $settings = drupal_unpack($result,'settings');
     $allowed = $settings->allowed_values;
-    foreach ($allowed as $value) {
-  	  $_allowed .= $value . "\n";
     }
-    return trim($_allowed);
   }
+  else
+  {
+  $result = db_query("SELECT value FROM {taxonomy_enhancer_value_text} WHERE fid = 'field_rank'");
+  $all_ranks = array();
+  while($row = db_fetch_object($result))
+	{
+	$all_ranks[] = $row->value;
+	}
+  $allowed = array_unique($all_ranks);
+  }
+  foreach ($allowed as $value) 
+          {
+  	  $_allowed .= $value . "\n";
+          }
+return trim($_allowed);
 }
 
 /**
@@ -351,6 +378,18 @@ function classification_settings_form() {
     '#title' => t('One taxonomic rank per line (in order of appearance)'),
     '#cols' => 30,
     '#required' => TRUE,
+  );
+
+ $form['settings']['show_rank_help'] = array(
+    '#prefix' => '',
+    '#type' => 'fieldset',
+    '#title' => t('Recommended rank names (in hierarchical order) '),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings']['show_rank_help']['show_rank_table'] = array(
+    '#value' => '<p>'.classification_rank_table(classification_rank_list()).'</p>',
   );
 
   $form['settings']['verns'] = array(
@@ -792,10 +831,28 @@ function classification_get_parent(){
 }
 
 /**
+ * Callback to get parent tids for use in autoexpanding the editor
+ */
+function classification_get_parents($tid){
+  $current->tid = $tid;
+  $ancestry = array();
+  while ($parents = taxonomy_get_parents($current->tid)) {
+     $current = array_shift($parents);
+     $ancestry[] = 'n'.$current->tid;
+  }
+  $ancestry = array_reverse($ancestry);
+  $ancestry = implode(",", $ancestry);
+
+  drupal_json(array('ancestry' => $ancestry));
+}
+
+/**
  * Callback for inline editing of name
  */
 function classification_edit_name() {
-	$form = array(
+  global $user;
+
+  $form = array(
     '#post' => $_POST,
   );
   
@@ -809,8 +866,11 @@ function classification_edit_name() {
     $value_db = $term_array->name;
   
     if($value !== $value_db) {
-       db_query(db_rewrite_sql("UPDATE {term_data} SET name = '%s' WHERE tid = %d"), $value, $tid);
-       
+	   //perform the edit
+       db_query("UPDATE {term_data} SET name = '%s' WHERE tid = %d", $value, $tid);
+	   //log the edit
+	   $action = ($value_db == 'Taxon') ? $value . ' added' : $value_db . ' changed to ' . $value;
+	   db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)", $user->uid, $action, time());
        drupal_json(array('status' => 'edited', 'message' => t('Name successfully edited')));
     }
     else {
@@ -922,10 +982,12 @@ function classification_edit_name() {
  * Callback to save name metadata
  */
 function classification_update_metadata() {
+	global $user;
+	
 	$form = array(
-    '#post' => $_POST,
-    '#programmed' => FALSE,
-  );
+      '#post' => $_POST,
+      '#programmed' => FALSE,
+    );
   
 	$tid = $_REQUEST['tid'];
 	$parent_tid = $_REQUEST['parent'];
@@ -945,7 +1007,7 @@ function classification_update_metadata() {
  		db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
  		
  		db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_rank','%s',%d)",$tid,$rank,0);
- 		drupal_json(array('status' => 'failed', 'data' => '', 'message' => t('You have to set the rank to "None" if you want to modify the relationship.')));
+ 		drupal_json(array('status' => 'failed', 'data' => '', 'message' => t('You have to set the rank to "taxonomic child" if you want to modify the relationship.')));
  	}
 
   //if a relationship and no rank, there are several possibilities
@@ -982,6 +1044,14 @@ function classification_update_metadata() {
  		     }
  		     //Now we add the relation metadata
  		     db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,%d)",$relation_id,$relation_type);
+
+             //log the adjustment
+             $name_array = taxonomy_get_term($tid);
+             $name = $name_array->name;
+             $relationship = db_fetch_object(db_query("SELECT trt.name FROM {term_relation_types} trt INNER JOIN {term_relation_has_type} trht ON (trt.rtid = trht.rtid) INNER JOIN {term_relation} tr ON (trht.trid=tr.trid) WHERE tr.tid1 = %d", $tid));
+             $action = $name . ' changed to ' . $relationship->name;
+             db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)",$user->uid,$action,time());
+
  		     drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Nomenclature successfully updated')));
     }
   
@@ -989,10 +1059,21 @@ function classification_update_metadata() {
   
   //Just assign the rank
   elseif($rank && !$relation_type) {
-  	//First, we remove the rank to accommodate a new name and also remove anything in term_relation in case this is elevated from synonym
-  	db_query("DELETE FROM {term_relation} WHERE tid1 = %d AND tid2 = %d",$tid,$parent_tid);
+	    //First, we learn what the rank used to be for logging purposes
+	    $old_rank = db_result(db_query("SELECT value FROM {taxonomy_enhancer_value_text} WHERE tid=%d",$tid));
+  	    //Next, we remove the rank to accommodate a new name and also remove anything in term_relation in case this is elevated from synonym
+  	    db_query("DELETE FROM {term_relation} WHERE tid1 = %d AND tid2 = %d",$tid,$parent_tid);
  		db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
  		db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value,delta) VALUES (%d,'field_rank','%s',%d)",$tid,$rank,0);
+
+        //log the adjustment if necessary
+        if($rank !== $old_rank) {
+          $name_array = taxonomy_get_term($tid);
+          $name = $name_array->name;
+          $action = $name . ' changed to rank ' . $rank;
+          db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)",$user->uid,$action,time());
+        }
+
  		drupal_json(array('status' => 'edited', 'data' => '', 'message' => t('Nomenclature successfully updated')));
   }
   else {
@@ -1035,11 +1116,10 @@ function classification_update_settings() {
 }
 
 function classification_update_lists($fid,$title,$list) {
-	$vid = classification_get_vid('Taxa');
-	
- 	$list_arr = explode("\n",trim($list));
- 	foreach ($list_arr as $list) {
-		 $opt[] = $list;
+  $vid = classification_get_vid('Taxa');
+  $list_arr = explode("\n",trim($list));
+  foreach ($list_arr as $list) {
+    $opt[] = $list;
   }
   
   $field = array(
@@ -1062,8 +1142,8 @@ function classification_update_lists($fid,$title,$list) {
  * Callback to add a new name
  */
 function classification_add_name() {
-	$form_state = array('submitted' => FALSE);
-
+  global $user;
+  $form_state = array('submitted' => FALSE);
   $form = array(
     '#post' => $_POST,
     '#programmed' => FALSE,
@@ -1076,7 +1156,7 @@ function classification_add_name() {
   if($parent_tid) {
   	$result = db_fetch_object(db_query("SELECT max(tid) AS tid FROM {term_data}"));
     $tid = $result->tid + 1;
-  
+    //perform the insertion in various tables
     db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$value);
     db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$parent_tid);
     db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
@@ -1094,12 +1174,12 @@ function classification_add_name() {
  * Callback to delete a name
  */
 function classification_delete_name() {
-	$form = array(
+  global $user;
+  $form = array(
     '#post' => $_POST,
   );
   
   $tid = $_REQUEST['tid'];
-  
   $form_state = array('submitted' => FALSE);
   
   if($tid) {
@@ -1112,6 +1192,7 @@ function classification_delete_name() {
         while ($term = db_fetch_object($res)) {
           db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
         }
+        //delete all the children terms
         taxonomy_del_term($branch->tid);
       }
     }
@@ -1121,7 +1202,17 @@ function classification_delete_name() {
     while ($term = db_fetch_object($res)) {
     	db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
     }
+    
+    //create the action taken for logging
+    $name_array = taxonomy_get_term($tid);
+    $name = $name_array->name;
+    $action = $name . ' and its children deleted';
+
+    //delete the term
     taxonomy_del_term($tid);
+
+    //log the action
+    db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)", $user->uid,$action,time());
      
     drupal_json(array('status' => 'edited', 'message' => t('Name and its children (if any) successfully deleted')));
   }
@@ -1134,7 +1225,9 @@ function classification_delete_name() {
  * Callback to move a name during drag/drop and during cut/paste
  */
 function classification_move_name() {
-	$form = array(
+  global $user;
+
+  $form = array(
     '#post' => $_POST,
   );
   
@@ -1142,12 +1235,24 @@ function classification_move_name() {
   $new_parent = $_REQUEST['new_parent'];
   
   $form_state = array('submitted' => FALSE);
+
+  //get the old parent for logging later
+  $old_parent_array = db_fetch_object(db_query(db_rewrite_sql('SELECT t.name FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid = %d'), $child));
+  $old_parent = $old_parent_array->name;
   
   if($child) {
      db_query("DELETE FROM {term_hierarchy} WHERE tid = %d", $child);
      db_query("INSERT INTO {term_hierarchy} (parent, tid) VALUES (%d, %d)", $new_parent, $child);
      // Update relationships if any
      db_query("UPDATE {term_relation} SET tid2 = %d WHERE tid1 = %d",$new_parent,$child);
+
+     //get the new parent & the child term names for logging purposes
+     $child_name_array = taxonomy_get_term($child);
+     $child_name = $child_name_array->name;
+     $new_parent_array = taxonomy_get_term($new_parent);
+     $new_parent_name = $new_parent_array->name;
+     $action = $child_name . ' moved from ' . $old_parent . ' to ' . $new_parent_name;
+     db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)",$user->uid,$action,time());
 
      drupal_json(array('status' => 'moved', 'message' => t('Name successfully moved')));
   }
@@ -1160,28 +1265,37 @@ function classification_move_name() {
  * Callback to move a name during drag/drop from source tree into destination tree
  */
 function classification_copy_name_alternate() {
-	$form = array(
+  global $user;
+  $form = array(
     '#post' => $_POST,
   );
   
   $child = str_replace("_copy","",$_REQUEST['child']);
-  $new_parent = $_REQUEST['new_parent'];
+  $new_parent_prev = $_REQUEST['new_parent'];
+  $new_parent = db_fetch_object(db_query(db_rewrite_sql("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d"), $new_parent_prev)); // thii is a hack, maybe it is better to adjust JSTree instead
   
   $form_state = array('submitted' => FALSE);
   
-  if($child && $new_parent) {
-     db_query("DELETE FROM {term_hierarchy} WHERE tid = %d", $child);
-     db_query("INSERT INTO {term_hierarchy} (parent, tid) VALUES (%d, %d)", $new_parent, $child);
-     // Update relationships if any
-     db_query("UPDATE {term_relation} SET tid2 = %d WHERE tid1 = %d",$new_parent,$child);
-     
-     $vid = classification_get_vid('Taxa');
-     db_query("UPDATE {term_data} SET vid = %d WHERE tid = %d",$vid,$child);
+    if($child && $new_parent) {
+     $vid_old = db_fetch_object(db_query("SELECT vid FROM term_data WHERE tid = %d LIMIT 1", $child));
+     $vid_new = classification_get_vid('Taxa');
+     $children = taxonomy_get_tree($vid_old->vid, $child);
 
-     $children = taxonomy_get_children($child);
+     db_query("DELETE FROM {term_hierarchy} WHERE tid = %d", $child);
+     db_query("INSERT INTO {term_hierarchy} (parent, tid) VALUES (%d, %d)", $new_parent->tid, $child);
+     // Update relationships if any
+     db_query("UPDATE {term_relation} SET tid2 = %d WHERE tid1 = %d",$new_parent->tid,$child);
+
+     db_query("UPDATE {term_data} SET vid = %d WHERE tid = %d", $vid_new, $child);
      foreach ($children as $offspring) {
-       db_query("UPDATE {term_data} SET vid = %d WHERE tid = %d",$vid,$offspring->tid);
-     }
+       db_query("UPDATE {term_data} SET vid = %d WHERE tid = %d", $vid_new, $offspring->tid);
+       }
+
+     //log the activity
+     $name_array = taxonomy_get_term($child);
+     $name = $name_array->name;
+     $action = $name . ' and all its children (if any) inserted from an alternate classification';
+     db_query("INSERT INTO {classification_log} (uid,action,changed) VALUES (%d,'%s',%d)", $user->uid,$action,time());
 
      drupal_json(array('status' => 'moved', 'message' => t('Name successfully copied into your classification')));
   }

@@ -1,11 +1,16 @@
 	$(function() {
 			TREE = new tree_component();
 			EDIT = new classification_edit();
+			var form_build_id = $("input[name=form_build_id]").val(); 
 			TREE.init($("#classification_tree"), {
-				data		: { type : "json", async : true, url : Drupal.settings.classification_callback_jstree+'/', json : false },
-				dflt		: false,
-				path		: Drupal.settings.classification_module_path+"/jsTree/",
-				cookies     : { prefix: "tree", expires: 7, path: "/" },
+				data		: { type : "json", async : true, url : Drupal.settings.classification_callback_jstree, json : false },
+				dflt		: {
+					value   : Drupal.settings['classification_default'],
+					url     : Drupal.settings.classification_callback_base_url + "/get_parents/",
+					form_id : form_build_id
+				},
+				path		: Drupal.settings.classification_module_path + "/jsTree/",
+				cookies     : { prefix: "tree", expires: 7, path: "/classification" },
 				ui		    : {dots : true, rtl : false, animation : 10, hover_mode : true},
                 lang        : {new_node : "Taxon", loading : "&nbsp;&nbsp;&nbsp;&nbsp;"},
 				rules		: {
@@ -28,17 +33,17 @@
                 			beforecreate    : function(NODE,REF_NODE,TYPE,TREE_OBJ) { 
                 				     EDIT.add_name(REF_NODE);
                 				     return true;
-                		  },
+                		    },
                 			beforerename    : function(NODE,LANG,TREE_OBJ) { return true; },
                 			beforedelete    : function(NODE,TREE_OBJ) { 
                 			       var del = EDIT.delete_name(NODE);
                 			       if(del) { return true; }
                 			}, 
-					            beforechange	  : function(NODE,TREE_OBJ) { },
+					        beforechange	: function(NODE,TREE_OBJ) { },
                 			onchange        : function(NODE,TREE_OBJ) { },
                 			onrename        : function(NODE,LANG,TREE_OBJ) {
                 				     EDIT.edit_name(NODE);
-                		  },
+                		    },
                 			onmove          : function(NODE,REF_NODE,TYPE,TREE_OBJ) {
                 				     EDIT.move_name(NODE,REF_NODE,TYPE);
                 			},
@@ -50,10 +55,9 @@
                 			error           : function(TEXT, TREE_OBJ) { },
                 			// onclk callback added by David Shorthouse
                 			onclk           : function(NODE, TREE_OBJ) {
-                				     var form_build_id = $("input[name=form_build_id]").val();
                 				     EDIT.get_metadata(NODE,form_build_id);
                 				     EDIT.tab_selector(1);
-                		  },
+                		    },
                 			ondblclk        : function(NODE, TREE_OBJ) {
 						                 TREE_OBJ.rename.call(TREE_OBJ,NODE);
                 			},

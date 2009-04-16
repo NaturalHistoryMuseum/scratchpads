@@ -26,7 +26,7 @@ function classification_export_form(){
 
   $form['title'] = array(
     '#type' => 'markup',
-    '#value' => '<h2>' . t('Export') . '</h2>' . $message,
+    '#value' => $message,
    );
     
   $form['file_export'] = array(
@@ -108,8 +108,10 @@ function classification_export_form_submit($form, &$form_state)
 		ob_end_clean();
 //		header('Content-type: text/xml');
 //		header('Content-Disposition: attachment; filename=taxonomyexport.xml');
+		$constant_name = classification_get_lifedesk_name().'_last_classificationexport.xml.gz';
 		$currname = date("Ymd_Gi_").'classificationexport.xml.gz';
 		file_save_data(gzencode($out), 'classification/'.$currname, FILE_EXISTS_REPLACE);
+		file_save_data(gzencode($out), 'classification/'.$constant_name, FILE_EXISTS_REPLACE);
 		drupal_set_message(t('Classification export successfully produced.'), 'status');
 		drupal_goto('classification/export');
 //		header('Content-type: x-gzip');
@@ -252,4 +254,12 @@ WHERE
     echo $prefix."</TaxonConcept>\n";
     _classification_recurse_export_tcs_2($row['tid'], $vid, $prefix."  ");
  }
+}
+
+function classification_get_lifedesk_name()
+{
+	global $db_url;
+	$url = parse_url($db_url);
+	$lifedesk_name = substr($url['path'], 1);
+	return $lifedesk_name;
 }

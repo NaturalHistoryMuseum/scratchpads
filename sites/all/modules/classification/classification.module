@@ -33,6 +33,18 @@ function classification_perm() {
 }
 
 /**
+ * Implementation of hook_init to add some js
+ */
+function classification_init() {
+  $module_path = base_path().drupal_get_path('module', 'classification');
+  drupal_add_js(array('classification_module_path' => $module_path), 'setting');
+  drupal_add_js(array('classification_callback_base_url' => base_path().'classification'), 'setting');
+  drupal_add_js(array('classification_callback_jstree' => base_path().'classification/js_tree/'), 'setting');
+  drupal_add_js(array('classification_callback_jstree_viewer' => base_path().'classification/js_tree_viewer/'), 'setting');
+  drupal_add_js(array('classification_callback_jstree_elements' => base_path().'classification/js_tree_elements/'), 'setting');
+}
+
+/**
  * Implementation of hook_theme()
  */
 function classification_theme() {
@@ -49,20 +61,10 @@ function classification_theme() {
     'classification_import_message' => array( 
       'arguments' => array(), 
     ),
+    'classification_logs_form' => array(
+      'arguments' => array('form' => NULL),
+    ),
   );
-}
-
-/**
- * Implementation of hook_init
- * Add some jquery settings to help locate module & callbacks
- */
-function classification_init() {
-
-	$module_path = base_path().drupal_get_path('module', 'classification');
-	drupal_add_js(array('classification_module_path' => $module_path), 'setting');
-	drupal_add_js(array('classification_callback_base_url' => base_path().'classification'), 'setting');
-  drupal_add_js(array('classification_callback_jstree' => base_path().'classification/js_tree/'), 'setting');
-  
 }
 
 /**
@@ -626,27 +628,18 @@ function classification_menu() {
       'page callback' => 'drupal_get_form',
       'page arguments' => array('classification_import_form'),
       'access arguments' => array('import classification'),
-      'type' => MENU_NORMAL_ITEM,
+      'type' => MENU_LOCAL_TASK,
       'weight' => -1,
       'file' => 'includes/classification.import.inc',
     );
-    
-    $items['classification/import_message'] = array(
-  	  'title' => t('Import Message'),
-  	  'page callback' => 'theme',
-  	  'page arguments' => array('classification_import_message'),
-  	  'type' => MENU_CALLBACK,
-  	  'access arguments' => array('import classification'),
-  	  'file' => 'includes/classification.import.inc',
-  	);
-    
+
     $items['classification/edit'] = array(
        'title' => t('Edit'),
        'description' => t('Edit your site\'s classification, assign taxonomic ranks, maintain name relationships, <em>etc.</em>.'),
        'page callback' => 'drupal_get_form',
-       'page arguments' => array('classification_edit_form'),
+       'page arguments' => array('classification_edit_form',2),
        'access arguments' => array('edit classification'),
-       'type' => MENU_NORMAL_ITEM,
+       'type' => MENU_LOCAL_TASK,
        'weight' => 0,
        'file' => 'includes/classification.edit.inc',
     );
@@ -657,7 +650,7 @@ function classification_menu() {
        'page callback' => 'drupal_get_form',
        'page arguments' => array('classification_export_form'),
        'access arguments' => array('export classification'),
-       'type' => MENU_NORMAL_ITEM,
+       'type' => MENU_LOCAL_TASK,
        'weight' => 1,
        'file' => 'includes/classification.export.inc',
     );
@@ -668,7 +661,7 @@ function classification_menu() {
       'page callback' => 'drupal_get_form',
       'page arguments' => array('classification_administration_form'),
       'access arguments' => array('settings for classification'),
-      'type' => MENU_NORMAL_ITEM,
+      'type' => MENU_LOCAL_TASK,
       'weight' => 2,
       'file' => 'includes/classification.settings.inc',
     );
@@ -679,18 +672,36 @@ function classification_menu() {
       'page callback' => 'drupal_get_form',
       'page arguments' => array('classification_manage'),
       'access arguments' => array('create classification'),
-      'type' => MENU_NORMAL_ITEM,
+      'type' => MENU_LOCAL_TASK,
       'weight' => 3,
       'file' => 'includes/classification.manage.inc',
     );
-    
+
+    $items['classification/logs'] = array(
+      'title' => t('Activity Logs'),
+      'description' => t('View the activity in the classification editor performed by users with appropriate permissions.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('classification_logs_form'),
+      'access arguments' => array('access classification pages'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 4,
+      'file' => 'includes/classification.logs.inc',
+    );
+
+    $items['classification/logs/rss'] = array(
+      'page callback' => 'classificataion_logs_rss',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.logs.inc',
+    );
+  
     $items['classification/help'] = array(
       'title' => t('Help'),
       'description' => t('Instructions to help you work with the Classification functions.'),
       'page callback' => 'classification_help_pages',
       'access arguments' => array('access classification pages'),
-      'type' => MENU_NORMAL_ITEM,
-      'weight' => 4,
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 5,
       'file' => 'includes/classification.help.inc',
     );
     
@@ -744,7 +755,16 @@ function classification_menu() {
       'access arguments' => array('import classification'),
       'file' => 'includes/classification.import.inc',
     );
-    
+
+    $items['classification/import_message'] = array(
+      'title' => t('Import Message'),
+      'page callback' => 'theme',
+      'page arguments' => array('classification_import_message'),
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('import classification'),
+      'file' => 'includes/classification.import.inc',
+    );
+
     $items['classification/delete_classification'] = array(
       'title' => t('Delete Classfication'),
       'page callback' => 'classification_delete_classification',
@@ -801,12 +821,20 @@ function classification_menu() {
       'file' => 'includes/classification.viewer.inc',
     );
 
+    $items['classification/js_tree_elements'] = array(
+      'title' => t('Classification tree callback'),
+      'page callback' => 'classification_js_tree',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.elements.inc',
+    );
+
     $items['classification/js_tree_checked'] = array(
       'title' => t('Classification tree callback'),
       'page callback' => 'classification_js_tree_checked',
       'access arguments' => array('access content'),
       'type' => MENU_CALLBACK,
-      'file' => 'includes/classification.viewer.inc',
+      'file' => 'includes/classification.elements.inc',
      );
 
      $items['classification/get_metadata'] = array(
@@ -824,6 +852,14 @@ function classification_menu() {
       'type' => MENU_CALLBACK,
       'file' => 'includes/classification.edit.inc',
     );
+
+    $items['classification/get_parents'] = array(
+      'title' => t('Classification Parents List'),
+      'page callback' => 'classification_get_parents',
+      'access arguments' => array('edit classification'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/classification.edit.inc',
+     );
 
      $items['classification/get_synonyms'] = array(
       'title' => t('Classification Synomnym Search'),

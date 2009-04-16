@@ -26,7 +26,10 @@ function classification_edit() {
     },
     get_metadata: function(NODE,FORM_ID) {
     	var tid = this.get_id(NODE);
-    	$.post(Drupal.settings.classification_callback_base_url+"/get_metadata/", { "tid" : tid, "form_build_id" : FORM_ID }, function(data) {EDIT.build_metadata(data);}, "json");
+    	$.post(Drupal.settings.classification_callback_base_url + "/get_metadata/", { "tid" : tid, "form_build_id" : FORM_ID }, function(data) {EDIT.build_metadata(data);}, "json");
+    },
+    get_metadata_alternate: function(tid,FORM_ID) {
+	    $.post(Drupal.settings.classification_callback_base_url + "/get_metadata/", { "tid" : tid, "form_build_id" : FORM_ID }, function(data) {EDIT.build_metadata(data);}, "json");
     },
     check_vern: function(val) {
     	if(val==9) {
@@ -47,10 +50,10 @@ function classification_edit() {
         $('#classification_tree_' + vid).show();
     	TREE[vid] = new tree_component();
 		TREE[vid].init($("#classification_tree_" + vid), {
-			  data		: { type : "json", async : true, url : Drupal.settings.classification_callback_base_url+"/js_tree2/" + vid + "/", json : false },
+			  data		: { type : "json", async : true, url : Drupal.settings.classification_callback_base_url + "/js_tree2/" + vid + "/", json : false },
 			  dflt		: false,
-			  path		: Drupal.settings.classification_module_path+"/jsTree/",
-			  cookies   : { prefix: "tree_" + vid, expires: 7, path: "/" },
+			  path		: Drupal.settings.classification_module_path + "/jsTree/",
+			  cookies   : { prefix: "tree_" + vid, expires: 7, path: "/classification" },
 			  ui		: {dots : true, rtl : false, animation : 10, hover_mode : true},
               lang      : {new_node : "Taxon", loading : "&nbsp;&nbsp;&nbsp;&nbsp;"},
 			  rules		: {
@@ -104,27 +107,27 @@ function classification_edit() {
     	var vern_lang = $('#edit-vern-lang option:selected').val();
     	var form_build_id = $("input[name=form_build_id]").val();
     	if(tid) {
-    	   $.post(Drupal.settings.classification_callback_base_url+"/update_metadata/", { "tid" : tid, "parent" : parent_tid, "rank" : rank, "description" : desc, "relation_id" : relation_id, "relation_type" : relation_type, "vern_lang" : vern_lang }, function(data) {EDIT.display_message(data);}, "json");
+    	   $.post(Drupal.settings.classification_callback_base_url + "/update_metadata/", { "tid" : tid, "parent" : parent_tid, "rank" : rank, "description" : desc, "relation_id" : relation_id, "relation_type" : relation_type, "vern_lang" : vern_lang }, function(data) {EDIT.display_message(data);}, "json");
     	   if( parseInt(relation_type) >= 1 || parseInt(relation_id) > 0 ) {
     		    TREE.refresh();
     	   }
-    	   $.post(Drupal.settings.classification_callback_base_url+"/get_metadata/", { "tid" : tid, "form_build_id" : form_build_id }, function(data) {EDIT.build_metadata(data);}, "json");
+    	   $.post(Drupal.settings.classification_callback_base_url + "/get_metadata/", { "tid" : tid, "form_build_id" : form_build_id }, function(data) {EDIT.build_metadata(data);}, "json");
     	}
     },
   	edit_name: function(NODE) {
-  		var tid = this.get_id(NODE);
+  	  var tid = this.get_id(NODE);
       var newname = this.get_content(NODE);
       var form_build_id = $("input[name=form_build_id]").val();
-      $.post(Drupal.settings.classification_callback_base_url+"/edit_name/", { "tid" : tid, "value" : newname }, function(data) {EDIT.display_message(data);}, "json");
+      $.post(Drupal.settings.classification_callback_base_url + "/edit_name/", { "tid" : tid, "value" : newname }, function(data) {EDIT.display_message(data);}, "json");
       this.get_metadata(NODE,form_build_id);
     },
     adjust_id: function(content) {
-    	var new_node_id = "n" + content.maxtid;
-    	return new_node_id;
+      var new_node_id = "n" + content.maxtid;
+      return new_node_id;
     },
     add_name: function(REF_NODE) {
-    	var parent_tid = this.get_id(REF_NODE);
-      $.post(Drupal.settings.classification_callback_base_url+"/add_name/", { "parent_tid" : parent_tid }, function(data) {EDIT.display_message(data); EDIT.update_tid(REF_NODE.id,data.tid,data.parent_name);}, "json");
+      var parent_tid = this.get_id(REF_NODE);
+      $.post(Drupal.settings.classification_callback_base_url + "/add_name/", { "parent_tid" : parent_tid }, function(data) {EDIT.display_message(data); EDIT.update_tid(REF_NODE.id,data.tid,data.parent_name);}, "json");
     },
     adjust_name: function() {
     	var name = $('#input_name').val();
@@ -146,7 +149,7 @@ function classification_edit() {
     	var tid = this.get_id(NODE);
     	var name = this.get_content(NODE);
     	if(confirm("Are you sure you want to delete:\n\n" + name + " \n\nAND all of its children?\n\nYou may have content associated with the identifiers behind these names.")) {
-    	  $.post(Drupal.settings.classification_callback_base_url+"/delete_name/", {"tid" : tid }, function(data) {EDIT.display_message(data);}, "json");
+    	  $.post(Drupal.settings.classification_callback_base_url + "/delete_name/", {"tid" : tid }, function(data) {EDIT.display_message(data);}, "json");
     	  TREE.get_next();
     	  $('#edit-vern-lang-wrapper').hide();
     	  $('#edit-tid').val('');
@@ -168,33 +171,33 @@ function classification_edit() {
     	switch(TYPE) {
     		case "after":
     		   //must use parent of REF_NODE.id as new parent, so we need another callback to get it & then perform the move
-    		   $.post(Drupal.settings.classification_callback_base_url+"/get_parent/", {"child" : orig, "child_parent" : dest}, function(data) {EDIT.move_name_2(data);}, "json");
+    		   $.post(Drupal.settings.classification_callback_base_url + "/get_parent/", {"child" : orig, "child_parent" : dest}, function(data) {EDIT.move_name_2(data);}, "json");
     	     break;
     	   case "before":
     	     //must use parent of REF_NODE.id as new parent, so we need another callback to get it and then perform the move
-    	     $.post(Drupal.settings.classification_callback_base_url+"/get_parent/", {"child" : orig, "child_parent" : dest}, function(data) {EDIT.move_name_2(data);}, "json");
+    	     $.post(Drupal.settings.classification_callback_base_url + "/get_parent/", {"child" : orig, "child_parent" : dest}, function(data) {EDIT.move_name_2(data);}, "json");
     	     break;
     	   case "inside":
     	     //may use REF_NODE.id as new parent
-    	     $.post(Drupal.settings.classification_callback_base_url+"/move_name/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
+    	     $.post(Drupal.settings.classification_callback_base_url + "/move_name/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
     	     break;
     	}
     },
     move_name_2: function(content) {
     	var orig = content.child;
     	var dest = content.dest;
-    	$.post(Drupal.settings.classification_callback_base_url+"/move_name/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
+    	$.post(Drupal.settings.classification_callback_base_url + "/move_name/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
     },
     copy_name_alternate: function(NODE,REF_NODE) {
     	var orig = this.get_id(NODE);
     	var dest = this.get_id(REF_NODE);
-    	$.post(Drupal.settings.classification_callback_base_url+"/copy_name_alternate/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
+    	$.post(Drupal.settings.classification_callback_base_url + "/copy_name_alternate/", {"child" : orig, "new_parent" : dest }, function(data) {EDIT.display_message(data);}, "json");
     },
     update_settings: function() {
     	var ranks = $('#edit-ranks-list').val();
     	var verns = $('#edit-vern-list').val();
     	var display_options = $("input[@name='display_options_editor']:checked").val();
-    	$.post(Drupal.settings.classification_callback_base_url+"/update_settings/", { "ranks_list" : ranks, "vern_list" : verns, "display_options_editor" : display_options }, function(data) {EDIT.display_message(data);}, "json");
+    	$.post(Drupal.settings.classification_callback_base_url + "/update_settings/", { "ranks_list" : ranks, "vern_list" : verns, "display_options_editor" : display_options }, function(data) {EDIT.display_message(data);}, "json");
     	TREE.refresh();
     },
     display_message: function(content) {
@@ -288,7 +291,7 @@ function classification_edit() {
     	 
     	 // media items
     	 var $metadata = $('#metadata_actions li');
-         $("#metadata_actions li").children("a").attr("href","/pages/" + tid);	 
+         $metadata.children("a").attr("href",Drupal.settings.basePath + "pages/" + tid);	 
 
     	 if (image_count > 0) {
     	 	$metadata.eq(0).removeClass('classification_images');
@@ -320,8 +323,8 @@ function classification_edit() {
     	 } 	 
 	  },
     tab_selector: function(tab) {
-        $('#tabs-wrapper ul li:nth-child(' + tab + ')').addClass('active');
-        $('#tabs-wrapper ul li:not(:nth-child(' + tab + '))').removeClass('active');
+        $('.classification_tabs ul li:nth-child(' + tab + ')').addClass('active');
+        $('.classification_tabs ul li:not(:nth-child(' + tab + '))').removeClass('active');
         $('#alternate_wrapper div.alternate_content:nth-child(' + tab + ')').show();
         $('#alternate_wrapper div.alternate_content:not(:nth-child(' + tab + '))').hide();
     }
@@ -330,7 +333,7 @@ function classification_edit() {
 
 $(document).ready(function() {
 	var menu = $('#metadata_actions');
-		$(menu).find('A').mouseover( function() {
+	  $(menu).find('A').mouseover( function() {
 	  $(menu).find('LI.hover').removeClass('hover');
 	  $(this).parent().addClass('hover');
 	  }).mouseout( function() {

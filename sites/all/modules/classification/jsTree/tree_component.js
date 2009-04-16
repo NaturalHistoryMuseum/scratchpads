@@ -29,7 +29,11 @@ function tree_component () {
 				url		: false,		// FALSE or STRING - url to document to be used (async or not)
 				json	: false			// FALSE or OBJECT if type is JSON and async is false - the tree dump as json
 			},
-			dflt		: false,		// FALSE or STRING
+			dflt		: {
+				value   : false,        // FALSE or STRING
+				url     : false,        // FALSE or STRING -url for ancestry to expand
+				form_id : false         // FALSE or STRING
+			},
 			ancestry    : false,        // FALSE or STRING
 			languages	: [],			// ARRAY of string values (which will be used as CSS classes - si they must be valid)
 			path		: false,		// FALSE or STRING (if false - will be autodetected)
@@ -191,10 +195,18 @@ function tree_component () {
 			if(this.locked) return this.error("LOCKED");
 			var _this = this;
 			// SAVE SELECTED
-			this.settings.dflt = (this.selected) ? "#" + this.selected.attr("id") : this.settings.dflt;
-			if(this.settings.cookies) {
+			this.settings.dflt.value = (this.selected) ? "#" + this.selected.attr("id") : this.settings.dflt.value;
+			if (this.settings.dflt.url && Drupal.settings['classification_default']) {
+              this.settings.dflt.value = Drupal.settings['classification_default'];
+            }
+            if(this.settings.cookies && !Drupal.settings['classification_default']) {
 				var str = $.cookie(this.settings.cookies.prefix + '_selected');
-				if(str) this.settings.dflt = "#" + str;
+				if(str) {
+					this.settings.dflt.value = "#" + str;
+				    var form_id = (this.settings.dflt.form_id) ? this.settings.dflt.form_id : '';
+				    EDIT.get_metadata_alternate(this.settings.dflt.value.replace("#n",""),form_id);
+	                EDIT.tab_selector(1);
+	            }
 			}
 			if(obj && this.settings.data.async) {
 				this.opened = Array();
@@ -206,6 +218,23 @@ function tree_component () {
 			}
 
 			this.opened = Array();
+/**************************************************************************
+   Added by D. Shorthouse to expand nodes when a query parameter is passed
+**************************************************************************/
+            if (this.settings.dflt.url && Drupal.settings['classification_default']) {
+              tid = this.settings.dflt.value.replace('#n','');
+              $.getJSON(this.settings.dflt.url + tid, function (data) {
+                if(data.ancestry) {
+                  var str = data.ancestry;
+                  str = str.split(",");
+                  _this.opened = str;
+	              var form_id = (_this.settings.dflt.form_id) ? _this.settings.dflt.form_id : '';
+	              EDIT.get_metadata_alternate(tid,form_id);
+	              EDIT.tab_selector(1);
+                }
+              });
+            }
+/************************************************************/
 			if(this.settings.cookies) {
 				var str = $.cookie(this.settings.cookies.prefix + '_open');
 				if(str && str.length)	str = str.split(",");
@@ -712,17 +741,17 @@ function tree_component () {
 					this.select_branch("#" + tmp[i].attr("id"), true);
 				}
 			}
-			else if(this.settings.dflt && $(this.settings.dflt).size() == 1) {
-				this.selected		= $(this.settings.dflt);
+			else if(this.settings.dflt.value && $(this.settings.dflt.value).size() == 1) {
+				this.selected		= $(this.settings.dflt.value);
 				this.select_branch(this.selected);
 /***********************************************************************
 	Added by D. Shorthouse
 ***********************************************************************/
-				if(this.settings.ancestry && this.settings.dflt) {
+				if(this.settings.ancestry || this.settings.dflt.url && this.settings.dflt.value) {
 				  this.container.scrollTo( this.selected,1000,{offset:-100} ).scrollTo( this.selected,500,{axis:'x'} );
 				}
 /**********************************************************************/
-				this.settings.dflt	= false;
+				this.settings.dflt.value	= false;
 			}
 			this.settings.callback.onload.call(null, _this);
 		},
@@ -1231,6 +1260,7 @@ function tree_component () {
 		},
 		set_cookie : function (type) {
 			if(this.settings.cookies === false) return false;
+			if(this.settings.dflt.url && this.settings.dflt.value && Drupal.settings['classification_default']) return false;
 			switch(type) {
 				case "selected":
 					var val = this.selected ? this.selected.attr("id") : false;

@@ -26,15 +26,15 @@ function classification_import_form(&$form_state) {
   
   $form['title'] = array(
     '#type' => 'markup',
-    '#value' => '<h2>' . t('Import') . '</h2>' . $message,
+    '#value' => $message,
    );
 
   $vocabs = taxonomy_get_vocabularies();
   
   $opt[''] = '--Choose--';
   foreach($vocabs as $voc) {
-  	if($voc->name !== 'Taxon Description Chapters' && $voc->name !== 'Orphan Chapters' && $voc->name !== 'Forums' && $voc->name !== 'Taxa') {
-  		$opt[$voc->vid] = $voc->name;
+  	if (preg_match("/alternate_/i", $voc->name)) {
+  		$opt[$voc->vid] = str_replace("alternate_","",check_plain($voc->name));
   	}
   	elseif ($voc->name == 'Taxa') {
   		$opt[$voc->vid] = variable_get('site_name','Taxa') . ' classification';
@@ -164,12 +164,10 @@ function classification_import_form(&$form_state) {
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
 
 /*
-
 $form['delete'] = array( // Debug only!
     '#type' => 'submit',
     '#value' => t('Delete'),
   );
-  
 */
 
 return $form;
@@ -347,8 +345,6 @@ function classification_import_classification() {
     $url = 'http://services.eol.org/lifedesk/service.php?function=details_tcs&id=' . $tid;
     classification_import_tcs_init($url,$vid,$tot_count);
   }
-  
-  
 }
  
 /**
@@ -412,17 +408,12 @@ function classification_import_tcs_init($url,$voc,$tot_count) {
    sleep(3);
 
    classification_import_tcs_loop($url,'full',$id);
-
-   // Need to create the enhanced field definitions
-
    classification_create_enhanced_field($vid,'field_rank','Rank','options');
    classification_create_enhanced_field($vid,'field_vernacular_language','Vernacular Language','options');
 
    // Clear the counter table after a short sleep
    sleep(5);
    db_query("DROP TABLE {" . $temp_table . "}");
-
-   
 }
 
 /**
@@ -469,13 +460,10 @@ function classification_create_enhanced_field($vid,$fid,$title,$field_type){
    );
    $field['settings']['allowed_values'] = $opt;
    $field['settings']['options_type'] = 'select';
-   
    if(count($opt) > 0) {
    	  db_query(db_rewrite_sql("UPDATE {taxonomy_enhancer_fields} SET settings = '%s' WHERE vid = %d AND fid = '%s'"),serialize($field['settings']),$vid,$fid);
    }
 }
-
-
 
 /**
  *  Recursion function for import of names from a TCS web service
@@ -618,9 +606,10 @@ function classification_import_names($form,$form_state) {
 * File import function
 */
 function classification_import_file($form, &$form_state) {
+  set_time_limit(180);
   if ($form_state['values']['vid'] == 0)
   {
-    form_set_error('vid',t('Please select a Vocabulary'));
+    form_set_error('vid',t('Please select a vocabulary for classification'));
   }
   if ($form_state['values']['url']=="")
   {
@@ -637,16 +626,18 @@ function classification_import_file($form, &$form_state) {
 		fclose($fd);
 		if(!$fd)
 		{
-			form_set_error('data', t('Vocabulary import failed: file %filename cannot be read.', array('%filename' => $file->filename)));      
+			form_set_error('data', t('Classification import failed: file %filename cannot be read.', array('%filename' => $file->filename)));      
 		}
 		else
 		{
 			classification_import_parse($text, $form_state['values']['vid'], $form_state['values']['import_format']);
+			$currname = date("Ymd_Gi_").'classificationimport.txt.gz';
+			file_save_data(gzencode($text), 'classification/temp/'.$currname, FILE_EXISTS_REPLACE);
 		}
 	}
 	else
 	{
-		form_set_error('data', t('Vocabulary import failed: file was not uploaded.'));
+		form_set_error('data', t('Classification import failed: file was not uploaded.'));
 	}
   }
 }
@@ -729,7 +720,7 @@ if($import_format==0){
         if (trim($lines[$i])==""){
           break;
         }
-        $numbers_of_tabs[]=count(split("\t",$lines[$i]))-1;
+        $numbers_of_tabs[]=count(split("\t", $lines[$i]))-1;
       }
       // Check if they're all the same (add together, divide by number of them, if equal
       // to all of them, then they're the same.
@@ -761,28 +752,28 @@ class2	phylum1
       // Fill out the term_data first, filling out an array name=>parent_name
       // name=>number
       // which can then be converted into numbers.
-      $import_message=t("Imported using Parent-child format");
+      $import_message=t("Imported using Parent Child format");
       $parents = array();
       $term_id = array();
       foreach($lines as $line){
         if (trim($line)=="")
           break;
-        $line_parts = split("\t",$line);
+        $line_parts = split("\t", trim($line));
         // Remove '"' if at start or end of part
-        for($i=0;$i<count($line_parts);$i++){
+        for($i = 0; $i < count($line_parts); $i++){
           $line_parts[$i] = trim($line_parts[$i]);
-          if(substr($line_parts[$i],0,1)=='"')
-            $line_parts[$i]=substr($line_parts[$i],1,strlen($line_parts[$i])-2);
+          if(substr($line_parts[$i], 0, 1) == '"')
+            $line_parts[$i] = substr($line_parts[$i], 1, strlen($line_parts[$i])-2);
         }
         
         $name = $line_parts[0];
         $parent = $line_parts[1];
         $description = (isset($line_parts[2])) ? $line_parts[2] : '';
 
-	$synonyms = (isset($line_parts[3])) ? split("|",$line_parts[3]) : $synonyms=array();
+	$synonyms = (isset($line_parts[3])) ? split("\|",$line_parts[3]) : $synonyms=array();
       	$sequence_p = $sequence;
 	foreach($synonyms as $synonym){
-		if ($synonym_data!="") $synonym_data.=",";
+		if ($synonym_data != "") $synonym_data.= ",";
 		$synonym_name = trim($synonym, "\"\t\n\r .");
 		$synonym_data .= '('.$sequence_p.',\''.addslashes($synonym_name).'\')';
 	// Here starts the term_relation addition
@@ -791,18 +782,18 @@ class2	phylum1
 		if ($synonym_name != "") $synonym_term_data .= "(".$sequence.",".$vid.",'".addslashes($synonym_name)."','',0)";
 		if ($synonym_relation != "") $synonym_relation .=",";
 		$synonym_relation .= '('.$sequence.','.($sequence_p).')';
-		if ($synonym_tids != "") $synonym_tids .=" OR tid1=";
-		$synonym_tids .= $sequence;
+		if ($synonym_tids != "") $synonym_tids.= " OR tid1=";
+		$synonym_tids.= $sequence;
 		$sequence++;
 	// Here ends the term_relation addition
       	}
-	
+
       	if ($term_data !="") $term_data .=",";
       	$term_data .= "(".$sequence_p.",".$vid.",'".addslashes($name)."','".addslashes($description)."',0)";
       	$parents[$name]=$parent;
       	$term_id[$name]=$sequence_p;
       	$sequence++;
-      }
+			}
       // We should now have all the term_data SQL created, and know the IDs for all
       // of the names, we can now create the hierachy SQL.
       $names = array_keys($parents);
@@ -814,10 +805,10 @@ class2	phylum1
         if ($parent_id=="")
           $parent_id="0";
         $term_hierarchy .= '('.$term_id[$name].','.$parent_id.')';
-      }
+				}
     }
     elseif($import_format==2){
-      $import_message=t("Imported using tabbed hierarchy format");
+      $import_message=t("Imported using Tabbed List format");
       // File is in the format:
       /*
 kingdom1;descr1
@@ -831,10 +822,10 @@ kingdom1;descr1
       foreach ($lines as $line){
       	if (trim($line)=="")
       		break;
-      	$line_parts = split(";",$line);
+      	$line_parts = split(";", rtrim($line));
       	$name = $line_parts[0];
         $reference = (isset($line_parts[1])) ? $line_parts[1] : '';
-        $synonyms = (isset($line_parts[2])) ? split("|",$line_parts[2]) : array();
+        $synonyms = (isset($line_parts[2])) ? split("\|", $line_parts[2]) : array();
       	// Count the number of tabs before the name.  There should be no tabs within the name, whilst
       	// all tabs after the name are removed.
       	$name = rtrim($name);
@@ -846,7 +837,7 @@ kingdom1;descr1
       	
       	$sequence_p = $sequence;
 	foreach($synonyms as $synonym){
-		if ($synonym_data!="") $synonym_data.=",";
+		if ($synonym_data != "") $synonym_data.= ",";
 		$synonym_name = trim($synonym, "\"\t\n\r .");
 		$synonym_data .= '('.$sequence_p.',\''.addslashes($synonym_name).'\')';
 	// Here starts the term_relation addition
@@ -866,9 +857,9 @@ kingdom1;descr1
 
 	// Set this as a parent item, wipe all parent items with numbers *LESS* than this (easiest way is to just
       	// copy over the ones below to a new array)
-      	if ($rank>0){		
+      	if ($rank > 0){		
       		$temp_array=array();
-      		for($i=0;$i<$rank;$i++){
+      		for($i = 0; $i < $rank; $i++){
       			if(isset($parents[$i]))
       				$temp_array[$i]=$parents[$i];
       		}
@@ -898,9 +889,9 @@ kingdom1	phylum1	class1	order1	order	descr1	syn1|syn2
 kingdom1	phylum1	class1	order2	order		syn3|syn4
 kingdom1	phylum1	class2	order3	order	descr3	syn5
 */
-      $import_message=t("Imported using full hierarchy format");
+      $import_message=t("Imported using Full Hierarchy format");
       $first_line = array_shift($lines);
-      $first_line_parts = split("\t",$first_line);
+      $first_line_parts = split("\t", trim($first_line));
       $number_of_ranks = 0;
       $line_parts_index = array();
       $i=0;
@@ -917,10 +908,10 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
     	foreach ($lines as $line){
         if (trim($line)!="")
 	  {
-          $line_parts = split("\t",$line);
+          $line_parts = split("\t", trim($line));
           $taxon_parts = array();
-          for($i=0;$i<$number_of_ranks;$i++){
-            if(!in_array(trim($line_parts[$i]),$names) && trim($line_parts[$i]!="")){
+          for($i=0; $i < $number_of_ranks; $i++){
+            if(!in_array(trim($line_parts[$i]), $names) && trim($line_parts[$i] != "")){
 		$name = trim($line_parts[$i]);
 		$names[$sequence] = $name;
 		$sequence_p = $sequence;
@@ -928,7 +919,7 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 			{
 			$field_rank = $line_parts[$line_parts_index['rank']];
 			$reference = $line_parts[$line_parts_index['description']];
-			$synonyms = split("|",$line_parts[$line_parts_index['synonyms']]);
+			$synonyms = split("\|", $line_parts[$line_parts_index['synonyms']]);
 			if (!empty($synonyms[0])) foreach($synonyms as $synonym)
 				{
 				if ($synonym_data != "") $synonym_data .=",";
@@ -951,16 +942,24 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 		$term_data .= "(".$sequence_p.",".$vid.",'".addslashes($name)."','".addslashes(trim($reference))."',0)";
 		
 		//field_rank_data, let synonyms do not have rank
-		if ($field_rank_data !="") $field_rank_data .=",";
+		if ($field_rank_data != "") $field_rank_data .=",";
 		$field_rank_data .= "(".$sequence_p.",'field_rank','".addslashes(trim($field_rank))."')";
 		
 		// term_hierarchy
 		if ($term_hierarchy !="") $term_hierarchy .=",";
           	if ($i>0)
 		{
-          		// Add to hierarchy
+          		// Add to hierarchy, allows to skip one (only one!) parent
           		$parent = trim($line_parts[$i-1]);
-          		$parent_id = array_search($parent, $names);
+			if ($parent != "")
+				{
+				$parent_id = array_search($parent, $names);
+				}
+			else
+				{
+				$parent_up = trim($line_parts[$i-2]);
+				$parent_id = array_search($parent_up, $names);
+				}
 			$term_hierarchy .= '('.$sequence_p.','.$parent_id.')';
           	}
           	else 
@@ -991,9 +990,9 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 	$field_rank_data = "INSERT INTO {taxonomy_enhancer_value_text} (`tid`,`fid`,`value`) VALUES ".$field_rank_data;
     }
 
-	db_query($term_data);
-	db_query($term_hierarchy);
-	if ($synonym_data !="")
+	$data_success = db_query($term_data);
+	$hierarchy_success = db_query($term_hierarchy);
+	if ($synonym_data != "" and $data_success and $hierarchy_success)
 	{
 		//db_query($synonym_data);  // We stop pupulating the term_synonym table
 		// Here starts the term_relation addition
@@ -1012,7 +1011,7 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
 		db_query($synonym_trids);
 		// Here ends the term_relation addition
 	}
-	if ($field_rank_data !="")
+	if ($field_rank_data !="" and $data_success and $hierarchy_success)
 	{
 		$field_rank_data = db_query($field_rank_data);
 	}
@@ -1022,38 +1021,26 @@ kingdom1	phylum1	class2	order3	order	descr3	syn5
     return true;
   }
 
-  function theme_classification_import_message(){
-
-  	$vid = $_REQUEST['vid'];
-  	$tot_count = $_REQUEST['tot_count'];
-    $status = $_REQUEST['status'];
+function theme_classification_import_message(){
+  $vid = $_REQUEST['vid'];
+  $tot_count = $_REQUEST['tot_count'];
+  $status = $_REQUEST['status'];
     
-  	$json = array(
-  		'message' => '<div class="messages status">',
-  	);
+  $json = array(
+    'message' => '<div class="messages status">',
+  );
 
-  	switch ($status){
-
-  		case 'fail':
-
-  			$json['message'] .= t('Import complete.');
-
-  		break;
-
-  		case 'success':
-
-  			$json['message'] .= t('Import completed in a flash (or is <i>almost</i> done).');
-
-  		break;
-
-  	}
-
-  	$json['message'] .= ' ';
-  	$json['message'] .= l('View and Edit', 'classification/edit');
-  	$json['message'] .= ' your classification.</div>';
-
-  	return drupal_json($json);
-
+  switch ($status){
+    case 'fail':
+      $json['message'] .= t('Import complete.');
+      break;
+  	case 'success':
+  	  $json['message'] .= t('Import completed in a flash (or is <i>almost</i> done).');
+  	  break;
   }
+  $json['message'] .= ' ';
+  $json['message'] .= l('View and Edit', 'classification/edit');
+  $json['message'] .= ' your classification.</div>';
 
-
+  return drupal_json($json);
+}

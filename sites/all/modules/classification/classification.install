@@ -118,7 +118,38 @@ function classification_schema() {
     ),
     'primary key' => array('cid','type'),
   );
-  
+
+  $schema['classification_log'] = array(
+    'fields' => array(
+	  'lid' => array(
+		'type' => 'serial',
+		'unsigned' => TRUE,
+		'not null' => TRUE,
+		'description' => t('Primary Key: the id of the logging table'),
+	  ),
+      'uid' => array(
+        'description' => t('The {users}.uid that owns this node; initially, this is the user that created it.'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'action' => array(
+        'description' => t('A textual description of the action taken in the classification editor'),
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+        'size' => 'big'
+      ),
+      'changed' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The Unix timestamp when an item in the classification was most recently saved.'),
+      ),
+    ),
+    'primary key' => array('lid'),
+  );
+
   $schema['taxonomy_enhancer_fields'] = array(
     'fields' => array(
       'vid' => array(
@@ -353,5 +384,37 @@ function _classification_update_lists_install($fid, $title, $list) {
   $field['settings']['options_type'] = 'select';
   
   db_query("INSERT INTO {taxonomy_enhancer_fields} (vid,fid,title,module,type,weight,settings) VALUES (%d,'%s','%s','%s','%s',%d,'%s')",$field['vid'],$field['fid'],$field['title'],$field['module'],$field['type'],$field['weight'],serialize($field['settings']));
+}
 
+/**
+ * Implementation of update_hook functions
+ */
+function classification_update_6100() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("CREATE TABLE {classification_log} (
+          `lid` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+          `uid` INTEGER UNSIGNED NOT NULL default '0',
+          `action` longtext NOT NULL default '',
+          `changed` INTEGER(11) NOT NULL default '0',
+          PRIMARY KEY (`lid`),
+          INDEX classification_lid(`lid`)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+    case 'pgsql':
+      $ret[] = update_sql("CREATE TABLE {classification_log} (
+          lid SERIAL,
+          uid int_unsigned NOT NULL default '0',
+          action text NOT NULL default '',
+          changed int_unsigned NOT NULL default '0',
+          PRIMARY KEY (lid)
+        );");
+      $ret[] = update_sql("CREATE INDEX {classification_lid} on {classification}(lid);");
+      break;
+  }
+
+  return $ret;
 }

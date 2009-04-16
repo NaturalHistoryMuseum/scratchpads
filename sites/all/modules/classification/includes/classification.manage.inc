@@ -18,13 +18,6 @@ function classification_manage() {
     '#type' => 'markup',
     '#value' => '<div id="classification_delete"></div>',
   );
-
-  $message = '<p>' . t('Create alternate classifications from which you may import new names.') . '</p><div class="messages warning">' . t('CAUTION: These additional classifications will not be used to help visitors navigate your site. Rather, create and later import names to help refine your primary classification into a consensus structure.') . '</div>';
-
-  $form['title'] = array(
-    '#type' => 'markup',
-    '#value' => '<h2>' . t('Alternate Classification') . '</h2>' . $message,
-  );
   
   $form['add'] = array(
     '#type' => 'textfield',
@@ -48,9 +41,9 @@ function classification_manage() {
       $node_type = node_get_types('name', $type);
       $types[] = $node_type ? check_plain($node_type) : check_plain($type);
     }
-    if( check_plain($vocabulary->name) !== 'Taxa' && check_plain($vocabulary->name) !== 'Orphan Chapters' && check_plain($vocabulary->name) !== 'Taxon Description Chapters' && check_plain($vocabulary->name) !== 'Forums') {
+    if (preg_match("/alternate_/i", $vocabulary->name)) {
        $form[$vocabulary->vid]['#vocabulary'] = (array)$vocabulary;
-       $form[$vocabulary->vid]['name'] = array('#value' => '<span id="classification-'.$vocabulary->vid.'">' . check_plain($vocabulary->name) . '</span>');
+       $form[$vocabulary->vid]['name'] = array('#value' => '<span id="classification-'.$vocabulary->vid.'">' . check_plain(str_replace("alternate_","",$vocabulary->name)) . '</span>');
        $form[$vocabulary->vid]['vid'] = array('#type' => 'hidden', '#value' => $vocabulary->vid);
        $form[$vocabulary->vid]['delete'] = array(
           '#type' => 'markup',
@@ -70,7 +63,9 @@ function classification_manage() {
  * Theme for classification management form
  */
 function theme_classification_manage($form) {
-	$output = '';
+
+  $message = '<p>' . t('Create alternate classifications from which you may import new names.') . '</p><div class="messages warning">' . t('CAUTION: These additional classifications will not be used to help visitors navigate your site. Rather, create and later import names to help refine your primary classification into a consensus structure.') . '</div>';
+
   $rows = array();
   foreach (element_children($form) as $key) {
     if (isset($form[$key]['name'])) {
@@ -88,7 +83,7 @@ function theme_classification_manage($form) {
 
   $header = array(t('Classification'), t('Operations'));
 
-  return drupal_render($form) . theme('table', $header, $rows, array('id' => 'classification_list'));
+  return $message . drupal_render($form) . theme('table', $header, $rows, array('id' => 'classification_list'));
 }
 
 /**
@@ -96,10 +91,10 @@ function theme_classification_manage($form) {
  */
 function classification_manage_submit($form,&$form_state) {
 	$vocabulary = array(
-	  'name' => check_plain($form_state['values']['add']),
+	  'name' => 'alternate_' . check_plain($form_state['values']['add']),
 	);
 	taxonomy_save_vocabulary($vocabulary);
-  drupal_set_message(t('Your new, temporary classification was created.'));
+    drupal_set_message(t('Your new, temporary classification was created.'));
 }
 
 /**
