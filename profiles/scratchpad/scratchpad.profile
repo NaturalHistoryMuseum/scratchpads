@@ -30,7 +30,7 @@ function scratchpad_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone','fileshare',
       'globalredirect','legal','path_redirect','pathauto','quote','robotstxt',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','tabs','wysiwyg','print',
+      'jstools','tabs','wysiwyg','print','sharethis',
     // Spam control
       'mollom','hashcash',
     // JQuery
@@ -124,6 +124,8 @@ function scratchpad_profile_tasks(&$task, $url){
       ('".st('Institution')."','profile_institution','".st('Personal information')."','textfield',3,0,1,3,0),
       ('".st('Area of Taxonomic Interest')."','profile_taxonomy','".st('Personal information')."','textfield',4,0,1,3,1)
     ");
+    // Set a variable so that we know what the defined ones are
+    variable_set('scratchpad_profile_fields', array('profile_title','profile_givennames','profile_familyname','profile_institution','profile_taxonomy'));
   }
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
@@ -185,6 +187,7 @@ function scratchpad_profile_tasks(&$task, $url){
     db_query("UPDATE {users} SET uid = 2 WHERE uid = 1");
     db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'admin','no-direct-login',1,NOW())");
     db_query("INSERT INTO {users_roles} (uid,rid) VALUES (2,5)"); // Tsk, adding role when none exist!
+    db_query("UPDATE {url_alias} SET src = 'user/2' WHERE src = 'user/1'");
     $openids = array('http://simon.rycroft.name/','http://vsmith.info/','http://admin.edit-openid.eu/');
     foreach($openids as $openid){
       db_query("INSERT INTO {authmap} (uid,authname,module) VALUES (1,'%s','openid')", $openid);
@@ -248,6 +251,10 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
       )
     );
     
+    // Contact form
+    db_query("INSERT INTO {contact} (category, recipients, selected) SELECT '%s',mail,1 FROM users WHERE uid = 2", st('Website feedbak'));
+    
+    
     // Mollom
     variable_set('mollom_public_key','ebe52536e33b662497bad0f451187161');
     variable_set('mollom_private_key','f86117722dcd1d12aa1a1065edfb0fb2');
@@ -269,6 +276,7 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     // look ugly.    
     $links = array(
       'biblio' => array('menu_name' => 'primary-links','link_title' => st('Bibliography'),'module'=>'system'),
+      'contact' => array('menu_name' => 'primary-links','link_title' => st('Contact us'),'module'=>'system','hidden'=>0),
       'forum' => array('menu_name' => 'primary-links','module'=>'system'),
       'taskguide' => array('menu_name' => 'primary-links','module'=>'system'),
       'map/node' => array('hidden' => 1,'module'=>'system'),
@@ -305,6 +313,9 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     $content_types = array_keys(content_types());
     $content_types[] = "type";
     foreach($content_types as $content_type){
+      if($content_type != 'group'){
+        variable_set('og_content_type_usage_'.$content_type, 'group_post_standard');
+      }
       $content_perms_contributor[] = "create $content_type content";
       $content_perms_contributor[] = "delete own $content_type content";
       $content_perms_contributor[] = "edit own $content_type content";
@@ -314,8 +325,8 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     }
     $editor_perms = $maintainer_perms = implode(", ", array_merge($content_perms_contributor, $content_perms_editor));
     $contributor_perms = implode(", ", $content_perms_contributor);
-    $maintainer_perms .= ", view all user locations, view own user location, set own user location, administer user locations, view advanced help index, view advanced help popup, view advanced help topic, make backups, administer biblio, create biblio, edit all biblio entries, edit own biblio entries, import from file, show download links, show export links, show filter tab, show own download links, show sort links, view full text, administer blocks, create blog entries, delete any blog entry, delete own blog entries, edit any blog entry, edit own blog entries, create citations, clone node, clone own nodes, access comments, administer comments, post comments, post comments without approval, access site-wide contact form, administer site-wide contact form, administer creative commons lite, administer forums, create forum topics, delete any forum topic, delete own forum topics, edit any forum topic, edit own forum topics, fotonotes add notes to all images, fotonotes add notes to own images, fotonotes edit all notes, fotonotes edit own notes, fotonotes view notes, set user location, show node map, show user map, user locations, submit form without hashcash, create images, edit images, edit own images, view original images, administer images, administer Terms and Conditions, view Terms and Conditions, administer lightbox2, download original image, administer languages, translate interface, submit latitude/longitude, administer menu, post with no checking, access content, administer content types, administer nodes, delete revisions, revert revisions, view revisions, administer imports, import content, administer organic groups, administer url aliases, create url aliases, administer redirects, inspect all votes, vote on polls, access print, administer print, assign roles, search content, use advanced search, view search_files results, administer newsletters, administer simplenews settings, administer simplenews subscriptions, send newsletter, subscribe to newsletters, access administration pages, administer site configuration, select different theme, administer taxonomy, translate content, upload files, view uploaded files, access user profiles, administer users, access all views, administer views";
-    $editor_perms .= ", view all user locations, view own user location, set own user location, view advanced help index, view advanced help popup, view advanced help topic, create biblio, edit all biblio entries, edit own biblio entries, import from file, show download links, show export links, show filter tab, show own download links, show sort links, view full text, create blog entries, delete any blog entry, delete own blog entries, edit any blog entry, edit own blog entries, create citations, clone node, clone own nodes, access comments, administer comments, post comments, post comments without approval, access site-wide contact form, create forum topics, delete any forum topic, delete own forum topics, edit any forum topic, edit own forum topics, fotonotes add notes to all images, fotonotes add notes to own images, fotonotes edit all notes, fotonotes edit own notes, fotonotes view notes, set user location, show node map, show user map, user locations, submit form without hashcash, create images, edit images, edit own images, view original images, administer images, view Terms and Conditions, download original image, translate interface, submit latitude/longitude, administer menu, post with no checking, access content, revert revisions, view revisions, administer imports, import content, create url aliases, inspect all votes, vote on polls, access print, search content, use advanced search, view search_files results, administer newsletters, send newsletter, subscribe to newsletters, administer taxonomy, translate content, upload files, view uploaded files, access user profiles, administer users, access all views, administer views";
+    $maintainer_perms .= ", import classification, edit classification, delete classification, export classification, view all user locations, view own user location, set own user location, administer user locations, view advanced help index, view advanced help popup, view advanced help topic, make backups, administer biblio, create biblio, edit all biblio entries, edit own biblio entries, import from file, show download links, show export links, show filter tab, show own download links, show sort links, view full text, administer blocks, create blog entries, delete any blog entry, delete own blog entries, edit any blog entry, edit own blog entries, create citations, clone node, clone own nodes, access comments, administer comments, post comments, post comments without approval, access site-wide contact form, administer site-wide contact form, administer creative commons lite, administer forums, create forum topics, delete any forum topic, delete own forum topics, edit any forum topic, edit own forum topics, fotonotes add notes to all images, fotonotes add notes to own images, fotonotes edit all notes, fotonotes edit own notes, fotonotes view notes, set user location, show node map, show user map, user locations, submit form without hashcash, create images, edit images, edit own images, view original images, administer images, administer Terms and Conditions, view Terms and Conditions, administer lightbox2, download original image, administer languages, translate interface, submit latitude/longitude, administer menu, post with no checking, access content, administer content types, administer nodes, delete revisions, revert revisions, view revisions, administer imports, import content, administer organic groups, administer url aliases, create url aliases, administer redirects, inspect all votes, vote on polls, access print, administer print, assign roles, search content, use advanced search, view search_files results, administer newsletters, administer simplenews settings, administer simplenews subscriptions, send newsletter, subscribe to newsletters, access administration pages, administer site configuration, select different theme, administer taxonomy, translate content, upload files, view uploaded files, access user profiles, administer users, access all views, administer views";
+    $editor_perms .= ", import classification, edit classification, delete classification, export classification, view all user locations, view own user location, set own user location, view advanced help index, view advanced help popup, view advanced help topic, create biblio, edit all biblio entries, edit own biblio entries, import from file, show download links, show export links, show filter tab, show own download links, show sort links, view full text, create blog entries, delete any blog entry, delete own blog entries, edit any blog entry, edit own blog entries, create citations, clone node, clone own nodes, access comments, administer comments, post comments, post comments without approval, access site-wide contact form, create forum topics, delete any forum topic, delete own forum topics, edit any forum topic, edit own forum topics, fotonotes add notes to all images, fotonotes add notes to own images, fotonotes edit all notes, fotonotes edit own notes, fotonotes view notes, set user location, show node map, show user map, user locations, submit form without hashcash, create images, edit images, edit own images, view original images, administer images, view Terms and Conditions, download original image, translate interface, submit latitude/longitude, administer menu, post with no checking, access content, revert revisions, view revisions, administer imports, import content, create url aliases, inspect all votes, vote on polls, access print, search content, use advanced search, view search_files results, administer newsletters, send newsletter, subscribe to newsletters, administer taxonomy, translate content, upload files, view uploaded files, access user profiles, administer users, access all views, administer views";
     $contributor_perms .= ", view all user locations, view own user location, set own user location, view advanced help index, view advanced help popup, view advanced help topic, create biblio, edit own biblio entries, show download links, show export links, show filter tab, show own download links, show sort links, view full text, create blog entries, delete own blog entries, edit own blog entries, create citations, clone own nodes, access comments, post comments, post comments without approval, access site-wide contact form, create forum topics, delete own forum topics, edit own forum topics, fotonotes add notes to all images, fotonotes add notes to own images, fotonotes edit own notes, fotonotes view notes, set user location, show node map, show user map, user locations, submit form without hashcash, create images, edit own images, view original images, view Terms and Conditions, download original image, submit latitude/longitude, post with no checking, access content, view revisions, import content, create url aliases, vote on polls, access print, search content, use advanced search, view search_files results, subscribe to newsletters, translate content, upload files, view uploaded files, access user profiles, access all views";
     $authenticated_perms = "view all user locations, view own user location, show download links, show export links, show filter tab, show own download links, show sort links, view full text, create citations, access comments, post comments, post comments without approval, access site-wide contact form, create forum topics, edit own forum topics, fotonotes view notes, show node map, show user map, user locations, submit form without hashcash, view original images, view Terms and Conditions, download original image, access content, view revisions, vote on polls, access print, search content, use advanced search, view search_files results, subscribe to newsletters, view uploaded files, access user profiles, access all views";
     $anonymous_perms = "view all user locations, show download links, show export links, show filter tab, show own download links, show sort links, view full text, create citations, access comments, post comments, access site-wide contact form, create forum topics, fotonotes view notes, show node map, show user map, user locations, view original images, view Terms and Conditions, download original image, access content, vote on polls, access print, search content, use advanced search, view search_files results, view uploaded files, access user profiles, access all views";
@@ -334,6 +345,27 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     variable_set('user_register',2);
     variable_set('user_signatures',1);
     variable_set('user_pictures',1);
+    
+    // Change the newsletter name (Set to Drupal newsletter, as the site name
+    // wasn't known when the module was installed).
+    db_query("UPDATE {term_data} SET name = '%s' WHERE vid = '%d'", variable_get('site_name', 'Drupal')." ".st('newsletter'), variable_get('simplenews_vid',0));
+    
+    // Share this code
+    variable_set('sharethis_sharethis_this_code','<script type="text/javascript" src="http://w.sharethis.com/button/sharethis.js#publisher=d088be71-038a-4513-a8b7-3ee237518b9f&amp;type=website&amp;buttonText=&amp;send_services=email%2Csms&amp;post_services=facebook%2Cdigg%2Cdelicious%2Ctwitter%2Ctechnorati%2Cwordpress%2Clivejournal%2Cstumbleupon%2Cybuzz%2Creddit%2Cfriendfeed%2Cfriendster%2Cmixx%2Cblogger%2Ctypepad%2Cgoogle_bmarks%2Cwindows_live%2Cmyspace%2Cfark%2Cbus_exchange%2Cpropeller%2Cnewsvine%2Csphinn%2Clinkedin%2Cmeneame%2Cxanga%2Corkut%2Ckirtsy%2Cdiigo%2Cdealsplus%2Ccare2%2Cfresqui%2Cfunp%2Coknotizie%2Ccurrent%2Cfaves%2Cyigg%2Cslashdot%2Csimpy%2Cmister_wong%2Cblogmarks%2Cfurl%2Cblinklist%2Cn4g%2Cyahoo_bmarks"></script>');
+    
+    // Error level
+    variable_set('error_level','0');
+    
+    // File uploads settings
+    foreach(array('3','4','5','default') as $rid){
+      variable_set('upload_usersize_'.$rid, '2000');
+      variable_set('upload_uploadsize_'.$rid, '20');
+      variable_set('upload_extensions_'.$rid, 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp');
+    }
+    
+    // Image and gallery
+    variable_set('image_images_per_page','25');
+    variable_set('image_gallery_sort_order','3');
     
     // Setup TinyMCE and WYSIWYG
     
@@ -360,7 +392,7 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
       'id' => 'site_created',
       'to' => "$name <$mail>",
       'subject' => st('Your new Scratchpad'),
-      'body' => drupal_wrap_mail("$name!\n\n\tYour new Scratchpad has been created for you. You can login to it using the details below:\n\nusername: \"$name\"\npassword: \"$password\"\n$site\n\nSimon Rycroft, on behalf of the Scratchpad team."),
+      'body' => drupal_wrap_mail("$name!\n\n\tYour new Scratchpad has been created for you. You can login to it using the details below:\n\nusername: \"$name\"\npassword: $password\n$site\n\nSimon Rycroft, on behalf of the Scratchpad team."),
       'headers' => array()
     );
     drupal_mail_send($message);
@@ -409,7 +441,7 @@ function scratchpad_personal($form_state, $url){
     'expertise' => array(
       '#required' => TRUE,
       '#type' => 'textfield',
-      '#title' => st('Area of Taxonomic ')
+      '#title' => st('Area of Taxonomic expertise')
     ),
     'submit' => array(
       '#type' => 'submit',
