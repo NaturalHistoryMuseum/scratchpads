@@ -233,17 +233,17 @@ function classification_scratchpads_form_alter(&$form, $form_state, $form_id){
       break;
     
     case 'taxonomy_form_vocabulary' :
-      
-      $classification_vocabs = variable_get ( 'classification_scratchpads', array () );
-      
-      $form ['settings'] ['vocab'] = array (
-        '#type' => 'checkbox', 
-        '#title' => t ( 'Classification vocabulary' ), 
-        '#default_value' => ($classification_vocabs [$form ['vid'] ['#value']] ? 1 : 0), 
-        '#description' => t ( 'Select if you want to use this vocabulary with the classification module.' ) );
-      
-      $form ['#submit'] [] = 'classification_scratchpads_taxonomy_form_vocabulary_submit';
-      
+      if($form['module']['#value'] == 'taxonomy'){
+        $classification_vocabs = variable_get ( 'classification_scratchpads', array () );
+        
+        $form ['settings'] ['vocab'] = array (
+          '#type' => 'checkbox', 
+          '#title' => t ( 'Classification vocabulary' ), 
+          '#default_value' => ($classification_vocabs [$form ['vid'] ['#value']] ? 1 : 0), 
+          '#description' => t ( 'Select if you want to use this vocabulary with the classification module.' ) );
+        
+        $form ['#submit'] [] = 'classification_scratchpads_taxonomy_form_vocabulary_submit';
+      }      
       break;
   
   }
@@ -272,38 +272,36 @@ function classification_scratchpads_taxonomy_form_vocabulary_submit($form, &$for
  * Menu callback : admin/content/taxonomy/classification/import
  */
 
-function classification_scratchpads_import(&$form_state){  
+function classification_scratchpads_import(&$form_state){
   $form = classification_import_form ( $form_state );
-  $scratchpad_classifications = variable_get('classification_scratchpads', array());
-  $vocabularies = taxonomy_get_vocabularies();
-  $classifications = array('--Choose--');
-  foreach($scratchpad_classifications as $scratchpad_classification){
-    if($scratchpad_classification){
-      $classifications[$scratchpad_classification] = check_plain($vocabularies[$scratchpad_classification]->name);
+  $scratchpad_classifications = variable_get ( 'classification_scratchpads', array () );
+  $vocabularies = taxonomy_get_vocabularies ();
+  $classifications = array (
+    '--Choose--' );
+  foreach ( $scratchpad_classifications as $scratchpad_classification ) {
+    if ($scratchpad_classification) {
+      $classifications [$scratchpad_classification] = check_plain ( $vocabularies [$scratchpad_classification]->name );
     }
   }
-  if(count($classifications)==2){
+  if (count ( $classifications ) == 2) {
     // We only have one classification, remove the option
-    $form['vocab'] = array();
-    $form['vocab']['vid'] = array(
-      '#type' => 'hidden',
-      '#value' => array_pop(array_keys($classifications)) 
-    );
-  } else if(count($classifications)==1){
+    $form ['vocab'] = array ();
+    $form ['vocab'] ['vid'] = array (
+      '#type' => 'hidden', 
+      '#value' => array_pop ( array_keys ( $classifications ) ) );
+  } else if (count ( $classifications ) == 1) {
     // We have no classificaitons, display an error, and redirect to list
-    drupal_set_message(t('You have no vocabularies set to be a \'Classification vocabulary\''),'error');
-    drupal_goto('admin/content/taxonomy');
+    drupal_set_message ( t ( 'You have no vocabularies set to be a \'Classification vocabulary\'' ), 'error' );
+    drupal_goto ( 'admin/content/taxonomy' );
   } else {
     $form ['vocab'] = array (
-      '#type' => 'fieldset',
-      '#title' => t('Destination for import')
-    );
-    $form['vocab']['vid'] = array(
-      '#type' => 'select',
-      '#title' => t('Destination Classification for import'),
-      '#required' => 1,
-      '#options' => $classifications
-    );
+      '#type' => 'fieldset', 
+      '#title' => t ( 'Destination for import' ) );
+    $form ['vocab'] ['vid'] = array (
+      '#type' => 'select', 
+      '#title' => t ( 'Destination Classification for import' ), 
+      '#required' => 1, 
+      '#options' => $classifications );
   }
   $form ['title'] ['#value'] = '<h2>Import</h2><div class=\'messages status\'>You have three options to import your names and/or classification(s). Please see the <a href="/classification/help">help page</a> for instruction.</div>';
   
@@ -332,7 +330,7 @@ function classification_edit_multiple_form(&$form_state){
   }
   
   // Update the jstree callback
-  drupal_add_js ( 'Drupal.settings.classification_callback_jstree = "' . url('classification/js_tree/' . $vid ).'/";', 'inline' );
+  drupal_add_js ( 'Drupal.settings.classification_callback_jstree = "' . url ( 'classification/js_tree/' . $vid ) . '/";', 'inline' );
   
   global $module_path;
   $module_path = drupal_get_path ( 'module', 'classification' ) . '/';
