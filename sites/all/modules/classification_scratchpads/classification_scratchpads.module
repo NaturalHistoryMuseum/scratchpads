@@ -233,7 +233,7 @@ function classification_scratchpads_form_alter(&$form, $form_state, $form_id){
       break;
     
     case 'taxonomy_form_vocabulary' :
-      if($form['module']['#value'] == 'taxonomy'){
+      if($form['module']['#value'] == 'taxonomy' || !isset($form['module']['#value'])){
         $classification_vocabs = variable_get ( 'classification_scratchpads', array () );
         
         $form ['settings'] ['vocab'] = array (
