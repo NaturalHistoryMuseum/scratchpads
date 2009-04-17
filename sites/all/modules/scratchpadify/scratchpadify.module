@@ -265,16 +265,19 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
           return array('subject'=>'Statistics','content'=>theme_item_list($items));
         case 1:
-          if(user_access('create type content')){
+          if(user_access('create type content')){ // This is a "fixperms" permission, go get it!
             drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
             $node_types = node_get_types();
             $items = array();
             foreach($node_types as $node_type => $node_type_values){
+              if($node_type == 'ispecies'){ // Grrr, I hate this, module specific code.  Is there a better way?
+                continue;
+              }
               $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.$node_type);
             }
             $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
             $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
-            ksort($items);
+            uksort($items, "strnatcasecmp");
             return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           }
           break;
