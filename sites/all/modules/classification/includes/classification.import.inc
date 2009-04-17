@@ -497,33 +497,30 @@ function classification_import_tcs_loop($url,$type,$tid,$pid=false) {
    $canonical_name = $TaxonNames->TaxonName->CanonicalName->Simple;
    $rank = $TaxonNames->TaxonName->Rank;
 
+  db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$pid);
+  db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
+  if(trim($canonical_name)!=''){
+    db_query("INSERT INTO {term_synonym} (tid, name) VALUES (%d, '%s')", $tid, $canonical_name);
+  }
   switch ($type) {
     case 'full':
-      db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
-      db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$pid);
       db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value) VALUES (%d,'field_rank','%s')",$tid,$rank);
-      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
     case 'syn':
-      db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
-      db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$pid);
       db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$pid);
       $res = db_fetch_object(db_query("SELECT trid FROM {term_relation} where tid1 = %d AND tid2 = %d",$tid,$pid));
       db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,1)",$res->trid);
-      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
     case 'vern':
       $simple_name = $TaxonConcept->Name;
       $language = $TaxonConcept->Name->attributes()->language;
-      db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$simple_name);
-      db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$pid);
       db_query("INSERT INTO {taxonomy_enhancer_value_text} (tid,fid,value) VALUES (%d,'field_vernacular_language','%s')",$tid,$language);
       db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$pid);
       $res = db_fetch_object(db_query("SELECT trid FROM {term_relation} where tid1 = %d AND tid2 = %d",$tid,$pid));
       db_query("INSERT INTO {term_relation_has_type} (trid,rtid) VALUES (%d,9)",$res->trid);
-      db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
     break;
   }
+  db_query("UPDATE {" . $temp_table . "} SET curr_count = %d, term = '%s' WHERE cid = 1",$counter,$simple_name);
 
   //Slow down the recursion a hundredth of a second
   usleep(10000);
