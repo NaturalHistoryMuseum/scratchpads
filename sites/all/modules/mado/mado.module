@@ -10,36 +10,56 @@
 /**
  * Implementation of hook_menu
  */
-function mado_menu(){  
-  $items = array();  
-  $items['taxonomy/term/%'] = array(
-    'title' => 'Taxonomy term',
-    'page callback' => 'mado_term_page',
-    'page arguments' => array(2),
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-    'file' => 'mado.pages.inc',
-  );
-  $items['mado/save'] = array(
-    'title' => '',
-    'page callback' => 'mado_save_layout',
-    'access arguments' => array('layout mado'),
-    'type' => MENU_CALLBACK
-  );  
+function mado_menu(){
+  $items = array ();
+  $items ['taxonomy/term/%'] = array (
+    'title' => 'Taxonomy term', 
+    'page callback' => 'mado_term_page', 
+    'page arguments' => array (
+      2 ), 
+    'access arguments' => array (
+      'access content' ), 
+    'type' => MENU_CALLBACK, 
+    'file' => 'mado.pages.inc' );
+  $items ['mado/save'] = array (
+    'title' => '', 
+    'page callback' => 'mado_save_layout', 
+    'access arguments' => array (
+      'layout mado' ), 
+    'type' => MENU_CALLBACK );
   return $items;
 }
 
-function mado_perm(){
-}
 /**
  * Implementation of hook_theme()
  */
-function mado_theme() {
-  return array(
-    'mado_block' => array(
-      'arguments' => array('block' => array()),
-    )
-  );
+function mado_theme(){
+  return array (
+    'mado_block' => array (
+      'arguments' => array (
+        'block' => array () ) ) );
+}
+
+function mado_form_alter(&$form, $form_state, $form_id){
+  // Add a variable to the vocabulary edit page to specify that the vocabulary
+  // should use mado.
+  if ($form_id == 'taxonomy_form_vocabulary') {
+    if ($form ['module'] ['#value'] == 'taxonomy' || !isset($form['module']['#value'])) {
+      $mado_vocabularies = variable_get ( 'mado_vocabularies', array () );
+      $form ['settings'] ['usemado'] = array (
+        '#type' => 'checkbox', 
+        '#title' => t ( 'Display content using "Mado"' ), 
+        '#default_value' => isset ( $mado_vocabularies [$form ['vid'] ['#value']] ) && $mado_vocabularies [$form ['vid'] ['#value']] ? 1 : 0, 
+        '#description' => t ( 'Check the box if you would like to display content in blocks like "Taxon pages"' ) );
+      $form ['#submit'] [] = 'mado_taxonomy_form_vocabulary_submit';
+    }
+  }
+}
+
+function mado_taxonomy_form_vocabulary_submit($form, $form_state){
+  $mado_vocabularies = variable_get ( 'mado_vocabularies', array () );
+  $mado_vocabularies [$form_state ['values'] ['vid']] = $form_state ['values'] ['usemado'];
+  variable_set ( 'mado_vocabularies', $mado_vocabularies );
 }
 
 /**
@@ -47,36 +67,33 @@ function mado_theme() {
  *
  */
 function mado_get_blocks(){
-  $blocks_and_views = array();
-  $views = views_get_all_views();
+  $blocks_and_views = array ();
+  $views = views_get_all_views ();
   $i = 0;
-  foreach($views as $view){
-    if($view->display['default']->display_options['arguments']['tid']){
-      $blocks_and_views['view-'.$i] = array(
-        '#type' => 'view',
-        '#name' => $view->name,
-        '#scroll' => TRUE,
-        '#css' => 'mado_block_2'
-      );
-      $i++;
+  foreach ( $views as $view ) {
+    if ($view->display ['default']->display_options ['arguments'] ['tid']) {
+      $blocks_and_views ['view-' . $i] = array (
+        '#type' => 'view', 
+        '#name' => $view->name, 
+        '#scroll' => TRUE, 
+        '#css' => 'mado_block_2' );
+      $i ++;
     }
   }
   $i = 0;
-  foreach(module_implements('block') as $module){
-    $blocks = call_user_func($module.'_block','list');
-    foreach($blocks as $id => $block){
-      $blocks_and_views['block-'.$i] = array(
-        '#type' => 'block',
-        '#name' => "$module/$id",
-        '#scroll' => TRUE,
-        '#css' => 'mado_block_2'
-      );
-      $i++;
+  foreach ( module_implements ( 'block' ) as $module ) {
+    $blocks = call_user_func ( $module . '_block', 'list' );
+    foreach ( $blocks as $id => $block ) {
+      $blocks_and_views ['block-' . $i] = array (
+        '#type' => 'block', 
+        '#name' => "$module/$id", 
+        '#scroll' => TRUE, 
+        '#css' => 'mado_block_2' );
+      $i ++;
     }
   }
-  $blocks_and_views['divider'] = array(
-    '#type' => 'divider'
-  );
+  $blocks_and_views ['divider'] = array (
+    '#type' => 'divider' );
   return $blocks_and_views;
 }
 
@@ -84,31 +101,31 @@ function mado_get_blocks(){
  * Save the theme - ajax callback
  */
 function mado_save_layout(){
-  if(isset($_GET['blocks'])){
-    $blocks = array();
-    $all_blocks = mado_get_blocks();
-    $current_blocks = mado_get_theme($_GET['identifier']);
-    foreach($_GET['blocks'] as $block){
-      if(isset($current_blocks[$block])){
-        $blocks[$block] = $current_blocks[$block];
+  if (isset ( $_GET ['blocks'] )) {
+    $blocks = array ();
+    $all_blocks = mado_get_blocks ();
+    $current_blocks = mado_get_theme ( $_GET ['identifier'] );
+    foreach ( $_GET ['blocks'] as $block ) {
+      if (isset ( $current_blocks [$block] )) {
+        $blocks [$block] = $current_blocks [$block];
       } else {
-        $blocks[$block] = $all_blocks[$block];
+        $blocks [$block] = $all_blocks [$block];
       }
-      if($block == 'divider'){
+      if ($block == 'divider') {
         break;
       }
     }
-    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
-    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
-  } else if (isset($_GET['resize'])) {
-    print_r($_REQUEST);
-    $class = str_replace(" mado_block", "", $_GET['class']);
-    $scroll = $_GET['scroll'];     
-    $blocks = mado_get_theme($_GET['identifier']);
-    $blocks[$_GET['resize']]['#scroll'] = $scroll;
-    $blocks[$_GET['resize']]['#css'] = $class;
-    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['identifier']);
-    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET['identifier'], serialize($blocks));
+    db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
+    db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
+  } else if (isset ( $_GET ['resize'] )) {
+    print_r ( $_REQUEST );
+    $class = str_replace ( " mado_block", "", $_GET ['class'] );
+    $scroll = $_GET ['scroll'];
+    $blocks = mado_get_theme ( $_GET ['identifier'] );
+    $blocks [$_GET ['resize']] ['#scroll'] = $scroll;
+    $blocks [$_GET ['resize']] ['#css'] = $class;
+    db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
+    db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
   }
 }
 
@@ -117,15 +134,18 @@ function mado_save_layout(){
  * vocabulary should use the standard layout.
  */
 function mado_get_theme($vid, $tid = false){
-  // FIXME - Change the following:
-  if($vid!=6){return false;}
+  // Check if this vocabulary is set to use Mado
+  $mado_vocabularies = variable_get ( 'mado_vocabularies', array () );
+  if (! isset ( $mado_vocabularies[$vid] ) || ! $mado_vocabularies[$vid]) {
+    return FALSE;
+  }
   
   // try and get the blocks
-  $blocks = db_fetch_array(db_query("SELECT blocks FROM {mado} WHERE identifier = '%s' OR identifier = '%s' ORDER BY identifier DESC", $vid, "$vid/$tid"));
-  if($blocks){
-    return unserialize(array_pop($blocks));
+  $blocks = db_fetch_array ( db_query ( "SELECT blocks FROM {mado} WHERE identifier = '%s' OR identifier = '%s' ORDER BY identifier DESC", $vid, "$vid/$tid" ) );
+  if ($blocks) {
+    return unserialize ( array_pop ( $blocks ) );
   } else {
-    return mado_get_blocks();
+    return mado_get_blocks ();
   }
   return false;
 }
