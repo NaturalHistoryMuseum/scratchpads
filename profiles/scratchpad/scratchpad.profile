@@ -198,7 +198,9 @@ function scratchpad_profile_tasks(&$task, $url){
     db_query("DELETE FROM {filter_formats} WHERE format = 1");
     db_query("UPDATE {filters} SET format = 1");
     db_query("UPDATE {filter_formats} SET format = 1");
+    db_query("INSERT INTO {filter_formats} (format, name, cache) VALUES (2, 'Full HTML (script allowed)', 1)");
     db_query("INSERT INTO {filters} (format,module,delta,weight) VALUES (1,'biblio',0,10),(1,'gmap',0,10),(1,'quote',0,10),(1,'scratchpadify',0,10)");
+    db_query("INSERT INTO {filters} (format, module, delta, weight) VALUES (2,'gmap',0,10),(2,'quote',0,10),(2,'biblio',0,10),(2,'filter',2,0),(2,'filter',1,1),(2,'filter',3,10)");
     
     // Insert conditions into the Scratchpad
     $conditions = '<ol>
@@ -366,6 +368,10 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     // Image and gallery
     variable_set('image_images_per_page','25');
     variable_set('image_gallery_sort_order','3');
+    
+    // Set Jquery_update to use no compressions - VERY BAD, but necessary due to
+    // the fact that the module is BORKED.
+    variable_set('jquery_update_compression_type','none');
     
     // Setup TinyMCE and WYSIWYG
     
