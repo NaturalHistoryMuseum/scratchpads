@@ -30,7 +30,7 @@ function scratchpad_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone','fileshare',
       'globalredirect','legal','path_redirect','pathauto','quote','robotstxt',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','tabs','wysiwyg','print','sharethis',
+      'jstools','tabs','wysiwyg','print','sharethis','imce','imce_wysiwyg',
     // Spam control
       'mollom','hashcash',
     // JQuery
@@ -374,10 +374,104 @@ You understand and acknowledge that EDIT assumes no responsibility to screen or 
     variable_set('jquery_update_compression_type','none');
     
     // Setup TinyMCE and WYSIWYG
+    $tinymce_settings = array(
+      'default' => 1,
+      'user_choose' => 1,
+      'show_toggle' => 1,
+      'theme' => 'advanced',
+      'language' => 'en',
+      'buttons' => array(
+        'default' => array(
+          'bold' => 1,
+          'italic' => 1,
+          'underline' => 1,
+          'strikethrough' => 1,
+          'justifyleft' => 1,
+          'justifycenter' => 1,
+          'justifyfull' => 1,
+          'bullist' => 1,
+          'numlist' => 1,
+          'outdent' => 1,
+          'indent' => 1,
+          'undo' => 1,
+          'link' => 1,
+          'unlink' => 1,
+          'anchor' => 1,
+          'image' => 1,
+          'sup' => 1,
+          'sub' => 1,
+          'blockquote' => 1,
+          'code' => 1,
+          'hr' => 1,
+          'cut' => 1,
+          'copy' => 1,
+          'paste' => 1
+        ),
+        'paste' => array(
+          'pasteword' => 1
+        ),
+        'safari' => array(
+          'safari' => 1
+        ),
+        'imce' => array(
+          'imce' => 1
+        )   
+      ),
+      'toolbar_loc' => 'top',
+      'toolbar_align' => 'left',
+      'path_loc' => 'bottom',
+      'resizing' => 1,
+      'verify_html' => 1,
+      'preformatted' => 0,
+      'convert_fonts_to_spans' => 1,
+      'remove_linebreaks' => 0,
+      'apply_source_formatting' => 0,
+      'paste_auto_cleanup_on_paste' => 1,
+      'block_formats' => 'p,pre,h1,h2,h3,h4,h5,h6',
+      'css_settings' => 'theme'
+    );
+    db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
     
-    
-    
-    
+    // Setup IMCE
+    variable_set('imce_profiles', array(
+        1 => array(
+          'name' => st('All users IMCE'),
+          'filesize' => 20,
+          'quota' => 200,
+          'tuquota' => 0,
+          'extensions' => 'gif png jpg jpeg',
+          'dimensions' => '800x600',
+          'filenum' => 1,
+          'directories' => array(
+            array(
+              'name' => 'u%uid',
+              'subnav' => 1,
+              'browse' => 1,
+              'upload' => 1,
+              'thumb' => 1,
+              'delete' => 0,
+              'resize' => 0
+            )
+          ),
+          'thumbnails' => array(
+            array(
+              'name' => 'Thumb',
+              'dimensions' => '90x90',
+              'prefix' => 'thumb_',
+              'suffix' => ''
+            )            
+          )
+        )
+      )
+    );
+    variable_set('imce_roles_profiles', array(
+        5 => array('weight' => 0, 'pid' => 1),
+        4 => array('weight' => 0, 'pid' => 1),
+        3 => array('weight' => 0, 'pid' => 1),
+        2 => array('weight' => 11, 'pid' => 0),
+        1 => array('weight' => 12, 'pid' => 0),
+      )
+    );
     
     
     // Run cron
