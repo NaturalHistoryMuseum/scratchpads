@@ -1149,25 +1149,25 @@ function classification_add_name() {
     '#programmed' => FALSE,
   );
   
-  $vid = classification_get_vid('Taxa');
-  $parent_tid = $_REQUEST['parent_tid'];
-  $value = 'Taxon';
   
-  if($parent_tid) {
-  	$result = db_fetch_object(db_query("SELECT max(tid) AS tid FROM {term_data}"));
-    $tid = $result->tid + 1;
-    //perform the insertion in various tables
-    db_query("INSERT INTO {term_data} (tid,vid,name) VALUES (%d,%d,'%s')",$tid,$vid,$value);
-    db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,%d)",$tid,$parent_tid);
-    db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
+
+  $parent = taxonomy_get_term($_REQUEST['parent_tid']);
+
+  $term = array(
+    'name' => 'Taxon',
+    'parent' => array($parent->tid => $parent->tid),
+    'vid' => $parent->vid    
+  );
+  
+  taxonomy_save_term($term);
     
-    $parent = db_fetch_object(db_query("SELECT name FROM {term_data} WHERE tid = %d",$parent_tid));
-    
-    drupal_json(array('status' => 'added', 'message' => t('Name data successfully added'), 'tid' => $tid, 'parent_name' => $parent->name));
-  }
-  else {
-  	drupal_json(array('status' => 'failed', 'message' => t('Failed to receive correct POST message')));
-  }
+  if($term['tid']){
+      drupal_json(array('status' => 'added', 'message' => t('Name data successfully added'), 'tid' => $term['tid'], 'parent_name' => $parent->name));
+    }
+    else {
+    	drupal_json(array('status' => 'failed', 'message' => t('Failed to receive correct POST message')));
+    }
+
  }
 
 /**
