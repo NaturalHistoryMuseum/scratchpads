@@ -28,6 +28,13 @@ function ispecies_node_info() {
   );
 }
 
+function ispecies_form_alter(&$form, $unused_amd_unwanted_go_cry_to_mummy, $form_id){
+  // Hide iSpecies cache from the content types list.
+  if($form_id == 'taxonomy_form_vocabulary'){
+    unset($form['content_types']['nodes']['#options']['ispecies']);
+  }
+}
+
 function ispecies_menu(){
   $items = array();
   $items['ispecies'] = array(
@@ -53,8 +60,13 @@ function ispecies_ajax_callback($module, $tid = false){
 }
 
 function ispecies_get_data($module, $tid){
-  $term = taxonomy_get_term ( $tid );
-  $term_name = $term->name;
+  $synonyms = taxonomy_get_synonyms($tid);
+  if(count($synonyms)){
+    $term_name = array_pop($synonyms);
+  } else {
+    $term = taxonomy_get_term ( $tid );
+    $term_name = $term->name;
+  }
   $ispecies_views = module_invoke_all('ispecies');  
   $sort_orders = variable_get('view_sort-limits', array());
   if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
