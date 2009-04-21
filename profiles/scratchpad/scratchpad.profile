@@ -22,7 +22,7 @@ function scratchpad_profile_details(){
 function scratchpad_profile_modules(){
   return array(
     // Core - optional
-      'blog','color','comment','contact','locale','syslog','help','menu','openid'
+      'blog','color','comment','contact','locale','dblog','help','menu','openid'
       ,'path','poll','profile','search','taxonomy','trigger','upload','forum',
       'translation',
     // No requirements/Other
@@ -204,20 +204,21 @@ function scratchpad_profile_tasks(&$task, $url){
     
     // Insert conditions into the Scratchpad
     $conditions = '<ol>
-  <li><strong>ACCEPTANCE OF TERMS</strong>
-This agreement is between the European Distributed Institute of Taxonomy and its agents (collectively &#8220;EDIT&#8221;), and you and your agents (collectivly &#8220;you&#8221;) regarding the use of this website (the &quot;Site&quot;). By using the Site, you agree to the Terms and Conditions in this document.</li>
-  <li><strong>OWNERSHIP OF SITE</strong>
-  The text, graphics, sound and software (collectively &quot;Content&quot;) on this Site is owned by you and your agents and you bare sole and ultimate responsibility for this Content. EDIT supports the computer hardware infrastructure and software content management system that provides access to this Content</li>
-  <li><strong>ACCESS TO SERVICES AND TERMINATION OF ACCESS</strong>
-You are responsible for all activity logged through your user account and for the activity of other persons or entity you grant access to this Site. You agree to immediately notify EDIT in the event that you become aware of any unauthorized use and you agree that EDIT may terminate your access privileges and remove Content without notice if EDIT believe you have violated any provision of this Agreement. You agree that termination of your access to the Site shall not result in any liability or other obligation of EDIT to you or any third party in connection with such termination.</li>
-  <li><strong>CONTENT</strong>
-You agree to be bound by the Natural History Museum&#8217;s IT Conditions of Use document (attached), the terms and conditions of which are hereby incorporated by reference herein. In summary this document states that all Content placed on the Site must be legal, decent and truthful. Through you or your agent&#8217;s use of the Site, you represent and warrant that you have all the rights necessary to receive, use, transmit and disclose all data that you use in any way with the Site. You agree and acknowledge that you are solely responsible for any liabilities, fines, or penalties occasioned by any such violations or lack of rights and that you are solely responsible for the accuracy and adequacy of information and data furnished on the Site.</li>
-  <li><strong>DISCLAIMER OF WARRANTIES</strong>
-The use of the Site is solely at your own risk. The site is provided on an &quot;as is&quot; and &quot;as available&quot; basis and EDIT expressly disclaims all warranties of any kind with respect to the site, whether express or implied. EDIT makes no warranty that the access to the site and/or Content therein will be uninterrupted or secure. Your sole and exclusive remedy with respect to any defect in or dissatisfaction with the Site is to cease using the Site.</li>
-  <li><strong>LIMITATION OF LIABILITY</strong>
-You understand and agree that EDIT shall not be liable for any direct, indirect, incidental, special, consequential, or exemplary damages resulting from any matter related to your or other persons use of the site.</li>
-  <li><strong>DISCLAIMER OF CONTENT</strong>
-You understand and acknowledge that EDIT assumes no responsibility to screen or review Content and that EDIT shall have the right, but not the obligation, in its sole discretion to review, refuse, monitor, edit or remove any Content. EDIT expressly disclaims all responsibility or liability to you or any other person or entity for the Content and you acknowledge and agree that you assume all risk associated with the use of any and all Content.</li>
+  <li><b>ACCEPTANCE OF TERMS</b> This agreement is between the European Distributed Institute of Taxonomy and its agents (collectively “EDIT”), and you and your agents (collectively “you”) regarding the use of this website (the "Site"). By using the Site, you agree to the Terms and Conditions in this document.</li>
+  <li><b>OWNERSHIP OF SITE</b> The text, graphics, sound and software (collectively "Content") on this Site is owned by you and your agents and you bare sole and ultimate responsibility for this Content. EDIT supports the computer hardware infrastructure and software content management system that provides access to this Content.</li>
+  <li><b>ACCESS TO SERVICES AND TERMINATION OF ACCESS</b> You are responsible for all activity logged through your user account and for the activity of other persons or entity you grant access to this Site. You agree to notify EDIT immediately you become aware of any unauthorised use and you agree that EDIT may terminate your access privileges and remove Content without notice if EDIT believe you have violated any provision of this Agreement. You agree that termination of your access to the Site shall not result in any liability or other obligation of EDIT to you or any third party in connection with such termination.  An archive copy of your content at the time of termination will be kept and made available to you on request.</li>
+  <li><b>CONTENT</b> You agree to be bound by the Joint Academic Network (JANET) Acceptable Use Guidelines (<a href="http://www.ja.net/company/policies/aup.html">http://www.ja.net/company/policies/aup.html</a>). In summary this document states that all Content placed on the Site must be legal, decent and truthful. Through you or your agent’s use of the Site, you represent and warrant that you have all the rights necessary to receive, use, transmit and disclose all data that you use in any way with the Site. You agree and acknowledge that you are solely responsible for any liabilities, fines, or penalties occasioned by any such violations or lack of rights and that you are solely responsible for the accuracy and adequacy of information and data furnished on the Site.</li>
+  <li><b>TAKE DOWN POLICY</b> If you are a rights owner and are concerned that you have found material on a Site and have not given permission for its use, please contact us in writing (scratchpad@nhm.ac.uk) providing:
+    <ul>
+      <li>Your contact details</li>
+      <li>The full bibliographic details of the material</li>
+      <li>The Site address where you found the material</li>
+      <li>A statement that, under penalty of perjury, you are the rights owner or are authorised to act for the rights owner</li>
+    </ul>
+  </li>
+  <li><b>DISCLAIMER OF WARRANTIES</b> The use of the Site is solely at your own risk. The site is provided on an "as is" and "as available" basis and EDIT expressly disclaims all warranties of any kind with respect to the site, whether express or implied. EDIT makes no warranty that the access to the site and/or Content therein will be uninterrupted or secure. Your sole and exclusive remedy with respect to any defect in or dissatisfaction with the Site is to cease using the Site.</li>
+  <li><b>LIMITATION OF LIABILITY</b> You understand and agree that EDIT shall not be liable for any direct, indirect, incidental, special, consequential, or exemplary damages resulting from any matter related to your or other persons use of the site.</li>
+  <li><b>DISCLAIMER OF CONTENT</b> You understand and acknowledge that EDIT assumes no responsibility to screen or review Content and that EDIT shall have the right, but not the obligation, in its sole discretion to review, refuse, monitor, edit or remove any Content. EDIT expressly disclaims all responsibility or liability to you or any other person or entity for the Content and you acknowledge and agree that you assume all risk associated with the use of any and all Content.</li>
 </ol>';
     $extras = array('extras-1' => '','extras-2'=>'','extras-3'=>'','extras-4'=>'','extras-5'=>'');
     db_query("INSERT INTO {legal_conditions} (conditions, date, extras) VALUES ('%s',NOW(),'%s')", $conditions, serialize($extras));
