@@ -1278,7 +1278,8 @@ function classification_copy_name_alternate() {
   
     if($child && $new_parent) {
      $vid_old = db_fetch_object(db_query("SELECT vid FROM term_data WHERE tid = %d LIMIT 1", $child));
-     $vid_new = classification_get_vid('Taxa');
+     $new_parent = taxonomy_get_term($new_parent->tid);
+     $vid_new = $new_parent->vid;
      $children = taxonomy_get_tree($vid_old->vid, $child);
 
      db_query("DELETE FROM {term_hierarchy} WHERE tid = %d", $child);
