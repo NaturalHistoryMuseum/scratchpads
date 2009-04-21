@@ -333,6 +333,26 @@ function scratchpadify_admin_page(){
       )
     ),
     array(
+      'title' => t('Views'),
+      'position' => 'right',
+      'description' => t('Views are customized lists of content on your system; they are highly configurable and give you control over how lists of content are presented.'),
+      'content' => theme('admin_block_content', array(
+          array(
+            'localized_options' => array(),
+            'href' => 'admin/build/views',
+            'title' => t('List'),
+            'description' => t('List the different Views on your Scratchpad')
+          ),
+          array(
+            'localized_options' => array(),
+            'href' => 'admin/build/views/add',
+            'title' => t('Add'),
+            'description' => t('Add a new view to your Scratchpad')
+          )
+        )
+      )
+    ),
+    array(
       'title' => t('Layout'),
       'position' => 'right',
       'description' => t("Change the layout settings on your Scratchpad"),

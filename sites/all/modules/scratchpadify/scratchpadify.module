@@ -272,7 +272,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               if($node_type == 'ispecies'){ // Grrr, I hate this, module specific code.  Is there a better way?
                 continue;
               }
-              $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.$node_type);
+              $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type));
             }
             $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
             $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
