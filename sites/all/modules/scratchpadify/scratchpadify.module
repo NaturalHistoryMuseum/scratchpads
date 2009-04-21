@@ -34,6 +34,19 @@ function scratchpadify_menu(){
   return $items;
 }
 
+function scratchpadify_node_import_fields_alter(&$fields, $type){
+  // Always remove the fields, lets make this simpler!
+  unset($fields['comment']);
+  unset($fields['uid']);
+  unset($fields['created']);
+  unset($fields['log']);
+  unset($fields['revision']);
+  unset($fields['status']);
+  unset($fields['promote']);
+  unset($fields['sticky']);
+  unset($fields['path']);
+}
+
 function scratchpadify_menu_alter(&$items){
   $items['admin/settings/uploads']['access arguments'] = 'SCRATCHPADIFY';
   $items['admin/settings/admin']['access arguments'] = 'SCRATCHPADIFY';
@@ -275,7 +288,8 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type));
             }
             $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
-            $items[t('Create/Edit Taxonomy')] = l(t('Create/Edit Taxonomy'), 'admin/content/taxonomy');
+            $items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
+            $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');
             uksort($items, "strnatcasecmp");
             return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           }
