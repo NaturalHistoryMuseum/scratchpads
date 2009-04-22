@@ -986,7 +986,6 @@ function darwincorelocation_load($node) {
 
 function darwincore_submit($form, &$form_state){
   // Set the title to be a concat of other fields
-  print_r($form);print_r($form_state);exit;
   $form_state['values']['title'] = $form_state['values']['institutioncode']." ".$form_state['values']['collectioncode']." ".$form_state['values']['cataloguenumbertext'];
 }
 
