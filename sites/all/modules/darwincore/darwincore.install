@@ -128,7 +128,7 @@ function darwincore_schema(){
       'count' => array('type' => 'int', 'length' => 5),
       'genbanknum' => array('type' => 'varchar', 'length' => 255),
       'remarks' => array('type' => 'text', 'size' => 'big'),
-      'location' => array('type' => 'int', 'length' => 10)
+      'locationnode' => array('type' => 'int', 'length' => 10)
     ),
     'primary key' => array('vid')
   );

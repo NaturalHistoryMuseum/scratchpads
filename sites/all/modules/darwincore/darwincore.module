@@ -3,8 +3,228 @@
 /**
  * An attempt at creating a module for inputting specimens into Drupal
  * 
- * This module uses the Darwin Core Schema (DwC 1.21
+ * This module uses the Darwincore Schema (DwC 1.21
  */
+
+/**
+ * Implementation of hook_viewsapi
+ */
+function darwincore_views_api(){
+  return array('api' => 2);
+}
+
+/**
+ * Following two hooks are related to the node_import module.
+ */
+function darwincore_node_import_fields($type){
+  if($type == 'node:darwincore' || $type == 'node:darwincorelocation'){      
+    $vocabularies = taxonomy_get_vocabularies();
+    foreach($vocabularies as $vocabulary){
+      if($vocabulary->module == 'darwincore'){
+        $options[$vocabulary->name] = taxonomy_get_tree($vocabulary->vid);
+      }
+    }
+  }
+  if($type == 'node:darwincore'){
+    $fields = array();
+    $allowed_values = array();
+    foreach($options['Basis of record'] as $option){
+      $allowed_values[$option->tid] = $option->name;
+    }
+    $fields['basisofrecord'] = array(
+      'title' => t('Basis of record'),
+      'group' => t('Darwincore fields'),
+      'allowed_values' => $allowed_values
+    );
+    $allowed_values = array();
+    foreach($options['Sex'] as $option){
+      $allowed_values[$option->tid] = $option->name;
+    }
+    $fields['sex'] = array(
+      'title' => t('Sex'),
+      'group' => t('Darwincore fields'),
+      'allowed_values' => $allowed_values
+    );
+    $fields['institutioncode'] = array(
+      'title' => t('Institution code'),
+      'group' => t('Darwincore fields')      
+    );
+    $fields['collectioncode'] = array(
+      'title' => t('Collection code'),
+      'group' => t('Darwincore fields')      
+    );
+    $fields['cataloguenumbertext'] = array(
+      'title' => t('Catalogue number text'),
+      'group' => t('Darwincore fields')      
+    );
+    $fields['taxonomicname'] = array(
+      'title' => t('Taxonomic name'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['identificationqualifier'] = array(
+      'title' => t('Identification qualifier/modifier'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['identifiedby'] = array(
+      'title' => t('Identified by'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['dateidentified'] = array(
+      'title' => t('Date identified'),
+      'group' => t('Darwincore fields')
+    );  
+    $allowed_values = array();
+    foreach($options['Type status'] as $option){
+      $allowed_values[$option->tid] = $option->name;
+    }
+    $fields['typestatus'] = array(
+      'title' => t('Type status'),
+      'group' => t('Darwincore fields'),
+      'allowed_values' => $allowed_values
+    );
+    $fields['collectornumber'] = array(
+      'title' => t('Collector number'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['fieldnumber'] = array(
+      'title' => t('Field number'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['collector'] = array(
+      'title' => t('Collector'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['earliestdatecollected'] = array(
+      'title' => t('Earliest date collected'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['lateestdatecollected'] = array(
+      'title' => t('Latest date collected'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['fieldnotes'] = array(
+      'title' => t('Field notes'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['lifestage'] = array(
+      'title' => t('Life stage'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['count'] = array(
+      'title' => t('Individual count'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['genbanknum'] = array(
+      'title' => t('Genbank number'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['othercataloguenum'] = array(
+      'title' => t('Other catalogue numbers'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['remarks'] = array(
+      'title' => t('Remarks'),
+      'group' => t('Darwincore fields')
+    );
+    $fields['locationnode'] = array(
+      'title' => t('Location node'),
+      'group' => t('Darwincore fields')
+    );
+    return $fields;
+  } else if($type == 'node:darwincorelocation'){
+    $fields['locality'] = array(
+      'title' => t('Locality'),
+      'group' => t('Location')
+    );
+    $fields['stateprovince'] = array(
+      'title' => t('State province'),
+      'group' => t('Location')
+    );
+    $allowed_values = array();
+    foreach($options['Continent/BodyOfWater'] as $option){
+      $allowed_values[$option->tid] = $option->name;
+    }
+    $fields['continentocean'] = array(
+      'title' => t('Continent/BodyOfWater'),
+      'group' => t('Location'),
+      'allowed_values' => $allowed_values
+    );
+    $fields['islandgroup'] = array(
+      'title' => t('Island group'),
+      'group' => t('Location')
+    );
+    $fields['island'] = array(
+      'title' => t('Island'),
+      'group' => t('Location')
+    );
+    $fields['county'] = array(
+      'title' => t('County'),
+      'group' => t('Location')
+    );
+    $fields['geodeticdatum'] = array(
+      'title' => t('Geodetic Datum'),
+      'group' => t('Location')
+    );
+    $fields['verbatimcoordinatesystem'] = array(
+      'title' => t('Verbatim Coordinate System'),
+      'group' => t('Location')
+    );
+    $fields['georeferenceprotocol'] = array(
+      'title' => t('Georeference Protocol'),
+      'group' => t('Location')
+    );
+    $fields['coordinateuncertainty'] = array(
+      'title' => t('Coordinate uncertainty in meters'),
+      'group' => t('Location')
+    );
+    $fields['georeferenceremarks'] = array(
+      'title' => t('Georeference remarks'),
+      'group' => t('Location')
+    );
+    $fields['minelevation'] = array(
+      'title' => t('Minimum elevation in meters'),
+      'group' => t('Location')
+    );
+    $fields['maxelevation'] = array(
+      'title' => t('Maximum elevation in meters'),
+      'group' => t('Location')
+    );
+    $fields['mindepth'] = array(
+      'title' => t('Minimum depth in meters'),
+      'group' => t('Location')
+    );
+    $fields['maxdepth'] = array(
+      'title' => t('Maximum depth in meters'),
+      'group' => t('Location')
+    );
+    return $fields;
+  }
+}
+function darwincore_node_import_fields_alter(&$fields, $type){
+  if($type == 'node:darwincore' || $type == 'node:darwincorelocation'){ 
+    // Unset all vocabulary fields - we'll do the association ourselves.
+    $vocabularies_text = t('Vocabularies');
+    foreach($fields as $key => $field){
+      if($field['group'] == $vocabularies_text){
+        unset($fields[$key]);
+      }
+    }
+    // Hide the body field
+    $fields['body']['is_mappable'] = FALSE;
+    $fields['format']['is_mappable'] = FALSE;
+  }
+  if($type == 'node:darwincore'){
+    // Sort the title field
+    $fields['title']['is_mappable'] = FALSE;
+    $fields['title']['default_value'] = 'ANT'; // Auto Node Title
+    $fields['title']['allow_empty'] = TRUE;
+    $fields['title']['map_required'] = FALSE;
+  }
+  if($type == 'node:darwincorelocation'){
+    // Change the title field
+    $fields['title']['group'] = t('Location');
+  }
+}
 
 /**
  * Implementation of hook_node_info
@@ -14,165 +234,14 @@ function darwincore_node_info() {
     'darwincore' => array(
       'name' => t('Specimen (DwC 1.2.1)'),
       'module' => 'darwincore',
-      'description' => t('A Specimen content type based upon Darwin Core 1.2.1')    
+      'description' => t('A Specimen content type based upon Darwincore 1.2.1')    
     ),
     'darwincorelocation' => array(
       'name' => t('Location (DwC 1.2.1)'),
       'module' => 'darwincorelocation',
-      'description' => t('A location which conforms to Darwin Core 1.2.1, and can be associated with multiple specimens')
+      'description' => t('A location which conforms to Darwincore 1.2.1, and can be associated with multiple specimens')
     )
   );
-}
-
-function darwincore_views_tables(){
-  $tables['darwincore'] = array(
-    'name' => 'darwincore',
-    'join' => array(
-      'type' => 'inner',
-      'left' => array(
-        'table' => 'node',
-        'field' => 'nid',
-      ),
-      'right' => array(
-        'field' => 'nid'
-      )      
-    ),
-    'fields' => array(
-      'island' => array('name' => t('Darwincore: Island'), 'sortable' => true),
-      'institutioncode' => array('name' => t('Darwincore: Institution code'), 'sortable' => true),
-      'collectioncode' => array('name' => t('Darwincore: Collection code'), 'sortable' => true),
-      'cataloguenumbertext' => array('name' => t('Darwincore: Catalogue number'), 'sortable' => true),
-      'islandgroup' => array('name' => t('Darwincore: Island group'), 'sortable' => true),
-      'stateprovince' => array('name' => t('Darwincore: State/Province'), 'sortable' => true),
-      'county' => array('name' => t('Darwincore: County'), 'sortable' => true),
-      'locality' => array('name' => t('Darwincore: Locality'), 'sortable' => true),
-      'geodeticdatum' => array('name' => t('Darwincore: Geodetic datum'), 'sortable' => true),
-      'verbatimcoordinatesystem' => array('name' => t('Darwincore: Verbatim coordinate system'), 'sortable' => true),
-      'georeferenceprotocol' => array('name' => t('Darwincore: Georeference protocol'), 'sortable' => true),
-      'coordinateuncertainty' => array('name' => t('Darwincore: Coordinate uncertainty'), 'sortable' => true),
-      'georeferenceremarks' => array('name' => t('Darwincore: Georeference remarks'), 'sortable' => true),
-      'minelevation' => array('name' => t('Darwincore: Minimum elevation'), 'sortable' => true),
-      'maxelevation' => array('name' => t('Darwincore: Maximum elevation'), 'sortable' => true),
-      'mindepth' => array('name' => t('Darwincore: Minimum depth'), 'sortable' => true),
-      'maxdepth' => array('name' => t('Darwincore: Maximum depth'), 'sortable' => true),
-      'identificationqualifier' => array('name' => t('Darwincore: Identification qualifier'), 'sortable' => true),
-      'identifiedby' => array('name' => t('Darwincore: Identified by'), 'sortable' => true),
-      'dateidentified' => array('name' => t('Darwincore: Date identified'), 'sortable' => true),
-      'collectornumber' => array('name' => t('Darwincore: Collector number'), 'sortable' => true),
-      'fieldnumber' => array('name' => t('Darwincore: Field number'), 'sortable' => true),
-      'collector' => array('name' => t('Darwincore: Collector'), 'sortable' => true),
-      'earliestdatecollected' => array('name' => t('Darwincore: Earliest date collected'), 'sortable' => true),
-      'latestdatecollected' => array('name' => t('Darwincore: Latest date collected'), 'sortable' => true),
-      'fieldnotes' => array('name' => t('Darwincore: Field notes'), 'sortable' => true),
-      'count' => array('name' => t('Darwincore: Count'), 'sortable' => true),
-      'genbanknum' => array('name' => t('Darwincore: Genbank number'), 'sortable' => true),
-      'remarks' => array('name' => t('Darwincore: Remarks'), 'sortable' => true),
-      'lifestage' => array('name' => t('Darwincore: Lifestage'), 'sortable' => true),
-      'othercataloguenum' => array('name' => t('Darwincore: Other catalogue number'), 'sortable' => true)
-    )
-  );
-  $tables['term_data_taxonomicname'] = array(
-    'name' => 'term_data',
-    'join' => array(
-      'type'=>'left',
-      'left' => array(
-        'table'=>'darwincore',
-        'field'=>'taxonomicname'
-      ),
-      'right' => array(
-        'field' => 'tid'
-      )
-    ),
-    'fields' => array(
-      'name' => array(
-        'name' => t('Darwincore: Taxonomic name'),
-        'sortable' => true,
-        'handler' => 'views_taxonomicname_handler',
-        'option' => array(
-          '#type' => 'select',
-          '#options' => array(
-            1 => t('Plain text'),
-            2 => t('As link to Term page'),
-          )
-        )
-      )
-    )
-  );
-  $tables['term_data_basisofrecord'] = array(
-    'name' => 'term_data',
-    'join' => array(
-      'type' => 'left',
-      'left' => array(
-        'table' => 'darwincore',
-        'field' => 'basisofrecord'
-      ),
-      'right' => array(
-        'field' => 'tid'
-      )
-    ),
-    'fields' => array(
-      'name' => array('name' => t('Darwincore: Basis of record'), 'sortable' => true)
-    )
-  );
-  $tables['term_data_continentocean'] = array(
-    'name' => 'term_data',
-    'join' => array(
-      'type' => 'left',
-      'left' => array(
-        'table' => 'darwincore',
-        'field' => 'continentocean'
-      ),
-      'right' => array(
-        'field' => 'tid'
-      )
-    ),
-    'fields' => array(
-      'name' => array('name' => t('Darwincore: Continent/Ocean'), 'sortable' => true)
-    )
-  );
-  $tables['term_data_sex'] = array(
-    'name' => 'term_data',
-    'join' => array(
-      'type' => 'left',
-      'left' => array(
-        'table' => 'darwincore',
-        'field' => 'sex'
-      ),
-      'right' => array(
-        'field' => 'tid'
-      )
-    ),
-    'fields' => array(
-      'name' => array('name' => t('Darwincore: Sex'), 'sortable' => true)
-    )
-  );
-  $tables['term_data_typestatus'] = array(
-    'name' => 'term_data',
-    'join' => array(
-      'type' => 'left',
-      'left' => array(
-        'table' => 'darwincore',
-        'field' => 'typestatus'
-      ),
-      'right' => array(
-        'field' => 'tid'
-      )
-    ),
-    'fields' => array(
-      'name' => array('name' => t('Darwincore: Type status'), 'sortable' => true)
-    )
-  );
-  return $tables;  
-}
-
-function views_taxonomicname_handler($fieldinfo, $fielddata, $value, $data){
-  if ($fielddata['options']==2){
-    $results = db_query("SELECT tid FROM term_data WHERE name = '%s' AND tid IN (SELECT tid FROM term_node WHERE nid = %d);",$value,$data->nid);
-    $row = db_fetch_array($results);
-    return l($value,'taxonomy/term/'.$row['tid']);
-  } 
-  // default:
-  return $value;
 }
 
 /**
@@ -184,27 +253,10 @@ function darwincore_menu(){
     'title' => 'Autocomplete darwincore thingumy',
     'page callback' => 'darwincore_autocomplete',
     'access arguments' => array('create node content'),
+    'file' => 'darwincore.autocomplete.inc',
     'type' => MENU_CALLBACK
   );
   return $items;
-}
-
-/**
- * Function for the autocomplete
- */
-function darwincore_autocomplete($field, $string=''){
-  switch ($field){
-    case 'taxonomicname':
-      $results = db_query_range("SELECT DISTINCT name AS string FROM {term_data} WHERE LOWER(name) LIKE LOWER('%s%%')", $string, 0, 10);
-      break;
-    default:
-      $results = db_query_range("SELECT DISTINCT %s AS string FROM {darwincore} WHERE LOWER(%s) LIKE LOWER('%s%%')", $field, $field, $string, 0, 10);
-  }
-  while ($result = db_fetch_object($results)){
-    $matches[$result->string] = check_plain($result->string);
-  }
-  print drupal_to_js($matches);
-  exit();
 }
 
 /**
@@ -345,17 +397,17 @@ function darwincore_form(&$node) {
     '#weight' => 5,
     '#title' => t('Location')
   );
-  $results = db_query("SELECT n.nid,nr.title FROM node n, node_revisions nr WHERE n.nid = nr.nid AND n.type = 'darwincorelocation' ORDER BY nr.title;");
+  $results = db_query("SELECT nr.title FROM node n, node_revisions nr WHERE n.nid = nr.nid AND n.type = 'darwincorelocation' ORDER BY nr.title;");
   $location_nodes[0]=t('-- None --');
   while($row = db_fetch_array($results)){
-    $location_nodes[$row['nid']]=$row['title'];
+    $location_nodes[$row['title']]=$row['title'];
   }
   $form['locate']['locationnode'] = array(
     '#type' => 'select',
     '#title' => t('Select a previously created location'),
     //'#multiple' => 1,
     '#size' => 10,
-    '#default_value' => $node->location,
+    '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d",$node->locationnode))),
     '#options' => $location_nodes
   );
   $form['locate']['togglebelow'] = array(
@@ -610,7 +662,7 @@ function darwincorelocation_access($op, $node){
 /**
  * Implementation of hook_validate()
  */
-function darwincore_validate(&$node, &$form){
+function darwincore_validate($node, &$form){
   // Check the treasure for valuables.
   
   // Check that a BasisOfRecord has been selected
@@ -636,12 +688,24 @@ function darwincore_validate(&$node, &$form){
     }
   }
 }
+function darwincorelocation_validate($node, &$form){
+  // Lets make sure the location title is UNIQUE!
+  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND type = 'darwincorelocation' AND TRIM(LOWER(r.title)) = '%s'", trim(strtolower($node->title)))));
+  if($count){
+    form_set_error('title', t('The title must be unique'));
+  }
+}
 /**
  * Implementation of hook_view().
  */
 function darwincore_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser);
   $output = theme('darwincore_full_page', $node);
+  if($node->locationnode){
+    $locationnode = node_load($node->locationnode);
+    darwincorelocation_view($locationnode);
+    $output .= $locationnode->content['#value'];
+  }
   $node->content = array(
     '#value' => $output,
     '#weight' => -10
@@ -663,121 +727,14 @@ function darwincorelocation_view($node, $teaser = FALSE, $page = FALSE){
 function darwincore_theme($existing, $type, $theme, $path){
   return array(
     'darwincore_full_page' => array(
-      'arguments' => array('node' => NULL)
+      'arguments' => array('node' => NULL),
+      'file' => 'darwincore.pages.inc'
+    ),
+    'darwincorelocation_full_page' => array(
+      'arguments' => array('node' => NULL),
+      'file' => 'darwincore.pages.inc'
     )
   );
-}
-
-/**
- * Enter description here...
- *
- * @param unknown_type $node
- * @return unknown
- */
-function theme_darwincorelocation_full_page($node) {
-  // FIXME - Need to add the shit from the location module.
-  $location = _theme_darwincorelocation_help($node);
-  $output = '<div class="darwincore">';
-  $output .= _theme_darwincore_full_page_help($location, "Location");
-  $output .= '</div>';
-  return $output;
-}
-
-function _theme_darwincorelocation_help($path, $arg){
-  $countries = location_get_iso3166_list();
-  $location = array(
-    array("Continent Ocean",_darwincore_get_taxonomicname($path->continentocean)),
-    array("Type Status",_darwincore_get_taxonomicname($path->typestatus)),
-    array("Island Group",$path->islandgroup),
-    array("Island",$path->island),
-    array("State Province",$path->stateprovince),
-    array("County",$path->county),
-    array("Locality",$path->locality),
-    array("Geodeticdatum",$path->geodeticdatum),
-    array("Verbatim Coordinate System",$path->verbatimcoordinatesystem),
-    array("Georeference Protocol",$path->georeferenceprotocol),
-    array("Coordinate Uncertainty",$path->coordinateuncertainty),
-    array("Georeference Remarks",$path->georeferenceremarks),
-    array("Minimum Elevation",$path->minelevation),
-    array("Elevation",$path->maxelevation),
-    array("Minimum Depth",$path->mindepth),
-    array("Maximum Depth",$path->maxdepth),
-    array("Latitude",$path->locations[0]['latitude']),
-    array("Longitude",$path->locations[0]['longitude']),
-    array("Country Code",t($countries[$path->locations[0]['country']]))
-  );
-  return $location;  
-}
-/**
- * Custom theme for displaying the table of data
- */
-function theme_darwincore_full_page($node) {
-  $dates = array(&$node->dateidentified,&$node->earliestdatecollected,&$node->latestdatecollected);
-  foreach($dates as &$date){
-    $date = ($date['year'])? $date['year']."/".$date['month']."/".$date['day']:'';
-  }
-  if(isset($node->location) && is_numeric($node->location)){
-    $location_node = node_load($node->location);
-    $location = _theme_darwincorelocation_help($location_node);
-  }
-  $collection = array(
-    array("Institution Code",$node->institutioncode),
-    array("Collection Code",$node->collectioncode),
-    array("Catalogue Number Text",$node->cataloguenumbertext),
-    array("Collector Number",$node->collectornumber),
-    array("Field Number",$node->fieldnumber),
-    array("Collector",$node->collector),  
-    array("Earliest Date Collected",$node->earliestdatecollected),
-    array("Latest Date Collected",$node->latestdatecollected),
-    array("Count",$node->count),
-    array("Field Notes",$node->fieldnotes)
-  );
-  $misc = array(
-    array("Sex",_darwincore_get_taxonomicname($node->sex)),
-    array("Life Stage",$node->lifestage),
-    array("Gen Bank Number",$node->genbanknum),
-    array("Remarks",$node->remarks),
-    array("Other Catalogue Numbers",preg_replace("/[\n\r]+/","<br/>",$node->othercataloguenum))  
-  );
-  $identification = array(
-    array("Basis of Record",l(_darwincore_get_taxonomicname($node->basisofrecord),'taxonomy/term/'.$node->basisofrecord)),
-    array("Taxonomic Name",l(_darwincore_get_taxonomicname($node->taxonomicname),'taxonomy/term/'.$node->taxonomicname)),
-    array("Identification qualifier",$node->identificationqualifier),
-    array("Identified By",$node->identifiedby),
-    array("Date Identified",$node->dateidentified)
-  );
-  $output = '<div class="darwincore">';
-  $output .= _theme_darwincore_full_page_help($collection, "Collection");
-  $output .= _theme_darwincore_full_page_help($identification, "Identification");
-  $location_title='';
-  if ($node->location){
-    $location_title = l(t('Location'),'node/'.$node->location);
-  } else {
-    $location_title = 'Location';
-  }
-  if(is_array($location)){
-    $output .= _theme_darwincore_full_page_help($location, $location_title);
-  }
-  $output .= _theme_darwincore_full_page_help($misc, "Miscellaneous");
-  $output .= '</div>';
-  return $output;
-}
-function _theme_darwincore_full_page_help($values, $title){  
-  $output = '<div style="border: solid 1px black;padding:0;margin:5px;"><div style="display:block; border: solid 4px #dddddd;">';
-  $output .= '<h2 style="display:block; background-color: #dddddd; color: black; padding: 5px;margin:0;">'.$title.'</h2>';
-  $i=0;
-  foreach($values as $value){
-    if($value[1] !=''){
-      $output .= "<div style=\"display:block;padding: 0;margin:0; height: 25px;";
-      if ($i!=0)
-        $output .="border-top: dashed 1px #EDF2F2;";
-      $output .='">
-  <p><b>'.$value[0].':&nbsp;</b>'.$value[1].'</p></div>';
-    }    
-    $i++;
-  }
-  $output .= '</div></div>';
-  return $output;
 }
 
 /**
@@ -823,9 +780,6 @@ function darwincore_insert($node){
     $location_node->locations = array($location_node->locations);
     node_save($location_node);
     $node->locationnode = $location_node->nid;
-    $node->location = $location_node->nid;
-  } else {
-    $node->location = $node->locationnode;
   }
   // Lets not insert the default date of 2000/1/1
   $dates = array(&$node->dateidentified,&$node->earliestdatecollected,&$node->latestdatecollected);
@@ -839,7 +793,7 @@ function darwincore_insert($node){
   }
   // Change the taxonomic name to an ID (this should be valid as we've checked it already).
   $node->taxonomicname = _darwincore_get_taxonomicname($node->taxonomicname);
-  $result = db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentified,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,location) VALUES (%d,%d,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);",
+  $result = db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentified,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);",
     $node->nid,
     $node->vid,
     $node->institutioncode,
@@ -863,7 +817,7 @@ function darwincore_insert($node){
     $node->taxonomicname,
     $node->typestatus,
     $node->othercataloguenum,
-    $node->location
+    $node->locationnode
   );
   // Also need to link the taxonomies to the entry (duplication - FUCK, I know).
   $node->taxonomy = array_merge(is_array($node->taxonomy)?$node->taxonomy:array(),array(
@@ -987,6 +941,8 @@ function darwincorelocation_load($node) {
 function darwincore_submit($form, &$form_state){
   // Set the title to be a concat of other fields
   $form_state['values']['title'] = $form_state['values']['institutioncode']." ".$form_state['values']['collectioncode']." ".$form_state['values']['cataloguenumbertext'];
+  // Set the locationnode to be the numeric nid
+  $form_state['values']['locationnode'] = array_pop(db_fetch_array(db_query("SELECT n.nid FROM {node} n, {node_revisions} r WHERE r.vid = n.vid AND r.title = '%s' AND type = 'darwincorelocation'", $form_state['values']['locationnode'])));
 }
 
 /**
@@ -1063,6 +1019,10 @@ function _darwincore_get_taxonomicname($name){
   }
   else{
     $term = taxonomy_get_term_by_name($name);
-    return $term[0]->tid;    
+    if($term){
+      return $term[0]->tid;
+    }
+    $term = taxonomy_get_term(array_pop(db_fetch_array(db_query("SELECT tid FROM {term_synonym} WHERE LOWER(name) = '%s'", strtolower($name)))));
+    return $term->tid;
   }    
 }
