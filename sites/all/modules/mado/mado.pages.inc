@@ -85,7 +85,11 @@ function theme_mado_block($block, $id) {
       
       $view = views_get_view($block['#name']);
       if($view){
+        $view->get_total_rows = 'TRUE';
         $view_content = $view->preview($display_id, array(arg(2)));
+        if(!$view->total_rows && trim($view->display['default']->display_options['empty'])==''){
+          return false;
+        }
         // A little messy (Shit, VERY MESSY), but here we pull out the added
         // links for "Sort" and "Add" if they have been added by the views-sort
         // module.
@@ -114,6 +118,9 @@ function theme_mado_block($block, $id) {
           $title = $module_block['subject'];
         }
         $content = $module_block['content'];
+        if(trim($content)==''){
+          return false;
+        }
       } else {
         return false;
       }
