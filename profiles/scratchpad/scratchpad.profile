@@ -53,7 +53,7 @@ function scratchpad_profile_modules(){
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
       'node_term_edit','autotag','leftandright','taxtab','tinytax','tree',
-      'view_sort','wikipedia','yahooimages','scratchpadify',
+      'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
       'classification_biblio','classification_scratchpads'
   );
 }
@@ -74,7 +74,8 @@ function scratchpad_profile_task_list(){
  * Code for the tasks
  */
 function scratchpad_profile_tasks(&$task, $url){
-  if($task == 'profile'){      
+  if($task == 'profile'){
+    
     $task = 'personal';
 
     // Following copied straight from the default.profile (with story removed)
@@ -232,7 +233,7 @@ function scratchpad_profile_tasks(&$task, $url){
     variable_set('lightbox2_image_node',2);
     
     // Location
-    variable_set('location_default_country','uk');
+    variable_set('location_default_country','');
     variable_set('location_usegmap',1);
     variable_set('location_settings_user', array(
         'multiple' => array('min'=>1,'max'=>1,'add'=>1),
@@ -301,13 +302,6 @@ function scratchpad_profile_tasks(&$task, $url){
       $item['customized'] = 1;
       menu_link_save($item);
     }
-
-    /*    
-
-    // Move the "Admin" page
-    $basic_admin_mlid = array_pop(db_fetch_array(db_query("SELECT mlid FROM menu_links WHERE link_path = 'basicadmin'")));
-    db_query("UPDATE {menu_links} SET p2 = mlid, plid = %d, p1 = %d, customized = 1, link_title = '%s', has_children = 1 WHERE link_path = 'admin';", $basic_admin_mlid, $basic_admin_mlid, st('Advanced'));
-    */
         
     // Add roles and permissions
     db_query("INSERT INTO {role} (name) VALUES ('contributor'),('editor'),('maintainer')");
@@ -474,6 +468,13 @@ function scratchpad_profile_tasks(&$task, $url){
       )
     );
     
+    // Add an alias from 'content' to 'node'
+    path_set_alias('node','content');
+    // Update pathauto for users
+    variable_set('pathauto_user_pattern','user/[user-raw]');
+    // Update the alias set for the maintainer (it was created before we could
+    // have changed it)
+    db_query("UPDATE {url_alias} SET dst = REPLACE(dst, 'users/','user/') WHERE dst LIKE 'users/%'");
     
     // Run cron
     module_invoke_all('cron');
