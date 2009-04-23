@@ -175,7 +175,11 @@ function ispecies_views_default_views() {
       'type' => 'none',
     ));
     $handler->override_option('title', $ispecies_view['title']);
-    $handler->override_option('empty', '<div id="'.$module.'"></div><script type="text/javascript">ispecies_callback(\''.url('ispecies',array('absolute' => TRUE)).'\',\''.$module.'\');</script>');
+    if($ispecies_view['type'] == 'list'){
+      $handler->override_option('empty', '<div><ul id="'.$module.'"></ul></div><script type="text/javascript">ispecies_callback(\''.url('ispecies',array('absolute' => TRUE)).'\',\''.$module.'\');</script>');      
+    } else {
+      $handler->override_option('empty', '<div id="'.$module.'"></div><script type="text/javascript">ispecies_callback(\''.url('ispecies',array('absolute' => TRUE)).'\',\''.$module.'\');</script>');
+    }
     $handler->override_option('empty_format', '2'); // FIXME - this could change
     
     $views[$view->name] = $view;

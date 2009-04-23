@@ -52,7 +52,7 @@ function ncbi_ajax_callback($term_name, $limit = false, $offset = false){
         $elink_request_xml = file_get_contents ( $elink_request );
         if ($elink_request_xml) {
           $elinks = new SimpleXMLElement ( $elink_request_xml );
-          $body .= '<h3>External links</h3><ul id="elinks" />';
+          $body .= '<a href="#" onclick="$(this).next().toggle(); return false;"><h3>External links</h3></a><ul id="elinks" style="display:none">';
           foreach ( $elinks->LinkSet->IdUrlList->IdUrlSet->ObjUrl as $link ) {
             if ($link->LinkName) {
               if ($link->Provider->NameAbbr == 'taxresource') {

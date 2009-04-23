@@ -7,7 +7,8 @@ function googlescholar_ispecies(){
     'googlescholar' => array (
       'title' => t ( 'Google Scholar' ), 
       'description' => t ( 'Some info about Google Scholar' ), 
-      'callback' => 'googlescholar_ajax_callback' ) );
+      'callback' => 'googlescholar_ajax_callback' ,
+      'type' => 'list'));
 }
 
 function googlescholar_init(){
@@ -30,7 +31,7 @@ function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0){
     foreach ( $json_obj->Result as $key => $result ) {      
       $counter ++;      
       $item = array(
-        'body' => sprintf ( '<a target="_blank" href="%s" title="%s">%s</a>', $result->link, $result->title, $result->title ),
+        'body' => '<li><a target="_blank" href="'.$result->link.'">'.str_replace("&amp;","&",str_replace("&gt;",">",str_replace("&lt;","<",$result->title))).'</a></li>',
         'page_url' => $result->link
       );
       $urls[] = $item['page_url'];

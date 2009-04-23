@@ -7,7 +7,8 @@ function bhl_ispecies() {
     'bhl' => array (
       'title' => t('Biodiversity Heritage Library'), 
       'description' => t('Some info about BHL'),
-      'callback' => 'bhl_ajax_callback'));
+      'callback' => 'bhl_ajax_callback',
+      'type' => 'list'));
 }
 
 function bhl_menu() {
@@ -106,7 +107,7 @@ function bhl_ajax_callback($term_name, $limit = 20, $offset = 0){
       $number_of_pages = format_plural ( $page_counter, '@count page', '@count pages' );
       if ($number_of_pages) {
         $item = array(
-          'body' => sprintf ( '<a href="%s" title="%s">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul>',
+          'body' => "<li>" . sprintf ( '<a href="%s" title="%s" onclick="$(this).next().toggle(); return false">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul></li>',
           'page_url' => $title ['title_url']
         );
         $urls = $item['page_url'];

@@ -45,8 +45,4 @@ function add_event_handlers(alteredobject){
       });  
     })
   }
-  // add tablesorter
-  if ($.tablesorter) {
-    $("#view-control-"+vid+" .tablesorter").tablesorter();  
-  }  
 }
