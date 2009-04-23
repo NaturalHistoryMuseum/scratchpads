@@ -13,6 +13,13 @@
  */
 
 /**
+ * Implementation of hook_viewsapi
+ */
+function scratchpadify_views_api(){
+  return array('api' => 2);
+}
+
+/**
  * Implementation of hook_menu
  */
 function scratchpadify_menu(){
