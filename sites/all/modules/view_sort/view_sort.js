@@ -37,5 +37,8 @@ function view_sort_add_click(callback){
   });
 }
 
-// Once loaded, add
-$(document).ready(view_sort_add_click());
+$(document).ready(
+  function(){
+    view_sort_add_click();
+  }
+);
