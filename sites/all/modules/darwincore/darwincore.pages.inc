@@ -26,7 +26,7 @@ function theme_darwincorelocation_full_page($node) {
   return $output;
 }
 
-function _theme_darwincorelocation_help($path, $arg){
+function _theme_darwincorelocation_help($path){
   $countries = location_get_iso3166_list();
   $location = array(
     array("Continent Ocean",_darwincore_get_taxonomicname($path->continentocean)),

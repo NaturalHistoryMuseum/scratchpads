@@ -17,23 +17,8 @@ function darwincore_views_default_views() {
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('fields', array(
     'title' => array(
-      'label' => 'Title',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
+      'label' => 'Institution/Collection/Catalogue',
+      'alter' => array(),
       'link_to_node' => 1,
       'exclude' => 0,
       'id' => 'title',
@@ -41,28 +26,13 @@ function darwincore_views_default_views() {
       'field' => 'title',
       'relationship' => 'none',
     ),
-    'collectioncode' => array(
-      'label' => 'Collection code',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0,
-      ),
+    'taxonomicname' => array(
+      'label' => 'Taxonomic name',
+      'alter' => array(),
       'exclude' => 0,
-      'id' => 'collectioncode',
+      'id' => 'taxonomicname',
       'table' => 'darwincore',
-      'field' => 'collectioncode',
+      'field' => 'taxonomicname',
       'relationship' => 'none',
     ),
   ));
@@ -166,6 +136,7 @@ function darwincore_views_default_views() {
     'default' => '-1',
   ));
   $handler->override_option('title', t('Specimens'));
+  $handler->override_option('items_per_page', 0);
   $views[$view->name] = $view;
   
   return $views;
