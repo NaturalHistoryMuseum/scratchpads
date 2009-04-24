@@ -36,18 +36,11 @@ function darwincore_views_data() {
           )
         )
       ),
-      'title' => array(
-        'title' => t('Museum, Collection & Specimen codes'),
-        'help' => t('A field combining "Institution code", "Collection code" & "Catalogue number text"'),
-        'field' => array(
-          'handler' => 'views_handler_filter_string'          
-        )
-      ),
       'sex' => array(
         'title' => t('Sex'),
         'help' => t('The sex of the specimen'),
         'field' => array(
-          'handler' => 'views_handler_field_term_node_tid'
+          'handler' => 'darwincore_handler_field_tid'
         ),
         'filter' => array(
           'handler' => 'views_handler_filter_term_node_tid'
@@ -57,7 +50,7 @@ function darwincore_views_data() {
         'title' => t('Basis of record'),
         'help' => t('A descriptive term indicating whether the record represents an object or observation.'),
         'field' => array(
-          'handler' => 'views_handler_field_term_node_tid'
+          'handler' => 'darwincore_handler_field_tid'
         ),
         'filter' => array(
           'handler' => 'views_handler_filter_term_node_tid'
@@ -67,7 +60,7 @@ function darwincore_views_data() {
         'title' => t('Type status'),
         'help' => t('A list of one or more nomenclatural types represented by the object.'),
         'field' => array(
-          'handler' => 'views_handler_field_term_node_tid'
+          'handler' => 'darwincore_handler_field_tid'
         ),
         'filter' => array(
           'handler' => 'views_handler_filter_term_node_tid'
@@ -362,7 +355,7 @@ function darwincore_views_data() {
         'title' => t('Continent/BodyOfWater'),
         'help' => t('The full, unabbreviated name of the continent or ocean from which the cataloged item was collected.'),
         'field' => array(
-          'handler' => 'views_handler_field_term_node_tid'
+          'handler' => 'darwincore_handler_field_tid'
         ),
         'filter' => array(
           'handler' => 'views_handler_filter_term_node_tid'

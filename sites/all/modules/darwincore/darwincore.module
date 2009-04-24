@@ -988,10 +988,17 @@ function darwincore_form_alter($form, $form_state, &$form_id){
     }
   }
   // Don't allow editing of darwincore vocabularies
-  elseif ($form_id == 'taxonomy_form_vocabulary' && ($form['module']['#value'] == 'darwincore' || $form['module']['#value'] == 'darwincorelocation')){
-    $vocabulary = check_plain($form['identification']['name']['#default_value']);
-    drupal_set_message(t('The %vocabulary vocabulary can not be edited', array('%vocabulary'=>$vocabulary)), 'error');
-    drupal_goto('admin/content/taxonomy');
+  elseif ($form_id == 'taxonomy_form_vocabulary'){
+    if($form['module']['#value'] == 'darwincore' || $form['module']['#value'] == 'darwincorelocation'){
+      $vocabulary = check_plain($form['identification']['name']['#default_value']);
+      drupal_set_message(t('The %vocabulary vocabulary can not be edited', array('%vocabulary'=>$vocabulary)), 'error');
+      drupal_goto('admin/content/taxonomy');
+    }
+    // Hide Specimen and Location (DwC 1.2.1) From the Content types list
+    if($form_id == 'taxonomy_form_vocabulary'){
+      unset($form['content_types']['nodes']['#options']['darwincore']);
+      unset($form['content_types']['nodes']['#options']['darwincorelocation']);
+    }
   }
 }
 
@@ -1027,7 +1034,7 @@ function _darwincore_get_taxonomicname($name){
     }
     $term_array = db_fetch_array(db_query("SELECT tid FROM {term_synonym} WHERE LOWER(name) = '%s'", strtolower($name)));
     if(is_array($term_array)){
-      $term = taxonomy_get_term(array_pop());
+      $term = taxonomy_get_term(array_pop($term_array));
       return $term->tid;
     }
   }    
