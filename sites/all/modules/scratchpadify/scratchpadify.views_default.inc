@@ -16,7 +16,7 @@ function scratchpadify_views_default_views() {
     // Begin copy and paste of output from the Export tab of a view.
     $view = new view;
     $view->name = $type;
-    $view->description = $type_details->name;
+    $view->description = "[Full nodes view] ".strip_tags($type_details['description']);
     $view->tag = '';
     $view->view_php = '';
     $view->base_table = 'node';
@@ -54,12 +54,7 @@ function scratchpadify_views_default_views() {
         'table' => 'term_node',
         'field' => 'tid',
         'validate_user_argument_type' => 'uid',
-        'validate_user_roles' => array(
-          '2' => 0,
-          '3' => 0,
-          '4' => 0,
-          '5' => 0,
-        ),
+        'validate_user_roles' => array(),
         'relationship' => 'none',
         'default_options_div_prefix' => '',
         'default_argument_user' => 0,
@@ -102,6 +97,114 @@ function scratchpadify_views_default_views() {
     $handler->override_option('title', $type_details['name']);
     $views[$view->name] = $view;
   }
+  
+  $view = new view;
+  $view->name = 'biblio_table';
+  $view->description = 'Biblio nodes formatted in a table';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'biblio';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'biblio_authors' => array(
+      'label' => 'Authors',
+      'alter' => array(),
+      'biblio_label' => 1,
+      'style_name' => 'cse',
+      'exclude' => 0,
+      'id' => 'biblio_authors',
+      'table' => 'biblio',
+      'field' => 'biblio_authors',
+      'relationship' => 'none',
+    ),
+    'title' => array(
+      'label' => 'Title',
+      'alter' => array(),
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'biblio_year' => array(
+      'label' => 'Year of Publication',
+      'alter' => array(),
+      'biblio_label' => 1,
+      'exclude' => 0,
+      'id' => 'biblio_year',
+      'table' => 'biblio',
+      'field' => 'biblio_year',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('arguments', array(
+    'term_node_tid_depth' => array(
+      'default_action' => 'ignore',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'depth' => '0',
+      'break_phrase' => 0,
+      'set_breadcrumb' => 0,
+      'id' => 'term_node_tid_depth',
+      'table' => 'node',
+      'field' => 'term_node_tid_depth',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(),
+      'relationship' => 'none',
+      'default_options_div_prefix' => '',
+      'default_argument_user' => 0,
+      'default_argument_fixed' => '',
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+      'validate_argument_php' => '',
+    ),
+  ));
+  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'override' => 1,
+    'sticky' => 0,
+    'order' => 'asc',
+    'columns' => array(
+      'biblio_authors' => 'biblio_authors',
+      'title' => 'title',
+      'biblio_year' => 'biblio_year',
+    ),
+    'info' => array(
+      'biblio_authors' => array(
+        'separator' => '',
+      ),
+      'title' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'biblio_year' => array(
+        'separator' => '',
+      ),
+    ),
+    'default' => '-1',
+  ));
+  $handler->override_option('title', 'Bibliography');
+  
+  $views[$view->name] = $view;
+  
   // At the end, return array of default views.
   return $views;
 }
