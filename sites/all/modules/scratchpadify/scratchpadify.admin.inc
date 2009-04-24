@@ -263,19 +263,12 @@ function scratchpadify_admin_page(){
             'href' => 'node/add',
             'description' => t('Add new content to your Scratchpad'),
             'title' => t('Add')
-          )
-        )
-      )
-    ),
-    array(
-      'title' => t('Comments'),
-      'position' => 'left',
-      'content' => theme('admin_block_content', array(
+          ),
           array(
             'localized_options' => array(),
             'href' => 'admin/content/comment',
             'description' => t("List and edit Scratchpad comments and the comment moderation queue"),
-            'title' => t('List')
+            'title' => t('Comments')
           )
         )
       )

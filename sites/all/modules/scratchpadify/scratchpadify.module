@@ -55,37 +55,37 @@ function scratchpadify_node_import_fields_alter(&$fields, $type){
 }
 
 function scratchpadify_menu_alter(&$items){
-  $items['admin/settings/uploads']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/admin']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/build/modules']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/clean-urls']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/clone']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/error-reporting']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/file-system']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/uploads']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/gmap_location']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/globalredirect']['access arguments'] = 'SCRATCHPADIFY';  
-  $items['admin/settings/hashcash']['access arguments'] = 'SCRATCHPADIFY';  
-  $items['admin/settings/image-toolkit']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/image']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/image/image_gallery']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/lightbox2']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/location']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/logging']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/logging/syslog']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/mollom']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/performance']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/robotstxt']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/tabs']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/thickbox']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/weight']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/jquery_update']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/settings/site-maintenance']['access arguments'] = 'SCRATCHPADIFY';
-  $items['admin/og/og_access']['access arguments'] = 'SCRATCHPADIFY';
+  $items['admin/settings/uploads']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/admin']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/build/modules']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/clean-urls']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/clone']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/error-reporting']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/file-system']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/uploads']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/gmap_location']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/globalredirect']['access arguments'] = array('SCRATCHPADIFY');  
+  $items['admin/settings/hashcash']['access arguments'] = array('SCRATCHPADIFY');  
+  $items['admin/settings/image-toolkit']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/image']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/image/image_gallery']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/lightbox2']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/location']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/logging']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/logging/syslog']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/mollom']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/performance']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/robotstxt']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/tabs']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/thickbox']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/weight']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/jquery_update']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/site-maintenance']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/og/og_access']['access arguments'] = array('SCRATCHPADIFY');
   // All the print ones
   foreach($items as $item => $value){
     if(substr($item,0,20) == 'admin/settings/print'){
-      $items[$item]['access arguments'] = 'SCRATCHPADIFY';
+      $items[$item]['access arguments'] = array('SCRATCHPADIFY');
     }
   }
   $items['node'] = array(
