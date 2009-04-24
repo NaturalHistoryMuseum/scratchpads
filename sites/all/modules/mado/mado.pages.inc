@@ -87,7 +87,7 @@ function theme_mado_block($block, $id) {
       if($view){
         $view->get_total_rows = 'TRUE';
         $view_content = $view->preview($display_id, array(arg(2)));
-        if(!$view->total_rows && trim($view->display['default']->display_options['empty'])==''){
+        if((isset($view->total_rows) && !$view->total_rows) && trim($view->display['default']->display_options['empty'])==''){
           return false;
         }
         // A little messy (Shit, VERY MESSY), but here we pull out the added
