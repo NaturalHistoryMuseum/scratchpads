@@ -233,7 +233,7 @@ function classification_scratchpads_form_alter(&$form, $form_state, $form_id){
       break;
     
     case 'taxonomy_form_vocabulary' :
-      if($form['module']['#value'] == 'taxonomy' || !isset($form['module']['#value'])){
+      if ($form ['module'] ['#value'] == 'taxonomy' || ! isset ( $form ['module'] ['#value'] )) {
         $classification_vocabs = variable_get ( 'classification_scratchpads', array () );
         
         $form ['settings'] ['vocab'] = array (
@@ -243,11 +243,19 @@ function classification_scratchpads_form_alter(&$form, $form_state, $form_id){
           '#description' => t ( 'Select if you want to use this vocabulary with the classification module.' ) );
         
         $form ['#submit'] [] = 'classification_scratchpads_taxonomy_form_vocabulary_submit';
-      }      
+      }
       break;
   
   }
 
+}
+
+function classification_scratchpads_taxonomy($op, $type, $vocabulary){
+  if($type == 'vocabulary' && $op == 'delete'){
+    $classification_scratchpads = variable_get('classification_scratchpads', array());
+    unset($classification_scratchpads[$vocabulary['vid']]);
+    variable_set('classification_scratchpads', $classification_scratchpads);
+  }
 }
 
 function classification_scratchpads_taxonomy_form_vocabulary_submit($form, &$form_state){
