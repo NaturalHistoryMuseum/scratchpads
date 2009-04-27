@@ -176,6 +176,7 @@ function autotag_submit_vocabulary_form($form, $form_values){
  * Receive the form after the first page, nothing is done after the second.
  */
 function autotag_form_submit($form, &$form_state){
+  echo "<pre>";print_r($form_state);echo "</pre>";exit;
   if(isset($form_state['storage']['formbuttons'])){
     // After first page we store the form so that it can be restored on the second
     // page
@@ -222,7 +223,6 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     }
     return;
   }
-  
   if(variable_get('autotag_without_user_input', 0)){
     return;
   }
@@ -287,6 +287,16 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     // Change what will happen when we submit the form (remove the other 
     // submits)
     $form['buttons']['submit']['#submit'] = array('autotag_form_submit');
+    // upload_node_form_submit is SPECIAL, so add it back
+    // FIXME! - This doesn't need to be array_search
+    $key = array_search('upload_node_form_submit',$form_state['storage']['formsubmit']);
+    if($key){
+      $form['buttons']['submit']['#submit'] = array(
+        'upload_node_form_submit',
+        'autotag_form_submit'
+      );
+      unset($form_state['storage']['formsubmit'][$key]);
+    }
     $form['#submit'] = array();
   } else {
     // Else we likely have either a submitted form, or one with post shit
