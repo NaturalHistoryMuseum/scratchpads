@@ -282,7 +282,6 @@ function scratchpad_profile_tasks(&$task, $url){
       'biblio' => array('menu_name' => 'primary-links','link_title' => st('Bibliography'),'module'=>'system'),
       'contact' => array('menu_name' => 'primary-links','link_title' => st('Contact us'),'module'=>'system','hidden'=>0),
       'forum' => array('menu_name' => 'primary-links','module'=>'system'),
-      'taskguide' => array('menu_name' => 'primary-links','module'=>'system'),
       'map/node' => array('hidden' => 1,'module'=>'system'),
       'map/node/load/%/%' => array('hidden' => 1,'module'=>'system'),
       'map/user' => array('hidden' => 1,'module'=>'system'),
@@ -302,6 +301,9 @@ function scratchpad_profile_tasks(&$task, $url){
       $item['customized'] = 1;
       menu_link_save($item);
     }
+    // Create a link to help
+    $link = array('menu_name' => 'primary-links', 'weight' => -100, 'link_path' => 'http://scratchpads.eu/help', 'link_title' => 'Help');
+    menu_link_save($link);
         
     // Add roles and permissions
     db_query("INSERT INTO {role} (name) VALUES ('contributor'),('editor'),('maintainer')");
