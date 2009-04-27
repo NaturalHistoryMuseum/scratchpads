@@ -146,6 +146,13 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       }
     }
   }
+  else if($form['#id'] == 'node-form'){
+    if(isset($form['attachments']['wrapper']['new']['upload']['#description'])){
+      global $user;
+      $limits = _upload_file_limits($user);
+      $form['attachments']['wrapper']['new']['upload']['#description'] .= " ".t('You are currently using <b>!using</b> of your <b>!quota</b> quota.', array('!using' => format_size(upload_space_used($user->uid)), '!quota' => format_size($limits['user_size'])));
+    }
+  }
 }
 
 function scratchpadify_node_page_default(){
