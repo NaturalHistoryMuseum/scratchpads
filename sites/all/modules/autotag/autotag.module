@@ -176,12 +176,18 @@ function autotag_submit_vocabulary_form($form, $form_values){
  * Receive the form after the first page, nothing is done after the second.
  */
 function autotag_form_submit($form, &$form_state){
-  echo "<pre>";print_r($form_state);echo "</pre>";exit;
   if(isset($form_state['storage']['formbuttons'])){
     // After first page we store the form so that it can be restored on the second
     // page
     $form_state['storage']['formsubmitted'] = $form;
   } else {
+    //echo "<pre>";print_r($form_state);echo "</pre>";exit;
+    foreach($form_state['clicked_button']['#post']['files'] as $key => $value){
+      $form_state['values']['files'][$key] = db_fetch_array(db_query("SELECT * FROM files WHERE fid = %d", $key));
+      $form_state['values']['files'][$key]['new'] = 1;
+      $form_state['values']['files'][$key]['list'] = 1;
+    }
+    
     // Restore the hidden form fields from the old form for taxonomy
     $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
     foreach($form['taxonomy'] as $key=>$value){
@@ -287,17 +293,19 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     // Change what will happen when we submit the form (remove the other 
     // submits)
     $form['buttons']['submit']['#submit'] = array('autotag_form_submit');
-    // upload_node_form_submit is SPECIAL, so add it back
-    // FIXME! - This doesn't need to be array_search
-    $key = array_search('upload_node_form_submit',$form_state['storage']['formsubmit']);
-    if($key){
-      $form['buttons']['submit']['#submit'] = array(
-        'upload_node_form_submit',
-        'autotag_form_submit'
-      );
-      unset($form_state['storage']['formsubmit'][$key]);
-    }
     $form['#submit'] = array();
+  
+    // Add 'upload_node_form_submit' - it's special!!
+    /*
+    $key = array_search('upload_node_form_submit', $form_state['storage']['formsubmit']);
+    if($key){
+      $form['#submit'][] = 'upload_node_form_submit';
+    }
+    $key = array_search('upload_node_form_submit', $form_state['storage']['formbuttons']['submit']['#submit']);
+    if($key){
+      $form['buttons']['submit']['#submit'] = array('upload_node_form_submit','autotag_form_submit');
+    }
+    */
   } else {
     // Else we likely have either a submitted form, or one with post shit
     if(count($form_state['storage']['formsubmitted'])){
@@ -311,6 +319,16 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       // Our submit needs to be executed first - before node submit
       $form['buttons']['submit']['#submit'] = array_merge(array('autotag_form_submit'),$form['buttons']['submit']['#submit']);
     }
+    // Remove 'upload_node_form_submit'
+    $key = array_search('upload_node_form_submit', $form['#submit']);
+    if($key){
+      unset($form['#submit'][$key]);
+    }
+    $key = array_search('upload_node_form_submit', $form['buttons']['submit']['#submit']);
+    if($key){
+      unset($form['buttons']['submit']['#submit'][$key]);
+    }
+    
     // Add the CSS and JS necesary to style the form
     jquery_ui_add(array('ui.draggable', 'ui.droppable'),'none');
     drupal_add_css(drupal_get_path('module','autotag').'/autotag.css');
