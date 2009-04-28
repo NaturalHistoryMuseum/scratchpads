@@ -8,6 +8,7 @@ function node_term_edit_form_alter(&$form, &$form_state, $form_id){
     $term = taxonomy_get_term($_GET['tid']);
     if($term){
       $form['#node']->taxonomy[$_GET['tid']] = $term;
+      $form['#redirect'] = 'taxonomy/term/'.$_GET['tid'];
     }
   }
 }
