@@ -40,7 +40,8 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       // Add the callback URL for sorting
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
-        'ident' => $vids[0].'/'.$tids[0]
+        'ident' => $vids[0].'/'.$tids[0],
+	'finished_sorting' => t('Finished sorting')
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');

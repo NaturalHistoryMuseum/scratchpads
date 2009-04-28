@@ -1,8 +1,6 @@
-var mado_finished_sorting;
-
 $(document).ready(function() {
   $('#mado-start-sort').click( function() {
-    $('#mado-start-sort').html(mado_finished_sorting);
+    $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
     $('#divider').css('display','block');
     $('#mado > *').css('background-color','white');
     $('.resize').css('display','none');
