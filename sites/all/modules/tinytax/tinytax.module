@@ -168,7 +168,7 @@ function tinytax_taxonomy($op, $type, $vocabulary){
   if($type == 'vocabulary'){
     if($op=='delete'){
       db_query("DELETE FROM {blocks} WHERE module='tinytax' AND delta='%s'","tinytax-".$vocabulary['vid']);
-    } else if($op=='insert' && $type){
+    } else if($op=='insert' && $type=='vocabulary'){
       if(isset($vocabulary['vocab']) && $vocabulary['vocab']){
         module_load_include('admin.inc','block');
         block_admin_display();
