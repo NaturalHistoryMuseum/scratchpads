@@ -41,7 +41,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
         'ident' => $vids[0].'/'.$tids[0],
-	'finished_sorting' => t('Finished sorting')
+	'finished_sorting' => l(t('Finished sorting'),$_GET['q'])
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
