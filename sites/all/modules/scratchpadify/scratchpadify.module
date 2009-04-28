@@ -318,7 +318,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               }
               $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type), array('query' => $query));
             }
-            $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
+            $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form', array('query'=>$query));
             $items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
             $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');
             uksort($items, "strnatcasecmp");
