@@ -17,6 +17,16 @@
 /*******************************************************************************
  * HOOKS
  ******************************************************************************/
+//Implementation of hook_viewsapi
+function leftandright_views_api(){
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module','leftandright') . "/views"
+  );
+}
+function leftandright_perm(){
+  return array('administer leftandright');
+}
 // hook_menu
 function leftandright_menu(){
   $items['admin/content/taxonomy/leftandright'] = array(
@@ -31,6 +41,14 @@ function leftandright_menu(){
     'page callback' => 'leftandright_rebuild_tree_page',
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK
+  );
+  $items['admin/settings/leftandright'] = array(
+    'title' => 'Leftandright',
+    'description' => 'Change the default Leftandright settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('leftandright_admin_settings'),
+    'access arguments' => array('administer leftandright'),
+    'file' => 'leftandright.admin.inc'
   );
   $items['admin/content/taxonomy/%'] = array(
     'title' => 'List terms',

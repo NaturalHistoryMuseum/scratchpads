@@ -59,7 +59,17 @@ function leftandright_overview_terms($vid){
   return $output;
   
 }
-
+/**
+ * autotag settings page
+ */
+function leftandright_admin_settings() {
+  $form['leftandright_minimum_terms'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum number of terms required to use Leftandright module'),
+    '#default_value' => variable_get('leftandright_minimum_terms', 1000)
+  );
+  return system_settings_form($form);
+}
 /**
  * List and manage vocabularies.
  */
