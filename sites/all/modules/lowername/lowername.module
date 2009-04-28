@@ -21,3 +21,14 @@ function lowername_taxonomy($op, $type, $array = NULL){
     }
   }
 }
+
+/**
+ * FFS, I'm having to fix issues with other modules (NOT BLOODY MINE), here,
+ * AAAAAAAAAAAAAAAAAAAAAAAAARGH!
+ * 
+ * This function shouldn't be needed, but in case other modules are naughty, and
+ * add terms directly to the term_data table, then it is needed.
+ */
+function lowername_cron(){
+  db_query("INSERT INTO term_lowername (tid,lowername) SELECT tid, LOWER(name) FROM term_data WHERE tid NOT IN (SELECT tid FROM term_lowername)");
+}
