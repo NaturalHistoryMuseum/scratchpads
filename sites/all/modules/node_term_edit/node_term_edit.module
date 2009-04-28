@@ -9,6 +9,9 @@ function node_term_edit_form_alter(&$form, &$form_state, $form_id){
     if($term){
       $form['#node']->taxonomy[$_GET['tid']] = $term;
       $form['#redirect'] = 'taxonomy/term/'.$_GET['tid'];
+      if(count($form_state['storage']) && !$form_state['submitted']){
+        drupal_set_message(t('The term "@term" will be automatically added to this node.', array('@term' => $term->name)));
+      }
     }
   }
 }
