@@ -293,6 +293,11 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           return array('subject'=>'Statistics','content'=>theme_item_list($items));
         case 1:
           if(user_access('create type content')){ // This is a "fixperms" permission, go get it!
+            if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
+              $query = array('tid' => arg(2));
+            } else {
+              $query = array();
+            }
             drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
             $node_types = node_get_types();
             $items = array();
@@ -300,7 +305,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               if($node_type == 'ispecies'){ // Grrr, I hate this, module specific code.  Is there a better way?
                 continue;
               }
-              $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type));
+              $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type), array('query' => $query));
             }
             $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form');
             $items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
