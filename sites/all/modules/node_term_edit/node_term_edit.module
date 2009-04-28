@@ -1,17 +1,36 @@
 <?php
 function node_term_edit_form_alter(&$form, &$form_state, $form_id){
-  // Return if this isn't a node form  
-  if($form['#id'] != 'node-form'){return;}  
-  // Check that the tid is set and is numeric
+  //Check that the tid is set and is numeric
   if(isset($_GET['tid']) && is_numeric($_GET['tid'])){
-    // Add it to the form
-    $term = taxonomy_get_term($_GET['tid']);
-    if($term){
-      $form['#node']->taxonomy[$_GET['tid']] = $term;
-      $form['#redirect'] = 'taxonomy/term/'.$_GET['tid'];
-      if(count($form_state['storage']) && !$form_state['submitted']){
-        drupal_set_message(t('The term "@term" will be automatically added to this node.', array('@term' => $term->name)));
+    // If we're on the biblio import form.  
+    if($form_id == 'biblio_import_form' && isset($form['import_taxonomy'])){
+      $vocabs = array_filter(array_keys((array)$form['import_taxonomy']),'non_element_property');
+      foreach($vocabs as $vocab){
+        if(isset($form['import_taxonomy'][$vocab]['#type']) && $form['import_taxonomy'][$vocab]['#type'] == 'select'){
+          // We've got the select form, lets look for the tid
+          foreach($form['import_taxonomy'][$vocab]['#options'] as $option){
+            if(is_object($option) && isset($option->option[$_GET['tid']])){
+              $form['import_taxonomy'][$vocab]['#default_value'] = array($_GET['tid']);
+            }
+          }
+        }
+      }
+    }
+    // else if we're a node form.
+    else if($form['#id'] == 'node-form'){
+      // Add it to the form
+      $term = taxonomy_get_term($_GET['tid']);
+      if($term){
+        $form['#node']->taxonomy[$_GET['tid']] = $term;
+        $form['#redirect'] = 'taxonomy/term/'.$_GET['tid'];
+        if(count($form_state['storage']) && !$form_state['submitted']){
+          drupal_set_message(t('The term "@term" will be automatically added to this node.', array('@term' => $term->name)));
+        }
       }
     }
   }
+}
+
+function non_element_property($key){
+  return $key[0] != '#';
 }
