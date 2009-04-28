@@ -154,6 +154,17 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       $form['attachments']['wrapper']['new']['upload']['#description'] .= " ".t("You are currently using <b>!using</b> of your <b>!quota</b> quota. If you would like this quota increasing, please <a href=\"mailto:scratchpad@nhm.ac.uk?subject=Increase upload quota&body=Scratchpad Administrators! Please can you increase the quota for !user on <!site>.\">mail</a> us.", array('!using' => format_size(upload_space_used($user->uid)), '!quota' => format_size($limits['user_size']), '!user' => print_r($user->name, true), '!site' => $base_url));
     }
   }
+  else if($form_id == 'taxonomy_form_vocabulary'){
+    if(!isset($form['vid']) && isset($form['settings']['multiple']['#default_value'])){
+      // Set default value of multiple to checked.
+      $form['settings']['multiple']['#default_value'] = 1;
+      // Check all content types.
+      $form['content_types']['nodes']['#default_value'] = array_keys($form['content_types']['nodes']['#options']);
+      // Collapse the content types and settings fieldsets.
+      $form['content_types']['#collapsed'] = TRUE;
+      $form['settings']['#collapsed'] = TRUE;
+    }
+  } 
 }
 
 function scratchpadify_node_page_default(){
