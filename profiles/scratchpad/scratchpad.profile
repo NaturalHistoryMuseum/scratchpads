@@ -271,10 +271,14 @@ function scratchpad_profile_tasks(&$task, $url){
     variable_set('preprocess_js',1);
     
     // Set various blocks to be visible
+    db_query("DELETE FROM {blocks} WHERE module = search AND delta = 0");
     foreach (list_themes() as $theme) {
       db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('scratchpadify',1,'%s','left',1)", $theme->name);
-      db_query("INSERT INTO {blocks} (module, delta, theme, region, status,weight) VALUES ('scratchpadify',2,'%s','left',1,20)", $theme->name);
+      db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('scratchpadify',2,'%s','left',1,20)", $theme->name);
+      db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight, title) VALUES ('search',0,'%s','left',1,-20,'<none>')", $theme->name);
     }
+    // Hide the theme search form
+    variable_set('theme_settings', array('toggle_search' => 0));
     
     // Remove the "Biblio" & "Taskguide" links from the navigation menu - they
     // look ugly.    
