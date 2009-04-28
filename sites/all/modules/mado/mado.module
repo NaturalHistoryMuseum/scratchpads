@@ -56,7 +56,7 @@ function mado_form_alter(&$form, $form_state, $form_id){
       $form ['settings'] ['usemado'] = array (
         '#type' => 'checkbox', 
         '#title' => t ( 'Display content using "Mado"' ), 
-        '#default_value' => isset ( $mado_vocabularies [$form ['vid'] ['#value']] ) && $mado_vocabularies [$form ['vid'] ['#value']] ? 1 : 0, 
+        '#default_value' => !isset($form['vid']) || (isset ( $mado_vocabularies [$form ['vid'] ['#value']] ) && $mado_vocabularies [$form ['vid'] ['#value']]) ? 1 : 0, 
         '#description' => t ( 'Check the box if you would like to display content in blocks like "Taxon pages"' ) );
       $form ['#submit'] [] = 'mado_taxonomy_form_vocabulary_submit';
     }
