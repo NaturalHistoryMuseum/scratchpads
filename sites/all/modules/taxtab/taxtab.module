@@ -11,6 +11,7 @@
  */
 function taxtab_form_alter(&$form, &$form_state, $form_id){
   if ('search_block_form' == $form_id) {
+    $form['submit']['#value'] = t('Go!');
     $form['search_block_form']['#title'] = '';
     $form['tabs'] = _taxtab_tabs(true);
     unset($form['basic']['#title']);
@@ -69,12 +70,12 @@ function _taxtab_tabs($taxonomy=false){
 }
 
 function taxtab_create_form(&$form_state){
-/* TODO drupal_retrieve_form() now accepts a form_state parameter. */
   $form = drupal_retrieve_form('search_form', $form_state);
   $form['basic']['tabs'] = _taxtab_tabs(false);
   $form['basic']['inline']['keys']['#autocomplete_path'] = 'taxtab/autocomplete';
   $form['basic']['inline']['keys']['#size'] = 15;
   $form['#action']='/taxtab/process';
+  $form['basic']['inline']['submit']['#value'] = t('Go!');
   unset($form['basic']['#title']);
   return $form;
 }
