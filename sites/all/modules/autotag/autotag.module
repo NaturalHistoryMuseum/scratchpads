@@ -183,9 +183,20 @@ function autotag_form_submit($form, &$form_state){
   } else {
     //echo "<pre>";print_r($form_state);echo "</pre>";exit;
     foreach($form_state['clicked_button']['#post']['files'] as $key => $value){
-      $form_state['values']['files'][$key] = db_fetch_array(db_query("SELECT * FROM files WHERE fid = %d", $key));
-      $form_state['values']['files'][$key]['new'] = 1;
-      $form_state['values']['files'][$key]['list'] = 1;
+      // If we have a node, then the files may already be associated.
+      $fids_to_ignore = array();
+      if(isset($form['#node']->nid)){
+        // Lets get a list of the FIDs that are already in the upload table
+        $results = db_query("SELECT DISTINCT fid FROM upload WHERE nid = %d", $form['#node']->nid);
+        while($row = db_fetch_array($results)){
+          $fids_to_ignore[$row['fid']] = $row['fid'];
+        }
+      }
+      if(!isset($fids_to_ignore[$key])){
+        $form_state['values']['files'][$key] = db_fetch_array(db_query("SELECT * FROM files WHERE fid = %d", $key));
+        $form_state['values']['files'][$key]['new'] = 1;
+        $form_state['values']['files'][$key]['list'] = 1;
+      }
     }
     
     // Restore the hidden form fields from the old form for taxonomy
