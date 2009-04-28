@@ -96,7 +96,7 @@ function ispecies_init(){
 function ispecies_add_js($tid){
   drupal_add_js(drupal_get_path('module','ispecies').'/ispecies.js');
   drupal_add_js(drupal_get_path('module','citation')."/citation.js");
-  drupal_add_js('page_tid = '.$tid.';' , 'inline');
+  drupal_add_js(array('ispecies' => array('page_tid' => $tid, 'empty_view' => t('We have no content for this dynamic view'))),'setting');
 }
 /**
  * Implementation of hook_viewsapi
