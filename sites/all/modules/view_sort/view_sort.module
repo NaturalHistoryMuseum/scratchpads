@@ -22,6 +22,11 @@ function view_sort_menu(){
       'assign node weight' ) );
   return $items;
 }
+
+function view_sort_perm(){
+  return array('view sort sort');
+}
+
 function view_sort_views_pre_render(&$view){
   // Check to see if the view is being filtered by node type, and if it is being
   // sorted by weight.  If so, we add the links.
