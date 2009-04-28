@@ -251,7 +251,10 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   // Autotag doesn't work with the following content types, return if this node
   // is one of these.
   $node_types_to_ignore = variable_get('autotag_broken_node_types', array('webform', 'biblio'));
-  if(in_array($form['type']['#value'], $node_types_to_ignore)){return;}
+  if(in_array($form['type']['#value'], $node_types_to_ignore)){
+    drupal_set_message(t('The term selection interface provided by the Autotag module does not work with the <b>@type</b> content type. Nodes will still be automatically tagged, but without the option to remove unwanted tags.', array('@type' => $form['type']['#value'])));
+    return;
+  }
   
   // We're here, the form needs some changes, so lets get to it.
   
