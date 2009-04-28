@@ -123,8 +123,8 @@ function taxtab_normal_js(){
  */
 function taxtab_autocomplete($string = '') {
   $results;
-  if(function_exists('leftandright_get_tree')){
-    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t, {leftandright} l WHERE lowername LIKE LOWER('%s%%') AND l.tid = t.tid ORDER BY t.name", 't', 'tid'), $string, 0, 15);    
+  if(function_exists('lowername_taxonomy')){
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t, {term_lowername} l WHERE lowername LIKE LOWER('%s%%') AND l.tid = t.tid ORDER BY t.name", 't', 'tid'), $string, 0, 15);    
   } else {
     $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) LIKE LOWER('%s%%') ORDER BY t.name", 't', 'tid'), $string, 0, 15);
   }
