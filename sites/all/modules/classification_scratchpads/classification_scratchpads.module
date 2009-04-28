@@ -239,7 +239,7 @@ function classification_scratchpads_form_alter(&$form, $form_state, $form_id){
         $form ['settings'] ['vocab'] = array (
           '#type' => 'checkbox', 
           '#title' => t ( 'Classification vocabulary' ), 
-          '#default_value' => ($classification_vocabs [$form ['vid'] ['#value']] ? 1 : 0), 
+          '#default_value' => !isset($form['vid']) || $classification_vocabs [$form ['vid'] ['#value']] ? 1 : 0, 
           '#description' => t ( 'Select if you want to use this vocabulary with the classification module.' ) );
         
         $form ['#submit'] [] = 'classification_scratchpads_taxonomy_form_vocabulary_submit';
