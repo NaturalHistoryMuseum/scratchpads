@@ -1,4 +1,3 @@
-var mado_callback_url;
 var mado_finished_sorting;
 
 $(document).ready(function() {
@@ -22,8 +21,8 @@ $(document).ready(function() {
           }
         });
         var ajax_options = {
-          url:mado_callback_url,
-          data:{"blocks[]":items,"identifier":mado_ident}
+          url:Drupal.settings.mado.callback_url,
+          data:{"blocks[]":items,"identifier":Drupal.settings.mado.ident}
         };
         $.ajax(ajax_options); 
       }
@@ -46,8 +45,8 @@ function mado_update_resizes(element){
   var newclass = $(element).parent().parent().parent().parent().parent().parent().attr("class");
   var resizeid = $(element).parent().parent().parent().parent().parent().parent().attr("id");
   var ajax_options = {
-    url:mado_callback_url,
-    data:{"resize":resizeid,"identifier":mado_ident,"class":newclass,"scroll":scroll}
+    url:Drupal.settings.mado.callback_url,
+    data:{"resize":resizeid,"identifier":Drupal.settings.mado.ident,"class":newclass,"scroll":scroll}
   };
   $.ajax(ajax_options);  
 }

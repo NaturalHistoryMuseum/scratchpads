@@ -38,8 +38,10 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       // Add mado CSS
       drupal_add_css(drupal_get_path('module','mado').'/mado.css');
       // Add the callback URL for sorting
-      drupal_add_js('mado_callback_url="'.url('mado/save',array('absolute'=>TRUE)).'"; mado_ident = "'.$vids[0].'/'.$tids[0].'"', 'inline');
-      drupal_add_js('mado_finished_sorting="'.addslashes(l(t('Finished sorting'),$_GET['q'])).'"', 'inline');
+      drupal_add_js(array('mado' => array(
+        'callback_url' => url('mado/save',array('absolute'=>TRUE)),
+        'ident' => $vids[0].'/'.$tids[0]
+      )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
       // Set the page title      
