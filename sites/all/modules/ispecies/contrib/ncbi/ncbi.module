@@ -16,8 +16,7 @@ function ncbi_init(){
 
 function ncbi_ajax_callback($term_name, $limit = false, $offset = false){
   $items = array ();
-  $db = 'taxonomy';
-  $esearch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=' . $db . '&term=' . $term_name . '&retmax=' . $limit );
+  $esearch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term=' . str_replace(" ", "+", $term_name) . '&retmax=' . $limit );
   $esearch_xml = file_get_contents ( $esearch_request );
   if ($esearch_xml) {
     $esearch_results = new SimpleXMLElement ( $esearch_xml );
@@ -25,7 +24,7 @@ function ncbi_ajax_callback($term_name, $limit = false, $offset = false){
   if ($esearch_results) {
     if ($esearch_results->IdList->Id) {
       foreach ( $esearch_results->IdList->Id as $id ) {
-        $efetch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=' . $db . '&retmode=xml&id=' . $id );
+        $efetch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=taxonomy&retmode=xml&id=' . $id );
         $sequence_xml = file_get_contents ( $efetch_request );
         if ($sequence_xml) {
           $item = new stdClass ( );
