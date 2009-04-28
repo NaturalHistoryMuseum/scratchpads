@@ -153,7 +153,9 @@ function _tinytax_list_blocks(){
   $vocabularies = array_values(taxonomy_get_vocabularies()); // Paranoia setting in (no need for array_values).
   $blocks = array();
   foreach ($vocabularies as $vocabulary){
-    $blocks['tinytax-'.$vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array('@vocabulary'=>check_plain($vocabulary->name)));
+    if($vocabulary->module == 'taxonomy'){
+      $blocks['tinytax-'.$vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array('@vocabulary'=>check_plain($vocabulary->name)));
+    }
   }
   return $blocks;
 }
