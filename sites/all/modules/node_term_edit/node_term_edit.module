@@ -10,7 +10,9 @@ function node_term_edit_form_alter(&$form, &$form_state, $form_id){
           // We've got the select form, lets look for the tid
           foreach($form['import_taxonomy'][$vocab]['#options'] as $option){
             if(is_object($option) && isset($option->option[$_GET['tid']])){
+              $term = taxonomy_get_term($_GET['tid']);
               $form['import_taxonomy'][$vocab]['#default_value'] = array($_GET['tid']);
+              drupal_set_message(t('The term "@term" will be automatically added to the imported bibliography.', array('@term' => $term->name)));
             }
           }
         }
