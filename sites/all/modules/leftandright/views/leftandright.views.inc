@@ -42,8 +42,8 @@ function leftandright_views_data() {
         )
       ),
       'depth' => array(
-        'title' => t('Depth'),
-        'help' => t('The depth of the term from the top of the tree.'),
+        'title' => t('Term with depth'),
+        'help' => t('The term with padding according to the depth from the top of the tree.'),
         'sort' => array(
           'handler' => 'views_handler_sort'
         ),

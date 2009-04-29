@@ -207,6 +207,75 @@ function scratchpadify_views_default_views() {
   
   $views[$view->name] = $view;
   
+  $view = new view;
+  $view->name = 'vocabularies';
+  $view->description = '';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'term_data';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'depth' => array(
+      'label' => '',
+      'alter' => array(),
+      'exclude' => 0,
+      'id' => 'depth',
+      'table' => 'leftandright',
+      'field' => 'depth',
+      'relationship' => 'none',
+      'description' => 1
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'lft' => array(
+      'order' => 'ASC',
+      'id' => 'lft',
+      'table' => 'leftandright',
+      'field' => 'lft',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('arguments', array(
+    'vid' => array(
+      'default_action' => 'empty',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '%1',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'id' => 'vid',
+      'table' => 'vocabulary',
+      'field' => 'vid',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(),
+      'relationship' => 'none',
+      'default_options_div_prefix' => '',
+      'default_argument_user' => 0,
+      'default_argument_fixed' => '',
+      'validate_argument_node_type' => array(),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('items_per_page', 0);
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'vocabularies');
+  $views[$view->name] = $view;
+  
   // At the end, return array of default views.
   return $views;
 }
