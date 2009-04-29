@@ -146,21 +146,17 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   } else {
     $divider_position = false;
   }
+  $output = '<div id="'.$view_name.'" class="view-sort-drag">';
   foreach($items as $id => $item){
     // FIXME - This needs looking at
     // Remove links from the output (we don't want users clicking, just dragging
     
-      $output .= '<div view-sort="'.$view_name.'---'.$view_args[0].'---'.$id.'" class="sort-div">';
+      $output .= '<div view-sort="'.$view_name.'---'.$view_args[0].'---'.$id.'" class="sort-div"><div style="position:relative;clear:both;">';
     if(!isset($item['local']) || !$item['local']){
-      $output .='<h1>
-      <img src="'.url(drupal_get_path('module','view_sort')).'/close.png"/>
-    </h1>
-    <h1>
-      <img src="'.url(drupal_get_path('module','view_sort')).'/pin.png"/>
-    </h1>';
+      $output .='<div class="view-sort-toggle"><img src="'.url(drupal_get_path('module','view_sort')).'/close.png" id="view-sort-hide"/><img src="'.url(drupal_get_path('module','view_sort')).'/pin.png" id="view-sort-pin"/></div>';
     }
-    $output .=$item['body'].'
-  </div>';
+    $output .= $item['body'].'
+  </div></div>';
     $i ++;
     if($divider_position && $divider_position == $i){
       $output .= $divider;

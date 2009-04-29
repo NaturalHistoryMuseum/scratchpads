@@ -1,16 +1,13 @@
 .divider {
  background-color:red;
 }
-.sort-div {
- height:110px;
- overflow:hidden;
- border: solid 1px black;
- margin: 3px;
- font-size:80%;
+.view-sort-toggle{
+ display: none;
+ position: absolute;
+ top: 0px;
+ right: 0px;
 }
-.sort-div h1{
- display:inline;
- float:right;
- position:relative;
- top:0px;
+.view-sort-drag > *{
+ border: solid 1px #666;
+ margin: 2px;
 }
