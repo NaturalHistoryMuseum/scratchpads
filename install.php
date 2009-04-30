@@ -1154,7 +1154,7 @@ function install_configure_form_submit($form, &$form_state) {
 
   // We precreated user 1 with placeholder values. Let's save the real values.
   $account = user_load(1);
-  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 1);
+  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 0); // Changed status to be blocked - SDRycroft
   user_save($account, array_merge($form_state['values'], $merge_data));
   // Log in the first user.
   user_authenticate($form_state['values']);
