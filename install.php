@@ -257,7 +257,6 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Database name'),
       '#default_value' => $db_path,
       '#size' => 45,
-      '#maxlength' => 45,
       '#required' => TRUE,
       '#description' => $db_path_description
     );
@@ -268,7 +267,6 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Database username'),
       '#default_value' => $db_user,
       '#size' => 45,
-      '#maxlength' => 45,
       '#required' => TRUE,
     );
 
@@ -278,7 +276,6 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Database password'),
       '#default_value' => $db_pass,
       '#size' => 45,
-      '#maxlength' => 45,
     );
 
     $form['advanced_options'] = array(
@@ -295,7 +292,8 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Database host'),
       '#default_value' => $db_host,
       '#size' => 45,
-      '#maxlength' => 45,
+      // Hostnames can be 255 characters long.
+      '#maxlength' => 255,
       '#required' => TRUE,
       '#description' => st('If your database is located on a different server, change this.'),
     );
@@ -306,7 +304,8 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Database port'),
       '#default_value' => $db_port,
       '#size' => 45,
-      '#maxlength' => 45,
+      // The maximum port number is 65536, 5 digits.
+      '#maxlength' => 5,
       '#description' => st('If your database server is listening to a non-standard port, enter its number.'),
     );
 
@@ -317,7 +316,6 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#title' => st('Table prefix'),
       '#default_value' => $db_prefix,
       '#size' => 45,
-      '#maxlength' => 45,
       '#description' => st('If more than one application will be sharing this database, enter a table prefix such as %prefix for your @drupal site here.', array('@drupal' => drupal_install_profile_name(), '%prefix' => $prefix)),
     );
 
@@ -1156,7 +1154,7 @@ function install_configure_form_submit($form, &$form_state) {
 
   // We precreated user 1 with placeholder values. Let's save the real values.
   $account = user_load(1);
-  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 0); // Changed status to be blocked
+  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 1);
   user_save($account, array_merge($form_state['values'], $merge_data));
   // Log in the first user.
   user_authenticate($form_state['values']);
