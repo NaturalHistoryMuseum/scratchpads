@@ -31,7 +31,7 @@ function leftandright_requirements($phase) {
   $requirements = array();
   $t = get_t();
   if ($phase == 'runtime') {
-    if(filesize(drupal_get_path('module','taxonomy').'/taxonomy.module') == 46861){
+    if(filesize(drupal_get_path('module','taxonomy').'/taxonomy.module') == 46916){
       $requirement = REQUIREMENT_OK;
       $message = $t('taxonomy.module has been replaced correctly.');
     } else {
