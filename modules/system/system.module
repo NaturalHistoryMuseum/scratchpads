@@ -6,7 +6,7 @@
  * Configuration system that lets administrators modify the workings of the site.
  */
 
-define('VERSION', '5.15');
+define('VERSION', '5.17');
 
 /**
  * Implementation of hook_help().
@@ -96,7 +96,6 @@ function system_menu($may_cache) {
       'type' => MENU_CALLBACK);
 
     $access = user_access('administer site configuration');
-    $access_modules = user_access('administer modules');
 
     $items[] = array('path' => 'admin', 'title' => t('Administer'),
       'access' => user_access('access administration pages'),
@@ -190,29 +189,29 @@ function system_menu($may_cache) {
       'description' => t('Enable or disable add-on modules for your site.'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('system_modules'),
-      'access' => $access_modules);
+      'access' => $access);
     $items[] = array('path' => 'admin/build/modules/list',
       'title' => t('List'),
       'type' => MENU_DEFAULT_LOCAL_TASK,
-      'access' => $access_modules);
+      'access' => $access);
     $items[] = array('path' => 'admin/build/modules/list/confirm',
       'title' => t('List'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('system_modules'),
       'type' => MENU_CALLBACK,
-      'access' => $access_modules);
+      'access' => $access);
     $items[] = array('path' => 'admin/build/modules/uninstall',
       'title' => t('Uninstall'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('system_modules_uninstall'),
       'type' => MENU_LOCAL_TASK,
-      'access' => $access_modules);
+      'access' => $access);
     $items[] = array('path' => 'admin/build/modules/uninstall/confirm',
       'title' => t('Uninstall'),
       'callback' => 'drupal_get_form',
       'callback arguments' => array('system_modules_uninstall'),
       'type' => MENU_CALLBACK,
-      'access' => $access_modules);
+      'access' => $access);
 
     // Settings:
     $items[] = array(
@@ -527,7 +526,7 @@ function theme_system_theme_select_form($form) {
 
 function _system_zonelist() {
   $timestamp = time();
-  $zonelist = array(-11, -10, -9.5, -9, -8, -7, -6, -5, -4, -3.5, -3, -2, -1, 0, 1, 2, 3, 3.5, 4, 5, 5.5, 5.75, 6, 6.5, 7, 8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.75, 13, 14);
+  $zonelist = array(-11, -10, -9.5, -9, -8, -7, -6, -5, -4, -3.5, -3, -2.5, -2, -1, 0, 1, 2, 3, 3.5, 4, 5, 5.5, 5.75, 6, 6.5, 7, 8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.75, 13, 14);
   $zones = array();
   foreach ($zonelist as $offset) {
     $zone = $offset * 3600;
