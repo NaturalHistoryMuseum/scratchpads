@@ -153,6 +153,12 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       global $base_url;
       $form['attachments']['wrapper']['new']['upload']['#description'] .= " ".t("You are currently using <b>!using</b> of your <b>!quota</b> quota. If you would like this quota increasing, please <a href=\"mailto:scratchpad@nhm.ac.uk?subject=Increase upload quota&body=Scratchpad Administrators! Please can you increase the quota for !user on <!site>.\">mail</a> us.", array('!using' => format_size(upload_space_used($user->uid)), '!quota' => format_size($limits['user_size']), '!user' => print_r($user->name, true), '!site' => $base_url));
     }
+    if($form['type']['#value'] == 'image'){
+      $vid = variable_get('image_gallery_nav_vocabulary',0);
+      if(is_array($form['taxonomy'][$vid]) && (!isset($form['taxonomy'][$vid]['#description']) || trim($form['taxonomy'][$vid]['#description']) == '')){
+        $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/image/add', array('query' => array('sidebar' => 'no', 'destination' => 'node/add/image'))) . ".  (".t('N.B. Any changes you have made on this page will be lost').")";
+      }
+    }
   }
   else if($form_id == 'taxonomy_form_vocabulary'){
     if(!isset($form['vid']) && isset($form['settings']['multiple']['#default_value'])){
@@ -321,6 +327,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form', array('query'=>$query));
             $items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
             $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');
+            $items[t('Image galleries')] = l(t('Image galleries'),'admin/content/image',array('query'=> array('sidebar'=>'yes')));
             uksort($items, "strnatcasecmp");
             return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           }

@@ -15,7 +15,73 @@ function scratchpadify_compact_page($mode = 'off') {
  * Taskguide function
  */
 function scratchpadify_taskguide(){
-  $output = '<h1 style="padding:20px; border: solid 1px black">Click the links on your left to add new content to your site.</h1>';
+  $output = '<div class="mission" style="text-align: justify">
+  <h1 style="text-decoration:underline;padding-bottom:20px">Some tips to get you started:</h1>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/taxonomy.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Taxonomy</h2><p>Add a '.l('biological taxonomy','admin/content/taxonomy/add/vocabulary').' (vocabulary), and then '.l('import a classification','admin/content/taxonomy/classification/import').' into your new vocabulary. Adding a taxonomy allows you to create taxon pages, and automatically integrate and navigate content across your site.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/literature.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Literature</h2><p>'.l('Import a bibliography','biblio/import/form').', or '.l('add a new reference','node/add/biblio').'. To make this work with your biological taxonomy, make sure one or more taxon names are mentioned in the reference. You can access your '.l('full bibliographic list','biblio').' at any time.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/users.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Users</h2><p>'.l('Add','admin/user/user/create').' or '.l('list','admin/user/user').' site users in different \'roles\'. Contributors can add and edit their own content, editors can also edit other peoples content, and maintainers can also access advanced administrative features. The '.l('groups','node/add/group').' feature allows users to create private areas that can be selectively shared.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/content.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Content</h2><p>Use the '.l('list content','admin/content/node').' link to find and manage all content (nodes) within your site. Everything added to a site can be found from there.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/specimen.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Images, Specimens and Locations</h2><p>'.l('Add images','node/add/image').', '.l('create galleries','admin/content/image').', and '.l('view images','image').' in the galleries. You can also '.l('add','node/add/darwincore').' and '.l('import','admin/content/node_import/add').' specimen records along with '.l('geographic locations','node/add/darwincorelocation').'.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/dna.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Morphological and Molecular Data</h2><p>Create and import projects (collections of taxa, characters and data) that can be edited within the site matrix editor.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/language.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Languages</h2><p>Make your site multilingual by '.l('adding languages','admin/settings/language/add').', allowing users to provide translations of site content.*</p>
+    </div>
+  </div>  
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/information.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Site Information</h2><p>Change basic '.l('site information','admin/settings/site-information').', such as the site name, slogan, e-mail address, and mission. To present a static front page, specify the page address at the bottom of this page. Otherwise snippets of new content will appear on the front page as it is added to your site.*</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/theme.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Site Theme and Logo</h2><p>Change the site colour scheme, add a '.l('custom logo and change other settings','admin/build/themes/settings').' to make your site unique.*</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="http://scratchpads.eu/files/images/taskguide/layout.png" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Layout</h2><p>Change the layout of your site by changing the '.l('block','admin/build/block').' and '.l('menu','admin/build/menu').' items.*</p>
+    </div>
+  </div>
+  <div style="clear:both;">
+    <p style="text-align:right">*Only site maintainers can change these settings.</p>
+    <p>For more help check out the Scratchpad resources ('.l('screencasts','http://scratchpads.eu/screencasts').', '.l('forum','http://scratchpads.eu/forum').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
+  </div>
+</div>';
   return $output;
 }
 
@@ -67,7 +133,7 @@ function scratchpadify_admin_page(){
           ),
           array(
             'localized_options' => array(),
-            'href' => 'admin/user/user',
+            'href' => 'admin/user/user/create',
             'description' => t('Add a new user'),
             'title' => t('Add')
           ),
