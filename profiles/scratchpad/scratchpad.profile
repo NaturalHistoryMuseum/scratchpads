@@ -40,11 +40,11 @@ function scratchpad_profile_modules(){
       'date_timezone',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
-      'lightbox2',
+      'image_attach','lightbox2',
     // Location
       'location','gmap','gmap_location','location_user',
     // Organic Groups
-      'og','og_access',
+      'og','og_access','og_user_roles',
     // Views
       'views','views_ui',
     // LifeDesk
