@@ -1,0 +1,148 @@
+<?php 
+
+// $Id$ 
+
+/** 
+*Implementation of hook_install(). 
+*/ 
+function nexus_install() { 
+  
+drupal_install_schema('nexus'); 
+
+module_load_include('module', 'nexus', 'nexus');
+
+
+
+$character_vocabulary = array(
+ 'name' => 'Character vocabulary',
+ 'hierarchy' => 1,
+ 'module' => 'nexus',
+ 'nodes' => array(),
+ 'required' => 1,
+ 'multiple' => 1,
+);
+
+$nexus_node_info = nexus_node_info();
+
+  // Ensure all out nexus node types are allowed for the vocabulary
+  foreach($nexus_node_info as $nexus_node_type => $nexus_node){
+
+    $character_vocabulary['nodes'][$nexus_node_type] = $nexus_node_type;
+
+  }
+
+  variable_set('nexus_character_vid', $character_vocabulary->vid);
+
+
+taxonomy_save_vocabulary($character_vocabulary);
+
+} 
+
+/** 
+*Implementation of hook_uninstall(). 
+*/ 
+function nexus_uninstall() { 
+
+// Delete all the vocabs & node
+_nexus_delete_projects();
+
+drupal_uninstall_schema('nexus'); 
+
+} 
+
+/** 
+* Deletes all projects & project nodes
+*/
+function _nexus_delete_projects(){
+  
+  $result = db_query('SELECT nid, character_tid FROM {nexus_projects}'); 
+  
+  while ($project = db_fetch_object($result)) {
+
+    taxonomy_del_vocabulary($project->character_tid);
+    node_delete($project->nid);
+    
+    //BTODO - DELETE CHAR NODES
+
+  }
+  
+}
+
+/** 
+*Implementation of hook_schema(). 
+*/ 
+function nexus_schema() { 
+  
+$schema['nexus_projects'] = 
+
+  array( 
+    'description' => t("A Nexus Data Editor Project."), 
+    'fields' => array( 
+      'nid'=>array( 
+        'type'=>'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default'=>0, 
+        'description'=> 'The {node}.nid of the node.', 
+        ), 
+      'vid'=>array( 
+        'type'=>'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default'=>0, 
+        'description' => 'Primary Key: The {node}.vid of the node.', 
+      ), 
+      'taxa_vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {vocabulary}.vid of the project vocabulary assigned to the node.',
+      ),
+      'character_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {vocabulary}.tid of the root character term assigned to the node.',
+      ),
+      'settings' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of name value pairs for project settings.',
+      ),
+    ), 
+    'indexes' => array(
+      'nid' => array('nid'),
+      'taxa_vid' => array('taxa_vid'),
+      'character_tid' => array('character_tid')
+    ),
+    'primary key' => array('vid'),
+    
+  ); 
+
+$schema['nexus_is_numeric'] = 
+
+  array( 
+    'description' => t("Force numeric for free entry terms."), 
+    'fields' => array( 
+      'tid'=>array( 
+        'type'=>'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default'=> 0, 
+        'description'=> 'The tid of the numeric only term.', 
+        ), 
+     ), 
+    'primary key' => array('tid'),
+    
+  ); 
+
+
+return $schema; 
+
+} 
+
+
+
