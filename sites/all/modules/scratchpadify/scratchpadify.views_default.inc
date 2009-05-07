@@ -105,7 +105,7 @@ function scratchpadify_views_default_views() {
   $view->description = 'Biblio nodes formatted in a table';
   $view->tag = '';
   $view->view_php = '';
-  $view->base_table = 'biblio';
+  $view->base_table = 'node';
   $view->is_cacheable = FALSE;
   $view->api_version = 2;
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
