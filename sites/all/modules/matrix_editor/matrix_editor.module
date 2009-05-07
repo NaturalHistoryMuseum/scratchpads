@@ -1,0 +1,141 @@
+<?php
+
+/** 
+* Implementation of hook_theme(). 
+*/ 
+function matrix_editor_theme() { 
+  
+  return array(
+    
+    // Display the matrix editor
+    'matrix_editor' => array(
+      'arguments' => array(),
+    ),
+    
+  );
+      
+}
+
+function _matrix_editor_add_files(){
+
+   $path = drupal_get_path('module', 'matrix_editor');
+
+
+  $ui_path = drupal_get_path('module', 'jquery_ui');
+
+
+  // Add jquery_ui files
+  jquery_ui_add('jquery-ui-1.7.1.custom');
+  drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
+  
+   // Add the slickgrid files
+   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
+   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
+
+   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css');   
+
+   drupal_add_js($path.'/js/plugins/Slickgrid/slick.editors.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/slick.grid.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/slick.globaleditorlock.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/slick.model.js'); 
+
+   // Add clickgrid dependencies
+   drupal_add_js($path.'/js/plugins/Slickgrid/lib/firebugx.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.getScrollbarWidth.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.rule-1.0.1-min.js'); 
+
+   // Slickgrid needs to have style in the head to work
+   drupal_set_html_head('<style></style>');
+
+   // Add matrix editor files
+   drupal_add_css($path.'/css/matrix_editor.css');
+   drupal_add_js($path.'/js/matrix_editor.js');
+  
+}
+
+/** 
+* Convert a php array into a js string, allowing for function names (not wrapped in "")
+*/
+function matrix_editor_to_js($elements, $function_names = array()){
+  
+  if(count($elements)){
+    
+    $js_string = '[';
+    
+    foreach($elements as $element){
+    
+      $js_string .= $outer_conjunction.'{';
+      
+      foreach($element as $element_name => $element_value){
+
+        $js_string .= $inner_conjunction;
+
+        if(in_array($element_name, $function_names) || is_numeric($element_value) || is_bool($element_value)){
+
+          $js_string .= $element_name.': '.$element_value;
+
+        }else{
+
+          $js_string .= $element_name.': "'.$element_value.'"';
+
+        }
+
+        $inner_conjunction = ', ';
+
+      } // End of foreach($element)
+      
+      $js_string .= '}';
+      $inner_conjunction = ' ';
+      $outer_conjunction = ', ';
+    
+    }
+
+  $js_string .= ']';
+    
+  return $js_string;
+    
+  }
+  
+
+  
+}
+
+
+
+
+function theme_matrix_editor($matrix_editor){
+
+  $function_names = array('formatter', 'validator', 'editor', 'setValueHandler');
+  
+  _matrix_editor_add_files();
+
+  drupal_add_js('var options = '.drupal_to_js($matrix_editor->options), 'inline');    
+  drupal_add_js('var data = []; data = '.drupal_to_js($matrix_editor->data), 'inline');
+  
+  if(!$matrix_editor->filter){
+    $matrix_editor->filter = 'matrixFilter';
+  }
+  
+  drupal_add_js('var filter = '.$matrix_editor->filter, 'inline');
+  drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns, $function_names).';', 'inline');
+  
+  $output = '<div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows"></div>';
+  
+  
+  $output .= '<div class="matrix-editor-controls">';
+
+  if($matrix_editor->search){
+    $output .= '<div id="search"><label>Filter:</label><input type=text id="txtSearch"></div>';
+  }
+  
+  $output .= '</div>';
+    
+  drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
+  
+  return $output;
+  
+  
+}
+
+
+
