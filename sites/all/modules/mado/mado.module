@@ -82,7 +82,19 @@ function mado_get_blocks(){
         'taxonomy_term',
         'biblio', // Hide Biblio as we have the improved biblio_table view
         'darwincore',
-        'darwincorelocation'
+        'darwincorelocation',
+        'og',
+        'og_files',
+        'og_ghp_ron',
+        'og_members',
+        'og_members_block',
+        'og_members_faces',
+        'og_my',
+        'og_mytracker',
+        'og_recent_type_term',
+        'og_search',
+        'og_tracker',
+        'og_unread'
       ),
       'blocks' => array(
         'user' => array('all' => TRUE),
@@ -97,10 +109,11 @@ function mado_get_blocks(){
         'creativecommons_lite' => array('all' => TRUE),
         'gmap_location' => array('all' => TRUE),
         'og' => array('all' => TRUE),
+        'og_views' => array('all' => TRUE),
         'print' => array('ids' => array('1')),
         'forum' => array('ids' => array('0','1')),
         'scratchpadify' => array('ids' => array('1','3')),
-        'search' => array('ids' => array('0'))
+        'search' => array('ids' => array('0')),
       )));
   foreach ( $views as $view ) {
     if (($view->display ['default']->display_options ['arguments'] ['tid'] || 
