@@ -19,6 +19,16 @@ function scratchpadify_views_api(){
   return array('api' => 2);
 }
 
+function scratchpadify_cron(){
+  // As a way of cleaning up the system table, we'll delete entries where the
+  // files they point to don't exist.
+  $results = db_query("SELECT filename FROM {system}");
+  while($row = db_fetch_array($results)){
+    if(!file_exists($row['filename'])){
+      watchdog('scratchpadify','Excess entry in system table for "'.$row['filename'].'"');
+    }
+  }
+}
 /**
  * Implementation of hook_menu
  */
