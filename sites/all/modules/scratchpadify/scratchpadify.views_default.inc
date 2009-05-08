@@ -99,7 +99,7 @@ function scratchpadify_views_default_views() {
     $handler->override_option('title', $type_details['name']);
     $views[$view->name] = $view;
   }
-  
+  // ---------------------- BIBLIO TABLE ---------------------------------------
   $view = new view;
   $view->name = 'biblio_table';
   $view->description = 'Biblio nodes formatted in a table';
@@ -111,6 +111,16 @@ function scratchpadify_views_default_views() {
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('fields', array(
+    'biblio_year' => array(
+      'label' => 'Year of Publication',
+      'alter' => array(),
+      'biblio_label' => 1,
+      'exclude' => 0,
+      'id' => 'biblio_year',
+      'table' => 'biblio',
+      'field' => 'biblio_year',
+      'relationship' => 'none',
+    ),
     'biblio_authors' => array(
       'label' => 'Authors',
       'alter' => array(),
@@ -130,16 +140,6 @@ function scratchpadify_views_default_views() {
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
-      'relationship' => 'none',
-    ),
-    'biblio_year' => array(
-      'label' => 'Year of Publication',
-      'alter' => array(),
-      'biblio_label' => 1,
-      'exclude' => 0,
-      'id' => 'biblio_year',
-      'table' => 'biblio',
-      'field' => 'biblio_year',
       'relationship' => 'none',
     ),
   ));
@@ -204,9 +204,11 @@ function scratchpadify_views_default_views() {
     'default' => '-1',
   ));
   $handler->override_option('title', 'Bibliography');
-  
+  $handler->override_option('items_per_page', 0);  
   $views[$view->name] = $view;
   
+  
+  // ---------------------- VOCABULARIES ---------------------------------------
   $view = new view;
   $view->name = 'vocabularies';
   $view->description = '';
