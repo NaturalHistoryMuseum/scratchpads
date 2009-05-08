@@ -143,6 +143,18 @@ function scratchpadify_views_default_views() {
       'relationship' => 'none',
     ),
   ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'biblio' => 'biblio',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    )
+  ));
   $handler->override_option('arguments', array(
     'term_node_tid_depth' => array(
       'default_action' => 'ignore',
