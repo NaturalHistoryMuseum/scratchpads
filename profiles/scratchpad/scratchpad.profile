@@ -37,7 +37,7 @@ function scratchpad_profile_modules(){
       'jquery_update','jquery_ui',
     // CCK
       'content','number','optionwidgets','text','date_api','date',
-      'date_timezone',
+      'node_refernce','date_timezone',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
       'image_attach','lightbox2',
