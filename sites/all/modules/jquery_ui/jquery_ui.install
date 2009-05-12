@@ -17,6 +17,7 @@ function jquery_ui_requirements($phase) {
   if ($phase == 'install') {
     // The jquery_ui_get_version() function is in the .module file, which isn't
     // loaded yet.
+    return;
     include_once drupal_get_path('module', 'jquery_ui') . '/jquery_ui.module';
   }
 
