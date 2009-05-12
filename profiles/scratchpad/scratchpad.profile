@@ -706,7 +706,7 @@ function scratchpad_mission_submit($form, &$form_state){
     variable_set('site_mission',$form_state['values']['mission']);
   }
   if(trim($form_state['values']['slogan'])!=''){
-    variable_set('site_slogan',$form_state['values']['mission']);
+    variable_set('site_slogan',$form_state['values']['slogan']);
   }
   variable_set('mission_submitted', TRUE);
 }
