@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * This file installs the DwC specimen module.
+ */
+
+/*
+TODO:
+ 1. Install database
+ 2. Create the taxonomies
+ 3. Ensure the bio_image module is weighted higher than location */
+
+/**
+ * Implementation of hook_install
+ */
+function bio_image_install(){
+  // Install the taxonomies:
+  $vocabularies = array (
+    array (
+      array (
+        'name' => 'Imaging Technique', 
+        'help' => 'Select the imaging technique that was used to produce the images.', 
+        'description' => 'Describes the way that images have been taken', 
+        'hierarchy' => 1, 
+        'module' => 'bio_image', 
+        'nodes' => array (
+          'image' => 1 ) ), 
+      array (
+        array (
+          'name' => 'Photograph', 
+          'description' => 'Captured with a regular camera.' ), 
+        array (
+          'name' => 'Illustration', 
+          'description' => 'Figurative, hand drawn or computer rendered.' ), 
+        array (
+          'name' => 'Light Micrograph', 
+          'description' => 'Captured through a regular microscope.' ), 
+        array (
+          'name' => 'Scanning Electron Micrograph', 
+          'description' => 'Captured through a Scanning Electron Microscope.' ), 
+        array (
+          'name' => 'Transmission Electron Micrograph', 
+          'description' => 'Captured through a Transmission Electron Microscope.' ), 
+        array (
+          'name' => 'Other', 
+          'description' => 'None of the above.' ) ) ), 
+    array (
+      array (
+        'name' => 'Preparation Technique', 
+        'help' => 'Describe how the specimen was prepared for imaging (Leave blank if your image isn\'t a specimen)', 
+        'description' => 'Describe how the specimen was prepared for imaging.', 
+        'module' => 'bio_image', 
+        'tags' => 1, 
+        'nodes' => array (
+          'image' => 1 ) ), 
+      array () ), 
+    array (
+      array (
+        'name' => 'Keywords', 
+        'help' => 'Comma-separated keywords describing the image Parts, sex, form, developmental stage, view angle, people, building etc. Enclose phrases in "quotation marks". Examples: Antenna, Head, Juvenile, "First instar", conference, museum, specimen.', 
+        'description' => 'Describe the parts, sex, form, developmental stage, view angle etc shown in the image.', 
+        'module' => 'bio_image', 
+        'tags' => 1, 
+        'nodes' => array (
+          'image' => 1 ) ), 
+      array () ) );
+  foreach ( $vocabularies as $vocabulary ) {
+    taxonomy_save_vocabulary ( $vocabulary [0] );
+    $vid = $vocabulary [0] ['vid'];
+    foreach ( $vocabulary [1] as $term ) {
+      $term ['vid'] = $vid;
+      $children = $term ['children'];
+      taxonomy_save_term ( $term );
+      $parent = array (
+        $term ['tid'] );
+      if (isset ( $children )) {
+        foreach ( $children as $term ) {
+          $term ['parent'] = $parent;
+          $term ['vid'] = $vid;
+          taxonomy_save_term ( $term );
+        }
+      }
+    }
+  }
+  $fields = array (
+    array(
+      'field_name' => 'image_publication', 
+      'type_name' => 'image', 
+      'display_settings' => array (
+        'label' => array (
+          'format' => 'above', 
+          'exclude' => 0 ), 
+        'teaser' => array (
+          'format' => 'default', 
+          'exclude' => 0 ), 
+        'full' => array (
+          'format' => 'default', 
+          'exclude' => 0 ),
+        'email_plain' => array (
+          'format' => 'default', 
+          'exclude' => 0 ), 
+        'email_html' => array (
+          'format' => 'default', 
+          'exclude' => 0 ), 
+        'token' => array (
+          'format' => 'default', 
+          'exclude' => 0 ) ), 
+      'widget_active' => '1', 
+      'type' => 'nodereference', 
+      'required' => '0', 
+      'multiple' => '0', 
+      'db_storage' => '1', 
+      'module' => 'nodereference', 
+      'active' => '1', 
+      'locked' => '1', 
+      'columns' => array (
+        'nid' => array (
+          'type' => 'int', 
+          'unsigned' => true, 
+          'not null' => false ) ), 
+      'referenceable_types' => array (), 
+      'advanced_view' => 'biblio_nodes',
+      'widget' => array (
+        'autocomplete_match' => 'contains', 
+        'default_value' => array (
+          0 => array (
+            'nid' => '' ) ), 
+        'default_value_php' => NULL, 
+        'label' => 'Publication', 
+        'weight' => '31', 
+        'description' => '', 
+        'type' => 'nodereference_select', 
+        'module' => 'nodereference')),
+     array(
+      'field_name' => 'image_specimen', 
+      'type_name' => 'image', 
+      'widget_active' => '1', 
+      'type' => 'nodereference', 
+      'required' => '0', 
+      'multiple' => '0', 
+      'db_storage' => '1', 
+      'module' => 'nodereference', 
+      'active' => '1', 
+      'locked' => '1', 
+      'columns' => array (
+        'nid' => array (
+          'type' => 'int', 
+          'unsigned' => true, 
+          'not null' => false ) ), 
+      'referenceable_types' => array (
+        'darwincore' => 'darwincore'
+      ),
+      'widget' => array (
+        'autocomplete_match' => 'contains', 
+        'default_value' => array (
+          0 => array (
+            'nid' => '' ) ), 
+        'default_value_php' => NULL, 
+        'label' => 'Specimen', 
+        'weight' => '31', 
+        'description' => '', 
+        'type' => 'nodereference_select', 
+        'module' => 'nodereference')));
+  foreach ( $fields as $field ) {
+    // Add the field
+    module_load_include('inc', 'content', 'includes/content.crud');
+    content_field_instance_create($field);
+  }
+}
+
+function bio_image_uninstall(){
+  // Remove the tables and various settings.
+  $vocabularies = taxonomy_get_vocabularies ();
+  foreach ( $vocabularies as $vocabulary ) {
+    if ($vocabulary->module == 'bio_image') {
+      taxonomy_del_vocabulary ( $vocabulary->vid );
+    }
+  }
+}
