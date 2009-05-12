@@ -37,7 +37,7 @@ function scratchpad_profile_modules(){
       'jquery_update','jquery_ui',
     // CCK
       'content','number','optionwidgets','text','date_api','date',
-      'node_refernce','date_timezone',
+      'nodereference','date_timezone','fieldgroup',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
       'image_attach','lightbox2',
@@ -54,7 +54,7 @@ function scratchpad_profile_modules(){
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
       'node_term_edit','autotag','leftandright','taxtab','tinytax','tree',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
-      'classification_biblio','classification_scratchpads','nagger'
+      'classification_biblio','classification_scratchpads','nagger','bio_image'
   );
 }
 
