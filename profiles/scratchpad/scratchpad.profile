@@ -40,7 +40,8 @@ function scratchpad_profile_modules(){
       'nodereference','date_timezone','fieldgroup',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
-      'image_attach','lightbox2',
+      'image_attach',
+    // 'lightbox2', Disabled due to an incompatability with JQuery Update
     // Location
       'location','gmap','gmap_location','location_user',
     // Organic Groups
