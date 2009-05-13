@@ -19,6 +19,33 @@ function scratchpadify_views_api(){
   return array('api' => 2);
 }
 
+/**
+ * hook_theme
+ */
+function scratchpadify_theme_registry_alter(&$theme_registry){
+  foreach(array('filter_tips','filter_tips_more_info') as $theme){
+    unset($theme_registry[$theme]['file']);
+    unset($theme_registry[$theme]['theme path']);
+    unset($theme_registry[$theme]['theme paths']);
+    $theme_registry[$theme]['function'] = 'scratchpadify_filter_tips';
+  }
+}
+/*
+* Override filter.module's theme_filter_tips() function to disable tips display.
+*/
+function scratchpadify_filter_tips($tips, $long = FALSE, $extra = '') {
+  return '';
+}
+
+/*
+function phptemplate_filter_tips($tips, $long = FALSE, $extra = '') {
+  return '';
+}
+function phptemplate_filter_tips_more_info () {
+  return '';
+}
+*/
+
 function scratchpadify_cron(){
   // As a way of cleaning up the system table, we'll delete entries where the
   // files they point to don't exist.
