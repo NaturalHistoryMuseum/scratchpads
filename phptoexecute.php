@@ -481,5 +481,20 @@ db_query("ALTER TABLE {location} ADD INDEX locate_eid_index (eid)");*/
 // Delete robotstxt variable
 /* db_query("DELETE FROM {variable} WHERE name = 'robotstxt';"); */
 
-echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {comments} WHERE comment LIKE '%http%http%'")));
+/*echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {comments} WHERE comment LIKE '%http%http%'")));*/
+
+// Number of forums
+/* echo array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} WHERE type = 'forum'"))); */
+
+// Does this site have a biblio?
+/*if($row = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} WHERE type = 'darwincore'")))){
+  echo $row;
+}*/
+/*$results = db_query("SELECT DISTINCT type FROM {node}");
+while($row = db_fetch_array($results)){
+  echo $row['type'] . "\n";
+}*/
+
+// FUUUCCCK
+db_query("UPDATE system SET status = 0 WHERE name = 'rollout';");
 echo "Finished";
