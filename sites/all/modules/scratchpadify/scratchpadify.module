@@ -137,6 +137,7 @@ function scratchpadify_menu_alter(&$items){
     'page callback' => 'scratchpadify_compact_page',
     'access arguments' => array('access administration pages'),
     'type' => MENU_CALLBACK,
+    'module' => 'scratchpadify',
     'file' => 'scratchpadify.admin.inc'
   );
 }
