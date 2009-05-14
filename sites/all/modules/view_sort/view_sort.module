@@ -46,7 +46,7 @@ function view_sort_views_pre_render(&$view){
     if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
       $keys = array_keys($view->display['default']->display_options['filters']['type']['value']);
       if($keys[0] != 'ispecies'){
-        $view->attachment_before .= '<li>'.l(t('Add'), 'node/add/'.$view->display['default']->display_options['filters']['type']['value'][$keys[0]], array('query'=>array('tid'=>arg(2)), 'attributes'=>array('target'=>'_blank')))."</li>";
+        $view->attachment_before .= '<li>'.l(t('Add'), 'node/add/'.str_replace("_","-",$view->display['default']->display_options['filters']['type']['value'][$keys[0]]), array('query'=>array('tid'=>arg(2)), 'attributes'=>array('target'=>'_blank')))."</li>";
       }
     }
     $view->attachment_before .= '</ul>';
