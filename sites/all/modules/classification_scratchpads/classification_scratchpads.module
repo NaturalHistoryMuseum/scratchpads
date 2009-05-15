@@ -102,7 +102,7 @@ function classification_scratchpads_js_tree($vid, $tid = ''){
   switch ($names_options) {
     // Show all names
     case 0 :
-      $result = db_query ( db_rewrite_sql ( "
+      $result = db_query ( "
 	        SELECT 
 	          td.tid as tid, 
 	          td.name as name, 
@@ -120,11 +120,11 @@ function classification_scratchpads_js_tree($vid, $tid = ''){
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name" ), $vid, $tid );
+		       trt.rtid, td.name" , $vid, $tid );
       break;
     // Hide vernaculars
     case 1 :
-      $result = db_query ( db_rewrite_sql ( "
+      $result = db_query ( "
 	        SELECT 
 	          td.tid as tid, 
 	          td.name as name, 
@@ -141,11 +141,11 @@ function classification_scratchpads_js_tree($vid, $tid = ''){
 		       )  ON td.tid=tr.tid1 
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL ) 
-		     ORDER BY td.name" ), $vid, $tid );
+		     ORDER BY td.name" , $vid, $tid );
       break;
     // Hide all except valid
     case 2 :
-      $result = db_query ( db_rewrite_sql ( "
+      $result = db_query ( "
 	        SELECT 
 	          td.tid as tid, 
 	          td.name as name, 
@@ -163,11 +163,11 @@ function classification_scratchpads_js_tree($vid, $tid = ''){
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND trt.rtid IS NULL 
 		     ORDER BY 
-		       td.name" ), $vid, $tid );
+		       td.name" , $vid, $tid );
       break;
     // Show all names
     default :
-      $result = db_query ( db_rewrite_sql ( "
+      $result = db_query ( "
 	        SELECT 
 	          td.tid as tid, 
 	          td.name as name, 
@@ -185,7 +185,7 @@ function classification_scratchpads_js_tree($vid, $tid = ''){
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name" ), $vid, $tid );
+		       trt.rtid, td.name" , $vid, $tid );
   }
   
   while ( $object = db_fetch_object ( $result ) ) {
