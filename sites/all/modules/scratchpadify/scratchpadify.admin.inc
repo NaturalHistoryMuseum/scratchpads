@@ -102,7 +102,7 @@ function scratchpadify_admin_page(){
           array(
             'localized_options' => array(),
             'href' => 'admin/content/node',
-            'description' => t('List the pages/nodes of content on your Scratchpad, and perform bulk operartions'),
+            'description' => t('List the pages/nodes of content on your Scratchpad, and perform bulk operations'),
             'title' => t('List')
           ),
           array(
