@@ -448,7 +448,7 @@ function classification_settings_form() {
      switch ($names_options) {
      	 // Show all names
      	 case 0:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -466,11 +466,11 @@ function classification_settings_form() {
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name"),$vid,$tid);
+		       trt.rtid, td.name",$vid,$tid);
          break;
        // Hide vernaculars
        case 1:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -487,11 +487,11 @@ function classification_settings_form() {
 		       )  ON td.tid=tr.tid1 
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL ) 
-		     ORDER BY td.name"),$vid,$tid);
+		     ORDER BY td.name",$vid,$tid);
          break;
        // Hide all except valid
        case 2:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -509,11 +509,11 @@ function classification_settings_form() {
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND trt.rtid IS NULL 
 		     ORDER BY 
-		       td.name"),$vid,$tid);
+		       td.name",$vid,$tid);
          break;
        // Show all names
        default:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -531,7 +531,7 @@ function classification_settings_form() {
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name"),$vid,$tid);        
+		       trt.rtid, td.name",$vid,$tid);        
      }
 
      while ($object = db_fetch_object($result)) {
@@ -559,7 +559,7 @@ function classification_settings_form() {
         $tid = str_replace("n", "",$tid);
      }
      
-     $result = db_query(db_rewrite_sql("
+     $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -577,7 +577,7 @@ function classification_settings_form() {
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       td.name"),$vid,$tid);
+		       td.name",$vid,$tid);
 
      while ($object = db_fetch_object($result)) {
        $tid = $object->tid;
@@ -646,7 +646,7 @@ function classification_count_children($tid) {
    switch ($names_options) {
    	 // Show all names
    	 case 0:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count 
        FROM 
@@ -654,11 +654,11 @@ function classification_count_children($tid) {
        JOIN 
          {term_hierarchy} th ON (td.tid = th.tid) 
        WHERE 
-         td.vid = %d AND th.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d", $vid,$tid);
        break;
      // Hide vernaculars
      case 1:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
          SELECT 
            COUNT(*) as count
          FROM
@@ -671,11 +671,11 @@ function classification_count_children($tid) {
          	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
          	  ) ON td.tid=tr.tid1 
 		     WHERE 
-		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )"),$vid,$tid);
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )",$vid,$tid);
        break;
      // Hide all except valid
      case 2:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count
        FROM
@@ -688,11 +688,11 @@ function classification_count_children($tid) {
 			     JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
 		     ) ON td.tid=tr.tid1 
        WHERE 
-         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL"), $vid,$tid);
+         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL", $vid,$tid);
        break;
      // Show all names by default
      default:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count 
        FROM 
@@ -700,7 +700,7 @@ function classification_count_children($tid) {
        JOIN 
          {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         td.vid = %d AND th.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d", $vid,$tid);
    }
    
    $object = db_fetch_object($result);
@@ -712,7 +712,7 @@ function classification_count_children($tid) {
  */
 function classification_count_children_alternate($tid,$vid) {
    
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count 
        FROM 
@@ -720,7 +720,7 @@ function classification_count_children_alternate($tid,$vid) {
        JOIN 
          {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         td.vid = %d AND th.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d", $vid,$tid);
    
    $object = db_fetch_object($result);
    return $object->count;
@@ -739,7 +739,7 @@ function classification_autocomplete($vid,$string='') {
   $matches = array();
   $classification_autocomplete = variable_get('taxon_description_autocomplete_size',3);
   if (strlen($last_string) >= $classification_autocomplete ) {
-    $result = db_query_range(db_rewrite_sql("
+    $result = db_query_range("
     SELECT 
       a.tid, a.name 
     FROM 
@@ -747,7 +747,7 @@ function classification_autocomplete($vid,$string='') {
     INNER JOIN 
       {taxonomy_enhancer_value_text} b ON a.tid = b.tid 
     WHERE 
-      a.vid = %d AND b.fid = 'field_rank' AND b.value <> 'Species' AND  b.value <> 'Subspecies' AND LENGTH(b.value)>1 AND LOWER(a.name) LIKE LOWER('%%%s%%') ORDER BY a.name", 't', 'tid'), $vid, $last_string, 0, 10);
+      a.vid = %d AND b.fid = 'field_rank' AND b.value <> 'Species' AND  b.value <> 'Subspecies' AND LENGTH(b.value)>1 AND LOWER(a.name) LIKE LOWER('%%%s%%') ORDER BY a.name", 't', 'tid', $vid, $last_string, 0, 10);
 
     while ($tag = db_fetch_object($result)) {
       $n = $tag->name;
@@ -810,7 +810,7 @@ function classification_checkterm($vid){
   );
   $name = $_REQUEST['root'];
 
-  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT tid FROM {term_data} WHERE vid = %d AND LOWER(name) = LOWER('%s')"), $vid, $name));
+  $result = db_fetch_object(db_query("SELECT tid FROM {term_data} WHERE vid = %d AND LOWER(name) = LOWER('%s')", $vid, $name));
   
   drupal_json(array('status' => TRUE,'data' => $result->tid));
 }
@@ -825,7 +825,7 @@ function classification_get_parent(){
   $child = $_REQUEST['child'];
   $child_parent = $_REQUEST['child_parent'];
   
-  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d"), $child_parent));
+  $result = db_fetch_object(db_query("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d", $child_parent));
   
   drupal_json(array('child' => $child, 'dest' => $result->tid));
 }
@@ -1022,7 +1022,7 @@ function classification_update_metadata() {
  		     if(!$relation_id) {
  		     	  db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
  		     	  //Now we need the trid
- 		     	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d"),$tid,$parent_tid));
+ 		     	  $result = db_fetch_object(db_query("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d",$tid,$parent_tid));
  		     	  $relation_id = $result->trid;
  		     }
  		     //Now we add the relation metadata
@@ -1039,7 +1039,7 @@ function classification_update_metadata() {
  		     if(!$relation_id) {
  		     	  db_query("INSERT INTO {term_relation} (tid1,tid2) VALUES (%d,%d)",$tid,$parent_tid);
  		     	  //Now we need the trid
- 		     	  $result = db_fetch_object(db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d"),$tid,$parent_tid));
+ 		     	  $result = db_fetch_object(db_query("SELECT trid FROM {term_relation} WHERE tid1 = %d && tid2 = %d",$tid,$parent_tid));
  		     	  $relation_id = $result->trid;
  		     }
  		     //Now we add the relation metadata
@@ -1188,7 +1188,7 @@ function classification_delete_name() {
   	if(count($tree) > 0) {
   	  foreach ($tree as $branch) {
   	    db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$branch->tid);
-        $res = db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d"),$branch->tid,$branch->tid);
+        $res = db_query("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d",$branch->tid,$branch->tid);
         while ($term = db_fetch_object($res)) {
           db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
         }
@@ -1198,7 +1198,7 @@ function classification_delete_name() {
     }
 
     db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$tid);
-  	$res = db_rewrite_sql(db_query("SELECT trid FROM {term_relation} where tid1 = %d OR tid2 = %d"),$tid, $tid);
+  	$res = db_query("SELECT trid FROM {term_relation} where tid1 = %d OR tid2 = %d",$tid, $tid);
     while ($term = db_fetch_object($res)) {
     	db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
     }
@@ -1237,7 +1237,7 @@ function classification_move_name() {
   $form_state = array('submitted' => FALSE);
 
   //get the old parent for logging later
-  $old_parent_array = db_fetch_object(db_query(db_rewrite_sql('SELECT t.name FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid = %d'), $child));
+  $old_parent_array = db_fetch_object(db_query('SELECT t.name FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid = %d', $child));
   $old_parent = $old_parent_array->name;
   
   if($child) {
@@ -1272,7 +1272,7 @@ function classification_copy_name_alternate() {
   
   $child = str_replace("_copy","",$_REQUEST['child']);
   $new_parent_prev = $_REQUEST['new_parent'];
-  $new_parent = db_fetch_object(db_query(db_rewrite_sql("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d"), $new_parent_prev)); // thii is a hack, maybe it is better to adjust JSTree instead
+  $new_parent = db_fetch_object(db_query("SELECT parent as tid FROM {term_hierarchy} WHERE tid = %d", $new_parent_prev)); // thii is a hack, maybe it is better to adjust JSTree instead
   
   $form_state = array('submitted' => FALSE);
   
@@ -1312,7 +1312,7 @@ function classification_get_synonyms_json($tid=NULL) {
   $output = array();
   if($tid) {
     $vid = classification_get_vid('Taxa');
-    $result = db_query(db_rewrite_sql("
+    $result = db_query("
      SELECT 
         td.tid as tid, 
         td.name as name,
@@ -1329,7 +1329,7 @@ function classification_get_synonyms_json($tid=NULL) {
 	   WHERE 
 	      td.vid = %d AND th.parent = %d AND trt.rtid <> 9  
 	   ORDER BY 
-	      td.name"),$vid,$tid);
+	      td.name",$vid,$tid);
 	      
     while ($object = db_fetch_object($result)) {
        $tid = $object->tid;
