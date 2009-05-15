@@ -174,6 +174,9 @@ function taxonomy_overview_vocabularies() {
  * each one.
  */
 function taxonomy_overview_terms($vid) {
+  if(function_exists('leftandright_overview_terms')){
+    return leftandright_overview_terms($vid);
+  }
   $destination = drupal_get_destination();
 
   $header = array(t('Name'), t('Operations'));
@@ -621,7 +624,7 @@ function taxonomy_term_confirm_delete_submit($form_id, $form_values) {
  */
 function taxonomy_form($vid, $value = 0, $help = NULL, $name = 'taxonomy') {
   $vocabulary = taxonomy_get_vocabulary($vid);
-  $help = ($help) ? $help : $vocabulary->help;
+  $help = ($help) ? $help : filter_xss_admin($vocabulary->help);
 
   if (!$vocabulary->multiple) {
     $blank = ($vocabulary->required) ? t('- Please choose -') : t('- None selected -');
@@ -718,7 +721,7 @@ function taxonomy_form_alter($form_id, &$form) {
         $typed_string = implode(', ', $typed_terms) . (array_key_exists('tags', $terms) ? $terms['tags'][$vocabulary->vid] : NULL);
 
         if ($vocabulary->help) {
-          $help = $vocabulary->help;
+          $help = filter_xss_admin($vocabulary->help);
         }
         else {
           $help = t('A comma-separated list of terms describing this content. Example: funny, bungee jumping, "Company, Inc.".');
@@ -741,7 +744,7 @@ function taxonomy_form_alter($form_id, &$form) {
             $default_terms[$term->tid] = $term;
           }
         }
-        $form['taxonomy'][$vocabulary->vid] = taxonomy_form($vocabulary->vid, array_keys($default_terms), $vocabulary->help);
+        $form['taxonomy'][$vocabulary->vid] = taxonomy_form($vocabulary->vid, array_keys($default_terms), filter_xss_admin($vocabulary->help));
         $form['taxonomy'][$vocabulary->vid]['#weight'] = $vocabulary->weight;
         $form['taxonomy'][$vocabulary->vid]['#required'] = $vocabulary->required;
       }
@@ -988,6 +991,9 @@ function taxonomy_get_children($tid, $vid = 0, $key = 'tid') {
  *   Results are statically cached.
  */
 function taxonomy_get_tree($vid, $parent = 0, $depth = -1, $max_depth = NULL) {
+  if(function_exists('leftandright_get_tree')){
+    return leftandright_get_tree($vid, $parent, $max_depth);
+  }
   static $children, $parents, $terms;
 
   $depth++;
@@ -1232,7 +1238,10 @@ function theme_taxonomy_term_select($element) {
  * @return
  *   A resource identifier pointing to the query results.
  */
-function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.created DESC') {
+function taxonomy_select_nodes($tids = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.title ASC') {
+  if(function_exists('leftandright_select_nodes')){
+    return leftandright_select_nodes($tids, $operator, $depth, $pager, $order);
+  }
   if (count($tids) > 0) {
     // For each term ID, generate an array of descendant term IDs to the right depth.
     $descendant_tids = array();
