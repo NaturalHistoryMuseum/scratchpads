@@ -111,7 +111,7 @@ function classification_delete_classification() {
 	$tree = taxonomy_get_tree($vid);
   foreach ($tree as $branch) {
   	db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$branch->tid);
-    $res = db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d"),$branch->tid,$branch->tid);
+    $res = db_query("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d",$branch->tid,$branch->tid);
     while ($term = db_fetch_object($res)) {
       db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
     }

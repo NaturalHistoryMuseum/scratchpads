@@ -24,7 +24,7 @@ $names = new Names;
      switch ($names_options) {
      	 // Show all names
      	 case 0:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -42,11 +42,11 @@ $names = new Names;
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name"),$vid,$tid);
+		       trt.rtid, td.name",$vid,$tid);
          break;
        // Hide vernaculars
        case 1:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -63,11 +63,11 @@ $names = new Names;
 		       )  ON td.tid=tr.tid1 
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL ) 
-		     ORDER BY td.name"),$vid,$tid);
+		     ORDER BY td.name",$vid,$tid);
          break;
        // Hide all except valid
        case 2:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -85,11 +85,11 @@ $names = new Names;
 		     WHERE 
 		       td.vid = %d AND th.parent = %d AND trt.rtid IS NULL 
 		     ORDER BY 
-		       td.name"),$vid,$tid);
+		       td.name",$vid,$tid);
          break;
        // Show all names
        default:
-         $result = db_query(db_rewrite_sql("
+         $result = db_query("
          SELECT 
            td.tid as tid, 
            td.name as name, 
@@ -107,7 +107,7 @@ $names = new Names;
 		     WHERE 
 		       td.vid = %d AND th.parent = %d 
 		     ORDER BY 
-		       trt.rtid, td.name"),$vid,$tid);         
+		       trt.rtid, td.name",$vid,$tid);         
      }
 
      global $names;
@@ -180,7 +180,7 @@ function classification_count_children($vid,$tid) {
    switch ($names_options) {
    	 // Show all names
    	 case 0:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count 
        FROM 
@@ -188,11 +188,11 @@ function classification_count_children($vid,$tid) {
        JOIN 
          {term_hierarchy} th ON (td.tid = th.tid) 
        WHERE 
-         td.vid = %d AND th.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d", $vid,$tid);
        break;
      // Hide vernaculars
      case 1:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
          SELECT 
            COUNT(*) as count
          FROM
@@ -205,11 +205,11 @@ function classification_count_children($vid,$tid) {
          	    JOIN {term_relation_types} trt ON (trht.rtid=trt.rtid)
          	  ) ON td.tid=tr.tid1 
 		     WHERE 
-		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )"),$vid,$tid);
+		       td.vid = %d AND th.parent = %d AND ( trt.rtid <> 9 OR trt.rtid IS NULL )",$vid,$tid);
        break;
      // Hide all except valid
      case 2:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count
        FROM
@@ -222,11 +222,11 @@ function classification_count_children($vid,$tid) {
 			     JOIN {term_relation_types} trt on (trht.rtid=trt.rtid)
 		     ) ON td.tid=tr.tid1 
        WHERE 
-         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL"), $vid,$tid);
+         td.vid = %d AND th.parent = %d AND trt.rtid IS NULL", $vid,$tid);
        break;
      // Show all names by default
      default:
-       $result = db_query(db_rewrite_sql("
+       $result = db_query("
        SELECT 
          COUNT(*) AS count 
        FROM 
@@ -234,7 +234,7 @@ function classification_count_children($vid,$tid) {
        JOIN 
          {term_hierarchy} th ON (td.tid=th.tid) 
        WHERE 
-         td.vid = %d AND th.parent = %d"), $vid,$tid);
+         td.vid = %d AND th.parent = %d", $vid,$tid);
    }
    
    $object = db_fetch_object($result);
@@ -248,12 +248,12 @@ function classification_js_tree_checked($vid,$nid) {
 	drupal_set_header('Content-Type: text/plain; charset=utf-8');
 	$matches = array();
 	
-	$result = db_query(db_rewrite_sql("
+	$result = db_query("
 	SELECT tid 
 	FROM
 	  {classification_node} 
 	WHERE
-	  nid = %d"),$nid);
+	  nid = %d",$nid);
 	
 	while ($object = db_fetch_object($result)) {
 		$matches[] = $object->tid;

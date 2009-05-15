@@ -308,7 +308,7 @@ function classification_delete_primary() {
   db_query('DELETE FROM {taxonomy_enhancer_fields} WHERE vid = %d AND fid = "%s"', $vid, 'field_vernacular_language');
   foreach ($tree as $branch) {
         db_query("DELETE FROM {taxonomy_enhancer_value_text} WHERE tid = %d",$branch->tid);
-    $res = db_query(db_rewrite_sql("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d"),$branch->tid,$branch->tid);
+    $res = db_query("SELECT trid FROM {term_relation} WHERE tid1 = %d OR tid2 = %d",$branch->tid,$branch->tid);
     while ($term = db_fetch_object($res)) {
       db_query("DELETE FROM {term_relation_has_type} WHERE trid = %d", $term->trid);
     }
@@ -429,9 +429,9 @@ function classification_import_status() {
 
     $tot_count = $_REQUEST['tot_count'];
   
-    $table = db_fetch_object(db_query(db_rewrite_sql("SHOW TABLES LIKE 'classification_temp_" . $user->uid ."'")));
+    $table = db_fetch_object(db_query("SHOW TABLES LIKE 'classification_temp_" . $user->uid ."'"));
     if($table) {
-	     $record = db_fetch_object(db_query(db_rewrite_sql("SELECT curr_count, term FROM {classification_temp_" . $user->uid . "} WHERE cid = 1")));
+	     $record = db_fetch_object(db_query("SELECT curr_count, term FROM {classification_temp_" . $user->uid . "} WHERE cid = 1"));
 	     $name = check_plain($record->term);
 	     $curr_count = $record->curr_count;
        drupal_json(array('status' => 'success', 'curr_count' => $curr_count ,'tot_count' => $tot_count, 'name' => $name));
@@ -461,7 +461,7 @@ function classification_create_enhanced_field($vid,$fid,$title,$field_type){
    $field['settings']['allowed_values'] = $opt;
    $field['settings']['options_type'] = 'select';
    if(count($opt) > 0) {
-   	  db_query(db_rewrite_sql("UPDATE {taxonomy_enhancer_fields} SET settings = '%s' WHERE vid = %d AND fid = '%s'"),serialize($field['settings']),$vid,$fid);
+   	  db_query("UPDATE {taxonomy_enhancer_fields} SET settings = '%s' WHERE vid = %d AND fid = '%s'",serialize($field['settings'],$vid,$fid));
    }
 }
 

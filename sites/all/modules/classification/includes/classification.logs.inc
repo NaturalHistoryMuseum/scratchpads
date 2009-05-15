@@ -94,12 +94,12 @@ function classificataion_logs_rss() {
     INNER JOIN 
       {users} u ON (l.uid = u.uid)";
     
-    $query_pager = db_rewrite_sql("SELECT 
+    $query_pager = "SELECT 
       COUNT(l.lid) 
     FROM 
-      {classification_log} l");
+      {classification_log} l";
   
-    $result = pager_query(db_rewrite_sql($query),6, 0, $query_pager);
+    $result = pager_query($query,6, 0, $query_pager);
 
     while ($row = db_fetch_object($result)) {
 	//Tue, 03 Jun 2003 09:39:21 GMT

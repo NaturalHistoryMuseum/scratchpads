@@ -361,7 +361,7 @@ function classification_requirements($phase) {
  * Helper functions
  */
 function _classification_get_vid($name) {
-  $voc = db_fetch_object(db_query(db_rewrite_sql("SELECT vid FROM {vocabulary} WHERE name = '%s'"), $name));
+  $voc = db_fetch_object(db_query("SELECT vid FROM {vocabulary} WHERE name = '%s'", $name));
   return $voc->vid;
 }
 
