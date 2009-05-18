@@ -320,12 +320,12 @@ if($results){echo "Updated";}else{echo "Not Updated";}*/
 /*variable_set('error_level',0);*/
 
 // Install mollom spam protection and configure it to protect "comments".
-db_query('DELETE FROM variable WHERE name LIKE \'%mollom%\';');
+/*db_query('DELETE FROM variable WHERE name LIKE \'%mollom%\';');
 variable_set('mollom_public_key',"ebe52536e33b662497bad0f451187161");
 variable_set('mollom_private_key', "f86117722dcd1d12aa1a1065edfb0fb2");
 variable_set('mollom_servers', array("http://88.151.243.81","http://82.103.131.136"));
 variable_set('mollom_comment_form', 1);
-variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");
+variable_set('mollom_fallback', "MOLLOM_STATUS_ACCEPT");*/
 
 // Testing of BHL iSpecies panel
 //print_r(ispecies_bhl_get_data("Insecta", 100));
@@ -496,5 +496,13 @@ while($row = db_fetch_array($results)){
 }*/
 
 // FUUUCCCK
-db_query("UPDATE system SET status = 0 WHERE name = 'rollout';");
+/* db_query("UPDATE system SET status = 0 WHERE name = 'rollout';"); */
+
+// Get a list of files and node ids that are missing
+$results = db_query("SELECT nid, filepath FROM {files}");
+while($row = db_fetch_array($results)){
+  if(!file_exists($row['filepath'])){
+    echo "{$row['nid']}\t{$row['file']}";
+  }
+}
 echo "Finished";
