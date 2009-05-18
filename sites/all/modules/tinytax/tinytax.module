@@ -208,37 +208,36 @@ function _tinytax_view_blocks($delta){
     }
   }
   if (count($parents)+count($children)===0) {
-    if ($tid = variable_get('tinytax-'.$delta, FALSE)){
-      // Check to see if the taxonomy has multiple roots
-      $parents = taxonomy_get_parents_all($tid);  
-      $children = taxonomy_get_children(0,$vocabulary->vid);
-      if (count($children)>1){
-        $parent->tid='vid'.$vocabulary->vid;
-        $parent->vid=$vocabulary->vid;
-        $parent->name = _tinytax_get_vocabulary_name($vocabulary->vid);
-        $parents[] = $parent;        
-      }
-      $parents = array_reverse($parents);    
-      $children = taxonomy_get_children($tid);        
+    $tid = variable_get('tinytax-'.$delta, FALSE);
+    if ($tid === FALSE){
+      $tid = _tinytax_first_term_with_many_children($delta);
+      variable_set('tinytax-'.$delta, $tid);
     }
-    else {
-      // FIXME - Fix for trees with multiple bases goes here.
-      $parents = taxonomy_get_children(0, $vocabulary->vid);
-      if (count($parents)>1){
-        $children = $parents;
-        unset($parents);
-        $parent->tid='vid'.$vocabulary->vid;
-        $parent->vid=$vocabulary->vid;
-        $parent->name = _tinytax_get_vocabulary_name($vocabulary->vid);
-        $parents[] = $parent;
-      }
+    // Check to see if the taxonomy has multiple roots
+    $parents = taxonomy_get_parents_all($tid);
+    $children = taxonomy_get_children(0, $delta);
+    if (count($children)>1){
+      $parent->tid='vid'.$vocabulary->vid;
+      $parent->vid=$vocabulary->vid;
+      $parent->name = _tinytax_get_vocabulary_name($vocabulary->vid);
+      $parents[] = $parent;        
     }
+    $parents = array_reverse($parents);    
+    $children = taxonomy_get_children($tid, $delta);
   }
   $block['content'] = theme('tinytax_term_list',$parents, $children, $delta);
   // Load the Javascript and CSS
   drupal_add_js(drupal_get_path('module','tinytax').'/tinytax.js');
   drupal_add_css(drupal_get_path('module','tinytax').'/tinytax.css','module','screen',FALSE);
   return $block;
+}
+
+function _tinytax_first_term_with_many_children($vid){
+  $tid = 0;
+  while(array_pop(db_fetch_array(db_query("SELECT COUNT(t.tid) FROM term_data t, term_hierarchy h WHERE vid = %d AND t.tid = h.tid AND parent = %d;", $vid, $tid))) === "1"){
+    $tid = array_pop(db_fetch_array(db_query("SELECT t.tid FROM term_data t, term_hierarchy h WHERE vid = %d AND t.tid = h.tid AND parent = %d;", $vid, $tid)));
+  }
+  return $tid;
 }
 
 /**
@@ -319,7 +318,7 @@ function _theme_tinytax_term_list_link($term, $vid){
   }
   if (substr($term->tid,0,3)!='vid'){
     $return_string .= l(
-      '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.gif'.'"/>',
+      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'"/>',
       'taxonomy/term/'.$term->tid,
       array(
         'attributes' => array(
@@ -331,7 +330,7 @@ function _theme_tinytax_term_list_link($term, $vid){
     );
   } else {
     $return_string .= l(
-      '<img src="'.base_path().drupal_get_path('module','tinytax').'/images/plus.gif'.'"/>',
+      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'"/>',
       '',
       array(
         'attributes' => array(
@@ -354,6 +353,8 @@ function _theme_tinytax_term_list_link($term, $vid){
         )
       )
     );
+  } else {
+    $return_string .= $term->name;
   }
   $num_children = 0;
   if(variable_get('tinytax-'.$vid.'-showchildren',1)){
