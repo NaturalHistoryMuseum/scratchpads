@@ -502,7 +502,7 @@ while($row = db_fetch_array($results)){
 $results = db_query("SELECT nid, filepath FROM {files}");
 while($row = db_fetch_array($results)){
   if(!file_exists($row['filepath'])){
-    echo "{$row['nid']}\t{$row['filepath']}";
+    echo "{$row['nid']}\t{$row['filepath']}\n";
   }
 }
 echo "Finished";
