@@ -76,6 +76,13 @@ function scratchpadify_menu(){
     'file' => 'scratchpadify.admin.inc',
     'type' => MENU_NORMAL_ITEM
   );
+  $items['hidenotification'] = array(
+    'title' => '',
+    'page callback' => 'scratchpadify_set_cookie',
+    'access arguments' => array('access content'),
+    'file' => 'scratchpadify.admin.inc',
+    'type' => MENU_CALLBACK
+  );
   return $items;
 }
 
@@ -338,7 +345,13 @@ urchinTracker();
 function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
   switch ($op){
     case 'list':
-      return array(array('info'=>t('Scratchpad statistics')),array('info'=>t('Create Content')),array('info'=>t('About this site')),array('info'=>('Sad trombone')));
+      return array(
+        array('info'=>t('Scratchpad statistics')),
+        array('info'=>t('Create Content')),
+        array('info'=>t('About this site')),
+        array('info'=>t('Sad trombone')),
+        array('info'=>t('Scratchpad notifications'))
+      );
     case 'view':
       switch($delta){
         case 0:
@@ -378,6 +391,24 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
         case 3:
           drupal_add_js('var sadtrombone_width = 180;','inline');
           return array('subject'=>'Sad Trombone','content'=>'<div id="widget_sadtrombone"></div><div id="widget_tmp_sadtrombone" style="display:none"><script id="widget_scr_sadtrombone" type="text/javascript" src="http://www.sadtrombone.com/widget/async-sadtrombone.js"></script></div>');
+        case 4:
+          // First check to see if the message hasn't been hidden
+          if(isset($_COOKIE['scratchpadnotification']) && $_COOKIE['scratchpadnotification'] == 'hide'){
+            return;
+          }
+          $scratchpad_notification = variable_get('scratchpad_notification_block', array('time' => 0, 'message' => ''));
+          if($scratchpad_notification['time'] < time()+3600){
+            $message = file_get_contents(variable_get('scratchpad_notification_block_url','http://scratchpads.eu/notification.txt'));
+            if($message){
+              $scratchpad_notification = array('time' => time(), 'message' => $message);
+              variable_set('scratchpad_notification_block', $scratchpad_notification);
+            }
+            if(trim($scratchpad_notification['message']) != ''){
+              $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
+            }
+            drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
+            return array('subject' => '', 'content' => $scratchpad_notification['message']);
+          }
       }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
