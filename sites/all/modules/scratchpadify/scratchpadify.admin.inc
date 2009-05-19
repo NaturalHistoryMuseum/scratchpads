@@ -15,7 +15,7 @@ function scratchpadify_compact_page($mode = 'off') {
  * Callback to set the cookie to hide the message
  */
 function scratchpadify_set_cookie(){
-  $hash = variable_set('scratchpad_notification_block_message_id', 'nohash');
+  $hash = variable_get('scratchpad_notification_block_message_id', 'nohash');
   setcookie('scratchpadnotification', $hash, time()+60*60*24*365);
   drupal_goto($_GET['destination']);
 }
