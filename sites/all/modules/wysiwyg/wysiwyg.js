@@ -1,4 +1,4 @@
-// $Id: wysiwyg.js,v 1.5.2.6 2009/02/14 14:55:27 sun Exp $
+// $Id: wysiwyg.js,v 1.5.2.7 2009/03/29 06:38:35 sun Exp $
 
 /**
  * Initialize editor libraries.
@@ -7,6 +7,11 @@
  * init hook gives them a chance to do so.
  */
 Drupal.wysiwygInit = function() {
+  // This breaks in Konqueror. Prevent it from running.
+  if (/KDE/.test(navigator.vendor)) {
+    return;
+  }
+
   jQuery.each(Drupal.wysiwyg.editor.init, function(editor) {
     // Clone, so original settings are not overwritten.
     this(Drupal.wysiwyg.clone(Drupal.settings.wysiwyg.configs[editor]));
@@ -33,6 +38,11 @@ Drupal.wysiwygInit = function() {
  *   A DOM element, supplied by Drupal.attachBehaviors().
  */
 Drupal.behaviors.attachWysiwyg = function(context) {
+  // This breaks in Konqueror. Prevent it from running.
+  if (/KDE/.test(navigator.vendor)) {
+    return;
+  }
+
   $('.wysiwyg:not(.wysiwyg-processed)', context).each(function() {
     var params = Drupal.wysiwyg.getParams(this);
     var $this = $(this);

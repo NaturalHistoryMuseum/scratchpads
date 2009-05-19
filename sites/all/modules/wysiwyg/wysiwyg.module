@@ -1,5 +1,5 @@
 <?php
-// $Id: wysiwyg.module,v 1.17.2.8 2009/03/06 03:22:48 sun Exp $
+// $Id: wysiwyg.module,v 1.17.2.10 2009/04/01 16:29:38 sun Exp $
 
 /**
  * @file
@@ -58,10 +58,9 @@ function wysiwyg_help($path, $arg) {
  */
 function wysiwyg_form_alter(&$form, &$form_state) {
   $form['#after_build'][] = 'wysiwyg_process_form';
-  // Disable 'teaser' textarea.
+  // Teaser splitter is unconditionally removed and NOT supported.
   if (isset($form['body_field'])) {
     unset($form['body_field']['teaser_js']);
-    $form['body_field']['teaser_include'] = array();
   }
 }
 
@@ -360,14 +359,15 @@ function wysiwyg_add_plugin_settings($profile) {
     $plugins_native[$editor['name']] = module_invoke_all('wysiwyg_plugin', $editor['name'], $editor['installed version']);
   }
   // Only keep native external plugins that are enabled in this profile.
+  $profile_plugins_native = array();
   foreach ($plugins_native[$editor['name']] as $plugin => $meta) {
-    if (!isset($profile->settings['buttons'][$plugin])) {
-      unset($plugins_native[$editor['name']][$plugin]);
+    if (isset($profile->settings['buttons'][$plugin])) {
+      $profile_plugins_native[$plugin] = $plugins_native[$editor['name']][$plugin];
     }
   }
   // Invoke the editor's plugin settings callback, so it can populate the
   // settings for native external plugins with custom, required values.
-  $settings_native = $editor['plugin settings callback']($editor, $profile, $plugins_native[$editor['name']]);
+  $settings_native = $editor['plugin settings callback']($editor, $profile, $profile_plugins_native);
 
   drupal_add_js(array('wysiwyg' => array('plugins' => array('format' . $profile->format => $settings_native))), 'setting');
 

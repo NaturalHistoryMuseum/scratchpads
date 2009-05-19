@@ -1,5 +1,5 @@
 <?php
-// $Id: tinymce.inc,v 1.17.2.11 2009/02/24 23:21:22 sun Exp $
+// $Id: tinymce.inc,v 1.17.2.12 2009/03/20 23:56:04 sun Exp $
 
 
 /**
@@ -40,7 +40,7 @@ function wysiwyg_tinymce_editor() {
         'css files' => array('tinymce-2.css'),
         'download url' => 'http://sourceforge.net/project/showfiles.php?group_id=103281&package_id=111430&release_id=557383',
       ),
-      '3.2' => array(
+      '3.1' => array(
         // 'include files' => array('tinymce-3.inc'),
         'js files' => array('tinymce-3.js'),
         'css files' => array('tinymce-3.css'),

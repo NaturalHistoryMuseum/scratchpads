@@ -1,4 +1,4 @@
-// $Id: none.js,v 1.3 2008/10/28 22:46:05 sun Exp $
+// $Id: none.js,v 1.3.2.1 2009/05/17 00:13:34 sun Exp $
 
 /**
  * Attach this editor to a target element.
@@ -17,14 +17,14 @@ Drupal.wysiwyg.editor.attach.none = function(context, params, settings) {
   if (params.resizable) {
     $('#' + params.field).addClass('resizable');
     $('#' + params.field).css({display: ''});
-    Drupal.behaviors.textarea();
+    if (Drupal.behaviors.textarea) {
+      Drupal.behaviors.textarea();
+    }
   }
 };
 
 /**
  * Detach a single or all editors.
- *
- * See Drupal.wysiwyg.editor.attach.none() for a full desciption of arguments.
  *
  * @param context
  *   A DOM element, supplied by Drupal.attachBehaviors().
