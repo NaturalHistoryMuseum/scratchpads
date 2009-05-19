@@ -397,18 +397,16 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             return;
           }
           $scratchpad_notification = variable_get('scratchpad_notification_block', array('time' => 0, 'message' => ''));
-          if($scratchpad_notification['time'] < time()+3600){
+          if($scratchpad_notification['time']+3600 < time()){
             $message = file_get_contents(variable_get('scratchpad_notification_block_url','http://scratchpads.eu/notification.txt'));
-            if($message){
-              $scratchpad_notification = array('time' => time(), 'message' => $message);
-              variable_set('scratchpad_notification_block', $scratchpad_notification);
-            }
-            if(trim($scratchpad_notification['message']) != ''){
-              $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
-            }
-            drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
-            return array('subject' => '', 'content' => $scratchpad_notification['message']);
+            $scratchpad_notification = array('time' => time(), 'message' => $message);
+            variable_set('scratchpad_notification_block', $scratchpad_notification);
           }
+          if(trim($scratchpad_notification['message']) != ''){
+            $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
+          }
+          drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
+          return array('subject' => '', 'content' => $scratchpad_notification['message']);
       }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
