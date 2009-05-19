@@ -257,7 +257,7 @@ function scratchpad_profile_tasks(&$task, $url){
     );
     
     // Contact form
-    db_query("INSERT INTO {contact} (category, recipients, selected) SELECT '%s',mail,1 FROM users WHERE uid = 2", st('Website feedbak'));
+    db_query("INSERT INTO {contact} (category, recipients, selected) SELECT '%s',mail,1 FROM users WHERE uid = 2", st('Website feedback'));
     
     
     // Mollom
