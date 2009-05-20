@@ -499,11 +499,17 @@ while($row = db_fetch_array($results)){
 /* db_query("UPDATE system SET status = 0 WHERE name = 'rollout';"); */
 
 // Get a list of files and node ids that are missing
-$results = db_query("SELECT nid, filepath FROM {files}");
+/* $results = db_query("SELECT nid, filepath FROM {files}");
 while($row = db_fetch_array($results)){
   if(!file_exists($row['filepath'])){
     $filename = array_pop(explode("/",$row['filepath']));
     echo "{$row['nid']}\t$filename\n";
   }
+}*/
+
+// Count the number of nodes, and return the number if less than 50
+$number = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node}")));
+if($number < 50){
+  echo $number;
 }
-echo "Finished";
+//echo "Finished";
