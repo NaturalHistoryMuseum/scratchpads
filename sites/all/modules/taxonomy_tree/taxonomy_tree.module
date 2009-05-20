@@ -68,25 +68,87 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
 
     if(count($form['taxonomy'])){
       
-      // Do we need to make this a tree view?
-      foreach($form['taxonomy'] as $vid => $taxonomy){
-        
+    $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
+    
+      foreach($vocabularies as $vid => $vocabulary){
+ 
         $taxonomy_tree_node_types = variable_get('taxonomy_tree_'.$vid, array());
-        
+      
         if($taxonomy_tree_node_types[$form['type']['#value']]){
-        
-        $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');  
+      
+        $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
+
+        $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
 
         }
-        
+      
       }
       
+    if(count($form['taxonomy_tree'])){
+      
+      $form['#submit'] = array('taxonomy_tree_node_form_submit') + $form['#submit'];
+      
+    }  
+    
     }
+
   
   }
 
   
 }
+
+
+function taxonomy_tree_node_form_submit($form, &$form_state) {
+ 
+ $taxa_vid = $form_state['values']['taxa_vid'];
+ 
+ foreach($form_state['values']['taxonomy_tree'] as $vid){
+   
+   if(count($form_state['values']['taxonomy'][$vid])){
+     
+     foreach($form_state['values']['taxonomy'][$vid] as $tid){
+
+       if(!$form['#post']['expanded'][$tid]){
+       // This term has not been expanded, so we need to see if it has any children to automatically select
+       
+       taxonomy_tree_select_children($form_state, $vid, $tid);
+       
+       }
+       
+     }
+     
+   }
+   
+ }
+
+
+}
+
+/** 
+* Select all children of a term;
+* Recursive;
+*/
+function taxonomy_tree_select_children(&$form_state, $vid, $tid){
+  
+  $children = taxonomy_get_children($tid);
+
+  if(count($children)){
+
+    foreach($children as $child){
+
+      $form_state['values']['taxonomy'][$vid][$child->tid] = $child->tid;
+      
+      taxonomy_tree_select_children($form_state, $vid, $child->tid);
+
+    }
+
+  }
+
+  
+  
+}
+
 
 /** 
 * Process the field
@@ -136,7 +198,7 @@ function theme_taxonomy_tree_element($element){
     
   }
   
-  drupal_add_js('$(document).ready(function() {initTreeview("'.$element['#id'].'","'.$vid.'","'.$selected.'")})', 'inline');
+  drupal_add_js('$(document).ready(function() {TREE = new treeview(); TREE.init("'.$element['#id'].'","'.$vid.'","'.$selected.'")})', 'inline');
   
   $output = '<div '.drupal_attributes($element['#attributes']).'>';
   $output .= '<label>Terms for '.$element['#title'].'</label>';

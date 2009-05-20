@@ -8,6 +8,7 @@ function taxonomy_tree_callback($vid, $nid = null){
   $depth = 1;
   $branches_to_expand = array();
   
+  // If you're editing, tids can be passed in
   $selected_tids = $_GET['tids'];
 
   if($_GET['root'] == 'source'){
@@ -66,6 +67,39 @@ function taxonomy_tree_callback($vid, $nid = null){
 
   $json = taxonomy_tree_to_json($tree, $branches_to_expand, $selected_tids, $select_all);
 
+  // We need to store which items have been expanded
+  if(count($json)){
+    
+    if($parent){
+    
+      $element = array(
+        '#type' => 'hidden', 
+        '#value' => $parent, 
+        '#name' => 'expanded['.$parent.']',
+        '#return_value' => $parent
+      );
+      
+      $json[0]['text'] .= drupal_render($element);
+
+    }elseif(count($branches_to_expand)){
+    
+      foreach($branches_to_expand as $branch_to_expand){
+      
+        $element = array(
+          '#type' => 'hidden', 
+          '#value' => $branch_to_expand, 
+          '#name' => 'expanded['.$branch_to_expand.']',
+          '#return_value' => $branch_to_expand
+        );
+  
+        $json[0]['text'] .=  drupal_render($element);
+      
+      }
+    
+    }
+  
+  }
+
   return drupal_json($json);
    
 }
@@ -74,11 +108,11 @@ function taxonomy_tree_to_json($tree, $branches_to_expand, $selected_tids, $sele
   
   $tree_array = taxonomy_tree_to_array($tree);
   $json = array();
-  
+
   foreach($tree_array as $root){
 
-    $item = taxonomy_tree_get_element($root['data']->vid, $root['data']->tid, $root['data']->name, $selected_tids, $select_all);
-    
+    $item = taxonomy_tree_get_element($root['data']->vid, $root['data']->tid, $root['data']->name, $selected_tids, $select_all);   
+        
     if(count($root['children'])){
       
       if($branches_to_expand[$root['data']->tid]){
