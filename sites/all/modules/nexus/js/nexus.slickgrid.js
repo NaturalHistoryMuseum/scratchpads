@@ -57,7 +57,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
     
     this.init = function() {
       
-        $input = this.getInput();
+        $input =  $("<input tabIndex='0' type=text class='editor-text' />");
         
         if (value != null) 
         {
@@ -68,7 +68,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
         $input.appendTo($container);
         $input.focus().select();
         
-        this.populateData();
+        NEXUS.cellSelected($container, columnDef, value, dataContext);
         
     }
     
@@ -91,84 +91,6 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
     
     this.isValueChanged = function() {
         return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
-    }
-        
-    this.populateData = function(){
-      
-      var character = characters[columnDef.id];
-      
-      row = ($($container).parents('div.r').attr('row'));
-      cell = $($container).attr('cell');
-
-      var div = document.createElement('div');
-      var h1 = document.createElement('h1');
-      var name = document.createTextNode(character.name);
-      h1.appendChild(name);
-      div.appendChild(h1);
-
-      NEXUS.populateNote(columnDef, dataContext);
-
-      if(character.states){
-
-        // Create the option list 
-        var ul = document.createElement('ul');
-
-        for(key in character.states){        
-
-          // Add an option
-          var li = document.createElement('li');
-          var strong = document.createElement('strong');
-          var keyText = document.createTextNode(key);
-          strong.appendChild(keyText);
-          li.appendChild(strong);
-          var state = document.createTextNode(character.states[key]['state']);
-          li.appendChild(state);
-          
-          if(character.states[key]['state_description']){
-            var br = document.createElement('br');
-            li.appendChild(br); 
-            var state_description = document.createTextNode(character.states[key]['state_description']);
-            li.appendChild(state_description);           
-          }
-
-          ul.appendChild(li);
-
-        }
-
-        div.appendChild(ul);
-
-      }
-
-      $('#matrix-editor-data').html(div);
-      
-    }
-    
-    this.getInput = function(){
-      
-      character_tid = NEXUS.getColumnTid(columnDef);
-
-      if(characters[character_tid]['states']){
-
-          var select = "<select tabIndex='0'><option value=''></option>";
-
-          for(key in characters[character_tid]['states']){
-            
-            select += "<option value='"+key+"'>"+key+" "+characters[character_tid]['states'][key]['state']+"</option>";
-
-          }
-
-          select += '</select>';
-
-          $input = $(select);
-
-      }else{
-
-        $input = $("<input tabIndex='0' type=text class='editor-text' />");
-
-      }
-
-      return $input;
-      
     }
     
     this.validate = function(){
@@ -205,33 +127,72 @@ var nexusSelectorCellFormatter = function(row, cell, value, columnDef, dataConte
 /************************** Cell validator functions ************************/
 
 
-function nexusQuantitativeFieldValidator(value) {
+function nexusControlledStateValidator(value) {
+  
+  var character_tid = this.id;
+  var valid = true;
+  
+  if(value){
     
-  var character_tid = columns[cell]['id'];
-  var valid = false;
+    if(value.indexOf('+') != -1){
+
+      var values = (value.split('+'));
+
+    }else if(value.indexOf('/') != -1){
+      
+      var values = (value.split('/'));
+      
+    }else {
+
+      var values = [value];
+
+    }
     
- if (value.length){
+    // Check the values match one of the allowed values  
+    $(values).each(function(i) {
    
-   // Is it one of the options
-   if(characters[character_tid]['options'][value]){
-     
-     valid = true; 
-     
-   }else{
-     
-     valid = false;  
-     
-   }
-   
- }else{
-   
-   valid = true;
-   
- }
- 
- return {valid:valid, msg:null};
+     if(!characters[character_tid]['states'][values[i]]){
+         
+      valid = false;
+      
+      NEXUS.createDialog('error', 'The value '+values[i]+' is not an option for this controlled state. Please select one of the controlled values.');
+
+     }else if(values.length > 1 && (values[i].indexOf('?') != -1 || values[i].indexOf('-') != -1)){
+       
+      valid = false; 
+      NEXUS.createDialog('error', 'Sorry, you cannot select both a state and '+values[i]+'.');
+      
+       
+     }
+    
+    }); 
+    
+    
+  }
+  
+  return {valid: valid, msg:null};
+
 
 }
+
+
+function nexusNumericStateValidator(value) {
+
+  if (value.indexOf('?') == -1 && !value.toString().match(/^[-]?\d*\.?\d*$/) ){ 
+    NEXUS.createDialog('error', 'Please enter a numeric value');
+    valid = false;
+    
+  }else{
+    
+    valid = true;
+    
+  }
+  
+  return {valid:valid, msg:null};
+  
+  
+}
+
 
 
 
@@ -242,19 +203,23 @@ function nexusQuantitativeFieldValidator(value) {
 
 
 
-var nexusQualitativeUpdateItem = function(value,columnDef,item) {
 
+var nexusFreeEntryUpdateItem = function(value,columnDef,item) {
+
+  var character_tid = columnDef.id;
+  var taxa_tid = item.id;
+  
   var data = {
-    character_tid: NEXUS.getColumnTid(columnDef),
+    character_tid: columnDef.id,
     taxa_tid: item.id,
-    title: value
+    body: value
   }
   
-  if(free_states_data && free_states_data[character_tid] && free_states_data[character_tid][item.id]){
-    data.nid = free_states_data[character_tid][item.id];
+  if(intersection_info[character_tid] && intersection_info[character_tid][taxa_tid] && intersection_info[character_tid][taxa_tid]['state_nid']){
+    data.nid = intersection_info[character_tid][taxa_tid]['state_nid'];
   }
 
-	$.post(Drupal.settings.nexusCallback+'/set_free_state', data);
+	$.post(Drupal.settings.nexusCallback+'/save_free_state', data);
 	
 	item[columnDef.field] = value;
 	dataView.updateItem(item.id,item);
@@ -264,21 +229,42 @@ var nexusQualitativeUpdateItem = function(value,columnDef,item) {
 
 
 
-var nexusQuantitativeUpdateItem = function(value,columnDef,item) {
+var nexusControlledStateUpdateItem = function(value,columnDef,item) {
 
-  var data = {
-    character_tid: NEXUS.getColumnTid(columnDef),
-    taxa_tid: item.id
+  var data = 'character_tid='+columnDef.id+'&taxa_tid='+item.id;
+  
+  if(value.indexOf('+') != -1){
+    
+    var values = (value.split('+'));
+    
+    $(values).each(function() {
+      
+      data += '&nids[]='+characters[columnDef.id]['states'][this]['nid']; 
+      
+    });
+
+  }else if(value.indexOf('/') != -1){
+    
+    data += '&or=1'
+    
+    var values = (value.split('/'));
+    
+    $(values).each(function() {
+      
+      data += '&nids[]='+characters[columnDef.id]['states'][this]['nid']; 
+      
+    });
+    
+  }else if(value){
+    
+    data += '&nids[]='+characters[columnDef.id]['states'][value]['nid']; 
+    
   }
 
-  if(value){
-    data.nid = characters[character_tid]['states'][value]['nid'];
-  }
-
-	$.post(Drupal.settings.nexusCallback+'/set_state', data);
+	$.post(Drupal.settings.nexusCallback+'/save_state', data);
 	
 	item[columnDef.field] = value;
-	dataView.updateItem(item.id,item);
+	dataView.updateItem(item.id, item);
 	
 	
 }

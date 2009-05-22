@@ -11,8 +11,6 @@ drupal_install_schema('nexus');
 
 module_load_include('module', 'nexus', 'nexus');
 
-
-
 $character_vocabulary = array(
  'name' => 'Character vocabulary',
  'hierarchy' => 1,
@@ -31,20 +29,23 @@ $nexus_node_info = nexus_node_info();
 
   }
 
-  variable_set('nexus_character_vid', $character_vocabulary->vid);
+  taxonomy_save_vocabulary($character_vocabulary);
+
+}
 
 
-taxonomy_save_vocabulary($character_vocabulary);
-
-} 
 
 /** 
 *Implementation of hook_uninstall(). 
 */ 
 function nexus_uninstall() { 
 
-// Delete all the vocabs & node
-_nexus_delete_projects();
+// Delete the vocabs & nodes
+_nexus_delete_nodes();
+
+$character_vid = nexus_get_character_vid();
+
+taxonomy_del_vocabulary($character_vid);
 
 drupal_uninstall_schema('nexus'); 
 
@@ -53,18 +54,28 @@ drupal_uninstall_schema('nexus');
 /** 
 * Deletes all projects & project nodes
 */
-function _nexus_delete_projects(){
+function _nexus_delete_nodes(){
   
-  $result = db_query('SELECT nid, character_tid FROM {nexus_projects}'); 
+  $nexus_nodes = nexus_node_info();
   
-  while ($project = db_fetch_object($result)) {
-
-    taxonomy_del_vocabulary($project->character_tid);
-    node_delete($project->nid);
+  foreach($nexus_nodes as $node_type => $node_info){
     
-    //BTODO - DELETE CHAR NODES
-
+    $node_types[] = $node_type;
+    
   }
+
+  $type_placeholders = db_placeholders($node_types, 'text');
+
+  $sql = 'SELECT n.nid FROM {node} n WHERE n.type IN ('.$type_placeholders.')';
+  
+  $result = db_query($sql, $node_types); 
+  
+  while ($node = db_fetch_object($result)) {
+  
+    node_delete($node->nid);
+  
+  }
+
   
 }
 
@@ -99,7 +110,7 @@ $schema['nexus_projects'] =
         'default' => 0,
         'description' => 'The {vocabulary}.vid of the project vocabulary assigned to the node.',
       ),
-      'character_tid' => array(
+      'character_root_tid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -116,28 +127,86 @@ $schema['nexus_projects'] =
     'indexes' => array(
       'nid' => array('nid'),
       'taxa_vid' => array('taxa_vid'),
-      'character_tid' => array('character_tid')
+      'character_root_tid' => array('character_root_tid')
     ),
     'primary key' => array('vid'),
     
   ); 
 
-$schema['nexus_is_numeric'] = 
+  
+$schema['nexus_relationships'] = 
 
   array( 
-    'description' => t("Force numeric for free entry terms."), 
+    'description' => t("Define extra information about the relationship between term intersection - can be OR (/), N/A(-) or Unknown(?)."), 
     'fields' => array( 
-      'tid'=>array( 
+      'taxa_tid'=>array( 
         'type'=>'int', 
         'unsigned' => TRUE, 
         'not null' => TRUE, 
         'default'=> 0, 
-        'description'=> 'The tid of the numeric only term.', 
-        ), 
-     ), 
-    'primary key' => array('tid'),
+        'description'=> 'The taxa term.tid.', 
+        ),
+      'character_tid'=>array( 
+        'type'=>'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default'=> 0, 
+        'description'=> 'The character term.tid.', 
+        ),
+      'operator'=>array( 
+        'type' => 'varchar',
+        'length' => 1,
+        'not null' => TRUE,
+        'default' => '',
+        'description'=> 'The relationship operator / or - or ?', 
+        ),
+     ),
+     'indexes' => array(
+       'taxa_tid' => array('taxa_tid'),
+       'character_tid' => array('character_tid')
+     ),
     
-  ); 
+  );
+  
+  $schema['nexus_term_settings'] = 
+
+    array( 
+      'description' => t("Taxonomy settings - is a Taxa collapsed or width of columns."), 
+      'fields' => array( 
+        'tid'=>array( 
+          'type'=>'int', 
+          'unsigned' => TRUE, 
+          'not null' => TRUE, 
+          'default'=> 0, 
+          'description'=> 'The term.tid.', 
+          ),
+          
+        'value'=>array( 
+          'type'=>'int', 
+          'unsigned' => TRUE, 
+          'not null' => TRUE, 
+          'default'=> 1, 
+          'description'=> 'The value setting - integer denoting width or collapsed / numeric is true.', 
+          ),
+          
+        'setting_type'=>array( 
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'default' => '',
+          'description'=> 'Type of setting - either width, numeric or collapsed', 
+          ),
+                
+       ),
+       
+       'indexes' => array(
+         'setting_type' => array('setting_type')
+       ),
+       
+       'primary key' => array('tid'),
+
+    );
+    
 
 
 return $schema; 
