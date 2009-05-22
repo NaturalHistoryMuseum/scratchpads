@@ -1,115 +1,562 @@
-#nexus-state-wrapper{
-  display:none;
+
+#nexus{
+  position: relative;
+  min-width: 830px; 
+}
+
+#myGrid{
+  background-color: #f8f8f8;
+  border-color: #c0c0c0;
+  border-width: 1px; 
+  border-style: solid solid none solid;
 }
 
 
-#nexus-note-form #character-info{
+.main-data{
+  background-color: #fff;
+}
+
+/* Character groups */
+
+#character-groups{
+  overflow: hidden;
+  height: 25px;
+}
+
+#character-groups div.scroll{
+  width: 10000px;
+}
+
+#character-groups div.scroll div{
   float: left;
-  width: 200px;
+  background-color: #d4dde5;
+  overflow: hidden;
+  text-align: center;
+  font-size: 10px;
+  line-height: 22px;
+  height: 22px;
+  cursor: pointer;
+  border: 1px solid #999;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #e5ebf0 #969ca2 #969ca2 #e5ebf0;
 }
 
-#nexus-note-form fieldset{
-  margin-left: 420px;
-}
-
-.nexus-note{
-  background: url('../images/note.png') no-repeat top right;
-}
-
-#_flexselect{
-	width: 100%;
-	height: 100%;
-	border: 0px;
-	margin: 0px;
-	background: transparent;
-	outline: 0px; 
-	padding: 0px;
-	padding-top: 3px;
-}
-
-#nexus-note-form{
-  display:none;
-}
-
-.grid-canvas .hidden{
-background: #ccc;
-}
-
-.hidden-row .c{
-  background: #ccc;
-  color: #999;
-}
-
-.selectedColumn{
-  background-color:#F5F7D7;
-}
-
-.hideCols .hiddenColumn{
-  display: none;
-}
-
-.hiddenColumn{
-    background: #ccc;
-}
-
-/* This is used to display columns hidden in the head */
-#myGrid .unhiddenColumn{
-  display:block;
-  background: #fff;
+#character-groups div.scroll div:hover, #character-groups div.scroll div.selected{
+  background-color: #a2aec2;
+  border-color: #e5ebf0 #727b89 #727b89 #e5ebf0;
 }
 
 
-
-/* Project form dynamic form */
-.nexus-dynamic-options{
-  display: none;
-}
-
-
-/**************** forms ******************/
-
-/* character form */
+/* Add character */
 
 #add-character{
-  text-align: right;
+  position: absolute;
+  right: -1px;
+  top: 26px;
+  z-index: 5000;
+  height: 28px;
+  width: 28px;
+  background: #F0F0F0;
+  text-align: center;
 }
 
-/* Project form dynamic form */
-.nexus-dynamic-options{
-  display: none;
+#add-character:hover{
+  background: #e1e1e1;
+  border-left: 1px solid #C0C0C0;
+}
+
+#add-character img{
+  margin-top: 5px;
 }
 
 
-#edit-new-group-wrapper{
-  display: none;
+
+
+
+/* Header cells */
+
+/* Top */
+
+#myGrid div.h{
+  background: #ebebeb url('../images/header_cells_bg.gif') repeat-x!important; 
+  background-color: #f1f1f1;
+  border-width: 1px;
+  border-style: solid solid solid solid;
+  border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
+  color: #333333;
+  font-weight: normal;
+  cursor: pointer;
+  height: 22px;
+  padding:1px 2px 2px 1px;
+}
+
+/* Increase the hover area */
+#myGrid div.h span{
+  padding: 0 5px; 
+}
+
+#myGrid .grid-header{
+  height: 28px;
+} 
+
+.grid-header .h, .grid-canvas .c{
+  text-align: center;
+}
+
+
+
+/* Side */
+
+#myGrid div.c0{
+  padding-left: 10px;
+}
+
+#taxa{
+  cursor: auto!important;
+}
+
+.grid-canvas .r .c.cell-move-handle {
+   text-align: left;
+   border-width: 1px;
+   border-style: solid solid solid solid;
+   border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
+   font-weight: normal;
+   cursor: pointer;
+   
 }
 
 
 
 
-.ui-widget{
-  font-size: 1em;
+
+/* Selected & hover cells */
+
+.grid-canvas .r .cell-move-handle:hover, div.c0.selected {
+background:#dadada;
+border-color: #f8f8f8 #bcbcbc #bcbcbc #f8f8f8 !important;
 }
 
-.grid-header{
+.grid-canvas .r.selected .cell-move-handle{
+  background: #EFEFEF;
+}
+
+.grid-canvas .r.selected, .selectedColumn{
+  background: #edf3fe;
+}
+
+#myGrid .grid-header .h:hover{
+background-image: url('../images/header_cells_bg_hover.gif')!important;
+}
+
+
+
+
+
+
+/* controls */
+
+#matrix-editor-controls{
+  background: url('../images/control_background.gif') repeat-x;
+  height: 30px;
+  border-color: #c0c0c0;
+  border-width: 1px; 
+  border-style: solid;
+  
+}
+
+#matrix-editor-controls #search{
+  float: left;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+
+
+#matrix-editor-controls #search input{
+  height: 15px;
+  font-size: 11px;
+  line-height: 15px;
+  margin: 0 10px;
+  width: 150px;
+  border: 1px solid #999;
+}
+
+#matrix-editor-controls .item-list ul{
+  margin: 0;
   height: 30px;
 }
 
-.grid-header div.h{
-  border-top-width: 5px;
-  height: 24px;
+#matrix-editor-controls .item-list ul li, #matrix-editor-controls .item-list ul li.first, #matrix-editor-controls .item-list ul li.last{
+  float: right;
+  list-style: none;
+  background: url('../images/tab_off.gif') no-repeat;
+  text-align: center;
+  padding: 0 20px;  
+  line-height: 26px; 
+  border-left: 1px solid #c8c8c8; 
+  height: 30px;
+  margin: 0;
 }
 
-span.group{
-height: 3px;
-display: block;  
+#matrix-editor-controls .item-list ul li.active{
+  background: #d4dde5;
+  border-top: 1px solid #d4dde5;
 }
 
-.grid-header span.even{
-  background-color: orange;
+#matrix-editor-controls ul li img{
+  cursor: pointer;
 }
 
-.grid-header span.odd{
-  background-color: yellow;
+#matrix-editor-controls .item-list ul li a, #add-character a{
+    color: #5a5a5a;
+    outline: none;
 }
+
+
+/* matrix editor panels */
+
+#matrix-editor-panels{
+  clear: both;
+  width: 100%;
+  background-color: #d4dde5;
+  min-height: 350px;
+  border-color: #8995ab;
+  border-width: 1px; 
+  border-style: none solid solid solid;
+  color: #252b36;
+}
+
+#matrix-editor-panels .inner{
+  padding: 10px;
+}
+
+#matrix-editor-panels .tab{
+  display: none;
+}
+
+#matrix-editor-panels #data-editor{
+  display: block;
+}
+
+
+/* forms */
+
+#matrix-editor-panels form{
+  margin: 0!important;
+}
+
+#matrix-editor-panels #node-form{
+  width: 100%; 
+}
+
+#matrix-editor-panels span.form-required{
+  color: #ffaa06;
+}
+
+#matrix-editor-panels div.columns, #matrix-editor-panels .buttons{
+  width: 49%;
+}
+
+#matrix-editor-panels div#left{
+  float: left;
+}
+
+#matrix-editor-panels div#right{
+  min-height: 270px;
+}
+
+#matrix-editor-panels div#right{
+  float:left;
+}
+
+#matrix-editor-panels .buttons{
+    margin-left: 51%;
+}
+
+#matrix-editor-panels form input.form-text, #matrix-editor-panels form textarea, #edit-taxa ul.treeview, #text-state-dynamic-entry{
+  border: 1px solid #8995ab;
+  width: 95%;
+}
+
+#matrix-editor-panels form input.form-text{
+  height: 1.6em;
+}
+
+#matrix-editor-panels .resizable-textarea{
+  width: 100%;
+}
+
+#matrix-editor-panels .resizable-textarea .grippie{
+  background-color: #A2AEC2;
+  width: 95%;
+}
+
+
+/* #matrix-editor-panels #node-form .buttons{
+  position: absolute;
+  bottom: 25px;
+  left: 49%;
+  margin-left: 50px;
+} */
+
+#matrix-editor-panels .form-button, #matrix-editor-panels .form-submit {
+ margin: 0; 
+}
+
+
+/* delete form */
+
+#confirm-delete{
+  display: none;
+}
+
+
+/* edit taxa */
+
+#edit-taxa ul.treeview{
+  height: 250px;
+  overflow-y: scroll;
+  background-color: #fff;
+  padding: 5px;
+  width: 49%;
+}
+
+.treeview label:hover, .treeview span.hover label{
+  color: #000!important;
+}
+
+
+
+/* character form */
+
+#nexus-character-form #edit-character-group-wrapper label, #edit-new-group-wrapper label{
+  width: 15em;
+  float: left;
+}
+
+#nexus-character-form #edit-new-group-wrapper #edit-new-group, #nexus-character-form #edit-character-group{
+  width: 200px;
+}
+
+#nexus-character-form #edit-new-group-wrapper{
+  display: none;
+}
+
+#nexus-character-form .form-radios .form-item{
+  width: 100px;
+  float: left;
+}
+
+#nexus-character-form .form-radios #edit-type-controlled-wrapper{
+  width: 200px;
+}
+
+#character-info ul li{
+  margin: 5px 0;
+  list-style: none;
+  background: none;  
+}
+
+#character-info ul li strong{
+  padding-right: 5px;
+  font-size: 1.4em;
+  position: relative;
+  top: 2px;
+}
+
+
+/* state form */
+
+/* Hide the states by default - will be displayed with js */
+
+#nexus-state-wrapper{
+  display:none;
+  clear: both;
+  padding-top: 5px;
+}
+
+#nexus-states .state-bg-1{
+  background: #a2aec2 url('../images/state_tl.gif') no-repeat;
+  margin-bottom: 5px;
+}
+
+#nexus-states .state-bg-2{
+  background: url('../images/state_tr.gif') no-repeat top right;
+  padding-top: 7px;
+}
+
+#nexus-states .state-bg-3{
+  background: url('../images/state_br.gif') no-repeat bottom right;
+}
+
+#nexus-states .state-bg-4{
+  background: url('../images/state_bl.gif') no-repeat bottom left;
+  padding: 0 7px 7px;
+}
+
+#nexus-states div.state{
+  position: relative;
+}
+
+#nexus-states span.handle{
+  width: 10px;
+  background: url('../images/state_handle.gif') no-repeat;
+  height: 10px;
+  display: block;
+  cursor: move;
+  position: absolute;
+  top: 6px;
+  left: 0;
+}
+
+#nexus-states div.state .form-item{
+  margin: 0;
+}
+
+#nexus-states .form-item label{
+  width: 130px;
+  float: left;
+  margin-left: 15px;
+}
+
+#nexus-states .resizable-textarea{
+  margin-left: 140px;
+  width: 225px;
+}
+
+#nexus-states .resizable-textarea textarea{
+  width: 100%;
+  height: 50px;
+}
+
+#nexus-states .resizable-textarea .grippie{
+  background-color: #4d5d74;
+}
+
+#nexus-states div.state .form-item input{
+  width: 220px;
+}
+
+#nexus-states div.state.delete-state{
+  margin: 0;
+}
+
+#nexus-states div.controls{
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  
+}
+
+#nexus-states div.controls input{
+  margin: 0;
+}
+
+#nexus-states .state-description{
+  display: none;
+}
+
+
+/* Project settings */
+
+#matrix-editor-panels .vertical-tabs, #matrix-editor-panels .vertical-tabs-div{
+  min-height: 290px;
+}
+
+#matrix-editor-panels .vertical-tabs-div{
+ border: 1px solid #8995AB; 
+}
+
+#matrix-editor-panels .vertical-tabs li a{
+  padding: 2px 0;
+  color: #fff;
+}
+
+#matrix-editor-panels .vertical-tabs ul{
+  border: none;
+}
+
+#matrix-editor-panels .vertical-tabs li{
+    border-width: 1px;
+    border-style: solid none none solid;
+    border-color: #8995AB;
+}
+
+#matrix-editor-panels .vertical-tabs li .description{
+   color: #424e61;
+}
+
+#matrix-editor-panels .vertical-tabs li, #matrix-editor-panels .vertical-tabs{
+  background: #a2aec2;
+}
+
+#matrix-editor-panels .vertical-tabs .vertical-tabs-fieldsets, #matrix-editor-panels .vertical-tabs li.selected{
+  background-color:#e0e9f1;  
+}
+
+#matrix-editor-panels .vertical-tabs li.selected{
+  padding-right: 1px;
+  position: relative;
+  left: 1px;
+  border-left: 1px solid #D4DDE5;
+}
+
+#matrix-editor-panels .vertical-tabs li.selected a{
+  color: #252B36;
+}
+
+
+
+/* Project ADD form - dynamic options */
+
+.nexus-dynamic-options{
+  display: none;
+}
+
+
+
+
+
+
+
+
+/* Dialog */
+
+.ui-dialog .ui-dialog-buttonpane{
+  border-top: none;
+  text-align: center;
+}
+
+.ui-dialog .ui-dialog-buttonpane button{
+  float: none;
+  display: inline;
+}
+
+.ui-dialog .status{
+  color: #73A805;
+}
+
+/*  Beauty tips */
+
+.bt-wrapper{
+  opacity: 0.6;
+  -moz-opacity: 0.6;
+  filter:alpha(opacity=60);
+  margin-top: 20px;
+}
+
+
+
+
+
+/* UNused??? */
+
+
+#cell-data{
+  display: none;
+}
+
+
+
 

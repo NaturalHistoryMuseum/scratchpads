@@ -1,162 +1,101 @@
 <?php
 
 /** 
-* menu callback; wrapper for all ahah / ajax callbacks
+* hook_menu callback; 
+* Wrapper for all ahah / ajax callbacks
 */
-function nexus_callback($op){
+function nexus_callback($op, $arg = null){
   
   $func = 'nexus_callback_'.$op;
-  $json = $func();
-  
-  // switch($op){
-  //   
-  //   case 'add_state':
-  // 
-  //     $json = nexus_callback_add_state();
-  //       
-  //   break;
-  //   
-  //   case 'save_note':
-  // 
-  //     $json = nexus_callback_save_note();
-  //       
-  //   break;
-  //   
-  //   case 'set_state':
-  // 
-  //     $json = nexus_callback_set_state();
-  //       
-  //   break;
-  //   
-  //   case 'set_free_state':
-  //   
-  //     $json = nexus_callback_set_free_state();
-  //   
-  //   break;
-  //   
-  //   case 'reorder_columns':
-  //   
-  //     $json = nexus_callback_reorder_columns();
-  //   
-  //   break;
-  //   
-  //   case 'get_row_data':
-  //   
-  //     $json = nexus_callback_get_row_data();
-  //   
-  //   break;
-  //   
-  //   case 'get_character_form':
-  //   
-  //     $json = nexus_callback_get_character_form();
-  //   
-  //   break;   
-  //   
-  //   case 'get_character_form':
-  //   
-  //     $json = nexus_callback_save_character();
-  //   
-  //   break; 
-  //   
-  //   case 'toggle_display':
-  //   
-  //     $json = nexus_callback_toggle_display();
-  //   
-  //   break;
-  // 
-  //   case 'update_project_settings':
-  //   
-  //     $json = nexus_callback_update_project_settings();
-  //   
-  //   break;
-  //   
-  //   case 'update_project_taxa':
-  //   
-  //     $json = nexus_callback_update_project_taxa();
-  //   
-  //   break;
-  //   
-  //   case 'get_taxonomy':
-  //   
-  //     $json = nexus_callback_get_taxonomy();
-  //   
-  //   break;
-  //   
-  // }
-  
+  $json = $func($arg);
   drupal_json($json);
   
 }
 
-function nexus_callback_get_taxonomy(){
-
-  include_once 'modules/node/node.pages.inc';
-  
-   $form_state = array('storage' => NULL, 'submitted' => TRUE);
-   $form_build_id = $_POST['form_build_id'];
-   $form = form_get_cache($form_build_id, $form_state);
-
-   // Preparing for #5.
-   $args = $form['#parameters'];
-   $form_id = array_shift($args);
-   $form_state['post'] = $form['#post'] = $_POST;
-   $form['#programmed'] = $form['#redirect'] = FALSE;
-
-   // Step #5.
-   drupal_process_form($form_id, $form, $form_state);
-   // Step #6 and #7 and #8.
-   $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
-
-   return array('status' => TRUE, 'data' => 'HI');
-
-}
 
 
 /** 
 * Edit project form is being submitted (Settings)
 */
-function nexus_callback_update_project_settings(){
+function nexus_callback_project_settings_form_submit(){
   
   module_load_include('inc', 'node', 'node.pages');
 
-  $form_state = nexus_callback_ahah_form_submit();
+  $submitted_form = nexus_callback_ahah_form_submit();
     
   $output = theme('status_messages');
-
-  $output .= '<script>NEXUS.updateTitle("'.$form_state['post']['title'].'")</script>';
    
-  return array('status' => TRUE, 'data' => $output);
+  return array(
+    'status' => TRUE, 
+    'data' => $output, 
+    'action' => 'NEXUS.updateProjectCallback',
+    'title' => $submitted_form['form_state']['post']['title']
+  );
   
 }
 
-function nexus_callback_update_project_taxa(){
-  
-  module_load_include('inc', 'node', 'node.pages');
-  module_load_include('inc', 'nexus', 'includes/nexus.matrix');
 
-  $form_state = nexus_callback_ahah_form_submit();    
+function nexus_callback_update_project_setting(){
+  
+  $nid = $_POST['projectNid'];
+  $setting = $_POST['setting'];
+  $value = $_POST['value'];
+  
+  $node = node_load($nid);
+  
+  $node->settings[$setting] = $value;
+  
+  node_save($node);
+  
+}
+
+
+/** 
+* Save taxa settings
+*/
+function nexus_callback_project_taxonomy_form_submit(){
+
+  module_load_include('inc', 'node', 'node.pages');
+
+  $submitted_form = nexus_callback_ahah_form_submit();
+     
   $output = theme('status_messages');
   
-  $output .= nexus_regenerate_matrix_data($form_state['values']['nid']);
+  $output .= nexus_callback_regenerate_matrix_data($submitted_form['form_state']['values']['nid']);
      
-  return array('status' => TRUE, 'data' => $output);
+  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.displayDialog');
   
 }
 
-function nexus_regenerate_matrix_data($nid){
+/**
+ * Rebuild the matrix data and re-initialise the editor
+ */
+function nexus_callback_regenerate_matrix_data($nid){
+  
+  module_load_include('inc', 'nexus', 'includes/nexus.matrix');
   
   $node = node_load($nid);
   
   $matrix_editor = nexus_project_get_matrix_data($node);
-
-  $output = '<script>var data = '.drupal_to_js($matrix_editor->data).'; initMatrixEditor()</script>';
   
+  $js = "var data = ".drupal_to_js($matrix_editor->data).";\r";
+  $js .= "var columns = ".matrix_editor_to_js($matrix_editor->columns).";\r";
+  $js .= "var characters = ".drupal_to_js($matrix_editor->characters).";\r";
+  $js .= "var characterGroups = ".drupal_to_js($matrix_editor->character_groups).";\r";
+  
+  $js .= "initMatrixEditor(); NEXUS.init({$nid})";
+  
+   
+  $output = '<script type="text/javascript">'.$js.'</script>';
+   
   return $output;
   
 }
 
 
-
+/** 
+* Generic AHAH form submission
+*/
 function nexus_callback_ahah_form_submit(){
   
    $form_state = array('storage' => NULL, 'submitted' => FALSE);
@@ -169,138 +108,386 @@ function nexus_callback_ahah_form_submit(){
 
    drupal_process_form($form_id, $form, $form_state);
    $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
-   
-   return $form_state;
+    
+   return array(
+     'form' => $form,
+     'form_state' => $form_state
+    );
   
 }
 
-function nexus_callback_add_state(){
+
+/** 
+* Add new state to the character form
+*/
+function nexus_callback_state_form_submit(){
   
-  module_load_include('inc', 'nexus', 'includes/nexus.forms');
-  
-  nexus_callback_ahah_form_submit();
+  $submitted_form = nexus_callback_ahah_form_submit();
     
-  // Renexusr the new output.
-  $states_form = $form['states_wrapper']['states'];
+  // Get the new output.
+  $states_form = $submitted_form['form']['states_wrapper']['states'];
   unset($states_form['#prefix'], $states_form['#suffix']); // Prevent duplicate wrappers.
-  $output = theme('status_messages') . drupal_render($states_form);
+  $output = drupal_render($states_form);
 
-  return array('status' => TRUE, 'data' => $output);
+  return array(
+    'status' => TRUE, 
+    'data' => $output, 
+    'action' => 'NEXUS.addStateCallback', 
+    'messages' => theme('status_messages')
+  );
 
 }
 
-
-function nexus_callback_toggle_display(){
+/** 
+* Remove state
+*/
+function nexus_callback_delete_state(){
   
-  if(count($_POST['tids'])){
-  
-    switch($_POST['op']){
-    
-      case 'show': // Show items
-      
-        $sql =  'DELETE FROM nexus_hidden_terms WHERE nid = %d AND tid = %d';
-        
-      break;
-    
-      case 'hide': // Hide items
+  $state_nid = $_POST['state_nid'];
+  $delta = $_POST['delta'];
+  $form_build_id = $_POST['form_build_id'];
 
-        $sql =  'INSERT INTO nexus_hidden_terms (nid, tid) VALUES (%d, %d)';
-    
-      break;
-    
-    }
-    
-    foreach($_POST['tids'] as $tid){
+  // Need to ensure the cached form remains the same as the html form, so remove delta from cache
+  $form_state = array('storage' => NULL, 'submitted' => FALSE); 
+  $form = form_get_cache($form_build_id, $form_state);
 
-      $args = array($_POST['nid'], $tid);
+  unset($form['states_wrapper']['states'][$delta]);
 
-      db_query($sql, $args);
+  form_set_cache($form_build_id, $form, array());
 
-    }  
-  
+  if(is_numeric($state_nid)){
+    
+    node_delete($state_nid);
+    
   }
 
+  return array('status' => TRUE, 'data' => theme('status_messages'));
+
 }
 
 
 
+/** 
+* Row selected so return Taxa info
+*/
 function nexus_callback_get_row_data(){
   
-  $tid = $_POST['tid'];
-
-  $term = taxonomy_get_term($tid);
+  $taxa_tid = $_POST['taxa_tid'];
+  $project_nid = $_POST['project_nid'];
+  
+  $term = taxonomy_get_term($taxa_tid);
 
   return array(
     'status' => TRUE,
-    'data' => theme('nexus_row_data', $term) 
+    'data' => theme('nexus_row_data', $term, $project_nid) 
   );
   
 }
 
-function nexus_callback_get_character_form(){
-  
-  module_load_include('inc', 'nexus', 'includes/nexus.forms');
-  
-  $tid = $_POST['tid'];
-  $nid = $_POST['nid'];
-  
-  $output = drupal_get_form('nexus_character_form', $nid, $tid);
+/** 
+* Callback; Inherit states has been selected
+* This term should inherit all controlled states from it's children
+*/
+function nexus_callback_inherit_states(){
 
-  return array(
-    'status' => TRUE,
-    'data' => $output
-  );
+  $taxa_tid = $_POST['taxa_tid'];
+  $project_nid = $_POST['project_nid'];
   
-}
-
-function nexus_callback_save_character(){
+  $taxa_tid_children = nexus_get_children_in_project($project_nid, $taxa_tid);
   
-  module_load_include('inc', 'nexus', 'includes/nexus.forms');
-  
-  $tid = $_POST['tid'];
-  $nid = $_POST['nid'];
+  $controlled_characters = nexus_get_controlled_characters_in_project($project_nid);
 
-  return array(
-    'status' => TRUE,
-    'data' => theme('status_messages')
-  );
-  
-}
+  if(count($controlled_characters)){
+   
+    foreach($controlled_characters as $character_tid){
+
+      // Delete any currently selected states
+      $currently_selected_states = nexus_get_nodes_at_intersection(array($taxa_tid, $character_tid), array('nexus_state'));
+
+      if(count($currently_selected_states)){
+        
+        continue;
+        
+      }
+
+      $selected_states = array();
+
+      foreach($taxa_tid_children as $child_taxa_tid){
+
+      $intersection_nodes = nexus_get_nodes_at_intersection(array($child_taxa_tid, $character_tid), array('nexus_state'));
+
+        if(count($intersection_nodes)){
+
+          foreach($intersection_nodes as $intersection_node){
+
+            // Use NID for key to remove duplication
+            $selected_states[$intersection_node->nid] = $intersection_node->nid;
+
+          }
+
+          foreach($selected_states as $nid => $selected_state){
+
+            nexus_select_state_for_taxa($taxa_tid, $selected_state, $nid);
+
+          }
+
+          // All inherited characters are OR by default
+          nexus_insert_relationship('/', $character_tid, $taxa_tid);
+
+        }
 
 
+      }
 
-
-function nexus_callback_reorder_columns(){
-  
-  $tid = $_POST['tid'];
-  
-  if(is_numeric( $_POST['prev'])){
-    $prev = $_POST['prev'];
+    }
+    
   }
   
-  $next = $_POST['next'];
-  
-  $moved_term_parent = array_shift(taxonomy_get_parents($tid));
-  
-  
-  if($prev){
-    
-    $previous_term_parent = array_shift(taxonomy_get_parents($prev));
+  return array(
+    'status' => TRUE,
+    'data' => nexus_callback_regenerate_matrix_data($project_nid) 
+  );
 
-    if($previous_term_parent->tid == $moved_term_parent->tid){
+}
+
+
+/** 
+* Get the group form
+*/
+function nexus_callback_get_group_form(){
+  
+  $group_tid = $_POST['group_tid'];
+  $project_nid = $_POST['project_nid'];
+
+  return array(
+    'status' => TRUE,
+    'data' => drupal_get_form('nexus_group_form', $group_tid, $project_nid),
+    'ahah' => nexus_callback_get_ahah()
+  );
+  
+}
+
+
+/** 
+* Save taxa settings
+*/
+function nexus_callback_group_form_submit(){
+
+  $project_nid = $_POST['project_nid'];
+  
+  $submitted_form = nexus_callback_ahah_form_submit();
+     
+  $output = theme('status_messages');
+  
+  $output .= nexus_callback_regenerate_matrix_data($project_nid);
+     
+  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.displayDialog');
+  
+}
+
+
+/** 
+* Get the character form
+*/
+function nexus_callback_get_character_form(){
+ 
+  $character_tid = $_POST['character_tid'];
+  $project_nid = $_POST['project_nid'];
+  
+  $output = drupal_get_form('nexus_character_form', $project_nid, $character_tid);
+
+  return array(
+    'status' => TRUE,
+    'data' => $output,
+    'ahah' => nexus_callback_get_ahah()
+  );
+  
+}
+
+/** 
+* Get all the AHAH js stuff 
+* Used to add AHAH events to dynamic forms
+*/
+function nexus_callback_get_ahah(){
+  
+  $js = drupal_add_js();
+  $ahah = array();
+  
+  foreach($js['setting'] as $js_setting){
+    
+    if(key($js_setting) == 'ahah'){
+
+      $ahah += $js_setting['ahah'];
+      
+    }
+    
+  }
+  
+  return $ahah;
+  
+}
+
+
+/** 
+* Save character
+*/
+function nexus_callback_character_form_submit(){
+
+  $return = array('status' => true);
+  $project_nid = $_POST['project_nid'];
+  $character_tid = $_POST['character_tid'];
+
+  $submitted_form = nexus_callback_ahah_form_submit();
+
+  $return['data'] = theme('status_messages');
+  $return['action'] = 'NEXUS.displayDialog';
+  
+  $form_state = $submitted_form['form_state'];
+  
+  if($form_state['validated']){
+    
+    // Only reset the form if we're adding a new character
+    if(!is_numeric($character_tid)){
+      
+      // If a new group has been created, we need to add it to the options
+      if($form_state['new_group_term']){
+
+      $return['group_tid'] = $form_state['new_group_term']['tid'];
+      $return['group_name'] = $form_state['new_group_term']['name'];
+
+      }
+
+      $return['action'] = 'NEXUS.addCharacterCallback';
+      
+    }else{
+      
+      $return['action'] = 'NEXUS.saveCharacterCallback';
+      
+    }
+
+    
+    $return['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
+    
+  }
+
+  return $return;
+  
+}
+
+/** 
+* Delete callback - either character or group
+*/
+function nexus_callback_confirm_delete_form_submit(){
+  
+  $form_id = $_POST['form_id'];
+  
+  $output = array('status' => true);
+  
+  switch ($form_id){
+    
+    case 'nexus_group_form':
+    
+      nexus_delete_group();
+    
+    break;
+    
+    case 'nexus_character_form':
+    
+      $output += nexus_delete_character();
+    
+    break;
+     
+  }
+  
+  $project_nid = $_POST['project_nid'];
+  
+  $output['data'] = theme('status_messages');
+  
+  $output['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
+  
+  return $output;
+  
+}
+
+function nexus_callback_update_term_setting(){
+  
+  nexus_update_term_setting($_POST['tid'], $_POST['setting'], $_POST['value']);
+  
+}
+
+
+
+/** 
+* Delete character
+*/
+function nexus_delete_character(){
+  
+
+  $character_tid = $_POST['character_tid'];
+
+  $nexus_nodes = nexus_get_nodes_at_intersection(array($character_tid));
+  
+  // Need to delete the nodes here as hook_taxonomy is called after the node relationships have been removed
+  nexus_delete_nodes($nexus_nodes);
+  
+  taxonomy_del_term($character_tid);
+  
+  drupal_set_message('Character deleted');
+  
+  return array('action' => 'NEXUS.deleteCharacterCallback');
+  
+}
+
+/** 
+* Delete character
+*/
+function nexus_delete_group(){
+  
+  $group_tid = $_POST['tid'];
+  
+  taxonomy_del_term($group_tid);
+  
+  drupal_set_message('Character group deleted');
+  
+}
+
+
+/** 
+* Column order has been changed so save to DB
+*/
+function nexus_callback_reorder_columns(){
+  
+  $character_tid = $_POST['character_tid'];
+  
+  if(is_numeric($_POST['prev_tid'])){
+    $prev_tid = $_POST['prev_tid'];
+  }
+  
+  if(is_numeric($_POST['next_tid'])){
+    $next_tid = $_POST['next_tid'];
+  }
+  
+  $moved_term_parent = array_shift(taxonomy_get_parents($character_tid));
+  
+  if($prev_tid){
+    
+    $prev_tid_term_parent = array_shift(taxonomy_get_parents($prev_tid));
+    
+    // Has it been moved within the same group
+    if($prev_tid_term_parent->tid == $moved_term_parent->tid){
       
       $parent_tid = $moved_term_parent->tid;
       
     }
     
   }
-  
-  if(!$parent_tid && $next){
-    
-    
-    $next_term_parent = array_shift(taxonomy_get_parents($next));
 
-    if($next_term_parent->tid == $moved_term_parent->tid){
+  if(!$parent_tid && $next_tid){
+    
+    
+    $next_tid_term_parent = array_shift(taxonomy_get_parents($next_tid));
+
+    if($next_tid_term_parent->tid == $moved_term_parent->tid){
       
       $parent_tid = $moved_term_parent->tid;
       
@@ -312,15 +499,13 @@ function nexus_callback_reorder_columns(){
   
   if(!$parent_tid){
 
-    if($prev){ // If it doesn't and there's a previous term, use that
+    if($prev_tid){ // If it doesn't and there's a prev_tidious term, use that
       
-      $parent_tid = $previous_term_parent->tid;
-      $adjacent_tid = $prev;
+      $parent_tid = $prev_tid_term_parent->tid;
     
-    }elseif($next){
+    }elseif($next_tid){
     
-      $parent_tid = $next_term_parent->tid;
-      $adjacent_tid = $next;
+      $parent_tid = $next_tid_term_parent->tid;
     
     }
     
@@ -328,27 +513,27 @@ function nexus_callback_reorder_columns(){
   
   if($parent_tid){
     
-    $moved_term = taxonomy_get_term($tid);
+    $moved_term = taxonomy_get_term($character_tid);
     $moved_term->parent[0] = $parent_tid;
     
     // Get the new part of the tree
     $tree = taxonomy_get_tree($moved_term->vid, $parent_tid);
-
+    
     // Loop through the tree changing all the weights
 
-    if($prev){ // Are there terms previous to this one?
+    if($prev_tid){ // Are there terms previous to this one?
 
       foreach($tree as $term){
         
-          if($term->tid == $prev){
+          if($term->tid == $prev_tid){
             
             $moved_term->weight = $term->weight + 1;
-            nexus_callback_update_weight($moved_term);
+            _nexus_callback_update_weight($moved_term);
           
           }elseif($moved_term_weight){
           
             $term->weight = $term->weight + 2;
-            nexus_callback_update_weight($term);
+            _nexus_callback_update_weight($term);
           
           }
 
@@ -357,14 +542,14 @@ function nexus_callback_reorder_columns(){
     }else{
  
       $moved_term->weight = 0;
-      nexus_callback_update_weight($moved_term);
+      _nexus_callback_update_weight($moved_term);
       
       foreach($tree as $term){
       
-        if($term->tid != $tid){
+        if($term->tid != $character_tid){
         
           $term->weight++;
-          nexus_callback_update_weight($term);
+          _nexus_callback_update_weight($term);
         
         }
       
@@ -382,14 +567,17 @@ function nexus_callback_reorder_columns(){
     'status' => TRUE,
     'data' => theme('status_messages'),
     'settings' => array(
-      'tid' => $tid, 
-      'adjacentTid' => $adjacent_tid
+      'tid' => $character_tid, 
+      'groupTid' => $parent_tid
     )
   );
   
 }
 
-function nexus_callback_update_weight($term, $weight = null){
+/** 
+* Update the weight of a taxonomy term
+*/
+function _nexus_callback_update_weight($term, $weight = null){
   
   
   // When you get term data from taxonomy_get_tree it comes as parents, but you have to save it parent!!!
@@ -403,150 +591,199 @@ function nexus_callback_update_weight($term, $weight = null){
   
 }
 
-function nexus_callback_set_state(){
-  
-  $tids = array($_POST['character_tid'], $_POST['taxa_tid']);
-  
-  $current_state_nodes = nexus_get_nodes_at_intersection($tids, array('nexus_state'));
 
+
+/** 
+* Set the state for character / taxa
+*/
+function nexus_callback_save_state(){
+   
+  $character_tid = $_POST['character_tid'];
+  $taxa_tid = $_POST['taxa_tid'];
+  $nids = $_POST['nids'];
+  $or = $_POST['or'];
+
+  // Get all the states currently selected
+  $current_state_nodes = nexus_get_nodes_at_intersection(array($character_tid, $taxa_tid), array('nexus_state'));
+  
   if(count($current_state_nodes)){
     
     foreach($current_state_nodes as $current_state_node){
-       
-      $node = node_load($current_state_node->nid);
       
-      unset($node->taxonomy[$_POST['taxa_tid']]);
+      // Is this state still selected?
+      if($nids[$current_state_node->nid]){
+        
+        // Don't bother saving it again
+        unset($nids[$current_state_node->nid]);
+        
+      }else{ // Unselect it by updating the taxonomy
+        
+        $node = node_load($current_state_node->nid);
+        unset($node->taxonomy[$taxa_tid]);
+        node_save($node);
+        
+      }
       
-      node_save($node);
+    }
+    
+  }
+  
+  if($nids[0] == '?' || $nids[0] == '-'){
+    
+    nexus_insert_relationship($nids[0], $character_tid, $taxa_tid);
+    return;
+    
+  }elseif($or){ // Is this an or relationship
+    
+    nexus_insert_relationship('/', $character_tid, $taxa_tid);
+    
+  }else{ // It's AND (default), so remove all ORs if they exist
+    
+    nexus_delete_relationship($character_tid, $taxa_tid);
+    
+  }
+  
+  //If there's any nids left, update the taxonomy
+  if(count($nids)){
+    
+    foreach($nids as $nid){
+      
+      nexus_select_state_for_taxa($taxa_tid, $character_tid, $nid);
       
     }
     
   }
   
-  //If an option has been selected, load the option node, and save it with the taxa term
-  if($_POST['nid']){
-    
-    $new_state_node = node_load($_POST['nid']);
-    
-    $taxa_term = taxonomy_get_term($_POST['taxa_tid']);
+}
 
-    $new_state_node->taxonomy[$_POST['taxa_tid']] = $taxa_term;
-    
-    node_save($new_state_node);
-    
-  }
+/** 
+* Select a state for a taxa
+*/
+function nexus_select_state_for_taxa($taxa_tid, $character_tid, $nid){
+  
+  $selected_state = node_load($nid);
+  
+  $selected_state->taxonomy[$taxa_tid] = taxonomy_get_term($taxa_tid);
+  $selected_state->taxonomy[$character_tid] = taxonomy_get_term($character_tid);
+  
+  node_save($selected_state);
   
 }
 
+/** 
+* Remove selected states for a taxa
+*/
+function nexus_deselect_states_for_taxa($taxa_tid, $nid){
+  
+  $selected_state = node_load($nid);
 
-function nexus_callback_set_free_state(){
+  $taxa_term = taxonomy_get_term($taxa_tid);
+
+  unset($selected_state->taxonomy[$taxa_tid]);
+
+  node_save($selected_state);
+  
+}
+
+/** 
+* Set free state for character / taxa
+*/
+function nexus_callback_save_free_state(){
   
   global $user;
-
-  if($_POST['nid']){ // Is there a nid (does a note already exist)?
+  
+  $character_tid = $_POST['character_tid'];
+  $taxa_tid = $_POST['taxa_tid'];
+  $body = $_POST['body'];
+  $nid = $_POST['nid'];
+  
+  $character_term = taxonomy_get_term($character_tid);
+  $taxa_term = taxonomy_get_term($taxa_tid);
+      
+  if($body == '-' || $body == '?'){
     
-    if(!strlen($_POST['title'])){ // No text so delete the comment
+    $current_state_nodes = nexus_get_nodes_at_intersection(array($character_tid, $taxa_tid), array('nexus_free_state'));
+    
+    if(count($current_state_nodes)){
       
-      node_delete($_POST['nid']);
-      
-    }else{
-      
-      $node = node_load($_POST['nid']);
-      $node->title = $_POST['title'];
-      node_save($node);
+      foreach($current_state_nodes as $current_state_node){
+        
+        node_delete($current_state_node->nid);
+        
+      }
       
     }
     
-  }else{
+    nexus_insert_relationship($body, $character_tid, $taxa_tid);
     
-    $node = (object)$_POST;
-    
-    $character_term = taxonomy_get_term($node->character_tid);
-    $taxa_term = taxonomy_get_term($node->taxa_tid);
-
-    $node->title = $_POST['title'];
-    $node->type = 'nexus_free_state';
-    $node->uid = $user->uid;
-    
-    // Format the taxonomies
-    $node->taxonomy = array(
-      $character_term->vid = $node->character_tid,
-      $taxa_term->vid = $node->taxa_tid,
-    );
-    
-    node_save($node);
-    
-  }
+  }elseif($nid){ // Is there a nid (does a note already exist)?
   
-  return array(
-    'status' => TRUE
-  );
-
-  
-}
-
-
-
-function nexus_callback_save_note(){
-  
-  global $user;
-  
-  if($_POST['nid']){ // Is there a nid (does a note already exist)?
-    
-    $nid = $_POST['nid'];
-    
-    if(!strlen($_POST['body'])){ // No text so delete the comment
+    if(!strlen($body)){ // No text so delete the comment
       
-      node_delete($_POST['nid']);
-      $output = t('Note deleted');
-      $op = 'delete';
+      node_delete($nid);
       
     }else{
       
       $node = node_load($nid);
-      $node->body = $_POST['body'];
+      $node->body = $body;
       node_save($node);
-      
-      $output = t('Note saved');
-      $op = 'updated';
       
     }
     
   }else{
-    
-    $node = (object)$_POST;
-    
-    $character_term = taxonomy_get_term($node->character_tid);
-    $taxa_term = taxonomy_get_term($node->taxa_tid);
-
-    $node->title = 'NOTE: '.$taxa_term->name.' ('.$character_term->name.')';
-
+  
+    $node = new stdClass();
+    $node->type = 'nexus_free_state';
+    $node->uid = $user->uid;
+    $node->title = t('NEXUS STATE: ').$taxa_term->name.' ('.$character_term->name.')';
+    $node->body = $body;
+  
+    $character_term = taxonomy_get_term($character_tid);
+    $taxa_term = taxonomy_get_term($taxa_tid);
+  
     // Format the taxonomies
     $node->taxonomy = array(
-      $character_term->vid = $node->character_tid,
-      $taxa_term->vid = $node->taxa_tid,
+      $character_term->vid = $character_tid,
+      $taxa_term->vid = $taxa_tid,
     );
-    
-    $node->uid = $user->uid;
-    
+  
     node_save($node);
-    
-    $nid = $node->nid;
-    
-    $output = t('Note saved');
-    $op = 'add';
     
   }
   
   return array(
-    'status' => TRUE, 
-    'data' => $output, 
-    'action' => 'nexusAhahCallbackNoteUpdated',
-    'op' => $op, 
-    'nid' => $nid, 
-    'characterTid' => $_POST['character_tid'], 
-    'taxaTid' => $_POST['taxa_tid']
+    'status' => TRUE,
+    'data' => theme('status_messages')
   );
 
   
 }
+
+
+/** 
+* Save a note for a character / taxa
+*/
+function nexus_callback_note_node_form_submit(){
+  
+  module_load_include('inc', 'node', 'node.pages');
+
+  $character_tid = $_POST['character_tid'];
+  $taxa_tid = $_POST['taxa_tid'];
+  
+  $submitted_form = nexus_callback_ahah_form_submit();
+
+  return array(
+    'status' => TRUE, 
+    'data' => theme('status_messages'), 
+    'action' => 'NEXUS.saveNoteCallback',
+    'op' => $submitted_form['form_state']['op'], 
+    'new_note' => $submitted_form['form_state']['new_note'], 
+    'character_tid' => $character_tid, 
+    'taxa_tid' => $taxa_tid
+  );
+
+  
+}
+
+
+
