@@ -35,7 +35,7 @@ function _matrix_editor_add_files(){
    drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css');   
 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.editors.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/slick.grid.js'); 
+   drupal_add_js($path.'/js/plugins/Slickgrid/slick.grid.new.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.globaleditorlock.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.model.js'); 
 
@@ -56,7 +56,13 @@ function _matrix_editor_add_files(){
 /** 
 * Convert a php array into a js string, allowing for function names (not wrapped in "")
 */
-function matrix_editor_to_js($elements, $function_names = array()){
+function matrix_editor_to_js($elements, $additional_function_names = array()){
+  
+  $function_names = array('formatter', 'validator', 'editor', 'setValueHandler');
+  
+  if(count($additional_function_names)){
+    $function_names += $additional_function_names;
+  }
   
   if(count($elements)){
     
@@ -104,8 +110,6 @@ function matrix_editor_to_js($elements, $function_names = array()){
 
 
 function theme_matrix_editor($matrix_editor){
-
-  $function_names = array('formatter', 'validator', 'editor', 'setValueHandler');
   
   _matrix_editor_add_files();
 
@@ -117,18 +121,9 @@ function theme_matrix_editor($matrix_editor){
   }
   
   drupal_add_js('var filter = '.$matrix_editor->filter, 'inline');
-  drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns, $function_names).';', 'inline');
+  drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns).';', 'inline');
   
   $output = '<div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows"></div>';
-  
-  
-  $output .= '<div class="matrix-editor-controls">';
-
-  if($matrix_editor->search){
-    $output .= '<div id="search"><label>Filter:</label><input type=text id="txtSearch"></div>';
-  }
-  
-  $output .= '</div>';
     
   drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
   
