@@ -872,10 +872,10 @@ function theme_nexus_project_node_edit_form($form) {
   
   $output .= '<div id="edit-taxa" class="tab">';
   $output .= drupal_render($form['taxonomy']);
+  $output .= drupal_render($form['save_taxonomy']);
   $output .= '</div>';
 
   $output .= '<div id="settings" class="tab">';
-  unset($form['taxonomy']);
   $output .= drupal_render($form);
   $output .= '</div>';
   
@@ -1023,24 +1023,28 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
 
           }
           
-          // $form['settings']['settings_submit'] = array(
-          //   '#value' => t('Save settings'),
-          //   '#type' => 'image_button', 
-          //   '#src' => $path.'/images/save_changes.gif',
-          //   '#submit' => array('nexus_project_settings_form_submit'),
-          //   '#ahah' => array(
-          //     'path' => 'nexus/callback/project_settings_form_submit', 
-          //     'wrapper' => 'dialog',
-          //     'method' => 'replace',
-          //     'effect' => 'slide',
-          //   ),
-          // );
-          
-          $form['taxonomy']['taxonomy_submit'] = array(
+          $form['save_settings'] = array(
             '#type' => 'image_button', 
-            '#value' => t('Save taxonomy'),
+            '#src' => $path.'/images/save_changes.gif',
+            '#return_value' => 'save_settings',
+            '#name' => 'save_settings',
+            '#submit' => array('nexus_project_settings_form_submit'),
+            '#weight' => 500,
+            '#ahah' => array(
+              'path' => 'nexus/callback/project_settings_form_submit', 
+              'wrapper' => 'dialog',
+              'method' => 'replace',
+              'effect' => 'slide',
+            ),
+          );
+          
+          $form['save_taxonomy'] = array(
+            '#type' => 'image_button', 
+            '#return_value' => 'save_taxonomy',
+            '#name' => 'save_taxonomy',
             '#src' => $path.'/images/save_changes.gif',
             '#submit' => array('nexus_project_taxonomy_form_submit'),
+            '#weight' => 10,
             '#prefix' => '<div class="buttons">',
             '#suffix' => '</div>',
             '#ahah' => array(
@@ -1055,8 +1059,6 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
           
           $form['taxa_vid'] = array('#type' => 'hidden', '#value' => $form['#node']->taxa_vid);
           $form['character_root_tid'] = array('#type' => 'hidden', '#value' => $form['#node']->character_root_tid);
-
-          $form['settings']['#weight'] = 500; 
           
           $form['#validate'] = array('nexus_project_node_edit_form_validate');
           // $form['#submit'] = array('nexus_project_node_edit_form_submit');
@@ -2023,13 +2025,13 @@ function nexus_project_taxonomy_form_submit(&$form, &$form_state){
  
   unset($form_state['values']['title']);
   unset($form_state['values']['body']);
- 
+   
   $node = node_submit($form_state['values']);
   $form_state['node'] = (array)$node;
   $form_state['rebuild'] = TRUE;   
   $insert = empty($node->nid);
   node_save($node);  
- 
+   
   drupal_set_message('Taxonomy updated');
   
 }
