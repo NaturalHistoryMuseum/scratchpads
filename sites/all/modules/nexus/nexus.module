@@ -656,7 +656,7 @@ function nexus_get_nodes_at_intersection($tids, $node_types = array('nexus_note'
   
   $args = array_merge($tids, $node_types);
   
-  $result = db_query(db_rewrite_sql($sql), $args);
+  $result = db_query($sql, $args);
 
   while ($node = db_fetch_object($result)) {
 
@@ -1735,7 +1735,7 @@ function nexus_get_character_settings($character_root_tid){
     INNER JOIN {term_hierarchy} th ON th.tid = ns.tid 
     WHERE th.parent IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)', $character_root_tid);
   
-  $result = db_rewrite_sql($sql);
+  $result = db_query($sql);
 
   while ($setting = db_fetch_object($result)) {
 
