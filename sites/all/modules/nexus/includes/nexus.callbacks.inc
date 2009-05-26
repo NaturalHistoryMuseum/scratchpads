@@ -63,7 +63,7 @@ function nexus_callback_project_taxonomy_form_submit(){
   
   $output .= nexus_callback_regenerate_matrix_data($submitted_form['form_state']['values']['nid']);
      
-  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.displayDialog');
+  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.ineritCallback');
   
 }
 
@@ -80,11 +80,8 @@ function nexus_callback_regenerate_matrix_data($nid){
   
   $js = "var data = ".drupal_to_js($matrix_editor->data).";\r";
   $js .= "var columns = ".matrix_editor_to_js($matrix_editor->columns).";\r";
-  $js .= "var characters = ".drupal_to_js($matrix_editor->characters).";\r";
-  $js .= "var characterGroups = ".drupal_to_js($matrix_editor->character_groups).";\r";
   
   $js .= "initMatrixEditor(); NEXUS.init({$nid})";
-  
    
   $output = '<script type="text/javascript">'.$js.'</script>';
    
@@ -211,6 +208,7 @@ function nexus_callback_inherit_states(){
       }
 
       $selected_states = array();
+      $count = 0;
 
       foreach($taxa_tid_children as $child_taxa_tid){
 
@@ -222,7 +220,7 @@ function nexus_callback_inherit_states(){
 
             // Use NID for key to remove duplication
             $selected_states[$intersection_node->nid] = $intersection_node->nid;
-
+            
           }
 
           foreach($selected_states as $nid => $selected_state){
@@ -231,8 +229,16 @@ function nexus_callback_inherit_states(){
 
           }
 
-          // All inherited characters are OR by default
-          nexus_insert_relationship('/', $character_tid, $taxa_tid);
+          if($selected_states > 1){
+           
+            // All inherited characters are OR by default
+            nexus_insert_relationship('/', $character_tid, $taxa_tid);
+            
+          }
+          
+          
+          $count++;
+          
 
         }
 
@@ -243,10 +249,21 @@ function nexus_callback_inherit_states(){
     
   }
   
-  return array(
-    'status' => TRUE,
-    'data' => nexus_callback_regenerate_matrix_data($project_nid) 
-  );
+  if($count){
+    
+    drupal_set_message(format_plural($count, '@count state updated', '@count states updated'));
+    
+  }else{
+    
+    drupal_set_message(t('No states were updated'), 'warning');
+    
+  }
+
+  $output .= theme('status_messages');
+  $output .= nexus_callback_regenerate_matrix_data($project_nid);
+
+  return array('status' => TRUE, 'data' =>$output);
+  
 
 }
 

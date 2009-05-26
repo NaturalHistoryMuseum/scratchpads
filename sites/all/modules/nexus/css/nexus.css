@@ -228,7 +228,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #matrix-editor-panels .inner{
-  padding: 10px;
+  padding: 20px;
 }
 
 #matrix-editor-panels .tab{
@@ -287,6 +287,10 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   width: 100%;
 }
 
+#matrix-editor-panels textarea{
+  height: 70px;
+}
+
 #matrix-editor-panels .resizable-textarea .grippie{
   background-color: #A2AEC2;
   width: 95%;
@@ -318,12 +322,14 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   height: 250px;
   overflow-y: scroll;
   background-color: #fff;
-  padding: 5px;
-  width: 49%;
 }
 
 .treeview label:hover, .treeview span.hover label{
   color: #000!important;
+}
+
+#edit-taxa div.buttons{
+  margin: 265px 0 0 0;
 }
 
 
@@ -461,7 +467,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 /* Project settings */
 
 #matrix-editor-panels .vertical-tabs, #matrix-editor-panels .vertical-tabs-div{
-  min-height: 290px;
+  min-height: 238px;
 }
 
 #matrix-editor-panels .vertical-tabs-div{
@@ -469,12 +475,13 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #matrix-editor-panels .vertical-tabs li a{
-  padding: 2px 0;
+  padding: 0;
   color: #fff;
 }
 
 #matrix-editor-panels .vertical-tabs ul{
   border: none;
+  border-bottom: 1px solid #8995AB;
 }
 
 #matrix-editor-panels .vertical-tabs li{
@@ -505,6 +512,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 #matrix-editor-panels .vertical-tabs li.selected a{
   color: #252B36;
 }
+
 
 
 
@@ -543,7 +551,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   opacity: 0.6;
   -moz-opacity: 0.6;
   filter:alpha(opacity=60);
-  margin-top: 20px;
 }
 
 

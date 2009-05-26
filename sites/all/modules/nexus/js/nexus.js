@@ -9,6 +9,7 @@ function nexus() {
   var self;
   var $groups;
   var settings = [];
+  var bt;
   
   return {//
     
@@ -24,6 +25,7 @@ function nexus() {
       grid.onSelectedRowsChanged = self.onSelectedRowsChanged;
       grid.onColumnHeaderClick = self.onColumnHeaderClick;
       grid.onColumnsReordered = self.onColumnsReordered;
+      grid.onColumnsReorderStart = self.onColumnsReorderStart;
       grid.onColumnsResized  = self.onColumnsResized;
       grid.onViewportChanged  = self.onViewportChanged;
       
@@ -31,7 +33,13 @@ function nexus() {
       
       self.beautyTips();
       
+      $('.grid-header .h span').click(function(){
+
+        var columnIndex = grid.getColumnIndex($(this).parents('div.h').attr('id'));
       
+        grid.onColumnHeaderClick(columns[columnIndex]);
+        
+      });
       
       $('#matrix-editor-controls .item-list a').click(function(){
         var id = this.href.split('#')[1];
@@ -137,8 +145,6 @@ function nexus() {
     
     beautyTips: function(){
 
-      //BTODO: Jeff looking into this bug...
-
       $('.grid-header .h span').bt(
         {
           contentSelector: "NEXUS.getBeautyTipText($(this).parents('.h').attr('id'))",
@@ -148,6 +154,7 @@ function nexus() {
           fill: 'black',
           spikeLength: 10,
           cssStyles: {color: 'white', 'font-size': '10px'},
+          closeWhenOthersOpen: true
         }
       );
       
@@ -326,37 +333,47 @@ function nexus() {
       $('#character-groups').css('margin-left', $('.main-data').css('margin-left'));
       
       $groups = $("<div class='scroll'>").appendTo($('#character-groups'));
+    
+      var group = null;
       
-      for(i in characterGroups){
-        characterGroups[i]['width'] = 0;
-      }
+      var prevGroupID;
       
-      $(columns).each(function(){
-
-        if(typeof this.group !== 'undefined'){
-
-          characterGroups[this.group]['width'] += (this.width + 4);
-          
-        }
-             
-      });
-
-      for(i in characterGroups){
+      $(columns).each(function(i){
         
-        // Don't add if there aren't any characters
-        if(characterGroups[i]['width'] > 0){
-
-          var group = $("<div class='character-group' id='"+i+"'/>")
-           .html(characterGroups[i]['name'])
-           .width(characterGroups[i]['width'])
-           .appendTo($groups)
+        if(i == 0){
+         return; // continue
+        }
+        
+        if(this.groupID != prevGroupID){
+          
+          if(group){
+            group.appendTo($groups);
+          }
+         
+          group = $("<div class='character-group' id='"+this.groupID+"'/>")
+           .html(this.group)
+           .width(this.width + 4)
            .click(function(){
              self.groupSelected($(this));
            });
-           
+                    
+        }else{
+
+          var oldWidth = parseInt(group.css('width'));
+          
+          group.width(oldWidth + this.width + 4);
+          
         }
-     
+        
+        prevGroupID = this.groupID;
+ 
+      });
+      
+      if(group){
+        group.appendTo($groups);
       }
+
+
 
     },
     
@@ -431,7 +448,7 @@ function nexus() {
                args,
                function(response){
 
-                 self.updateDataPanel(response.data);
+                 self.updateDialog(response.data);
 
                },
                'json'
@@ -449,6 +466,7 @@ function nexus() {
 
      },
 
+     // After reordering
      onColumnsReordered: function(e, ui){
 
          data = {
@@ -467,6 +485,14 @@ function nexus() {
        );
 
      },
+     
+     onColumnsReorderStart: function(event, ui){
+       
+       console.log(event);
+       
+     },
+
+
 
      columnsReorderedCallback: function(response){
 
@@ -500,7 +526,6 @@ function nexus() {
 
        var note_body = '';
        var note_nid = '';
-       var character = characters[columnDef.id];
        var $cellForm;
        
        $('#character-info').html('');
@@ -508,14 +533,14 @@ function nexus() {
        $cellForm = $('<div>').appendTo($('#character-info'));
        $('<h1>Edit character state</h1><p>'+columnDef.term+'</p>').appendTo($cellForm);
 
-        if(character.states){
+        if(columnDef.states){
           
           $('<p>This is a <em>controlled state character</em>. Available options are:<p>').appendTo($cellForm);
           
           // Create the option list 
           var ul = document.createElement('ul');
           
-          for(key in character.states){        
+          for(key in columnDef.states){        
           
             // Add an option
             var li = document.createElement('li');
@@ -523,13 +548,13 @@ function nexus() {
             var keyText = document.createTextNode(key);
             strong.appendChild(keyText);
             li.appendChild(strong);
-            var state = document.createTextNode(character.states[key]['state']);
+            var state = document.createTextNode(columnDef.states[key]['state']);
             li.appendChild(state);
           
-            if(character.states[key]['state_description']){
+            if(columnDef.states[key]['state_description']){
               var br = document.createElement('br');
               li.appendChild(br); 
-              var state_description = document.createTextNode(character.states[key]['state_description']);
+              var state_description = document.createTextNode(columnDef.states[key]['state_description']);
               li.appendChild(state_description);           
             }
           
@@ -574,8 +599,6 @@ function nexus() {
        $('#cell-data #node-form #edit-character-tid').val(columnDef.id);
 
        self.toggleDataPanelItem('cell-data');
-
-       // console.log(intersection_info);
 
        // Are there notes / free state info?
        if(intersection_info[columnDef.id] && intersection_info[columnDef.id][dataContext.id]){

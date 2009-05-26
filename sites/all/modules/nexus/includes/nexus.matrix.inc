@@ -46,11 +46,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
 
     // Get settings for these characters (column width & numeric)
     $character_settings = nexus_get_character_settings($node->character_root_tid);
-    
-    // Array of all the characters / notes so we don't need to use a callback for display the info
-    $matrix_editor->characters = array();
-    $matrix_editor->character_groups = array();
-    $matrix_editor->notes = array();
+
     $counter = 1;
     
     $default_states = array(
@@ -69,20 +65,9 @@ function nexus_project_get_matrix_data($node, $editable = true) {
      
       // If the parent is the root term, this is a char group
       if($character_term->parents[0] == $node->character_root_tid){
-
-        $children = taxonomy_get_children($character_term->tid);
-        
-        if(count($children)){
-
-          $matrix_editor->character_groups[$character_term->tid] = array(
-          'name' => $character_term->name,
-          'width' => 0
-          );
           
-        }  
-
-
-        
+        $groups[$character_term->tid] = $character_term->name;
+ 
       }else{ // This is an actual character
 
         $column = array(
@@ -93,16 +78,11 @@ function nexus_project_get_matrix_data($node, $editable = true) {
           'cssClass' => 'cell-title',
           'editor' => 'nexusCellEditor',
           'term' => $character_term->name,
-          'group' => $character_term->parents[0],
-          'description' => $character_term->description
+          'description' => $character_term->description,
+          'groupID' => $character_term->parents[0],
+          'group' => $groups[$character_term->parents[0]],
         );
-          
-        // All the characters so we don't need to do a callback to display the info
-        $matrix_editor->characters[$character_term->tid] = array(
-          'name' => $character_term->name,
-          'description' => $character_term->description
-        );
-
+        
         // Get options for this character
         $nexus_states = nexus_get_states_for_character($character_term->tid);      
 
@@ -113,11 +93,11 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         
           $x = 1;
           
-          $matrix_editor->characters[$character_term->tid]['states'] = $default_states;  
+          $column['states'] = $default_states;  
 
           foreach($nexus_states as $nexus_state){
 
-            $matrix_editor->characters[$character_term->tid]['states'][$x] = $nexus_state; 
+            $column['states'][$x] = $nexus_state; 
             
             // Save the order number for each nid so we can use it as the default value
             $state_order_number[$nexus_state['nid']] = $x;
@@ -149,6 +129,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     $tree = array();    
     
     if(count($node->taxonomy)){
+      
+      // Put these tids in order.
 
       foreach($node->taxonomy as $tid => $taxonomy){
       
@@ -213,14 +195,18 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
   foreach($tree as $taxa_tid => $branch){
     
     // Is it a selected item for this node..?
-    if(!$taxa[$taxa_tid]){
-      continue;
-    }
-    
+    if($taxa[$taxa_tid]){
+
     $data_item = array(
       'id' => $taxa_tid,
       'taxa' => $taxa[$taxa_tid]->name
     );
+    
+    if($taxa_tid == 4){
+      
+      print_r($parents);
+      
+    }
     
     for($x = count($taxa[$taxa_tid]->parents); $x > 0; $x--){
       
@@ -311,6 +297,8 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
 
     $matrix_editor->data[$count] = $data_item;
     $count++;
+    
+  }
     
     if(count($branch)){
       

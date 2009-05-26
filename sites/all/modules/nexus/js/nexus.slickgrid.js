@@ -97,7 +97,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
       
       if (columnDef.validator) 
       {
-          var validationResults = columnDef.validator(scope.getValue());
+          var validationResults = columnDef.validator(scope.getValue(), columnDef);
           if (!validationResults.valid) 
               return validationResults;
       }
@@ -127,7 +127,7 @@ var nexusSelectorCellFormatter = function(row, cell, value, columnDef, dataConte
 /************************** Cell validator functions ************************/
 
 
-function nexusControlledStateValidator(value) {
+function nexusControlledStateValidator(value, columnDef) {
   
   var character_tid = this.id;
   var valid = true;
@@ -151,7 +151,7 @@ function nexusControlledStateValidator(value) {
     // Check the values match one of the allowed values  
     $(values).each(function(i) {
    
-     if(!characters[character_tid]['states'][values[i]]){
+     if(!columnDef['states'][values[i]]){
          
       valid = false;
       
@@ -176,7 +176,7 @@ function nexusControlledStateValidator(value) {
 }
 
 
-function nexusNumericStateValidator(value) {
+function nexusNumericStateValidator(value, columnDef) {
 
   if (value.indexOf('?') == -1 && !value.toString().match(/^[-]?\d*\.?\d*$/) ){ 
     NEXUS.createDialog('error', 'Please enter a numeric value');
@@ -239,7 +239,7 @@ var nexusControlledStateUpdateItem = function(value,columnDef,item) {
     
     $(values).each(function() {
       
-      data += '&nids[]='+characters[columnDef.id]['states'][this]['nid']; 
+      data += '&nids[]='+columnDef['states'][this]['nid']; 
       
     });
 
@@ -251,13 +251,13 @@ var nexusControlledStateUpdateItem = function(value,columnDef,item) {
     
     $(values).each(function() {
       
-      data += '&nids[]='+characters[columnDef.id]['states'][this]['nid']; 
+      data += '&nids[]='+columnDef['states'][this]['nid']; 
       
     });
     
   }else if(value){
     
-    data += '&nids[]='+characters[columnDef.id]['states'][value]['nid']; 
+    data += '&nids[]='+columnDef['states'][value]['nid']; 
     
   }
 
