@@ -911,7 +911,7 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
       unset($form['comment_settings']);
       unset($form['menu']);
       unset($form['body_filter']['filter']);
-      
+      unset($form['weight_form']);
       
       $form['character_tid'] = array('#type' => 'hidden', '#value' => '');
       $form['taxa_tid'] = array('#type' => 'hidden', '#value' => '');
