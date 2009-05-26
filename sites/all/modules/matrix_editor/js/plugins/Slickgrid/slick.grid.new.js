@@ -1129,9 +1129,7 @@ function SlickGrid($container,data,columns,options)
           
         }else{
           
-          console.log(numRows);
-          
-          // gotoDir(numRows, -1);
+          gotoCell(numRows, (currentCell -1));
           
         }
 
