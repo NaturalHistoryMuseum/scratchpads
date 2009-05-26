@@ -145,7 +145,7 @@ function nexus() {
     
     beautyTips: function(){
 
-      $('.grid-header .h span').hover(function(){
+      $('.grid-header .h span').mouseover(function(){
         
         if(!sorting){
           $(this).btOn(); 
@@ -162,9 +162,10 @@ function nexus() {
       
       $('.grid-header .h span').mouseout(function(){
         
-        if(!sorting){
-        $(this).btOff(); 
+        if($(this).hasClass('bt-active')){
+          $(this).btOff(); 
         }
+
         
       });
       
@@ -380,7 +381,7 @@ function nexus() {
          
           group = $("<div class='character-group' id='"+this.groupID+"'/>")
            .html(this.group)
-           .width(this.width + 4)
+           .width(this.width + 3) // Knock of the 2 for the groups own border
            .click(function(){
              self.groupSelected($(this));
            });
@@ -389,7 +390,7 @@ function nexus() {
 
           var oldWidth = parseInt(group.css('width'));
           
-          group.width(oldWidth + this.width + 4);
+          group.width(oldWidth + this.width + 5);
           
         }
         
@@ -432,7 +433,7 @@ function nexus() {
           $('#character-groups')[0].scrollLeft = 0;
           self.onGroupsReordered(e, ui);
           
-          ('..main-scroller').addClass('loading');
+          $('.main-scroller').addClass('loading');
           $('.grid-canvas').hide();
           $('.main-scroller').stop();
                     

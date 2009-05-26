@@ -57,7 +57,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
     
     this.init = function() {
       
-        $input =  $("<input tabIndex='0' type=text class='editor-text' />");
+        $input =  $("<input tabIndex='0' type=text class='editor-text' autocomplete='off' />");
         
         if (value != null) 
         {
