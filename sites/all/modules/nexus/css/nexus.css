@@ -473,9 +473,14 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 /* Project settings */
 
-#matrix-editor-panels .vertical-tabs, #matrix-editor-panels .vertical-tabs-div{
+#matrix-editor-panels .vertical-tabs, 
+#matrix-editor-panels .vertical-tabs-div,
+#matrix-editor-panels .vertical-tabs-pane
+{
   min-height: 238px;
 }
+
+
 
 #matrix-editor-panels .vertical-tabs-div{
  border: 1px solid #8995AB; 
@@ -505,7 +510,11 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   background: #a2aec2;
 }
 
-#matrix-editor-panels .vertical-tabs .vertical-tabs-fieldsets, #matrix-editor-panels .vertical-tabs li.selected{
+
+
+#matrix-editor-panels .vertical-tabs .vertical-tabs-fieldsets, 
+#matrix-editor-panels .vertical-tabs .vertical-tabs-panes,
+ #matrix-editor-panels .vertical-tabs li.selected{
   background-color:#e0e9f1;  
 }
 
