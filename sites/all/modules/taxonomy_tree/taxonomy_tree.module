@@ -198,12 +198,12 @@ function taxonomy_tree_theme() {
 function theme_taxonomy_tree_element($element){
 
   taxonomy_tree_add_files();
-  
+
   $vid = $element['#array_parents'][1];
 
   foreach($element['#value'] as $value){
     
-    $selected .= '&tids['.$value.']='.$value;
+    $selected .= '&t['.$value.']='.$value;
     
   }
   

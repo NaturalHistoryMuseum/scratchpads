@@ -9,7 +9,7 @@ function taxonomy_tree_callback($vid, $nid = null){
   $branches_to_expand = array();
   
   // If you're editing, tids can be passed in
-  $selected_tids = $_GET['tids'];
+  $selected_tids = $_GET['t'];
 
   if($_GET['root'] == 'source'){
     
