@@ -435,11 +435,10 @@ function nexus_taxonomy($op, $type, $term){
       switch($type){
         
         case 'term':
-        
-          // Delete numeric data
-          nexus_delete_numeric_state($term->tid);
           
-          // Delete or data
+          // Delete nexus data associated with this term
+          nexus_delete_term_settings($term->tid);
+          
           nexus_delete_relationships($term->tid);
 
         break;
@@ -1746,6 +1745,12 @@ function nexus_update_term_setting($tid, $setting_type, $value = null){
 function nexus_delete_term_setting($tid, $setting_type){
   
   db_query('DELETE FROM {nexus_term_settings} WHERE tid = %d AND setting_type = "%s"', $tid, $setting_type); 
+  
+}
+
+function nexus_delete_term_settings($tid){
+  
+  db_query('DELETE FROM {nexus_term_settings} WHERE tid = %d', $tid); 
   
 }
 
