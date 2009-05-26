@@ -1003,9 +1003,13 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
           
           // Need to validate form so we know all required data i set up
           $form['#validate'][] = 'nexus_project_node_add_form_validate';
+          // $form['#submit'][] = '';
+          
+          $form['buttons']['submit']['#submit'][] = 'nexus_project_node_add_form_submit';
+          
           $form['#theme'] = array('nexus_project_node_add_form');  
                        
-          }else{
+        }else{ // There is a NID
           
           $path = drupal_get_path('module', 'nexus');
           
@@ -1064,8 +1068,6 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
             ),
             
           );
-          
-
           
           $form['taxa_vid'] = array('#type' => 'hidden', '#value' => $form['#node']->taxa_vid);
           $form['character_root_tid'] = array('#type' => 'hidden', '#value' => $form['#node']->character_root_tid);
@@ -2006,7 +2008,16 @@ function nexus_project_node_add_form_validate($form, &$form_state){
 
 }
 
-
+/**
+ * Redirect to the node edit form
+ */
+function nexus_project_node_add_form_submit($form, &$form_state){
+  
+  if ($form_state['nid']) {
+    $form_state['redirect'] = url('node/'.$form_state['nid'].'/edit');
+  }
+  
+}
 
 
 

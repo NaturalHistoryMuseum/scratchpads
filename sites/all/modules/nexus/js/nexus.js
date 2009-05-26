@@ -403,17 +403,46 @@ function nexus() {
       
       $($groups).sortable({ 
         axis: 'x', 
+        scroll: true,
         start: function(e, ui){
         
           sorting = true;
                     
         },
+        sort: function(e, ui){
+          
+          var $charGroup = $('#character-groups');
+          var charGroupMarginLeft = parseInt($charGroup.css('margin-left'));
+          var charGroupWidth = $charGroup.width();
+  
+          if((ui.position.left - 50) < charGroupMarginLeft){
+           
+          $('.main-scroller').animate({scrollLeft:0}, 1000);
+            
+          }else if((ui.position.left + ui.item.width()) > charGroupWidth + charGroupMarginLeft - 50){
+           
+            $('.main-scroller').animate({scrollLeft:50000}, 1000);
+            
+          }
+          
+        },
         containment: $('#character-groups'),
         update: function(e, ui){
         
+          $('#character-groups')[0].scrollLeft = 0;
           self.onGroupsReordered(e, ui);
+          
+          ('..main-scroller').addClass('loading');
+          $('.grid-canvas').hide();
+          $('.main-scroller').stop();
                     
-        }
+        },
+        deactivate: function(event, ui){
+
+          $('.main-scroller').stop();
+
+        },
+        
         
       });
       
