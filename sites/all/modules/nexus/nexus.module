@@ -537,11 +537,10 @@ function nexus_get_project_nodes(){
   
   $projects = array();
 
-  $result = db_query('SELECT DISTINCT np.nid FROM {nexus_projects} np');
+  $result = db_query(db_rewrite_sql('SELECT DISTINCT np.nid FROM {nexus_projects} np'));
 
   while ($node = db_fetch_object($result)) {
 
-    print_r($node);
     $projects[$node->nid] = node_load($node->nid);
     
   }
