@@ -41,7 +41,6 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     // Get all the charcater terms attached to this project 
     
     $character_vid = nexus_get_character_vid();
-
     $character_terms = taxonomy_get_tree($character_vid, $node->character_root_tid);
 
     // Get settings for these characters (column width & numeric)
@@ -161,7 +160,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         if(is_array($branch)){
         
           $tree = nexus_array_merge_recursive($branch, $tree);    
-      
+
         }  
     
       }
@@ -176,7 +175,11 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     // Get the relationship data for child terms
     $nexus_relationships = nexus_get_relationships($node->character_root_tid);
     
-    nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
+    nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor, $no_tree);
+
+    if($no_tree){
+      $matrix_editor->columns[0]['formatter'] = 'nexusSelectorCellFormatter';
+    }
 
     return $matrix_editor;
     
@@ -187,37 +190,42 @@ function nexus_project_get_matrix_data($node, $editable = true) {
 /**
  * Recursively populate the date in the tree
  */
-function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$state_order_number, &$nexus_relationships, &$collapsed_taxa,  &$matrix_editor){
+function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$state_order_number, &$nexus_relationships, &$collapsed_taxa,  &$matrix_editor, &$no_tree){
 
   static $count = 0;
   static $term_history;
   
-  foreach($tree as $taxa_tid => $branch){
+  $tids = array_keys($tree);
+  
+  $ordered_tids = nexus_order_tids_by_weight($tids);
+  
+  foreach($ordered_tids as $ordered_tid){
     
     // Is it a selected item for this node..?
-    if($taxa[$taxa_tid]){
+    if($taxa[$ordered_tid]){
 
     $data_item = array(
-      'id' => $taxa_tid,
-      'taxa' => $taxa[$taxa_tid]->name
+      'id' => $ordered_tid,
+      'taxa' => $taxa[$ordered_tid]->name
     );
     
-    if($taxa_tid == 4){
-      
-      print_r($parents);
-      
-    }
+    $parent_count = count($taxa[$ordered_tid]->parents);
     
-    for($x = count($taxa[$taxa_tid]->parents); $x > 0; $x--){
+    for($x = count($taxa[$ordered_tid]->parents); $x > 0; $x--){
       
-      $parent_tid = $taxa[$taxa_tid]->parents[$x]->tid;
+      $parent_tid = $taxa[$ordered_tid]->parents[$x]->tid;
       
       if($term_history[$parent_tid]){
         $data_item['parent'] = $term_history[$parent_tid]['key'];
         $data_item['indent'] = $term_history[$parent_tid]['indent'] + 1;
-        $data_item['_collapsed'] = ($collapsed_taxa[$taxa_tid] ? 1 : 0);
+        $data_item['_collapsed'] = ($collapsed_taxa[$ordered_tid] ? 1 : 0);
       }else{
         $data_item['indent'] = 0;
+        
+        if($parent_tid){
+          $no_tree = true;
+        }
+        
       }
       
       
@@ -227,18 +235,18 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
  
     foreach($character_terms as $character_term){
       
-      if($nexus_relationships[$character_term->tid][$taxa_tid] == '?'){
+      if($nexus_relationships[$character_term->tid][$ordered_tid] == '?'){
         
         $data_item[$character_term->tid] = '?';
         
-      }elseif($nexus_relationships[$character_term->tid][$taxa_tid] == '-'){
+      }elseif($nexus_relationships[$character_term->tid][$ordered_tid] == '-'){
       
         $data_item[$character_term->tid] = '-';
       
       }
       
       // Are there nodes?
-      $nexus_nodes = nexus_get_nodes_at_intersection(array($character_term->tid, $taxa_tid));
+      $nexus_nodes = nexus_get_nodes_at_intersection(array($character_term->tid, $ordered_tid));
 
       $conj = '';
       
@@ -252,7 +260,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
                 
               $data_item[$character_term->tid] .= $conj.$state_order_number[$nexus_nodes[$x]->nid]; 
 
-              if($nexus_relationships[$character_term->tid][$taxa_tid] = '/'){
+              if($nexus_relationships[$character_term->tid][$ordered_tid] = '/'){
                 
                 $conj = '/';
                 
@@ -266,7 +274,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
             
             case 'nexus_note':
 
-              $matrix_editor->intersection_info[$character_term->tid][$taxa_tid]['note'] = array(
+              $matrix_editor->intersection_info[$character_term->tid][$ordered_tid]['note'] = array(
                 'nid' => $nexus_nodes[$x]->nid,
                 'body' => $nexus_nodes[$x]->body,
               );
@@ -275,7 +283,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
             
             case 'nexus_free_state':
             
-            $matrix_editor->intersection_info[$character_term->tid][$taxa_tid]['state_nid'] = $nexus_nodes[$x]->nid;
+            $matrix_editor->intersection_info[$character_term->tid][$ordered_tid]['state_nid'] = $nexus_nodes[$x]->nid;
                 
             $data_item[$character_term->tid] = $nexus_nodes[$x]->body;
             
@@ -290,7 +298,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
       
     }
  
-     $term_history[$taxa_tid] = array(
+     $term_history[$ordered_tid] = array(
        'key' => $count,
        'indent' => $data_item['indent'],
      );
@@ -300,9 +308,9 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
     
   }
     
-    if(count($branch)){
+    if(count($tree[$ordered_tid])){
       
-      nexus_matrix_editor_populate_data($branch, $taxa, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
+      nexus_matrix_editor_populate_data($tree[$ordered_tid], $taxa, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor, $no_tree);
       
     }
     
@@ -311,20 +319,21 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
 }
 
 
-//BTODO - need to to order tids.
-function nexus_order_tids_by_weight($tids){
+function nexus_order_tids_by_weight($unordered_tids){
   
-  $tid_placeholders = db_placeholders($tids, 'integer');
+  $tids_placeholders = db_placeholders($unordered_tids, 'int');
      
-  $sql = 'SELECT t.tid FROM {term_data} t WHERE t.tid IN  ('.$tid_placeholders.') ORDER BY weight';
+  $sql = 'SELECT DISTINCT t.tid FROM {term_data} t WHERE t.tid IN  ('.$tids_placeholders.') ORDER BY t.weight';
 
-    while ($node = db_fetch_object($result)) {
+  $result = db_query($sql, $unordered_tids); 
 
-     $nodes[] = $node;
+    while ($tid = db_fetch_object($result)) {
+
+     $ordered_tids[] = $tid->tid;
 
     }
   
-  return $nodes;
+  return $ordered_tids;
   
 }
 

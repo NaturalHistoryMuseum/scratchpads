@@ -533,6 +533,8 @@ function nexus_callback_reorder_columns(){
     $moved_term = taxonomy_get_term($character_tid);
     $moved_term->parent[0] = $parent_tid;
     
+    $parent = taxonomy_get_term($parent_tid);
+    
     // Get the new part of the tree
     $tree = taxonomy_get_tree($moved_term->vid, $parent_tid);
     
@@ -585,7 +587,8 @@ function nexus_callback_reorder_columns(){
     'data' => theme('status_messages'),
     'settings' => array(
       'tid' => $character_tid, 
-      'groupTid' => $parent_tid
+      'groupTid' => $parent_tid,
+      'group' => $parent->name
     )
   );
   

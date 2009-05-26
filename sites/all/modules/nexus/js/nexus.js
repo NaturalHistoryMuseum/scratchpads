@@ -9,7 +9,7 @@ function nexus() {
   var self;
   var $groups;
   var settings = [];
-  var bt;
+  var columnDrag;
   
   return {//
     
@@ -145,6 +145,30 @@ function nexus() {
     
     beautyTips: function(){
 
+      $('.grid-header .h span').hover(function(){
+        
+        if(!columnDrag){
+          $(this).btOn(); 
+        }
+        
+        
+      });
+      
+      $('.grid-header .h span').mousedown(function(){
+      
+        $(this).btOff(); 
+        
+      });
+      
+      $('.grid-header .h span').mouseout(function(){
+        
+        if(!columnDrag){
+        $(this).btOff(); 
+        }
+        
+      });
+      
+      
       $('.grid-header .h span').bt(
         {
           contentSelector: "NEXUS.getBeautyTipText($(this).parents('.h').attr('id'))",
@@ -154,7 +178,11 @@ function nexus() {
           fill: 'black',
           spikeLength: 10,
           cssStyles: {color: 'white', 'font-size': '10px'},
-          closeWhenOthersOpen: true
+          closeWhenOthersOpen: true,
+          trigger: 'none',
+          preShow: function() {
+            return false;
+          },
         }
       );
       
@@ -483,12 +511,14 @@ function nexus() {
          },
          'json'
        );
+       
+       columnDrag = false;
 
      },
      
      onColumnsReorderStart: function(event, ui){
        
-       console.log(event);
+       columnDrag = true;
        
      },
 
@@ -499,9 +529,7 @@ function nexus() {
        $(columns).each(function(i){
          
          if(i > 0){
-           
-          // console.log(this.id); 
-           
+
           $('#'+this.id+' span').html(i);
            
          }
@@ -510,7 +538,8 @@ function nexus() {
            
            if(this.group != response.settings.groupTid){
              
-             this.group = parseInt(response.settings.groupTid);
+             this.groupID = parseInt(response.settings.groupTid);
+             this.group = response.settings.group;
              self.addGroups();
              
            }

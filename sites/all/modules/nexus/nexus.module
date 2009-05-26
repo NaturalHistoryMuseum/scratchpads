@@ -375,13 +375,13 @@ function nexus_delete(&$node) {
 *Implementation of hook_load(). 
 */ 
 function nexus_load($node) { 
-    
+
   if($node->type == 'nexus_project'){  
     
     $sql = 'SELECT taxa_vid, character_root_tid, settings FROM {nexus_projects} WHERE vid = %d';
-  
-    $project_node = db_fetch_object(db_query($sql), $node->vid); 
-  
+
+    $project_node = db_fetch_object(db_query($sql, $node->vid)); 
+
   }
 
   $project_node->settings = unserialize($project_node->settings);
@@ -605,7 +605,7 @@ function nexus_get_project_character_root_tid($project_nid){
   
   $sql = 'SELECT character_root_tid FROM {nexus_projects} WHERE nid = %d LIMIT 1';
   
-  $result = db_query(db_rewrite_sql($sql), $project_nid); 
+  $result = db_query($sql, $project_nid); 
   
   return db_result($result); 
   
@@ -862,6 +862,7 @@ function nexus_preprocess_list_projects_node(&$variables) {
 
 
 function theme_nexus_project_node_add_form($form) {
+
   
   $path = drupal_get_path('module', 'nexus');
   drupal_add_js($path.'/js/nexus.forms.js');
@@ -1068,7 +1069,6 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
           $form['character_root_tid'] = array('#type' => 'hidden', '#value' => $form['#node']->character_root_tid);
           
           $form['#validate'] = array('nexus_project_node_edit_form_validate');
-          // $form['#submit'] = array('nexus_project_node_edit_form_submit');
           $form['#theme'] = array('nexus_project_node_edit_form');
           
         }
@@ -1144,7 +1144,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
    
      $character_root_tid = nexus_get_project_character_root_tid($project_nid); 
      $character_vid = nexus_get_character_vid();
-         
+
      $character_groups = taxonomy_get_tree($character_vid, $character_root_tid, -1, 1);
      
      $form['group']['new_group'] = array(

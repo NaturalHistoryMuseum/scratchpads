@@ -119,10 +119,9 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
 // Format the row selector field
 var nexusSelectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
   
-  return '<input type="hidden" class="tid" value="'+dataContext.id+'" />'+row;
+  return (!dataContext ? "" : value);
 
 };
-
 
 /************************** Cell validator functions ************************/
 
