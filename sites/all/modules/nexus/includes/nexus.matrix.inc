@@ -248,6 +248,8 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
       // Are there nodes?
       $nexus_nodes = nexus_get_nodes_at_intersection(array($character_term->tid, $ordered_tid));
 
+      print_r($nexus_nodes);
+
       $conj = '';
       
       if(count($nexus_nodes)){
