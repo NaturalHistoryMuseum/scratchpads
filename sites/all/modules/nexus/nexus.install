@@ -30,6 +30,8 @@ $nexus_node_info = nexus_node_info();
   }
 
   taxonomy_save_vocabulary($character_vocabulary);
+  
+  update_sql("UPDATE {system} SET weight = 2 WHERE name = 'nexus'");
 
 }
 
