@@ -1204,8 +1204,8 @@ function SlickGrid($container,data,columns,options)
 		setSelectedCellAndRow(cell);
 		
 		// if no editor was created, set the focus back on the cell
-		if (!currentEditor) 
-			currentCellNode.focus();
+    // if (!currentEditor) 
+    //  currentCellNode.focus();
 	}
 
 
