@@ -241,6 +241,14 @@ function SlickGrid($container,data,columns,options)
        containment: $divHeadersScroller,
        scroll: true,
        cancel:".ui-resizable-handle",
+       
+       start: function (event, ui) { 
+       
+         if (self.onColumnsReorderStart)
+           self.onColumnsReorderStart(event, ui);
+         
+       },
+       
        sort: function(event, ui) { 
          
          var rightScrollPos = $divMainScroller.width() + $divMainScroller.scrollLeft() - 35;
@@ -260,12 +268,11 @@ function SlickGrid($container,data,columns,options)
            $('.main-scroller').stop();
            
          }
+           
       },
       
       deactivate: function(event, ui){
-        
-        console.log($divMainScroller);
-        
+
         $('.main-scroller').stop();
         
       },
@@ -307,7 +314,6 @@ function SlickGrid($container,data,columns,options)
           console.timeEnd("column reorder");        
         }
       });
-			
 	
 		$divHeaders.bind("click", function(e) {
 			if (!$(e.target).hasClass(".h")) return;
@@ -827,6 +833,7 @@ function SlickGrid($container,data,columns,options)
 				break;
 				
 			case 39:  // right
+			case 13:  // enter			
 				gotoDir(0,1);
 				break;
 				
@@ -835,7 +842,6 @@ function SlickGrid($container,data,columns,options)
 				break;
 				
 			case 40:  // down
-			case 13:  // enter
 				gotoDir(1,0);
 				break;
 								
@@ -1106,6 +1112,70 @@ function SlickGrid($container,data,columns,options)
 			}
 		}
 		
+
+	  var numCols = columns.length - 1;
+	  
+	  var numRows = data.length - 1;
+	  
+		
+    if(!nextRow){ // User is at top or bottom of col moving up or down
+
+      if(currentRow == 0){ //At the top
+
+        // We are at the top left
+        if((options.fixedFirstColumn && currentCell == 1) || currentCell == 0){
+          
+          gotoCell(numRows, numCols);
+          
+        }else{
+          
+          gotoDir(numRows, -1);
+          
+        }
+
+      }else{
+
+        if(numRows == currentRow && currentCell == numCols){
+          
+          // We are the far bottom right          
+          if(options.fixedFirstColumn){
+            
+            gotoCell(0, 1);
+            
+          }else{
+            
+            gotoCell(0, 0);
+            
+          }
+          
+          
+        }else{
+          
+          gotoDir((0 - numRows), 1); 
+          
+        }
+        
+      }
+      
+    }else if (!nextCell.length){
+			
+			if(options.fixedFirstColumn){
+			  var gotoCol = numCols - 1;
+			}else{
+			  var gotoCol = numCols;
+			}
+			
+		  if(currentCell == 1){ //At the top
+
+        gotoDir(-1, gotoCol);
+        
+      }else{
+        
+        gotoDir(1, (0 - gotoCol)); 
+        
+      }
+		
+		}
 		
 		if (nextRow && nextCell && nextCell.length) 
 		{
@@ -1272,6 +1342,7 @@ function SlickGrid($container,data,columns,options)
 		"onViewportChanged":	null,
 		"onSelectedRowsChanged":	null,
 		"onColumnsReordered":	null,
+		"onColumnsReorderStart":	null,
 		"onColumnsResized":	null,
 		
 		// Methods

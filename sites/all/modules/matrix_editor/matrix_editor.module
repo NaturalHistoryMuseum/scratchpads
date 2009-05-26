@@ -80,6 +80,10 @@ function matrix_editor_to_js($elements, $additional_function_names = array()){
 
           $js_string .= $element_name.': '.$element_value;
 
+        }elseif(is_array($element_value)){
+          
+           $js_string .= $element_name.': '.drupal_to_js($element_value);
+          
         }else{
 
           $js_string .= $element_name.': "'.$element_value.'"';

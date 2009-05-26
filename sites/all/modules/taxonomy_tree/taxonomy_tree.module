@@ -84,11 +84,20 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
       
       }
       
-    if(count($form['taxonomy_tree'])){
+      if(count($form['taxonomy_tree'])){
       
-      $form['#submit'] = array('taxonomy_tree_node_form_submit') + $form['#submit'];
+        if(is_array($form['#submit'])){
+        
+          $form['#submit'] = array('taxonomy_tree_node_form_submit') + $form['#submit'];
+        
+        }else{
+        
+          $form['#submit'] = array('taxonomy_tree_node_form_submit');
+        
+        }
       
-    }  
+      }
+      
     
     }
 
