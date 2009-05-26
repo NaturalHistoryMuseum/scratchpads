@@ -9,8 +9,8 @@ function nexus() {
   var self;
   var $groups;
   var settings = [];
-  var columnDrag;
-  
+  var sorting;
+
   return {//
     
     init: function(nid, node_settings) {
@@ -147,7 +147,7 @@ function nexus() {
 
       $('.grid-header .h span').hover(function(){
         
-        if(!columnDrag){
+        if(!sorting){
           $(this).btOn(); 
         }
         
@@ -162,7 +162,7 @@ function nexus() {
       
       $('.grid-header .h span').mouseout(function(){
         
-        if(!columnDrag){
+        if(!sorting){
         $(this).btOff(); 
         }
         
@@ -400,10 +400,58 @@ function nexus() {
       if(group){
         group.appendTo($groups);
       }
+      
+      $($groups).sortable({ 
+        axis: 'x', 
+        start: function(e, ui){
+        
+          sorting = true;
+                    
+        },
+        containment: $('#character-groups'),
+        update: function(e, ui){
+        
+          self.onGroupsReordered(e, ui);
+                    
+        }
+        
+      });
+      
+
+
 
 
 
     },
+    
+    onGroupsReordered: function(e, ui){
+      
+      var data = 'project_nid='+self.getProjectNid();
+      data += '&active_group='+ui.item.attr('id');
+      
+      $('.character-group').each(function(){
+
+        data+='&groups[]='+$(this).attr('id');
+
+      });
+
+      $.post(
+        Drupal.settings.nexusCallback+'/reorder_groups', 
+        data,
+        function(response){
+
+          self.updateDialog(response.data);
+          
+          $('#'+response.active_group).addClass('selected');
+
+        },
+        'json'
+      );
+      
+      sorting = false;
+      
+    },
+
     
     groupsDeselect: function(){
       
@@ -512,13 +560,13 @@ function nexus() {
          'json'
        );
        
-       columnDrag = false;
+       sorting = false;
 
      },
      
      onColumnsReorderStart: function(event, ui){
        
-       columnDrag = true;
+       sorting = true;
        
      },
 

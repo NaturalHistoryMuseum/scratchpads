@@ -310,6 +310,7 @@ function nexus_callback_get_character_form(){
  
   $character_tid = $_POST['character_tid'];
   $project_nid = $_POST['project_nid'];
+
   
   $output = drupal_get_form('nexus_character_form', $project_nid, $character_tid);
 
@@ -468,6 +469,40 @@ function nexus_delete_group(){
   
 }
 
+/** 
+* Column order has been changed so save to DB
+*/
+function nexus_callback_reorder_groups(){
+ 
+  $groups = $_POST['groups'];
+  
+  $project_nid = $_POST['project_nid'];
+  
+  $active_group = $_POST['active_group'];
+  
+  $root_character_tid = nexus_get_project_character_root_tid($project_nid);
+
+  if(count($groups)){
+    
+    foreach($groups as $weight => $group){
+      
+      $term = taxonomy_get_term($group);
+      
+      $term->parent = array($root_character_tid);
+      $term->weight = $weight;
+      
+      _nexus_callback_update_weight($term);
+      
+    }
+    
+  }
+  
+
+  $output .= nexus_callback_regenerate_matrix_data($project_nid);
+     
+  return array('status' => TRUE, 'data' => $output, 'active_group' => $active_group);
+  
+}
 
 /** 
 * Column order has been changed so save to DB
@@ -598,8 +633,7 @@ function nexus_callback_reorder_columns(){
 * Update the weight of a taxonomy term
 */
 function _nexus_callback_update_weight($term, $weight = null){
-  
-  
+   
   // When you get term data from taxonomy_get_tree it comes as parents, but you have to save it parent!!!
   if($term->parents){
     $term->parent = $term->parents;
