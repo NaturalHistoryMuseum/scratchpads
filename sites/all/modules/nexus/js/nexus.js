@@ -228,7 +228,7 @@ function nexus() {
     onColumnsResized: function(e, ui){
            
       var cell = $(ui.element).attr('cell');
-      var group_id = columns[cell]['group'];
+      var group_id = columns[cell]['groupID'];
 
       // Sometimes UI doesn't change the original width, but UI has new size so get the actual element width
       
