@@ -401,15 +401,19 @@ function nexus_view(&$node, $teaser = FALSE, $page = FALSE) {
   if(!$teaser) { 
  
     $node = node_prepare($node, $teaser, $page);   
-    
-    module_load_include('inc', 'nexus', 'includes/nexus.matrix');   
-    $matrix_data = nexus_project_get_matrix_data($node, false);
-  
-    $node->content['body'] = array(
-       '#value' => theme('nexus_matrix', $matrix_data, $node)
-     );
+ 
+    if($node->type == 'nexus_project'){
      
-     unset($node->taxonomy);
+      module_load_include('inc', 'nexus', 'includes/nexus.matrix');   
+      $matrix_data = nexus_project_get_matrix_data($node, false);
+
+      $node->content['body'] = array(
+         '#value' => theme('nexus_matrix', $matrix_data, $node)
+       );
+
+       unset($node->taxonomy);
+      
+    }
  
   } else { 
    
