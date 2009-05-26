@@ -377,7 +377,11 @@ function nexus_delete(&$node) {
 function nexus_load($node) { 
     
   if($node->type == 'nexus_project'){  
-  $project_node = db_fetch_object(db_query('SELECT taxa_vid, character_root_tid, settings FROM {nexus_projects} WHERE vid = %d', $node->vid)); 
+    
+    $sql = 'SELECT taxa_vid, character_root_tid, settings FROM {nexus_projects} WHERE vid = %d';
+  
+    $project_node = db_fetch_object(db_query($sql), $node->vid); 
+  
   }
 
   $project_node->settings = unserialize($project_node->settings);
@@ -528,8 +532,8 @@ function nexus_get_character_vid(){
 function nexus_get_project_nodes(){
   
   $projects = array();
-  
-  $result = db_rewrite_sql(db_query('SELECT DISTINCT nid FROM {nexus_projects}'));
+
+  $result = db_query(db_rewrite_sql('SELECT DISTINCT nid FROM {nexus_projects}'));
 
   while ($node = db_fetch_object($result)) {
 
@@ -599,7 +603,9 @@ function nexus_get_states_for_character($tid){
 */
 function nexus_get_project_character_root_tid($project_nid){
   
-  $result = db_query('SELECT character_root_tid FROM {nexus_projects} WHERE nid = %d LIMIT 1', $project_nid); 
+  $sql = 'SELECT character_root_tid FROM {nexus_projects} WHERE nid = %d LIMIT 1';
+  
+  $result = db_query(db_rewrite_sql($sql), $project_nid); 
   
   return db_result($result); 
   
@@ -610,7 +616,8 @@ function nexus_get_project_character_root_tid($project_nid){
 */
 function nexus_count_projects_by_vid($vid){
   
-  $result = db_query('SELECT COUNT(*) FROM {nexus_projects} WHERE vid = %d', $vid); 
+  $sql = 'SELECT COUNT(*) FROM {nexus_projects} WHERE vid = %d';
+  $result = db_query(db_rewrite_sql($sql), $vid); 
   
   return db_result($result); 
 
@@ -623,9 +630,9 @@ function nexus_count_projects_by_vid($vid){
 * Get the taxa vocabulary vid for a project
 */
 function nexus_get_taxa_vid($vid){
-  
-  $result = db_query('SELECT taxa_vid FROM {nexus_projects} WHERE vid = %d LIMIT 1', $vid); 
-  
+
+  $result = db_query('SELECT taxa_vid FROM {nexus_projects} WHERE vid = %d LIMIT 1', $vid);
+
   $taxa_vid = db_result($result); 
   
   return $taxa_vid; 
@@ -656,7 +663,7 @@ function nexus_get_nodes_at_intersection($tids, $node_types = array('nexus_note'
   
   $args = array_merge($tids, $node_types);
   
-  $result = db_query($sql, $args);
+  $result = db_query(db_rewrite_sql($sql), $args);
 
   while ($node = db_fetch_object($result)) {
 
@@ -731,12 +738,9 @@ function theme_nexus_matrix($matrix_editor, $node){
   
   // Add the beauty tips
 
-  drupal_add_js($path.'/js/plugins/bt/jquery.bt.js');
+  drupal_add_js($path.'/js/plugins/bt/jquery.bt.min.js');
   drupal_add_css($path.'/js/plugins/bt/jquery.bt.css');
 
-  // Add the extra matrix editor data
-  drupal_add_js('var characters = '.drupal_to_js($matrix_editor->characters), 'inline');
-  drupal_add_js('var characterGroups = '.drupal_to_js($matrix_editor->character_groups), 'inline');
   drupal_add_js('var intersection_info = '.drupal_to_js($matrix_editor->intersection_info), 'inline');
   
   drupal_add_js("$(function(){\rNEXUS.init(".$node->nid.", ".drupal_to_js($node->settings).");\n})",'inline');
@@ -803,13 +807,12 @@ function theme_nexus_row_data($term, $nid){
  */
 function nexus_get_children_in_project($nid, $tid){
   
-  $sql = db_query(
-    'SELECT th.tid
+  $sql = 'SELECT th.tid
      FROM {term_node} tn 
      INNER JOIN {term_hierarchy} th ON th.parent = tn.tid 
-     WHERE tn.nid = %d AND th.parent = %d', $nid, $tid);
+     WHERE tn.nid = %d AND th.parent = %d';
 
-   $result = db_rewrite_sql($sql);
+   $result = db_query(db_rewrite_sql($sql), $nid, $tid);
 
    while ($result_tids = db_fetch_object($result)) {
 
@@ -818,9 +821,10 @@ function nexus_get_children_in_project($nid, $tid){
    }
    
    return $tids;
-  
-  
+   
 }
+
+
 
 function theme_nexus_column_data($term){
   
@@ -870,10 +874,11 @@ function theme_nexus_project_node_add_form($form) {
 
 function theme_nexus_project_node_edit_form($form) {
   
-  $output .= '<div id="edit-taxa" class="tab">';
+  $output .= '<div id="edit-taxa" class="tab"><div class="columns" id="left">';
   $output .= drupal_render($form['taxonomy']);
+  $output .= '</div><div class="columns" id="right">';
   $output .= drupal_render($form['save_taxonomy']);
-  $output .= '</div>';
+  $output .= '</div></div>';
 
   $output .= '<div id="settings" class="tab">';
   $output .= drupal_render($form);
@@ -1030,6 +1035,8 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
             '#name' => 'save_settings',
             '#submit' => array('nexus_project_settings_form_submit'),
             '#weight' => 500,
+            '#prefix' => '<div class="buttons">',
+            '#suffix' => '</div>',
             '#ahah' => array(
               'path' => 'nexus/callback/project_settings_form_submit', 
               'wrapper' => 'dialog',
@@ -1393,10 +1400,13 @@ function nexus_character_form_submit($form, &$form_state){
     
     $character_root_tid = nexus_get_project_character_root_tid($project_nid);
     
+    $group_weight = 1 + nexus_get_max_weight_of_child_term($character_root_tid);
+    
     $group_term = array(
       'name' => $form_state['values']['new_group'],
       'parent' =>$character_root_tid,
-      'vid' => $character_vid 
+      'vid' => $character_vid,
+      'weight' => $group_weight 
     );
 
     taxonomy_save_term($group_term);
@@ -1729,13 +1739,12 @@ function nexus_get_character_settings($character_root_tid){
   
   $settings = array();
   
-  $sql = db_query(
-   'SELECT ns.tid, ns.value, ns.setting_type
+  $sql = 'SELECT ns.tid, ns.value, ns.setting_type
     FROM {nexus_term_settings} ns 
     INNER JOIN {term_hierarchy} th ON th.tid = ns.tid 
-    WHERE th.parent IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)', $character_root_tid);
+    WHERE th.parent IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)';
   
-  $result = db_query($sql);
+  $result = db_query(db_rewrite_sql($sql), $character_root_tid);
 
   while ($setting = db_fetch_object($result)) {
 
@@ -1759,7 +1768,7 @@ function nexus_get_collapsed_taxa($terms){
   $sql = 'SELECT ns.tid FROM {nexus_term_settings} ns 
           WHERE ns.tid IN ('.$tids_placeholders.') AND ns.setting_type = "collapsed"';
   
-  $result = db_query($sql, $tids);
+  $result = db_query(db_rewrite_sql($sql), $tids);
 
   while ($setting = db_fetch_object($result)) {
     
@@ -1792,14 +1801,12 @@ function nexus_get_relationships($character_root_tid){
     
   $relationships = array();
 
-  $sql = db_query(
-   'SELECT nr.operator, nr.character_tid, nr.taxa_tid 
+  $sql = 'SELECT nr.operator, nr.character_tid, nr.taxa_tid 
     FROM nexus_relationships nr 
     INNER JOIN {term_hierarchy} th ON th.tid = nr.character_tid 
-    WHERE th.parent IN (SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.tid = t.tid WHERE h.parent = %d)',
-    $character_root_tid);
+    WHERE th.parent IN (SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.tid = t.tid WHERE h.parent = %d)';
 
-  $result = db_rewrite_sql($sql);
+  $result = db_query(db_rewrite_sql($sql), $character_root_tid);
 
   while ($relationship = db_fetch_object($result)) {
 
