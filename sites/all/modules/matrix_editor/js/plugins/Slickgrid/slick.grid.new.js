@@ -1129,7 +1129,9 @@ function SlickGrid($container,data,columns,options)
           
         }else{
           
-          gotoDir(numRows, -1);
+          console.log(numRows);
+          
+          // gotoDir(numRows, -1);
           
         }
 
@@ -1151,7 +1153,7 @@ function SlickGrid($container,data,columns,options)
           
         }else{
           
-          gotoDir((0 - numRows), 1); 
+          // gotoDir((0 - numRows), 1); 
           
         }
         
