@@ -5,7 +5,7 @@
 function coder_drush_command() {
   $items['coder'] = array(
     'callback' => 'coder_drush_review',
-    'description' => t('Run code reviews'),
+    'description' => dt('Run code reviews'),
   );
   return $items;
 }
@@ -70,7 +70,7 @@ function coder_drush_review() {
     }
     $output = array();
     if (isset($severity_name)) {
-      $output[] = t('Severity @severity_name', array('@severity_name' => $severity_name));
+      $output[] = dt('Severity @severity_name', array('@severity_name' => $severity_name));
       $settings['coder_severity'] = _coder_severity($severity_name);
     }
     if (count($reviews)) {
