@@ -24,8 +24,7 @@ function mado_menu(){
   $items ['mado/save'] = array (
     'title' => '', 
     'page callback' => 'mado_save_layout', 
-    'access arguments' => array (
-      'layout mado' ), 
+    'access arguments' => array ('mado sort' ), 
     'type' => MENU_CALLBACK );
   return $items;
 }
