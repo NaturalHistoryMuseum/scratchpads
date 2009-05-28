@@ -170,7 +170,7 @@ return array(
   'nexus_project' => array( 
     'name'=>t('Character project'),//Required. 
     'module'=>'nexus', //Required. 
-    'description'=>t('A Nexus project.'), // Required. 
+    'description'=>t('A character data project.'), // Required. 
     'has_title' => TRUE, 
     'title_label' => t('Project title'), 
     'has_body' => TRUE, 
@@ -1013,7 +1013,7 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
             '#title' => t('Vocabulary'),
             '#options' => $vocabulary_options,
             '#weight' => -1,   
-            '#description' => t('Please select the vocabulary to add / edit Nexus data to.'), 
+            '#description' => t('Choose the taxonomy that contains the taxon names relevant to your project.'), 
             '#required' => true,
             '#parents' => array('taxa_vid'),
           );
@@ -2168,6 +2168,9 @@ function nexus_project_settings_form_submit(&$form, &$form_state){
    drupal_set_message('Project settings updated');
   
 }
+
+
+
 
 
 
