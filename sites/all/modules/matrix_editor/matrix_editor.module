@@ -25,7 +25,8 @@ function _matrix_editor_add_files(){
 
 
   // Add jquery_ui files
-  jquery_ui_add('jquery-ui-1.7.1.custom');
+  jquery_ui_add(array('ui.resizable', 'ui.draggable', 'ui.droppable'),'none');
+    
   drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
   
    // Add the slickgrid files
