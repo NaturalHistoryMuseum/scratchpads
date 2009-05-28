@@ -78,7 +78,7 @@ function SlickGrid($container,data,columns,options)
 		editOnDoubleClick: false,
 		enableCellNavigation: true,
 		defaultColumnWidth: 80,
-		enableColumnReorder: true,
+		enableColumnReorder: false,
 		asyncEditorLoading: true,
 		fixedFirstColumn: false
 	};
@@ -175,7 +175,7 @@ function SlickGrid($container,data,columns,options)
 			
 			if(i == 0 && options.fixedFirstColumn){
 			  
-        updateFixedColumnWidth(m.width + 14);
+        updateFixedColumnWidth(m.width);
 			  $appendTo = $container;
 			  			  
 			}else{
@@ -200,7 +200,7 @@ function SlickGrid($container,data,columns,options)
 			var cell = parseInt($(this).attr("cell"));
 			var m = columns[cell];
 			
-			if (m.resizable === false) return;
+			if (!m.resizable) return;
 			
 			$(this).resizable({
 				handles: "e",
@@ -212,8 +212,10 @@ function SlickGrid($container,data,columns,options)
 					columns[cell].width = $(this).width();
 					$.rule("." + uid + " .grid-canvas .c" + cell, "style").css("width", columns[cell].width + "px");
 					
-					if(options.fixedFirstColumn && cell == 0){					
-					updateFixedColumnWidth($(this).width());
+					if(options.fixedFirstColumn && cell == 0){
+					  
+					  updateFixedColumnWidth($(this).width());
+					  
 					}
 					
 					if (self.onColumnsResized)
@@ -231,90 +233,91 @@ function SlickGrid($container,data,columns,options)
 		});
 		
 		
+		
 		// ignore .ui-resizable-handle to prevent sortable interfering with resizable
-    if (options.enableColumnReorder)
-      
+    if (options.enableColumnReorder){
+
      var a;
 
      $divHeaders.sortable({
-       axis:"x", 
-       containment: $divHeadersScroller,
-       scroll: true,
-       cancel:".ui-resizable-handle",
-       
-       start: function (event, ui) { 
-       
-         if (self.onColumnsReorderStart)
-           self.onColumnsReorderStart(event, ui);
+         axis:"x", 
+         containment: $divHeadersScroller,
+         scroll: true,
+         cancel:".ui-resizable-handle",
          
-       },
-       
-       sort: function(event, ui) { 
+         start: function (event, ui) { 
          
-         var rightScrollPos = $divMainScroller.width() + $divMainScroller.scrollLeft() - 35;
+           if (self.onColumnsReorderStart)
+             self.onColumnsReorderStart(event, ui);
+           
+         },
          
-         var scrollMax = $divMain.width() - $divMainScroller.width(); 
-
-         if(ui.position.left > rightScrollPos){
+         sort: function(event, ui) { 
            
-           $('.main-scroller').animate({scrollLeft:scrollMax}, 1000);
+           var rightScrollPos = $divMainScroller.width() + $divMainScroller.scrollLeft() - 35;
            
-         }else if(ui.position.left < ($divMainScroller.scrollLeft() + 20)){
-           
-           $('.main-scroller').animate({scrollLeft:0}, 1000);
-           
-         }else{
-           
-           $('.main-scroller').stop();
-           
-         }
-           
-      },
+           var scrollMax = $divMain.width() - $divMainScroller.width(); 
       
-      deactivate: function(event, ui){
-
-        $('.main-scroller').stop();
+           if(ui.position.left > rightScrollPos){
+             
+             $('.main-scroller').animate({scrollLeft:scrollMax}, 1000);
+             
+           }else if(ui.position.left < ($divMainScroller.scrollLeft() + 20)){
+             
+             $('.main-scroller').animate({scrollLeft:0}, 1000);
+             
+           }else{
+             
+             $('.main-scroller').stop();
+             
+           }
+             
+        },
         
-      },
-
-       update: function(e,ui) {
-          console.time("column reorder");
+        deactivate: function(event, ui){
+      
+          $('.main-scroller').stop();
           
-          var newOrder = $divHeaders.sortable("toArray");
-          
-          // If there's a fixed first column, it won't be part of newOrder
-          if(options.fixedFirstColumn){
-             newOrder.unshift(columns[0]['id']);
-          }
-          
-          var lookup = {};
-          for (var i=0; i<columns.length; i++)
-          {
-            lookup[columns[i].id] = columns[i];
-          }
-          
-          for (var i=0; i<newOrder.length; i++)
-          {
-            columnsById[newOrder[i]] = i;
-            columns[i] = lookup[newOrder[i]];
-          }
-          
-          console.log(columns);
-          
-               removeAllRows();
-               removeCssRules();
-               createCssRules();
-               render();
-          
-          if (self.onColumnsReordered)
-            self.onColumnsReordered(e, ui);
+        },
+      
+         update: function(e,ui) {
+            console.time("column reorder");
             
-          e.stopPropagation();
+            var newOrder = $divHeaders.sortable("toArray");
             
-          console.timeEnd("column reorder");        
-        }
-      });
-	
+            // If there's a fixed first column, it won't be part of newOrder
+            if(options.fixedFirstColumn){
+               newOrder.unshift(columns[0]['id']);
+            }
+            
+            var lookup = {};
+            for (var i=0; i<columns.length; i++)
+            {
+              lookup[columns[i].id] = columns[i];
+            }
+            
+            for (var i=0; i<newOrder.length; i++)
+            {
+              columnsById[newOrder[i]] = i;
+              columns[i] = lookup[newOrder[i]];
+            }
+            
+                 removeAllRows();
+                 removeCssRules();
+                 createCssRules();
+                 render();
+            
+            if (self.onColumnsReordered)
+              self.onColumnsReordered(e, ui);
+              
+            e.stopPropagation();
+              
+            console.timeEnd("column reorder");        
+          }
+        });
+        
+      }
+  	
 		$divHeaders.bind("click", function(e) {
 			if (!$(e.target).hasClass(".h")) return;
 			
@@ -1151,7 +1154,7 @@ function SlickGrid($container,data,columns,options)
           
         }else{
           
-          // gotoDir((0 - numRows), 1); 
+          gotoDir((0 - numRows), 1); 
           
         }
         
@@ -1204,8 +1207,8 @@ function SlickGrid($container,data,columns,options)
 		setSelectedCellAndRow(cell);
 		
 		// if no editor was created, set the focus back on the cell
-    // if (!currentEditor) 
-    //  currentCellNode.focus();
+		if (!currentEditor) 
+			currentCellNode.focus();
 	}
 
 
@@ -1265,10 +1268,12 @@ function SlickGrid($container,data,columns,options)
 	};
 	
 	function updateFixedColumnWidth(width){
-	  
+    
+    width = width + 2;
+    
 	  $divHeadersScroller.css('margin-left', width+'px');
 	  $divMainData.css('margin-left', width+'px');
-	  $divSideHeader.width(width);
+	  $.rule($divSideHeader, "style").css("width", width + "px");
 	  
 	};
 	

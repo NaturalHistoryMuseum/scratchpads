@@ -10,29 +10,45 @@ function nexus() {
   var $groups;
   var settings = [];
   var sorting;
+  var gotTree;
+  var edit;
 
   return {//
     
-    init: function(nid, node_settings) {
+    init: function(nid, node_settings, editable) {
       // Attach events
-      project_nid = nid;
+      project_nid = nid; 
       self = this;
+      edit = editable;
       
       if(node_settings){
         settings = node_settings;
       }
+      
+      self.beautyTips();
+      
+      self.addGroups();
+
+      self.sizeViewport();
+
+      self.addResizableViewport();
+      
+      grid.onViewportChanged  = self.onViewportChanged;
+      
+      if(!edit){
+        return;
+      }
+      
+      // Everything past this point are for editors only
+      
+      self.addGroupEvents();
       
       grid.onSelectedRowsChanged = self.onSelectedRowsChanged;
       grid.onColumnHeaderClick = self.onColumnHeaderClick;
       grid.onColumnsReordered = self.onColumnsReordered;
       grid.onColumnsReorderStart = self.onColumnsReorderStart;
       grid.onColumnsResized  = self.onColumnsResized;
-      grid.onViewportChanged  = self.onViewportChanged;
-      
-      self.sizeViewport();
-      
-      self.beautyTips();
-      
+
       $('.grid-header .h span').click(function(){
 
         var columnIndex = grid.getColumnIndex($(this).parents('div.h').attr('id'));
@@ -45,6 +61,15 @@ function nexus() {
         var id = this.href.split('#')[1];
         
         var $this = $(this);
+        
+          if(id == 'edit-taxa' &! gotTree){
+            
+            TREE.displayTree($('#edit-taxa ul').attr('id'));
+            
+            gotTree = true;
+            
+          }
+        
         self.showTab(id, $this);        
         return false;
         
@@ -101,9 +126,12 @@ function nexus() {
         
       });
       
-      self.addGroups();
+
       
-      self.addResizableViewport();
+      $("body").click(function(){
+        $("#dialog").hide();
+      })
+      
       
     },
     
@@ -116,8 +144,8 @@ function nexus() {
     
     addResizableViewport: function(){
 
-      $('#myGrid').resizable({ 
-        alsoResize: '.main-scroller',
+      $('#resizableWrapper').resizable({ 
+        alsoResize: '.main-scroller, #myGrid',
         maxWidth: $('#myGrid').width(),
         minWidth: $('#myGrid').width(),
         stop: function(event, ui) {
@@ -143,6 +171,23 @@ function nexus() {
 
     },
     
+    sizeViewport: function(){
+         
+      // Add the height saved in project node
+      if(typeof settings.height != 'undefined'){
+        
+      var h = parseInt(settings.height);
+      var s = h - $('#myGrid .grid-header').height();
+
+       $('#myGrid').height(h);
+       $('#resizableWrapper').height(h);  
+       $('.main-scroller').height(s);
+       
+      }
+      
+    },
+
+    // Add beauty tips handlers - bit convoluted to ensure they play nice with sortables...
     beautyTips: function(){
 
       $('.grid-header .h span').mouseover(function(){
@@ -155,8 +200,10 @@ function nexus() {
       });
       
       $('.grid-header .h span').mousedown(function(){
-      
-        $(this).btOff(); 
+        
+        if($(this).hasClass('bt-active')){
+          $(this).btOff(); 
+        }
         
       });
       
@@ -181,9 +228,6 @@ function nexus() {
           cssStyles: {color: 'white', 'font-size': '10px'},
           closeWhenOthersOpen: true,
           trigger: 'none',
-          preShow: function() {
-            return false;
-          },
         }
       );
       
@@ -205,24 +249,6 @@ function nexus() {
       })
       // console.log(columns[id]);
       return tiptext;
-      
-    },
-    
-    sizeViewport: function(){
-     
-      
-      // Add the height saved in project node
-      if(typeof settings.height != 'undefined'){
-        
-        var h = parseInt(settings.height);
-
-       $('#myGrid').height(h);
-       
-       
-       
-       $('.main-scroller').height(h - $('#myGrid .grid-header').height());
-       
-      }
       
     },
     
@@ -311,9 +337,16 @@ function nexus() {
      
      displayDialog: function(){
        
-       $("#dialog div.messages").dialog({ 
-         buttons: { "OK": function() { $(this).dialog("close"); } } });
+       $("#dialog").fadeIn('fast');
+       
+       setTimeout(self.hideDialog, 2000);
 
+     },
+     
+     hideDialog: function(){
+       
+       $("#dialog").fadeOut()
+       
      },
      
      createDialog: function(type, message){
@@ -354,6 +387,61 @@ function nexus() {
     
     },
     
+    addGroupEvents: function(){
+      
+      // Select group on click
+      $('.character-group').click(function(){
+        self.groupSelected($(this));
+      });
+      
+      // Make groups sortable
+      $($groups).sortable({ 
+        axis: 'x', 
+        scroll: true,
+        start: function(e, ui){
+
+          sorting = true;
+
+        },
+        sort: function(e, ui){
+
+          var $charGroup = $('#character-groups');
+          var charGroupMarginLeft = parseInt($charGroup.css('margin-left'));
+          var charGroupWidth = $charGroup.width();
+
+          if((ui.position.left - 50) < charGroupMarginLeft){
+
+          $('.main-scroller').animate({scrollLeft:0}, 1000);
+
+          }else if((ui.position.left + ui.item.width()) > charGroupWidth + charGroupMarginLeft - 50){
+
+            $('.main-scroller').animate({scrollLeft:50000}, 1000);
+
+          }
+
+        },
+        containment: $('#character-groups'),
+        update: function(e, ui){
+
+          $('#character-groups')[0].scrollLeft = 0;
+          self.onGroupsReordered(e, ui);
+
+          $('.main-scroller').addClass('loading');
+          $('.grid-canvas').hide();
+          $('.main-scroller').stop();
+
+        },
+        deactivate: function(event, ui){
+
+          $('.main-scroller').stop();
+
+        },
+
+
+      });      
+      
+    },
+    
     addGroups: function(){
 
       // $('#character-groups').width()
@@ -381,10 +469,7 @@ function nexus() {
          
           group = $("<div class='character-group' id='"+this.groupID+"'/>")
            .html(this.group)
-           .width(this.width + 3) // Knock of the 2 for the groups own border
-           .click(function(){
-             self.groupSelected($(this));
-           });
+           .width(this.width + 3); // Knock of the 2 for the groups own border
                     
         }else{
 
@@ -401,56 +486,6 @@ function nexus() {
       if(group){
         group.appendTo($groups);
       }
-      
-      $($groups).sortable({ 
-        axis: 'x', 
-        scroll: true,
-        start: function(e, ui){
-        
-          sorting = true;
-                    
-        },
-        sort: function(e, ui){
-          
-          var $charGroup = $('#character-groups');
-          var charGroupMarginLeft = parseInt($charGroup.css('margin-left'));
-          var charGroupWidth = $charGroup.width();
-  
-          if((ui.position.left - 50) < charGroupMarginLeft){
-           
-          $('.main-scroller').animate({scrollLeft:0}, 1000);
-            
-          }else if((ui.position.left + ui.item.width()) > charGroupWidth + charGroupMarginLeft - 50){
-           
-            $('.main-scroller').animate({scrollLeft:50000}, 1000);
-            
-          }
-          
-        },
-        containment: $('#character-groups'),
-        update: function(e, ui){
-        
-          $('#character-groups')[0].scrollLeft = 0;
-          self.onGroupsReordered(e, ui);
-          
-          $('.main-scroller').addClass('loading');
-          $('.grid-canvas').hide();
-          $('.main-scroller').stop();
-                    
-        },
-        deactivate: function(event, ui){
-
-          $('.main-scroller').stop();
-
-        },
-        
-        
-      });
-      
-
-
-
-
 
     },
     
@@ -527,10 +562,8 @@ function nexus() {
     onSelectedRowsChanged: function() {
 
        var row = grid.getSelectedRows();
-       
-       
+      
        self.deselectColumn();
-          
 
        var cell = $('div.selected:not(.r)').attr('cell');
 
@@ -538,7 +571,8 @@ function nexus() {
 
          args = {
            taxa_tid: data[row]['id'],
-           project_nid: self.getProjectNid()
+           project_nid: self.getProjectNid(),
+           no_tree: settings.no_tree
          }
 
          $.post(
@@ -575,6 +609,10 @@ function nexus() {
      // After reordering
      onColumnsReordered: function(e, ui){
 
+        var columnIndex = grid.getColumnIndex($(ui.item).attr('id'));
+              
+        grid.onColumnHeaderClick(columns[columnIndex]);
+        
          data = {
            character_tid: $(ui.item).attr('id'),
            next_tid: $(ui.item).next('div.h').attr('id'),
@@ -670,7 +708,8 @@ function nexus() {
           }
           
           $(ul).appendTo($cellForm);
-
+          $('<p>For multiple states, please use <strong>/</strong> for <em>or</em> and <strong>+</strong> for <em>and</em>.<p>').appendTo($cellForm);
+          
         }else if(typeof columnDef.validator == 'undefined'){ // This is a text field so add the textarea
           
           $('<p>This is a <em>free state text character</em> - please enter text in the table cell or the field below.<p>').appendTo($cellForm);
@@ -720,7 +759,6 @@ function nexus() {
 
        }
 
-
        $('#edit-body-1').val(note_body);
        $('#edit-note-nid').val(note_nid);
 
@@ -730,7 +768,34 @@ function nexus() {
 
     
     /* character form */
-    
+    renumberStates: function() {
+      
+      $('#nexus-states div.state-form:not(.ui-sortable-placeholder)').each(function(i){
+
+        $(this).find('input.state-nid').attr({
+          id: 'edit-states-'+i+'-nid',
+          name: 'states['+i+'][nid]'
+        });
+
+        $(this).find('div.state label').attr('for', 'edit-states-'+i+'-state').html('State '+(i + 1)+':');
+
+        $(this).find('div.state input').attr({
+          id: 'edit-states-'+i+'-state',
+          name: 'states['+i+'][state]'
+        });
+
+        $(this).find('div.state-description label').attr('for', 'edit-states-'+i+'-state-description');
+
+        $(this).find('div.state-description textarea').attr({
+          id: 'edit-states-'+i+'-state-description',
+          name: 'states['+i+'][state_description]'
+        });
+
+
+      });
+      
+      
+    },
     
     attachCharacterFormEvents: function() {
 
@@ -740,31 +805,8 @@ function nexus() {
          handle: 'span.handle', 
          items: 'div.state-form' , 
          update: function(event, ui) {
-
-           $('#nexus-states div.state-form:not(.ui-sortable-placeholder)').each(function(i){
-
-             $(this).find('input.state-nid').attr({
-               id: 'edit-states-'+i+'-nid',
-               name: 'states['+i+'][nid]'
-             });
-
-             $(this).find('div.state label').attr('for', 'edit-states-'+i+'-state');
-
-             $(this).find('div.state input').attr({
-               id: 'edit-states-'+i+'-state',
-               name: 'states['+i+'][state]'
-             });
-
-             $(this).find('div.state-description label').attr('for', 'edit-states-'+i+'-state-description');
-
-             $(this).find('div.state-description textarea').attr({
-               id: 'edit-states-'+i+'-state-description',
-               name: 'states['+i+'][state_description]'
-             });
-
-
-           });
-
+           
+           self.renumberStates();
 
          }
 
@@ -773,16 +815,25 @@ function nexus() {
        if($("input[name='type']:checked").val() == 'controlled'){
          $('#nexus-state-wrapper').show();  
        }
-
+       
+       $('#character-type .description p.'+$("input[name='type']:checked").val()).show();
+       $("input[name='type']:checked").parents('#character-type .form-radios .form-item').addClass('selected');  
+       
        // Show / hide options on creating character form
        $("input[name='type']").change(
          function()
          {
-
+           
+           $('#character-type div.selected').removeClass('selected');
+           $(this).parents('#character-type .form-radios .form-item').addClass('selected');   
+           
+           $('#character-type .description p').hide();
+           $('#character-type .description p.'+$(this).val()).show();
+           
            if($(this).val() == 'controlled'){
-           $('#nexus-state-wrapper').show();  
-           }else{
-           $('#nexus-state-wrapper').hide();   
+             $('#nexus-state-wrapper').show();  
+           }else{ 
+             $('#nexus-state-wrapper').hide();   
            }
          }
        );
@@ -899,7 +950,14 @@ function nexus() {
     deleteCharacterCallback: function(response){
       
       $('#confirm-delete').hide();
+      self.displayDialog();
       
+    },
+    
+    groupSubmitCallback: function(response){
+
+       self.updateDialog(response.data);
+
     },
 
     
@@ -937,8 +995,9 @@ function nexus() {
          form_build_id: $input.parents('form').find("input[name='form_build_id']").val(),
        }
 
-       $.post(Drupal.settings.nexusCallback+'/delete_state', args, function(){
+       $.post(Drupal.settings.nexusCallback+'/delete_state', args, function(){                  
          parentStateForm.remove();
+         self.renumberStates();
        });
 
      },
@@ -946,6 +1005,10 @@ function nexus() {
 
     // AHAH action callback
     addStateCallback: function(response){
+      
+      var states_count = $('#edit-states-count').val() + 1;
+
+      $('#edit-states-count').val(states_count);
       
       self.updateDialog(response.messages);
       self.attachStateFormEvents();
@@ -960,7 +1023,13 @@ function nexus() {
       
       self.displayDialog();
     
-    },    
+    },  
+    
+    updateTaxonomyCallback: function(response){
+      
+      self.displayDialog();
+    
+    },  
 
 
     /* notes */

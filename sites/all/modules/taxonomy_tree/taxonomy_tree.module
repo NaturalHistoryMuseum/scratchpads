@@ -77,7 +77,7 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
         if($taxonomy_tree_node_types[$form['type']['#value']]){
       
         $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
-
+        
         $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
 
         }
@@ -207,7 +207,12 @@ function theme_taxonomy_tree_element($element){
     
   }
   
-  drupal_add_js('$(document).ready(function() {TREE = new treeview(); TREE.init("'.$element['#id'].'","'.$vid.'","'.$selected.'")})', 'inline');
+  $js = '$(document).ready(function() {
+          TREE = new treeview(); 
+          TREE.init("'.$element['#id'].'","'.$vid.'","'.$selected.'", "'.$element['#no_tree'].'")
+        })';
+  
+  drupal_add_js($js, 'inline');
   
   $output = '<div '.drupal_attributes($element['#attributes']).'>';
   $output .= '<label>Terms for '.$element['#title'].'</label>';

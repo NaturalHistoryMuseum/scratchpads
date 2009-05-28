@@ -63,7 +63,7 @@ function nexus_callback_project_taxonomy_form_submit(){
   
   $output .= nexus_callback_regenerate_matrix_data($submitted_form['form_state']['values']['nid']);
      
-  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.ineritCallback');
+  return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.updateTaxonomyCallback');
   
 }
 
@@ -81,7 +81,11 @@ function nexus_callback_regenerate_matrix_data($nid){
   $js = "var data = ".drupal_to_js($matrix_editor->data).";\r";
   $js .= "var columns = ".matrix_editor_to_js($matrix_editor->columns).";\r";
   
-  $js .= "initMatrixEditor(); NEXUS.init({$nid})";
+  $node->settings['no_tree'] = $matrix_editor->options['no_tree'];
+  
+  ($matrix_editor->options['editable'] ? $editable = true : $editable = false);
+  
+  $js .= "initMatrixEditor(); NEXUS.init({$nid}, ".drupal_to_js($node->settings).", '".$editable."');\n";
    
   $output = '<script type="text/javascript">'.$js.'</script>';
    
@@ -119,10 +123,22 @@ function nexus_callback_ahah_form_submit(){
 */
 function nexus_callback_state_form_submit(){
   
-  $submitted_form = nexus_callback_ahah_form_submit();
-    
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+  $form_state['post'] = $form['#post'] = $_POST;
+  $form['#programmed'] = $form['#redirect'] = FALSE;
+
+  // Skip validation in project issue.
+  $form_state['ahah_state_submit'] = TRUE;
+
+  drupal_process_form($form_id, $form, $form_state);
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+
   // Get the new output.
-  $states_form = $submitted_form['form']['states_wrapper']['states'];
+  $states_form = $form['states_wrapper']['states'];
   unset($states_form['#prefix'], $states_form['#suffix']); // Prevent duplicate wrappers.
   $output = drupal_render($states_form);
 
@@ -148,15 +164,21 @@ function nexus_callback_delete_state(){
   $form_state = array('storage' => NULL, 'submitted' => FALSE); 
   $form = form_get_cache($form_build_id, $form_state);
 
-  unset($form['states_wrapper']['states'][$delta]);
+  $count = 0;
+  
+  $form['states_count']--;
 
-  form_set_cache($form_build_id, $form, array());
-
-  if(is_numeric($state_nid)){
+  foreach($form['states_wrapper']['states'] as $key => $state){
     
-    node_delete($state_nid);
+    if(is_numeric($key)){
+      $count++;
+    }
     
   }
+
+  unset($form['states_wrapper']['states'][$count]);
+
+  form_set_cache($form_build_id, $form, array());
 
   return array('status' => TRUE, 'data' => theme('status_messages'));
 
@@ -171,12 +193,13 @@ function nexus_callback_get_row_data(){
   
   $taxa_tid = $_POST['taxa_tid'];
   $project_nid = $_POST['project_nid'];
+  $no_tree = $_POST['no_tree'];
   
   $term = taxonomy_get_term($taxa_tid);
 
   return array(
     'status' => TRUE,
-    'data' => theme('nexus_row_data', $term, $project_nid) 
+    'data' => theme('nexus_row_data', $term, $project_nid, $no_tree) 
   );
   
 }
@@ -193,7 +216,9 @@ function nexus_callback_inherit_states(){
   $taxa_tid_children = nexus_get_children_in_project($project_nid, $taxa_tid);
   
   $controlled_characters = nexus_get_controlled_characters_in_project($project_nid);
-
+  
+  $count = 0;
+  
   if(count($controlled_characters)){
    
     foreach($controlled_characters as $character_tid){
@@ -206,9 +231,11 @@ function nexus_callback_inherit_states(){
         continue;
         
       }
+      
+      $count++; 
 
       $selected_states = array();
-      $count = 0;
+      
 
       foreach($taxa_tid_children as $child_taxa_tid){
 
@@ -235,9 +262,6 @@ function nexus_callback_inherit_states(){
             nexus_insert_relationship('/', $character_tid, $taxa_tid);
             
           }
-          
-          
-          $count++;
           
 
         }
@@ -301,6 +325,8 @@ function nexus_callback_group_form_submit(){
   return array('status' => TRUE, 'data' => $output, 'action' => 'NEXUS.displayDialog');
   
 }
+
+
 
 
 /** 
@@ -449,6 +475,9 @@ function nexus_delete_character(){
   nexus_delete_nodes($nexus_nodes);
   
   taxonomy_del_term($character_tid);
+  
+  // Clear mesage queue
+  drupal_get_messages();
   
   drupal_set_message('Character deleted');
   

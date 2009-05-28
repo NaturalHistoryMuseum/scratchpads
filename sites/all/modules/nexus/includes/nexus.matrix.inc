@@ -15,9 +15,10 @@ function nexus_project_get_matrix_data($node, $editable = true) {
   $matrix_editor->options = array(
     'editable' => $editable,
     'enableAddRow' => false,
-    'enableCellNavigation' => true,
+    'enableCellNavigation' => $editable,
     'asyncEditorLoading' => false,
-    'fixedFirstColumn' => true
+    'fixedFirstColumn' => true,
+    'enableColumnReorder' => $editable
   );
   
   // Prepare columns
@@ -35,7 +36,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
       'cssClass' => 'cell-move-handle',
       'formatter' => 'TaskNameFormatter',
       'validator' => 'requiredFieldValidator',
-      'setValueHandler' => 'updateItem',  
+      'setValueHandler' => 'updateItem',
+      'resizable' => ($editable ? 1 : 0) 
     );
    
     // Get all the charcater terms attached to this project 
@@ -77,9 +79,10 @@ function nexus_project_get_matrix_data($node, $editable = true) {
           'cssClass' => 'cell-title',
           'editor' => 'nexusCellEditor',
           'term' => $character_term->name,
-          'description' => $character_term->description,
+          'description' => addslashes($character_term->description),
           'groupID' => $character_term->parents[0],
           'group' => $groups[$character_term->parents[0]],
+          'resizable' => ($editable ? 1 : 0)
         );
         
         // Get options for this character
@@ -175,9 +178,9 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     // Get the relationship data for child terms
     $nexus_relationships = nexus_get_relationships($node->character_root_tid);
     
-    nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor, $no_tree);
+    nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
 
-    if($no_tree){
+    if($matrix_editor->options['no_tree']){
       $matrix_editor->columns[0]['formatter'] = 'nexusSelectorCellFormatter';
     }
 
@@ -190,7 +193,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
 /**
  * Recursively populate the date in the tree
  */
-function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$state_order_number, &$nexus_relationships, &$collapsed_taxa,  &$matrix_editor, &$no_tree){
+function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$state_order_number, &$nexus_relationships, &$collapsed_taxa,  &$matrix_editor){
 
   static $count = 0;
   static $term_history;
@@ -223,7 +226,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
         $data_item['indent'] = 0;
         
         if($parent_tid){
-          $no_tree = true;
+          $matrix_editor->options['no_tree'] = true;
         }
         
       }
@@ -310,7 +313,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
     
     if(count($tree[$ordered_tid])){
       
-      nexus_matrix_editor_populate_data($tree[$ordered_tid], $taxa, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor, $no_tree);
+      nexus_matrix_editor_populate_data($tree[$ordered_tid], $taxa, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
       
     }
     

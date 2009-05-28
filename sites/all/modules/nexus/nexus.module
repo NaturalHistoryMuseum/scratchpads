@@ -11,8 +11,8 @@ function nexus_menu(){
   
   // Menu items & tabs
   
-  $items['nexus'] = array(
-    'title' => 'Nexus projects',
+  $items['character_projects'] = array(
+    'title' => 'Character projects',
     'page callback' => 'nexus_list_projects_page',
     'access arguments' => array('access nexus projects'),
     'type' => MENU_NORMAL_ITEM,
@@ -20,13 +20,13 @@ function nexus_menu(){
     'file path' => drupal_get_path('module', 'nexus').'/includes/', 
   );
   
-  $items['nexus/list'] = array(
+  $items['character_projects/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
   
-  $items['nexus/add_project'] = array(
+  $items['character_projects/add_project'] = array(
     'title' => 'Add project',
     'page callback' => 'node_add',
     'page arguments' => array('nexus-project'),
@@ -43,7 +43,8 @@ function nexus_menu(){
     'title' => 'Add project',
     'page callback' => 'nexus_callback',
     'page arguments' => array(2),
-    'access arguments' => array('create nexus character'),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
     'type' => MENU_CALLBACK,
     'file' => 'nexus.callbacks.inc',
     'file path' => drupal_get_path('module', 'nexus').'/includes/',
@@ -97,8 +98,7 @@ function nexus_project_node_page_edit($node){
   $matrix_data = nexus_project_get_matrix_data($node);
   
   $output .= '<div id="add-character">';
-  $img = theme('image', $path.'/images/add_character.gif', 'Add character', 'Add character');  
-  $output .= l($img, '', array('html' => true, 'attributes' => array('class' => 'add-character', 'title' => 'Add character')));
+  $output .= l(t('Add character'), '', array('html' => true, 'attributes' => array('class' => 'add-character', 'title' => 'Add character')));
   
   $output .= '</div>';
   
@@ -118,7 +118,7 @@ function nexus_project_node_page_edit($node){
   $output .= theme('item_list', $tabs);
   $output .= '</div>';
   
-  $output .= '<div id="matrix-editor-panels"><div class="inner">';
+  $output .= '<div id="matrix-editor-panels" class="clearfix"><div class="inner">';
   
   $output .= drupal_get_form('nexus_project_node_form', $node);
   
@@ -141,12 +141,13 @@ function nexus_project_node_page_edit($node){
   $output .= '</div></div>';
   $output .= '</div>'; // End of #data-editor
 
-  $output .= '</div></div>';  
+  $output .= '<div id="dialog"></div>';
 
+  $output .= '</div></div>';  
   
   $output .= '</div>'; // End of #matrix-editor-panels < #nexus
   
-  $output .= '<div id="dialog"></div>';
+  
   
   return $output;
   
@@ -167,7 +168,7 @@ function nexus_node_info() {
 return array( 
   
   'nexus_project' => array( 
-    'name'=>t('Nexus project'),//Required. 
+    'name'=>t('Character project'),//Required. 
     'module'=>'nexus', //Required. 
     'description'=>t('A Nexus project.'), // Required. 
     'has_title' => TRUE, 
@@ -258,19 +259,13 @@ function nexus_perm(){
   
   $nexus_node_info = nexus_node_info();
   
-  $perm = array();
-  
-  foreach($nexus_node_info as $nexus_node_type => $nexus_node){
-    
-    $perm[] = 'create '.$nexus_node_type;
-    $perm[] = 'edit own '.$nexus_node_type;
-    $perm[] = 'edit any '.$nexus_node_type;
-    $perm[] = 'delete own '.$nexus_node_type;
-    $perm[] = 'delete any '.$nexus_node_type;
-    
-  }
-  
-  $perm[] = 'create nexus characters';
+  $perm = array(
+    'create nexus projects', 
+    'edit nexus projects',
+    'edit own nexus projects',
+    'access nexus projects',
+    'delete nexus projects'
+  );
   
   return $perm;
   
@@ -405,10 +400,10 @@ function nexus_view(&$node, $teaser = FALSE, $page = FALSE) {
     if($node->type == 'nexus_project'){
      
       module_load_include('inc', 'nexus', 'includes/nexus.matrix');   
-      $matrix_data = nexus_project_get_matrix_data($node, false);
+      $matrix_editor = nexus_project_get_matrix_data($node, false);
 
       $node->content['body'] = array(
-         '#value' => theme('nexus_matrix', $matrix_data, $node)
+         '#value' => theme('nexus_matrix', $matrix_editor, $node)
        );
 
        unset($node->taxonomy);
@@ -588,7 +583,7 @@ function nexus_get_states_for_character($tid){
    
    while ($node = db_fetch_object($result)) {
    
-      $nodes[] = array(
+      $nodes[$node->nid] = array(
         'state' => $node->title,
         'state_description' => $node->body,
         'nid' => $node->nid
@@ -702,6 +697,10 @@ function nexus_theme() {
       'arguments'=>array(), 
     ),
 
+    'nexus_note_node_form' => array( 
+      'arguments'=>array(), 
+    ),
+
     'nexus_row_data' => array( 
       'arguments'=>array('term' => null), 
     ),
@@ -747,7 +746,13 @@ function theme_nexus_matrix($matrix_editor, $node){
 
   drupal_add_js('var intersection_info = '.drupal_to_js($matrix_editor->intersection_info), 'inline');
   
-  drupal_add_js("$(function(){\rNEXUS.init(".$node->nid.", ".drupal_to_js($node->settings).");\n})",'inline');
+  $node->settings['no_tree'] = $matrix_editor->options['no_tree'];
+  
+  ($matrix_editor->options['editable'] ? $editable = true : $editable = false);
+  
+  drupal_add_js("$(function(){
+    \rNEXUS.init(".$node->nid.", ".drupal_to_js($node->settings).", '".$editable."');\n
+    })",'inline');
   drupal_add_css($path.'/css/nexus.css');
   
   
@@ -756,7 +761,7 @@ function theme_nexus_matrix($matrix_editor, $node){
 }
 
 
-function theme_nexus_row_data($term, $nid){
+function theme_nexus_row_data($term, $nid, $no_tree = false){
   
   $path = drupal_get_path('module', 'nexus');
   
@@ -782,25 +787,31 @@ function theme_nexus_row_data($term, $nid){
     
   }
   
-  $output .= '</div><div class="columns" id="right">';
-  
-  // Does this term have child terms in this project?
-  $children = nexus_get_children_in_project($nid, $term->tid);
-  
-  if(count($children)){
-    
-    $output .= '<h4>Inherit controlled states from children</h4>';
-    $output .= '<p>'.t('This taxa has child taxa in this project it can automatically inherit controlled states from').'</p>';
-    $output .= '<p>'.t('Please click inherit to update the states.').'</p>';
-    
-    $options = array('html' => true, 'attributes' => array('id' => 'inherit-states'));
-    $image = theme('image', $path.'/images/inherit_button.gif', t('Inherit'), t('Inherit'));
-    
-    $output .= l($image, '', $options);
-    
-  }
-  
   $output .= '</div>';
+
+    if($no_tree == 'null'){
+
+    $output .= '<div class="columns" id="right"><div class="inner">';
+      
+    // Does this term have child terms in this project?
+    $children = nexus_get_children_in_project($nid, $term->tid);
+      
+      if(count($children)){
+    
+        $output .= '<h4>Inherit controlled states from children</h4>';
+        $output .= '<p>'.t('This taxa has child taxa in this project it can automatically inherit controlled states from').'</p>';
+        $output .= '<p>'.t('Please click inherit to update the states.').'</p>';
+    
+        $options = array('html' => true, 'attributes' => array('id' => 'inherit-states'));
+        $image = theme('image', $path.'/images/inherit_button.gif', t('Inherit'), t('Inherit'));
+    
+        $output .= l($image, '', $options);
+    
+      }
+      
+    $output .= '</div></div>';
+    
+    }
   
   return $output;
   
@@ -853,6 +864,13 @@ function nexus_preprocess_nexus_project_list_item(&$variables) {
   $variables['description'] = $variables['node']->content['body']['#value'];
   
   $variables['taxa'] = $taxa_vocabulary->name;
+  
+  $variables['delete'] = l(
+    t('Delete'), 
+    'node/'.$variables['node']->nid.'/delete', 
+    array('query' => array('destination' => 'nexus'))
+  );
+
   return $variables;
 
 }
@@ -901,6 +919,8 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
   switch ($form_id){
   
     case 'nexus_note_node_form':
+      
+      $form['#attributes'] = array('class' => 'note-form');
       
       unset($form['revision_information']);
       unset($form['author']);
@@ -1028,9 +1048,15 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
               
               unset($form['taxonomy'][$vid]);
               
+            }else{
+              
+              $form['taxonomy'][$vid]['#no_tree'] = true;
+              
             }
 
           }
+          
+          
           
           $form['save_settings'] = array(
             '#type' => 'image_button', 
@@ -1039,13 +1065,10 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
             '#name' => 'save_settings',
             '#submit' => array('nexus_project_settings_form_submit'),
             '#weight' => 500,
-            '#prefix' => '<div class="buttons">',
-            '#suffix' => '</div>',
             '#ahah' => array(
               'path' => 'nexus/callback/project_settings_form_submit', 
               'wrapper' => 'dialog',
               'method' => 'replace',
-              'effect' => 'slide',
             ),
           );
           
@@ -1056,8 +1079,6 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
             '#src' => $path.'/images/save_changes.gif',
             '#submit' => array('nexus_project_taxonomy_form_submit'),
             '#weight' => 10,
-            '#prefix' => '<div class="buttons">',
-            '#suffix' => '</div>',
             '#ahah' => array(
               'path' => 'nexus/callback/project_taxonomy_form_submit', 
               'wrapper' => 'dialog',
@@ -1113,7 +1134,18 @@ function theme_nexus_character_form($form){
 }
 
 
-
+function theme_nexus_note_node_form($form){
+  
+  $buttons = drupal_render($form['buttons']);
+  
+  $output = '<div class="inner">';
+  $output .= drupal_render($form); 
+  $output .= '</div>';
+  $output .= $buttons;
+  
+  return $output;
+  
+}
 
 
 /**
@@ -1140,13 +1172,12 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#size' => 60,
     '#default_value' => $character_term->name,
     '#maxlength' => 128,
-    '#required' => TRUE,
+    '#attributes' => array('autocomplete' => 'off') // Firefox jquery bug fix
   );
   
   $form['description'] = array(
      '#type' => 'textarea',
      '#title' => t('Character description'),
-     '#required' => FALSE,
      '#default_value' => $character_term->description,
    );
    
@@ -1194,6 +1225,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
      );
    
    
+   
    $form['type'] = array(
      '#type' => 'radios',
      '#title' => t('Type of character'),
@@ -1202,21 +1234,28 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
        'text' => t('Text'), 
        'numeric' => t('Numeric'), 
        'controlled' => t('Controlled character')),
-     '#required' => TRUE,   
-     '#prefix' => '</div><div class="columns" id="right">' 
+     '#required' => TRUE,
+     '#description' => '<p class="text">'.t('User can enter any text to describe the character').'</p>
+     <p class="numeric">'.t('Input must be numeric - useful for measurements.').'</p>
+     <p class="controlled">'.t('The will be asked to select from one of the controlled states below.').'</p>',  
+     '#prefix' => '</div><div class="columns" id="right"><div class="inner"><div id="character-type">',
+     '#suffix' => '</div>' 
    );
-   
+
      // What type of character is this?
-     if($character_tid){
+     if($character_tid && empty($form_state['values']['op'])){
        
        $nexus_states = nexus_get_states_for_character($character_tid); 
    
        if(count($nexus_states)){
          
-         $form['type']['#default_value'] = 'controlled';  
-         $form_state['values']['states'] = $nexus_states;
+         $nexus_state_nids = array_keys($nexus_states);
          
-         $form['states_count'] = array('#type' => 'hidden', '#value' => count($nexus_states));
+         $form['type']['#default_value'] = 'controlled';
+         
+         foreach($nexus_state_nids as $nexus_state_nid){
+           $form_state['values']['states'][] = $nexus_states[$nexus_state_nid];
+         }  
          
        }elseif(nexus_is_numeric_state($character_tid)){
      
@@ -1227,7 +1266,16 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
      }
    
      if (isset($form_state['states_count'])) {
+       
        $states_count = $form_state['states_count'];
+       
+       // If one has been deleted, the states_count will be one higher than it should be
+       if(($form_state['states_count'] - count($form_state['post']['states'])) > 1 ){
+         
+         $states_count--;
+         
+       }
+       
      }else{
        $states_count = (count($form_state['values']['states']) ? count($form_state['values']['states']) : 1);
      }
@@ -1246,24 +1294,26 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
      );
    
      $states = $form_state['values']['states'];
+
      
+
      // Add the current choices to the form.
      for ($delta = 0; $delta < $states_count; $delta++) {
-   
+               
        $nid = isset($states[$delta]['nid']) ? $states[$delta]['nid'] : '';      
        $state = isset($states[$delta]['state']) ? $states[$delta]['state'] : '';
        $state_description = isset($states[$delta]['state_description']) ? $states[$delta]['state_description'] : '';
-       
        $form['states_wrapper']['states'][$delta] = _nexus_state_form($delta, $nid, $state, $state_description);
      
      }
    
    $form['states_wrapper']['add_state'] = array(
      '#type' => 'submit',
-     '#value' => t('Add more states'),
+     '#value' => t('Add another state'),
      '#description' => t("If the amount of boxes above isn't enough, click here to add more states."),
      '#weight' => 1,
      '#submit' => array('nexus_state_form_submit'), // If no javascript action.
+     '#suffix' => '</div>',
      '#ahah' => array( 
        'path' => 'nexus/callback/state_form_submit', 
        'wrapper' => 'nexus-states',
@@ -1272,16 +1322,13 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
      ),
    );
    
+    $path = drupal_get_path('module', 'nexus');
    
-   
-   $form['buttons'] = array(
-     '#prefix' => '<div class="buttons">',
-     '#suffix' => '</div>',
-   );
-   
-    $form['buttons']['save_character'] = array(
-      '#type' => 'submit', 
-      '#value' => t('Save'),
+    $form['save_character'] = array(
+      '#type' => 'image_button', 
+      '#return_value' => 'save_character',
+      '#name' => 'save_character',
+      '#src' => $path.'/images/save_changes.gif',
       '#ahah' => array( 
         'path' => 'nexus/callback/character_form_submit', 
         'wrapper' => 'dialog',
@@ -1289,22 +1336,23 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
         'effect' => 'slide',
       ),
     );
-    
+
     if($character_tid){
   
-      $form['buttons']['delete'] = array(
-        '#type' => 'button',
-        '#value' => t('Delete'),
-        '#weight' => 15,
-      ); 
+      $form['delete'] = array(
+        '#type' => 'image_button', 
+        '#return_value' => 'delete',
+        '#name' => 'delete',
+        '#src' => $path.'/images/delete_button.gif',
+      );
   
     }
     
-    $form['column_end'] = array('#value' => '</div>');
+    $form['column_end'] = array('#value' => '</div></div>');
 
   
   // Have confirm delete on the same form so we don't need to perform another callback
-  $form += nexus_confirm_delete_form();
+  $form += nexus_confirm_delete_form('character');
   
   
   $form['#validate'] = array('nexus_character_form_validate');
@@ -1313,22 +1361,28 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
    
 }
 
-function nexus_confirm_delete_form(){
+  
+
+function nexus_confirm_delete_form($type){
+  
+  $path = drupal_get_path('module', 'nexus');
   
   $form['confirm_delete']['delete_confirmed'] = array(
-    '#type' => 'button',
-    '#value' => t('Delete'),
-    '#prefix' => '<div id="confirm-delete">'.t('Are you sure you want to delete this character?'),
+    '#type' => 'image_button', 
+    '#src' => $path.'/images/confirm_delete_button.gif',
+    '#return_value' => 'delete_confirmed',
+    '#name' => 'delete_confirmed',
+    '#prefix' => '<div id="confirm-delete"><p>'.t('Are you sure you want to delete this '.$type.'?').'</p>',
     '#ahah' => array( 
       'path' => 'nexus/callback/confirm_delete_form_submit', 
       'wrapper' => 'dialog',
       'method' => 'replace',
-      'effect' => 'slide',
     ),
   );
   
   $form['confirm_delete']['cancel'] = array(
-    '#type' => 'button',
+    '#type' => 'image_button', 
+    '#src' => $path.'/images/cancel_delete_button.gif',   
     '#value' => t('Cancel'),
     '#suffix' => '</div>',
   );
@@ -1355,42 +1409,27 @@ function nexus_get_last_character_group($character_root_tid){
  */
 function nexus_character_form_validate($form, &$form_state){
   
-  if(!$form_state['values']['character_group']){
+  // This variable is set in the add state callback - do not validate if true
+  if(!$form_state['ahah_state_submit']){
     
-    if(empty($form_state['values']['new_group'])){
+    if(empty($form_state['values']['name'])){
       
-      form_set_error('new_group', t('Please enter a name for the new character group'));
+      form_set_error('name', t('Please enter a name for the character'));
       
     }
-      
-  }
   
-
-  // If this isn't controlled, remove the state form errors as they aren't required
-  if($form_state['values']['type'] != 'controlled'){
+    if(!$form_state['values']['character_group']){
     
-    $errors = form_get_errors();
-    
-      if(count($errors)){
-    
-        // Reset the errors
-        form_set_error(null, null, true);
-        drupal_get_messages('error', TRUE);
-        
-        foreach($errors as $name => $error){
-          
-          // $name is an array string, not text
-          if(strpos($name, 'states') === false){
-            
-            form_set_error($name, $error);
-            
-          }
-          
-        }
-        
+      if(empty($form_state['values']['new_group'])){
+      
+        form_set_error('new_group', t('Please enter a name for the new character group'));
+      
       }
-    
+      
+    }
+
   }
+
    
 }
 
@@ -1410,18 +1449,42 @@ function nexus_character_form_submit($form, &$form_state){
   $project_nid = $form_state['values']['project_nid'];
   $character_tid = $form_state['values']['character_tid'];
   
-  $character_term = taxonomy_get_term($character_tid);
+  if($character_tid){
+    
+    $character_term = (array) taxonomy_get_term($character_tid);
+    
+  }else{
+    
+    $character_term = array();
+    
+  }
+  
 
   $character_vid = nexus_get_character_vid();
+  
+  $character_root_tid = nexus_get_project_character_root_tid($project_nid);
 
 
   if($form_state['values']['character_group']){
     
     $parent_tid = $form_state['values']['character_group'];
     
-  }else{
+    // If there's no items in group, add it to the end of the group list
+    $items_in_group = taxonomy_get_children($parent_tid);
     
-    $character_root_tid = nexus_get_project_character_root_tid($project_nid);
+    if(!count($items_in_group)){
+      
+      $group_term = (array) taxonomy_get_term($parent_tid);
+      
+      $group_term['weight'] = 1 + nexus_get_max_weight_of_child_term($character_root_tid);
+      $group_term['parent'] = $character_root_tid;
+      
+      taxonomy_save_term($group_term);
+      
+    }
+
+    
+  }else{
     
     $group_weight = 1 + nexus_get_max_weight_of_child_term($character_root_tid);
     
@@ -1443,28 +1506,21 @@ function nexus_character_form_submit($form, &$form_state){
     
   // Update the character
   
-  $term = array(
-    'parent' => $parent_tid,
-    'vid' => $character_vid,
-    'name' => $form['#post']['name'],
-    'description' => $form['#post']['description']
-  );
-  
-  if($character_tid){
+  $character_term['name'] = $form['#post']['name'];
+  $character_term['description'] = $form['#post']['description'];
+  $character_term['vid'] = $character_vid;
+  $character_term['parent'] = $parent_tid;
+
+  if(!$character_tid){
     
-    $term['tid'] = $character_tid;
-    drupal_set_message('Character updated');
-    
-  }else{
-    
-    drupal_set_message('Created new character');
-    
-    $term['weight'] = nexus_get_max_weight_of_child_term($parent_tid) + 1;   
+    $character_term['weight'] = nexus_get_max_weight_of_child_term($parent_tid) + 1;   
     
   }
+
+  taxonomy_save_term($character_term);
   
-  taxonomy_save_term($term);
-  
+  $nexus_existing_states_to_remove = nexus_get_states_for_character($character_tid); 
+
   // What type of character is this?
   switch($form_state['values']['type']){
     
@@ -1472,18 +1528,25 @@ function nexus_character_form_submit($form, &$form_state){
     // If controlled, loop through all the states and save the state nodes
     
       if(count($form_state['values']['states'])){
+        
+        $weight = 0;
           
-        foreach($form_state['values']['states'] as $weight => $state){
+        foreach($form_state['values']['states'] as $state){
+          
+          if(!$state['state']){
+            continue;
+          }
           
           if(is_numeric($state['nid'])){
             $state_node = node_load($state['nid']);
+            unset($nexus_existing_states_to_remove[$state['nid']]);            
           }else{
             $state_node = new stdClass();
             $state_node->uid = $user->uid;
             $state_node->type = 'nexus_state';
             $state_node->status = 1;
             $state_node->name = $user->name;
-            $state_node->taxonomy = array($character_vid => $term['tid']);
+            $state_node->taxonomy = array($character_vid => $character_term['tid']);
           }
            
           $state_node->title = $state['state'];
@@ -1491,44 +1554,54 @@ function nexus_character_form_submit($form, &$form_state){
           $state_node->node_weight = $weight;
           
           node_save($state_node);
+          
+          $weight++;
       
         }
         
       }
       
-      nexus_delete_term_setting($term['tid'], 'numeric');
+      nexus_delete_term_setting($character_term['tid'], 'numeric');
       
     
     break;
     
     case 'numeric':
     
-      nexus_update_term_setting($term['tid'], 'numeric', 1);      
-    
-      // Delete state nodes
-      if($form_state['values']['states']){
-        nexus_delete_nodes($form_state['values']['states']);
-      }
+      nexus_update_term_setting($character_term['tid'], 'numeric', 1);      
     
     
     break;
     
     case 'text':
-    
-      // Delete state nodes
-      if($form_state['values']['states']){
-        nexus_delete_nodes($form_state['values']['states']);
-      }
       
       // If it was numeric, delete from the numeric table
-      nexus_delete_term_setting($term['tid'], 'numeric');
+      nexus_delete_term_setting($character_term['tid'], 'numeric');
       
     break;
 
     
   }
   
+  // If there's any exisitng state nodes we're not using, delete them
+  if(count($nexus_existing_states_to_remove)){
+    
+    nexus_delete_nodes($nexus_existing_states_to_remove);
+    
+  }
   
+  // Clear mesage queue
+  drupal_get_messages();
+  
+  if($character_tid){
+    
+    drupal_set_message('Character updated');
+    
+  }else{
+    
+    drupal_set_message('Created new character');
+    
+  }
 
   
 }
@@ -1645,7 +1718,7 @@ function nexus_group_form($form_state, $group_tid, $project_nid){
   
   $group = taxonomy_get_term($group_tid);
   
-  $form['columns_start'] = array('#value' => '<div class="columns" id="left"><h1>'.t('Edit group').'</h1>');
+  $form['columns_start'] = array('#value' => '<div class="columns" id="left"><div class="inner"><h1>'.t('Edit group').'</h1>');
   $form['tid'] = array('#type' => 'hidden', '#value' => $group_tid);
   $form['project_nid'] = array('#type' => 'hidden', '#value' => $project_nid);
   
@@ -1672,23 +1745,19 @@ function nexus_group_form($form_state, $group_tid, $project_nid){
     '#default_value' => $group->description
   );
   
-  $form['columns_middle'] = array('#value' => '</div><div class="columns" id="right">');
-  
   $root_tid = nexus_get_project_character_root_tid($project_nid);
   
   $groups = taxonomy_get_tree($group->vid, $root_tid, -1, 1);
   
-  $form['column_end'] = array('#value' => '</div>'); 
+  $path = drupal_get_path('module', 'nexus');
   
-  $form['buttons'] = array(
-    '#prefix' => '<div class="buttons">',
-    '#suffix' => '</div>',
-  );
-  
-  $form['buttons']['save_group'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save changes'),
+  $form['save_group'] = array(
+      '#type' => 'image_button', 
+      '#return_value' => 'save_group',
+      '#name' => 'save_group',
+      '#src' => $path.'/images/save_changes.gif',
       '#submit' => array('nexus_group_form_submit'),
+      '#prefix' => '</div>',
       '#ahah' => array(
         'path' => 'nexus/callback/group_form_submit',
         'wrapper' => 'dialog',
@@ -1696,15 +1765,18 @@ function nexus_group_form($form_state, $group_tid, $project_nid){
       )
     );
     
-  $form['buttons']['delete'] = array(
-    '#type' => 'button',
-    '#value' => t('Delete'),
-    '#weight' => 15,
+  
+    
+  $form['delete'] = array(
+    '#type' => 'image_button', 
+    '#return_value' => 'delete',
+    '#name' => 'delete',
+    '#src' => $path.'/images/delete_button.gif',
   );
   
-   
+  $form['column_end'] = array('#value' => '</div>');  
   
-  $form += nexus_confirm_delete_form();  
+  $form += nexus_confirm_delete_form('group');  
     
   return $form;
   
@@ -1891,13 +1963,11 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
   $form = array(
     '#tree' => TRUE,
   );
-
-  // We'll manually set the #parents property of these fields so that
-  // their values appear in the $form_state['values']['choice'] array.
  
   $nexus_node_info = nexus_node_info();
   
-  $form['top'] = array('#value' => '<div class="state-form state-bg-1"><div class="state-bg-2"><div class="state-bg-3"><div class="state-bg-4"><div class="state '.($nid ? '' : 'expanded').'"><span class="handle"></span>');
+  $form['#prefix'] = '<div class="state-form"><div class="state '.($nid ? '' : 'expanded').'"><span class="handle"></span>';
+  $form['#suffix'] = '</div>';
   
   $form['nid'] = array(
     '#type' => 'hidden', 
@@ -1913,12 +1983,13 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
     '#attributes' => array('class' => 'delta')
   );
 
+  $state_label = $nexus_node_info['nexus_state']['title_label'] .' '. ($delta + 1);
+
   $form['state'] = array(
     '#type' => 'textfield',
-    '#title' => $nexus_node_info['nexus_state']['title_label'],
+    '#title' => $state_label,
     '#size' => 10,
     '#maxlength' => 128,
-    '#required' => TRUE,
     '#parents' => array('states', $delta, 'state'),
     '#default_value' => $state,
     '#attributes' => array('class' => 'state')
@@ -1958,8 +2029,6 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
     '#prefix' => '<div class="state-description">',
     '#suffix' => '</div>',
   );
-  
-  $form['end'] = array('#value' => '</div></div></div></div>');
  
   return $form;
 

@@ -12,6 +12,46 @@
   
 }
 
+#resizableWrapper{
+  overflow: hidden;
+}
+
+#resizableWrapper .ui-resizable-handle{
+  background: url('../images/resize_handle.png') no-repeat;
+}
+
+#resizableWrapper .ui-resizable-se{
+  bottom: -1px;
+  right: -2px;
+  cursor:s-resize;
+}
+
+#resizableWrapper .ui-resizable-e{
+  display: none!important;
+}
+
+#myGrid .ui-resizable-e{
+display: block!important;
+background: url('../images/header_resize_handle.png') no-repeat center left!important;
+z-index: 300;
+width: 11px;
+
+}
+
+#resizableWrapper .ui-resizable-s{
+  background: none;
+}
+
+#myGrid .ui-resizable-handle{
+  background-image:url(images/ui-icons_222222_256x240.png);
+  
+}
+
+#myGrid .ui-resizable-se{
+  bottom: 1px;
+  right: 1px;
+}
+
 .loading{
   background: url('../images/preloader.gif') no-repeat 50%;
 }
@@ -22,11 +62,13 @@
 }
 
 
+
 /* Character groups */
 
 #character-groups{
   overflow: hidden;
   height: 25px;
+  padding-left: 1px;
 }
 
 #character-groups div.scroll{
@@ -59,25 +101,19 @@
 
 #add-character{
   position: absolute;
-  right: -1px;
-  top: 26px;
+  right: 0;
+  top: 0;
   z-index: 5000;
-  height: 28px;
-  width: 28px;
-  background: #F0F0F0;
-  text-align: center;
+  height: 26px;
+  line-height: 23px;
+  width: 80px;
+  text-align: left;
+  padding-left: 32px;
+  background: url('../images/add_character.gif') no-repeat;
+  border-right: 1px solid #c0c0c0;
+  font-size: 0.9em;
+  
 }
-
-#add-character:hover{
-  background: #e1e1e1;
-  border-left: 1px solid #C0C0C0;
-}
-
-#add-character img{
-  margin-top: 5px;
-}
-
-
 
 
 
@@ -116,12 +152,15 @@
 /* Side */
 
 #myGrid div.c0{
-  padding-left: 10px;
+  padding: 1px 0 2px 0;
+  text-indent: 10px;
 }
 
 #taxa{
   cursor: auto!important;
 }
+
+
 
 .grid-canvas .r .c.cell-move-handle {
    text-align: left;
@@ -130,6 +169,7 @@
    border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
    font-weight: normal;
    cursor: pointer;
+   margin-right: 1em;
    
 }
 
@@ -156,8 +196,13 @@ border-color: #f8f8f8 #bcbcbc #bcbcbc #f8f8f8 !important;
 background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
+.grid-canvas .r .c.editable{
+  border-color: #7dbe40;
+}
 
-
+.grid-canvas .r:hover{
+  background-color: inherit;
+}
 
 
 
@@ -169,7 +214,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   border-color: #c0c0c0;
   border-width: 1px; 
   border-style: solid;
-  
 }
 
 #matrix-editor-controls #search{
@@ -232,6 +276,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   border-width: 1px; 
   border-style: none solid solid solid;
   color: #252b36;
+  position: relative;
 }
 
 #matrix-editor-panels .inner{
@@ -244,6 +289,10 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #matrix-editor-panels #data-editor{
   display: block;
+}
+
+#matrix-editor-panels #cell-data{
+  display: none;
 }
 
 
@@ -261,7 +310,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   color: #ffaa06;
 }
 
-#matrix-editor-panels div.columns, #matrix-editor-panels .buttons{
+#matrix-editor-panels div.columns{
   width: 49%;
 }
 
@@ -277,11 +326,15 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   float:left;
 }
 
-#matrix-editor-panels .buttons{
-    margin-left: 51%;
+#matrix-editor-panels div.columns .inner{
+  padding: 0;
+  min-height: 260px;
 }
 
-#matrix-editor-panels form input.form-text, #matrix-editor-panels form textarea, #edit-taxa ul.treeview, #text-state-dynamic-entry{
+#matrix-editor-panels form input.form-text, 
+#matrix-editor-panels form textarea, 
+#edit-taxa ul.treeview, 
+#text-state-dynamic-entry{
   border: 1px solid #8995ab;
   width: 95%;
 }
@@ -304,15 +357,10 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 
-/* #matrix-editor-panels #node-form .buttons{
-  position: absolute;
-  bottom: 25px;
-  left: 49%;
-  margin-left: 50px;
-} */
 
-#matrix-editor-panels .form-button, #matrix-editor-panels .form-submit {
- margin: 0; 
+#matrix-editor-panels .form-button, 
+#matrix-editor-panels .form-submit {
+ margin: 0 20px 0 0; 
 }
 
 
@@ -320,6 +368,14 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #confirm-delete{
   display: none;
+  margin: 50px auto;
+  width: 500px;
+  text-align: center;
+}
+
+#confirm-delete p{
+  font-size: 1.4em;
+  margin-bottom: 30px;
 }
 
 
@@ -329,14 +385,15 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   height: 250px;
   overflow-y: scroll;
   background-color: #fff;
+  padding-top: 5px;
 }
 
 .treeview label:hover, .treeview span.hover label{
   color: #000!important;
 }
 
-#edit-taxa div.buttons{
-  margin: 265px 0 0 0;
+#edit-taxa #right{
+  padding-top: 265px;
 }
 
 
@@ -378,49 +435,116 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   top: 2px;
 }
 
+#matrix-editor-panels .note-form textarea{
+  height: 200px;
+}
+
 
 /* state form */
 
 /* Hide the states by default - will be displayed with js */
 
+#nexus-character-form #character-type .form-item{
+  margin: 0;
+  padding: 0;
+}
+
+#nexus-character-form #character-type .form-radios .form-item{
+  padding: 4px 5px;
+}
+
+#nexus-character-form #character-type .form-radios input{
+  position: relative;
+  top: 2px;
+  cursor: pointer;
+}
+
+#nexus-character-form #character-type .form-radios label{
+   cursor: pointer; 
+}
+
+#character-type .selected, 
+#nexus-character-form #nexus-state-wrapper,
+#character-type .description p{
+  background: #dfe8f0;
+  border-width: 1px;
+  border-color: #8995AB;
+}
+
+#character-type .selected{
+  border-style: solid solid none solid;
+}
+
+#character-type .selected{
+  position: relative;
+  top: 1px;
+}
+
+#character-type .description{
+  clear: left;
+  font-size: 1em;
+  margin: 0;
+}
+
+#character-type .description p{
+  display: none;
+  margin: 0;
+  color: #252B36;
+  padding: 15px 7px;
+  border-style: solid;
+}
+
+#character-type .description p.controlled{
+  border-bottom-style: none;
+}
+
+
+#nexus-character-form #nexus-state-wrapper{
+  border-style: none solid solid solid;
+  margin-bottom: 10px;
+}
+
 #nexus-state-wrapper{
   display:none;
   clear: both;
-  padding-top: 5px;
-}
-
-#nexus-states .state-bg-1{
-  background: #a2aec2 url('../images/state_tl.gif') no-repeat;
-  margin-bottom: 5px;
-}
-
-#nexus-states .state-bg-2{
-  background: url('../images/state_tr.gif') no-repeat top right;
-  padding-top: 7px;
-}
-
-#nexus-states .state-bg-3{
-  background: url('../images/state_br.gif') no-repeat bottom right;
-}
-
-#nexus-states .state-bg-4{
-  background: url('../images/state_bl.gif') no-repeat bottom left;
-  padding: 0 7px 7px;
-}
-
-#nexus-states div.state{
+  padding: 10px 0 30px 0;
   position: relative;
 }
 
+
+#nexus-states div.state-form{
+  position: relative;
+  margin: 0 5px 5px 5px;
+  padding: 5px;
+  border: 1px solid #8995AB;
+  background: #d4dde5;
+}
+
+#edit-add-state{
+  border: 1px solid #8995AB;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+  color: #fff;
+  padding: 2px 4px 2px 18px;
+  background: #8995AB url('../images/add_state.gif') no-repeat 6px center;
+  margin-right: 0!important;
+}
+
+#edit-add-state:hover{
+  text-decoration: underline;
+}
+
 #nexus-states span.handle{
-  width: 10px;
+  width: 9px;
   background: url('../images/state_handle.gif') no-repeat;
-  height: 10px;
+  height: 9px;
   display: block;
   cursor: move;
   position: absolute;
-  top: 6px;
-  left: 0;
+  top: 12px;
+  left: 5px;
 }
 
 #nexus-states div.state .form-item{
@@ -444,7 +568,8 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-states .resizable-textarea .grippie{
-  background-color: #4d5d74;
+  width: 100%;
+  margin-left: 5px;
 }
 
 #nexus-states div.state .form-item input{
@@ -457,13 +582,15 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #nexus-states div.controls{
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 6px;
+  right: 5px;
   
 }
 
 #nexus-states div.controls input{
   margin: 0;
+  padding: 5px;
+  border: 1px solid #8995AB;
 }
 
 #nexus-states .state-description{
@@ -542,7 +669,9 @@ padding: 12px;
 }
 
 
-
+#settings .form-submit{
+  margin-left: 48%;
+}
 
 /* Project ADD form - dynamic options */
 
@@ -559,19 +688,38 @@ padding: 12px;
 
 /* Dialog */
 
-.ui-dialog .ui-dialog-buttonpane{
-  border-top: none;
+#dialog{
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  margin-left: -140px;
+  z-index: 5000;
+  display: none;
+  cursor: pointer;
+}
+
+#dialog div.messages{
+  width: 287px;
+  color: #fff;
+  border: none;
   text-align: center;
+  font-size: 1.1em;
+  margin: 0;
+  padding: 20px 10px;
+  border-style: ridge;
+  border-width: 3px;
 }
 
-.ui-dialog .ui-dialog-buttonpane button{
-  float: none;
-  display: inline;
+#dialog div.status{
+  background: #96da0b;
+  border-color: #96da0b;
 }
 
-.ui-dialog .status{
-  color: #73A805;
+#dialog div.error{
+  background: #ea1717;
+  border-color: #cd0202;
 }
+
 
 /*  Beauty tips */
 
@@ -582,16 +730,28 @@ padding: 12px;
 }
 
 
+/* clearfix */
 
-
-
-/* UNused??? */
-
-
-#cell-data{
-  display: none;
+.clearfix:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
 }
-
+ 
+.clearfix {
+	display: inline-block;
+}
+ 
+html[xmlns] .clearfix {
+	display: block;
+}
+ 
+* html .clearfix {
+	height: 1%;
+}
 
 
 
