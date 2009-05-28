@@ -1207,10 +1207,6 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
          
        }
        
-     }else{
-       
-       $form['group']['new_group']['#required'] = true;
-       
      }
      
      $term_parents = taxonomy_get_parents($character_tid);

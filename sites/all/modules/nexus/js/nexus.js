@@ -339,7 +339,7 @@ function nexus() {
        
        $("#dialog").fadeIn('fast');
        
-       setTimeout(self.hideDialog, 2000);
+       // setTimeout(self.hideDialog, 2000);
 
      },
      
@@ -352,7 +352,7 @@ function nexus() {
      createDialog: function(type, message){
      
        var div = document.createElement('div');
-       div.setAttribute("class","error");
+       div.setAttribute("class","messages error");
        var text = document.createTextNode(message);
        div.appendChild(text);
        
