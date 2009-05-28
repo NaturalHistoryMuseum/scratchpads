@@ -339,7 +339,7 @@ function nexus() {
        
        $("#dialog").fadeIn('fast');
        
-       // setTimeout(self.hideDialog, 2000);
+       setTimeout(self.hideDialog, 2000);
 
      },
      
