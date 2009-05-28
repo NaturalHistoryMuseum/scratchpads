@@ -25,7 +25,7 @@ function _matrix_editor_add_files(){
 
 
   // Add jquery_ui files
-  jquery_ui_add(array('ui.resizable', 'ui.draggable', 'ui.droppable'),'none');
+  jquery_ui_add(array('ui.resizable', 'ui.draggable', 'ui.droppable', 'ui.sortable', 'ui.slider'),'none');
     
   drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
   
