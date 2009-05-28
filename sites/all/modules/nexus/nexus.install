@@ -31,7 +31,7 @@ $nexus_node_info = nexus_node_info();
 
   taxonomy_save_vocabulary($character_vocabulary);
   
-  variable_set('autotag_broken_node_types', array('webform', 'biblio', 'nexus_project'));
+  variable_set('autotag_broken_node_types', array_merge(variable_get('autotag_broken_node_types',array('webform', 'biblio')), array('nexus_project')));
 
 }
 
