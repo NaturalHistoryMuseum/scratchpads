@@ -216,7 +216,21 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       $form['content_types']['#collapsed'] = TRUE;
       $form['settings']['#collapsed'] = TRUE;
     }
-  } 
+  }
+  else if($form_id == 'install_configure_form'){
+    $form['server_settings']['#collapsed'] = TRUE;
+    $form['server_settings']['#collapsible'] = TRUE;
+    $form['admin_account']['account']['pass'] = array(
+      '#type' => 'hidden',
+      '#value' => user_password() // Not ideal, but it's only set for seconds!
+    );
+    $form['#submit'] = array('scratchpadify_install_configure_form_submit');
+  }
+}
+
+function scratchpadify_install_configure_form_submit($form, &$form_state) {
+  module_load_include('profile-help.php','scratchpadify');
+  return _scratchpadify_install_configure_form_submit($form, $form_state);
 }
 
 function scratchpadify_node_page_default(){
