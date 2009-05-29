@@ -19,6 +19,7 @@ function jquery_ui_requirements($phase) {
     // loaded yet.
     return;
   }
+  $requirements['jquery_ui']['title'] = $t('JQuery UI');
 
   if ($jquery_ui_version = jquery_ui_get_version()) {
     // Everything looks good; display the current jQuery UI version.
