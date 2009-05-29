@@ -97,7 +97,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
       
       if (columnDef.validator) 
       {
-          var validationResults = columnDef.validator(scope.getValue(), columnDef);
+          var validationResults = columnDef.validator(scope.getValue(), columnDef, $container);
           if (!validationResults.valid) 
               return validationResults;
       }
@@ -126,10 +126,11 @@ var nexusSelectorCellFormatter = function(row, cell, value, columnDef, dataConte
 /************************** Cell validator functions ************************/
 
 
-function nexusControlledStateValidator(value, columnDef) {
+function nexusControlledStateValidator(value, columnDef, $container) {
   
   var character_tid = this.id;
   var valid = true;
+  var error;
   
   if(value){
     
@@ -149,17 +150,26 @@ function nexusControlledStateValidator(value, columnDef) {
     
     // Check the values match one of the allowed values  
     $(values).each(function(i) {
-   
+    
      if(!columnDef['states'][values[i]]){
          
       valid = false;
       
-      NEXUS.createDialog('error', 'The value '+values[i]+' is not an option for this controlled state. Please select one of the controlled values.');
+      error = "'"+values[i]+"' is not an option for this controlled state. Please select from: <br />";
+      
+        for(var j in columnDef['states']){
 
+          error+= '<strong>'+j+"</strong> "+columnDef['states'][j]['state']+"<br />";
+          
+        }
+        
+      return;
+      
      }else if(values.length > 1 && (values[i].indexOf('?') != -1 || values[i].indexOf('-') != -1)){
        
       valid = false; 
-      NEXUS.createDialog('error', 'Sorry, you cannot select both a state and '+values[i]+'.');
+      
+      error = 'Sorry, you cannot select both a state and '+values[i]+'.';
       
        
      }
@@ -169,16 +179,23 @@ function nexusControlledStateValidator(value, columnDef) {
     
   }
   
+  if(error){
+    nexusErrorBeautyTip($container, error)
+  }
+
+  
   return {valid: valid, msg:null};
 
 
 }
 
 
-function nexusNumericStateValidator(value, columnDef) {
+function nexusNumericStateValidator(value, columnDef, $container) {
 
   if (value.indexOf('?') == -1 && !value.toString().match(/^[-]?\d*\.?\d*$/) ){ 
-    NEXUS.createDialog('error', 'Please enter a numeric value');
+    
+    nexusErrorBeautyTip($container, 'Please enter a numeric value')
+    
     valid = false;
     
   }else{
@@ -189,6 +206,45 @@ function nexusNumericStateValidator(value, columnDef) {
   
   return {valid:valid, msg:null};
   
+  
+}
+
+function nexusErrorBeautyTip($container, error){
+ 
+  $container.bt(error, 
+    {
+      offsetParent: 'body',
+      positions: 'right',
+      fill: 'black',
+      spikeLength: 10,
+      cssStyles: {color: 'white', 'font-size': '10px'},
+      closeWhenOthersOpen: true,
+      trigger: 'none',
+      width: 150,
+      cssClass: 'bt-error-message'
+    });
+    
+  
+  $container.btOn();
+  
+  
+  // On lost focus
+  // ANd key down?
+  $container.click(function(){
+    
+    if($container.hasClass('bt-active')){
+      $container.btOff();
+    }
+    
+  });
+  
+  $container.keydown(function(){
+    
+    if($container.hasClass('bt-active')){
+      $container.btOff();
+    }
+    
+  })
   
 }
 

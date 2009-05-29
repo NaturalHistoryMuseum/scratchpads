@@ -228,6 +228,7 @@ function nexus() {
           cssStyles: {color: 'white', 'font-size': '10px'},
           closeWhenOthersOpen: true,
           trigger: 'none',
+          cssClass: 'bt-character-info'
         }
       );
       
@@ -347,17 +348,6 @@ function nexus() {
        
        $("#dialog").fadeOut()
        
-     },
-     
-     createDialog: function(type, message){
-     
-       var div = document.createElement('div');
-       div.setAttribute("class","messages error");
-       var text = document.createTextNode(message);
-       div.appendChild(text);
-       
-       self.updateDialog(div);
-     
      },
 
      getProjectNid: function(){
