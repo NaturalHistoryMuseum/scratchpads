@@ -127,7 +127,7 @@ function theme_matrix_editor($matrix_editor){
   
   drupal_add_js('var filter = '.$matrix_editor->filter, 'inline');
   drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns).';', 'inline');
-  
+
   $output = '<div id="resizableWrapper"><div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows"></div></div>';
     
   drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');

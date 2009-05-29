@@ -87,6 +87,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         
         // Get options for this character
         $nexus_states = nexus_get_states_for_character($character_term->tid);      
+        // 
+        // print_r($nexus_states);
 
         if(count($nexus_states)){
         

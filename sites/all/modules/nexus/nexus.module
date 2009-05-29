@@ -105,14 +105,14 @@ function nexus_project_node_page_edit($node){
   $output .= theme('nexus_matrix', $matrix_data, $node);
   
   $image_path = $path.'/images/';
-
+  
   $tabs = array(
     '<a href="#settings" title="Settings">Project settings</a>',
     '<a href="#export-data" title="Export data">Export data</a>',    
     '<a href="#edit-taxa" title="Edit taxa">Select taxa</a>', 
     array('data' => '<a href="#data-editor" title="Edit data">Data editor</a>', 'class' => 'active'),
   );
-
+  
   $output .= '<div id="matrix-editor-controls">';
   $output .= '<div id="search"><label for="txtSearch">Filter taxa</label><input type=text id="txtSearch"></div>';
   $output .= theme('item_list', $tabs);
@@ -140,9 +140,9 @@ function nexus_project_node_page_edit($node){
   $output .= drupal_get_form('nexus_note_node_form', $note);
   $output .= '</div></div>';
   $output .= '</div>'; // End of #data-editor
-
+  
   $output .= '<div id="dialog"></div>';
-
+  
   $output .= '</div></div>';  
   
   $output .= '</div>'; // End of #matrix-editor-panels < #nexus
@@ -577,7 +577,8 @@ function nexus_get_states_for_character($tid){
             FROM {node} n 
             INNER JOIN {node_revisions} nr ON n.vid = nr.vid 
             INNER JOIN {term_node} tn ON n.vid = tn.vid 
-            WHERE n.type = "nexus_state" AND tn.tid = %d';
+            WHERE n.type = "nexus_state" AND tn.tid = %d
+            ORDER BY n.sticky DESC';
             
   $result = db_query($sql, $tid);
    
@@ -1233,7 +1234,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
      '#required' => TRUE,
      '#description' => '<p class="text">'.t('User can enter any text to describe the character').'</p>
      <p class="numeric">'.t('Input must be numeric - useful for measurements.').'</p>
-     <p class="controlled">'.t('The will be asked to select from one of the controlled states below.').'</p>',  
+     <p class="controlled">'.t('The user will be asked to select from the controlled states below.').'</p>',  
      '#prefix' => '</div><div class="columns" id="right"><div class="inner"><div id="character-type">',
      '#suffix' => '</div>' 
    );
@@ -1523,11 +1524,16 @@ function nexus_character_form_submit($form, &$form_state){
     case 'controlled':
     // If controlled, loop through all the states and save the state nodes
     
-      if(count($form_state['values']['states'])){
+      // print_r($form_state['post']['states']);
+      // exit;
+    
+      if(count($form_state['post']['states'])){
         
         $weight = 0;
           
-        foreach($form_state['values']['states'] as $state){
+        foreach($form_state['post']['states'] as $state){
+          
+          // print_r($state);
           
           if(!$state['state']){
             continue;
@@ -1986,6 +1992,7 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
     '#title' => $state_label,
     '#size' => 10,
     '#maxlength' => 128,
+    '#attribute' => array('class' => 'state'),
     '#parents' => array('states', $delta, 'state'),
     '#default_value' => $state,
     '#attributes' => array('class' => 'state')

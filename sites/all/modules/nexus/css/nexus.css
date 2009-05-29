@@ -1,7 +1,7 @@
 
 #nexus{
   position: relative;
-  min-width: 830px; 
+  min-width: 850px; 
 }
 
 #myGrid{
@@ -106,7 +106,7 @@ width: 11px;
   z-index: 5000;
   height: 26px;
   line-height: 23px;
-  width: 80px;
+  width: 85px;
   text-align: left;
   padding-left: 32px;
   background: url('../images/add_character.gif') no-repeat;
@@ -414,7 +414,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-character-form .form-radios .form-item{
-  width: 100px;
   float: left;
 }
 
@@ -450,13 +449,13 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-character-form #character-type .form-radios .form-item{
-  padding: 4px 5px;
+  padding: 4px 15px;
 }
 
 #nexus-character-form #character-type .form-radios input{
-  position: relative;
-  top: 2px;
+  position: relative;§
   cursor: pointer;
+  margin-left: 0;
 }
 
 #nexus-character-form #character-type .form-radios label{
@@ -552,7 +551,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-states .form-item label{
-  width: 130px;
+  width: 100px;
   float: left;
   margin-left: 15px;
 }
@@ -573,7 +572,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-states div.state .form-item input{
-  width: 220px;
+  width: 200px;
 }
 
 #nexus-states div.state.delete-state{

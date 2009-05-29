@@ -25,15 +25,11 @@ function nexus() {
         settings = node_settings;
       }
       
-      self.beautyTips();
+      self.initBeautyTips();
       
-      self.addGroups();
-
-      self.sizeViewport();
-
-      self.addResizableViewport();
+      self.initGroups();
       
-      grid.onViewportChanged  = self.onViewportChanged;
+      self.initViewport();
       
       if(!edit){
         return;
@@ -48,14 +44,41 @@ function nexus() {
       grid.onColumnsReordered = self.onColumnsReordered;
       grid.onColumnsReorderStart = self.onColumnsReorderStart;
       grid.onColumnsResized  = self.onColumnsResized;
-
-      $('.grid-header .h span').click(function(){
-
-        var columnIndex = grid.getColumnIndex($(this).parents('div.h').attr('id'));
       
-        grid.onColumnHeaderClick(columns[columnIndex]);
+      self.initHeaders();
+      self.initControls();
+      self.initTabs();
+
+      $('#myGrid div.main-scroller').scroll(function(e){
+        
+        var top = parseInt("-"+e.target.scrollTop);
+        $('.side-header').css("top",top+"px");
         
       });
+      
+      $("body").click(function(){
+        $("#dialog").hide();
+      })
+      
+      
+    },
+    
+    initControls: function(){
+      
+      $('a.add-character').click(function(){
+
+        args = {
+          project_nid: self.getProjectNid()
+        };
+        
+        self.getCharacterForm(args);
+        return false;
+        
+      });
+      
+    },
+    
+    initTabs: function(){
       
       $('#matrix-editor-controls .item-list a').click(function(){
         var id = this.href.split('#')[1];
@@ -84,24 +107,18 @@ function nexus() {
         
       })
       
-      $('a.add-character').click(function(){
+    },
+    
+    initHeaders: function(){
+      
+      $('.grid-header .h span').click(function(){
 
-        args = {
-          project_nid: self.getProjectNid()
-        };
-        
-        self.getCharacterForm(args);
-        return false;
+        var columnIndex = grid.getColumnIndex($(this).parents('div.h').attr('id'));
+      
+        grid.onColumnHeaderClick(columns[columnIndex]);
         
       });
       
-
-      $('#myGrid div.main-scroller').scroll(function(e){
-        
-        var top = parseInt("-"+e.target.scrollTop);
-        $('.side-header').css("top",top+"px");
-        
-      });
       
       $('div.side-header').click(function(e){
         
@@ -125,12 +142,6 @@ function nexus() {
         }
         
       });
-      
-
-      
-      $("body").click(function(){
-        $("#dialog").hide();
-      })
       
       
     },
@@ -171,6 +182,16 @@ function nexus() {
 
     },
     
+    initViewport: function(){
+      
+      self.sizeViewport();
+
+      self.addResizableViewport();
+      
+      grid.onViewportChanged  = self.onViewportChanged;
+      
+    },
+    
     sizeViewport: function(){
          
       // Add the height saved in project node
@@ -188,7 +209,7 @@ function nexus() {
     },
 
     // Add beauty tips handlers - bit convoluted to ensure they play nice with sortables...
-    beautyTips: function(){
+    initBeautyTips: function(){
 
       $('.grid-header .h span').mouseover(function(){
         
@@ -432,7 +453,7 @@ function nexus() {
       
     },
     
-    addGroups: function(){
+    initGroups: function(){
 
       // $('#character-groups').width()
       $('#character-groups').html('');
@@ -646,7 +667,7 @@ function nexus() {
              
              this.groupID = parseInt(response.settings.groupTid);
              this.group = response.settings.group;
-             self.addGroups();
+             self.initGroups();
              
            }
            
@@ -766,21 +787,35 @@ function nexus() {
           id: 'edit-states-'+i+'-nid',
           name: 'states['+i+'][nid]'
         });
-
-        $(this).find('div.state label').attr('for', 'edit-states-'+i+'-state').html('State '+(i + 1)+':');
-
-        $(this).find('div.state input').attr({
+        
+        $(this).find('input.delta')
+          .attr({
+            id: 'edit-states-'+i+'-nid',
+            name: 'states['+i+'][delta]'
+          })
+          .val(i);
+        
+        $(this).find('div.state input.state').attr({
           id: 'edit-states-'+i+'-state',
           name: 'states['+i+'][state]'
         });
+        
+        
+        // $(this).find('input.delta').val(i);
+        
+        
+        $(this).find('div.state label').attr('for', 'edit-states-'+i+'-state').html('State '+(i + 1)+':');
+        
+        
 
+        
         $(this).find('div.state-description label').attr('for', 'edit-states-'+i+'-state-description');
-
+        
         $(this).find('div.state-description textarea').attr({
           id: 'edit-states-'+i+'-state-description',
           name: 'states['+i+'][state_description]'
         });
-
+        
 
       });
       

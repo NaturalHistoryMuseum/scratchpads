@@ -48,13 +48,13 @@ function taxonomy_tree_menu(){
 
 function taxonomy_tree_add_files(){
    
-     $path = drupal_get_path('module', 'taxonomy_tree');
+   $path = drupal_get_path('module', 'taxonomy_tree');
 
-     drupal_add_js($path.'/js/plugins/jquery.cookie.js');
-     drupal_add_js($path.'/js/plugins/jquery.treeview.js');
-     drupal_add_js($path.'/js/plugins/jquery.treeview.async.js');
-     drupal_add_js($path.'/js/taxonomy_tree.js');
-     drupal_add_css($path.'/css/taxonomy_tree.css');
+   drupal_add_js($path.'/js/plugins/jquery.cookie.js');
+   drupal_add_js($path.'/js/plugins/jquery.treeview.js');
+   drupal_add_js($path.'/js/plugins/jquery.treeview.async.js');
+   drupal_add_js($path.'/js/taxonomy_tree.js');
+   drupal_add_css($path.'/css/taxonomy_tree.css');
         
 }
 
@@ -65,13 +65,13 @@ function taxonomy_tree_add_files(){
 function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
   
   if (isset($form['type']) && isset($form['#node'])) {
-
+  
     if(count($form['taxonomy'])){
       
     $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
     
       foreach($vocabularies as $vid => $vocabulary){
- 
+   
         $taxonomy_tree_node_types = variable_get('taxonomy_tree_'.$vid, array());
       
         if($taxonomy_tree_node_types[$form['type']['#value']]){
@@ -79,7 +79,7 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
         $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
         
         $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
-
+  
         }
       
       }
@@ -100,7 +100,7 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
       
     
     }
-
+  
   
   }
 
@@ -154,7 +154,6 @@ function taxonomy_tree_select_children(&$form_state, $vid, $tid){
 
   }
 
-  
   
 }
 
