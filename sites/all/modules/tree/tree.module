@@ -152,7 +152,7 @@ function tree_update($node) {
   exec($exec_string);
   /* Small bug here given that we need to link to the images directory */
   symlink($_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','tree').'/images',$_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid.'/images');
-  file_delete($filepath);
+  //file_delete($filepath);
   db_query("DELETE FROM {tree} WHERE vid = %d", $node->vid);
   db_query("INSERT INTO {tree} (vid,tree,publication) VALUES (%d, '%s', %d)", $node->vid, $node->tree, $node->publication);
 }
