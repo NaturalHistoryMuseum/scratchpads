@@ -147,6 +147,7 @@ function tree_update($node) {
   $path = $_SERVER['DOCUMENT_ROOT'].'/'.file_directory_path().'/tree-'.$node->nid;
   file_check_directory($path, true);
   $exec_string = 'cd '.$_SERVER['DOCUMENT_ROOT'].'/'.drupal_get_path('module','tree').' && ./tvwidget -s 3 -o '.$path.' -b '.base_path().file_directory_path().'/tree-'.$node->nid.' -r '.base_path().file_directory_path().'/tree-'.$node->nid.' '.$filepath;
+  drupal_set_message($exec_string);
   //echo $exec_string;exit;
   exec($exec_string);
   /* Small bug here given that we need to link to the images directory */
