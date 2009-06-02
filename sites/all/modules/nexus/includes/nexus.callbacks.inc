@@ -85,7 +85,7 @@ function nexus_callback_regenerate_matrix_data($nid){
   
   ($matrix_editor->options['editable'] ? $editable = true : $editable = false);
   
-  $js .= "initMatrixEditor(); NEXUS.init({$nid}, ".drupal_to_js($node->settings).", '".$editable."');\n";
+  $js .= "initMatrixEditor(); NEXUS.init({$nid}, ".drupal_to_js($node->settings).", '".$editable."', true);\n";
    
   $output = '<script type="text/javascript">'.$js.'</script>';
    
@@ -144,9 +144,8 @@ function nexus_callback_state_form_submit(){
 
   return array(
     'status' => TRUE, 
-    'data' => $output, 
-    'action' => 'NEXUS.addStateCallback', 
-    'messages' => theme('status_messages')
+    'data' => $output,
+    'action' => 'NEXUS.addStateCallback'
   );
 
 }
@@ -223,6 +222,8 @@ function nexus_callback_inherit_states(){
    
     foreach($controlled_characters as $character_tid){
 
+      $states_updated = false; 
+
       // Delete any currently selected states
       $currently_selected_states = nexus_get_nodes_at_intersection(array($taxa_tid, $character_tid), array('nexus_state'));
 
@@ -231,8 +232,6 @@ function nexus_callback_inherit_states(){
         continue;
         
       }
-      
-      $count++; 
 
       $selected_states = array();
       
@@ -254,6 +253,8 @@ function nexus_callback_inherit_states(){
 
             nexus_select_state_for_taxa($taxa_tid, $selected_state, $nid);
 
+            $states_updated = true; 
+
           }
 
           if($selected_states > 1){
@@ -267,6 +268,12 @@ function nexus_callback_inherit_states(){
         }
 
 
+      }
+      
+      if($states_updated){
+        
+        $count++; 
+        
       }
 
     }
@@ -384,7 +391,7 @@ function nexus_callback_character_form_submit(){
   $submitted_form = nexus_callback_ahah_form_submit();
 
   $return['data'] = theme('status_messages');
-  $return['action'] = 'NEXUS.displayDialog';
+  $return['action'] = 'NEXUS.saveCharacterCallback';
   
   $form_state = $submitted_form['form_state'];
   
@@ -403,12 +410,7 @@ function nexus_callback_character_form_submit(){
 
       $return['action'] = 'NEXUS.addCharacterCallback';
       
-    }else{
-      
-      $return['action'] = 'NEXUS.saveCharacterCallback';
-      
     }
-
     
     $return['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
     
@@ -431,7 +433,7 @@ function nexus_callback_confirm_delete_form_submit(){
     
     case 'nexus_group_form':
     
-      nexus_delete_group();
+      $output += §nexus_delete_group();
     
     break;
     
@@ -495,6 +497,10 @@ function nexus_delete_group(){
   taxonomy_del_term($group_tid);
   
   drupal_set_message('Character group deleted');
+  
+  return array('action' => 'NEXUS.deleteGroupCallback');
+  
+  
   
 }
 

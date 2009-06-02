@@ -215,13 +215,13 @@ function nexusErrorBeautyTip($container, error){
     {
       offsetParent: 'body',
       positions: 'right',
-      fill: 'black',
+      fill: 'rgba(0, 0, 0, .7)',
+      strokeWidth: 0,
       spikeLength: 10,
       cssStyles: {color: 'white', 'font-size': '10px'},
       closeWhenOthersOpen: true,
       trigger: 'none',
-      width: 150,
-      cssClass: 'bt-error-message'
+      width: 150
     });
     
   

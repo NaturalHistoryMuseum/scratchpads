@@ -32,22 +32,22 @@ function _matrix_editor_add_files(){
    // Add the slickgrid files
    drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
    drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
-
+  
    drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css');   
-
+  
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.editors.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.grid.new.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.globaleditorlock.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/slick.model.js'); 
-
+  
    // Add clickgrid dependencies
    drupal_add_js($path.'/js/plugins/Slickgrid/lib/firebugx.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.getScrollbarWidth.js'); 
    drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.rule-1.0.1-min.js'); 
-
+  
    // Slickgrid needs to have style in the head to work
    drupal_set_html_head('<style></style>');
-
+  
    // Add matrix editor files
    drupal_add_css($path.'/css/matrix_editor.css');
    drupal_add_js($path.'/js/matrix_editor.js');
@@ -120,7 +120,7 @@ function theme_matrix_editor($matrix_editor){
 
   drupal_add_js('var options = '.drupal_to_js($matrix_editor->options), 'inline');    
   drupal_add_js('var data = []; data = '.drupal_to_js($matrix_editor->data), 'inline');
-  
+   
   if(!$matrix_editor->filter){
     $matrix_editor->filter = 'matrixFilter';
   }
@@ -128,7 +128,9 @@ function theme_matrix_editor($matrix_editor){
   drupal_add_js('var filter = '.$matrix_editor->filter, 'inline');
   drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns).';', 'inline');
 
-  $output = '<div id="resizableWrapper"><div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows"></div></div>';
+  $output = '<div id="resizableWrapper">
+  <div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows '.($matrix_editor->options['editable'] ? 'editable' : '').'">
+  </div></div>';
     
   drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
   

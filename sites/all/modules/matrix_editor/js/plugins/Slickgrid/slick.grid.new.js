@@ -715,7 +715,7 @@ function SlickGrid($container,data,columns,options)
 		var rowsBefore = renderedRows;
 		var stringArray = {
   		main: [],
-  		fixedCol: [],
+  		fixedCol: []
   	};
 		var rows =[];
 		var _start = new Date();

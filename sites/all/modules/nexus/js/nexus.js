@@ -15,7 +15,7 @@ function nexus() {
 
   return {//
     
-    init: function(nid, node_settings, editable) {
+    init: function(nid, node_settings, editable, regenerated) {
       // Attach events
       project_nid = nid; 
       self = this;
@@ -25,18 +25,20 @@ function nexus() {
         settings = node_settings;
       }
       
+      self.initViewport();
+      
       self.initBeautyTips();
       
       self.initGroups();
       
-      self.initViewport();
+      
       
       if(!edit){
         return;
       }
       
       // Everything past this point are for editors only
-      
+            
       self.addGroupEvents();
       
       grid.onSelectedRowsChanged = self.onSelectedRowsChanged;
@@ -46,20 +48,18 @@ function nexus() {
       grid.onColumnsResized  = self.onColumnsResized;
       
       self.initHeaders();
-      self.initControls();
-      self.initTabs();
-
-      $('#myGrid div.main-scroller').scroll(function(e){
-        
-        var top = parseInt("-"+e.target.scrollTop);
-        $('.side-header').css("top",top+"px");
-        
-      });
       
       $("body").click(function(){
         $("#dialog").hide();
       })
       
+      // Everything past this point is for initial set up, not regeneration
+      if(regenerated){
+        return;
+      }
+      
+      self.initTabs();
+      self.initControls();
       
     },
     
@@ -79,6 +79,18 @@ function nexus() {
     },
     
     initTabs: function(){
+      
+      // IE7 chokes if tabs are hidden before adding vertical tabs, so hide everthing here
+      $('#matrix-editor-panels div.tab')
+        .css('visibility', 'visible')
+        .hide();
+        
+      $('#matrix-editor-panels #data-editor').show();  
+
+      $('#matrix-editor-panels')
+        .css('height', 'auto')
+        .css('overflow', 'auto');
+      
       
       $('#matrix-editor-controls .item-list a').click(function(){
         var id = this.href.split('#')[1];
@@ -140,6 +152,14 @@ function nexus() {
           );
           
         }
+        
+      });
+      
+      // Scroll headers with view port
+      $('#myGrid div.main-scroller').scroll(function(e){
+        
+        var top = parseInt("-"+e.target.scrollTop);
+        $('.side-header').css("top",top+"px");
         
       });
       
@@ -233,23 +253,23 @@ function nexus() {
         if($(this).hasClass('bt-active')){
           $(this).btOff(); 
         }
-
+      
         
       });
       
-      
+    
       $('.grid-header .h span').bt(
         {
-          contentSelector: "NEXUS.getBeautyTipText($(this).parents('.h').attr('id'))",
+          contentSelector: "NEXUS.getBeautyTipText($(this).parents('.h').attr('id'))", 
           positions: 'top',
           offsetParent: 'body',
           shrinkToFit: true,
-          fill: 'black',
-          spikeLength: 10,
+          fill: 'rgba(0, 0, 0, .7)',
           cssStyles: {color: 'white', 'font-size': '10px'},
           closeWhenOthersOpen: true,
+          spikeLength: 10,
           trigger: 'none',
-          cssClass: 'bt-character-info'
+          strokeWidth: 0
         }
       );
       
@@ -335,6 +355,7 @@ function nexus() {
     },
     
     updateDataPanel: function(data) {
+
        $('#non-cell-data').html(data);
        self.toggleDataPanelItem('non-cell-data');
      },
@@ -342,6 +363,7 @@ function nexus() {
      toggleDataPanelItem: function(id){
 
        $('#matrix-editor-panels div.panel:not(#'+id+')').hide();    
+
        $('#'+id).show();
        
        var $a = $('#matrix-editor-controls li.last a');
@@ -446,7 +468,7 @@ function nexus() {
 
           $('.main-scroller').stop();
 
-        },
+        }
 
 
       });      
@@ -799,10 +821,7 @@ function nexus() {
           id: 'edit-states-'+i+'-state',
           name: 'states['+i+'][state]'
         });
-        
-        
-        // $(this).find('input.delta').val(i);
-        
+
         
         $(this).find('div.state label').attr('for', 'edit-states-'+i+'-state').html('State '+(i + 1)+':');
         
@@ -822,7 +841,7 @@ function nexus() {
       
     },
     
-    attachCharacterFormEvents: function() {
+    initCharacterFormEvents: function() {
 
        $('#nexus-states').sortable({ 
          containment: 'parent' , 
@@ -832,9 +851,9 @@ function nexus() {
          update: function(event, ui) {
            
            self.renumberStates();
-
+       
          }
-
+       
        });  
 
        if($("input[name='type']:checked").val() == 'controlled'){
@@ -845,10 +864,10 @@ function nexus() {
        $("input[name='type']:checked").parents('#character-type .form-radios .form-item').addClass('selected');  
        
        // Show / hide options on creating character form
-       $("input[name='type']").change(
+       $("input[name='type']").click( //CLick works better than .change() in IE7
          function()
          {
-           
+
            $('#character-type div.selected').removeClass('selected');
            $(this).parents('#character-type .form-radios .form-item').addClass('selected');   
            
@@ -920,7 +939,7 @@ function nexus() {
 
            self.updateDataPanel(response.data);
 
-           self.attachCharacterFormEvents();
+           self.initCharacterFormEvents();
 
          },
          'json'
@@ -934,11 +953,11 @@ function nexus() {
         // Add the new character group to the drop down
         $("#edit-new-group").val("");
 
+
         if(response.group_tid && response.group_name){
 
-          var option = document.createElement('option');
-          option.text = response.group_name;
-          option.value = response.group_tid;
+          var option = '<option value="'+response.group_tid+'">'+response.group_name+'<option>';
+          
           $("#edit-character-group").append(option);
           $("#edit-character-group").val(response.group_tid);
           $('#edit-new-group-wrapper').hide();
@@ -979,6 +998,13 @@ function nexus() {
       
     },
     
+    deleteGroupCallback: function(response){
+      
+      $('#confirm-delete').hide();
+      self.displayDialog();
+      
+    },
+    
     groupSubmitCallback: function(response){
 
        self.updateDialog(response.data);
@@ -992,20 +1018,20 @@ function nexus() {
     attachStateFormEvents: function(){
       
        $('input.delete-state').click(function(){
-
+       
          self.deleteState($(this));
          return false;
-
+       
        });
        
        $('input.expand-state').click(function(){
-
+       
          var description = $(this).parents('div.state-form').find('div.state-description');
          
          description.toggle('fast');
          
          return false;
-
+       
        });
 
      },
@@ -1017,7 +1043,7 @@ function nexus() {
        args = {
          state_nid: $(parentStateForm).find('input.state-nid').val(),
          delta: $(parentStateForm).find('input.delta').val(),
-         form_build_id: $input.parents('form').find("input[name='form_build_id']").val(),
+         form_build_id: $input.parents('form').find("input[name='form_build_id']").val()
        }
 
        $.post(Drupal.settings.nexusCallback+'/delete_state', args, function(){                  
@@ -1031,11 +1057,6 @@ function nexus() {
     // AHAH action callback
     addStateCallback: function(response){
       
-      var states_count = $('#edit-states-count').val() + 1;
-
-      $('#edit-states-count').val(states_count);
-      
-      self.updateDialog(response.messages);
       self.attachStateFormEvents();
     
     },
@@ -1082,10 +1103,11 @@ function nexus() {
       
       self.updateDialog(response.data);
     
-    },
+    }
 
     
-  }
+  };
+  
 }
 
 

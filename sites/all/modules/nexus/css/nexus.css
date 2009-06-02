@@ -83,7 +83,6 @@ width: 11px;
   font-size: 10px;
   line-height: 22px;
   height: 22px;
-  cursor: pointer;
   border: 1px solid #999;
   border-width: 1px;
   border-style: solid;
@@ -129,17 +128,22 @@ width: 11px;
   border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
   color: #333333;
   font-weight: normal;
-  cursor: pointer;
   height: 22px;
   padding:1px 2px 2px 1px;
 }
 
-/* Increase the hover area */
-#myGrid div.h span{
-  padding: 0 5px; 
+.editable div.h,
+.editable #character-groups div.scroll div,
+.editable .grid-canvas .r .c.cell-move-handle {
+  cursor: pointer;
 }
 
-#myGrid .grid-header{
+/* Increase the hover area */
+#myGrid div.h span{
+  padding: 0 10px;
+}
+
+#myGrid .grid-header, #myGrid div.h span{
   height: 28px;
 } 
 
@@ -168,7 +172,7 @@ width: 11px;
    border-style: solid solid solid solid;
    border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
    font-weight: normal;
-   cursor: pointer;
+   cursor: default;
    margin-right: 1em;
    
 }
@@ -269,7 +273,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #matrix-editor-panels{
   clear: both;
-  width: 100%;
   background-color: #d4dde5;
   min-height: 350px;
   border-color: #8995ab;
@@ -277,18 +280,18 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   border-style: none solid solid solid;
   color: #252b36;
   position: relative;
+  height: 350px;
+  overflow: hidden;
+
 }
+
 
 #matrix-editor-panels .inner{
   padding: 20px;
 }
 
-#matrix-editor-panels .tab{
-  display: none;
-}
-
-#matrix-editor-panels #data-editor{
-  display: block;
+#matrix-editor-panels div.tab{
+visibility: hidden;
 }
 
 #matrix-editor-panels #cell-data{
@@ -311,11 +314,13 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #matrix-editor-panels div.columns{
-  width: 49%;
+  width: 48%;
 }
 
 #matrix-editor-panels div#left{
   float: left;
+  margin-right: 3%;
+  margin-left: 0.5%;
 }
 
 #matrix-editor-panels div#right{
@@ -336,7 +341,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 #edit-taxa ul.treeview, 
 #text-state-dynamic-entry{
   border: 1px solid #8995ab;
-  width: 95%;
+  width: 100%;
 }
 
 #matrix-editor-panels form input.form-text{
@@ -353,7 +358,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #matrix-editor-panels .resizable-textarea .grippie{
   background-color: #A2AEC2;
-  width: 95%;
 }
 
 
@@ -381,7 +385,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 /* edit taxa */
 
-#edit-taxa ul.treeview{
+#edit-taxa div.taxonomy-tree ul.treeview{
   height: 250px;
   overflow-y: scroll;
   background-color: #fff;
@@ -392,8 +396,8 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   color: #000!important;
 }
 
-#edit-taxa #right{
-  padding-top: 265px;
+#edit-taxa #right input{
+  margin-top: 265px;
 }
 
 
@@ -443,8 +447,8 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 /* Hide the states by default - will be displayed with js */
 
-#nexus-character-form #character-type .form-item{
-  margin: 0;
+#nexus-character-form #character-type .form-item, #nexus-character-form #character-type .form-radios{
+  margin: 0!important;
   padding: 0;
 }
 
@@ -453,9 +457,13 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #nexus-character-form #character-type .form-radios input{
-  position: relative;§
+  position: relative;
   cursor: pointer;
   margin-left: 0;
+}
+
+#edit-save-character{
+  margin-top: 20px;
 }
 
 #nexus-character-form #character-type .form-radios label{
@@ -506,29 +514,30 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 #nexus-state-wrapper{
   display:none;
   clear: both;
-  padding: 10px 0 30px 0;
-  position: relative;
+  padding: 10px 0 0 0;
 }
 
 
 #nexus-states div.state-form{
   position: relative;
+  z-index: 5000;
   margin: 0 5px 5px 5px;
   padding: 5px;
   border: 1px solid #8995AB;
   background: #d4dde5;
+  text-align: left;
 }
 
-#edit-add-state{
-  border: 1px solid #8995AB;
-  position: absolute;
-  right: 0;
-  bottom: 0;
+#edit-add-state, #edit-add-state:active{
+
   cursor: pointer;
   color: #fff;
-  padding: 2px 4px 2px 18px;
+  padding: 0 10px 4px 18px!important;
   background: #8995AB url('../images/add_state.gif') no-repeat 6px center;
-  margin-right: 0!important;
+  margin: 10px 0 0 0!important;
+  height: 24px;
+  border: 0px;
+  
 }
 
 #edit-add-state:hover{
@@ -548,17 +557,17 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #nexus-states div.state .form-item{
   margin: 0;
+  margin-left: 20px;
 }
 
 #nexus-states .form-item label{
-  width: 100px;
+  width: 120px;
   float: left;
-  margin-left: 15px;
 }
 
 #nexus-states .resizable-textarea{
-  margin-left: 140px;
-  width: 225px;
+  margin: 10px 2px 0 120px;
+  width: auto;
 }
 
 #nexus-states .resizable-textarea textarea{
@@ -568,11 +577,10 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 
 #nexus-states .resizable-textarea .grippie{
   width: 100%;
-  margin-left: 5px;
 }
 
 #nexus-states div.state .form-item input{
-  width: 200px;
+  width: 50%;
 }
 
 #nexus-states div.state.delete-state{
@@ -595,6 +603,7 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 #nexus-states .state-description{
   display: none;
 }
+
 
 
 /* Project settings */
@@ -717,21 +726,6 @@ padding: 12px;
 #dialog div.error, #dialog div.warning{
   background: #ea1717;
   border-color: #cd0202;
-}
-
-
-/*  Beauty tips */
-
-.bt-character-info{
-  opacity: 0.6;
-  -moz-opacity: 0.6;
-  filter:alpha(opacity=60);
-}
-
-.bt-error-message{
-  opacity: 0.6;
-  -moz-opacity: 0.6;
-  filter:alpha(opacity=60);
 }
 
 

@@ -170,7 +170,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     
       }
       
-    $collapsed_taxa = nexus_get_collapsed_taxa(array_keys($node->taxonomy));  
+    $collapsed_taxa = nexus_get_collapsed_taxa($node->taxonomy);  
     
     }
 
@@ -179,7 +179,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     
     // Get the relationship data for child terms
     $nexus_relationships = nexus_get_relationships($node->character_root_tid);
-    
+
     nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
 
     if($matrix_editor->options['no_tree']){
