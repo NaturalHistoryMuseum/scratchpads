@@ -11,7 +11,7 @@
  */
 function scratchpad_profile_details(){
   return array(
-    'name' => 'Scratchpad http://scratchpads.eu',
+    'name' => 'Scratchpad',
     'description' => 'Select this profile to enable a whole suite of modules to make entering biodiversity and taxonomic information on to your site easier.'
   );
 }
