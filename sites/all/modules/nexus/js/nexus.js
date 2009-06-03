@@ -98,8 +98,13 @@ function nexus() {
         var $this = $(this);
         
           if(id == 'edit-taxa' &! gotTree){
+
+            // if(typeof TREE != 'undefined'){
+            //   
+            //   TREE.displayTree($('#edit-taxa ul').attr('id'));
+            //   
+            // }
             
-            TREE.displayTree($('#edit-taxa ul').attr('id'));
             
             gotTree = true;
             
@@ -383,7 +388,7 @@ function nexus() {
        
        $("#dialog").fadeIn('fast');
        
-       setTimeout(self.hideDialog, 2000);
+       setTimeout(self.hideDialog, 2500);
 
      },
      

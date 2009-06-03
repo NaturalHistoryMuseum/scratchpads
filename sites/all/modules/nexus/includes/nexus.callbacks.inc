@@ -163,17 +163,9 @@ function nexus_callback_delete_state(){
   $form_state = array('storage' => NULL, 'submitted' => FALSE); 
   $form = form_get_cache($form_build_id, $form_state);
 
-  $count = 0;
+  $count = count(element_children($form['states_wrapper']['states']));
   
   $form['states_count']--;
-
-  foreach($form['states_wrapper']['states'] as $key => $state){
-    
-    if(is_numeric($key)){
-      $count++;
-    }
-    
-  }
 
   unset($form['states_wrapper']['states'][$count]);
 
@@ -225,7 +217,7 @@ function nexus_callback_inherit_states(){
       $states_updated = false; 
 
       // Delete any currently selected states
-      $currently_selected_states = nexus_get_nodes_at_intersection(array($taxa_tid, $character_tid), array('nexus_state'));
+      $currently_selected_states = nexus_get_nodes_at_intersection(array($taxa_tid, $character_tid), array('nexus_controlled_state'));
 
       if(count($currently_selected_states)){
         
@@ -238,7 +230,7 @@ function nexus_callback_inherit_states(){
 
       foreach($taxa_tid_children as $child_taxa_tid){
 
-      $intersection_nodes = nexus_get_nodes_at_intersection(array($child_taxa_tid, $character_tid), array('nexus_state'));
+      $intersection_nodes = nexus_get_nodes_at_intersection(array($child_taxa_tid, $character_tid), array('nexus_controlled_state'));
 
         if(count($intersection_nodes)){
 
@@ -693,7 +685,7 @@ function nexus_callback_save_state(){
   $or = $_POST['or'];
 
   // Get all the states currently selected
-  $current_state_nodes = nexus_get_nodes_at_intersection(array($character_tid, $taxa_tid), array('nexus_state'));
+  $current_state_nodes = nexus_get_nodes_at_intersection(array($character_tid, $taxa_tid), array('nexus_controlled_state'));
   
   if(count($current_state_nodes)){
     

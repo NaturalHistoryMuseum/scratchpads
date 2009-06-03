@@ -14,7 +14,8 @@ function nexus_menu(){
   $items['character_projects'] = array(
     'title' => 'Character projects',
     'page callback' => 'nexus_list_projects_page',
-    'access arguments' => array('access nexus projects'),
+    'access callback' => 'nexus_access',
+    'access arguments' => array('view'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'nexus.pages.inc',
     'file path' => drupal_get_path('module', 'nexus').'/includes/', 
@@ -30,7 +31,8 @@ function nexus_menu(){
     'title' => 'Add project',
     'page callback' => 'node_add',
     'page arguments' => array('nexus-project'),
-    'access callback' => '_node_add_access',
+    'access callback' => 'nexus_access',
+    'access arguments' => array('create'),
     'weight' => 1,
     'type' => MENU_LOCAL_TASK,
     'parent' => 'nexus',
@@ -43,8 +45,8 @@ function nexus_menu(){
     'title' => 'Add project',
     'page callback' => 'nexus_callback',
     'page arguments' => array(2),
-    'access callback' => 'node_access',
-    'access arguments' => array('update', 1),
+    'access callback' => 'nexus_access',
+    'access arguments' => array('update'),
     'type' => MENU_CALLBACK,
     'file' => 'nexus.callbacks.inc',
     'file path' => drupal_get_path('module', 'nexus').'/includes/',
@@ -122,7 +124,14 @@ function nexus_project_node_page_edit($node){
   
   $output .= '<div id="export-data" class="tab">';
   // $output .= drupal_get_form('nexus_export_form');
-  $output .= '<p>'.t("Nexus import / export coming soon...").'</p>';
+  $output .= '<h1>'.t("Coming soon").'</h1>';
+  $output .= '<p>Nexus data file - for phylogeny reconstruction</p>';
+  $output .= '<p>CSV text file - for generalized export</p>';
+  $output .= '<p>Printable single access key - for identification</p>';
+  $output .= '<p>Multi access (matrix) key - for identification</p>';
+  $output .= '<p>Printable character list - formatted for publication</p>';
+  $output .= '<p>Printable monograph - formatted for publication</p>';
+  
   $output .= '</div>';
   
   $output .= '<div id="data-editor" class="tab">';
@@ -177,7 +186,7 @@ return array(
   ),
   
   // Qualitative data - user inputed data
-  'nexus_state' => array( 
+  'nexus_controlled_state' => array( 
     'name'=>t('Nexus controlled state'),//Required. 
     'module'=>'nexus', //Required. 
     'description'=>t('A controlled state for a character.'), // Required.    
@@ -216,25 +225,29 @@ return array(
 /** 
 * Implementation of hook_access(). 
 */ 
-function nexus_access($op, $node, $account) { 
+function nexus_access($op, $node = null, $account = null) { 
   
 $is_author = $account->uid == $node->uid; 
 
   switch ($op) { 
+    
+    case 'view': 
+  
+    return user_access('view nexus projects');
   
     case 'create': 
 
-    return user_access('create '.$node->type, $account); 
+    return user_access('create nexus projects', $account); 
 
     case 'update': 
  
-    return (user_access('edit own '.$node->type, $account) && $is_author) 
-      || user_access('edit any '.$node->type, $account); 
+    return (user_access('edit own nexus projects', $account) && $is_author) 
+      || user_access('edit any nexus projects', $account); 
 
     case 'delete': 
 
-    return (user_access('delete own '.$node->type, $account) && $is_author) 
-      ||  user_access('delete any '.$node->type, $account); 
+    return (user_access('delete own nexus projects', $account) && $is_author) 
+      ||  user_access('delete any nexus projects', $account); 
 
   } 
   
@@ -259,10 +272,11 @@ function nexus_perm(){
   
   $perm = array(
     'create nexus projects', 
-    'edit nexus projects',
+    'edit any nexus projects',
     'edit own nexus projects',
-    'access nexus projects',
-    'delete nexus projects'
+    'view nexus projects',
+    'delete any nexus projects',
+    'delete own nexus projects'
   );
   
   return $perm;
@@ -549,7 +563,7 @@ function nexus_get_controlled_characters_in_project($project_nid){
   $sql = "SELECT DISTINCT tn.tid FROM {term_node} tn 
           INNER JOIN {node} n ON n.nid = tn.nid 
           INNER JOIN {term_hierarchy} th ON tn.tid = th.tid
-          WHERE n.type = 'nexus_state' AND th.parent IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)";
+          WHERE n.type = 'nexus_controlled_state' AND th.parent IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)";
   
   $result = db_query($sql, $character_root_tid);
   
@@ -567,7 +581,7 @@ function nexus_get_controlled_characters_in_project($project_nid){
 /** 
 * Get states for a character
 */
-function nexus_get_states_for_character($tid){
+function nexus_get_states_for_character($tid, $state_type = 'nexus_controlled_state'){
   
   $nodes = array();
 
@@ -575,18 +589,14 @@ function nexus_get_states_for_character($tid){
             FROM {node} n 
             INNER JOIN {node_revisions} nr ON n.vid = nr.vid 
             INNER JOIN {term_node} tn ON n.vid = tn.vid 
-            WHERE n.type = "nexus_state" AND tn.tid = %d
+            WHERE n.type = "%s" AND tn.tid = %d
             ORDER BY n.sticky DESC';
-            
-  $result = db_query($sql, $tid);
+  
+  $result = db_query($sql, array($state_type, $tid));
    
    while ($node = db_fetch_object($result)) {
    
-      $nodes[$node->nid] = array(
-        'state' => $node->title,
-        'state_description' => $node->body,
-        'nid' => $node->nid
-      );
+      $nodes[$node->nid] = $node;
    
    }
    
@@ -641,7 +651,7 @@ function nexus_get_taxa_vid($vid){
 /** 
 * Get the nodes at the intersection of two tids
 */
-function nexus_get_nodes_at_intersection($tids, $node_types = array('nexus_note', 'nexus_state', 'nexus_free_state')){
+function nexus_get_nodes_at_intersection($tids, $node_types = array('nexus_note', 'nexus_controlled_state', 'nexus_free_state')){
     
   $type_placeholders = db_placeholders($node_types, 'text');
      
@@ -861,6 +871,11 @@ function theme_nexus_column_data($term){
  */
 function nexus_preprocess_nexus_project_list_item(&$variables) {
 
+  $path = drupal_get_path('module', 'nexus');
+  drupal_add_css($path.'/css/pages.css');
+
+  global $user;
+
   $taxa_vocabulary = taxonomy_vocabulary_load($variables['node']->taxa_vid);
 
   $variables['title'] = l($variables['node']->title, 'node/'.$variables['node']->nid);
@@ -869,11 +884,25 @@ function nexus_preprocess_nexus_project_list_item(&$variables) {
   
   $variables['taxa'] = $taxa_vocabulary->name;
   
-  $variables['delete'] = l(
-    t('Delete'), 
-    'node/'.$variables['node']->nid.'/delete', 
-    array('query' => array('destination' => 'character_projects'))
-  );
+  if(nexus_access('delete', $variables['node'], $user)){
+
+    $variables['delete'] = l(
+      t('Delete'), 
+      'node/'.$variables['node']->nid.'/delete', 
+      array('query' => array('destination' => 'character_projects'))
+    );
+    
+  }
+  
+  if(nexus_access('update', $variables['node'], $user)){
+
+    $variables['edit'] = l(
+      t('Edit'), 
+      'node/'.$variables['node']->nid.'/edit'
+    );
+    
+  }
+
 
   return $variables;
 
@@ -1054,7 +1083,7 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
               
             }else{
               
-              $form['taxonomy'][$vid]['#no_tree'] = true;
+              // $form['taxonomy'][$vid]['#no_tree'] = true;
               
             }
 
@@ -1229,15 +1258,16 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     $form['type'] = array(
       '#type' => 'radios',
       '#title' => t('Type of character'),
-      '#default_value' => 'text',
+      '#default_value' => ($character_tid ? 'text' : 'controlled'),
       '#options' => array(
+        'controlled' => t('Controlled'),
         'text' => t('Text'), 
-        'numeric' => t('Numeric'), 
-        'controlled' => t('Controlled character')),
+        'numeric' => t('Numeric')),
       '#required' => TRUE,
-      '#description' => '<p class="text">'.t('User can enter any text to describe the character').'</p>
-      <p class="numeric">'.t('Input must be numeric - useful for measurements.').'</p>
-      <p class="controlled">'.t('The user will be asked to select from the controlled states below.').'</p>',  
+      '#description' => '<p class="text">'.t('Unrestricted input - useful for text descriptions').'</p>
+      <p class="numeric">'.t('Numeric input - useful for measurements.').'</p>
+      <p class="controlled">'.t('  Restricted to the states below - useful for building
+        phylogenies & keys.').'</p>',  
       '#prefix' => '</div><div class="columns" id="right"><div class="inner"><div id="character-type">',
       '#suffix' => '</div>' 
     );
@@ -1247,16 +1277,22 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
        // What type of character is this?
        if($character_tid && empty($form_state['values']['op'])){
          
-         $nexus_states = nexus_get_states_for_character($character_tid); 
+         $nexus_controlled_states = nexus_get_states_for_character($character_tid); 
      
-         if(count($nexus_states)){
+         if(count($nexus_controlled_states)){
            
-           $nexus_state_nids = array_keys($nexus_states);
+           $nexus_controlled_state_nids = array_keys($nexus_controlled_states);
            
            $form['type']['#default_value'] = 'controlled';
            
-           foreach($nexus_state_nids as $nexus_state_nid){
-             $form_state['values']['states'][] = $nexus_states[$nexus_state_nid];
+           foreach($nexus_controlled_state_nids as $nexus_controlled_state_nid){
+             
+             $form_state['values']['states'][] = array(
+               'nid' => $nexus_controlled_states[$nexus_controlled_state_nid]->nid,
+               'state_description' => $nexus_controlled_states[$nexus_controlled_state_nid]->body,
+               'state' => $nexus_controlled_states[$nexus_controlled_state_nid]->title
+              );
+              
            }  
            
          }elseif(nexus_is_numeric_state($character_tid)){
@@ -1308,7 +1344,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
          $nid = isset($states[$delta]['nid']) ? $states[$delta]['nid'] : '';      
          $state = isset($states[$delta]['state']) ? $states[$delta]['state'] : '';
          $state_description = isset($states[$delta]['state_description']) ? $states[$delta]['state_description'] : '';
-         $form['states_wrapper']['states'][$delta] = _nexus_state_form($delta, $nid, $state, $state_description);
+         $form['states_wrapper']['states'][$delta] = _nexus_controlled_state_form($delta, $nid, $state, $state_description);
        
        }
      
@@ -1317,7 +1353,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
        '#value' => t('Add another state'),
        '#description' => t("If the amount of boxes above isn't enough, click here to add more states."),
        '#weight' => 1,
-       '#submit' => array('nexus_state_form_submit'), // If no javascript action.
+       '#submit' => array('nexus_controlled_state_form_submit'), // If no javascript action.
        '#ahah' => array( 
          'path' => 'nexus/callback/state_form_submit', 
          'wrapper' => 'nexus-states',
@@ -1556,17 +1592,12 @@ function nexus_character_form_submit($form, &$form_state){
     case 'controlled':
     // If controlled, loop through all the states and save the state nodes
     
-      // print_r($form_state['post']['states']);
-      // exit;
-    
       if(count($form_state['post']['states'])){
         
         $weight = 0;
           
         foreach($form_state['post']['states'] as $state){
-          
-          // print_r($state);
-          
+
           if(!$state['state']){
             continue;
           }
@@ -1577,7 +1608,7 @@ function nexus_character_form_submit($form, &$form_state){
           }else{
             $state_node = new stdClass();
             $state_node->uid = $user->uid;
-            $state_node->type = 'nexus_state';
+            $state_node->type = 'nexus_controlled_state';
             $state_node->status = 1;
             $state_node->name = $user->name;
             $state_node->taxonomy = array($character_vid => $character_term['tid']);
@@ -1597,6 +1628,8 @@ function nexus_character_form_submit($form, &$form_state){
       
       nexus_delete_term_setting($character_term['tid'], 'numeric');
       
+      nexus_delete_free_states($character_term['tid']);
+      
     
     break;
     
@@ -1604,6 +1637,13 @@ function nexus_character_form_submit($form, &$form_state){
     
       nexus_update_term_setting($character_term['tid'], 'numeric', 1);      
     
+      // If this has been changed to numeric from text, we need to delete all non numeric free states
+      if($form['type']['#default_value'] == 'text'){
+        
+        nexus_delete_free_states($character_term['tid'], true);
+        
+      } 
+
     
     break;
     
@@ -1660,6 +1700,29 @@ function nexus_delete_nodes($nodes){
       }
       
 
+    }
+    
+  }
+  
+}
+
+/**
+ * Delete any free state nodes which aren't numeric
+ */
+function nexus_delete_free_states($character_tid, $numeric_only = false){
+  
+  $nexus_free_states = nexus_get_states_for_character($character_tid, 'nexus_free_state');
+  
+  if(count($nexus_free_states)){
+    
+    foreach($nexus_free_states as $nexus_free_state){
+            
+      if($numeric_only && is_numeric($nexus_free_state->body)){
+        continue;
+      }  
+        
+      node_delete($nexus_free_state->nid);
+      
     }
     
   }
@@ -1993,7 +2056,7 @@ function nexus_delete_relationship($character_tid, $taxa_tid){
 }
 
 
-function _nexus_state_form($delta, $nid = null, $state = '', $state_description = 0) {
+function _nexus_controlled_state_form($delta, $nid = null, $state = '', $state_description = 0) {
 
   $path = drupal_get_path('module', 'nexus');
 
@@ -2020,7 +2083,7 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
     '#attributes' => array('class' => 'delta')
   );
 
-  $state_label = $nexus_node_info['nexus_state']['title_label'] .' '. ($delta + 1);
+  $state_label = $nexus_node_info['nexus_controlled_state']['title_label'] .' '. ($delta + 1);
 
   $form['state'] = array(
     '#type' => 'textfield',
@@ -2035,7 +2098,7 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
 
   $form['state_description'] = array(
     '#type' => 'textarea',
-    '#title' => $nexus_node_info['nexus_state']['body_label'],
+    '#title' => $nexus_node_info['nexus_controlled_state']['body_label'],
     '#size' => 5,
     '#required' => FALSE,
     '#parents' => array('states', $delta, 'state_description'),
@@ -2080,7 +2143,7 @@ function _nexus_state_form($delta, $nid = null, $state = '', $state_description 
  * User has submitted add option form
  * Passed validation so increase option count to display new row when form is renexusred
  */
-function nexus_state_form_submit($form, &$form_state) {
+function nexus_controlled_state_form_submit($form, &$form_state) {
   // Set the form to rebuild and run submit handlers.
   
   // Make the changes we want to the form state.
@@ -2149,12 +2212,7 @@ function nexus_project_node_edit_form_validate($form, &$form_state){
 
     case $form['settings']['submit']['#value']:
     
-      // BTODO: Is there a better way of doing this?
       $form_state['values']['changed'] = node_last_changed($form_state['values']['nid']);
-    
-      // if($form_state['storage']['node_changed']){
-      //   $form_state['values']['changed'] = $form_state['storage']['node_changed'];
-      // }
  
       node_validate($form_state['values'], $form);
     

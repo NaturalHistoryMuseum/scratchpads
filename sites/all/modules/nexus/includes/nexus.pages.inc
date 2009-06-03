@@ -16,7 +16,7 @@ function nexus_list_projects_page() {
 
     }
 
-    $output = theme('item_list', $project_list);
+    $output = theme('item_list', $project_list, null, 'ul', array('id' => 'nexus-projects'));
     
   }else{
     

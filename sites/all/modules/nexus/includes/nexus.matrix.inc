@@ -86,11 +86,9 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         );
         
         // Get options for this character
-        $nexus_states = nexus_get_states_for_character($character_term->tid);      
-        // 
-        // print_r($nexus_states);
+        $nexus_controlled_states = nexus_get_states_for_character($character_term->tid);      
 
-        if(count($nexus_states)){
+        if(count($nexus_controlled_states)){
         
           $column['setValueHandler'] = 'nexusControlledStateUpdateItem';
           $column['validator'] = 'nexusControlledStateValidator';
@@ -99,12 +97,17 @@ function nexus_project_get_matrix_data($node, $editable = true) {
           
           $column['states'] = $default_states;  
 
-          foreach($nexus_states as $nexus_state){
+          foreach($nexus_controlled_states as $nexus_controlled_state){
 
-            $column['states'][$x] = $nexus_state; 
+
+            $column['states'][$x] = array(
+              'state' => $nexus_controlled_state->title,
+              'state_description' => $nexus_controlled_state->body,
+              'nid' => $nexus_controlled_state->nid
+            );
             
             // Save the order number for each nid so we can use it as the default value
-            $state_order_number[$nexus_state['nid']] = $x;
+            $state_order_number[$nexus_controlled_state->nid] = $x;
             $x++;
           
           }
@@ -261,7 +264,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
          
           switch($nexus_nodes[$x]->type){
                           
-            case 'nexus_state':
+            case 'nexus_controlled_state':
                 
               $data_item[$character_term->tid] .= $conj.$state_order_number[$nexus_nodes[$x]->nid]; 
 

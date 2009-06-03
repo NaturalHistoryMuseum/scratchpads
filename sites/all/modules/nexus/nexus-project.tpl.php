@@ -1,5 +1,14 @@
 <h2><?php echo $title ?></h2>
-<?php echo $delete ?>
+<p class="description"><?php echo $taxa ?></p>
+
+<?php if($description): ?>
+<div class="body"> 
 <?php echo $description ?>
-<p><strong>Taxa: </strong><?php echo $taxa ?></p>  
+</div>
+<?php endif; ?>
+
+<?php if($edit || $delete): ?>
+<p class="controls"><span><?php echo $edit ?></span><span><?php echo $delete ?></span><p>
+<?php endif; ?>  
+ 
 

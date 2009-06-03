@@ -35,7 +35,7 @@ $nexus_node_info = nexus_node_info();
   
   // Controlled states need to be ordered by weight
   module_load_include('inc', 'weight', 'weight.admin');  
-  weight_old_nodes(array('nexus_state' => 'nexus_state'));
+  weight_old_nodes(array('nexus_controlled_state' => 'nexus_controlled_state'));
 
 
 }
