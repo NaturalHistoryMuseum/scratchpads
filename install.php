@@ -1054,20 +1054,17 @@ function install_configure_form(&$form_state, $url) {
     '#required' => TRUE,
     '#weight' => -5,
   );
-  /*
   $form['admin_account']['account']['pass'] = array(
     '#type' => 'password_confirm',
     '#required' => TRUE,
     '#size' => 25,
     '#weight' => 0,
   );
-  */
 
   $form['server_settings'] = array(
     '#type' => 'fieldset',
     '#title' => st('Server settings'),
-    '#collapsed' => TRUE,
-    '#collapsible' => TRUE,
+    '#collapsible' => FALSE,
   );
   $form['server_settings']['date_default_timezone'] = array(
     '#type' => 'select',
@@ -1154,7 +1151,7 @@ function install_configure_form_submit($form, &$form_state) {
 
   // We precreated user 1 with placeholder values. Let's save the real values.
   $account = user_load(1);
-  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 0); // Changed status to be blocked - SDRycroft
+  $merge_data = array('init' => $form_state['values']['mail'], 'roles' => array(), 'status' => 1);
   user_save($account, array_merge($form_state['values'], $merge_data));
   // Log in the first user.
   user_authenticate($form_state['values']);
