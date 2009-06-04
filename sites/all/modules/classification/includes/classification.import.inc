@@ -583,6 +583,7 @@ function classification_import_names($form, $form_state){
  * File import function
  */
 function classification_import_file($form, &$form_state){
+  echo "HERE";exit;
   set_time_limit ( 180 );
   if ($form_state ['values'] ['vid'] == 0) {
     form_set_error ( 'vid', t ( 'Please select a vocabulary for classification' ) );
