@@ -225,7 +225,6 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       '#value' => user_password() // Not ideal, but it's only set for seconds!
     );
     $form['#submit'] = array('scratchpadify_install_configure_form_submit');
-    debug_print_backtrace();exit;
   }
 }
 
