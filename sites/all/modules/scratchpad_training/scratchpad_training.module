@@ -8,16 +8,17 @@
  */
 
 function scratchpad_training_form_alter(&$form, $form_state, $form_id){
+  echo $form_id;
   $form_state = array (
     'storage' => NULL, 
     'submitted' => true, 
     'values' => array (
       'site_name' => 'Drupal6 Too', 
-      'site_mail' => 'simon@rycroft.name', 
+      'site_mail' => 'scratchpad@nhm.ac.uk', 
       'account' => array (
-        'name' => 'sdfhklahsdg', 
-        'mail' => 'simon@rycroft.name', 
-        'pass' => 'WQrW3ZZ9CU' ), 
+        'name' => 'user',
+        'mail' => 'scratchpad@nhm.ac.uk', 
+        'pass' => 'password' ), 
       'date_default_timezone' => '3600', 
       'clean_url' => '1', 
       'update_status_module' => array (
@@ -33,11 +34,11 @@ function scratchpad_training_form_alter(&$form, $form_state, $form_id){
       '#weight' => 15, 
       '#post' => array (
         'site_name' => 'Drupal6 Too', 
-        'site_mail' => 'simon@rycroft.name', 
+        'site_mail' => 'scratchpad@nhm.ac.uk',
         'account' => array (
-          'name' => 'sdfhklahsdg', 
-          'mail' => 'simon@rycroft.name', 
-          'pass' => 'feNGoYxiYK' ), 
+          'name' => 'user',
+          'mail' => 'scratchpad@nhm.ac.uk', 
+          'pass' => 'password' ),  
         'date_default_timezone' => '3600', 
         'clean_url' => '1', 
         'update_status_module' => array (
@@ -65,5 +66,5 @@ function scratchpad_training_form_alter(&$form, $form_state, $form_id){
         0 => 'form_expand_ahah' ), 
       '#id' => 'edit-submit' ), 
     'redirect' => NULL );
-  scratchpadify_install_configure_form_submit($form, &$form_state);
+  scratchpadify_install_configure_form_submit($form, $form_state);
 }
