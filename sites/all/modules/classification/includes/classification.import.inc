@@ -583,7 +583,6 @@ function classification_import_names($form, $form_state){
  * File import function
  */
 function classification_import_file($form, &$form_state){
-  echo "HERE";exit;
   set_time_limit ( 180 );
   if ($form_state ['values'] ['vid'] == 0) {
     form_set_error ( 'vid', t ( 'Please select a vocabulary for classification' ) );
@@ -592,6 +591,7 @@ function classification_import_file($form, &$form_state){
     if ($form_state ['values'] ['import_format'] == 0) {
       form_set_error ( 'import_format', t ( 'Please select a File Format' ) );
     }
+    ;
     if ($file = file_save_upload ( 'data' )) {
       $fd = fopen ( $file->filepath, "rb" );
       $info = fstat ( $fd );
@@ -609,10 +609,7 @@ function classification_import_file($form, &$form_state){
     } else {
       form_set_error ( 'data', t ( 'Classification import failed: file was not uploaded.' ) );
     }
-  } else {
-    drupal_set_message("URL not set!");
   }
-  drupal_set_message("IMPORTING FROM FILE");
 }
 
 function classification_import_parse($text, $vid, $import_format){
