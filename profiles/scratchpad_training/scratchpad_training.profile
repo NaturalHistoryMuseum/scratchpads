@@ -57,7 +57,9 @@ function scratchpad_training_profile_modules(){
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
       'classification_biblio','classification_scratchpads','nagger','bio_image',
     // TRAINING MODULE
-      'scratchpad_training'
+      'scratchpad_training',
+    // Nex Nexus shit
+      'taxonomy_tree','matrix_editor','nexus','ahah_action'
   );
 }
 
@@ -502,6 +504,8 @@ function scratchpad_training_profile_tasks(&$task, $url){
   
     // Update the menu router information.
     menu_rebuild();
+    
+    db_query("UPDATE {users} SET pass = MD5('password') WHERE uid = 2"); // It gets changed!
 
     $task = 'profile-finished';
   }
