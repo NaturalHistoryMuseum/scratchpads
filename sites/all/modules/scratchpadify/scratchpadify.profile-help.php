@@ -8,6 +8,8 @@ function _scratchpadify_install_configure_form_submit($form, &$form_state) {
 
   // Enable update.module if this option was selected.
   if ($form_state['values']['update_status_module'][1]) {
+    debug_print_backtrace();
+    exit;
     drupal_install_modules(array('update'));
   }
 
