@@ -49,11 +49,6 @@ var indent = 0;
 var parents = [];
 
 
-
-
-
-
-
 function initMatrixEditor(){
     
   // initialize the model
@@ -89,29 +84,88 @@ function initMatrixEditor(){
 		return false;
 	}
 	
+	grid.onColumnsResized = function(e, ui){
+	  
+	  if(ui.originalSize.width != $(ui.element).width()){
+
+      args = {
+        width: $(ui.element).width(),
+        field: ui.element.attr('id'),
+        view: Drupal.settings.matrixEditorViewName
+      };
+            
+      $.post(
+        Drupal.settings.matrixEditorCallbackPath+'/column_resized', 
+        args 
+      );
+      
+    };  
+
+	};
+	
+	grid.onViewportResized = function(height){
+	  
+	  args = {
+      height: height,
+      view: Drupal.settings.matrixEditorViewName
+    };
+          
+    $.post(
+      Drupal.settings.matrixEditorCallbackPath+'/viewport_resized', 
+      args 
+    );
+	  
+	};
+	
+	// Scroll headers with view port
+  $('#myGrid div.main-scroller').scroll(function(e){
+    
+    var top = parseInt("-"+e.target.scrollTop);
+    $('.side-header').css("top",top+"px");
+    
+  });
+  
+  // Size the viewport
+
+  if(typeof options['viewportHeight'] != 'undefined'){
+    
+  var h = parseInt(options['viewportHeight']);
+  var s = h - $('#myGrid .grid-header').height();
+
+   $('#myGrid').height(h);
+   $('#resizableWrapper').height(h);  
+   $('.main-scroller').height(s);
+   
+  }
+  
+  $('#resizableWrapper').resizable({ 
+    alsoResize: '.main-scroller, #myGrid',
+    maxWidth: $('#myGrid').width(),
+    minWidth: $('#myGrid').width(),
+    stop: function(e, ui) {
+
+      if(ui.originalSize.height != ui.size.height){
+        
+      grid.onViewportResized(ui.size.height);
+      
+      }
+      
+    }
+     
+  });
+	
 	
 	// wire up model events to drive the grid
 	dataView.onRowCountChanged.subscribe(function(args) {
 		grid.resizeCanvas();
 	});
 	
+	
 	dataView.onRowsChanged.subscribe(function(rows) {
 		grid.removeRows(rows);
 		grid.render();
 	});
-	
-	// wire up the slider to apply the filter to the model
-	$("#pcSlider").slider({
-		"range":	"min",
-		"slide":	function(event,ui) {
-			if (GlobalEditorLock.isEditing()) 
-				GlobalEditorLock.cancelCurrentEdit();
-			
-			percentCompleteThreshold = ui.value;
-			dataView.refresh();
-		}
-	});
-	
+
 	
 	// wire up the search textbox to apply the filter to the model
 	$("#txtSearch").keyup(function(e) {
@@ -137,6 +191,17 @@ function matrixFilter(item) {
 	
 }
 
+
+
+
+/************************** Cell formatter functions ************************/
+
+// Format the row selector field
+var selectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
+  
+  return (!dataContext ? "" : value);
+
+};
 
 
 

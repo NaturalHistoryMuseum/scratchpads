@@ -114,14 +114,6 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
     this.init();
 }
 
-/************************** Cell formatter functions ************************/
-
-// Format the row selector field
-var nexusSelectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
-  
-  return (!dataContext ? "" : value);
-
-};
 
 /************************** Cell validator functions ************************/
 

@@ -18,7 +18,9 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     'enableCellNavigation' => $editable,
     'asyncEditorLoading' => false,
     'fixedFirstColumn' => true,
-    'enableColumnReorder' => $editable
+    'enableColumnReorder' => $editable,
+    'viewportHeight' => ($node->settings['height'] ? $node->settings['height'] : 300),
+    'noTree' => false
   );
   
   // Prepare columns
@@ -183,10 +185,10 @@ function nexus_project_get_matrix_data($node, $editable = true) {
 
     nexus_matrix_editor_populate_data($tree, $node->taxonomy, $character_terms, $state_order_number, $nexus_relationships, $collapsed_taxa, $matrix_editor);
 
-    if($matrix_editor->options['no_tree']){
-      $matrix_editor->columns[0]['formatter'] = 'nexusSelectorCellFormatter';
+    if($matrix_editor->options['noTree']){
+      $matrix_editor->columns[0]['formatter'] = 'selectorCellFormatter';
     }
-
+    
     return $matrix_editor;
     
 }
@@ -229,7 +231,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
         $data_item['indent'] = 0;
         
         if($parent_tid){
-          $matrix_editor->options['no_tree'] = true;
+          $matrix_editor->options['noTree'] = true;
         }
         
       }

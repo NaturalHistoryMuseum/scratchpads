@@ -78,14 +78,11 @@ function nexus_callback_regenerate_matrix_data($nid){
   
   $matrix_editor = nexus_project_get_matrix_data($node);
   
-  $js = "var data = ".drupal_to_js($matrix_editor->data).";\r";
+  $js .= "var options = ".drupal_to_js($matrix_editor->options).";\r";
+  $js .= "var data = ".drupal_to_js($matrix_editor->data).";\r";
   $js .= "var columns = ".matrix_editor_to_js($matrix_editor->columns).";\r";
   
-  $node->settings['no_tree'] = $matrix_editor->options['no_tree'];
-  
-  ($matrix_editor->options['editable'] ? $editable = true : $editable = false);
-  
-  $js .= "initMatrixEditor(); NEXUS.init({$nid}, ".drupal_to_js($node->settings).", '".$editable."', true);\n";
+  $js .= "initMatrixEditor(); NEXUS.init({$nid});\n";
    
   $output = '<script type="text/javascript">'.$js.'</script>';
    

@@ -4,6 +4,33 @@
 include dirname(__FILE__) .'/matrix_editor.theme.inc';
 
 
+
+
+
+
+
+
+
+/** 
+* Implementation of hook_menu(). 
+*/
+function matrix_editor_menu(){
+    
+  // Menu callbacks
+  $items['matrix_editor/callback/%'] = array(
+    'page callback' => 'matrix_editor_callback',
+    'page arguments' => array(2),
+    'access callback' => 'nexus_access',
+    'access arguments' => array('update'),
+    'type' => MENU_CALLBACK,
+    'file' => 'matrix_editor.callbacks.inc',
+  );
+    
+  return $items;
+  
+}
+
+
 /**
  * Implementation of hook_views_api
  */
@@ -157,7 +184,7 @@ function _matrix_editor_add_files(){
   drupal_add_js($path.'/js/lib/slickgrid/slick.globaleditorlock.js'); 
   drupal_add_js($path.'/js/lib/slickgrid/slick.model.js');
     
-  // drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
+  drupal_add_css($path.'/js/lib/ui/css/smoothness/jquery-ui-1.7.2.custom.css'); 
   
    // Add the slickgrid files
    drupal_add_css($path.'/js/lib/slickgrid/slick.grid.css'); 

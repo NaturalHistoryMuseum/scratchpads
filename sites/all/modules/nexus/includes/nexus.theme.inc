@@ -68,13 +68,9 @@ function theme_nexus_matrix($matrix_editor, $node){
   drupal_add_css($path.'/js/plugins/bt/jquery.bt.css');
   
   drupal_add_js('var intersection_info = '.drupal_to_js($matrix_editor->intersection_info), 'inline');
-  
-  $node->settings['no_tree'] = $matrix_editor->options['no_tree'];
-  
-  ($matrix_editor->options['editable'] ? $editable = true : $editable = false);
-  
+
   drupal_add_js("$(function(){
-    \rNEXUS.init(".$node->nid.", ".drupal_to_js($node->settings).", '".$editable."');\n
+    \rNEXUS.init(".$node->nid.");\n
     })",'inline');
   drupal_add_css($path.'/css/nexus.css');
   
@@ -112,7 +108,7 @@ function theme_nexus_row_data($term, $nid, $no_tree = false){
   
   $output .= '</div>';
 
-    if($no_tree == 'null'){
+    if($no_tree == 'false'){
 
     $output .= '<div class="columns" id="right"><div class="inner">';
       

@@ -911,7 +911,7 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
               
             }else{
               
-              // $form['taxonomy'][$vid]['#no_tree'] = true;
+              $form['taxonomy'][$vid]['#no_tree'] = true;
               
             }
 

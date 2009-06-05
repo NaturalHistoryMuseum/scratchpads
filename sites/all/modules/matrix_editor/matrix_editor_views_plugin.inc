@@ -11,15 +11,17 @@ class matrix_editor_views_plugin extends views_plugin_style {
     $options = parent::option_definition();
 
     $options['editable'] = array('default' => TRUE);
-    $options['enableAddRow'] = array('default' => FALSE);
+    
+    $options['enableColumnResize'] = array('default' => TRUE);
+    $options['enableColumnReorder'] = array('default' => FALSE);
+    
     $options['enableCellNavigation'] = array('default' => TRUE);
     $options['asyncEditorLoading'] = array('default' => TRUE);
     
-    $options['enableColumnReorder'] = array('default' => FALSE);
-    $options['columnWidth'] = array('default' => 50);
-    $options['fixedFirstColumn'] = array('default' => TRUE);   
-    $options['firstColumnWidth'] = array('default' => 50);
+    $options['fixedFirstColumn'] = array('default' => TRUE);
     
+    $options['viewportHeight'] = array('default' => 200);   
+
     return $options;
     
   }
@@ -66,39 +68,41 @@ class matrix_editor_views_plugin extends views_plugin_style {
     $form['editable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Editable'),
-      '#default_value' => $this->options['editable'],
-    );
-    
-    $form['enableAddRow'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable add row'),
-      '#default_value' => $this->options['enableAddRow'],
+      '#default_value' => !empty($this->options['editable']),
     );
 
-    $form['enableCellNavigation'] = array(
+    $form['enableColumnResize'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable cell navigation'),
-      '#default_value' => $this->options['enableCellNavigation'],
+      '#title' => t('Enable resizing columns'),
+      '#default_value' => !empty($this->options['enableColumnResize']),
+    );
+    
+    $form['enableColumnReorder'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable reordering columns'),
+      '#default_value' => !empty($this->options['enableColumnReorder']),
+    );
+    
+    $form['fixedFirstColumn'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use first column as a side header'),
+      '#default_value' => !empty($this->options['fixedFirstColumn']),
     );
     
     $form['asyncEditorLoading'] = array(
       '#type' => 'checkbox',
       '#title' => t('A sync editor loading'),
-      '#default_value' => $this->options['asyncEditorLoading'],
+      '#default_value' => !empty($this->options['asyncEditorLoading']),
+    );
+    
+    $form['viewportHeight'] = array(
+      '#title' => t('Viweport height'),
+      '#type' => 'textfield',
+      '#default_value' => $this->options['viewportHeight'],
+      '#size' => 10,
+      '#maxlength' => 10,
     );
 
-    $form['enableColumnReorder'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable column reorder'),
-      '#default_value' => $this->options['enableColumnReorder'],
-    ); 
-    
-    $form['fixedFirstColumn'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use first column as headers'),
-      '#default_value' => $this->options['fixedFirstColumn'],
-    );
-    
     $form['#theme'] = 'matrix_editor_views_plugin_table';
   
 

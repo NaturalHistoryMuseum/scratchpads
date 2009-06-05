@@ -11,29 +11,19 @@ function nexus() {
   var settings = [];
   var sorting;
   var gotTree;
-  var edit;
 
   return {//
     
-    init: function(nid, node_settings, editable, regenerated) {
+    init: function(nid) {
+      
       // Attach events
       project_nid = nid; 
       self = this;
-      edit = editable;
       
-      if(node_settings){
-        settings = node_settings;
-      }
-      
-      self.initViewport();
-      
-      self.initBeautyTips();
-      
+      self.initBeautyTips();     
       self.initGroups();
-      
-      
-      
-      if(!edit){
+
+      if(!options.editable){
         return;
       }
       
@@ -46,6 +36,8 @@ function nexus() {
       grid.onColumnsReordered = self.onColumnsReordered;
       grid.onColumnsReorderStart = self.onColumnsReorderStart;
       grid.onColumnsResized  = self.onColumnsResized;
+      grid.onViewportChanged  = self.onViewportChanged;
+      grid.onViewportResized  = self.onViewportResized;
       
       self.initHeaders();
       
@@ -54,7 +46,7 @@ function nexus() {
       })
       
       // Everything past this point is for initial set up, not regeneration
-      if(regenerated){
+      if(options.regenerated){
         return;
       }
       
@@ -99,12 +91,11 @@ function nexus() {
         
           if(id == 'edit-taxa' &! gotTree){
 
-            // if(typeof TREE != 'undefined'){
-            //   
-            //   TREE.displayTree($('#edit-taxa ul').attr('id'));
-            //   
-            // }
-            
+            if(typeof TREE != 'undefined'){
+              
+              TREE.displayTree($('#edit-taxa ul').attr('id'));
+              
+            }        
             
             gotTree = true;
             
@@ -160,13 +151,6 @@ function nexus() {
         
       });
       
-      // Scroll headers with view port
-      $('#myGrid div.main-scroller').scroll(function(e){
-        
-        var top = parseInt("-"+e.target.scrollTop);
-        $('.side-header').css("top",top+"px");
-        
-      });
       
       
     },
@@ -178,59 +162,19 @@ function nexus() {
 
     },
     
-    addResizableViewport: function(){
+    onViewportResized: function(height){
 
-      $('#resizableWrapper').resizable({ 
-        alsoResize: '.main-scroller, #myGrid',
-        maxWidth: $('#myGrid').width(),
-        minWidth: $('#myGrid').width(),
-        stop: function(event, ui) {
-          
-          if(ui.originalSize.height != ui.size.height){
-            
-            args = {
-              projectNid: self.getProjectNid(),
-              setting: 'height',
-              value: ui.size.height
-            };
-            
-            $.post(
-              Drupal.settings.nexusCallback+'/update_project_setting', 
-              args 
-            );
-            
-          }
-          
-        }
-         
-      });
-
-    },
-    
-    initViewport: function(){
-      
-      self.sizeViewport();
-
-      self.addResizableViewport();
-      
-      grid.onViewportChanged  = self.onViewportChanged;
-      
-    },
-    
-    sizeViewport: function(){
-         
-      // Add the height saved in project node
-      if(typeof settings.height != 'undefined'){
+        args = {
+          projectNid: self.getProjectNid(),
+          setting: 'height',
+          value: height
+        };
         
-      var h = parseInt(settings.height);
-      var s = h - $('#myGrid .grid-header').height();
+        $.post(
+          Drupal.settings.nexusCallback+'/update_project_setting', 
+          args 
+        );
 
-       $('#myGrid').height(h);
-       $('#resizableWrapper').height(h);  
-       $('.main-scroller').height(s);
-       
-      }
-      
     },
 
     // Add beauty tips handlers - bit convoluted to ensure they play nice with sortables...
@@ -599,6 +543,8 @@ function nexus() {
     
     onSelectedRowsChanged: function() {
 
+      console.log(options);
+
        var row = grid.getSelectedRows();
       
        self.deselectColumn();
@@ -610,7 +556,7 @@ function nexus() {
          args = {
            taxa_tid: data[row]['id'],
            project_nid: self.getProjectNid(),
-           no_tree: settings.no_tree
+           no_tree: options['noTree']
          }
 
          $.post(
