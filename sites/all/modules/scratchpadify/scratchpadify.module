@@ -385,7 +385,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             $node_types = node_get_types();
             $items = array();
             foreach($node_types as $node_type => $node_type_values){
-              if($node_type == 'ispecies'){ // Grrr, I hate this, module specific code.  Is there a better way?
+              if(in_array($node_type, variable_get('scratchpadify_ignore_content_types', array('ispecies','nexus_controlled_state','nexus_note','nexus_free_state')))){ // Grrr, I hate this, module specific code.  Is there a better way?
                 continue;
               }
               $items[$node_type_values->name] = l($node_type_values->name,'node/add/'.str_replace("_","-",$node_type), array('query' => $query));
