@@ -157,22 +157,7 @@ function countriesmap_insert($node) {
       db_query("INSERT INTO {countriesmap_nodes} (vid, nid, cmid) VALUES (%d, %d, %d)", $node->vid, $node->nid, substr($key, 13));
     }
   }
-}
-
-/**
- * Implementation of hook_update().
- *
- * As an existing node is being updated in the database, we need to do our own
- * database updates.
- */
-function countriesmap_update($node) {
-  // if this is a new node or we're adding a new revision,
-  if (!$node->revision) {
-    // Updating a current revision
-    countriesmap_delete($node);
-  }
-  countriesmap_insert($node);  
-
+  // Create the image
   $level4ids = array();
   foreach($node as $key => $value){
     if(substr($key, 0, 13) == 'countriesmap_' && $value){
@@ -189,6 +174,21 @@ function countriesmap_update($node) {
   $output_path = file_directory_path().'/countriesmap_'.$node->nid.'.jpg';
   exec("composite $file $map_path $output_path");
   unlink($file);
+}
+
+/**
+ * Implementation of hook_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ */
+function countriesmap_update($node) {
+  // if this is a new node or we're adding a new revision,
+  if (!$node->revision) {
+    // Updating a current revision
+    countriesmap_delete($node);
+  }
+  countriesmap_insert($node);
 }
 
 /**
