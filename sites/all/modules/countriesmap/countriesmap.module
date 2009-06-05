@@ -167,9 +167,9 @@ function countriesmap_insert($node) {
   }
   $temp = file_directory_temp();
   $file = tempnam(realpath($temp), 'file');
-  file_put_contents($file, file_get_contents("http://edit.csic.es/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=800&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids)));
+  file_put_contents($file, file_get_contents("http://edit.csic.es/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=1600&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids)));
   exec("convert $file -fuzz 30% -transparent white $file");
-  exec("convert $file -channel A -evaluate divide 2 +channel $file");
+  exec("convert $file -channel A -evaluate divide 2 +channel -resize 800x $file");
   $map_path = drupal_get_path('module','countriesmap').'/map.jpg';
   $output_path = file_directory_path().'/countriesmap_'.$node->nid.'.jpg';
   exec("composite $file $map_path $output_path");
