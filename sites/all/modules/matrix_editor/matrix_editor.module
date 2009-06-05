@@ -1,5 +1,37 @@
 <?php
 
+
+include dirname(__FILE__) .'/matrix_editor.theme.inc';
+
+
+/**
+ * Implementation of hook_views_api
+ */
+function matrix_editor_views_api() {
+  return array('api' => 2);
+}
+
+function matrix_editor_alternate_js($set = false){
+  
+  static $use_alternate_js;
+  
+  if(!$use_alternate_js && $set){
+    
+    $jquery_version = jquery_update_get_version();
+      
+    if (!preg_match('/1.3.*/', $jquery_version)) {
+    
+      $use_alternate_js = true;
+    
+    }
+    
+  }
+  
+  return $use_alternate_js;
+  
+  
+}
+
 /** 
 * Implementation of hook_theme(). 
 */ 
@@ -12,38 +44,136 @@ function matrix_editor_theme() {
       'arguments' => array(),
     ),
     
+    'matrix_editor_views_plugin_table'=> array(
+      'arguments' => array(),
+    ),
+    
   );
       
 }
 
+
+/**
+ * Array of jQuery files to replace if jQuery is loaded.
+ */
+function matrix_editor_get_jquery_replacements() {
+  return array(
+    'module' => array(
+      'misc/farbtastic/farbtastic.js' => 'farbtastic.js',
+      'misc/teaser.js' => 'teaser.js',
+      'misc/ahah.js' => 'ahah.js',
+      'misc/jquery.form.js' => 'jquery.form.js',
+    ),
+    'core' => array(
+      'misc/tabledrag.js' => 'tabledrag.js',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ */
+function matrix_editor_theme_registry_alter(&$theme_registry) {
+
+  if (isset($theme_registry['page'])) {
+    // If jquery_update's preprocess function is there already, remove it.
+    if ($key = array_search('matrix_editor_preprocess_page', $theme_registry['page']['preprocess functions'])) {
+      unset($theme_registry['page']['preprocess functions'][$key]);
+    }
+    // Now tack it on at the end so it runs after everything else.
+    $theme_registry['page']['preprocess functions'][] = 'matrix_editor_preprocess_page';
+  }
+  
+}
+
+/**
+ * Implementation of moduleName_preprocess_hook().
+ *
+ * Replace Drupal core's jquery.js with the new one from jQuery Update module.
+ */
+function matrix_editor_preprocess_page(&$variables) {
+
+  // Only do this for pages that have JavaScript on them.
+  if (matrix_editor_alternate_js() && !empty($variables['scripts'])) {
+    
+    $path = drupal_get_path('module', 'matrix_editor') .'/js/lib/jquery';
+    
+    // Get an array of all the JavaScript files loaded by Drupal on this page.
+    $scripts = drupal_add_js();
+
+    // Replace jquery.js first.
+    $new_jquery = array($path.'/jquery.js' => $scripts['core']['misc/jquery.js']);
+    $scripts['core'] = array_merge($new_jquery, $scripts['core']);
+    unset($scripts['core']['misc/jquery.js']);
+
+    // Loop through each of the required replacements.
+    foreach (matrix_editor_get_jquery_replacements() as $type => $replacements) {
+      foreach ($replacements as $find => $replace) {
+        // If the file to replace is loaded on this page...
+        if (isset($scripts[$type][$find])) {
+          // Create a new entry for the replacement file, and unset the original one.
+          $replace = $path .'/'. $replace;
+          $scripts[$type][$replace] = $scripts[$type][$find];
+          unset($scripts[$type][$find]);
+        }
+      }
+    }
+
+    $variables['scripts'] = drupal_get_js('header', $scripts);
+    
+  }
+  
+}
+
+
+
 function _matrix_editor_add_files(){
 
-   $path = drupal_get_path('module', 'matrix_editor');
-
+  $path = drupal_get_path('module', 'matrix_editor');
 
   $ui_path = drupal_get_path('module', 'jquery_ui');
 
-
+  matrix_editor_alternate_js(true);
+  
   // Add jquery_ui files
-  jquery_ui_add(array('ui.resizable', 'ui.draggable', 'ui.droppable', 'ui.sortable', 'ui.slider', 'effects.highlight'),'none');
+  if(jquery_ui_get_version() == '1.7'){
     
-  drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
+      jquery_ui_add(array('', 'ui.draggable', 'ui.droppable', 'ui.sortable', 'ui.slider', 'effects.highlight'),'none');
+    
+  }else{
+    
+    drupal_add_js($path.'/js/lib/ui/ui.core.js');
+    drupal_add_js($path.'/js/lib/ui/ui.resizable.js');
+    drupal_add_js($path.'/js/lib/ui/ui.draggable.js'); 
+    drupal_add_js($path.'/js/lib/ui/ui.droppable.js'); 
+    drupal_add_js($path.'/js/lib/ui/ui.sortable.js'); 
+    drupal_add_js($path.'/js/lib/ui/ui.slider.js');
+    drupal_add_js($path.'/js/lib/ui/effects.core.js');
+    drupal_add_js($path.'/js/lib/ui/effects.highlight.js');
+    
+  }
+
+  drupal_add_js($path.'/js/lib/slickgrid/slick.grid.new.js'); 
+  drupal_add_js($path.'/js/lib/slickgrid/slick.globaleditorlock.js'); 
+  drupal_add_js($path.'/js/lib/slickgrid/slick.model.js');
+    
+  // drupal_add_css($ui_path.'/jquery.ui/themes/smoothness/ui.all.css'); 
   
    // Add the slickgrid files
-   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
-   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css'); 
+   drupal_add_css($path.'/js/lib/slickgrid/slick.grid.css'); 
+   drupal_add_css($path.'/js/lib/slickgrid/slick.grid.css'); 
   
-   drupal_add_css($path.'/js/plugins/Slickgrid/slick.grid.css');   
+   drupal_add_css($path.'/js/lib/slickgrid/slick.grid.css');   
   
-   drupal_add_js($path.'/js/plugins/Slickgrid/slick.editors.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/slick.grid.new.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/slick.globaleditorlock.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/slick.model.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/slick.editors.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/slick.grid.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/slick.globaleditorlock.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/slick.model.js'); 
   
-   // Add clickgrid dependencies
-   drupal_add_js($path.'/js/plugins/Slickgrid/lib/firebugx.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.getScrollbarWidth.js'); 
-   drupal_add_js($path.'/js/plugins/Slickgrid/lib/jquery.rule-1.0.1-min.js'); 
+   // Add slickgrid dependencies
+   drupal_add_js($path.'/js/lib/slickgrid/lib/firebugx.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/lib/jquery.getScrollbarWidth.js'); 
+   drupal_add_js($path.'/js/lib/slickgrid/lib/jquery.rule-1.0.1-min.js'); 
   
    // Slickgrid needs to have style in the head to work
    drupal_set_html_head('<style></style>');
@@ -114,30 +244,6 @@ function matrix_editor_to_js($elements, $additional_function_names = array()){
 
 
 
-function theme_matrix_editor($matrix_editor){
-  
-  _matrix_editor_add_files();
-
-  drupal_add_js('var options = '.drupal_to_js($matrix_editor->options), 'inline');    
-  drupal_add_js('var data = []; data = '.drupal_to_js($matrix_editor->data), 'inline');
-   
-  if(!$matrix_editor->filter){
-    $matrix_editor->filter = 'matrixFilter';
-  }
-  
-  drupal_add_js('var filter = '.$matrix_editor->filter, 'inline');
-  drupal_add_js('var columns = '.matrix_editor_to_js($matrix_editor->columns).';', 'inline');
-
-  $output = '<div id="resizableWrapper">
-  <div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows '.($matrix_editor->options['editable'] ? 'editable' : '').'">
-  </div></div>';
-    
-  drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
-  
-  return $output;
-  
-  
-}
 
 
 

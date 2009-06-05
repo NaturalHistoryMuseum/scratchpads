@@ -128,6 +128,15 @@ function initMatrixEditor(){
   
 }
 
+function matrixFilter(item) {
+		
+	if (searchString != "" && item["title"].indexOf(searchString) == -1)
+		return false;
+		
+	return true;
+	
+}
+
 
 
 
