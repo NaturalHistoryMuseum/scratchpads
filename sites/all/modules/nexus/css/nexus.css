@@ -3,62 +3,11 @@
   min-width: 850px; 
 }
 
-#myGrid{
-  background-color: #f8f8f8;
-  border-color: #c0c0c0;
-  border-width: 1px; 
-  border-style: solid solid none solid;
-  
-}
-
-#resizableWrapper{
-  overflow: hidden;
-}
-
-#resizableWrapper .ui-resizable-handle{
-  background: url('../images/resize_handle.png') no-repeat;
-}
-
-#resizableWrapper .ui-resizable-se{
-  bottom: -1px;
-  right: -2px;
-  cursor:s-resize;
-}
-
-#resizableWrapper .ui-resizable-e{
-  display: none!important;
-}
-
-#myGrid .ui-resizable-e{
-display: block!important;
-background: url('../images/header_resize_handle.png') no-repeat center left!important;
-z-index: 300;
-width: 11px;
-
-}
-
-#resizableWrapper .ui-resizable-s{
-  background: none;
-}
-
-#myGrid .ui-resizable-handle{
-  background-image:url(images/ui-icons_222222_256x240.png);
-  
-}
-
-#myGrid .ui-resizable-se{
-  bottom: 1px;
-  right: 1px;
-}
-
-.loading{
-  background: url('../images/preloader.gif') no-repeat 50%;
-}
 
 
-.main-data{
-  background-color: #fff;
-}
+
+
+
 
 
 
@@ -115,97 +64,6 @@ width: 11px;
 
 
 
-/* Header cells */
-
-/* Top */
-
-#myGrid div.h{
-  background: #ebebeb url('../images/header_cells_bg.gif') repeat-x!important; 
-  background-color: #f1f1f1;
-  border-width: 1px;
-  border-style: solid solid solid solid;
-  border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
-  color: #333333;
-  font-weight: normal;
-  height: 22px;
-  padding:1px 2px 2px 1px;
-}
-
-.editable div.h,
-.editable #character-groups div.scroll div,
-.editable .grid-canvas .r .c.cell-move-handle {
-  cursor: pointer;
-}
-
-/* Increase the hover area */
-#myGrid div.h span{
-  padding: 0 10px;
-}
-
-#myGrid .grid-header, #myGrid div.h span{
-  height: 28px;
-} 
-
-.grid-header .h, .grid-canvas .c{
-  text-align: center;
-}
-
-
-
-/* Side */
-
-#myGrid div.c0{
-  padding: 1px 0 2px 0;
-  text-indent: 10px;
-}
-
-#taxa{
-  cursor: auto!important;
-}
-
-
-
-.grid-canvas .r .c.cell-move-handle {
-   text-align: left;
-   border-width: 1px;
-   border-style: solid solid solid solid;
-   border-color: #f8f8f8 #cfcfcf #cfcfcf #f8f8f8 !important;
-   font-weight: normal;
-   cursor: default;
-   margin-right: 1em;
-   
-}
-
-
-
-
-
-/* Selected & hover cells */
-
-.grid-canvas .r .cell-move-handle:hover, div.c0.selected {
-background:#dadada;
-border-color: #f8f8f8 #bcbcbc #bcbcbc #f8f8f8 !important;
-}
-
-.grid-canvas .r.selected .cell-move-handle{
-  background: #EFEFEF;
-}
-
-.grid-canvas .r.selected, .selectedColumn{
-  background: #edf3fe;
-}
-
-#myGrid .grid-header .h:hover{
-background-image: url('../images/header_cells_bg_hover.gif')!important;
-}
-
-.grid-canvas .r .c.editable{
-  border-color: #7dbe40;
-}
-
-.grid-canvas .r:hover{
-  background-color: inherit;
-}
 
 
 
@@ -224,8 +82,6 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   margin-left: 10px;
   margin-top: 5px;
 }
-
-
 
 #matrix-editor-controls #search input{
   height: 15px;

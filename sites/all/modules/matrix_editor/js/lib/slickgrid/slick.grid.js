@@ -176,6 +176,8 @@ function SlickGrid($container,data,columns,options)
 			if(i == 0 && options.fixedFirstColumn){
 			  
         updateFixedColumnWidth(m.width);
+        
+        m.cssClass += ' fixed-column-header';
 			  $appendTo = $container;
 			  			  
 			}else{

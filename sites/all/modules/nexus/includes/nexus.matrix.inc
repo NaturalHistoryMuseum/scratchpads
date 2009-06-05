@@ -35,8 +35,6 @@ function nexus_project_get_matrix_data($node, $editable = true) {
       'width' => ($node->settings['taxa_column_width'] ? $node->settings['taxa_column_width'] : 350),
       'cssClass' => 'cell-move-handle',
       'formatter' => 'TaskNameFormatter',
-      'validator' => 'requiredFieldValidator',
-      'setValueHandler' => 'updateItem',
       'resizable' => ($editable ? 1 : 0) 
     );
    

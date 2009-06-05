@@ -8,6 +8,7 @@ function theme_matrix_editor($options, $columns, $data, $filter = 'matrixFilter'
   drupal_add_js('var data = []; data = '.drupal_to_js($data), 'inline');
    
   drupal_add_js('var filter = '.$filter, 'inline');
+
   drupal_add_js('var columns = '.matrix_editor_to_js($columns).';', 'inline');
 
   $output = '<div id="resizableWrapper">
@@ -67,6 +68,15 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
   
   $fields   = &$view->field;
   
+  // if($options['fixedFirstColumn']){
+  //   
+  // }else{
+  //   
+  // }
+  
+        // 'formatter' => 'TaskNameFormatter',
+  // print_r($options);
+  
   foreach ($handlers as $field => $handler) {
   
     if (!$name = $handler->label()) {
@@ -83,7 +93,6 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     );
   
   }
-
   
   foreach ($result as $num => $row) {
     
@@ -91,8 +100,7 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     
   }
   
-  
-  // print_r($options);
+
   
   $options['fixedFirstColumn'] = true;
   
