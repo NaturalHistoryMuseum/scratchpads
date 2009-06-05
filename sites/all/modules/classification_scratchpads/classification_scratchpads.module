@@ -73,8 +73,7 @@ function classification_scratchpads_menu(){
 /** 
  *Implementation of hook_menu_alter(). 
  */
-function classification_scratchpads_menu_alter(&$items){
-  
+function classification_scratchpads_menu_alter(&$items){  
   $items ['classification/import']['hidden'] = 1;
   $items ['classification/edit']['hidden'] = 1;
   $items ['classification/export']['hidden'] = 1;
@@ -82,7 +81,14 @@ function classification_scratchpads_menu_alter(&$items){
   $items ['classification/manage']['hidden'] = 1;
   $items ['classification/help']['hidden'] = 1;
   $items ['classification']['hidden'] = 1;
-
+   
+  $items ['classification/import']['type'] = MENU_LINK;
+  $items ['classification/edit']['type'] = MENU_LINK;
+  $items ['classification/export']['type'] = MENU_LINK;
+  $items ['classification/settings']['type'] = MENU_LINK;
+  $items ['classification/manage']['type'] = MENU_LINK;
+  $items ['classification/help']['type'] = MENU_LINK;
+  $items ['classification']['type'] = MENU_LINK;
 }
 
 function classification_scratchpads_js_tree($vid, $tid = ''){
