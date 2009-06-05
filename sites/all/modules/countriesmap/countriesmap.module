@@ -70,6 +70,7 @@ function countriesmap_perm() {
  * Implementation of hook_form
  */
 function countriesmap_form(&$node) {
+  drupal_add_css(drupal_get_path('module','countriesmap').'/countriesmap.css');
   $type = node_get_types('type', $node);
   if ($type->has_title) {
     $form['title'] = array(
@@ -83,31 +84,49 @@ function countriesmap_form(&$node) {
   if ($type->has_body) {
     $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
   }
+  $form['cm'] = array(
+    '#prefix' => '<div class="countriesmap"><p>Check the checkboxes of the countries below that you would like to mark on the map.</p>',
+    '#suffix' => '</div>'
+  );
   // Now we define the form elements specific to our node type.
   // Lets get the continents from the continents table - these will be used for
   // grouping the countries
   $result = db_query("SELECT * FROM {countriesmap_continents} ORDER BY continent");
   while($row = db_fetch_array($result)){
     // Create a group in the form for this continent
-    $form['continent_'.$row['conid']] = array(
+    $form['cm']['continent_'.$row['conid']] = array(
       '#type' => 'fieldset',
       '#title' => $row['continent'],
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#weight' => -20+$row['conid']
     );
-    // Fetch the countries for this continent
-    $result2 = db_query("SELECT cmid, ct.name as regionname, ci.name as countryname FROM {countriesmap_tdwg} ct,{countriesmap_iso3166} ci WHERE isocode=code AND conid = %d ORDER BY ci.name,ct.name", $row['conid']);
+    // Get all the Country groups for this continent
+    $result2 = db_query("SELECT * FROM {countriesmap_countrygroups} WHERE cgid IN (SELECT cgid FROM {countriesmap_tdwg WHERE conid = %d)", $row['conid']);
     while($row2 = db_fetch_array($result2)){
-      // Create a form element for each country
-      $fieldname = 'countriesmap_'.$row2['cmid'];
-      $form['continent_'.$row['conid']][$fieldname] = array(
-        '#type' => 'checkbox',
-        '#title' => $row2['countryname']." | ".$row2['regionname'],
-        '#default_value' => isset($node->$fieldname) && $node->$fieldname ? 1 : 0
+      // Create a group in the form for this country group
+      $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']] = array(
+        '#type' => 'fieldset',
+        '#title' => $row2['countrygroup'],
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
       );
+      // Fetch the countries for this country group
+      $result3 = db_query("SELECT cmid, ct.name as regionname, ci.name as countryname FROM {countriesmap_tdwg} ct,{countriesmap_iso3166} ci WHERE isocode=code AND cgid = %d ORDER BY ci.name,ct.name", $row2['cgid']);
+      while($row3 = db_fetch_array($result3)){
+        // Create a form element for each country
+        $fieldname = 'countriesmap_'.$row3['cmid'];
+        $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']][$fieldname] = array(
+          '#type' => 'checkbox',
+          '#title' => $row3['countryname']." | ".$row3['regionname'],
+          '#default_value' => isset($node->$fieldname) && $node->$fieldname ? 1 : 0
+        );
+      }      
     }
   }
+  $form['body_field']['#type'] = 'fieldset';
+  $form['body_field']['#title'] = t('Description');
+  $form['body_field']['#collapsed'] = 1;
+  $form['body_field']['#collapsible'] = 1;
   return $form;
 }
 
@@ -152,7 +171,24 @@ function countriesmap_update($node) {
     // Updating a current revision
     countriesmap_delete($node);
   }
-  countriesmap_insert($node);
+  countriesmap_insert($node);  
+
+  $level4ids = array();
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      // Again, we're doing this the slow way FIXME
+      $level4ids[] = array_pop(db_fetch_array(db_query("SELECT level4code FROM countriesmap_tdwg WHERE cmid = %d", substr($key, 13))));
+    }
+  }
+  $temp = file_directory_temp();
+  $file = tempnam(realpath($temp), 'file');
+  file_put_contents($file, file_get_contents("http://edit.csic.es/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=800&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids)));
+  exec("convert $file -fuzz 30% -transparent white $file");
+  exec("convert $file -channel A -evaluate divide 2 +channel $file");
+  $map_path = drupal_get_path('module','countriesmap').'/map.jpg';
+  $output_path = file_directory_path().'/countriesmap_'.$node->nid.'.jpg';
+  exec("composite $file $map_path $output_path");
+  unlink($file);
 }
 
 /**
@@ -173,6 +209,7 @@ function countriesmap_nodeapi(&$node, $op, $teaser, $page) {
 function countriesmap_delete($node) {
   // Notice that we're matching all revision, by using the node's nid.
   db_query('DELETE FROM {countriesmap_nodes} WHERE nid = %d', $node->nid);
+  unlink(file_directory_path().'/countriesmap_'.$node->nid.'.jpg');
 }
 
 /**
@@ -227,14 +264,7 @@ function countriesmap_theme() {
  */
 function theme_countriesmap_display_map($node) {
   $output = '<div class="countriesmap_map">';
-  $level4ids = array();
-  foreach($node as $key => $value){
-    if(substr($key, 0, 13) == 'countriesmap_' && $value){
-      // Again, we're doing this the slow way FIXME
-      $level4ids[] = array_pop(db_fetch_array(db_query("SELECT level4code FROM countriesmap_tdwg WHERE cmid = %d", substr($key, 13))));
-    }
-  }
-  $output .= '<img src="http://edit.csic.es/v1/areas.php?l=earth&as=a:0000ff,,1&ms='.variable_get('countriesmap_size', 800).'&bbox=-180,-90,180,90&ad=tdwg4:a:'.implode(",",$level4ids).'"/>';
+  $output .= '<img src="'.url(file_directory_path().'/countriesmap_'.$node->nid.'.jpg').'"/>';
   $output .= '</div>';
   return $output;
 }

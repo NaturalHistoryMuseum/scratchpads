@@ -42,6 +42,7 @@ function countriesmap_load_tdwg_data(){
   // Firstly, lets get the Continents and regions and populate their tables
   $continents = array();
   $regions = array();
+  $countrygroups = array();
   foreach($lines as $line){
     $line_parts = explode("\t", $line);
     if(!isset($regions[$line_parts[3]])){
@@ -53,11 +54,18 @@ function countriesmap_load_tdwg_data(){
       $regions[$line_parts[3]] = $id;
     }
     // Do exactly the same with continents
-    if(!isset($continents[$line_parts[4]])){
-      db_query("INSERT INTO {countriesmap_continents} (continent) VALUES ('%s')", $line_parts[4]);
+    if(!isset($countrygroups[$line_parts[4]])){
+      db_query("INSERT INTO {countriesmap_countrygroups} (countrygroup) VALUES ('%s')", $line_parts[4]);
       // As with regions, we're selecting, not getting the last insert id
-      $id = array_pop(db_fetch_array(db_query("SELECT conid FROM {countriesmap_continents} WHERE continent = '%s'", $line_parts[4])));
-      $continents[$line_parts[4]] = $id;
+      $id = array_pop(db_fetch_array(db_query("SELECT cgid FROM {countriesmap_countrygroups} WHERE countrygroup = '%s'", $line_parts[4])));
+      $countrygroups[$line_parts[4]] = $id;
+    }
+    // Do exactly the same with continents
+    if(!isset($continents[$line_parts[5]])){
+      db_query("INSERT INTO {countriesmap_continents} (continent) VALUES ('%s')", $line_parts[5]);
+      // As with regions, we're selecting, not getting the last insert id
+      $id = array_pop(db_fetch_array(db_query("SELECT conid FROM {countriesmap_continents} WHERE continent = '%s'", $line_parts[5])));
+      $continents[$line_parts[5]] = $id;
     }
   }
   foreach($lines as $line){
@@ -68,7 +76,7 @@ function countriesmap_load_tdwg_data(){
     if(count($line_parts)<4){
       break;
     }
-    db_query("INSERT INTO {countriesmap_tdwg} (level4code, isocode, name, regid, conid) VALUES ('%s', '%s', '%s', %d, %d)", $line_parts[0], $line_parts[1], $line_parts[2], $regions[$line_parts[3]], $continents[$line_parts[4]]);
+    db_query("INSERT INTO {countriesmap_tdwg} (level4code, isocode, name, regid, cgid, conid) VALUES ('%s', '%s', '%s', %d, %d, %d)", $line_parts[0], $line_parts[1], $line_parts[2], $regions[$line_parts[3]], $countrygroups[$line_parts[4]], $continents[$line_parts[5]]);
   }
   // Finally we'll load the iso code stuff.  Aren't we naughty, using a two
   // letter code as primary key/foreign key, ah well, it's only ~200 rows.
@@ -111,6 +119,10 @@ function countriesmap_schema(){
         'type' => 'int',
         'unsigned' => TRUE,
         'size' => 'tiny'),
+      'cgid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'tiny'),
       'regid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -135,6 +147,22 @@ function countriesmap_schema(){
       'primary key' => array('conid'),
       'unique keys' => array(
         'countriesmap_unique_continents' => array('continent'))
+  );
+  $tables['countriesmap_countrygroups'] = array(
+    'description' => 'Stores the Country Groups',
+    'fields' => array(
+      'cgid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'size' => 'tiny'),
+      'countrygroup' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE)),
+      'primary key' => array('cgid'),
+      'unique keys' => array(
+        'countriesmap_unique_countrygroup' => array('countrygroup'))
   );
   $tables['countriesmap_regions'] = array(
     'description' => 'Stores the Regions',
