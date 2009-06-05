@@ -63,7 +63,9 @@ function nexus_menu(){
 function nexus_menu_alter(&$items){
   
   $items['node/%node/edit']['page callback'] = 'nexus_node_page_edit';
-
+  $items['node/add/nexus-free-state']['hidden'] = 1;
+  $items['node/add/nexus-controlled-state']['hidden'] = 1;
+  $items['node/add/nexus-note']['hidden'] = 1;
   return $items;
     
 }
