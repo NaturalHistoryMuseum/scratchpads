@@ -443,11 +443,28 @@ function classification_edit_multiple_form(&$form_state){
   return $form;
 
 }
+function classification_scratchpads_theme_registry_alter(&$theme_registry){
+  $theme_path = drupal_get_path('module','classification_scratchpads');
+  $theme_registry['taxonomy_overview_vocabularies'] = array(
+    'function' => 'classification_scratchpads_taxonomy_overview_vocabularies',
+    'theme path' => $theme_path,
+    'theme paths' => array(
+      $theme_path
+    )
+  );
+  $theme_registry['classification_import_message'] = array(
+    'function' => 'classification_scratchpads_classification_import_message',
+    'theme path' => $theme_path,
+    'theme paths' => array(
+      $theme_path
+    )  
+  );
+}
 
 /**
  * Theme the vocabulary overview as a sortable list of vocabularies.
  */
-function phptemplate_taxonomy_overview_vocabularies($form){
+function classification_scratchpads_taxonomy_overview_vocabularies($form){
   
   $rows = array ();
   
@@ -509,7 +526,7 @@ function phptemplate_taxonomy_overview_vocabularies($form){
     'id' => 'taxonomy' ) ) . drupal_render ( $form );
 }
 
-function phptemplate_classification_import_message(){
+function classification_scratchpads_classification_import_message(){
   
   $vid = $_REQUEST ['vid'];
   $status = $_REQUEST ['status'];
