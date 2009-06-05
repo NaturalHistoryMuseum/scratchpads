@@ -81,14 +81,6 @@ function classification_scratchpads_menu_alter(&$items){
   $items ['classification/manage']['hidden'] = 1;
   $items ['classification/help']['hidden'] = 1;
   $items ['classification']['hidden'] = 1;
-   
-  $items ['classification/import']['type'] = MENU_CALLBACK;
-  $items ['classification/edit']['type'] = MENU_CALLBACK;
-  $items ['classification/export']['type'] = MENU_CALLBACK;
-  $items ['classification/settings']['type'] = MENU_CALLBACK;
-  $items ['classification/manage']['type'] = MENU_CALLBACK;
-  $items ['classification/help']['type'] = MENU_CALLBACK;
-  $items ['classification']['type'] = MENU_CALLBACK;
 }
 
 function classification_scratchpads_js_tree($vid, $tid = ''){
@@ -456,9 +448,9 @@ function classification_scratchpads_theme_registry_alter(&$theme_registry){
   $theme_registry['taxonomy_overview_vocabularies']['theme paths'] = array(
     $theme_path
   );
-  $theme_registry['taxonomy_overview_vocabularies']['function'] = 'classification_scratchpads_classification_import_message';
-  $theme_registry['taxonomy_overview_vocabularies']['theme path'] = $theme_path;
-  $theme_registry['taxonomy_overview_vocabularies']['theme paths'] = array(
+  $theme_registry['classification_import_message']['function'] = 'classification_scratchpads_classification_import_message';
+  $theme_registry['classification_import_message']['theme path'] = $theme_path;
+  $theme_registry['classification_import_message']['theme paths'] = array(
     $theme_path
   );
 }
