@@ -10,6 +10,7 @@ function taxonomy_tree_callback($vid, $nid = null){
   
   // If you're editing, tids can be passed in
   $selected_tids = $_GET['t'];
+  $nid = $_GET['nid'];
 
   if($_GET['root'] == 'source'){
     
@@ -23,7 +24,7 @@ function taxonomy_tree_callback($vid, $nid = null){
       
         if($number_of_parents > $depth){
         
-          $depth = $number_of_parents;
+          $depth = $number_of_parents - 1;
         
         }
       
@@ -40,7 +41,7 @@ function taxonomy_tree_callback($vid, $nid = null){
       
       }
 
-    }else{
+    }elseif(!$nid){
       
     $select_all = true;  
       
@@ -62,7 +63,7 @@ function taxonomy_tree_callback($vid, $nid = null){
     }
     
   }
-  
+
   $tree = taxonomy_get_tree($vid, $parent, -1, $depth);
 
   $json = taxonomy_tree_to_json($tree, $branches_to_expand, $selected_tids, $select_all);
@@ -158,15 +159,12 @@ function taxonomy_tree_add_children($children, $branches_to_expand, $selected_ti
       
       $child_item = taxonomy_tree_get_element($child['data']->vid, $child['data']->tid, $child['data']->name, $selected_tids);
 
-      if(count($child['children'])){
-        
+      if(count($child['children']) && $branches_to_expand[$child['data']->tid]){
+
         $child_item['children'] = taxonomy_tree_add_children($child['children'], $branches_to_expand, $selected_tids);
-       
-        if($branches_to_expand[$child['data']->tid]){
+        
+        $child_item['expanded'] = true;
 
-          $child_item['expanded'] = true;
-
-        }
         
       }else{
 
@@ -178,7 +176,7 @@ function taxonomy_tree_add_children($children, $branches_to_expand, $selected_ti
 
           }
 
-        }
+      }
       
 
       
@@ -192,10 +190,20 @@ function taxonomy_tree_add_children($children, $branches_to_expand, $selected_ti
 
 function taxonomy_tree_get_element($vid, $tid, $name, $selected_tids, $select_all = false){
   
+  if($tid && $selected_tids[$tid] || $select_all){
+    
+    $value = 1;
+    
+  }else{
+    
+    $value = 0;
+    
+  }
+  
   $element[$tid] = array(
     '#type' => 'checkbox',
     '#title' => $name,
-    '#value' => ($selected_tids[$tid] || $select_all ? 1 : 0),
+    '#value' => $value,
     '#name' => 'taxonomy['.$vid.']['.$tid.']',
     '#return_value' => $tid
   );
