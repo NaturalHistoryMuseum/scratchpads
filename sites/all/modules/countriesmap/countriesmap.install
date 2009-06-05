@@ -211,5 +211,22 @@ function countriesmap_schema(){
         'size' => 'small')),
     'primary key' => array('vid', 'cmid')
   );
+  $tables['countriesmap_image'] = array(
+    'description' => 'Links a Countries map node with its image',
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE),
+      'nid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE),
+      'filename' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255)),
+    'primary key' => array('vid')
+  );
   return $tables;
 }

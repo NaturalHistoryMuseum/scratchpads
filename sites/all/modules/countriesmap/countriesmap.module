@@ -151,6 +151,7 @@ function countriesmap_validate(&$node) {
  * database inserts.
  */
 function countriesmap_insert($node) {
+  db_query("DELETE FROM {countriesmap_nodes} WHERE vid = %d", $node->vid);
   foreach($node as $key => $value){
     if(substr($key, 0, 13) == 'countriesmap_' && $value){
       // I'm afraid we're doing this the slow way!
@@ -167,12 +168,18 @@ function countriesmap_insert($node) {
   }
   $temp = file_directory_temp();
   $file = tempnam(realpath($temp), 'file');
+  $image_filename = file_save_data("DATA", file_directory_path().'/countriesmap_'.$node->nid.'_'.user_password(20).'.jpg');
   file_put_contents($file, file_get_contents("http://edit.csic.es/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=1600&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids)));
   exec("convert $file -fuzz 30% -transparent white $file");
   exec("convert $file -channel A -evaluate divide 2 +channel -resize 800x $file");
   $map_path = drupal_get_path('module','countriesmap').'/map.jpg';
-  $output_path = file_directory_path().'/countriesmap_'.$node->nid.'.jpg';
-  exec("composite $file $map_path $output_path");
+  exec("composite $file $map_path $image_filename");
+  
+  // Now delete the previous file.
+  unlink(array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid))));
+  db_query('DELETE FROM {countriesmap_image} WHERE vid = %d', $node->vid);
+    
+  db_query("INSERT INTO {countriesmap_image} (nid, vid, filename) VALUES (%d, %d, '%s')", $node->nid, $node->vid, $image_filename);
   unlink($file);
 }
 
@@ -183,11 +190,6 @@ function countriesmap_insert($node) {
  * database updates.
  */
 function countriesmap_update($node) {
-  // if this is a new node or we're adding a new revision,
-  if (!$node->revision) {
-    // Updating a current revision
-    countriesmap_delete($node);
-  }
   countriesmap_insert($node);
 }
 
@@ -196,8 +198,10 @@ function countriesmap_update($node) {
  */
 function countriesmap_nodeapi(&$node, $op, $teaser, $page) {
   switch ($op) {
-    case 'delete_revision':
+    case 'delete revision':
       // Notice that we're matching a single revision based on the node's vid.
+      unlink(array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid))));
+      db_query('DELETE FROM {countriesmap_image} WHERE vid = %d', $node->vid);
       db_query('DELETE FROM {countriesmap_nodes} WHERE vid = %d', $node->vid);
       break;
   }
@@ -209,7 +213,11 @@ function countriesmap_nodeapi(&$node, $op, $teaser, $page) {
 function countriesmap_delete($node) {
   // Notice that we're matching all revision, by using the node's nid.
   db_query('DELETE FROM {countriesmap_nodes} WHERE nid = %d', $node->nid);
-  unlink(file_directory_path().'/countriesmap_'.$node->nid.'.jpg');
+  $result = db_query('SELECT filename FROM {countriesmap_image} WHERE nid = %d', $node->nid);
+  while($row = db_fetch_array($result)){
+    unlink($row['filename']);
+  }
+  db_query('DELETE FROM {countriesmap_image} WHERE nid = %d', $node->nid);
 }
 
 /**
@@ -264,7 +272,8 @@ function countriesmap_theme() {
  */
 function theme_countriesmap_display_map($node) {
   $output = '<div class="countriesmap_map">';
-  $output .= '<img src="'.url(file_directory_path().'/countriesmap_'.$node->nid.'.jpg').'"/>';
+  $filename = array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid)));
+  $output .= '<img src="'.url($filename).'"/>';
   $output .= '</div>';
   return $output;
 }
