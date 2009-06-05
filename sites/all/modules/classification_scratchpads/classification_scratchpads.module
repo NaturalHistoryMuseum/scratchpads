@@ -82,13 +82,13 @@ function classification_scratchpads_menu_alter(&$items){
   $items ['classification/help']['hidden'] = 1;
   $items ['classification']['hidden'] = 1;
    
-  $items ['classification/import']['type'] = MENU_LINK;
-  $items ['classification/edit']['type'] = MENU_LINK;
-  $items ['classification/export']['type'] = MENU_LINK;
-  $items ['classification/settings']['type'] = MENU_LINK;
-  $items ['classification/manage']['type'] = MENU_LINK;
-  $items ['classification/help']['type'] = MENU_LINK;
-  $items ['classification']['type'] = MENU_LINK;
+  $items ['classification/import']['type'] = MENU_CALLBACK;
+  $items ['classification/edit']['type'] = MENU_CALLBACK;
+  $items ['classification/export']['type'] = MENU_CALLBACK;
+  $items ['classification/settings']['type'] = MENU_CALLBACK;
+  $items ['classification/manage']['type'] = MENU_CALLBACK;
+  $items ['classification/help']['type'] = MENU_CALLBACK;
+  $items ['classification']['type'] = MENU_CALLBACK;
 }
 
 function classification_scratchpads_js_tree($vid, $tid = ''){
