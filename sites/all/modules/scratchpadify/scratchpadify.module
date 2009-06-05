@@ -33,7 +33,7 @@ function scratchpadify_theme_registry_alter(&$theme_registry){
 /*
 * Override filter.module's theme_filter_tips() function to disable tips display.
 */
-function scratchpadify_filter_tips($tips, $long = FALSE, $extra = '') {
+function scratchpadify_filter_tips($tips='', $long = FALSE, $extra = '') {
   return '';
 }
 
