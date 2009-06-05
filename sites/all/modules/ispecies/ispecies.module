@@ -28,6 +28,10 @@ function ispecies_node_info() {
   );
 }
 
+function ispecies_menu_alter(&$items){  
+  $items['node/add/ispecies']['hidden'] = 1;
+}
+
 function ispecies_form_alter(&$form, $unused_amd_unwanted_go_cry_to_mummy, $form_id){
   // Hide iSpecies cache from the content types list.
   if($form_id == 'taxonomy_form_vocabulary'){
