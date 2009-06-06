@@ -30,7 +30,7 @@ function scratchpad_training_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone','fileshare',
       'globalredirect','legal','path_redirect','pathauto','quote','robotstxt',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','tabs','wysiwyg','print','sharethis','imce','imce_wysiwyg',
+      'jstools','wysiwyg','print','sharethis','imce','imce_wysiwyg',
     // Spam control
       'mollom','hashcash',
     // JQuery
@@ -40,8 +40,7 @@ function scratchpad_training_profile_modules(){
       'nodereference','date_timezone','fieldgroup',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
-      'image_attach',
-    // 'lightbox2', Disabled due to an incompatability with JQuery Update
+      'image_attach','lightbox2',
     // Location
       'location','gmap','gmap_location','location_user',
     // Organic Groups
