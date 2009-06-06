@@ -269,7 +269,8 @@ function darwincore_form(&$node) {
   // Add the JS required.
   jquery_ui_add('ui.tabs');
   drupal_add_js(drupal_get_path('module','darwincore').'/darwincore.js');
-
+  // Add the CSS
+  drupal_add_css(drupal_get_path('module','jquery_ui').'/jquery.ui/themes/smoothness/ui.all.css');
   // Hide the title
   $form['title'] = array(
     '#type' => 'hidden',
