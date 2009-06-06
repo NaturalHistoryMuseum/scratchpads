@@ -285,6 +285,7 @@ function darwincore_form(&$node) {
       <li><a href="#fragment-2"><span>Taxonomy</span></a></li>
       <li><a href="#fragment-3"><span>Collection</span></a></li>
       <li><a href="#fragment-4"><span>Miscellaneous</span></a></li>
+      <li><a href="#fragment-5"><span>Miscellaneous</span></a></li>
     </ul>',
     '#suffix' => '</div>'
   );
@@ -403,10 +404,8 @@ function darwincore_form(&$node) {
   '#description' => t('Notes taken in the field for the cataloged item.')
   );
   $form['locate'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => 1,
-    '#collapsed' => 1,
-    '#weight' => 5,
+    '#prefix' => '<div id="fragment-5">',
+    '#suffix' => '</div>'
     '#title' => t('Location')
   );
   $results = db_query("SELECT nr.title FROM node n, node_revisions nr WHERE n.nid = nr.nid AND n.type = 'darwincorelocation' ORDER BY nr.title;");
