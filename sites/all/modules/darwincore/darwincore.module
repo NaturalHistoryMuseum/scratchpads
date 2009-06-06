@@ -405,7 +405,7 @@ function darwincore_form(&$node) {
   );
   $form['locate'] = array(
     '#prefix' => '<div id="fragment-5">',
-    '#suffix' => '</div>'
+    '#suffix' => '</div>',
     '#title' => t('Location')
   );
   $results = db_query("SELECT nr.title FROM node n, node_revisions nr WHERE n.nid = nr.nid AND n.type = 'darwincorelocation' ORDER BY nr.title;");
