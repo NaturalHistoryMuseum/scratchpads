@@ -266,30 +266,41 @@ function darwincore_menu(){
  * Implementation of hook_form()
  */
 function darwincore_form(&$node) {
+  // Add the JS required.
+  jquery_ui_add('ui.tabs');
+  drupal_add_js(drupal_get_path('module','darwincore').'/darwincore.js');
+
+  // Hide the title
   $form['title'] = array(
     '#type' => 'hidden',
     '#value' => $node->title
   );
+  
+  // Tabs component
   $form['tabs'] = array(
-  '#type' => 'tabset',
-  '#weight' => -100
+    '#prefix' => '<div id="tabs">    
+    <ul>
+      <li><a href="#tab1"><span>Required</span></a></li>
+      <li><a href="#tab2"><span>Taxonomy</span></a></li>
+      <li><a href="#tab3"><span>Collection</span></a></li>
+      <li><a href="#tab4"><span>Miscellaneous</span></a></li>
+    </ul>',
+    '#suffix' => '</div>'
   );
 //-- Required tab -----------------------------------------
   $form['tabs']['requiredfields'] = array(
-  '#title' => t('Required'),
-  '#weight' => -5,
-  '#type' => 'tabpage',
-  '#description' => t('The following values are required to create a specimen')
+    '#prefix' => '<div id="tab1">',
+    '#suffix' => '</div>'
   );
   $form['tabs']['requiredfields']['basisofrecord'] = _darwincore_get_vocabulary_form('Basis of record',$node->basisofrecord,'A descriptive term indicating whether the record represents an object or observation.');
   $form['tabs']['requiredfields']['basisofrecord']['#required'] = true;
   $form['tabs']['requiredfields']['institutioncode'] = array(
-  '#type' => 'textfield',
-  '#autocomplete_path' => 'darwincore/autocomplete/institutioncode',
-  '#default_value' => $node->institutioncode,
-  '#description' => t('The code (or acronym) identifying the institution administering the collection in which the organism record is cataloged. No global registry exists for institutional codes; use the code that is "standard" at your institution or in your discipline.'),
-  '#title' => t('Institution code'),
-  '#required' => true
+    '#type' => 'textfield',
+    '#autocomplete_path' => 'darwincore/autocomplete/institutioncode',
+    '#default_value' => $node->institutioncode,
+    '#description' => t('The code (or acronym) identifying the institution administering the collection in which the organism record is cataloged. No global registry exists for institutional codes; use the code that is "standard" at your institution or in your discipline.'),
+    '#title' => t('Institution code'),
+    '#required' => true
   );
   $form['tabs']['requiredfields']['collectioncode'] = array(
   '#type' => 'textfield',
@@ -308,10 +319,8 @@ function darwincore_form(&$node) {
   );
 //-- Identification tab -----------------------------------
   $form['tabs']['taxonomy'] = array(
-  '#type' => 'tabpage',
-  '#weight' => -3,
-  '#title' => t('Identification'),
-  '#description' => t('The taxonomic name of this specimen')
+    '#prefix' => '<div id="tab2">',
+    '#suffix' => '</div>'
   );
   $form['tabs']['taxonomy']['taxonomicname'] = array(
   '#type' => 'textfield',
@@ -342,13 +351,12 @@ function darwincore_form(&$node) {
   '#description' => t('The date-time in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.')
   );
   $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
+  
+  //-- Collection tab ---------------------------------------
   $form['tabs']['collection'] = array(
-  '#type' => 'tabpage',
-  '#weight' => -1,
-  '#title' => t('Collection information'),
-  '#description' => t('Information with regards how and when this specimen was collected')
+    '#prefix' => '<div id="tab3">',
+    '#suffix' => '</div>'
   );
-//-- Collection tab ---------------------------------------
   $form['tabs']['collection']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, '');
   $form['tabs']['collection']['collectornumber'] = array(
   '#type' => 'textfield',
@@ -449,11 +457,8 @@ function darwincore_form(&$node) {
     $form['locate']['createlocation'][$key] = $location_form[$key];
   }
   $form['tabs']['misc'] = array(
-  '#type' => 'tabpage',
-  '#title' => t('Miscellaneous'),
-  '#weight' => 10,
-  '#collapsible' => true,
-  '#collapsed' => false
+    '#prefix' => '<div id="tab4">',
+    '#suffix' => '</div>'
   );
   $form['tabs']['misc']['sex'] = _darwincore_get_vocabulary_form('Sex', $node->sex, '');
   $form['tabs']['misc']['lifestage'] = array(
