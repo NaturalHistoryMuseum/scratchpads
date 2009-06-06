@@ -289,7 +289,7 @@ function darwincore_form(&$node) {
   );
 //-- Required tab -----------------------------------------
   $form['tabs']['requiredfields'] = array(
-    '#prefix' => '<div id="tab1">',
+    '#prefix' => '<div id="fragment-1">',
     '#suffix' => '</div>'
   );
   $form['tabs']['requiredfields']['basisofrecord'] = _darwincore_get_vocabulary_form('Basis of record',$node->basisofrecord,'A descriptive term indicating whether the record represents an object or observation.');
@@ -319,7 +319,7 @@ function darwincore_form(&$node) {
   );
 //-- Identification tab -----------------------------------
   $form['tabs']['taxonomy'] = array(
-    '#prefix' => '<div id="tab2">',
+    '#prefix' => '<div id="fragment-2">',
     '#suffix' => '</div>'
   );
   $form['tabs']['taxonomy']['taxonomicname'] = array(
@@ -354,7 +354,7 @@ function darwincore_form(&$node) {
   
   //-- Collection tab ---------------------------------------
   $form['tabs']['collection'] = array(
-    '#prefix' => '<div id="tab3">',
+    '#prefix' => '<div id="fragment-3">',
     '#suffix' => '</div>'
   );
   $form['tabs']['collection']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, '');
@@ -457,7 +457,7 @@ function darwincore_form(&$node) {
     $form['locate']['createlocation'][$key] = $location_form[$key];
   }
   $form['tabs']['misc'] = array(
-    '#prefix' => '<div id="tab4">',
+    '#prefix' => '<div id="fragment-4">',
     '#suffix' => '</div>'
   );
   $form['tabs']['misc']['sex'] = _darwincore_get_vocabulary_form('Sex', $node->sex, '');
