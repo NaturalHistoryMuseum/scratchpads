@@ -233,7 +233,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
         '#type' => 'checkbox',
         '#title' => t('Disable Autotag'),
         '#default_value' => isset($disable_vids[$form['vid']['#value']]) ? $disable_vids[$form['vid']['#value']] : 0,  
-        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger (Vocabularies that are marked as "Multiple Select" and are NOT makred as "Tags" or "Required" will use autotagger)')
+        '#description' => t('If checked, this Vocabulary will not be used by the Autotagger (Vocabularies that are marked as "Multiple Select" and are NOT marked as "Tags" or "Required" will use autotagger)')
       );
       // Finally we need a submit function
       $form['#submit'][] = 'autotag_submit_vocabulary_form';
