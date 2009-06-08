@@ -99,6 +99,95 @@ DirectoryIndex index.php
   # If your site is running in a VirtualDocumentRoot at http://example.com/,
   # uncomment the following line:
   # RewriteBase /
+  # BOOST START
+  <IfModule mod_headers.c>
+    Header add Expires "Sun, 19 Nov 1978 05:00:00 GMT"
+    Header add Cache-Control "store, no-cache, must-revalidate, post-check=0, pre-check=0"
+  </IfModule>
+  <IfModule mod_mime.c>
+    AddCharset utf-8 .html
+  </IfModule>
+  <FilesMatch "\.(html.gz)$">
+    AddEncoding x-gzip .gz
+    ForceType text/html
+  </FilesMatch>
+  #serve file IF it exist on server
+  RewriteCond %{REQUEST_FILENAME} \.\w{2,4}$
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule .? - [L]
+
+  #GZIP
+  # root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} ^/$
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{HTTP_USER_AGENT} !".*Safari.*"
+  RewriteCond %{HTTP:Accept-encoding} gzip
+  RewriteCond %{DOCUMENT_ROOT}/cache/gz/%{SERVER_NAME}/index.html.gz -f
+  RewriteRule ^(.*)$ cache/gz/%{SERVER_NAME}/index.html.gz [L]
+  # subdir root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{HTTP_USER_AGENT} !".*Safari.*"
+  RewriteCond %{HTTP:Accept-encoding} gzip
+  RewriteCond %{DOCUMENT_ROOT}/cache/gz/%{SERVER_NAME}%{REQUEST_URI} -d
+  RewriteCond %{DOCUMENT_ROOT}/cache/gz/%{SERVER_NAME}%{REQUEST_URI}/index.html.gz -f
+  RewriteRule ^(.*)$ cache/gz/%{SERVER_NAME}%{REQUEST_URI}/index.html.gz [L]
+  # non root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{HTTP_USER_AGENT} !".*Safari.*"
+  RewriteCond %{HTTP:Accept-encoding} gzip
+  RewriteCond %{DOCUMENT_ROOT}/cache/gz/%{SERVER_NAME}%{REQUEST_URI}.html.gz -f
+  RewriteRule ^(.*)$ cache/gz/%{SERVER_NAME}%{REQUEST_URI}.html.gz [L]
+  # url variables
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} !^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{HTTP_USER_AGENT} !".*Safari.*"
+  RewriteCond %{HTTP:Accept-encoding} gzip
+  RewriteCond %{DOCUMENT_ROOT}/cache/gz/%{SERVER_NAME}%{REQUEST_URI}_%{QUERY_STRING}.html.gz -f
+  RewriteRule ^(.*)$ cache/gz/%{SERVER_NAME}%{REQUEST_URI}_%{QUERY_STRING}.html.gz [L]
+
+  #NORMAL
+  # root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} ^/$
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{DOCUMENT_ROOT}/cache/%{SERVER_NAME}/index.html -f
+  RewriteRule ^(.*)$ cache/%{SERVER_NAME}/index.html [L]
+  # subdir root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{DOCUMENT_ROOT}/cache/%{SERVER_NAME}%{REQUEST_URI} -d
+  RewriteCond %{DOCUMENT_ROOT}/cache/%{SERVER_NAME}%{REQUEST_URI}/index.html -f
+  RewriteRule ^(.*)$ cache/%{SERVER_NAME}%{REQUEST_URI}/index.html [L]
+  # non root
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{DOCUMENT_ROOT}/cache/%{SERVER_NAME}%{REQUEST_URI}.html -f
+  RewriteRule ^(.*)$ cache/%{SERVER_NAME}%{REQUEST_URI}.html [L]
+  # url variables
+  RewriteCond %{REQUEST_METHOD} ^GET$
+  RewriteCond %{REQUEST_URI} !(^/admin|^/cache|^/misc|^/modules|^/sites|^/system|^/themes|^/user/login)
+  RewriteCond %{QUERY_STRING} !^$
+  RewriteCond %{HTTP_COOKIE} !DRUPAL_UID
+  RewriteCond %{DOCUMENT_ROOT}/cache/%{SERVER_NAME}%{REQUEST_URI}_%{QUERY_STRING}.html -f
+  RewriteRule ^(.*)$ cache/%{SERVER_NAME}%{REQUEST_URI}_%{QUERY_STRING}.html [L]
+  # BOOST END
+
+# $Id: boosted1.txt,v 1.1.2.3 2009/05/01 23:13:31 mikeytown2 Exp $
 
   # Rewrite URLs of the form 'x' to the form 'index.php?q=x'.
   RewriteCond %{REQUEST_FILENAME} !-f
