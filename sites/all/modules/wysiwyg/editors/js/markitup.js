@@ -1,4 +1,4 @@
-// $Id: markitup.js,v 1.1.2.2 2009/01/06 01:40:37 sun Exp $
+// $Id: markitup.js,v 1.1 2009/01/06 01:40:31 sun Exp $
 
 /**
  * Attach this editor to a target element.

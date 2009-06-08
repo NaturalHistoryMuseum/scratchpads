@@ -205,6 +205,20 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
         $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/image/add', array('query' => array('sidebar' => 'no', 'destination' => 'node/add/image'))) . ".  (".t('N.B. Any changes you have made on this page will be lost').")";
       }
     }
+    else if($form['type']['#value'] == 'biblio'){
+      if(isset($form['contributors2_wrapper'])){
+        $form['contributors2_wrapper']['#collapsed'] = 1;
+      }
+      if(isset($form['contributors3_wrapper'])){
+        $form['contributors3_wrapper']['#collapsed'] = 1;
+      }
+      if(isset($form['contributors4_wrapper'])){
+        $form['contributors4_wrapper']['#collapsed'] = 1;
+      }
+      if(isset($form['contributors5_wrapper'])){
+        $form['contributors5_wrapper']['#collapsed'] = 1;
+      }
+    }
   }
   else if($form_id == 'taxonomy_form_vocabulary'){
     if(!isset($form['vid']) && isset($form['settings']['multiple']['#default_value'])){

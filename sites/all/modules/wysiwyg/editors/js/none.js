@@ -1,4 +1,4 @@
-// $Id: none.js,v 1.3.2.1 2009/05/17 00:13:34 sun Exp $
+// $Id: none.js,v 1.6 2009/05/17 00:13:21 sun Exp $
 
 /**
  * Attach this editor to a target element.
@@ -43,3 +43,28 @@ Drupal.wysiwyg.editor.detach.none = function(context, params) {
   }
 };
 
+/**
+ * Instance methods for plain text areas.
+ */
+Drupal.wysiwyg.editor.instance.none = {
+  insert: function(content) {
+    var editor = document.getElementById(this.field);
+
+    // IE support.
+    if (document.selection) {
+      editor.focus();
+      var sel = document.selection.createRange();
+      sel.text = content;
+    }
+    // Mozilla/Firefox/Netscape 7+ support.
+    else if (editor.selectionStart || editor.selectionStart == '0') {
+      var startPos = editor.selectionStart;
+      var endPos = editor.selectionEnd;
+      editor.value = editor.value.substring(0, startPos) + content + editor.value.substring(endPos, editor.value.length);
+    }
+    // Fallback, just add to the end of the content.
+    else {
+      editor.value += content;
+    }
+  }
+};

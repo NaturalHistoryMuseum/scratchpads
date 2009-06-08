@@ -1,5 +1,5 @@
 <?php
-// $Id: markitup.inc,v 1.1.2.3 2009/03/06 02:48:41 sun Exp $
+// $Id: markitup.inc,v 1.2 2009/03/06 02:48:30 sun Exp $
 
 /**
  * @file

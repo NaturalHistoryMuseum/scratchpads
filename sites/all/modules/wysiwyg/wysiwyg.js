@@ -1,4 +1,4 @@
-// $Id: wysiwyg.js,v 1.5.2.7 2009/03/29 06:38:35 sun Exp $
+// $Id: wysiwyg.js,v 1.13 2009/03/29 06:38:26 sun Exp $
 
 /**
  * Initialize editor libraries.
@@ -88,6 +88,14 @@ Drupal.wysiwygAttach = function(context, params) {
     Drupal.wysiwyg.instances[params.field] = {};
     // Provide all input format parameters to editor instance.
     jQuery.extend(Drupal.wysiwyg.instances[params.field], params);
+    // Provide editor callbacks for plugins, if available.
+    if (typeof Drupal.wysiwyg.editor.instance[params.editor] == 'object') {
+      jQuery.extend(Drupal.wysiwyg.instances[params.field], Drupal.wysiwyg.editor.instance[params.editor]);
+    }
+    // Store this field id, so (external) plugins can use it.
+    // @todo Wrong point in time. Probably can only supported by editors which
+    //   support a onFocus() or similar event.
+    Drupal.wysiwyg.activeId = params.field;
     // Attach or update toggle link.
     Drupal.wysiwygAttachToggleLink(context, params);
     // Attach editor, if enabled by default or last state was enabled.
@@ -142,6 +150,7 @@ Drupal.wysiwygAttachToggleLink = function(context, params) {
       // After disabling the editor, re-attach default behaviors.
       // @todo We HAVE TO invoke Drupal.wysiwygAttach() here.
       Drupal.wysiwyg.editor.attach.none(context, params);
+      Drupal.wysiwyg.instances[params.field] = Drupal.wysiwyg.editor.instance.none;
       Drupal.wysiwyg.instances[params.field].editor = 'none';
       $(this).html(Drupal.settings.wysiwyg.enable).blur();
     }

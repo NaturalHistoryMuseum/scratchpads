@@ -1,4 +1,4 @@
-// $Id: whizzywig.js,v 1.3.2.1 2009/02/05 01:34:52 sun Exp $
+// $Id: whizzywig.js,v 1.4 2009/02/05 01:34:35 sun Exp $
 
 var wysiwygWhizzywig = { currentField: null, fields: {} };
 var buttonPath = null;
