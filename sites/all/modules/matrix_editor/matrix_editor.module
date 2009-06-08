@@ -133,6 +133,12 @@ function matrix_editor_preprocess_page(&$variables) {
     $scripts['core'] = array_merge($new_jquery, $scripts['core']);
     unset($scripts['core']['misc/jquery.js']);
 
+    // Get rid of the lightbox js
+    $lightbox_path = drupal_get_path('module', 'lightbox2');
+
+    unset($scripts['module'][$lightbox_path.'/js/lightbox.js']);
+    unset($scripts['module'][$lightbox_path.'/js/auto_image_handling.js']);
+
     // Loop through each of the required replacements.
     foreach (matrix_editor_get_jquery_replacements() as $type => $replacements) {
       foreach ($replacements as $find => $replace) {

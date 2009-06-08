@@ -32,18 +32,20 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     $first_field = key($handlers);
 
   }
+
+  $options['enableAddRow'] = false;
   
   foreach ($handlers as $field => $handler) {
   
     if (!$name = $handler->label()) {
       $name = $handler->ui_name();
     }
-    
+
     $column = array(
       'id' => $field,
       'name' => $name,
       'field' => $fields[$field]->field_alias,
-      'width' => $options['columns'][$field]['width'],
+      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 50),
       'cssClass' => 'cell-title',
       'resizable' => ($options['enableColumnResize'] ? 1 : 0),
       'formatter' => 'selectorCellFormatter'  
@@ -53,9 +55,9 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
       
       unset($first_field);
     
-    }elseif($field != 'nid'){
-      
-      $column['editor'] = 'TextCellEditor';
+    }elseif($field != 'nid'){ // You can never edit a NID
+
+      $column['editor'] = 'MatrixTextCellEditor';
       
     }
     
@@ -63,26 +65,34 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     
   }
   
+  
+  
   foreach ($result as $num => $row) {
     
     $data[$num] = (array) $row;
-    
+
   }
   
-  $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
+  // drupal_add_js('var fields = '.drupal_to_js($field_forms), 'inline');
 
+  $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
+  $vars['matrix'] .= '<div id="matrix-editor-panel"></div>';
 
 }
 
 
-function theme_matrix_editor($options, $columns, $data, $filter = 'matrixFilter'){
+function theme_matrix_editor($options, $columns, $data, $filter = null){
   
   _matrix_editor_add_files();
   
   drupal_add_js('var options = '.drupal_to_js($options), 'inline');    
   drupal_add_js('var data = []; data = '.drupal_to_js($data), 'inline');
    
-  drupal_add_js('var filter = '.$filter, 'inline');
+  if($filter){
+
+    drupal_add_js('var filter = '.$filter, 'inline');
+    
+  }
 
   drupal_add_js('var columns = '.matrix_editor_to_js($columns).';', 'inline');
   
@@ -91,8 +101,6 @@ function theme_matrix_editor($options, $columns, $data, $filter = 'matrixFilter'
   </div></div>';
     
   drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
-  
-  // drupal_add_js("$(function(){\r MATRIX = new matrix_editor();\n});", 'inline');
   
   return $output;
   

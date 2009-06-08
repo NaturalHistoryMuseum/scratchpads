@@ -55,7 +55,11 @@ function initMatrixEditor(){
 	dataView = new DataView();
 	dataView.beginUpdate();
 	dataView.setItems(data);
-	dataView.setFilter(filter);
+	
+	if(typeof filter != 'undefined'){
+	  dataView.setFilter(filter);
+	}
+	
 	dataView.endUpdate();
 	
 	// initialize the grid
@@ -116,6 +120,29 @@ function initMatrixEditor(){
     );
 	  
 	};
+	
+	grid.onColumnsReordered = function(e, ui){
+
+    var args = 'view='+Drupal.settings.matrixEditorViewName;
+
+    if($('#myGrid').hasClass('.fixedFirstCol')){
+
+      args += '&cols[]='+$('div.h.fixed-column-header').attr('id');
+      
+    }
+
+    $('.ui-sortable .h').each(function(i){
+      
+      args += '&cols[]='+$(this).attr('id');
+      
+    });
+
+    $.post(
+      Drupal.settings.matrixEditorCallbackPath+'/reorder_columns', 
+      args
+    );
+
+  };
 	
 	// Scroll headers with view port
   $('#myGrid div.main-scroller').scroll(function(e){
@@ -202,6 +229,87 @@ var selectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
   return (!dataContext ? "" : value);
 
 };
+
+
+var MatrixTextCellEditor = function($container, columnDef, value, dataContext) {
+    var $input;
+    var defaultValue = value;
+    var scope = this;
+    
+    this.init = function() {
+
+        
+          args = {
+            field: columnDef.id,
+            nid: dataContext.nid
+          }
+
+        $.post(
+          Drupal.settings.matrixEditorCallbackPath+'/get_form_field', 
+          args,
+          function(response){
+            
+            if(response.status){
+              
+              $input = $("<INPUT type=text class='editor-text' />");
+
+              if (value != null) 
+              {
+                  $input[0].defaultValue = value;
+                  $input.val(defaultValue);
+              }
+
+              $input.appendTo($container);
+              $input.focus().select();
+              
+              $('#matrix-editor-panel').html(response.data);
+              
+            }
+
+          },
+          'json'
+        );
+        
+    }
+    
+    this.destroy = function() {
+        $input.remove();
+    }
+    
+    this.focus = function() {
+        $input.focus();
+    }
+    
+    this.setValue = function(value) {
+        $input.val(value);
+        defaultValue = value;
+    }
+    
+    this.getValue = function() {
+        return $input.val();
+    }
+    
+    this.isValueChanged = function() {
+        return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+    }
+    
+    this.validate = function() {
+        if (columnDef.validator) 
+        {
+            var validationResults = columnDef.validator(scope.getValue());
+            if (!validationResults.valid) 
+                return validationResults;
+        }
+        
+        return {
+            valid: true,
+            msg: null
+        };
+    }
+    
+    this.init();
+}
+
 
 
 
