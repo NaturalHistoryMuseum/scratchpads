@@ -28,12 +28,12 @@ function view_sort_sorted(callback, viewname, callback2){
   $('.view-sort-drag > *').each(function(){
     items += " "+$(this).attr('view-sort');
   });
-  alert(items);
+  //alert(items);
   var ajax_options = {
     type:"POST",
     url:callback+"/"+viewname+"/"+Drupal.settings.ispecies.page_tid,
     success:function(data){
-      alert(data);
+      //alert(data);
       ispecies_callback(callback2,viewname);
     },
     data:"order="+items
