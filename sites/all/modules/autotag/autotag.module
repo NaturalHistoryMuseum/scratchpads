@@ -211,6 +211,35 @@ function autotag_form_submit($form, &$form_state){
   }
 }
 
+/**
+ * Array_walk function for helping to restore values to the form when there is
+ * an error on the page.
+ */
+function _autotag_form_walk(&$form, $key, $form_state_array){
+  if(is_array($form)){
+    if($key == $form_state_array['key'] && (isset($form['#type']) || is_array($form_state_array['value']))){
+      if(is_array($form_state_array['value'])){
+        _autotag_form_set_from_array($form, $form_state_array['value']);
+      } else {
+        $form['#default_value'] = $form_state_array['value'];
+      }
+    } else {
+      array_walk($form, '_autotag_form_walk', $form_state_array);
+    }
+  }
+}
+// Recursive function called by the above function.
+function _autotag_form_set_from_array(&$form, $form_state){
+  foreach($form_state as $key => $value){
+    if(isset($form[$key])){
+      if(is_array($value)){
+        _autotag_form_set_from_array($form[$key], $value);
+      } else {
+        $form[$key]['#default_value'] = $value;
+      }
+    }
+  }
+}
 /*******************************************************************************
  * FORM ALTER
  ******************************************************************************/
@@ -280,6 +309,15 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   if((!$form_state['submitted'] && !$form_state['post']) || !$form_is_valid){
     // Hide the taxonomy fields -> this can greatly improve the rendering time 
     // for a page with a large classification on it.  We do this on all pages
+    if(!$form_is_valid){
+      // The form isn't valid, we need to restore the values that the user had
+      // entered to the form.
+      foreach($form_state['values'] as $key => $value){
+        // We need to walk the $form variable for each key, and set the 
+        // #default_value to be $value.
+        array_walk($form, '_autotag_form_walk', array('key' => $key, 'value' => $value));
+      }
+    }
     foreach($form['taxonomy'] as $key=>$value){
       if(in_array($key,$hide_vids)){
         unset($form['taxonomy'][$key]);
