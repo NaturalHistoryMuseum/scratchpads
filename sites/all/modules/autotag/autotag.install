@@ -6,6 +6,7 @@ function autotag_install(){
   // Create tables.
   drupal_install_schema('autotag');
   autotag_update_2();
+  autotag_update_3();
 }
 
 function autotag_set_system_weight(){
@@ -16,6 +17,10 @@ function autotag_update_2(){
   $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
   $result[] = update_sql("UPDATE {system} SET weight=%d WHERE name='autotag'", $taxonomy_weight+10);
   return $result;
+}
+
+function autotag_update_3(){
+  variable_set('node_preview',0);
 }
 /**
  * Implementation of hook_schema

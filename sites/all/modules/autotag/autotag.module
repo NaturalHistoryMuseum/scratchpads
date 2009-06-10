@@ -265,6 +265,10 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       );
       // Finally we need a submit function
       $form['#submit'][] = 'autotag_submit_vocabulary_form';
+    } else if ($form_id == 'node_configure'){
+      $form['node_preview']['#disabled'] = TRUE;
+      $form['node_preview']['#default_value'] = 0;
+      $form['node_preview']['#description'] .= ' <span class="error">' . t('This option has been disabled due to a conflict with the Autotag module').'</span>';
     }
     return;
   }
