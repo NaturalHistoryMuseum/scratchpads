@@ -761,6 +761,47 @@ function nexus_form_alter(&$form, $form_state, $form_id){
     
     case 'nexus_project_node_form' :
       
+  
+    
+    if (count ( $form ['taxonomy'] )) {
+      
+      $vocabularies = taxonomy_get_vocabularies ( $form ['#node']->type );
+      
+      foreach ( $vocabularies as $vid => $vocabulary ) {
+          
+        $form ['taxonomy'] [$vid] ['#process'] = array (
+          'taxonomy_tree_process_field' );
+        $form ['taxonomy'] [$vid] ['#nid'] = $form ['#node']->nid;
+        
+        $form ['taxonomy_tree'] [$vid] = array (
+          '#type' => 'hidden', 
+          '#value' => $vid, 
+          '#parents' => array (
+            'taxonomy_tree', 
+            $vid ) );
+      
+      }
+      
+      if (count ( $form ['taxonomy_tree'] )) {
+        
+        if (is_array ( $form ['#submit'] )) {
+          
+          $form ['#submit'] = array (
+            'taxonomy_tree_node_form_submit' ) + $form ['#submit'];
+        
+        } else {
+          
+          $form ['#submit'] = array (
+            'taxonomy_tree_node_form_submit' );
+        
+        }
+      
+      }
+    
+    }
+  
+  }
+      
       // Move the node title & body into a fieldset so it works with vertical tabs
       if (arg ( 0 ) == 'admin' || $form ['#node']->nid) {
         
@@ -807,14 +848,8 @@ function nexus_form_alter(&$form, $form_state, $form_id){
           $form ['taxonomy'] [$vid] ['#suffix'] = '</div>';
           // Turn off required fields
           $form ['taxonomy'] [$vid] ['#required'] = false;
-          
-          
-          // Change the farpin taxonomy fields to ALWAYS be taxonomy bloomin tree
-          $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
-          $form['taxonomy'][$vid]['#nid'] = $form['#node']->nid;        
-          $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
+        
         }
-        $form['#submit'][] = 'taxonomy_tree_node_form_submit';
         
         $form ['taxonomy'] ['taxa_vid'] = array (
           '#type' => 'select', 
