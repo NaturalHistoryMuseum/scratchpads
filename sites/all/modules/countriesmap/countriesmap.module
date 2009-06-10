@@ -121,6 +121,19 @@ function countriesmap_form(&$node) {
       );
       // Fetch the countries for this country group
       $result3 = db_query("SELECT cmid, ct.name as regionname, ci.name as countryname FROM {countriesmap_tdwg} ct,{countriesmap_iso3166} ci WHERE isocode=code AND cgid = %d ORDER BY ci.name,ct.name", $row2['cgid']);
+      $result3 = db_query("SELECT 
+        cmid,
+        ct.name as regionname,
+        COALESCE(ci.name,'UNKNOWN') as countryname
+      FROM {countriesmap_tdwg} ct
+      LEFT JOIN
+        {countriesmap_iso3166} ci
+      ON 
+        isocode=code 
+      WHERE 
+        cgid = %d
+      ORDER BY
+        ci.name,ct.name", $row2['cgid']);
       while($row3 = db_fetch_array($result3)){
         $default_value = 0;
         $fieldname = 'countriesmap_'.$row3['cmid'];

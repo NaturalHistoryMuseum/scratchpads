@@ -53,7 +53,7 @@ function countriesmap_load_tdwg_data(){
       $id = array_pop(db_fetch_array(db_query("SELECT regid FROM {countriesmap_regions} WHERE region = '%s'", $line_parts[3])));
       $regions[$line_parts[3]] = $id;
     }
-    // Do exactly the same with continents
+    // Do exactly the same with groups
     if(!isset($countrygroups[$line_parts[4]])){
       db_query("INSERT INTO {countriesmap_countrygroups} (countrygroup) VALUES ('%s')", $line_parts[4]);
       // As with regions, we're selecting, not getting the last insert id
