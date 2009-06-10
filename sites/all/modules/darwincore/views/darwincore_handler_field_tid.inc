@@ -3,7 +3,7 @@ class darwincore_handler_field_tid extends views_handler_field {
 
   function option_definition() {
     $options = parent::option_definition();
-    $options['link_to_taxonomy'] = array('default' => FALSE);
+    $options['link_to_taxonomy'] = array('default' => TRUE);
     return $options;
   }
 
