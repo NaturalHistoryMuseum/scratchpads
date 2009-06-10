@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * Installs and Uninstalls the Species Profile Model Module.
+ */
+
+function spm_install(){  
+  // Create the tables for SPM data
+  drupal_install_schema('spm');
+}
+
+function spm_uninstall(){  
+  // Remove tables.
+  drupal_uninstall_schema('spm');
+  
+  // Delete the node type
+  node_type_delete('spm');
+  
+  variable_del('spm_headers');
+  variable_del('spm_fields');
+}
+
+function spm_schema(){
+  
+  $schema['spm'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'vid' => array('type' => 'int', 'length' => 10, 'not null' => true),  
+  
+    ),
+    'primary key' => array('vid')
+  );
+
+  $xml_file = drupal_get_path('module', 'spm') .'/EOL_SPM.xml';
+  $xml = simplexml_load_file($xml_file);
+  //print_r($xml);exit;
+  $spm_groups = array();
+  $spm_fields = array();
+  foreach($xml->term as $group){
+    $group_id = preg_replace("/[^a-z]/","",strtolower($group->name));
+    $spm_groups[$group_id] = array('name' => (string)$group->name, 'description' => (string)$group->description);
+    $spm_fields_temp = array();
+    foreach($group->children->term as $field){
+      $schema['spm']['fields'][preg_replace("/[^a-z]/","",strtolower($field->name))] = array('type' => 'text', 'size' => 'big');
+      $spm_fields_temp[preg_replace("/[^a-z]/","",strtolower($field->name))] = array('name' => (string)$field->name, 'description' => (string)$field->description);
+    }
+    $spm_fields[$group_id] = $spm_fields_temp;
+  }
+  variable_set('spm_headers', $spm_groups);
+  variable_set('spm_fields', $spm_fields);
+  return $schema;  
+}
