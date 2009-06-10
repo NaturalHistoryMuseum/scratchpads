@@ -317,6 +317,8 @@ function scratchpadify_link_alter(&$links, $node){
  */
 function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
   // This returns one BIG link which has lots of lickle links in it
+  if($node->type == 'nexus_project'){return;} // Don't display links for nexus
+  // projects, as there will be LOADS of them.
   $terms = array();
   if(isset($node->taxonomy) && is_array($node->taxonomy)){
     foreach ($node->taxonomy as $term) {
