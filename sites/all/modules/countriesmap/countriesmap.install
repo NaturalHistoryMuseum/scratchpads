@@ -45,15 +45,10 @@ function countriesmap_load_tdwg_data(){
   $countrygroups = array();
   foreach($lines as $line){
     $line_parts = explode("\t", $line);
-    if(!isset($regions[$line_parts[3]])){
-      db_query("INSERT INTO {countriesmap_regions} (region) VALUES ('%s')", $line_parts[3]);
-      // If the above insert fails, we've already got data in the table, and
-      // this region is in there, we'll just get the ID with a query (rather
-      // than using last insert ID)
-      $id = array_pop(db_fetch_array(db_query("SELECT regid FROM {countriesmap_regions} WHERE region = '%s'", $line_parts[3])));
-      $regions[$line_parts[3]] = $id;
-    }
-    // Do exactly the same with groups
+    if(!isset($regions[$line_parts[3]]))
+    // If the above insert fails, we've already got data in the table, and
+    // this region is in there, we'll just get the ID with a query (rather
+    // than using last insert ID)
     if(!isset($countrygroups[$line_parts[4]])){
       db_query("INSERT INTO {countriesmap_countrygroups} (countrygroup) VALUES ('%s')", $line_parts[4]);
       // As with regions, we're selecting, not getting the last insert id
@@ -164,22 +159,6 @@ function countriesmap_schema(){
       'unique keys' => array(
         'countriesmap_unique_countrygroup' => array('countrygroup'))
   );
-  $tables['countriesmap_regions'] = array(
-    'description' => 'Stores the Regions',
-    'fields' => array(
-      'regid' => array(
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'size' => 'small'),
-      'region' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE)),
-      'primary key' => array('regid'),
-      'unique keys' => array(
-        'countriesmap_unique_regions' => array('region'))
-  );
   $tables['countriesmap_iso3166'] = array(
     'description' => 'ISO3166 Two letter codes and country names',
     'fields' => array(
@@ -229,4 +208,15 @@ function countriesmap_schema(){
     'primary key' => array('vid')
   );
   return $tables;
+}
+
+/**
+ * Remove the countriesmap_regions table
+ */
+function countriesmap_update_6000() {
+  $ret = array();
+  if (db_table_exists('countriesmap_regions')) {
+    db_drop_table($ret, "countriesmap_regions");
+  }
+  return $ret;
 }
