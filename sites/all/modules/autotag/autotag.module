@@ -181,7 +181,6 @@ function autotag_form_submit($form, &$form_state){
     // page
     $form_state['storage']['formsubmitted'] = $form;
   } else {
-    //echo "<pre>";print_r($form_state);echo "</pre>";exit;
     foreach($form_state['clicked_button']['#post']['files'] as $key => $value){
       // If we have a node, then the files may already be associated.
       $fids_to_ignore = array();
@@ -217,7 +216,7 @@ function autotag_form_submit($form, &$form_state){
  */
 function _autotag_form_walk(&$form, $key, $form_state_array){
   if(is_array($form)){
-    if($key == $form_state_array['key'] && (isset($form['#type']) || is_array($form_state_array['value']))){
+    if($key == $form_state_array['key'] && ((isset($form['#type']) && $form['#type'] != 'fieldset') || is_array($form_state_array['value']))){
       if(is_array($form_state_array['value'])){
         _autotag_form_set_from_array($form, $form_state_array['value']);
       } else {
@@ -232,7 +231,7 @@ function _autotag_form_walk(&$form, $key, $form_state_array){
 function _autotag_form_set_from_array(&$form, $form_state){
   foreach($form_state as $key => $value){
     if(isset($form[$key])){
-      if(is_array($value)){
+      if(is_array($value)  && !isset($form[$key]['#default_value'])){
         _autotag_form_set_from_array($form[$key], $value);
       } else {
         $form[$key]['#default_value'] = $value;
