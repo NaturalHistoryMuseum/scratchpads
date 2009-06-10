@@ -702,6 +702,17 @@ function darwincorelocation_validate($node, &$form){
   if($count){
     form_set_error('title', t('The title must be unique'));
   }
+  // Lets make sure that elevation and other fields only contain numbers (1,45, or 2.23 etc)
+  /*
+    $node->minelevation,
+    $node->maxelevation,
+    $node->mindepth,
+    $node->maxdepth,*/
+  if(trim(preg_replace("/[^0-9\.]*/","",$node->minelevation)) != ''){
+    // Looks like this isn't right, set an error
+    form_set_error('minelevation', t('Minimum elevation must be a number'));
+  }
+  
 }
 /**
  * Implementation of hook_view().
