@@ -512,6 +512,12 @@ function nexus_form_alter(&$form, $form_state, $form_id){
             'taxonomy_tree', 
             $vid));
       }
+      $vocabularies = taxonomy_get_vocabularies ( $form ['#node']->type );
+      foreach($vocabularies as $vid => $vocabulary){
+        if(!isset($vocabulary_options[$vid])){
+          unset($form['taxonomy'][$vid]);
+        }
+      }
       if(count($form['taxonomy_tree'])){
         if(is_array($form['#submit'])){
           $form['#submit'] = array(
