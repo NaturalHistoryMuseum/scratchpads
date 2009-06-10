@@ -698,7 +698,7 @@ function darwincore_validate($node, &$form){
 }
 function darwincorelocation_validate($node, &$form){
   // Lets make sure the location title is UNIQUE!
-  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND type = 'darwincorelocation' AND TRIM(LOWER(r.title)) = '%s'", trim(strtolower($node->title)))));
+  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND type = 'darwincorelocation' AND TRIM(LOWER(r.title)) = '%s' AND vid != %d", trim(strtolower($node->title)), $node->vid)));
   if($count){
     form_set_error('title', t('The title must be unique'));
   }
@@ -708,10 +708,23 @@ function darwincorelocation_validate($node, &$form){
     $node->maxelevation,
     $node->mindepth,
     $node->maxdepth,*/
-  if(trim(preg_replace("/[^0-9\.]*/","",$node->minelevation)) != ''){
+  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
     // Looks like this isn't right, set an error
     form_set_error('minelevation', t('Minimum elevation must be a number'));
   }
+  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+    // Looks like this isn't right, set an error
+    form_set_error('max§elevation', t('Maximum elevation must be a number'));
+  }
+  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+    // Looks like this isn't right, set an error
+    form_set_error('mindepth', t('Minimum depth must be a number'));
+  }
+  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+    // Looks like this isn't right, set an error
+    form_set_error('maxdepth', t('Maximum depth must be a number'));
+  }
+  
   
 }
 /**
