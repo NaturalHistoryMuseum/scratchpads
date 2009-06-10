@@ -712,15 +712,15 @@ function darwincorelocation_validate($node, &$form){
     // Looks like this isn't right, set an error
     form_set_error('minelevation', t('Minimum elevation must be a number'));
   }
-  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+  if(trim(preg_replace("/[0-9\.]*/","",$node->maxelevation)) != ''){
     // Looks like this isn't right, set an error
-    form_set_error('max§elevation', t('Maximum elevation must be a number'));
+    form_set_error('maxelevation', t('Maximum elevation must be a number'));
   }
-  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+  if(trim(preg_replace("/[0-9\.]*/","",$node->mindepth)) != ''){
     // Looks like this isn't right, set an error
     form_set_error('mindepth', t('Minimum depth must be a number'));
   }
-  if(trim(preg_replace("/[0-9\.]*/","",$node->minelevation)) != ''){
+  if(trim(preg_replace("/[0-9\.]*/","",$node->maxdepth)) != ''){
     // Looks like this isn't right, set an error
     form_set_error('maxdepth', t('Maximum depth must be a number'));
   }
