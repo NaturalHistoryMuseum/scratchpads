@@ -223,9 +223,9 @@ function nexus_node_info(){
       'has_title' => TRUE, 
       'has_body' => TRUE, 
       'body_label' => t ( 'State' ), 
-      'locked' => TRUE ) )
+      'locked' => TRUE ) );
 
-  ;
+  
 
 }
 
@@ -449,7 +449,7 @@ function _nexus_get_vocabularies(){
   foreach ( $vocabularies as $vocabulary ) {
     
     // Don't show vocabularies created by this module
-    if ($vocabulary->module != 'nexus') {
+    if ($vocabulary->module != 'nexus' && ! $vocabulary->tags && $vocabulary->multiple) {
       
       $vocabulary_options [$vocabulary->vid] = $vocabulary->name;
     
@@ -761,9 +761,10 @@ function nexus_form_alter(&$form, $form_state, $form_id){
     
     case 'nexus_project_node_form' :
       if (count ( $form ['taxonomy'] )) {
-        $vocabularies = taxonomy_get_vocabularies ( $form ['#node']->type );      
+        $vocabularies = taxonomy_get_vocabularies ( $form ['#node']->type );
         foreach ( $vocabularies as $vid => $vocabulary ) {
-          $form ['taxonomy'] [$vid] ['#process'] = array ('taxonomy_tree_process_field');
+          $form ['taxonomy'] [$vid] ['#process'] = array (
+            'taxonomy_tree_process_field' );
           $form ['taxonomy'] [$vid] ['#disablebatax'] = TRUE;
           $form ['taxonomy'] [$vid] ['#nid'] = $form ['#node']->nid;
           $form ['taxonomy_tree'] [$vid] = array (
@@ -775,9 +776,11 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         }
         if (count ( $form ['taxonomy_tree'] )) {
           if (is_array ( $form ['#submit'] )) {
-            $form ['#submit'] = array ('taxonomy_tree_node_form_submit' ) + $form ['#submit'];
+            $form ['#submit'] = array (
+              'taxonomy_tree_node_form_submit' ) + $form ['#submit'];
           } else {
-            $form ['#submit'] = array ('taxonomy_tree_node_form_submit' );
+            $form ['#submit'] = array (
+              'taxonomy_tree_node_form_submit' );
           }
         }
       }
@@ -808,7 +811,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
       
       if (! count ( $vocabulary_options )) {
         
-        form_set_error ( '', t ( 'Sorry, before you can create projects, there must be a vocabulary associated with the nexus project node type. Please add one now.' ) );
+        form_set_error ( '', t ( 'Sorry, before you can create projects, there must be a vocabulary associated with the nexus project node type. The vocabulary must be marked as "Mutliple select", and must not be marked as "Tags". Please add one now.' ) );
         
         drupal_goto ( 'admin/content/taxonomy' );
       
@@ -906,9 +909,9 @@ function nexus_form_alter(&$form, $form_state, $form_id){
           '#ahah' => array (
             'path' => 'nexus/callback/project_taxonomy_form_submit', 
             'wrapper' => 'dialog', 
-            'method' => 'replace' ) )
+            'method' => 'replace' ) );
 
-        ;
+        
         
         $form ['taxa_vid'] = array (
           '#type' => 'hidden', 
@@ -922,7 +925,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         $form ['#theme'] = array (
           'nexus_project_node_edit_form' );
       
-      }      
+      }
       break;
   
   }
@@ -968,8 +971,8 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#default_value' => $character_term->name, 
     '#maxlength' => 128, 
     '#attributes' => array (
-      'autocomplete' => 'off' ) )// Firefox jquery bug fix
-;
+      'autocomplete' => 'off' ) );// Firefox jquery bug fix
+
   
   $form ['description'] = array (
     '#type' => 'textarea', 
@@ -1526,13 +1529,13 @@ function nexus_export_form($form){
     '#type' => 'submit', 
     '#value' => t ( 'Export data' ), 
     '#submit' => array (
-      'nexus_export_form_submit' ) )// '#ahah' => array(
-  //   'path' => 'nexus/callback/save_note',
+      'nexus_export_form_submit' ) );// '#ahah' => array(
+//   'path' => 'nexus/callback/save_note',
   //   'wrapper' => 'nexus-messages',
   //   'method' => 'replace',
   //   'effect' => 'fade'
   // )
-  ;
+  
   
   return $form;
 
