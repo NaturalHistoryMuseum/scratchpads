@@ -44,7 +44,7 @@ function scratchpad_profile_modules(){
     // Location
       'location','gmap','gmap_location','location_user',
     // Organic Groups
-      'og','og_access','og_user_roles',
+      'og','og_access','og_user_roles','og_views',
     // Views
       'views','views_ui',
     // LifeDesk
@@ -282,6 +282,8 @@ function scratchpad_profile_tasks(&$task, $url){
     }
     // Hide the theme search form
     variable_set('theme_settings', array('toggle_search' => 0));
+    // For some strange reason, the garland theme ends up being disabled.  FIXME
+    db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
     
     // Remove the "Biblio" & "Taskguide" links from the navigation menu - they
     // look ugly.    

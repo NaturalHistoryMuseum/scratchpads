@@ -101,6 +101,7 @@ function scratchpadify_node_import_fields_alter(&$fields, $type){
 
 function scratchpadify_menu_alter(&$items){
   $items['admin/settings/uploads']['access arguments'] = array('SCRATCHPADIFY');
+  $items['admin/settings/imce']['access arguments'] = array('SCRATCHPADIFY');
   $items['admin/settings/admin']['access arguments'] = array('SCRATCHPADIFY');
   $items['admin/build/modules']['access arguments'] = array('SCRATCHPADIFY');
   $items['admin/settings/clean-urls']['access arguments'] = array('SCRATCHPADIFY');
