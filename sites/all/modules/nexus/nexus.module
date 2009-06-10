@@ -764,6 +764,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         $vocabularies = taxonomy_get_vocabularies ( $form ['#node']->type );      
         foreach ( $vocabularies as $vid => $vocabulary ) {
           $form ['taxonomy'] [$vid] ['#process'] = array ('taxonomy_tree_process_field');
+          $form ['taxonomy'] [$vid] ['#disablebatax'] = TRUE;
           $form ['taxonomy'] [$vid] ['#nid'] = $form ['#node']->nid;
           $form ['taxonomy_tree'] [$vid] = array (
             '#type' => 'hidden', 

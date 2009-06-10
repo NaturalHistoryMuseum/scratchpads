@@ -58,7 +58,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       $were_using_batax = false;
       foreach($form['taxonomy'] as $vid => $taxonomy_element){
         if(is_array($taxonomy_element)){
-          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select' && !in_array($vid, $ignore_vids)){
+          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select' && !in_array($vid, $ignore_vids) && (!isset($taxonomy_element['#disablebatax']) || $taxonomy_element['#disablebatax'] == FALSE)){
             // We have a select taxonomy, lets check if it should use batax
             if(batax_use_batax($vid)){
               // Set the following to true so that we know to add an extra submit
