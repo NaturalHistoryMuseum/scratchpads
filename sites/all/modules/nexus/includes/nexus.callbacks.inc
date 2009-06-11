@@ -73,9 +73,7 @@ function nexus_callback_project_taxonomy_form_submit(){
 function nexus_callback_regenerate_matrix_data($nid){
   
   module_load_include('inc', 'nexus', 'includes/nexus.matrix');
-  
-  cache_clear_all();
-  
+
   $node = node_load($nid);
 
   $matrix_editor = nexus_project_get_matrix_data($node);
