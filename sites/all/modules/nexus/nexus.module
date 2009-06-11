@@ -1030,12 +1030,17 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
    
    $character_group_options[0] = t('Add to new group');
      
-   $character_groups = nexus_get_character_groups($character_root_tid);
+   $character_groups = nexus_get_characters($character_root_tid);
      
-    if(is_array($character_groups)){
+     
+    if(count($character_groups)){
     
-      $character_group_options += $character_groups;
-    
+      foreach($character_groups as $character_group){
+        
+        $character_group_options[$character_group->tid] = $character_group->name;
+        
+      }
+  
     } 
      
     $term_parents = taxonomy_get_parents($character_tid);
@@ -1196,18 +1201,18 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
 }
 
 
-function nexus_get_character_groups($character_root_tid){
+function nexus_get_characters($parent){
   
-  $sql = 'SELECT td.tid, td.name  
+  $sql = 'SELECT td.tid, td.name, td.description  
      FROM {term_data} td 
      INNER JOIN {term_hierarchy} th ON th.tid = td.tid 
      WHERE th.parent = %d';
 
-   $result = db_query(db_rewrite_sql($sql), $character_root_tid);
+   $result = db_query(db_rewrite_sql($sql), $parent);
 
    while ($term = db_fetch_object($result)) {
 
-     $character_groups[$term->tid] = $term->name;
+     $character_groups[$term->tid] = $term;
 
    }
 

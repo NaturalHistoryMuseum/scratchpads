@@ -40,11 +40,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
       'resizable' => ($editable ? 1 : 0) 
     );
    
-    // Get all the charcater terms attached to this project 
-    
-    $character_vid = nexus_get_character_vid();
-    
-    $character_terms = taxonomy_get_tree($character_vid, $node->character_root_tid);
+    // Get all the charcater groups attached to this project 
+    $character_groups = nexus_get_characters($node->character_root_tid);
     
     // Get settings for these characters (column width & numeric)
     $character_settings = nexus_get_character_settings($node->character_root_tid);
@@ -63,31 +60,34 @@ function nexus_project_get_matrix_data($node, $editable = true) {
       
     );
        
-    foreach($character_terms as $character_term){
+    $character_terms = array();   
+       
+    foreach($character_groups as $character_group_tid => $character_group){
      
-      // If the parent is the root term, this is a char group
-      if($character_term->parents[0] == $node->character_root_tid){
-          
-        $groups[$character_term->tid] = $character_term->name;
- 
-      }else{ // This is an actual character
+      $characters = nexus_get_characters($character_group_tid);
+
+      if(count($characters)){
+        
+        $character_terms += $characters;
+  
+        foreach($characters as $character_tid => $character){
 
         $column = array(
-          'id' => $character_term->tid,
-          'field' => $character_term->tid,
+          'id' => $character_tid,
+          'field' => $character_tid,
           'name' => '<span>'.$counter.'</span>',
-          'width' => ($character_settings['width'][$character_term->tid] ? $character_settings['width'][$character_term->tid] : 50),
+          'width' => ($character_settings['width'][$character_tid] ? $character_settings['width'][$character_tid] : 50),
           'cssClass' => 'cell-title',
           'editor' => 'nexusCellEditor',
           'term' => $character_term->name,
-          'description' => addslashes($character_term->description),
-          'groupID' => $character_term->parents[0],
-          'group' => $groups[$character_term->parents[0]],
+          'description' => addslashes($character->description),
+          'groupID' => $character_group_tid,
+          'group' => $character_group->name,
           'resizable' => ($editable ? 1 : 0)
         );
         
         // Get options for this character
-        $nexus_controlled_states = nexus_get_states_for_character($character_term->tid);      
+        $nexus_controlled_states = nexus_get_states_for_character($character_tid);      
 
         if(count($nexus_controlled_states)){
         
@@ -131,6 +131,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         $counter++;
       
       }  
+      
+      }
 
     }
 
