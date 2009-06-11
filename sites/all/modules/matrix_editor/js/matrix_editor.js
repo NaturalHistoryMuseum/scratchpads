@@ -281,7 +281,7 @@ function initMatrixEditor(){
               2500
             );
             
-            // $loader.remove();
+            $loader.remove();
 
          },
          'json'

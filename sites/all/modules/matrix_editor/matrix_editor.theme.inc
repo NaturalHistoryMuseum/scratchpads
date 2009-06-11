@@ -117,7 +117,7 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
 
   $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
   
-  $path = drupal_get_path('module', 'nexus');
+  $path = drupal_get_path('module', 'matrix_editor');
 
    $form['save_changes'] = array(
     '#type' => 'image_button',
