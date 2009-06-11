@@ -74,7 +74,7 @@ function nexus_callback_regenerate_matrix_data($nid){
   
   module_load_include('inc', 'nexus', 'includes/nexus.matrix');
   
-  $node = node_load($nid);
+  $node = node_load($nid, null, true);
   
   $matrix_editor = nexus_project_get_matrix_data($node);
   
