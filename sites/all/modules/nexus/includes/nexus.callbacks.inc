@@ -384,9 +384,8 @@ function nexus_callback_character_form_submit(){
   
   $form_state = $submitted_form['form_state'];
   
-  if($form_state['validated']){
+  // if($form_state['validated']){
     
-    // Only reset the form if we're adding a new character
     if(!is_numeric($character_tid)){
       
       // If a new group has been created, we need to add it to the options
@@ -403,7 +402,7 @@ function nexus_callback_character_form_submit(){
     
     $return['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
     
-  }
+  // }
 
   return $return;
   
