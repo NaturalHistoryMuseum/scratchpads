@@ -238,7 +238,7 @@ function initMatrixEditor(){
 	
   $('#matrix-editor-panel input.form-submit').click(function(){    
   
-    $loader = $("<img class='imageLoader' src='"+Drupal.settings.matrixEditorPath+"/images/ajax-loader.gif' />").insertAfter($(this));
+    $loader = $("<img src='"+Drupal.settings.matrixEditorPath+"/images/ajax-loader.gif' />").insertAfter($(this));
   
     var args = $("#matrix-editor-panel form").serialize();
     
