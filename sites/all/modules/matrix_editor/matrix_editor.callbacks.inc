@@ -183,6 +183,7 @@ function matrix_editor_callback_update_node(){
       }
       
       $form_state['values']['op'] = t('Save');
+      $form_state['submitted'] = true;
 
       $node = node_load($nid);
 
