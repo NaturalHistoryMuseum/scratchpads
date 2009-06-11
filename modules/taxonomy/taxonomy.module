@@ -820,9 +820,9 @@ function taxonomy_get_children($tid, $vid = 0, $key = 'tid') {
  *   Results are statically cached.
  */
 function taxonomy_get_tree($vid, $parent = 0, $depth = -1, $max_depth = NULL) {
-  if(function_exists('leftandright_use_leftandright') && leftandright_use_leftandright($vid)){
-    return leftandright_get_tree($vid, $parent, $max_depth);
-  }
+  // if(function_exists('leftandright_use_leftandright') && leftandright_use_leftandright($vid)){
+  //   return leftandright_get_tree($vid, $parent, $max_depth);
+  // }
   static $children, $parents, $terms;
 
   $depth++;
@@ -1176,6 +1176,7 @@ function taxonomy_render_nodes($result) {
  * Implementation of hook_nodeapi().
  */
 function taxonomy_nodeapi($node, $op, $arg = 0) {
+  
   switch ($op) {
     case 'load':
       $output['taxonomy'] = taxonomy_node_get_terms($node);
