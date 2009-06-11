@@ -1019,9 +1019,6 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
    $form['character_tid'] = array('#type' => 'hidden', '#value' => $character_tid);
  
    $character_root_tid = nexus_get_project_character_root_tid($project_nid); 
-   $character_vid = nexus_get_character_vid();
-
-   $character_groups = taxonomy_get_tree($character_vid, $character_root_tid, -1, 1);
    
    $form['group']['new_group'] = array(
      '#type' => 'textfield',
@@ -1033,26 +1030,24 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
    
    $character_group_options[0] = t('Add to new group');
      
-      if(count($character_groups)){
-        
-        foreach($character_groups as $character_group){
-          
-          $character_group_options[$character_group->tid] = $character_group->name;
-          
-        }
-        
-      }
-      
-      $term_parents = taxonomy_get_parents($character_tid);
-      
-      $default_group_tid = nexus_get_last_character_group($character_root_tid);
-   
-      $form['group']['character_group'] = array(
-        '#type' => 'select',
-        '#title' => t('Character group'),
-        '#options' => $character_group_options,
-        '#default_value' => ($character_tid ? key($term_parents) : $default_group_tid)
-      );
+   $character_groups = nexus_get_character_groups($character_root_tid);
+     
+    if(is_array($character_groups)){
+    
+      $character_group_options += $character_groups;
+    
+    } 
+     
+    $term_parents = taxonomy_get_parents($character_tid);
+    
+    $default_group_tid = nexus_get_last_character_group($character_root_tid);
+ 
+    $form['group']['character_group'] = array(
+      '#type' => 'select',
+      '#title' => t('Character group'),
+      '#options' => $character_group_options,
+      '#default_value' => ($character_tid ? key($term_parents) : $default_group_tid)
+    );
     
     
     
@@ -1134,11 +1129,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
        );
      
        $states = $form_state['values']['states'];
-       
-       
-    
-       
-    
+
        // Add the current choices to the form.
        for ($delta = 0; $delta < $states_count; $delta++) {
                  
@@ -1203,6 +1194,27 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
   return $form;
    
 }
+
+
+function nexus_get_character_groups($character_root_tid){
+  
+  $sql = 'SELECT td.tid, td.name  
+     FROM {term_data} td 
+     INNER JOIN {term_hierarchy} th ON th.tid = td.tid 
+     WHERE th.parent = %d';
+
+   $result = db_query(db_rewrite_sql($sql), $character_root_tid);
+
+   while ($term = db_fetch_object($result)) {
+
+     $character_groups[$term->tid] = $term->name;
+
+   }
+
+   return $character_groups;
+  
+}
+
 
   
 
