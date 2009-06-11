@@ -75,8 +75,7 @@ function DataView() {
 	}
 	
 	function updateItem(id,item) {
-
-		items[idxById[id]] = item;
+    items[idxById[id]] = item;
 		if (!updated) updated = {};
 		updated[id] = true;
 		refresh();

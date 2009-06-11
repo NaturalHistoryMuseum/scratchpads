@@ -14,6 +14,7 @@ function matrix_editor_views_plugins() {
         'uses fields' => TRUE,
         'uses options' => TRUE,
         'uses grouping' => FALSE,
+        'use ajax' => FALSE,
         'type' => 'normal'
       ),
     ),

@@ -33,63 +33,201 @@ function matrix_editor_callback_viewport_resized(){
    
 }
 
+
+function array_diff_assoc2_deep($array1, $array2) {
+    $ret = array();
+    foreach ($array1 as $k => $v) {
+        if (!isset($array2[$k])) $ret[$k] = $v;
+        else if (is_array($v) && is_array($array2[$k])) $ret[$k] = array_diff_assoc2_deep($v, $array2[$k]);
+        else if ((string)$v != (string)$array2[$k]) $ret[$k] = $v;
+    }
+    return $ret;
+}
+
+
+
 function matrix_editor_callback_get_form_field(){
  
   module_load_include('inc', 'node', 'node.pages');
- 
+
   $nid = $_POST['nid'];
   $field = $_POST['field'];
+  $view_field = $_POST['view_field'];
   
-  $node = node_load($nid);
+  if($nid){
+    
+    $node = node_load($nid);
+
+    $form_state = array();
+
+    $form_id = $node->type .'_node_form';
+
+    $form = drupal_retrieve_form($form_id, $form_state, $node);
+
+    drupal_prepare_form($form_id, $form, $form_state);
+
+    drupal_alter('form', $form, array(), $form_id);
+
+    drupal_process_form($form_id, $form, $form_state);
+    
+    if($field == 'body'){
+      $field .= '_field';
+    }
+    
+    if($form[$field]){
+      
+      $form[$field]['#attributes'] = array('class' => 'matrix-editor-field');
+      $output = drupal_render($form[$field]);
+      
+    }elseif(count($_POST['vids'])){
+      
+        foreach($_POST['vids'] as $vid){
+          
+          $output .= drupal_render($form['taxonomy'][$vid]);
+          
+        }
+      
+    }else{
+      
+      matrix_editor_get_form_element($field, $form, $form_element);
+
+      if($form_element){
+        
+        $output .= drupal_render($form_element);
+        
+      }else{
+        
+        $output .= '<p>'.t('Sorry, this field cannot be found for this node type').'</p>';
+        
+      }
+
+       
+      
+    }
+
+  $form['nid']['#type'] = 'hidden';
+   
+  $output .= drupal_render($form['nid']); 
   
+  $form['view_field'] = array(
+    '#type' => 'hidden', 
+    '#value' => $view_field, 
+    '#id' => 'view_field', 
+    '#name' => 'view_field'
+  );
   
-  switch ($field){
-    
-    case 'body':
-    
-      $form_state['body'] = 'hi';
-      $form = node_content_form($node, $form_state);
-      $output = drupal_render($form['body_field']['body']);
-      
-    break;
-    
-    case 'title':
-    
-      $form = node_content_form($node, array());
-      
-      print_r($form);
-      
-      $form['title']['#value'] = $node->title;
-      
-      // print_r($form);
-      
-      // $output = drupal_render($form['title']);
-      
-    break;
-    
-    default:
-      
-      module_load_include('inc', 'content', 'includes/content.node_form');
-            
-      $content_type = content_types($node->type);
-
-      $form = array();
-      $form_state = array();
-      $field = content_field_form($form, $form_state, $content_type['fields']['field_b_cck_text']);
-
-      // print_r($field);
-
-      $output = drupal_render($field['field_b_cck_text'][0]);
-    
-      // $output = content_view_field($content_type['fields']['field_b_cck_text'], $node);
-    
-    break;
+  $output .= drupal_render($form['view_field']);  
+   
+  return array('status' => TRUE, 'data' => $output); 
     
   }
   
-  return array('status' => TRUE, 'data' => $output);
+}
+
+
+
+
+function matrix_editor_get_form_element($field, &$form, &$element){
+  
+  static $count;
+  
+  if($element){
+    return;
+  }
+  
+  foreach(element_children($form) as $child_element){
+    
+    if($child_element === $field){
+
+       $element = $form[$child_element];
+       return;
+      
+    }elseif(count(element_children($form[$child_element]))){
+      
+      $count++;  
+      matrix_editor_get_form_element($field, $form[$child_element], $element);
+
+    }
+    
+  }
   
 }
+
+
+
+
+function matrix_editor_callback_update_node(){
+  
+  $default_nid = $_POST['nid'];
+  $view_name = $_POST['view'];
+  $view_field = $_POST['view_field'];
+  
+  $nids = $_POST['nids'];
+  $nids[] = $default_nid;
+  
+  if(count($nids)){
+  
+  module_load_include('inc', 'node', 'node.pages');
+    
+    foreach($nids as $nid){
+
+      $_POST['nid'] = $nid;
+      $form_state = array();
+    
+      $form_state['values'] = $_POST;
+      
+      if(!$form_state['values']['taxonomy']){
+
+        $form_state['taxonomy_tree_override'] = true;
+
+      }
+      
+      $form_state['values']['op'] = t('Save');
+
+      $node = node_load($nid);
+
+      if($node->type){
+       
+        $form_id = $node->type .'_node_form';
+
+        drupal_execute($form_id, $form_state, $node);
+        
+      }
+      
+      $errors = form_get_errors();
+      
+      if(count($errors)){
+        break;
+      }
+      
+    }
+    
+    if (!count($errors)) {
+
+      // Get the new view field content to add to the matrix
+      
+      // Double check view name exists - FF2 with firebug seems sometimes to lose it...
+      if($view_name){ 
+
+        $view = views_get_view($view_name);
+        $view->is_cacheable = 0;
+        $view->matrix_editor_nid = $default_nid;
+
+        $view->execute();
+        $view->render();
+
+        $output = $view->render_field($view_field, 0);
+        
+      }
+
+    }  
+    
+  }
+  
+  return array('data' => $output, 'result' => theme('status_messages'));
+  
+}
+
 
 function matrix_editor_callback_set_option($view_name, $option, $value){
   

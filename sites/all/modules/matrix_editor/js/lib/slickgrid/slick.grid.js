@@ -259,14 +259,16 @@ function SlickGrid($container,data,columns,options)
            var rightScrollPos = $divMainScroller.width() + $divMainScroller.scrollLeft() - 35;
            
            var scrollMax = $divMain.width() - $divMainScroller.width(); 
-      
-           if(ui.position.left > rightScrollPos){
+         
+           var positionRight = ui.item.width() + ui.position.left;
+
+           if(positionRight > rightScrollPos){
              
-             $('.main-scroller').animate({scrollLeft:scrollMax}, 1000);
+             $('.main-scroller').animate({scrollLeft:scrollMax}, 700);
              
            }else if(ui.position.left < ($divMainScroller.scrollLeft() + 20)){
              
-             $('.main-scroller').animate({scrollLeft:0}, 1000);
+             $('.main-scroller').animate({scrollLeft:0}, 700);
              
            }else{
              
@@ -283,7 +285,6 @@ function SlickGrid($container,data,columns,options)
         },
       
          update: function(e,ui) {
-            console.time("column reorder");
             
             var newOrder = $divHeaders.sortable("toArray");
             
@@ -898,12 +899,12 @@ function SlickGrid($container,data,columns,options)
 			if (!currentEditor || (validated = commitCurrentEdit())) 
 			{
 				// handler will return true if the event was handled
-				if (self.onClick(e, row, cell)) 
-				{
-					e.stopPropagation();
-					e.preventDefault();
-					return false;
-				}
+        if (self.onClick(e, row, cell)) 
+        {
+         e.stopPropagation();
+         e.preventDefault();
+         return false;
+        }
 			}
 		}
 
@@ -1234,7 +1235,7 @@ function SlickGrid($container,data,columns,options)
 							columns[currentCell].setValueHandler(value, columns[currentCell], data[currentRow]);
 						}
 						else {
-							data[currentRow][columns[currentCell].field] = value;
+              data[currentRow][columns[currentCell].field] = value;
 							makeSelectedCellNormal();
 						}
 					}

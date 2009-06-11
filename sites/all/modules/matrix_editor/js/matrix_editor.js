@@ -50,15 +50,20 @@ var parents = [];
 
 
 function initMatrixEditor(){
+  
+  if($.browser.msie && $.browser.version < 7){
+    $("#myGrid").html('Sorry, this feature isn\'t currently available for IE6');
+    return;
+  }
     
   // initialize the model
 	dataView = new DataView();
 	dataView.beginUpdate();
 	dataView.setItems(data);
 	
-	if(typeof filter != 'undefined'){
-	  dataView.setFilter(filter);
-	}
+  if(typeof filter != 'undefined'){
+    dataView.setFilter(filter);
+  }
 	
 	dataView.endUpdate();
 	
@@ -71,22 +76,45 @@ function initMatrixEditor(){
 
 		if ($(e.target).hasClass("toggle")) {
 			
-			var item = dataView.rows[row];
-			if (item) {
-				if (!item._collapsed){
-				  item._collapsed = true;
-				}else{
-				  item._collapsed = false;
-				}
-	
-        dataView.updateItem(item.id,item);           
-			}
+      var item = dataView.rows[row];
+      if (item) {
+       if (!item._collapsed){
+         item._collapsed = true;
+       }else{
+         item._collapsed = false;
+       }
+       
+              dataView.updateItem(item.id,item);           
+      }
 			
 			return true;
 		}
 		
 		return false;
 	}
+	
+	// Only for the matrix editor view
+	$(".view-content #myGrid .c").click(function(e){
+	  
+	  if(e.metaKey){
+	   
+	    if($("#myGrid .c.selected").attr('cell') == $(this).attr('cell')){
+	      
+	      $(this).toggleClass('multiSelected');
+	      
+	    }
+	   
+	    e.stopPropagation();
+      e.preventDefault();
+      return false;
+	    
+	  }else{
+	    
+	    $("#myGrid .c").removeClass('multiSelected');
+	    
+	  }
+	  
+	});
 	
 	grid.onColumnsResized = function(e, ui){
 	  
@@ -205,18 +233,67 @@ function initMatrixEditor(){
 		
 		searchString = this.value;
 		dataView.refresh();
+		
 	});
+	
+  $('#matrix-editor-panel input.form-submit').click(function(){    
+  
+    $loader = $("<img class='imageLoader' src='"+Drupal.settings.matrixEditorPath+"/images/ajax-loader.gif' />").insertAfter($(this));
+  
+    var args = $("#matrix-editor-panel form").serialize();
+    
+    args+='&view='+Drupal.settings.matrixEditorViewName;
+  
+    if($('#matrix-editor-field iframe').length){
+  
+      args += '&body='+$('#matrix-editor-field iframe').contents().find('body').html();
+      
+    }
+    
+    // Are there multiple nodes selected?
+    $('#myGrid div.c.multiSelected').each(function(){
+      
+      var row = $(this).parents('.r').attr('row');
+      var item = dataView.rows[row];
+      
+      args += '&nids[]='+item.id;
+      
+    });
+    
+       $.post(
+         Drupal.settings.matrixEditorCallbackPath+'/update_node', 
+         args,
+         function(response){
+           
+           if(response.data){
+             
+             $('#myGrid .editor-text, #myGrid .multiSelected').html(response.data);
+             
+            }
+            
+            $result = $("#matrix-editor-result");
+            $result.html(response.result);
+            
+            $result.fadeIn('fast');
+     
+            setTimeout(
+              function(){$result.fadeOut()}, 
+              2500
+            );
+            
+            $loader.remove();
+
+         },
+         'json'
+      );  
+    
+    return false;
+    
+  });
+  
   
 }
 
-function matrixFilter(item) {
-		
-	if (searchString != "" && item["title"].indexOf(searchString) == -1)
-		return false;
-		
-	return true;
-	
-}
 
 
 
@@ -231,76 +308,72 @@ var selectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
 };
 
 
-var MatrixTextCellEditor = function($container, columnDef, value, dataContext) {
+
+var MatrixCellEditor = function($container, columnDef, value, dataContext) {
     var $input;
     var defaultValue = value;
     var scope = this;
     
     this.init = function() {
-
+      
+        $input =  $("<div tabIndex='0' type=text class='editor-text' autocomplete='off' />");
         
-          args = {
-            field: columnDef.id,
-            nid: dataContext.nid
-          }
-
+        if (value != null) 
+        {
+            $input[0].defaultValue = value;
+            $input.html(defaultValue);
+        }
+        
+        field_args = columnDef.args+'&field='+columnDef.id+'&nid='+dataContext.id+'&view_field='+columnDef.field;
+           
         $.post(
-          Drupal.settings.matrixEditorCallbackPath+'/get_form_field', 
-          args,
-          function(response){
-            
-            if(response.status){
-              
-              $input = $("<INPUT type=text class='editor-text' />");
-
-              if (value != null) 
-              {
-                  $input[0].defaultValue = value;
-                  $input.val(defaultValue);
-              }
-
-              $input.appendTo($container);
-              $input.focus().select();
-              
-              $('#matrix-editor-panel').html(response.data);
-              
-            }
-
-          },
-          'json'
+           Drupal.settings.matrixEditorCallbackPath+'/get_form_field', 
+           field_args,
+           function(response){
+             
+             $('#matrix-editor-field').html($(response.data));
+             
+             if($('#matrix-editor-panel').is(':hidden')){
+               $('#matrix-editor-panel').slideDown(1000);
+             }
+             
+             $('#matrix-editor-field').find('input');
+             
+             Drupal.attachBehaviors($('#matrix-editor-field'));
+             
+           },
+           'json'
         );
         
+        $input.appendTo($container);
+        $input.focus().select();
+  
     }
     
+    
     this.destroy = function() {
-        $input.remove();
+      $input.remove();
     }
+    
     
     this.focus = function() {
         $input.focus();
     }
     
     this.setValue = function(value) {
-        $input.val(value);
+        $input.html(value);
         defaultValue = value;
     }
     
     this.getValue = function() {
-        return $input.val();
+        return $input.html();
     }
     
     this.isValueChanged = function() {
-        return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+        return (!($input.html() == "" && defaultValue == null)) && ($input.html() != defaultValue);
     }
     
     this.validate = function() {
-        if (columnDef.validator) 
-        {
-            var validationResults = columnDef.validator(scope.getValue());
-            if (!validationResults.valid) 
-                return validationResults;
-        }
-        
         return {
             valid: true,
             msg: null
@@ -308,13 +381,8 @@ var MatrixTextCellEditor = function($container, columnDef, value, dataContext) {
     }
     
     this.init();
+    
 }
-
-
-
-
-
-
 
 
 

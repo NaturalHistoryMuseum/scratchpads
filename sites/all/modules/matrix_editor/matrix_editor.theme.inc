@@ -12,7 +12,9 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     
   $view = $vars['view'];
   
-  drupal_add_js(array('matrixEditorCallbackPath' => url('matrix_editor/callback')), 'setting');
+  drupal_add_js(array('matrixEditorCallbackPath' => url('matrix_editor/callback/'.$view->name)), 'setting');
+  drupal_add_js(array('matrixEditorPath' => drupal_get_path('module', 'matrix_editor')), 'setting');
+  
   drupal_add_js(array('matrixEditorViewName' => $view->name), 'setting');
   
   $result   = $vars['rows'];
@@ -30,7 +32,7 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
   if($options['fixedFirstColumn']){
     
     $first_field = key($handlers);
-
+  
   }
 
   $options['enableAddRow'] = false;
@@ -40,44 +42,118 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     if (!$name = $handler->label()) {
       $name = $handler->ui_name();
     }
+    
+    ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
 
     $column = array(
       'id' => $field,
       'name' => $name,
-      'field' => $fields[$field]->field_alias,
-      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 50),
+      'field' => $field,
+      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 100),
       'cssClass' => 'cell-title',
       'resizable' => ($options['enableColumnResize'] ? 1 : 0),
-      'formatter' => 'selectorCellFormatter'  
+      'formatter' => 'selectorCellFormatter',
+      'editor' => 'MatrixCellEditor',
+      'args' => ''  
     );
 
     if((isset($first_field) && $first_field == $field)){
       
       unset($first_field);
     
-    }elseif($field != 'nid'){ // You can never edit a NID
-
-      $column['editor'] = 'MatrixTextCellEditor';
+    }elseif($field != 'nid'){
+      
+      // Is this a CCK field?
+      if($handler->content_field['widget']['type']){
+        
+        $column['id'] = $handler->content_field['field_name'];
+        
+      }elseif($field == 'tid'){
+        
+        foreach($handler->options['vids'] as $vid){
+       
+          if($vid){
+            
+            $column['args'] .= 'vids[]='.$vid.'&';
+            
+          }
+          
+        }
+ 
+      }
       
     }
-    
+
     $columns[] = $column;
     
   }
   
+  $renders = array();
+  $keys = array_keys($view->field);
   
+  $node_types = array();
+  $data = array();
   
-  foreach ($result as $num => $row) {
-    
-    $data[$num] = (array) $row;
+  module_load_include('inc', 'node', 'node.pages');
 
+  foreach ($result as $count => $row) {
+    
+    foreach ($keys as $id) {
+
+      $data[$count][$id] = $view->field[$id]->theme($row);
+
+    }
+
+    if(!$node_types[$row->node_type]){
+      
+      matrix_editor_add_node_form_js($row->node_type, $row->nid);
+      $node_types[$row->node_type] = $row->nid;
+      
+    }
+
+    $data[$count]['id'] = $row->nid;
+    
   }
-  
-  // drupal_add_js('var fields = '.drupal_to_js($field_forms), 'inline');
 
   $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
-  $vars['matrix'] .= '<div id="matrix-editor-panel"></div>';
+  
+  $path = drupal_get_path('module', 'nexus');
 
+   $form['save_changes'] = array(
+    '#type' => 'image_button',
+    '#src' => $path.'/images/save_changes.gif',
+    '#value' => t('Save note'),
+    );
+  
+   $vars['matrix'] .= '<div id="matrix-editor-panel"><form>';
+   $vars['matrix'] .= '<div id="matrix-editor-field"></div>';
+   $vars['matrix'] .= '<div id="save-field"> '.drupal_render($form).'</div>';
+   $vars['matrix'] .= '</form></div>';
+   $vars['matrix'] .= '<div id="matrix-editor-result"></div>';
+  
+ 
+}
+
+/**
+ * Load and pseudo-render the form - ensures all js & css files are available
+ */
+function matrix_editor_add_node_form_js($node_type, $nid){
+
+  $form_state = array();
+  $node = node_load($nid);
+
+  $form_id = $node_type .'_node_form';
+
+  $form = drupal_retrieve_form($form_id, $form_state, $node);
+
+  drupal_prepare_form($form_id, $form, $form_state);
+
+  drupal_alter('form', $form, array(), $form_id);
+
+  drupal_process_form($form_id, $form, $form_state);
+  
+  drupal_render_form($form_id, $form);
+  
 }
 
 

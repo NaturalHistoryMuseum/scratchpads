@@ -3,12 +3,18 @@
 
 include dirname(__FILE__) .'/matrix_editor.theme.inc';
 
-
-
-
-
-
-
+/** 
+* Filter the view to just return one nid 
+*/
+function matrix_editor_views_query_alter(&$view, &$query){
+  
+  if($view->matrix_editor_nid){
+    
+    $query->add_where(0, 'node.nid = %d', $view->matrix_editor_nid);
+    
+  }
+  
+}
 
 
 /** 
@@ -17,16 +23,27 @@ include dirname(__FILE__) .'/matrix_editor.theme.inc';
 function matrix_editor_menu(){
     
   // Menu callbacks
-  $items['matrix_editor/callback/%'] = array(
+  $items['matrix_editor/callback/%/%'] = array(
+    'access callback' => 'matrix_editor_access',
+    'access arguments' => array(2),
     'page callback' => 'matrix_editor_callback',
-    'page arguments' => array(2),
-    'access callback' => 'nexus_access',
-    'access arguments' => array('update'),
+    'page arguments' => array(3),
     'type' => MENU_CALLBACK,
     'file' => 'matrix_editor.callbacks.inc',
   );
     
   return $items;
+  
+}
+
+/** 
+* Check user has access to the view
+*/
+function matrix_editor_access($view_name){
+  
+  $view = views_get_view($view_name); 
+  $view->build();
+  return $view->display['default']->handler->access();
   
 }
 
@@ -84,17 +101,48 @@ function matrix_editor_theme() {
  * Array of jQuery files to replace if jQuery is loaded.
  */
 function matrix_editor_get_jquery_replacements() {
-  return array(
+  
+  $path = drupal_get_path('module', 'matrix_editor').'/js/lib';
+  
+  $replacements =  array(
     'module' => array(
-      'misc/farbtastic/farbtastic.js' => 'farbtastic.js',
-      'misc/teaser.js' => 'teaser.js',
-      'misc/ahah.js' => 'ahah.js',
-      'misc/jquery.form.js' => 'jquery.form.js',
+      'misc/farbtastic/farbtastic.js' => $path.'/jquery/farbtastic.js',
+      'misc/teaser.js' => $path.'/jquery/teaser.js',
+      'misc/ahah.js' => $path.'/jquery/ahah.js',
+      'misc/jquery.form.js' => $path.'/jquery/jquery.form.js',
     ),
     'core' => array(
-      'misc/tabledrag.js' => 'tabledrag.js',
+      'misc/tabledrag.js' => $path.'/jquery/tabledrag.js',
     ),
   );
+  
+  // Replace jquery
+  if(jquery_ui_get_version() != '1.7'){
+    
+    $jquery_ui = array(
+      'ui.core.js',
+      'ui.resizable.js',
+      'ui.draggable.js',
+      'ui.droppable.js',
+      'ui.sortable.js',
+      'ui.slider.js',
+      'ui.datepicker.js',
+      'ui.tabs.js',
+      'effects.core.js',
+      'effects.highlight.js'
+    );
+    
+    foreach($jquery_ui as $ui){
+      
+      $replacements['module'][JQUERY_UI_PATH.'/ui/'.$ui] = $path.'/ui/'.$ui;
+      
+    }
+    
+  }
+
+  return $replacements;
+  
+  
 }
 
 /**
@@ -145,7 +193,6 @@ function matrix_editor_preprocess_page(&$variables) {
         // If the file to replace is loaded on this page...
         if (isset($scripts[$type][$find])) {
           // Create a new entry for the replacement file, and unset the original one.
-          $replace = $path .'/'. $replace;
           $scripts[$type][$replace] = $scripts[$type][$find];
           unset($scripts[$type][$find]);
         }
@@ -164,28 +211,20 @@ function _matrix_editor_add_files(){
 
   $path = drupal_get_path('module', 'matrix_editor');
 
-  $ui_path = drupal_get_path('module', 'jquery_ui');
-
   matrix_editor_alternate_js(true);
   
-  // Add jquery_ui files
-  if(jquery_ui_get_version() == '1.7'){
+    jquery_ui_add(
+      array(
+      'ui.resizable', 
+      'ui.draggable', 
+      'ui.droppable', 
+      'ui.sortable', 
+      'ui.slider', 
+      'ui.datepicker', 
+      'effects.highlight'
+      ),
+    'none');
     
-      jquery_ui_add(array('', 'ui.draggable', 'ui.droppable', 'ui.sortable', 'ui.slider', 'effects.highlight'),'none');
-    
-  }else{
-    
-    drupal_add_js($path.'/js/lib/ui/ui.core.js');
-    drupal_add_js($path.'/js/lib/ui/ui.resizable.js');
-    drupal_add_js($path.'/js/lib/ui/ui.draggable.js'); 
-    drupal_add_js($path.'/js/lib/ui/ui.droppable.js'); 
-    drupal_add_js($path.'/js/lib/ui/ui.sortable.js'); 
-    drupal_add_js($path.'/js/lib/ui/ui.slider.js');
-    drupal_add_js($path.'/js/lib/ui/effects.core.js');
-    drupal_add_js($path.'/js/lib/ui/effects.highlight.js');
-    
-  }
-
   drupal_add_js($path.'/js/lib/slickgrid/slick.grid.new.js'); 
   drupal_add_js($path.'/js/lib/slickgrid/slick.globaleditorlock.js'); 
   drupal_add_js($path.'/js/lib/slickgrid/slick.model.js');
@@ -273,10 +312,5 @@ function matrix_editor_to_js($elements, $additional_function_names = array()){
 
   
 }
-
-
-
-
-
 
 

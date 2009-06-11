@@ -13,12 +13,12 @@ class matrix_editor_views_plugin extends views_plugin_style {
     $options['editable'] = array('default' => TRUE);
     
     $options['enableColumnResize'] = array('default' => TRUE);
-    $options['enableColumnReorder'] = array('default' => FALSE);
+    $options['enableColumnReorder'] = array('default' => TRUE);
     
     $options['enableCellNavigation'] = array('default' => TRUE);
     $options['asyncEditorLoading'] = array('default' => TRUE);
     
-    $options['fixedFirstColumn'] = array('default' => TRUE);
+    $options['fixedFirstColumn'] = array('default' => FALSE);
     
     $options['viewportHeight'] = array('default' => 200);   
 
@@ -96,7 +96,7 @@ class matrix_editor_views_plugin extends views_plugin_style {
     );
     
     $form['viewportHeight'] = array(
-      '#title' => t('Viweport height'),
+      '#title' => t('Viewport height'),
       '#type' => 'textfield',
       '#default_value' => $this->options['viewportHeight'],
       '#size' => 10,
@@ -105,6 +105,13 @@ class matrix_editor_views_plugin extends views_plugin_style {
 
     $form['#theme'] = 'matrix_editor_views_plugin_table';
   
+
+  }
+  
+  function query() {
+    
+    // We always want the node type to be returned
+    $this->view->query->add_field('node', 'type');
 
   }
   

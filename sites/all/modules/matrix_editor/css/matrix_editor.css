@@ -76,8 +76,8 @@ li {
 }
 
 #resizableWrapper .ui-resizable-se{
-  bottom: -1px;
-  right: -2px;
+  bottom: 1px;
+  right: 1px;
   cursor:s-resize;
 }
 
@@ -124,6 +124,7 @@ width: 11px;
   font-weight: normal;
   height: 22px;
   padding:1px 2px 2px 1px;
+  overflow: hidden;
 }
 
 .editable div.h,
@@ -175,7 +176,7 @@ width: 11px;
 
 /* Selected & hover cells */
 
-.grid-canvas .r .cell-move-handle:hover, div.c0.selected {
+.grid-canvas .r .cell-move-handle:hover, .fixedFirstCol div.c0.selected {
 background:#dadada;
 border-color: #f8f8f8 #bcbcbc #bcbcbc #f8f8f8 !important;
 }
@@ -201,15 +202,87 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 #matrix-editor-panel{
-  border: 1px solid #C0C0C0;
-  min-height: 150px;
+  border-width: 1px;
+  border-color: #C0C0C0;
+  border-style: none solid solid solid;
   background: #F8F8F8;
 }
 
+.view-content #resizableWrapper{
+  border-bottom: 1px solid #c0c0c0;
+}
 
 
+.grid-canvas .r .c div.editor-text{
+  width: 100%;
+  overflow: hidden;
+}
 
+#matrix-editor-panel{
+  display: none;
+  overflow: hidden;
+}
 
+#matrix-editor-panel form{
+  padding: 20px;
+  margin: 0!important;
+}
+
+#matrix-editor-panel form div.form-item{
+  margin: 0!important;
+}
+
+#matrix-editor-panel div#matrix-editor-field{
+  min-height: 50px;
+}
+
+#matrix-editor-panel div#save-field{
+  text-align: center;
+  width: 131px;
+  margin: 0 auto;
+  position: relative;
+  padding: 20px 30px 0 0;
+  clear: both;
+}
+
+#matrix-editor-panel div#save-field img.imageLoader{
+  position: absolute;
+  top: 25px;
+  right: 2px;
+}
+
+#matrix-editor-panel div#save-field input{
+  margin: 0;
+}
+
+.view-content #myGrid .c p{
+  margin: 0!important;
+}
+
+#matrix-editor-result{
+  min-height: 50px;
+}
+
+#matrix-editor-result .messages{
+  margin: 0;
+}
+
+#matrix-editor-result .status{
+  border-width: 1px;
+  border-color: #C0C0C0;
+  border-style: none solid solid solid;
+  text-align: center;
+  color: #7cb603;
+  background: #f9ffee;
+}
+
+.view-content #myGrid .multiSelected{
+  border-color: #00ccff;
+}
+
+.view-content #myGrid .c{
+  cursor: pointer;
+}
 
 
 

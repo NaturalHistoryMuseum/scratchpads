@@ -83,6 +83,7 @@ var TextCellEditor = function($container, columnDef, value, dataContext) {
         
         $input.appendTo($container);
         $input.focus().select();
+        
     }
     
     this.destroy = function() {
