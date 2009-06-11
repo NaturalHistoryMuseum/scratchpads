@@ -96,7 +96,7 @@ function initMatrixEditor(){
 	// Only for the matrix editor view
 	$(".view-content #myGrid .c").click(function(e){
 	  
-	  if(e.metaKey){
+	  if(e.metaKey || e.ctrlKey){
 	   
 	    if($("#myGrid .c.selected").attr('cell') == $(this).attr('cell')){
 	      
@@ -281,7 +281,7 @@ function initMatrixEditor(){
               2500
             );
             
-            $loader.remove();
+            // $loader.remove();
 
          },
          'json'
