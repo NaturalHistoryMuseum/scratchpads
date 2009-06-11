@@ -413,14 +413,14 @@ function darwincore_form(&$node) {
   while($row = db_fetch_array($results)){
     $location_nodes[$row['title']]=$row['title'];
   }
-  $form['locate']['locationnode'] = array(
-    '#type' => 'select',
-    '#title' => t('Select a previously created location'),
-    //'#multiple' => 1,
-    '#size' => 10,
-    '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d",$node->locationnode))),
-    '#options' => $location_nodes
-  );
+  // $form['locate']['locationnode'] = array(
+  //   '#type' => 'select',
+  //   '#title' => t('Select a previously created location'),
+  //   //'#multiple' => 1,
+  //   '#size' => 10,
+  //   '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d",$node->locationnode))),
+  //   '#options' => $location_nodes
+  // );
   $form['locate']['togglebelow'] = array(
     '#value' => '<a href="#" onclick="$(\'#locationfieldset\').show();$(\'#edit-creatingnewlocation\').val(\'1\');$(\'#edit-locationnode\').attr(\'disabled\',\'disabled\');return false;">Or, Create a new location</a>'
   );
@@ -974,7 +974,16 @@ function darwincore_submit($form, &$form_state){
   // Set the title to be a concat of other fields
   $form_state['values']['title'] = $form_state['values']['institutioncode']." ".$form_state['values']['collectioncode']." ".$form_state['values']['cataloguenumbertext'];
   // Set the locationnode to be the numeric nid
-  $form_state['values']['locationnode'] = array_pop(db_fetch_array(db_query("SELECT n.nid FROM {node} n, {node_revisions} r WHERE r.vid = n.vid AND r.title = '%s' AND type = 'darwincorelocation'", $form_state['values']['locationnode'])));
+  
+  $darwincorelocation_nodes = db_fetch_array(db_query("SELECT n.nid FROM {node} n, {node_revisions} r WHERE r.vid = n.vid AND r.title = '%s' AND type = 'darwincorelocation'", $form_state['values']['locationnode']));
+  
+  if(is_array($darwincorelocation_nodes)){
+
+    $form_state['values']['locationnode'] = array_pop($darwincorelocation_nodes);
+    
+  }
+  
+
 }
 
 /**
