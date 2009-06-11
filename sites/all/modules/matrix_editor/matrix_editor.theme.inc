@@ -173,9 +173,9 @@ function theme_matrix_editor($options, $columns, $data, $filter = null){
   drupal_add_js('var columns = '.matrix_editor_to_js($columns).';', 'inline');
   
   $output = '<div id="resizableWrapper">
-  <div id="myGrid" style="width:100%;height:300px;" class="hideCols hideRows '.($options['editable'] ? 'editable' : '').'">
+  <div id="myGrid" style="width:100%;height:'.$options['viewportHeight'].'px;" class="hideCols hideRows '.($options['editable'] ? 'editable' : '').'">
   </div></div>';
-    
+
   drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
   
   return $output;
