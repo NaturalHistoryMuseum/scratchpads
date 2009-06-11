@@ -177,7 +177,7 @@ function imagex_get_thumbs_html($minutes = NULL){
   $html = '';
   while($node = db_fetch_object($result)){
     $node = node_load($node->nid);
-    $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'" onclick="imagexclick(\''.$node->nid.'\');">'.image_display($node,  IMAGE_THUMBNAIL, array('alt'=>$node->title)).'</div>';
+    $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'">'.l(image_display($node,  IMAGE_THUMBNAIL, array('alt'=>$node->title)),'node/'.$node->nid.'/edit', array('html'=>TRUE, 'attributes'=>array('target'=>'_blank'))).'</div>';
   }
   return $html;
 }
