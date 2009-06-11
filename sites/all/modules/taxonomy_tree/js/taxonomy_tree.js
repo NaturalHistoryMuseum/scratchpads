@@ -1,4 +1,3 @@
-
 function treeview(){
   
   var self;
@@ -7,7 +6,7 @@ function treeview(){
   return {//
     
     init: function(id, vid, nid, selected, noTree) {
-  
+
       self = this;
       
       elements[id] = {
