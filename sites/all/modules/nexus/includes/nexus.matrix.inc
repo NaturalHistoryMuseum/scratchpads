@@ -43,6 +43,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     // Get all the charcater terms attached to this project 
     
     $character_vid = nexus_get_character_vid();
+    
     $character_terms = taxonomy_get_tree($character_vid, $node->character_root_tid);
 
     // Get settings for these characters (column width & numeric)
