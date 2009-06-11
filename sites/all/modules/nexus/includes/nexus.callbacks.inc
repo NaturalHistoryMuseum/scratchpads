@@ -76,6 +76,8 @@ function nexus_callback_regenerate_matrix_data($nid){
   
   $node = node_load($nid, null, true);
   
+  print_r($node);
+  
   $matrix_editor = nexus_project_get_matrix_data($node);
   
   $js .= "var options = ".drupal_to_js($matrix_editor->options).";\r";
