@@ -880,7 +880,6 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
           
           // Need to validate form so we know all required data i set up
           $form['#validate'][] = 'nexus_project_node_add_form_validate';
-          // $form['#submit'][] = '';
           
           $form['buttons']['submit']['#submit'][] = 'nexus_project_node_add_form_submit';
           

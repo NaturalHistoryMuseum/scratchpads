@@ -61,9 +61,11 @@ function nexus_project_get_matrix_data($node, $editable = true) {
     );
        
     $character_terms = array();   
-       
-    foreach($character_groups as $character_group_tid => $character_group){
-     
+    
+    if(count($character_groups)){
+      
+      foreach($character_groups as $character_group_tid => $character_group){
+
       $characters = nexus_get_characters($character_group_tid);
 
       if(count($characters)){
@@ -136,6 +138,8 @@ function nexus_project_get_matrix_data($node, $editable = true) {
 
     }
 
+    }
+    
     $tree = array();    
     
     if(count($node->taxonomy)){
