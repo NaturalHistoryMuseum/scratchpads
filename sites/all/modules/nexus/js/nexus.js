@@ -595,7 +595,7 @@ function nexus() {
               
         grid.onColumnHeaderClick(columns[columnIndex]);
         
-         data = {
+         args = {
            character_tid: $(ui.item).attr('id'),
            next_tid: $(ui.item).next('div.h').attr('id'),
            prev_tid: $(ui.item).prev('div.h').attr('id')
@@ -603,7 +603,7 @@ function nexus() {
 
        $.post(
          Drupal.settings.nexusCallback+'/reorder_columns', 
-         data,
+         args,
          function(response){
           self.columnsReorderedCallback(response);
          },
