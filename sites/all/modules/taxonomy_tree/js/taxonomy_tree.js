@@ -25,6 +25,8 @@ function treeview(){
     
     displayTree: function(id){
 
+      console.log(id);
+
       var element = elements[id];
 
       $("#"+id).treeview({ 
