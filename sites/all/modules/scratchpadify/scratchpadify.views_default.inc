@@ -291,6 +291,249 @@ function scratchpadify_views_default_views() {
   $views[$view->name] = $view;
   
   
+
+
+  // ---------------------- MATRIX EDITOR: IMAGES ---------------------------------------
+  
+  $view = new view;
+  $view->name = 'matrix_images';
+  $view->description = 'Matrix editor images';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => 'Title',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'tid_1' => array(
+      'label' => 'All terms',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'type' => 'separator',
+      'separator' => ', ',
+      'empty' => '',
+      'link_to_taxonomy' => 0,
+      'limit' => 1,
+      'vids' => array(
+        '9' => 9,
+        '1' => 0,
+        '5' => 0,
+        '18' => 0,
+        '8' => 0,
+        '3' => 0,
+        '11' => 0,
+        '2' => 0,
+        '10' => 0,
+        '17' => 0,
+        '6' => 0,
+        '4' => 0,
+        '16' => 0,
+        '13' => 0,
+        '14' => 0,
+        '7' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'tid_1',
+      'table' => 'term_node',
+      'field' => 'tid',
+      'relationship' => 'none',
+    ),
+    'image_publication_nid' => array(
+      'label' => 'Publication',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'plain',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'image_publication_nid',
+      'table' => 'node_data_image_publication',
+      'field' => 'image_publication_nid',
+      'relationship' => 'none',
+    ),
+    'tid' => array(
+      'label' => 'All terms',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'type' => 'separator',
+      'separator' => ', ',
+      'empty' => '',
+      'link_to_taxonomy' => 0,
+      'limit' => 1,
+      'vids' => array(
+        '3' => 3,
+        '1' => 0,
+        '5' => 0,
+        '18' => 0,
+        '8' => 0,
+        '9' => 0,
+        '11' => 0,
+        '2' => 0,
+        '10' => 0,
+        '17' => 0,
+        '6' => 0,
+        '4' => 0,
+        '16' => 0,
+        '13' => 0,
+        '14' => 0,
+        '7' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'tid',
+      'table' => 'term_node',
+      'field' => 'tid',
+      'relationship' => 'none',
+    ),
+    'image_specimen_nid' => array(
+      'label' => 'Specimen',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'plain',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'image_specimen_nid',
+      'table' => 'node_data_image_specimen',
+      'field' => 'image_specimen_nid',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'image' => 'image',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('style_plugin', 'matrix');
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'matrix/images');
+  $handler->override_option('menu', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+  ));
+
+ 
+  
+  $views[$view->name] = $view;
+
   
   // At the end, return array of default views.
   return $views;
