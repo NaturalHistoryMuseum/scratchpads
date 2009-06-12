@@ -723,8 +723,8 @@ function nexus() {
           
         }
 
-       $('#cell-data #node-form #edit-taxa-tid').val(dataContext.id);
-       $('#cell-data #node-form #edit-character-tid').val(columnDef.id);
+       $("#cell-data .note-form input[name='taxa_tid']").val(dataContext.id);
+       $("#cell-data .note-form input[name='character_tid']").val(columnDef.id);
 
        self.toggleDataPanelItem('cell-data');
 
