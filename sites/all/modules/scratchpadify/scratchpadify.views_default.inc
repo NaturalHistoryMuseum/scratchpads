@@ -1176,7 +1176,7 @@ function scratchpadify_views_default_views() {
      
    );
 
-   // $vocabularies = taxonomy_get_vocabularies('page');
+   $vocabularies = taxonomy_get_vocabularies('page');
    // 
    // if(count($vocabularies)){
    // 
