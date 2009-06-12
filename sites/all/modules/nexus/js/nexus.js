@@ -543,8 +543,6 @@ function nexus() {
     
     onSelectedRowsChanged: function() {
 
-      console.log('hi');
-
        var row = grid.getSelectedRows();
       
        self.deselectColumn();
