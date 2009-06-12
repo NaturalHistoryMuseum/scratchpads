@@ -139,8 +139,10 @@ function matrix_editor_get_form_element($field, &$form, &$element){
     
     if($child_element === $field){
 
-       $element = $form[$child_element];
-       return;
+      if($form[$child_element]['#type']){
+        $element = $form[$child_element];
+        return;
+      }
       
     }elseif(count(element_children($form[$child_element]))){
       
