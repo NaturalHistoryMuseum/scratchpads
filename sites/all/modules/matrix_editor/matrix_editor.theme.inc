@@ -70,7 +70,7 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
         
         $column['id'] = $handler->content_field['field_name'];
         
-      }elseif($field == 'tid'){
+      }elseif(count($handler->options['vids'])){
         
         foreach($handler->options['vids'] as $vid){
        
