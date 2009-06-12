@@ -722,7 +722,7 @@ function nexus() {
           $('<p>This is a <em>numeric character</em> - please enter only numeric values.<p>').appendTo($cellForm);
           
         }
-
+        
        $("#cell-data .note-form input[name='taxa_tid']").val(dataContext.id);
        $("#cell-data .note-form input[name='character_tid']").val(columnDef.id);
 
