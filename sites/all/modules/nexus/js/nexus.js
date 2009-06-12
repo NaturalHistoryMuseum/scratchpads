@@ -711,7 +711,7 @@ function nexus() {
 
             $('input.editor-text').val($(this).val());
             $('input.editor-text').effect("highlight", {color:"#9ADE0B"}, 300);
-            $('input.editor-text').trigger('change');
+            $('input.editor-text').focus();
 
           });
 
