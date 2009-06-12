@@ -83,6 +83,8 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
         $form['taxonomy'][$vid]['#nid'] = $form['#node']->nid;
         
         $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
+        
+        echo $vid;
            
         }
       
