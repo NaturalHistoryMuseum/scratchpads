@@ -290,6 +290,1008 @@ function scratchpadify_views_default_views() {
   $handler->override_option('path', 'vocabularies');
   $views[$view->name] = $view;
   
+  
+  
+  // ---------------------- MATRIX EDITOR: PAGES ---------------------------------------
+
+   $view = new view;
+   $view->name = 'matrix_pages';
+   $view->description = 'Matrix editor for pages';
+   $view->tag = '';
+   $view->view_php = '';
+   $view->base_table = 'node';
+   $view->is_cacheable = FALSE;
+   $view->api_version = 2;
+   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+   $handler = $view->new_display('default', 'Defaults', 'default');
+
+   $fields = array(
+     'title' => array(
+       'label' => 'Title',
+       'alter' => array(
+         'alter_text' => 0,
+         'text' => '',
+         'make_link' => 0,
+         'path' => '',
+         'alt' => '',
+         'prefix' => '',
+         'suffix' => '',
+         'help' => '',
+         'trim' => 0,
+         'max_length' => '',
+         'word_boundary' => 1,
+         'ellipsis' => 1,
+         'strip_tags' => 0,
+         'html' => 0,
+       ),
+       'link_to_node' => 0,
+       'exclude' => 0,
+       'id' => 'title',
+       'table' => 'node',
+       'field' => 'title',
+       'override' => array(
+         'button' => 'Override',
+       ),
+       'relationship' => 'none',
+     ),
+     'body' => array(
+       'label' => 'Body',
+       'alter' => array(
+         'alter_text' => 0,
+         'text' => '',
+         'make_link' => 0,
+         'path' => '',
+         'alt' => '',
+         'prefix' => '',
+         'suffix' => '',
+         'help' => '',
+         'trim' => 0,
+         'max_length' => '',
+         'word_boundary' => 1,
+         'ellipsis' => 1,
+         'strip_tags' => 0,
+         'html' => 0,
+       ),
+       'exclude' => 0,
+       'id' => 'body',
+       'table' => 'node_revisions',
+       'field' => 'body',
+       'override' => array(
+         'button' => 'Override',
+       ),
+       'relationship' => 'none',
+     ),
+     
+   );
+
+   $vocabularies = taxonomy_get_vocabularies('page');
+
+   if(count($vocabularies)){
+
+     $vocabularies = taxonomy_get_vocabularies('page');
+
+     $default_vids = array_fill_keys(array_keys($vocabularies), 0);
+     $counter = 0;
+
+     foreach($vocabularies as $vid => $vocabulary){
+
+       $vids = $default_vids;
+       $vids[$vid] = $vid;
+       
+       $name = 'tid'.$field_name_extension;
+
+       $fields[$name] = array(
+         'label' => $vocabulary->name,
+         'alter' => array(
+           'alter_text' => 0,
+           'text' => '',
+           'make_link' => 0,
+           'path' => '',
+           'alt' => '',
+           'prefix' => '',
+           'suffix' => '',
+           'help' => '',
+           'trim' => 0,
+           'max_length' => '',
+           'word_boundary' => 1,
+           'ellipsis' => 1,
+           'strip_tags' => 0,
+           'html' => 0,
+         ),
+         'type' => 'separator',
+         'separator' => ', ',
+         'empty' => '',
+         'link_to_taxonomy' => 1,
+         'limit' => 1,
+         'vids' => $vids,
+         'exclude' => 0,
+         'id' => 'tid',
+         'table' => 'term_node',
+         'field' => 'tid',
+         'relationship' => 'none',
+       );
+      
+      $counter++; 
+      $field_name_extension = '_'.$counter;
+      
+
+     }
+
+   }
+   
+   $handler->override_option('fields', $fields);
+
+    $handler->override_option('filters', array(
+     'type' => array(
+       'operator' => 'in',
+       'value' => array(
+         'page' => 'page',
+       ),
+       'group' => '0',
+       'exposed' => FALSE,
+       'expose' => array(
+         'operator' => FALSE,
+         'label' => '',
+       ),
+       'id' => 'type',
+       'table' => 'node',
+       'field' => 'type',
+       'override' => array(
+         'button' => 'Override',
+       ),
+       'relationship' => 'none',
+     ),
+   ));
+   $handler->override_option('access', array(
+     'type' => 'none',
+   ));
+   $handler->override_option('style_plugin', 'matrix');
+   $handler->override_option('style_options', array(
+     'columns' => array(
+       'body' => array(
+         'width' => '478',
+       ),
+       'title' => array(
+         'width' => '293',
+       ),
+     ),
+     'viewportHeight' => '432',
+   ));
+   $handler = $view->new_display('page', 'Page', 'page_2');
+   $handler->override_option('path', 'matrix/pages');
+   $handler->override_option('menu', array(
+     'type' => 'none',
+     'title' => '',
+     'description' => '',
+     'weight' => 0,
+     'name' => 'navigation',
+   ));
+   $handler->override_option('tab_options', array(
+     'type' => 'none',
+     'title' => '',
+     'description' => '',
+     'weight' => 0,
+   ));
+
+  $views[$view->name] = $view;
+  
+  
+  
+  
+  
+  // ---------------------- MATRIX EDITOR: SPECIMENS ---------------------------------------
+  
+  $view = new view;
+  $view->name = 'matrix_editor_specimens';
+  $view->description = 'Matrix editor for specimen records';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'basisofrecord' => array(
+      'label' => 'Basis of record',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_taxonomy' => 0,
+      'exclude' => 0,
+      'id' => 'basisofrecord',
+      'table' => 'darwincore',
+      'field' => 'basisofrecord',
+      'relationship' => 'none',
+    ),
+    'cataloguenumbertext' => array(
+      'label' => 'Catalogue number text',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'cataloguenumbertext',
+      'table' => 'darwincore',
+      'field' => 'cataloguenumbertext',
+      'relationship' => 'none',
+    ),
+    'collector' => array(
+      'label' => 'Collector',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'collector',
+      'table' => 'darwincore',
+      'field' => 'collector',
+      'relationship' => 'none',
+    ),
+    'collectioncode' => array(
+      'label' => 'Collection code',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'collectioncode',
+      'table' => 'darwincore',
+      'field' => 'collectioncode',
+      'relationship' => 'none',
+    ),
+    'collectornumber' => array(
+      'label' => 'Collector number',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'collectornumber',
+      'table' => 'darwincore',
+      'field' => 'collectornumber',
+      'relationship' => 'none',
+    ),
+    'count' => array(
+      'label' => 'Count',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'count',
+      'table' => 'darwincore',
+      'field' => 'count',
+      'relationship' => 'none',
+    ),
+    'dateidentified' => array(
+      'label' => 'Date identified',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'dateidentified',
+      'table' => 'darwincore',
+      'field' => 'dateidentified',
+      'relationship' => 'none',
+    ),
+    'earliestdatecollected' => array(
+      'label' => 'Earliest date collected',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'earliestdatecollected',
+      'table' => 'darwincore',
+      'field' => 'earliestdatecollected',
+      'relationship' => 'none',
+    ),
+    'fieldnotes' => array(
+      'label' => 'Field notes',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'fieldnotes',
+      'table' => 'darwincore',
+      'field' => 'fieldnotes',
+      'relationship' => 'none',
+    ),
+    'fieldnumber' => array(
+      'label' => 'Field number',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'fieldnumber',
+      'table' => 'darwincore',
+      'field' => 'fieldnumber',
+      'relationship' => 'none',
+    ),
+    'genbanknum' => array(
+      'label' => 'Genbank number',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'genbanknum',
+      'table' => 'darwincore',
+      'field' => 'genbanknum',
+      'relationship' => 'none',
+    ),
+    'identificationqualifier' => array(
+      'label' => 'Identification qualifier/modifier',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'identificationqualifier',
+      'table' => 'darwincore',
+      'field' => 'identificationqualifier',
+      'relationship' => 'none',
+    ),
+    'identifiedby' => array(
+      'label' => 'Identified by',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'identifiedby',
+      'table' => 'darwincore',
+      'field' => 'identifiedby',
+      'relationship' => 'none',
+    ),
+    'institutioncode' => array(
+      'label' => 'Institution code',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'institutioncode',
+      'table' => 'darwincore',
+      'field' => 'institutioncode',
+      'relationship' => 'none',
+    ),
+    'latestdatecollected' => array(
+      'label' => 'Latest date collected',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'latestdatecollected',
+      'table' => 'darwincore',
+      'field' => 'latestdatecollected',
+      'relationship' => 'none',
+    ),
+    'lifestage' => array(
+      'label' => 'Life stage',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'lifestage',
+      'table' => 'darwincore',
+      'field' => 'lifestage',
+      'relationship' => 'none',
+    ),
+    'othercataloguenum' => array(
+      'label' => 'Other cataloguenum',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'othercataloguenum',
+      'table' => 'darwincore',
+      'field' => 'othercataloguenum',
+      'relationship' => 'none',
+    ),
+    'remarks' => array(
+      'label' => 'Remarks',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'remarks',
+      'table' => 'darwincore',
+      'field' => 'remarks',
+      'relationship' => 'none',
+    ),
+    'sex' => array(
+      'label' => 'Sex',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_taxonomy' => 0,
+      'exclude' => 0,
+      'id' => 'sex',
+      'table' => 'darwincore',
+      'field' => 'sex',
+      'relationship' => 'none',
+    ),
+    'taxonomicname' => array(
+      'label' => 'Taxonomic name',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_taxonomy' => 0,
+      'exclude' => 0,
+      'id' => 'taxonomicname',
+      'table' => 'darwincore',
+      'field' => 'taxonomicname',
+      'relationship' => 'none',
+    ),
+    'typestatus' => array(
+      'label' => 'Type status',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_taxonomy' => 0,
+      'exclude' => 0,
+      'id' => 'typestatus',
+      'table' => 'darwincore',
+      'field' => 'typestatus',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'darwincore' => 'darwincore',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('style_plugin', 'matrix');
+  $handler->override_option('style_options', array(
+    'columns' => array(
+      'collectioncode' => array(
+        'width' => '176',
+      ),
+    ),
+  ));
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'matrix/specimens');
+  $handler->override_option('menu', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+  ));
+  
+  $views[$view->name] = $view;
+  
+  
+  
+  // ---------------------- MATRIX EDITOR: IMAGES ---------------------------------------
+  
+  $view = new view;
+  $view->name = 'matrix_images';
+  $view->description = '';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => 'Title',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'tid_1' => array(
+      'label' => 'All terms',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'type' => 'separator',
+      'separator' => ', ',
+      'empty' => '',
+      'link_to_taxonomy' => 0,
+      'limit' => 1,
+      'vids' => array(
+        '9' => 9,
+        '1' => 0,
+        '5' => 0,
+        '18' => 0,
+        '8' => 0,
+        '3' => 0,
+        '11' => 0,
+        '2' => 0,
+        '10' => 0,
+        '17' => 0,
+        '6' => 0,
+        '4' => 0,
+        '16' => 0,
+        '13' => 0,
+        '14' => 0,
+        '7' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'tid_1',
+      'table' => 'term_node',
+      'field' => 'tid',
+      'relationship' => 'none',
+    ),
+    'image_publication_nid' => array(
+      'label' => 'Publication',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'plain',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'image_publication_nid',
+      'table' => 'node_data_image_publication',
+      'field' => 'image_publication_nid',
+      'relationship' => 'none',
+    ),
+    'tid' => array(
+      'label' => 'All terms',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'type' => 'separator',
+      'separator' => ', ',
+      'empty' => '',
+      'link_to_taxonomy' => 0,
+      'limit' => 1,
+      'vids' => array(
+        '3' => 3,
+        '1' => 0,
+        '5' => 0,
+        '18' => 0,
+        '8' => 0,
+        '9' => 0,
+        '11' => 0,
+        '2' => 0,
+        '10' => 0,
+        '17' => 0,
+        '6' => 0,
+        '4' => 0,
+        '16' => 0,
+        '13' => 0,
+        '14' => 0,
+        '7' => 0,
+      ),
+      'exclude' => 0,
+      'id' => 'tid',
+      'table' => 'term_node',
+      'field' => 'tid',
+      'relationship' => 'none',
+    ),
+    'image_specimen_nid' => array(
+      'label' => 'Specimen',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'plain',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'image_specimen_nid',
+      'table' => 'node_data_image_specimen',
+      'field' => 'image_specimen_nid',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'image' => 'image',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('style_plugin', 'matrix');
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'matrix/images');
+  $handler->override_option('menu', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+    'name' => 'navigation',
+  ));
+  $handler->override_option('tab_options', array(
+    'type' => 'none',
+    'title' => '',
+    'description' => '',
+    'weight' => 0,
+  ));
+
+ 
+  
+  $views[$view->name] = $view;
+  
+  
   // At the end, return array of default views.
   return $views;
 }
