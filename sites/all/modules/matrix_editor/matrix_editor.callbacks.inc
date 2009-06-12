@@ -172,20 +172,37 @@ function matrix_editor_callback_update_node(){
     foreach($nids as $nid){
 
       $_POST['nid'] = $nid;
+      $_POST['op'] = t('Save');
+      
       $form_state = array();
     
       $form_state['values'] = $_POST;
+      
+      $form_state['values']['op'] = t('Save');      
+      $form_state['submitted'] = true;
+      
+      $node = node_load($nid);
       
       if(!$form_state['values']['taxonomy']){
 
         $form_state['taxonomy_tree_override'] = true;
 
-      }
-      
-      $form_state['values']['op'] = t('Save');
-      $form_state['submitted'] = true;
+      }elseif(is_array($_POST['taxonomy'])){
+        
+        $vid = key($_POST['taxonomy']);
 
-      $node = node_load($nid);
+        foreach($node->taxonomy as $tid => $term){
+          
+          if($term->vid == $vid){
+            
+            unset($node->taxonomy[$tid]);
+            
+          }
+          
+        }
+
+        
+      }
 
       if($node->type){
        
