@@ -38,14 +38,14 @@ function matrix_editor_menu(){
 
 /** 
 * Implementation of hook_init(). 
-* Add the matrix editor files - need to add here so it's available for the view preview
 */
 function matrix_editor_init(){
-  
-  $path = drupal_get_path('module', 'matrix_editor');
-  
-  drupal_add_css($path.'/css/matrix_editor.css');
-  
+
+ $path = drupal_get_path('module', 'matrix_editor');
+ 
+ // Add special style sheet for the views preview
+ drupal_add_css($path.'/css/matrix_editor.views.css');
+ 
 }
 
 /** 
@@ -262,7 +262,8 @@ function _matrix_editor_add_files(){
    // Slickgrid needs to have style in the head to work
    drupal_set_html_head('<style></style>');
   
-   // Add matrix editor js
+   // Add matrix editor files
+   drupal_add_css($path.'/css/matrix_editor.css');
    drupal_add_js($path.'/js/matrix_editor.js');
   
 }
