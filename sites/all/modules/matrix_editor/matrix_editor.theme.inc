@@ -12,10 +12,13 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
     
   $view = $vars['view'];
   
+  $path = drupal_get_path('module', 'matrix_editor');
+  
   drupal_add_js(array('matrixEditorCallbackPath' => url('matrix_editor/callback/'.$view->name)), 'setting');
-  drupal_add_js(array('matrixEditorPath' => drupal_get_path('module', 'matrix_editor')), 'setting');
+  drupal_add_js(array('matrixEditorPath' => $path), 'setting');
   
   drupal_add_js(array('matrixEditorViewName' => $view->name), 'setting');
+  drupal_add_css($path.'/css/matrix_editor.css');
   
   $result   = $vars['rows'];
 

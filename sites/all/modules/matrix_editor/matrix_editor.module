@@ -250,8 +250,7 @@ function _matrix_editor_add_files(){
    // Slickgrid needs to have style in the head to work
    drupal_set_html_head('<style></style>');
   
-   // Add matrix editor files
-   drupal_add_css($path.'/css/matrix_editor.css');
+   // Add matrix editor js
    drupal_add_js($path.'/js/matrix_editor.js');
   
 }
