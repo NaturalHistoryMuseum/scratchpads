@@ -1177,59 +1177,59 @@ function scratchpadify_views_default_views() {
    );
 
    $vocabularies = taxonomy_get_vocabularies('page');
-   // 
-   // if(count($vocabularies)){
-   // 
-   //   $vocabularies = taxonomy_get_vocabularies('page');
-   // 
-   //   $default_vids = array_fill_keys(array_keys($vocabularies), 0);
-   //   $counter = 0;
-   // 
-   //   foreach($vocabularies as $vid => $vocabulary){
-   // 
-   //     $vids = $default_vids;
-   //     $vids[$vid] = $vid;
-   //     
-   //     $name = 'tid'.$field_name_extension;
-   // 
-   //     $fields[$name] = array(
-   //       'label' => $vocabulary->name,
-   //       'alter' => array(
-   //         'alter_text' => 0,
-   //         'text' => '',
-   //         'make_link' => 0,
-   //         'path' => '',
-   //         'alt' => '',
-   //         'prefix' => '',
-   //         'suffix' => '',
-   //         'help' => '',
-   //         'trim' => 0,
-   //         'max_length' => '',
-   //         'word_boundary' => 1,
-   //         'ellipsis' => 1,
-   //         'strip_tags' => 0,
-   //         'html' => 0,
-   //       ),
-   //       'type' => 'separator',
-   //       'separator' => ', ',
-   //       'empty' => '',
-   //       'link_to_taxonomy' => 1,
-   //       'limit' => 1,
-   //       'vids' => $vids,
-   //       'exclude' => 0,
-   //       'id' => 'tid',
-   //       'table' => 'term_node',
-   //       'field' => 'tid',
-   //       'relationship' => 'none',
-   //     );
-   //    
-   //    $counter++; 
-   //    $field_name_extension = '_'.$counter;
-   //    
-   // 
-   //   }
-   // 
-   // }
+   
+   if(count($vocabularies)){
+   
+     $vocabularies = taxonomy_get_vocabularies('page');
+   
+     $default_vids = array_fill_keys(array_keys($vocabularies), 0);
+     $counter = 0;
+   
+     // foreach($vocabularies as $vid => $vocabulary){
+     //    
+     //   $vids = $default_vids;
+     //   $vids[$vid] = $vid;
+     //   
+     //   $name = 'tid'.$field_name_extension;
+     //    
+     //   $fields[$name] = array(
+     //     'label' => $vocabulary->name,
+     //     'alter' => array(
+     //       'alter_text' => 0,
+     //       'text' => '',
+     //       'make_link' => 0,
+     //       'path' => '',
+     //       'alt' => '',
+     //       'prefix' => '',
+     //       'suffix' => '',
+     //       'help' => '',
+     //       'trim' => 0,
+     //       'max_length' => '',
+     //       'word_boundary' => 1,
+     //       'ellipsis' => 1,
+     //       'strip_tags' => 0,
+     //       'html' => 0,
+     //     ),
+     //     'type' => 'separator',
+     //     'separator' => ', ',
+     //     'empty' => '',
+     //     'link_to_taxonomy' => 1,
+     //     'limit' => 1,
+     //     'vids' => $vids,
+     //     'exclude' => 0,
+     //     'id' => 'tid',
+     //     'table' => 'term_node',
+     //     'field' => 'tid',
+     //     'relationship' => 'none',
+     //   );
+     //  
+     //  $counter++; 
+     //  $field_name_extension = '_'.$counter;
+     //  
+     //    
+     // }
+   
+   }
    
    $handler->override_option('fields', $fields);
 
