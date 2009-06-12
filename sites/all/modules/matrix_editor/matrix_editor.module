@@ -37,6 +37,18 @@ function matrix_editor_menu(){
 }
 
 /** 
+* Implementation of hook_init(). 
+* Add the matrix editor files - need to add here so it's available for the view preview
+*/
+function matrix_editor_init(){
+  
+  $path = drupal_get_path('module', 'matrix_editor');
+  
+  drupal_add_css($path.'/css/matrix_editor.css');
+  
+}
+
+/** 
 * Check user has access to the view
 */
 function matrix_editor_access($view_name){

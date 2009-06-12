@@ -18,7 +18,6 @@ function matrix_editor_preprocess_views_view_matrix(&$vars) {
   drupal_add_js(array('matrixEditorPath' => $path), 'setting');
   
   drupal_add_js(array('matrixEditorViewName' => $view->name), 'setting');
-  drupal_add_css($path.'/css/matrix_editor.css');
   
   $result   = $vars['rows'];
 
