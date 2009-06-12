@@ -1202,20 +1202,22 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
 
 function nexus_get_characters($parent){
   
-  $sql = 'SELECT td.tid, td.name, td.description  
+  $sql = 'SELECT td.tid, td.name, td.description, td.weight  
      FROM {term_data} td 
      INNER JOIN {term_hierarchy} th ON th.tid = td.tid 
-     WHERE th.parent = %d';
+     WHERE th.parent = %d ORDER BY td.weight ASC';
 
    $result = db_query(db_rewrite_sql($sql), $parent);
 
    while ($term = db_fetch_object($result)) {
 
-     $character_groups[$term->tid] = $term;
+     $characters[$term->tid] = $term;
 
    }
 
-   return $character_groups;
+   // print_r($characters);
+
+   return $characters;
   
 }
 

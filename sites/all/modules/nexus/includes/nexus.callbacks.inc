@@ -384,7 +384,7 @@ function nexus_callback_character_form_submit(){
   
   $form_state = $submitted_form['form_state'];
   
-  // if($form_state['validated']){
+  if($form_state['validated']){
     
     if(!is_numeric($character_tid)){
       
@@ -402,7 +402,7 @@ function nexus_callback_character_form_submit(){
     
     $return['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
     
-  // }
+  }
 
   return $return;
   
@@ -610,6 +610,7 @@ function nexus_callback_reorder_columns(){
           }elseif($moved_term_weight){
           
             $term->weight = $term->weight + 2;
+
             _nexus_callback_update_weight($term);
           
           }
@@ -625,7 +626,10 @@ function nexus_callback_reorder_columns(){
       
         if($term->tid != $character_tid){
         
-          $term->weight++;
+          $moved_term->weight++;
+        
+          $term->weight = $moved_term->weight;
+          
           _nexus_callback_update_weight($term);
         
         }
