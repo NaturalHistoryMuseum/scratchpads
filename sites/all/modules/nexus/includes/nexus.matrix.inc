@@ -121,7 +121,7 @@ function nexus_project_get_matrix_data($node, $editable = true) {
                
           // Numeric validator
           
-          if(isset($character_settings['numeric'][$character_term->tid])){
+          if(isset($character_settings['numeric'][$character->tid])){
             
             $column['validator'] = 'nexusNumericStateValidator';
             
