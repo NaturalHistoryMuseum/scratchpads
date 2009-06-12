@@ -2,9 +2,11 @@
 
 $(document).ready(function() {
  
- $('#nexus-dynamic-option-'+$('#edit-taxa-vid').val()).show();
+ var select = $("#node-form select[name='taxa_vid']");
  
- $('#edit-taxa-vid').change(function(){
+ $('#nexus-dynamic-option-'+select.val()).show();
+ 
+ $(select).change(function(){
    
    $('.nexus-dynamic-options').hide();
    $('#nexus-dynamic-option-'+$(this).val()).show('fast');
