@@ -1210,7 +1210,7 @@ function scratchpadify_views_default_views() {
          'type' => 'separator',
          'separator' => ', ',
          'empty' => '',
-         'link_to_taxonomy' => 1,
+         'link_to_taxonomy' => 0,
          'limit' => 1,
          'vids' => array($vid => $vid),
          'exclude' => 0,
