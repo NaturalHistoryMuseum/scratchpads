@@ -2018,7 +2018,7 @@ function nexus_project_node_add_form_validate($form, &$form_state){
 function nexus_project_node_add_form_submit($form, &$form_state){
   
   if ($form_state['nid']) {
-    $form_state['redirect'] = url('node/'.$form_state['nid'].'/edit');
+    $form_state['redirect'] = 'node/'.$form_state['nid'].'/edit';
   }
   
 }
