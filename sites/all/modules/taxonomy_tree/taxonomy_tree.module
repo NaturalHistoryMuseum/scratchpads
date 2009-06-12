@@ -73,6 +73,8 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
       
     $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
     
+    print_r($vocabularies);
+    
       foreach($vocabularies as $vid => $vocabulary){
    
         $taxonomy_tree_node_types = variable_get('taxonomy_tree_'.$vid, array());
