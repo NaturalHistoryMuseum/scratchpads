@@ -6,99 +6,49 @@ function taxonomy_tree_admin_settings_form(){
   
   $vocabularies = taxonomy_get_vocabularies();
   
-  $node_types = node_get_types();
-  
   if(count($vocabularies)){
     
-    foreach($vocabularies as $vocabulary){
+    foreach($vocabularies as $vid => $vocabulary){
 
-      if($vocabulary->multiple && count($vocabulary->nodes)){
-
-        $options = array();
-
-        foreach($vocabulary->nodes as $vocabulary_node){
-          
-          $options[$vocabulary_node] = '';
-          
-        }
-        
-        $form['taxonomy_tree_'.$vocabulary->vid] = array(
-          '#type' => 'checkboxes',
-          '#default_value' => variable_get('taxonomy_tree_'.$vocabulary->vid, array()),
-          '#options' => $options
-        );
-        
-      }
+      $vocabulary_options[$vid] = $vocabulary->name;
 
     }
+
+    $form['taxonomy_tree_vocabularies'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Vocabularies'),
+      '#default_value' => variable_get('taxonomy_tree_vocabularies', array()),
+      '#options' => $vocabulary_options,
+      '#description' => t('Please select which vocabularies should use the taxonomy tree.')
+    );
     
   }
   
-  $form['#prefix'] = '<p>'.t('Please select for which vocabularies & on which node forms you want to use taxonomy tree').'</p>';
-  $form['#suffix'] = '<p class="warning">Please note: Only \'multiple\' vocabularies can use taxonomy tree, so unless a vocabulary is marked as \'multiple\' it will not be displayed in this list.</p>';
+  $node_types = node_get_types();
   
-  $form = system_settings_form($form);
-  
-  $form['#theme'] = 'taxonomy_tree_admin_settings_form';
-  
-  return $form;
-  
-}
+  if(count($node_types)){
 
-
-
-function theme_taxonomy_tree_admin_settings_form($form){
-  
-  $rows = array();
-  $header = array(t('Vocabularies'));
-  
-  $vocabularies = taxonomy_get_vocabularies();
-  
-  $node_type_info = node_get_types();
-  
-  $node_types = array();
-  
-  foreach($vocabularies as $vocabulary){
-    
-    if(count($vocabulary->nodes)){
-      
-      $node_types += $vocabulary->nodes;
-      
-    }
-
-  }
-  
-  foreach($vocabularies as $vocabulary){
-    
-    $row = array($vocabulary->name);
-    
     foreach($node_types as $node_type){
 
-      $header[$node_type] = $node_type_info[$node_type]->name;
-
-      if($vocabulary->nodes[$node_type]){
-
-         $row[] = drupal_render($form['taxonomy_tree_'.$vocabulary->vid][$node_type]);
-
-       }else{
-     
-         $row[] = '<span title="This content type does not use this vocabulary">N/A</span>';
-     
-       }
+      $node_type_options[$node_type->type] = $node_type->name;
 
     }
-    
-    $rows[] = $row;
-    
-  }
 
-  $output = theme('table', $header, $rows);
-   
-  $output .= drupal_render($form);
+    $form['taxonomy_tree_node_types'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Node types'),
+      '#default_value' => variable_get('taxonomy_tree_node_types', array()),
+      '#options' => $node_type_options,
+      '#description' => t('Select nodes which will use the taxonomy tree for <em>all</em> vocabularies')
+    );
+
+  }
   
-  return $output;
+  return system_settings_form($form);
   
 }
+
+
 
 
 

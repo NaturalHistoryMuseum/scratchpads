@@ -1,0 +1,13 @@
+<?php
+
+/** 
+*Implementation of hook_uninstall(). 
+*/ 
+function taxonomy_tree_uninstall() {
+
+  variable_del('taxonomy_tree_node_types');
+  variable_del('taxonomy_tree_vids');
+
+}
+
+?>

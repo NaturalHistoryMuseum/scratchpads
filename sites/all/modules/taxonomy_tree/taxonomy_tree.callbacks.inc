@@ -9,9 +9,12 @@ function taxonomy_tree_callback($vid, $nid = null){
   $branches_to_expand = array();
   
   // If you're editing, tids can be passed in
-  $selected_tids = $_GET['t'];
-  $nid = $_GET['nid'];
-
+  if($_GET['t']){
+    
+    $selected_tids = explode('-', $_GET['t']);
+  
+  }
+  
   if($_GET['root'] == 'source'){
     
     if(count($selected_tids)){
@@ -28,8 +31,7 @@ function taxonomy_tree_callback($vid, $nid = null){
         
         }
       
-        // We need to know all the parents so we can automatically expand the tree
-      
+        // We need to know all the parents so we can automatically expand the tree      
         foreach($parents as $parent){
         
           if($selected_tid != $parent->tid){
@@ -49,6 +51,7 @@ function taxonomy_tree_callback($vid, $nid = null){
     
     $parent = 0;
 
+    
     
   }else{ 
     
@@ -106,7 +109,7 @@ function taxonomy_tree_callback($vid, $nid = null){
 }
 
 function taxonomy_tree_to_json($tree, $branches_to_expand, $selected_tids, $select_all = false){
-  
+
   $tree_array = taxonomy_tree_to_array($tree);
   $json = array();
 
@@ -190,7 +193,7 @@ function taxonomy_tree_add_children($children, $branches_to_expand, $selected_ti
 
 function taxonomy_tree_get_element($vid, $tid, $name, $selected_tids, $select_all = false){
   
-  if($tid && $selected_tids[$tid] || $select_all){
+  if($tid && is_array($selected_tids) && in_array($tid, $selected_tids) || $select_all){
     
     $value = 1;
     

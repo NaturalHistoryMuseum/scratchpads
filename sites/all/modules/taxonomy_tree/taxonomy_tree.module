@@ -62,37 +62,93 @@ function taxonomy_tree_add_files(){
 }
 
 
+function taxonomy_tree_add_trees_to_form(&$form, &$form_state, $taxonomy_tree_vocabularies_var = null){
+  
+  foreach(element_children($form['taxonomy']) as $vid){
+
+    if(!$taxonomy_tree_vocabularies_var || $taxonomy_tree_vocabularies_var[$vid]){
+    
+    $taxonomy_tree = true;
+    
+    $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
+    
+    $form['taxonomy'][$vid]['taxonomy_tree_nid'] = array(
+      '#type' => 'hidden', 
+      '#value' => $form['#node']->nid,
+      '#parents' => array('taxonomy_tree_nid', $vid)
+    );
+    
+    $form['taxonomy'][$vid]['taxonomy_tree_vid'] = array(
+      '#type' => 'hidden', 
+      '#value' => $vid,
+      '#parents' => array('taxonomy_tree_vid', $vid)
+    );
+
+            
+    $form['taxonomy'][$vid]['taxonomy_tree_selected'] = array(
+       '#type' => 'hidden', 
+       '#value' => '',
+       '#parents' => array('taxonomy_tree_selected', $vid)
+     );
+       
+       // If form fails validation, we need to know what tids have been selected
+       ($form_state['post']['taxonomy'][$vid] ? $selected_tids = $form_state['post']['taxonomy'][$vid] : $selected_tids = $form['taxonomy'][$vid]['#default_value']);
+       
+       if(count($selected_tids)){
+        
+         $conj = '';
+        
+         foreach($selected_tids as $selected_tid){
+       
+            $form['taxonomy'][$vid]['taxonomy_tree_selected']['#value'] .= $conj.$selected_tid;
+            $conj = '-';
+       
+         }
+         
+       }
+     
+    }
+    
+  }
+  
+  return $taxonomy_tree;
+  
+}
+
+
 /** 
 *Implementation of hook_alter(). 
 */
-function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
+function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {  
   
   if (isset($form['type']) && isset($form['#node'])) {
   
     if(count($form['taxonomy'])){
       
-    $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
+    $taxonomy_tree_node_types_var = variable_get('taxonomy_tree_node_types', array());  
     
-      foreach($vocabularies as $vid => $vocabulary){
-   
-        $taxonomy_tree_node_types = variable_get('taxonomy_tree_'.$vid, array());
+      if($taxonomy_tree_node_types_var[$form['#node']->type]){
       
-        if($taxonomy_tree_node_types[$form['type']['#value']]){
+        $taxonomy_tree = taxonomy_tree_add_trees_to_form($form, $form_state);
       
-        $form['taxonomy'][$vid]['#process'] = array('taxonomy_tree_process_field');
-        $form['taxonomy'][$vid]['#nid'] = $form['#node']->nid;
-        
-        $form['taxonomy_tree'][$vid] = array('#type' => 'hidden', '#value' => $vid, '#parents' => array('taxonomy_tree', $vid));
-           
-        }
+      }else{
+      
+      $taxonomy_tree_vocabularies_var = variable_get('taxonomy_tree_vocabularies', array());
+      
+          if(count($taxonomy_tree_vocabularies_var)){
+            
+            $taxonomy_tree = taxonomy_tree_add_trees_to_form($form, $form_state, $taxonomy_tree_vocabularies_var);
+            
+          }
       
       }
-      
-      if(count($form['taxonomy_tree'])){
+
+      if($taxonomy_tree){
       
         if(is_array($form['#submit'])){
         
           $form['#submit'] = array('taxonomy_tree_node_form_submit') + $form['#submit'];
+          
         
         }else{
         
@@ -107,36 +163,44 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
   
   
   }
-
   
 }
 
 
+/** 
+* Automatically populate the taxonomy array with expanded values
+*/
 function taxonomy_tree_node_form_submit($form, &$form_state) {
 
- if(count($form_state['values']['taxonomy_tree']) &! $form_state['taxonomy_tree_override']){
-
-   foreach($form_state['values']['taxonomy_tree'] as $vid){
-
-     if(count($form_state['values']['taxonomy'][$vid])){
-
-       foreach($form_state['values']['taxonomy'][$vid] as $tid){
-
-         if(!$form['#post']['expanded'][$tid]){
-         // This term has not been expanded, so we need to see if it has any children to automatically select
-
-         taxonomy_tree_select_children($form_state, $vid, $tid);
-
-         }
-
-       }
-
-     }
-
-   }
+ if(isset($form_state['taxonomy_tree_override'])){
+   
+   return;
    
  }
 
+ if(count($form_state['values']['taxonomy_tree_vid'])){
+ 
+   foreach($form_state['values']['taxonomy_tree_vid'] as $vid){
+ 
+     if(count($form_state['values']['taxonomy'][$vid])){
+ 
+       foreach($form_state['values']['taxonomy'][$vid] as $tid){
+ 
+         if(!$form['#post']['expanded'][$tid]){
+         // This term has not been expanded, so we need to see if it has any children to automatically select
+ 
+         taxonomy_tree_select_children($form_state, $vid, $tid);
+ 
+         }
+ 
+       }
+ 
+     }
+ 
+   }
+   
+ }
+ 
 }
 
 /** 
@@ -171,7 +235,6 @@ function taxonomy_tree_process_field($element){
   $element['#type'] = 'markup';
   $element['#theme'] = 'taxonomy_tree_element';
   
-  
   // Remove options as otherwise illegal choise will be detected
   unset($element['#options']);
   
@@ -190,11 +253,7 @@ function taxonomy_tree_theme() {
     
     'taxonomy_tree_element' => array(
       'arguments' => array('element' => NULL)
-    ),
-
-    'taxonomy_tree_admin_settings_form' => array(
-      'arguments' => array('form' => null)
-    ),    
+    ), 
     
   );
 
@@ -208,24 +267,17 @@ function taxonomy_tree_theme() {
 */
 function theme_taxonomy_tree_element($element){
 
-  $vid = $element['#array_parents'][1];
+ $vid = $element['#array_parents'][1];
 
-  foreach($element['#value'] as $value){
-    
-    $selected .= '&t['.$value.']='.$value;
-    
-  }
-  
-  $js = '$(document).ready(function() {
-          TREE = new treeview(); 
-          TREE.init("'.$element['#id'].'","'.$vid.'","'.$element['#nid'].'","'.$selected.'", "'.$element['#no_tree'].'")
-        })';
-  
+ $element['#attributes']['class'] = 'taxonomy-tree-field';
+
   $output = '<div '.drupal_attributes($element['#attributes']).'>';
   $output .= '<label>Terms for '.$element['#title'].'</label>';
-  $output .= '<div class="taxonomy-tree"><ul id="'.$element['#id'].'"></ul></div>';
+  $output .= '<div class="taxonomy-tree"><ul id="'.$vid.'"></ul></div>';
+  $output .= drupal_render($element['taxonomy_tree_nid']);
+  $output .= drupal_render($element['taxonomy_tree_vid']);
+  $output .= drupal_render($element['taxonomy_tree_selected']);
   $output .= '</div>';
-  $output .= '<script type="text/javascript">'.$js.'</script>';
   
   return $output;
   
