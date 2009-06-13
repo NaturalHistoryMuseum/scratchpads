@@ -267,7 +267,17 @@ function initMatrixEditor(){
            
            if(response.data){
              
-             $('#myGrid .editor-text, #myGrid .multiSelected').html(response.data);
+             var cell = $('#myGrid .editor-text').parents('div.c').attr('cell');
+             var columnID = columns[cell]['id'];
+             
+             $('#myGrid .editor-text, #myGrid .multiSelected').each(function(){
+                             
+               var row = $(this).parents('div.r').attr('row');
+               
+               data[row][columnID] = response.data
+               $(this).html(response.data);
+
+             });
              
             }
             

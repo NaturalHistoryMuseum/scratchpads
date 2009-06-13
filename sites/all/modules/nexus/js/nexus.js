@@ -711,7 +711,7 @@ function nexus() {
 
             $('input.editor-text').val($(this).val());
             $('input.editor-text').effect("highlight", {color:"#9ADE0B"}, 300);
-            $('input.editor-text').focus();
+            grid.commitCurrentEdit();
 
           });
 
@@ -902,16 +902,14 @@ function nexus() {
         // Add the new character group to the drop down
         $("#edit-new-group").val("");
 
-
         if(response.group_tid && response.group_name){
 
-          var option = '<option value="'+response.group_tid+'">'+response.group_name+'<option>';
+          var option = '<option value="'+response.group_tid+'">'+response.group_name+'</option>';
           
           $("#edit-character-group").append(option);
           $("#edit-character-group").val(response.group_tid);
           $('#edit-new-group-wrapper').hide();
           
-
         }
 
        // Reset the character form
@@ -1022,7 +1020,7 @@ function nexus() {
     
     updateTaxonomyCallback: function(response){
       
-      self.displayDialog();
+      // self.displayDialog();
     
     },  
 

@@ -16,6 +16,38 @@ function matrix_editor_views_query_alter(&$view, &$query){
   
 }
 
+function matrix_editor_form_alter(&$form, $form_state, $form_id) {
+
+  if(arg(0) == 'matrix_editor'){
+    
+    $form['#validate'][] = 'matrix_editor_form_validate';
+    
+  }
+
+  
+}
+
+function matrix_editor_form_validate(&$form, &$form_state){
+  
+  $field = $form['#post']['field_name'];
+  
+  $errors = form_get_errors();
+
+  if(count($errors)){ // We only care about errors on the current field
+    
+    drupal_get_messages('error');
+    form_set_error(null, '', true);
+    
+    if($errors[$field]){
+      
+      form_set_error($field, $errors[$field], $form_state);
+      
+    }
+    
+  }
+  
+}
+
 
 /** 
 * Implementation of hook_menu(). 

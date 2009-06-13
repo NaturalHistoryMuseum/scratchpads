@@ -109,14 +109,22 @@ function matrix_editor_callback_get_form_field(){
    
   $output .= drupal_render($form['nid']); 
   
-  $form['view_field'] = array(
+  $form['fields']['view_field'] = array(
     '#type' => 'hidden', 
     '#value' => $view_field, 
     '#id' => 'view_field', 
     '#name' => 'view_field'
   );
   
-  $output .= drupal_render($form['view_field']);  
+  $form['fields']['field_name'] = array(
+    '#type' => 'hidden', 
+    '#value' => $field, 
+    '#id' => 'field_name', 
+    '#name' => 'field_name'
+  );
+  
+  $output .= drupal_render($form['fields']);  
+  
    
   return array('status' => TRUE, 'data' => $output); 
     

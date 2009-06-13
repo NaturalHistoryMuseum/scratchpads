@@ -78,6 +78,8 @@ function nexus_callback_regenerate_matrix_data($nid){
 
   $matrix_editor = nexus_project_get_matrix_data($node);
   
+  $matrix_editor->options['regenerated'] = true;
+  
   $js .= "var options = ".drupal_to_js($matrix_editor->options).";\r";
   $js .= "var data = ".drupal_to_js($matrix_editor->data).";\r";
   $js .= "var columns = ".matrix_editor_to_js($matrix_editor->columns).";\r";
