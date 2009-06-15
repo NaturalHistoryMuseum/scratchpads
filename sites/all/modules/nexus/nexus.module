@@ -233,7 +233,7 @@ $is_author = $account->uid == $node->uid;
     
     case 'view': 
   
-    return user_access('view nexus projects');
+    return user_access('access content');
   
     case 'create': 
 
@@ -275,7 +275,6 @@ function nexus_perm(){
     'create nexus projects', 
     'edit any nexus projects',
     'edit own nexus projects',
-    'view nexus projects',
     'delete any nexus projects',
     'delete own nexus projects'
   );
