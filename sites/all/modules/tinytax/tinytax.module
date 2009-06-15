@@ -209,7 +209,7 @@ function _tinytax_view_blocks($delta){
   }
   if (count($parents)+count($children)===0) {
     $tid = variable_get('tinytax-'.$delta, FALSE);
-    if ($tid === FALSE){
+    if (!$tid){
       $tid = _tinytax_first_term_with_many_children($delta);
       variable_set('tinytax-'.$delta, $tid);
     }
