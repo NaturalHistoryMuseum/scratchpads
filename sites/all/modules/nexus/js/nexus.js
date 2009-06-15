@@ -22,6 +22,7 @@ function nexus() {
       
       self.initBeautyTips();     
       self.initGroups();
+      grid.onViewportChanged  = self.onViewportChanged;
 
       if(!options.editable){
         return;
@@ -36,7 +37,7 @@ function nexus() {
       grid.onColumnsReordered = self.onColumnsReordered;
       grid.onColumnsReorderStart = self.onColumnsReorderStart;
       grid.onColumnsResized  = self.onColumnsResized;
-      grid.onViewportChanged  = self.onViewportChanged;
+      
       grid.onViewportResized  = self.onViewportResized;
       
       self.initHeaders();
