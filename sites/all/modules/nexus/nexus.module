@@ -73,7 +73,11 @@ function nexus_menu_alter(&$items){
 function nexus_node_page_clone($node){
   if($node->type == 'nexus_project'){
     drupal_set_message(t('This node type can not be cloned'), 'error');
-    drupal_goto('node/'.$node->nid);
+    if($referer = referer_uri()){
+      drupal_goto($referer);
+    } else {      
+      drupal_goto('node/'.$node->nid);
+    }
   } else {
     clone_node_check($node);
   }
