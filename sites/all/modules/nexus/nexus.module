@@ -1213,9 +1213,7 @@ function nexus_get_characters($parent){
      $characters[$term->tid] = $term;
 
    }
-
-   // print_r($characters);
-
+   
    return $characters;
   
 }
@@ -1701,6 +1699,10 @@ function nexus_group_form($form_state, $group_tid, $project_nid){
 
 
 function nexus_group_form_submit($form, &$form_state){
+ 
+  $term = taxonomy_get_term($form_state['values']['tid']);
+ 
+  $form_state['values']['weight'] = $term->weight;
  
   taxonomy_save_term($form_state['values']);
   
