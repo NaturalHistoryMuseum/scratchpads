@@ -794,7 +794,7 @@ function nexus_form_alter(&$form, $form_state, $form_id) {
       
       $form['character_tid'] = array('#type' => 'hidden', '#value' => '');
       $form['taxa_tid'] = array('#type' => 'hidden', '#value' => '');
-      $form['note_nid'] = array('#type' => 'hidden', '#value' => '');
+      $form['note_nid'] = array('#type' => 'hidden', '#value' => '', '#id' => 'note-nid');
       
       $path = drupal_get_path('module', 'nexus');
 

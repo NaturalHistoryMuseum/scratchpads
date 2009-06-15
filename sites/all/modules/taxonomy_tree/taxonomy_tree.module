@@ -66,7 +66,7 @@ function taxonomy_tree_add_trees_to_form(&$form, &$form_state, $taxonomy_tree_vo
   
   foreach(element_children($form['taxonomy']) as $vid){
 
-    if(!$taxonomy_tree_vocabularies_var || $taxonomy_tree_vocabularies_var[$vid]){
+    if(is_numeric($vid) && (!$taxonomy_tree_vocabularies_var || $taxonomy_tree_vocabularies_var[$vid])){
     
     $taxonomy_tree = true;
     
@@ -77,38 +77,44 @@ function taxonomy_tree_add_trees_to_form(&$form, &$form_state, $taxonomy_tree_vo
     
     unset($form['taxonomy'][$vid]['#default_value']);
     
-    $form['taxonomy'][$vid]['taxonomy_tree_nid'] = array(
-      '#type' => 'hidden', 
-      '#value' => $form['#node']->nid,
-      '#parents' => array('taxonomy_tree_nid', $vid)
-    );
     
-    $form['taxonomy'][$vid]['taxonomy_tree_vid'] = array(
-      '#type' => 'hidden', 
-      '#value' => $vid,
-      '#parents' => array('taxonomy_tree_vid', $vid)
-    );
+    if($form['#node']->nid){
     
-            
-    $form['taxonomy'][$vid]['taxonomy_tree_selected'] = array(
-       '#type' => 'hidden', 
-       '#value' => '',
-       '#parents' => array('taxonomy_tree_selected', $vid)
-     );
+       $form['taxonomy'][$vid]['taxonomy_tree_nid'] = array(
+         '#type' => 'hidden', 
+         '#value' => $form['#node']->nid,
+         '#parents' => array('taxonomy_tree_nid', $vid)
+       );
        
-       if(count($selected_tids)){
-        
-         $conj = '';
-        
-         foreach($selected_tids as $selected_tid){
-       
-            $form['taxonomy'][$vid]['taxonomy_tree_selected']['#value'] .= $conj.$selected_tid;
-            $conj = '-';
-       
-         }
-         
-       }
+     }
+    
      
+     $form['taxonomy'][$vid]['taxonomy_tree_vid'] = array(
+       '#type' => 'hidden', 
+       '#value' => $vid,
+       '#parents' => array('taxonomy_tree_vid', $vid)
+     );
+     
+             
+     $form['taxonomy'][$vid]['taxonomy_tree_selected'] = array(
+        '#type' => 'hidden', 
+        '#value' => '',
+        '#parents' => array('taxonomy_tree_selected', $vid)
+      );
+        
+        if(count($selected_tids)){
+         
+          $conj = '';
+         
+          foreach($selected_tids as $selected_tid){
+        
+             $form['taxonomy'][$vid]['taxonomy_tree_selected']['#value'] .= $conj.$selected_tid;
+             $conj = '-';
+        
+          }
+          
+        }
+      
     }
     
   }
@@ -239,7 +245,7 @@ function taxonomy_tree_process_field($element){
   
   // Remove options as otherwise illegal choise will be detected
   unset($element['#options']);
-  
+   
   return $element;
   
   
@@ -269,18 +275,18 @@ function taxonomy_tree_theme() {
 */
 function theme_taxonomy_tree_element($element){
 
- $vid = $element['#array_parents'][1];
+ $vid = $element['taxonomy_tree_vid']['#value'];
 
  $element['#attributes']['class'] = 'taxonomy-tree-field';
-
+ 
   $output = '<div '.drupal_attributes($element['#attributes']).'>';
   $output .= '<label>Terms for '.$element['#title'].'</label>';
   $output .= '<div class="taxonomy-tree"><ul id="'.$vid.'"></ul></div>';
-  $output .= drupal_render($element['taxonomy_tree_nid']);
-  $output .= drupal_render($element['taxonomy_tree_vid']);
-  $output .= drupal_render($element['taxonomy_tree_selected']);
-  $output .= '</div>';
-  
+   $output .= drupal_render($element['taxonomy_tree_nid']);
+   $output .= drupal_render($element['taxonomy_tree_vid']);
+   $output .= drupal_render($element['taxonomy_tree_selected']);
+   $output .= '</div>';
+   
   return $output;
   
 }

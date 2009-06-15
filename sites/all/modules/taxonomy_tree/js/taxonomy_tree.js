@@ -2,7 +2,6 @@ Drupal.behaviors.taxonomyTree = function(context) {
 
   $(context).find('.taxonomy-tree-field ul').each(function(){
   
-    // getTaxonomyTree();
     var vid = $(this).attr('id');
   
     var url = Drupal.settings.taxonomyTreeCallbackPath+'/'+vid;
@@ -27,7 +26,7 @@ Drupal.behaviors.taxonomyTree = function(context) {
        persist: "location",
     });
     
-    // updateEvents($(this));
+    updateEvents($(this));
     
     $(this).ajaxSuccess(function(){
       updateEvents($(this))

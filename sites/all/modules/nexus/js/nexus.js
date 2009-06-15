@@ -741,8 +741,8 @@ function nexus() {
 
        }
 
-       $('#edit-body-1').val(note_body);
-       $('#edit-note-nid').val(note_nid);
+       $('form.note-form textarea[name="body"]').val(note_body);
+       $('input#note-nid').val(note_nid);
 
 
      },
