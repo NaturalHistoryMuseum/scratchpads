@@ -338,7 +338,7 @@ function nexus_order_tids_by_weight($unordered_tids){
   
   $tids_placeholders = db_placeholders($unordered_tids, 'int');
      
-  $sql = 'SELECT DISTINCT t.tid FROM {term_data} t WHERE t.tid IN  ('.$tids_placeholders.') ORDER BY t.weight';
+  $sql = 'SELECT DISTINCT t.tid FROM {term_data} t WHERE t.tid IN  ('.$tids_placeholders.') ORDER BY t.weight, t.name';
 
   $result = db_query($sql, $unordered_tids); 
 

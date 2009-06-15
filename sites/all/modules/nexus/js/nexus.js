@@ -59,6 +59,10 @@ function nexus() {
       
       $('a.add-character').click(function(){
 
+      if (GlobalEditorLock.isEditing()){
+        GlobalEditorLock.commitCurrentEdit()
+      }  
+
         args = {
           project_nid: self.getProjectNid()
         };
@@ -591,21 +595,73 @@ function nexus() {
      // After reordering
      onColumnsReordered: function(e, ui){
 
-        var columnIndex = grid.getColumnIndex($(ui.item).attr('id'));
-              
-        grid.onColumnHeaderClick(columns[columnIndex]);
+        var column = columns[grid.getColumnIndex($(ui.item).attr('id'))];
+        var groupID = null;
+        var prevColumn = null;
+        var nextColumn = null;
+        var args = null;
         
-         args = {
-           character_tid: $(ui.item).attr('id'),
-           next_tid: $(ui.item).next('div.h').attr('id'),
-           prev_tid: $(ui.item).prev('div.h').attr('id')
-         }
+        if($(ui.item).prev('div.h').length){
+          
+          prevColumn = columns[grid.getColumnIndex($(ui.item).prev('div.h').attr('id'))];
+          
+        }
+        
+        if($(ui.item).next('div.h').length){
+          
+          nextColumn = columns[grid.getColumnIndex($(ui.item).next('div.h').attr('id'))];
+          
+        }
+        
+        if(prevColumn && column.groupID == prevColumn.groupID){
+          
+          groupID = prevColumn.groupID;
+          group = prevColumn.group;
+          
+        }else if(nextColumn && (column.groupID == nextColumn.groupID)){
+          
+          groupID = nextColumn.groupID;
+          group = nextColumn.group;
+          
+        }else if(prevColumn){
+          
+          groupID = prevColumn.groupID;
+          group = prevColumn.group;
+          
+        }else if(nextColumn){
+
+          groupID = nextColumn.groupID;
+          group = nextColumn.group;
+
+        }
+        
+        if(groupID){
+          
+          args = 'groupID='+groupID;
+          
+          $(columns).each(function(){
+            
+            if(this.groupID == groupID || this.id == column.id){
+              
+              args+='&c[]='+this.id;
+              
+            }
+            
+          });
+          
+        }
 
        $.post(
          Drupal.settings.nexusCallback+'/reorder_columns', 
          args,
          function(response){
-          self.columnsReorderedCallback(response);
+           
+          if(response.status){
+            
+            self.columnsReorderedCallback(column.id, groupID, group);
+            
+          }
+
          },
          'json'
        );
@@ -622,27 +678,26 @@ function nexus() {
 
 
 
-     columnsReorderedCallback: function(response){
+     columnsReorderedCallback: function(characterID, groupID, group){
 
        $(columns).each(function(i){
          
          if(i > 0){
-
+       
           $('#'+this.id+' span').html(i);
            
          }
          
-         if(this.id == response.settings.tid){
+         if(this.id == characterID){
            
-           if(this.group != response.settings.groupTid){
+           if(this.groupID != groupID){
              
-             this.groupID = parseInt(response.settings.groupTid);
-             this.group = response.settings.group;
+             this.groupID = parseInt(groupID);
+             this.group = group;
              self.initGroups();
              
            }
-           
-           
+          
          }
          
        });
@@ -694,10 +749,11 @@ function nexus() {
           
         }else if(typeof columnDef.validator == 'undefined'){ // This is a text field so add the textarea
           
+          var defaultValue;
+          
           $('<p>This is a <em>free state text character</em> - please enter text in the table cell or the field below.<p>').appendTo($cellForm);
           
-          var $resizableTextarea = $("#edit-body-1-wrapper .resizable-textarea").clone()
-          var defaultValue;
+          var $resizableTextarea = $(".note-form .resizable-textarea").clone()
           
           if(typeof value != 'undefined'){
             defaultValue = value;
@@ -716,6 +772,12 @@ function nexus() {
           });
 
           $textarea.appendTo($cellForm);
+          
+          $container.keyup(function(){
+
+            $textarea.val($(this).find('input').val());
+
+          })
           
         }else{ // This is numeric
           
@@ -736,11 +798,10 @@ function nexus() {
          if(info.note){
            note_body = info.note.body;
            note_nid = info.note.nid;
-
          }
 
        }
-
+       
        $('form.note-form textarea[name="body"]').val(note_body);
        $('input#note-nid').val(note_nid);
 
@@ -1020,7 +1081,7 @@ function nexus() {
     
     updateTaxonomyCallback: function(response){
       
-      // self.displayDialog();
+      self.displayDialog();
     
     },  
 

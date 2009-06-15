@@ -516,7 +516,7 @@ function nexus_callback_reorder_groups(){
       $term->parent = array($root_character_tid);
       $term->weight = $weight;
       
-      _nexus_callback_update_weight($term);
+      _nexus_callback_save_term($term);
       
     }
     
@@ -534,110 +534,20 @@ function nexus_callback_reorder_groups(){
 */
 function nexus_callback_reorder_columns(){
   
-  $character_tid = $_POST['character_tid'];
+  $characters = $_POST['c'];
+  $parent_tid = $_POST['groupID'];
   
-  if(is_numeric($_POST['prev_tid'])){
-    $prev_tid = $_POST['prev_tid'];
-  }
-  
-  if(is_numeric($_POST['next_tid'])){
-    $next_tid = $_POST['next_tid'];
-  }
-  
-  $moved_term_parent = array_shift(taxonomy_get_parents($character_tid));
-  
-  if($prev_tid){
+  if(count($characters)){
     
-    $prev_tid_term_parent = array_shift(taxonomy_get_parents($prev_tid));
-    
-    // Has it been moved within the same group
-    if($prev_tid_term_parent->tid == $moved_term_parent->tid){
+    foreach($characters as $weight => $character){
       
-      $parent_tid = $moved_term_parent->tid;
+      $character_term = taxonomy_get_term($character);
       
-    }
-    
-  }
-
-  if(!$parent_tid && $next_tid){
-    
-    
-    $next_tid_term_parent = array_shift(taxonomy_get_parents($next_tid));
-
-    if($next_tid_term_parent->tid == $moved_term_parent->tid){
+      $character_term->parent = $parent_tid;
+      $character_term->weight = $weight;
       
-      $parent_tid = $moved_term_parent->tid;
+      _nexus_callback_save_term($character_term);
       
-    }
-    
-  }
-
-  
-  
-  if(!$parent_tid){
-
-    if($prev_tid){ // If it doesn't and there's a prev_tidious term, use that
-      
-      $parent_tid = $prev_tid_term_parent->tid;
-    
-    }elseif($next_tid){
-    
-      $parent_tid = $next_tid_term_parent->tid;
-    
-    }
-    
-  }
-  
-  if($parent_tid){
-    
-    $moved_term = taxonomy_get_term($character_tid);
-    $moved_term->parent[0] = $parent_tid;
-    
-    $parent = taxonomy_get_term($parent_tid);
-    
-    // Get the new part of the tree
-    $tree = taxonomy_get_tree($moved_term->vid, $parent_tid);
-    
-    // Loop through the tree changing all the weights
-
-    if($prev_tid){ // Are there terms previous to this one?
-
-      foreach($tree as $term){
-        
-          if($term->tid == $prev_tid){
-            
-            $moved_term->weight = $term->weight + 1;
-            _nexus_callback_update_weight($moved_term);
-          
-          }elseif($moved_term_weight){
-          
-            $term->weight = $term->weight + 2;
-
-            _nexus_callback_update_weight($term);
-          
-          }
-
-      }
-
-    }else{
- 
-      $moved_term->weight = 0;
-      _nexus_callback_update_weight($moved_term);
-      
-      foreach($tree as $term){
-      
-        if($term->tid != $character_tid){
-        
-          $moved_term->weight++;
-        
-          $term->weight = $moved_term->weight;
-          
-          _nexus_callback_update_weight($term);
-        
-        }
-      
-      }
-
     }
     
   }else{
@@ -648,20 +558,16 @@ function nexus_callback_reorder_columns(){
     
   return array(
     'status' => TRUE,
-    'data' => theme('status_messages'),
-    'settings' => array(
-      'tid' => $character_tid, 
-      'groupTid' => $parent_tid,
-      'group' => $parent->name
-    )
+    'data' => theme('status_messages')
   );
   
 }
 
+
 /** 
-* Update the weight of a taxonomy term
+* Update a taxonomy term
 */
-function _nexus_callback_update_weight($term, $weight = null){
+function _nexus_callback_save_term($term){
    
   // When you get term data from taxonomy_get_tree it comes as parents, but you have to save it parent!!!
   if($term->parents){
@@ -673,6 +579,8 @@ function _nexus_callback_update_weight($term, $weight = null){
   taxonomy_save_term($term_array);
   
 }
+
+
 
 
 
