@@ -125,7 +125,7 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
   
     if(count($form['taxonomy'])){
       
-    $taxonomy_tree_node_types_var = variable_get('taxonomy_tree_node_types', array());  
+    $taxonomy_tree_node_types_var = variable_get('taxonomy_tree_node_types', array('nexus_project'));  
     
       if($taxonomy_tree_node_types_var[$form['#node']->type]){
       
