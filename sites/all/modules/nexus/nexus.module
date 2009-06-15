@@ -63,13 +63,21 @@ function nexus_menu(){
 function nexus_menu_alter(&$items){
   
   $items['node/%node/edit']['page callback'] = 'nexus_node_page_edit';
+  $items['node/%node/clone']['page callback'] = 'nexus_node_page_clone';
   $items['node/add/nexus-free-state']['hidden'] = 1;
   $items['node/add/nexus-controlled-state']['hidden'] = 1;
   $items['node/add/nexus-note']['hidden'] = 1;
   return $items;
-    
 }
 
+function nexus_node_page_clone($node){
+  if($node->type == 'nexus_project'){
+    drupal_set_message(t('This node type can not be cloned'), 'error');
+    drupal_goto('node/'.$node->nid);
+  } else {
+    clone_node_check($node);
+  }
+}
 /** 
  * Menu callback; 
  * Overides node_page_edit so we can use our own page for nexus projects
