@@ -133,6 +133,10 @@ function theme_classification_biblio_citation($name, $year, $title){
 function classification_biblio_form_alter(&$form, $form_state, $form_id){
   module_load_include('class', 'classification', '/includes/classification_functions');
   global $names;
+  if(!class_exists('Names')){
+    watchdog('error',t('Failed to create a "Names" object'));
+    return;
+  }
   $names = new Names();
   switch($form_id){
     case 'classification_edit_multiple_form' :
