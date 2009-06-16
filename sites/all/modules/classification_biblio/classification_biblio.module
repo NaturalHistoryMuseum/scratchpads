@@ -111,7 +111,7 @@ function classification_biblio_callback_autocomplete($string = ''){
             LEFT JOIN {biblio_contributor} bc ON bc.nid = n.nid 
             LEFT JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
             LEFT JOIN {biblio} b ON b.nid = n.nid
-            WHERE ";
+            WHERE type = 'biblio' AND ";
     
     if(is_numeric($string)){
       
