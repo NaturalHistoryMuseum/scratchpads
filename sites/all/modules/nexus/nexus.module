@@ -2069,9 +2069,17 @@ function nexus_project_taxonomy_form_submit(&$form, &$form_state){
   unset($form_state['values']['body']);
    
   $node = node_submit($form_state['values']);
+  
+  $path = 'node/'. $node->nid;
+  $language = isset($node->language) ? $node->language : '';
+  
+  $node->path = drupal_get_path_alias($path, $language);
+  $node->pathauto_perform_alias = false;
+
   $form_state['node'] = (array)$node;
   $form_state['rebuild'] = TRUE;   
   $insert = empty($node->nid);
+  
   node_save($node);  
    
   drupal_set_message('Taxonomy updated');

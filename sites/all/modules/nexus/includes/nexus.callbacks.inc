@@ -265,7 +265,7 @@ function nexus_callback_confirm_delete_form_submit(){
   $output = array('status' => true);
   switch($form_id){
     case 'nexus_group_form' :
-      $output += §nexus_delete_group();
+      $output += nexus_delete_group();
       break;
     case 'nexus_character_form' :
       $output += nexus_delete_character();
