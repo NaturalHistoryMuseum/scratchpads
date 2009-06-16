@@ -156,7 +156,7 @@ function classification_biblio_form_alter(&$form, $form_state, $form_id){
           'text' => t('Edit Citation'))), 'setting');
       drupal_add_js(array(
         'classification_biblio_add_link' => array(
-          'href' => base_path() . '/node/add/biblio/classification/?tid=%tid', 
+          'href' => url('node/add/biblio/classification',array('absolute' => TRUE, 'query'=>array('tid' => '%tid'))), 
           'text' => t('Add Citation'))), 'setting');
       $form['name_metadata']['bibliographic_citation'] = array(
         '#type' => 'textfield', 
