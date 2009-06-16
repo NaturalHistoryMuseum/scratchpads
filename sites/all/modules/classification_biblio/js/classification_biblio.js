@@ -61,8 +61,8 @@ function classification_biblio() {
 		t = document.createTextNode(link_obj.text);
 		a.appendChild(t);
 		
-		link_obj.href = link_obj.href.replace('%nid', nid);
-		link_obj.href = link_obj.href.replace('%tid', tid);
+		link_obj.href = link_obj.href.replace('--NID--', nid);
+		link_obj.href = link_obj.href.replace('--TID--', tid);
 		
 		a.setAttribute('href', link_obj.href);
 		

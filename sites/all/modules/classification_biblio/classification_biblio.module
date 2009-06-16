@@ -152,11 +152,11 @@ function classification_biblio_form_alter(&$form, $form_state, $form_id){
         'classification_biblio_callback_base_url' => base_path() . 'classification_biblio/callback'), 'setting');
       drupal_add_js(array(
         'classification_biblio_edit_link' => array(
-          'href' => base_path() . '/node/%nid/edit/classification/?tid=%tid', 
+          'href' => url('node/--NID--/edit/classification',array('absolute' => TRUE, 'query'=>array('tid' => '--TID--'))), 
           'text' => t('Edit Citation'))), 'setting');
       drupal_add_js(array(
         'classification_biblio_add_link' => array(
-          'href' => url('node/add/biblio/classification',array('absolute' => TRUE, 'query'=>array('tid' => '%tid'))), 
+          'href' => url('node/add/biblio/classification',array('absolute' => TRUE, 'query'=>array('tid' => '--TID--'))), 
           'text' => t('Add Citation'))), 'setting');
       $form['name_metadata']['bibliographic_citation'] = array(
         '#type' => 'textfield', 
