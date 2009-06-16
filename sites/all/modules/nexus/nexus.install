@@ -22,6 +22,7 @@ function nexus_install(){
   module_load_include('inc', 'weight', 'weight.admin');
   weight_old_nodes(array(
     'nexus_controlled_state' => 'nexus_controlled_state'));
+  variable_set('autotag_totally_borked', array_merge(variable_get('autotag_totally_borked', array()), array('nexus_project', 'nexus_controlled_state', 'nexus_free_state', 'nexus_note')));
 }
 
 /** 
@@ -113,7 +114,4 @@ function nexus_schema(){
     'indexes' => array('setting_type' => array('setting_type')), 
     'primary key' => array('tid'));
   return $schema;
-} 
-
-
-
+}
