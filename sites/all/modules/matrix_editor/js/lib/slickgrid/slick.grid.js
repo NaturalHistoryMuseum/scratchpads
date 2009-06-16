@@ -816,6 +816,7 @@ function SlickGrid($container,data,columns,options)
 	// Interactivity
 
 	function handleKeyDown(e) {
+
 		switch (e.which) {
 			case 27:  // esc
 				if (GlobalEditorLock.isEditing() && GlobalEditorLock.hasLock(self))
@@ -838,8 +839,7 @@ function SlickGrid($container,data,columns,options)
 				gotoDir(0,-1);
 				break;
 				
-			case 39:  // right
-			case 13:  // enter			
+			case 39:  // right			
 				gotoDir(0,1);
 				break;
 				
@@ -848,6 +848,7 @@ function SlickGrid($container,data,columns,options)
 				break;
 				
 			case 40:  // down
+			case 13:  // enter
 				gotoDir(1,0);
 				break;
 								
