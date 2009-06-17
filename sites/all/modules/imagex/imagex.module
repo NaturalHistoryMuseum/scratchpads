@@ -156,7 +156,7 @@ function imagex_js(){
   // Reurns HTML as JS for the thumbs of images uploaded
   // Does this for the user logged in only
   if(function_exists('matrix_editor_menu')){
-    $matrix = " ".l('matrix/image','Edit your most recent images');
+    $matrix = " ".l('Edit your most recent images', 'matrix/image');
   }
   print drupal_to_js(array('html' => '<p>'.t('The following images have been uploaded by you in the last hour.') . $matrix .'</p>'.imagex_get_thumbs_html(60)));
   exit();
