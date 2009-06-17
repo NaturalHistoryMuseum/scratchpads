@@ -362,7 +362,7 @@ function darwincore_form(&$node) {
   '#default_value' => (empty($node->dateidentified)) ? array('day'=>1,'month'=>1,'year'=>2000) : $node->dateidentified,
   '#description' => t('The date-time in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.')
   );
-  $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
+  $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
   
   //-- Collection tab ---------------------------------------
   $form['tabs']['collection'] = array(
