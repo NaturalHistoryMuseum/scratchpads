@@ -301,7 +301,7 @@ function scratchpadify_views_default_views(){
   $handler->override_option('access', array('type' => 'none'));
   $handler->override_option('style_plugin', 'matrix');
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('path', 'matrix/images');
+  $handler->override_option('path', 'matrix/image');
   $handler->override_option('menu', array('type' => 'none', 
     'title' => '', 'description' => '', 'weight' => 0, 
     'name' => 'navigation'));
@@ -580,7 +580,7 @@ function scratchpadify_views_default_views(){
     'columns' => array(
       'collectioncode' => array('width' => '176'))));
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('path', 'matrix/specimens');
+  $handler->override_option('path', 'matrix/darwincore');
   $handler->override_option('menu', array('type' => 'none', 
     'title' => '', 'description' => '', 'weight' => 0, 
     'name' => 'navigation'));
