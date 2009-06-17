@@ -462,6 +462,7 @@ function scratchpad_profile_set_perms(){
   }
   
   $anonymous_perms = array("access all views",
+                            "access biblio content",
                             "access comments",
                             "access content",
                             "access print",
