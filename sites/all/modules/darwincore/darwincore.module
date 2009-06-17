@@ -369,7 +369,6 @@ function darwincore_form(&$node) {
     '#prefix' => '<div id="fragment-3">',
     '#suffix' => '</div>'
   );
-  $form['tabs']['collection']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, '');
   $form['tabs']['collection']['collectornumber'] = array(
   '#type' => 'textfield',
   '#title' => t('Collector number'),
