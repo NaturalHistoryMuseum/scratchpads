@@ -30,7 +30,6 @@ function _theme_darwincorelocation_help($path){
   $countries = location_get_iso3166_list();
   $location = array(
     array("Continent Ocean",_darwincore_get_taxonomicname($path->continentocean)),
-    array("Type Status",_darwincore_get_taxonomicname($path->typestatus)),
     array("Island Group",$path->islandgroup),
     array("Island",$path->island),
     array("State Province",$path->stateprovince),
@@ -64,6 +63,7 @@ function theme_darwincore_full_page($node) {
     $location = _theme_darwincorelocation_help($location_node);
   }
   $collection = array(
+    array("Type Status",_darwincore_get_taxonomicname($node->typestatus)),
     array("Institution Code",$node->institutioncode),
     array("Collection Code",$node->collectioncode),
     array("Catalogue Number Text",$node->cataloguenumbertext),
