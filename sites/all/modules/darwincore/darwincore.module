@@ -422,14 +422,13 @@ function darwincore_form(&$node) {
   while($row = db_fetch_array($results)){
     $location_nodes[$row['title']]=$row['title'];
   }
-  // $form['locate']['locationnode'] = array(
-  //   '#type' => 'select',
-  //   '#title' => t('Select a previously created location'),
-  //   //'#multiple' => 1,
-  //   '#size' => 10,
-  //   '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d",$node->locationnode))),
-  //   '#options' => $location_nodes
-  // );
+  $form['locate']['locationnode'] = array(
+    '#type' => 'select',
+    '#title' => t('Select a previously created location'),
+    '#size' => 10,
+    '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d",$node->locationnode))),
+    '#options' => $location_nodes
+  );
   $form['locate']['togglebelow'] = array(
     '#value' => '<a href="#" onclick="$(\'#locationfieldset\').show();$(\'#edit-creatingnewlocation\').val(\'1\');$(\'#edit-locationnode\').attr(\'disabled\',\'disabled\');return false;">Or, Create a new location</a>'
   );
@@ -451,7 +450,7 @@ function darwincore_form(&$node) {
   );
   $location_form = darwincorelocation_form($node, $param);
   $location_form['type']['#value'] = 'darwincorelocation';
-  location_form_alter($form, $form_state, $form_id);
+  location_node_form_alter($form, $form_state, $form_id);
   $location_form['locationtitle'] = $location_form['title'];
   $location_form['locationtitle']['#required'] = 0;
   if($location_form['locationtitle']['#value']==$form['title']['#value']){
@@ -513,6 +512,13 @@ function darwincore_form(&$node) {
   return $form;
 
 }
+
+function darwincorelocation_form_pre_render($element){
+  // No idea why CCK is doing this, but hey ho!
+  $element['#content_extra_fields']['title']['weight'] = -200;
+  return $element;
+}
+
 /**
  * Implementation of hook_form()
  *
@@ -521,6 +527,7 @@ function darwincore_form(&$node) {
  * @return array $form
  */
 function darwincorelocation_form(&$node, &$param){
+  $form['#pre_render'][] = 'darwincorelocation_form_pre_render';
   $form['title'] = array(
     '#title' => t('Location title (Used when referencing this location)'),
     '#required' => 1,
