@@ -247,6 +247,16 @@ function darwincore_node_info() {
   );
 }
 
+// hook_perm
+function darwincore_perm(){
+  return array(
+    'create darwincore content',
+    'delete darwincore content',
+    'delete own darwincore content',
+    'edit darwincore content',
+    'edit own darwincore content'
+  );
+}
 /**
  * Implementation of hook_menu()
  */
@@ -255,7 +265,7 @@ function darwincore_menu(){
   $items['darwincore/autocomplete'] = array(
     'title' => 'Autocomplete darwincore thingumy',
     'page callback' => 'darwincore_autocomplete',
-    'access arguments' => array('create node content'),
+    'access arguments' => array('create darwincore content'),
     'file' => 'darwincore.autocomplete.inc',
     'type' => MENU_CALLBACK
   );
@@ -639,32 +649,29 @@ function darwincorelocation_form(&$node, &$param){
  * Implementation of hook_access()
  */
 function darwincore_access($op, $node, $account){
-
   if ($op == 'create'){
-    return user_access('create node content', $account);
+    return user_access('create darwincore content', $account);
   }
-  if ($op =='update' || $op =='delete'){
-    if(user_access('edit own node content', $account) && $account->uid == $node->uid){
+  if ($op =='update'){
+    if(user_access('edit own darwincore content', $account) && $account->uid == $node->uid){
       return true;
     }
     else {
-      return user_access('edit node content', $account);
+      return user_access('edit darwincore content', $account);
     }
   }
+  if ($op =='delete'){
+    if(user_access('delete own darwincore content', $account) && $account->uid == $node->uid){
+      return true;
+    }
+    else {
+      return user_access('delete darwincore content', $account);
+    }
+  }
+  return false;
 }
-function darwincorelocation_access($op, $node){
-  global $user;
-  if ($op == 'create'){
-    return user_access('create node content');
-  }
-  if ($op =='update' || $op =='delete'){
-    if(user_access('edit own node content') && $user->uid == $node->uid){
-      return true;
-    }
-    else {
-      return user_access('edit node content');
-    }
-  }  
+function darwincorelocation_access($op, $node, $account){
+  return darwincore_access($op, $node, $account);  
 }
 
 /**
