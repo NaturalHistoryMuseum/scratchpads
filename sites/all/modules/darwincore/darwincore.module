@@ -448,9 +448,12 @@ function darwincore_form(&$node) {
     '#default_value' => 0,
     '#options' => array(1,0)
   );
-  $location_form = darwincorelocation_form($node, $param);
+  $location_node = new stdClass();
+  $location_node->type = 'darwincorelocation';
+  $location_form = darwincorelocation_form($location_node, $param);
   $location_form['type']['#value'] = 'darwincorelocation';
-  location_node_form_alter($form, $form_state, $form_id);
+  $location_form['#node'] = $location_node;
+  location_node_form_alter($location_form, $form_state, 'darwincorelocation_node_form');
   $location_form['locationtitle'] = $location_form['title'];
   $location_form['locationtitle']['#required'] = 0;
   if($location_form['locationtitle']['#value']==$form['title']['#value']){
