@@ -42,7 +42,7 @@ function scratchpad_profile_modules(){
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
       'image_attach','lightbox2',
     // Location
-      'location','gmap','gmap_location','location_user',
+      'location','gmap','gmap_location','location_user','location_node',
     // Organic Groups
       'og','og_access','og_user_roles','og_views',
     // Views
