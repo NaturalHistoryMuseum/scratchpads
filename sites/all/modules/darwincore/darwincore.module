@@ -386,7 +386,7 @@ function darwincore_form(&$node){
     '#type' => 'fieldset', 
     '#title' => t('Collection date range'), 
     '#collapsible' => false, '#collapsed' => false, 
-    '#description' => t('The earliest and latest date-time (Common Era calendar) in a date-time period during which an organism or group of organisms was collected or observed. If the event is recorded as occurring at a single date-time, populate both EarliestDateCollected and LatestDateCollected with the same value.')
+    '#description' => t('The earliest and latest date-time (Common Era calendar) in a date-time period during which an organism or group of organisms was collected or observed. If the event is recorded as occurring at a single date-time, populate only the  Earliest Date Collected field')
   );
   $form['tabs']['collection']['daterange']['earliestdatecollected'] = array(
     '#type' => 'date_popup', 
