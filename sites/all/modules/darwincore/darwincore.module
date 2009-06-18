@@ -275,15 +275,18 @@ function darwincore_menu(){
   return $items;
 }
 
-/**
- * Implementation of hook_form()
- */
-function darwincore_form(&$node){
+function theme_darwincore_node_form($form){
   // Add the JS required.
   jquery_ui_add('ui.tabs');
   drupal_add_js(drupal_get_path('module', 'darwincore') . '/darwincore.js');
   // Add the CSS
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
+  return drupal_render($form);
+}
+/**
+ * Implementation of hook_form()
+ */
+function darwincore_form(&$node){
   // Hide the title
   $form['title'] = array(
     '#type' => 'hidden', '#value' => $node->title
@@ -352,12 +355,13 @@ function darwincore_form(&$node){
     '#default_value' => $node->identifiedby, 
     '#description' => t('The name(s) of the person(s) who applied the ScientificName to the object or observation. Example: James Earl Jones.')
   );
+  $number_of_years_to_1700 = 1700 - date("Y");
   $form['tabs']['taxonomy']['dateidentified'] = array(
     '#type' => 'date_popup', 
     '#title' => t('Date identified'), '#date_format' => 'j F Y', 
-    '#date_year_range' => '-150:0', 
+    '#date_year_range' => $number_of_years_to_1700.':0', 
     '#default_value' => $node->dateidentified, 
-    '#description' => t('The date in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.')
+    '#description' => t('The date in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the Scientific Name.')
   );
   $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
   //-- Collection tab ---------------------------------------
@@ -391,13 +395,13 @@ function darwincore_form(&$node){
   $form['tabs']['collection']['daterange']['earliestdatecollected'] = array(
     '#type' => 'date_popup', 
     '#title' => t('Earliest date collected'), 
-    '#date_format' => 'j F Y', '#date_year_range' => '-150:0', 
+    '#date_format' => 'j F Y', '#date_year_range' => $number_of_years_to_1700.':0',
     '#default_value' => $node->earliestdatecollected
   );
   $form['tabs']['collection']['daterange']['latestdatecollected'] = array(
     '#type' => 'date_popup', 
     '#title' => t('Latest date collected'), 
-    '#date_format' => 'j F Y', '#date_year_range' => '-150:0', 
+    '#date_format' => 'j F Y', '#date_year_range' => $number_of_years_to_1700.':0',
     '#default_value' => $node->latestdatecollected
   );
   $form['tabs']['collection']['fieldnotes'] = array(
@@ -423,7 +427,7 @@ function darwincore_form(&$node){
   );
   $form['locate']['togglebelow'] = array(
     
-    '#value' => '<a href="#" onclick="$(\'#locationfieldset\').show();$(\'#edit-creatingnewlocation\').val(\'1\');$(\'#edit-locationnode\').attr(\'disabled\',\'disabled\');return false;">Or, Create a new location</a>'
+    '#value' => '<a href="#" onclick="$(\'#locationfieldset\').show();$(\'#edit-creatingnewlocation\').val(\'1\');$(\'#edit-locationnode\').attr(\'disabled\',\'disabled\');Drupal.gmap.getMap(\'auto1map\').map.checkResize();return false;">Or, Create a new location</a>'
   );
   $form['locate']['createlocation'] = array(
     '#suffix' => '</div>', 
@@ -760,6 +764,11 @@ function darwincore_theme($existing, $type, $theme, $path){
       'arguments' => array(
       'node' => NULL
     ), 'file' => 'darwincore.pages.inc'
+    ),
+    'darwincore_node_form' => array(
+      'arguments' => array(
+        'form' => array()
+      )
     )
   );
 }
