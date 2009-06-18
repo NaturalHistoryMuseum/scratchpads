@@ -67,8 +67,13 @@ function theme_darwincore_full_page($node) {
     array("Field Number",$node->fieldnumber),
     array("Collector",$node->collector)
   );  
-  if($node->earliestdatecollected)
-    $collection[] = array("Earliest Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));
+  if($node->earliestdatecollected){
+    if($node->latestdatecollected){
+      $collection[] = array("Earliest Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));
+    } else {
+      $collection[] = array("Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));    
+    }
+  }
   if($node->latestdatecollected)
     $collection[] = array("Latest Date Collected",format_date(strtotime($node->latestdatecollected), 'custom', 'j F Y'));
   $collection[] = array("Count",$node->count);
