@@ -356,11 +356,12 @@ function darwincore_form(&$node) {
   '#description' => t('The name(s) of the person(s) who applied the ScientificName to the object or observation. Example: James Earl Jones.')
   );
   $form['tabs']['taxonomy']['dateidentified'] = array(
-  '#type' => 'date',
+  '#type' => 'date_popup',
   '#title' => t('Date identified'),
-  '#required' => true,
-  '#default_value' => (empty($node->dateidentified)) ? array('day'=>1,'month'=>1,'year'=>2000) : $node->dateidentified,
-  '#description' => t('The date-time in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.')
+  '#date_format' => 'j F Y',
+  '#date_year_range' => '-150:0',
+  '#default_value' => $node->dateidentified,
+  '#description' => t('The date in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.')
   );
   $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
   
@@ -395,10 +396,12 @@ function darwincore_form(&$node) {
   '#collapsed' => false,
   '#description' => t('The earliest and latest date-time (Common Era calendar) in a date-time period during which an organism or group of organisms was collected or observed. If the event is recorded as occurring at a single date-time, populate both EarliestDateCollected and LatestDateCollected with the same value.')
   );
-  $form['tabs']['collection']['daterange']['earliestdatecollected'] = array(
-  '#type' => 'date',
-  '#title' => t('Earliest date collected'),
-  '#default_value' => (empty($node->earliestdatecollected)) ? array('year'=>2000,'month'=>1,'day'=>1) : $node->earliestdatecollected
+  $form['tabs']['collection']['daterange']['earliestdatecollected'] = array(  
+    '#type' => 'date_popup',
+    '#title' => t('Earliest date collected'),
+    '#date_format' => 'j F Y',
+    '#date_year_range' => '-150:0',
+    '#default_value' => $node->earliestdatecollected
   );
   $form['tabs']['collection']['daterange']['latestdatecollected'] = array(
   '#type' => 'date',
@@ -829,18 +832,13 @@ function darwincore_insert($node){
     node_save($location_node);
     $node->locationnode = $location_node->nid;
   }
-  // Lets not insert the default date of 2000/1/1
-  $dates = array(&$node->dateidentified,&$node->earliestdatecollected,&$node->latestdatecollected);
-  foreach($dates as &$date){
-    if ($date['year']==2000 && $date['month']==1 && $date['day']==1){
-      $date = 'NULL';
-    }
-    else {
-      $date = $date['year']."/".$date['month']."/".$date['day'];
-    }
-  }
   // Change the taxonomic name to an ID (this should be valid as we've checked it already).
   $node->taxonomicname = _darwincore_get_taxonomicname($node->taxonomicname);
+  drupal_set_message("Data identified:". $node->dateidentified);
+  if(trim($node->dateidentifed) == ''){
+    $node->dateidentified = 'NULL';
+  }
+  print_r($node);exit;
   $result = db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentified,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);",
     $node->nid,
     $node->vid,
@@ -964,13 +962,6 @@ function darwincorelocation_delete($node){
  */
 function darwincore_load($node) {
   $object = db_fetch_object(db_query('SELECT * FROM {darwincore} WHERE vid = %d', $node->vid));
-  // Surely there must be a Drupal way of doing this ugly code.
-  $dates = array(&$object->dateidentified,&$object->earliestdatecollected,&$object->latestdatecollected);
-  foreach($dates as &$date){
-    $date = split('-',$date);
-    $date = array('year'=>(int)$date[0],'month'=>(int)$date[1],'day'=>(int)$date[2]);
-  }
-  // End of the uglyness //
   // If integers, set them to null
   $object->count = ($object->count==0)?'':$object->count;
   return $object;

@@ -54,10 +54,6 @@ function _theme_darwincorelocation_help($path){
  * Custom theme for displaying the table of data
  */
 function theme_darwincore_full_page($node) {
-  $dates = array(&$node->dateidentified,&$node->earliestdatecollected,&$node->latestdatecollected);
-  foreach($dates as &$date){
-    $date = ($date['year'])? $date['year']."/".$date['month']."/".$date['day']:'';
-  }
   if(isset($node->location) && is_numeric($node->location)){
     $location_node = node_load($node->location);
     $location = _theme_darwincorelocation_help($location_node);
@@ -69,12 +65,14 @@ function theme_darwincore_full_page($node) {
     array("Catalogue Number Text",$node->cataloguenumbertext),
     array("Collector Number",$node->collectornumber),
     array("Field Number",$node->fieldnumber),
-    array("Collector",$node->collector),  
-    array("Earliest Date Collected",$node->earliestdatecollected),
-    array("Latest Date Collected",$node->latestdatecollected),
-    array("Count",$node->count),
-    array("Field Notes",$node->fieldnotes)
-  );
+    array("Collector",$node->collector)
+  );  
+  if($node->earliestdatecollected)
+    $collection[] = array("Earliest Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));
+  if($node->latestdatecollected)
+    $collection[] = array("Latest Date Collected",format_date(strtotime($node->latestdatecollected), 'custom', 'j F Y'));
+  $collection[] = array("Count",$node->count);
+  $collection[] = array("Field Notes",$node->fieldnotes);
   $misc = array(
     array("Sex",_darwincore_get_taxonomicname($node->sex)),
     array("Life Stage",$node->lifestage),
@@ -86,9 +84,10 @@ function theme_darwincore_full_page($node) {
     array("Basis of Record",l(_darwincore_get_taxonomicname($node->basisofrecord),'taxonomy/term/'.$node->basisofrecord)),
     array("Taxonomic Name",l(_darwincore_get_taxonomicname($node->taxonomicname),'taxonomy/term/'.$node->taxonomicname)),
     array("Identification qualifier",$node->identificationqualifier),
-    array("Identified By",$node->identifiedby),
-    array("Date Identified",$node->dateidentified)
+    array("Identified By",$node->identifiedby)
   );
+  if($node->dateidentified)
+    $identification[] = array("Date Identified",format_date(strtotime($node->dateidentified), 'custom', 'j F Y'));
   $output = '<div class="darwincore">';
   $output .= _theme_darwincore_full_page_help($collection, "Collection");
   $output .= _theme_darwincore_full_page_help($identification, "Identification");
