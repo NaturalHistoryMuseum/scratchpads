@@ -155,7 +155,7 @@ function darwincore_schema(){
     'primary key' => array('vid')
   );
   variable_set('location_settings_node_darwincorelocation', array(
-      'multiple' => array('min'=>1,'max'=>1,'add'=>1),
+      'multiple' => array('min'=>0,'max'=>1,'add'=>1),
       'form' => array(
         'weight' => 0,
         'collapsible' => 1,
@@ -196,10 +196,33 @@ function darwincore_uninstall(){
   node_type_delete('darwincore');
 }
 
-function darwincore_update_6000(){
+function darwincore_update_6101(){
   // Try and load the file
   require_once("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+}
+
+
+function darwincore_update_6102(){
+  variable_set('location_settings_node_darwincorelocation', array(
+      'multiple' => array('min'=>0,'max'=>1,'add'=>1),
+      'form' => array(
+        'weight' => 0,
+        'collapsible' => 1,
+        'collapsed' => 0,
+        'fields' => array(
+          'name' => array('collect'=>1,'weight'=>2),
+          'street' => array('collect'=>1,'weight'=>4),
+          'additional' => array('collect'=>1, 'weight'=>6),
+          'country' => array('collect'=>1,'weight'=>8)
+        ),
+        'register' => 1
+      ),
+      'display' => array(
+        'weight' => 0
+      )
+    )
+  );
 }
