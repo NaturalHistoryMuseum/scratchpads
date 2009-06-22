@@ -11,8 +11,8 @@
  */
 function sandbox_profile_details(){
   return array(
-    'name' => 'Scratchpad Training',
-    'description' => 'This profile automatically installs everything, no user input is required.'
+    'name' => 'Scratchpad Sandbox',
+    'description' => 'Provides the Scratchpad Sandbox.'
   );
 }
 
