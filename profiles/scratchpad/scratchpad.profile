@@ -443,7 +443,7 @@ function scratchpad_profile_tasks_3(){
  */
 function scratchpad_profile_set_perms(){
   // Add roles and permissions
-  db_query("TRUNCATE {role}");
+  db_query("DELETE FROM {role} WHERE name IN ('contributor','editor','maintainer')");
   db_query("INSERT INTO {role} (name) VALUES ('contributor'),('editor'),('maintainer')");
 
   $contributor_perms = array();
@@ -591,7 +591,7 @@ function scratchpad_profile_set_perms(){
   $editor_perms = implode(", ", $editor_perms);
   $maintainer_perms = implode(", ", $maintainer_perms);
   db_query("TRUNCATE TABLE {permission}");
-  db_query("INSERT INTO {permission} (rid,perm) VALUES (1,'%s'),(2,'%s'),(3,'%s'),(4,'%s'),(5,'%s')", $anonymous_perms, $authenticated_perms, $contributor_perms, $editor_perms, $maintainer_perms);
+  db_query("INSERT INTO {permission} (rid,perm) VALUES ((SELECT rid FROM {role} WHERE name = 'anonymous user'),'%s'),((SELECT rid FROM {role} WHERE name = 'authenticated user'),'%s'),((SELECT rid FROM {role} WHERE name = 'contributor'),'%s'),((SELECT rid FROM {role} WHERE name = 'editor'),'%s'),((SELECT rid FROM {role} WHERE name = 'maintainer'),'%s')", $anonymous_perms, $authenticated_perms, $contributor_perms, $editor_perms, $maintainer_perms);
 }
 
 /**
