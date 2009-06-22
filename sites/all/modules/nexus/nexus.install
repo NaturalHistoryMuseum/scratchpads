@@ -22,10 +22,10 @@ function nexus_install(){
   module_load_include('inc', 'weight', 'weight.admin');
   weight_old_nodes(array(
     'nexus_controlled_state' => 'nexus_controlled_state'));
-  nexus_update_6002();
+  nexus_update_6101();
 }
 
-function nexus_update_6002(){
+function nexus_update_6101(){
   if(function_exists('autotag_nodeapi')){
     variable_set('autotag_broken_node_types', array_unique(array_merge(
       variable_get('autotag_broken_node_types', array('webform', 'biblio')),

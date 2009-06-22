@@ -213,7 +213,7 @@ function countriesmap_schema(){
 /**
  * Remove the countriesmap_regions table
  */
-function countriesmap_update_6000() {
+function countriesmap_update_6101() {
   $ret = array();
   if (db_table_exists('countriesmap_regions')) {
     db_drop_table($ret, "countriesmap_regions");

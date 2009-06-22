@@ -196,12 +196,13 @@ function darwincore_uninstall(){
   node_type_delete('darwincore');
 }
 
-function darwincore_update_6101(){
+function darwincore_update_6102(){
   // Try and load the file
   require_once("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+  return array('#finished' => TRUE);
 }
 
 
