@@ -54,3 +54,66 @@ function scratchpad_training_profile_tasks(&$task, $url){
     $task = 'profile-finished';
   }
 }
+
+function scratchpad_training_form_alter(&$form, $form_state, $form_id){
+  if($form_id == 'install_configure_form'){
+    $form_state = array (
+      'storage' => NULL, 
+      'submitted' => true, 
+      'values' => array (
+        'site_name' => 'Drupal6 Too', 
+        'site_mail' => 'scratchpad@nhm.ac.uk', 
+        'account' => array (
+          'name' => 'user',
+          'mail' => 'scratchpad@nhm.ac.uk', 
+          'pass' => 'password' ), 
+        'date_default_timezone' => '3600', 
+        'clean_url' => '1', 
+        'update_status_module' => array (
+          1 => 1 ), 
+        'op' => 'Save and continue', 
+        'submit' => 'Save and continue', 
+        'form_build_id' => 'form-efd87430cbc3216b5485d28cecbd6975', 
+        'form_id' => 'install_configure_form', 
+        'hashcash' => '1:090529:install_configure_form:157.140.4.52:.drupal6too:rCtWOHrU7aIWdsuRG0Ei' ), 
+      'clicked_button' => array (
+        '#type' => 'submit', 
+        '#value' => 'Save and continue', 
+        '#weight' => 15, 
+        '#post' => array (
+          'site_name' => 'Drupal6 Too', 
+          'site_mail' => 'scratchpad@nhm.ac.uk',
+          'account' => array (
+            'name' => 'user',
+            'mail' => 'scratchpad@nhm.ac.uk', 
+            'pass' => 'password' ),  
+          'date_default_timezone' => '3600', 
+          'clean_url' => '1', 
+          'update_status_module' => array (
+            1 => '1' ), 
+          'form_build_id' => 'form-3d6dc9ab849bed34ff077b89da1217ed', 
+          'form_id' => 'install_configure_form', 
+          'hashcash' => '1:090529:install_configure_form:157.140.4.52:.drupal6too:rCtWOHrU7aIWdsuRG0Ei', 
+          'op' => 'Save and continue' ), 
+        '#programmed' => false, 
+        '#tree' => false, 
+        '#parents' => array (
+          0 => 'submit' ), 
+        '#array_parents' => array (
+          0 => 'submit' ), 
+        '#processed' => false, 
+        '#description' => NULL, 
+        '#attributes' => array (), 
+        '#required' => false, 
+        '#input' => true, 
+        '#name' => 'op', 
+        '#button_type' => 'submit', 
+        '#executes_submit_callback' => true, 
+        '#process' => array (
+                         
+          0 => 'form_expand_ahah' ), 
+        '#id' => 'edit-submit' ), 
+      'redirect' => NULL );
+    scratchpadify_install_configure_form_submit($form, $form_state);
+  }
+}
