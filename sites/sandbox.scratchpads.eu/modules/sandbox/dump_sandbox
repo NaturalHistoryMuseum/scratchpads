@@ -1,4 +1,0 @@
-#!/bin/bash
-~simor/bin/clearcache sandboxscratchpadseu watchdog
-mymysqldump sandboxscratchpadseu | gzip > sandbox.sql.gz
-touch -d "`date +"%b %d %H:00"`" sandbox.sql.gz
