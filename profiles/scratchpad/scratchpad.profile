@@ -443,6 +443,7 @@ function scratchpad_profile_tasks_3(){
  */
 function scratchpad_profile_set_perms(){
   // Add roles and permissions
+  db_query("TRUNCATE {role}");
   db_query("INSERT INTO {role} (name) VALUES ('contributor'),('editor'),('maintainer')");
 
   $contributor_perms = array();
