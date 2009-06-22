@@ -205,7 +205,7 @@ function darwincore_update_6101(){
 }
 
 
-function darwincore_update_6102(){
+function darwincore_update_6103(){
   variable_set('location_settings_node_darwincorelocation', array(
       'multiple' => array('min'=>0,'max'=>1,'add'=>1),
       'form' => array(
@@ -213,9 +213,9 @@ function darwincore_update_6102(){
         'collapsible' => 1,
         'collapsed' => 0,
         'fields' => array(
-          'name' => array('collect'=>1,'weight'=>2),
-          'street' => array('collect'=>1,'weight'=>4),
-          'additional' => array('collect'=>1, 'weight'=>6),
+          'name' => array('collect'=>0,'weight'=>2),
+          'street' => array('collect'=>0,'weight'=>4),
+          'additional' => array('collect'=>0, 'weight'=>6),
           'country' => array('collect'=>1,'weight'=>8)
         ),
         'register' => 1
@@ -225,4 +225,5 @@ function darwincore_update_6102(){
       )
     )
   );
+  return array('#finished' => TRUE);
 }
