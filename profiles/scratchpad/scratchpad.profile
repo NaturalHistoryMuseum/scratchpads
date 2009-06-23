@@ -333,15 +333,22 @@ function scratchpad_profile_tasks_2(){
         'copy' => 1,
         'paste' => 1
       ),
+      'font' => array(
+        'formatselect' => 1,
+      ),
       'paste' => array(
-        'pasteword' => 1
+        'pasteword' => 1,
+        'pastetext' => 1
       ),
       'safari' => array(
         'safari' => 1
       ),
       'imce' => array(
         'imce' => 1
-      )   
+      ),
+      'drupal' => array(
+        'break' => 1
+      )
     ),
     'toolbar_loc' => 'top',
     'toolbar_align' => 'left',
