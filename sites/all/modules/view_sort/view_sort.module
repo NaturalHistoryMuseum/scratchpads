@@ -140,7 +140,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   $output = '<div class="view-sort-drag">';
   $i = 0;
   $sort_orders = variable_get('view_sort-limits', array());
-  $divider = '<div view-sort="divider" class="sort-div divider">Divider</div>';
+  $divider = '<div view-sort="divider" class="sort-div divider">&nbsp;</div>';
   if (isset($sort_orders[$view_name])){
     $divider_position = $sort_orders[$view_name];
   } else {
