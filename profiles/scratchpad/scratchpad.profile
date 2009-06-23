@@ -27,7 +27,7 @@ function scratchpad_profile_modules(){
       'translation','tracker',
     // No requirements/Other
       'biblio','boost','node_import','creativecommons_lite','simplenews',
-      'advanced_help','auto_nodetitle','checkbox_validate','clone','fileshare',
+      'advanced_help','auto_nodetitle','checkbox_validate','clone',
       'globalredirect','legal','path_redirect','pathauto','quote','robotstxt',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
       'jstools','wysiwyg','print','sharethis','imce','imce_wysiwyg',
