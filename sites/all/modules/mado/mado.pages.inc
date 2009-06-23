@@ -100,9 +100,17 @@ function theme_mado_block($block, $id) {
         if($start_of_links){
           $end_of_links = strpos($view_content, "</ul>", $start_of_links);
           $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
-          $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
-        } else {
-          $content = $view_content;
+          if(isset($block['#hidden']) && $block['#hidden']){
+            $content = t('Hidden');
+          } else {
+            $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
+          }
+        } else {        
+          if(isset($block['#hidden']) && $block['#hidden']){
+            $content = t('Hidden');
+          } else {
+            $content = $view_content;
+          }
         }
         if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
           $title = $view->display['default']->display_options['title'];
@@ -120,7 +128,11 @@ function theme_mado_block($block, $id) {
         if(isset($module_block['subject']) && $module_block['subject']!=''){
           $title = $module_block['subject'];
         }
-        $content = $module_block['content'];
+        if(isset($block['#hidden']) && $block['#hidden']){
+          $content = t('Hidden');
+        } else {
+          $content = $module_block['content'];
+        }
         if(trim($content)==''){
           return false;
         }
@@ -131,7 +143,7 @@ function theme_mado_block($block, $id) {
     case 'divider':
       $id = 'divider';
       $block['#css'] = 'mado_block_2';
-      $content = t('Sort the blocks');
+      $content = '&nbsp;'; // Can't be empty as then the block would be hidden
       break;
     default:
       return false;
@@ -140,22 +152,24 @@ function theme_mado_block($block, $id) {
   if (trim($content)==''){
     return false;
   }
-  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block"><div>
+  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'"><div>
     <div class="boxtop">
       <div class="bc ctr"></div>
       <div class="bc ctl"></div>
     </div>
-    <div class="boxcontent">
-      <div class="boxtitle">
-        <h1>'.$title.'</h1>';
-  if(user_access('mado sort')){
-    $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'"/></a></li>';
+    <div class="boxcontent">';
+  if($id != 'divider'){
+    $output .= '<div class="boxtitle">
+          <h1>'.$title.'</h1>';
+    if(user_access('mado sort')){
+      $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'"/></a></li>';
+    }
+    if($list_of_links != ''){
+      $output .= '<ul class="mado-title-links">'.$list_of_links.'</ul>';
+    }
+    $output .= '</div>';
   }
-  if($list_of_links != ''){
-    $output .= '<ul>'.$list_of_links.'</ul>';
-  }
-  $output .= '</div>
-      <div class="subboxcontent">
+  $output .='<div class="subboxcontent">
         <div class="mado_content'. ((isset($block['#scroll']) && $block['#scroll']) ? " mado_scroll": "") .'">
           '.$content.'
         </div>

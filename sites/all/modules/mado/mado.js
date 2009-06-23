@@ -2,8 +2,9 @@ $(document).ready(function() {
   $('#mado-start-sort').click( function() {
     $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
     $('#divider').css('display','block');
+    $('.mado-hidden').removeClass('mado-hidden');
     $('#mado > *').css('background-color','white');
-    $('.resize').css('display','none');
+    $('.mado-title-links').css('display','none');
     $('#mado .mado_content').each( function (){
       if($(this).height()>150){
         $(this).height($(this).height()/2);

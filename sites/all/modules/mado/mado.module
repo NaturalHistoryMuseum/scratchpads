@@ -195,9 +195,16 @@ function mado_get_theme($vid, $tid = false){
   // try and get the blocks
   $blocks = db_fetch_array ( db_query ( "SELECT blocks FROM {mado} WHERE identifier = '%s' OR identifier = '%s' ORDER BY identifier DESC", $vid, "$vid/$tid" ) );
   if ($blocks) {
-    return unserialize ( array_pop ( $blocks ) );
+    $blocks = unserialize ( array_pop ( $blocks ) );
   } else {
-    return mado_get_blocks ();
+    $blocks = array();
   }
-  return false;
+  $additional_blocks = mado_get_blocks ();
+  foreach($additional_blocks as $key => $additional_block){
+    if(!isset($blocks[$key])){
+      $blocks[$key] = $additional_block;
+      $blocks[$key]['#hidden'] = TRUE;
+    }
+  }
+  return $blocks;
 }
