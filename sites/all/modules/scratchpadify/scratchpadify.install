@@ -7,3 +7,9 @@ function scratchpadify_install(){
   // Place it almost last (before Devel).
   db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");
 }
+
+function scratchpadify_update_6101(){
+  // Remove the fileshare module
+  db_query("DELETE FROM {system} WHERE name = 'fileshare'");
+  return array('#finished' => TRUE);
+}
