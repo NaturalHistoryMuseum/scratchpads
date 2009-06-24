@@ -127,6 +127,9 @@ function theme_mado_block($block, $id) {
         $module_block = module_invoke($module,'block','view',$delta);
         if(isset($module_block['subject']) && $module_block['subject']!=''){
           $title = $module_block['subject'];
+        } else {
+          $temp_block = module_invoke($module, 'block', 'list', $delta);
+          $title = $temp_block[$delta]['info'];
         }
         if(isset($block['#hidden']) && $block['#hidden']){
           $content = t('Hidden');
