@@ -21,7 +21,9 @@ function sandbox_profile_details(){
  */
 function sandbox_profile_modules(){
   require_once("./profiles/scratchpad/scratchpad.profile");
-  return array_merge(scratchpad_profile_modules(), array('sandbox'));
+  $modules = array_merge(scratchpad_profile_modules(), array('sandbox'));
+  unset($modules[array_search('boost',$modules)]);
+  return $modules;
 }
 
 /**
@@ -2539,8 +2541,7 @@ function sandbox_profile_tasks(&$task, $url){
 
     module_load_include('admin.inc','block');
     block_admin_display();
-    $region = system_default_region(variable_get('theme_default', 'garland'));
-    db_query("UPDATE {blocks} SET status = 1, region = '%s', weight = -100 WHERE delta = 'tinytax-13'", $region);
+    db_query("UPDATE {blocks} SET status = 1, weight = -100 WHERE delta = 'tinytax-13'");
     
     // Update the menu router information.
     menu_rebuild();
