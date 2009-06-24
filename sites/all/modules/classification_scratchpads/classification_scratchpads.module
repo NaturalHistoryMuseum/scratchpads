@@ -33,6 +33,15 @@ function classification_scratchpads_menu(){
     'file' => 'classification.edit.inc', 
     'file path' => drupal_get_path ( 'module', 'classification' ) . '/includes/' );
   
+  $items['classification_scratchpads/help'] = array(
+    'title' => t('Help'),
+    'description' => t('Instructions to help you work with the Taxonomy import.'),
+    'page callback' => 'classification_scratchpads_help_pages',
+    'access arguments' => array('access content'), // Not fussed about restricting access to this page FFS
+    'type' => MENU_CALLBACK, // Don't display in menu
+    'file' => 'classification_scratchpads.help.inc',
+  );
+  
   /**
    * Callbacks
    */
@@ -310,7 +319,7 @@ function classification_scratchpads_import(&$form_state){
       '#required' => 1, 
       '#options' => $classifications );
   }
-  $form ['title'] ['#value'] = '<h2>Import</h2><div class=\'messages status\'><h3>You have three options to import your names and/or classification(s). Please see the <a href="/classification/help">help page</a> for instruction.</h3></div>';
+  $form ['title'] ['#value'] = t('<h2>Import</h2><div class=\'messages status\'><h3>You have three options to import your taxonomy. Please see the <a href="!url">help page</a> for instruction.</h3></div>', array('!url' => url('classification_scratchpads/help')));
   
   $form['#submit'] = array('classification_import_form_submit');
   
