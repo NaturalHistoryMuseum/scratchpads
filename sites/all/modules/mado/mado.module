@@ -200,6 +200,9 @@ function mado_get_theme($vid, $tid = false){
     $blocks = array();
   }
   $additional_blocks = mado_get_blocks ();
+  if(!$blocks){
+    return $additional_blocks;
+  }
   foreach($additional_blocks as $key => $additional_block){
     if(!isset($blocks[$key])){
       $blocks[$key] = $additional_block;
