@@ -30,6 +30,10 @@ function sandbox_profile_modules(){
 function sandbox_profile_tasks(&$task, $url){
   require_once("./profiles/scratchpad/scratchpad.profile");
   if($task == 'profile'){
+    // Firstly, take the site off line in case anyone is trying to view the site
+    // now.
+    variable_set('site_offline',1);
+    variable_set('site_offline_message','The Scratchpad Sandbox is currently being rebuilt, please come back in two minutes.');
     scratchpad_profile_tasks_1();
     
     db_query("INSERT INTO {profile_values} (fid, uid, value) VALUES 
@@ -2539,7 +2543,8 @@ function sandbox_profile_tasks(&$task, $url){
     db_query("UPDATE {blocks} SET status = 1, region = '%s', weight = -100 WHERE delta = 'tinytax-13'", $region);
     
     // Update the menu router information.
-    menu_rebuild();    
+    menu_rebuild();
+    variable_set('site_offline',0);
     $task = 'profile-finished';
   }
 }
