@@ -41,7 +41,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
         'ident' => $vids[0].'/'.$tids[0],
-	'finished_sorting' => l(t('Finished sorting'),$_GET['q'])
+	'finished_sorting' => l(t('Finished sorting'),'mado/applytoall',array('attributes' => array('class' => 'thickbox'),'query' => array('ident' => $vids[0].'/'.$tids[0])))
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
@@ -83,6 +83,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 function theme_mado_block($block, $id) {
   $title = '&nbsp;';
   $content = '';
+  $hidden_content = t('The content of this element is currently hidden, content will be displayed once it is moved above the divider.');
   switch($block['#type']){
     case 'view':
       
@@ -101,13 +102,13 @@ function theme_mado_block($block, $id) {
           $end_of_links = strpos($view_content, "</ul>", $start_of_links);
           $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
           if(isset($block['#hidden']) && $block['#hidden']){
-            $content = t('Hidden');
+            $content = $hidden_content;
           } else {
             $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
           }
         } else {        
           if(isset($block['#hidden']) && $block['#hidden']){
-            $content = t('Hidden');
+            $content = $hidden_content;
           } else {
             $content = $view_content;
           }
@@ -132,7 +133,7 @@ function theme_mado_block($block, $id) {
           $title = $temp_block[$delta]['info'];
         }
         if(isset($block['#hidden']) && $block['#hidden']){
-          $content = t('Hidden');
+          $content = $hidden_content;
         } else {
           $content = $module_block['content'];
         }

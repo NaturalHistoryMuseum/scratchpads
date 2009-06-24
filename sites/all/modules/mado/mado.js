@@ -26,6 +26,7 @@ $(document).ready(function() {
         $.ajax(ajax_options); 
       }
     });
+    tb_init('.thickbox');
   });
   $('.resize-x').click( function(){
     $(this).parent().parent().parent().parent().parent().parent().toggleClass("mado_block_2");
