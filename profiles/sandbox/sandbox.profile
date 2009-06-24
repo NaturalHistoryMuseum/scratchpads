@@ -2541,7 +2541,7 @@ function sandbox_profile_tasks(&$task, $url){
 
     module_load_include('admin.inc','block');
     block_admin_display();
-    db_query("UPDATE {blocks} SET status = 1, weight = -100 WHERE delta = 'tinytax-13'");
+    db_query("UPDATE {blocks} SET status = 1, weight = -100, theme = 'garland' WHERE delta = 'tinytax-13'");
     
     // Update the menu router information.
     menu_rebuild();
