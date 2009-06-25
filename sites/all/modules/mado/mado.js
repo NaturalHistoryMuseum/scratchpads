@@ -29,9 +29,9 @@ $(document).ready(function() {
         }
       });
       $('#mado').sortable({
-        start: function(event, ui){
+        /*start: function(event, ui){
           $('.mado_close').css('display','none');
-        },
+        },*/
         stop: function(event, ui){
           mado_after_sort();
         }
