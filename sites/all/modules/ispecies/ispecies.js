@@ -6,13 +6,12 @@ function ispecies_callback(callback, viewname){
       ispecies_success(data, viewname);
     },
     complete:function(){
-      add_event_handlers($('#'+viewname));
+      add_event_handlers('#'+viewname);
     },
     data:"url="+location.href
   };
   $.ajax(ajax_options); 
 }
-
 function ispecies_success(data, viewname){
   var resultObj = eval('(' + data + ')');
   var output = '';
@@ -33,19 +32,12 @@ function ispecies_success(data, viewname){
     citation_add_citation_url(resultObj);
   }
 }
-
-function add_event_handlers(alteredobject){  
-  alteredobject.parents('.content').find("a.thickbox").each(function(){
+function add_event_handlers(context){
+  $(context).parents('.content').find("a.thickbox").each(function(){
     $(this).unbind('click');
     tb_init($(this));
-  })  
-  if(typeof Lightbox == 'object'){    
-    alteredobject.parents('.content').find("a.lightbox").each(function(){  
-      $(this).unbind('click');        
-      $(this).click(function(){
-      Lightbox.start(this);
-      return false
-      });  
-    })
+  })
+  if(typeof Lightbox == 'object'){
+    Lightbox.initList(context);
   }
 }
