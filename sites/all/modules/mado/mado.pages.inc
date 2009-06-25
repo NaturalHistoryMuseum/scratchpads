@@ -41,7 +41,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
         'ident' => $vids[0].'/'.$tids[0],
-	'finished_sorting' => l(t('Finished sorting'),$_GET['q'],array('attributes' => array('onclick' => "$('#mado_apply').dialog('open');return false;")))
+	      'finished_sorting' => l(t('Finished sorting'),$_GET['q'],array('attributes' => array('onclick' => "$('#mado_apply').dialog('open');return false;")))
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
@@ -167,7 +167,11 @@ function theme_mado_block($block, $id) {
   if (trim($content)==''){
     return false;
   }
-  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'"><div>
+  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">
+  <div class="mado_close">
+    <img src="'.url(drupal_get_path('module','mado').'/images/close.png').'" alt="Close"/>
+  </div>
+  <div>
     <div class="boxtop">
       <div class="bc ctr"></div>
       <div class="bc ctl"></div>
