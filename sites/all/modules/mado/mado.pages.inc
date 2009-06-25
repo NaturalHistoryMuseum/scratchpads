@@ -41,7 +41,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
         'ident' => $vids[0].'/'.$tids[0],
-	'finished_sorting' => l(t('Finished sorting'),'mado/applytoall',array('attributes' => array('class' => 'thickbox'),'query' => array('ident' => $vids[0].'/'.$tids[0])))
+	'finished_sorting' => l(t('Finished sorting'),$_GET['q'],array('attributes' => array('onclick' => "$('#mado_apply').dialog('open');return false;")))
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
@@ -63,7 +63,18 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_set_breadcrumb($breadcrumb);
       
       if(user_access('mado sort')){
-        $output .= '<div class="mado_sort"><h1 id="mado-start-sort"><a>'.t('Sort this page').'</a></h1></div>';
+        $output .= '<div class="mado_sort">
+            <h1 id="mado-start-sort">
+              <a>'.t('Sort this page').'</a>
+            </h1>
+          </div>
+          <div id="mado_apply">
+            <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
+            <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
+          </div>';
+        jquery_ui_add(array('ui.dialog'));
+        jquery_ui_add(array('ui.draggable'));
+        drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
       }
       
       $output .= '<div id="mado">';

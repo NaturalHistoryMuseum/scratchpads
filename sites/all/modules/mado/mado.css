@@ -1,17 +1,21 @@
-div.mado_apply{
- text-align: center;
- border: solid 1px #ddd;
- margin: 30px;
- padding: 30px;
+#mado_apply{
+ text-align: left;
 }
-div.mado_apply a{
+#mado_apply p{
+ font-size: 110%;
+ font-family: Helvetica, Arial, sans-serif;
+}
+#mado_apply a{
  display:block;
- padding: 20px;
- margin: 20px;
- border: solid 1px black;
+ padding: 10px;
+ margin: 10px;
+ border: outset 3px #555;
+ color: black;
 }
-div.mado_apply a:hover{
- background-color:green;
+#mado_apply a:hover{
+ border-style: inset;
+ text-decoration: none;
+ background-color: #eee;
 }
 #divider{
  background-image: url('images/mado-divider.png');

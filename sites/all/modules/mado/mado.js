@@ -1,32 +1,45 @@
+var currently_sorting = false;
+
 $(document).ready(function() {
+  $('#mado_apply').dialog({
+    autoOpen: false,
+    bgiframe: true,
+    draggable: true,
+    modal: true,
+    width: 'auto',
+    height: 'auto',
+    title: 'Apply to "This page" or "All"'
+  });
   $('#mado-start-sort').click( function() {
-    $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
-    $('#divider').css('display','block');
-    $('.mado-hidden').removeClass('mado-hidden');
-    $('#mado > *').css('background-color','white');
-    $('.mado-title-links').css('display','none');
-    $('#mado .mado_content').each( function (){
-      if($(this).height()>150){
-        $(this).height($(this).height()/2);
-        $(this).css('overflow','hidden');        
-      }
-    });
-    $('#mado').sortable({
-      stop: function(event, ui){
-        var items = Array();
-        $('.mado_block').each(function(){
-          if($(this).attr('id')!=''){
-            items[items.length] = $(this).attr('id');
-          }
-        });
-        var ajax_options = {
-          url:Drupal.settings.mado.callback_url,
-          data:{"blocks[]":items,"identifier":Drupal.settings.mado.ident}
-        };
-        $.ajax(ajax_options); 
-      }
-    });
-    tb_init('.thickbox');
+    if(!currently_sorting){
+      $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
+      $('#divider').css('display','block');
+      $('.mado-hidden').removeClass('mado-hidden');
+      $('#mado > *').css('background-color','white');
+      $('.mado-title-links').css('display','none');
+      $('#mado .mado_content').each( function (){
+        if($(this).height()>150){
+          $(this).height($(this).height()/2);
+          $(this).css('overflow','hidden');        
+        }
+      });
+      $('#mado').sortable({
+        stop: function(event, ui){
+          var items = Array();
+          $('.mado_block').each(function(){
+            if($(this).attr('id')!=''){
+              items[items.length] = $(this).attr('id');
+            }
+          });
+          var ajax_options = {
+            url:Drupal.settings.mado.callback_url,
+            data:{"blocks[]":items,"identifier":Drupal.settings.mado.ident}
+          };
+          $.ajax(ajax_options); 
+        }
+      });
+    }
+    currently_sorting = true;
   });
   $('.resize-x').click( function(){
     $(this).parent().parent().parent().parent().parent().parent().toggleClass("mado_block_2");

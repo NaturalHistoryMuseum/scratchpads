@@ -43,18 +43,13 @@ function mado_perm(){
   return array('mado sort');
 }
 
-function mado_apply_to_all($save = FALSE){
-  if(!$save){
-    $output = '<div class="mado_apply"><h1>'.l('Apply to all unset pages','mado/applytoall/save',array('query' => array('ident' => $_GET['ident']))).'</h1><h1>'.l('Apply to just this page','taxonomy/term/'.array_pop(explode("/",$_GET['ident']))).'</h1></div>';
-    echo $output;
-  } else {
-    $row = db_fetch_array(db_query("SELECT * FROM {mado} WHERE identifier = '%s'", $_GET['ident']));
-    $blocks = $row['blocks'];
-    $ident_parts = explode("/", $_GET['ident']);
-    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
-    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $blocks);
-    drupal_goto('taxonomy/term/'.$ident_parts[1]);
-  }
+function mado_apply_to_all(){
+  $row = db_fetch_array(db_query("SELECT * FROM {mado} WHERE identifier = '%s'", $_GET['ident']));
+  $blocks = $row['blocks'];
+  $ident_parts = explode("/", $_GET['ident']);
+  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
+  db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $blocks);
+  drupal_goto('taxonomy/term/'.$ident_parts[1]);
 }
 
 /**
