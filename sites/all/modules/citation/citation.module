@@ -446,14 +446,12 @@ function citation_block($op = 'list', $delta = 0, $edit = array()){
     case 'view' :
       if(user_access('create citations')){
         drupal_add_js(drupal_get_path('module', 'citation') . '/citation.js');
-        drupal_add_js("citation_email_success = \"" . t('Your email has been sent.') . "\";
-citation_email_failure = \"" . t('Your email has not been sent, the administrator of this site has been notified.') . "\";", 'inline');
-        drupal_add_css(drupal_get_path('module', 'citation') . '/citation.css');
         drupal_add_js(array('citation' => array(
           'email' => array(
             'success' => t('Your email has been sent.'),
             'failure' => t('Your email has not been sent, the administrator of this site has been notified.')
           ))), 'setting');
+        drupal_add_css(drupal_get_path('module', 'citation') . '/citation.css');
         $blocks = array(
           
           'title' => t('Authors & Sources'), 
