@@ -11,48 +11,57 @@
  * 
  * hook_citation(&$citations = array(), &$javascript = FALSE)
  */
-
 /**
  * Implementation of hook_menu
  */
 function citation_menu(){
-  $items = array ();
-  $items ['citation/create_no_js'] = array (
+  $items = array();
+  $items['citation/create_no_js'] = array(
     'title' => '', 
     'page callback' => 'citation_create_no_js', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
-  $items ['citation/get_citations'] = array (
+    'access arguments' => array(
+      'create citations'
+    )
+  );
+  $items['citation/get_citations'] = array(
     'title' => '', 
     'page callback' => 'citation_get_citations', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
-  $items ['citation/create_citation'] = array (
+    'access arguments' => array(
+      'create citations'
+    )
+  );
+  $items['citation/create_citation'] = array(
     'title' => '', 
     'page callback' => 'citation_create_citation', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
-  $items ['citation/popup'] = array (
+    'access arguments' => array(
+      'create citations'
+    )
+  );
+  $items['citation/popup'] = array(
     'title' => 'Your Citation', 
     'page callback' => 'citation_popup_html', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
-  $items ['citations'] = array (
-    'title' => '', 
-    'page callback' => 'citation_get_files', 
+    'access arguments' => array(
+      'create citations'
+    )
+  );
+  $items['citations'] = array(
+    'title' => '', 'page callback' => 'citation_get_files', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
-  $items ['citation/email'] = array (
-    'title' => '', 
-    'page callback' => 'citation_email', 
+    'access arguments' => array(
+      'create citations'
+    )
+  );
+  $items['citation/email'] = array(
+    'title' => '', 'page callback' => 'citation_email', 
     'type' => MENU_CALLBACK, 
-    'access arguments' => array (
-      'create citations' ) );
+    'access arguments' => array(
+      'create citations'
+    )
+  );
   return $items;
 }
 
@@ -61,22 +70,22 @@ function citation_menu(){
  * doing this)
  */
 function citation_get_files(){
-  $file_name = arg ( 1 );
-  if (arg ( 2 )) {
-    $file_name .= "/" . arg ( 2 );
-  } else {
+  $file_name = arg(1);
+  if(arg(2)){
+    $file_name .= "/" . arg(2);
+  }else{
     $file_name .= ".html";
   }
-  $file_name = file_directory_path () . "/citations/$file_name";
-  $file = fopen ( $file_name, "rb" );
-  fpassthru ( $file );
-  exit ();
+  $file_name = file_directory_path() . "/citations/$file_name";
+  $file = fopen($file_name, "rb");
+  fpassthru($file);
+  exit();
 }
+
 /**
  * Creates a page for users without JS.
  */
-function citation_create_no_js(){
-  // Add a warning that we need JavaScript - F' off you "no scripters"
+function citation_create_no_js(){  // Add a warning that we need JavaScript - F' off you "no scripters"
 }
 
 /**
@@ -85,51 +94,53 @@ function citation_create_no_js(){
 function citation_popup_html($cid = 1){
   // Return the reference, we shouldn't get here without a cid, but just in case
   // we'll default to 1
-  $row = db_fetch_array ( db_query ( "SELECT * FROM {citation} WHERE cid = %d", $cid ) );
+  $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
   print '<div class="citation-popup">';
-  print theme ( 'citation_popup', $row );
+  print theme('citation_popup', $row);
   global $user;
-  if ($user->uid) {
-    print '<div class="form"><form action="' . url ( 'citation/create_no_js' ) . '"><input type="button" value="' . t ( 'Email me this' ) . '" onclick="';
-    print "citation_email('" . url ( 'citation/email', array (
-      'absolute' => 1 ) ) . "'," . $cid . ", '" . $user->uid . "');return false";
+  if($user->uid){
+    print '<div class="form"><form action="' . url('citation/create_no_js') . '"><input type="button" value="' . t('Email me this') . '" onclick="';
+    print "citation_email('" . url('citation/email', array(
+      'absolute' => 1
+    )) . "'," . $cid . ", '" . $user->uid . "');return false";
     print '"/></form></div>';
   }
   print '</div>';
-  exit ();
+  exit();
 }
 
 function citation_email(){
-  if ($_POST ['cid'] && $_POST ['uid']) {
-    $cid = $_POST ['cid'];
-    $uid = $_POST ['uid'];
+  if($_POST['cid'] && $_POST['uid']){
+    $cid = $_POST['cid'];
+    $uid = $_POST['uid'];
     global $user;
-    if ($uid == $user->uid) {
-      $row = db_fetch_array ( db_query ( "SELECT * FROM {citation} WHERE cid = %d", $cid ) );
+    if($uid == $user->uid){
+      $row = db_fetch_array(db_query("SELECT * FROM {citation} WHERE cid = %d", $cid));
       global $user;
-      $params ['user'] = $user;
-      $params ['citation'] = $row;
-      drupal_mail ( 'citation', 'popup', $account->mail, user_preferred_language ( $account ), $params );
-      print json_encode ( true );
-      exit ();
+      $params['user'] = $user;
+      $params['citation'] = $row;
+      drupal_mail('citation', 'popup', $account->mail, user_preferred_language($account), $params);
+      print json_encode(true);
+      exit();
     }
   }
-  print json_encode ( false );
+  print json_encode(false);
 }
 
 function citation_mail($key, &$message, $params){
-  switch ($key) {
+  switch($key){
     case 'popup' :
-      $user = $params ['user'];
-      $citation = $params ['citation'];
-      $message ['subject'] = t ( 'Citation' );
-      $message ['body'] = array (
+      $user = $params['user'];
+      $citation = $params['citation'];
+      $message['subject'] = t('Citation');
+      $message['body'] = array(
         $user->name . "!", 
         'The following citation was requested by you:', 
-        strip_tags ( $citation ['reference'] ), 
-        variable_get ( 'site_name', 'drupal' ), 
-        "--\r\nScratchpad powered" );
-      $message ['to'] = $user->mail;
+        strip_tags($citation['reference']), 
+        variable_get('site_name', 'drupal'), 
+        "--\r\nScratchpad powered"
+      );
+      $message['to'] = $user->mail;
       break;
   }
 }
@@ -138,169 +149,157 @@ function citation_mail($key, &$message, $params){
  * Create the citation
  */
 function citation_create_citation(){
-  if ($_POST ['page']) {
-    
+  if($_POST['page']){
     // Set variable to the posted page
-    $page = $_POST ['page'];
-    
+    $page = $_POST['page'];
     // Get the citation number
-    $row = db_fetch_array ( db_query ( "SELECT cid FROM {citation} ORDER BY cid DESC LIMIT 1" ) );
-    if ($row) {
-      $citation_number = $row ['cid'] + 1;
-    } else {
+    $row = db_fetch_array(db_query("SELECT cid FROM {citation} ORDER BY cid DESC LIMIT 1"));
+    if($row){
+      $citation_number = $row['cid'] + 1;
+    }else{
       $citation_number = 1;
     }
-    
     // Create the directory for saving external shit
-    $file_path = file_directory_path ();
+    $file_path = file_directory_path();
     $citation_directory = "$file_path/citations/$citation_number";
-    @mkdir ( "$file_path/citations/" );
-    @mkdir ( $citation_directory );
-    
+    @mkdir("$file_path/citations/");
+    @mkdir($citation_directory);
     //strip out all <script></script>
     $scripts = '/<script(.*?)\/script>/';
-    $page = preg_replace ( $scripts, '', $page );
-    
+    $page = preg_replace($scripts, '', $page);
     //create directories for storing permanent files    
     //copy all files to permanent dir
-    preg_match_all ( '/src="(.+?)"/i', $page, $sources );
-    if (is_array ( $sources [1] )) {
-      foreach ( $sources [1] as $file ) {
-        $page = str_replace ( $file, citation_save_file ( $file, $citation_number ), $page );
+    preg_match_all('/src="(.+?)"/i', $page, $sources);
+    if(is_array($sources[1])){
+      foreach($sources[1] as $file){
+        $page = str_replace($file, citation_save_file($file, $citation_number), $page);
       }
     }
-    
     // Copy the css files - Thanks Ben!   
-    preg_match_all ( '/<link type="text\/css" rel="stylesheet" media=".*" href="(.+?)"/i', $page, $style_sheets );
-    if (is_array ( $style_sheets [1] )) {
-      foreach ( $style_sheets [1] as $file ) {
-        $page = str_replace ( $file, citation_save_file ( $file, $citation_number ), $page );
+    preg_match_all('/<link type="text\/css" rel="stylesheet" media=".*" href="(.+?)"/i', $page, $style_sheets);
+    if(is_array($style_sheets[1])){
+      foreach($style_sheets[1] as $file){
+        $page = str_replace($file, citation_save_file($file, $citation_number), $page);
       }
     }
-    
     //strip out onload
     $page = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" id="cited-page">' . $page . '</html>';
-    
     // Strip the link to create a citation
-    $page = preg_replace ( "/<p><a[^>]*>Create Citation<\/a><\/p>/i", "", $page );
-    
+    $page = preg_replace("/<p><a[^>]*>Create Citation<\/a><\/p>/i", "", $page);
     // Now save the contents of the file to filepath / citation / [citation_number].html
-    file_put_contents ( "$file_path/citations/$citation_number.html", $page );
-    
+    file_put_contents("$file_path/citations/$citation_number.html", $page);
     print $citation_number; // Probably change this to return a link
-    unset ( $_SESSION ['citations'] );
-    
+    unset($_SESSION['citations']);
     // Insert the stuff into the database
-    $retrieved = time ();
-    $reference = theme ( 'citation_plain', $_POST ['citation_nids'], $_POST ['citation_urls'], $retrieved, $citation_number );
-    db_query ( "INSERT INTO {citation} (cid, created, reference, url) VALUES (%d, %d, '%s', '%s')", $citation_number, $retrieved, $reference, $_POST ['url'] );
-    exit ();
+    $retrieved = time();
+    $reference = theme('citation_plain', $_POST['citation_nids'], $_POST['citation_urls'], $retrieved, $citation_number);
+    db_query("INSERT INTO {citation} (cid, created, reference, url) VALUES (%d, %d, '%s', '%s')", $citation_number, $retrieved, $reference, $_POST['url']);
+    exit();
   }
 }
 
 // FIXME - There is an issue with saving of files within CSS files which are
 // enclosed by double quotes (at least that is what I believe the issue to be)
 function citation_save_file($file, $citation_number){
-  $citation_directory = file_directory_path () . "/citations/$citation_number";
-  $previous_citation_directory = file_directory_path () . "/citations/" . ($citation_number - 1);
-  if (isset ( $_SESSION ['citations'] [$file] )) {
-    return $_SESSION ['citations'] [$file];
+  $citation_directory = file_directory_path() . "/citations/$citation_number";
+  $previous_citation_directory = file_directory_path() . "/citations/" . ($citation_number - 1);
+  if(isset($_SESSION['citations'][$file])){
+    return $_SESSION['citations'][$file];
   }
   global $base_url;
   // save the file in the citation directory, and replace the text in the
   // html to point to the new location
-  $file_name = basename ( urldecode ( $file ) );
+  $file_name = basename(urldecode($file));
   // If the filename has a query, remove it
-  if (strpos ( $file_name, "?" )) {
-    $file_name = substr ( $file_name, 0, strpos ( $file_name, "?" ) );
+  if(strpos($file_name, "?")){
+    $file_name = substr($file_name, 0, strpos($file_name, "?"));
   }
-  if (substr ( $file, 0, 7 ) == "http://" || substr ( $file, 0, 8 ) == "https://") {
+  if(substr($file, 0, 7) == "http://" || substr($file, 0, 8) == "https://"){
     $get_file = $file;
-  } else {
-    if (substr ( $file, 0, 1 ) == "/") {
+  }else{
+    if(substr($file, 0, 1) == "/"){
       // Local file, we need to add the local URL to it
       $get_file = $base_url . $file;
-    } else {
+    }else{
       // This was a relative file, we need the referer, if we don't have it,
       // then we give a warning, and possibly bail (FFS, stop blocking 
       // referers).
-      $get_file = referer_uri () . $file;
+      $get_file = referer_uri() . $file;
     }
   }
   $new_file = "$citation_directory/$file_name";
-  if (file_exists ( $new_file )) {
+  if(file_exists($new_file)){
     // We need a different file name
-    watchdog ( "citation", "This file already exists: $new_file" );
+    watchdog("citation", "This file already exists: $new_file");
   }
-  file_put_contents ( $new_file, file_get_contents ( $get_file ) );
-  
+  file_put_contents($new_file, file_get_contents($get_file));
   // Check to see if this file has been cited before (previous ID, and if so,
   // link to that file rather than having a full copy here)
-  if ($previous_citation_directory) {
+  if($previous_citation_directory){
     $previous_file = "$previous_citation_directory/$file_name";
-    if (file_exists ( $previous_file ) && filesize ( $previous_file ) == filesize ( $new_file )) {
-      unlink ( $new_file );
-      symlink ( "../" . ($citation_number - 1) . "/" . basename ( $new_file ), $new_file );
+    if(file_exists($previous_file) && filesize($previous_file) == filesize($new_file)){
+      unlink($new_file);
+      symlink("../" . ($citation_number - 1) . "/" . basename($new_file), $new_file);
     }
   }
-  
   // If the file we've just downloaded is a CSS file, we need to get the files
   // that the CSS file points at (Not perfect given that CSS files don't have to
   // end in .css
-  if (strtolower ( substr ( $new_file, - 4, 4 ) ) == '.css') {
-    preg_match_all ( '/url\((.+?)\)/i', file_get_contents ( $new_file ), $css_files );
-    if (is_array ( $css_files [1] )) {
-      foreach ( $css_files [1] as $css_file ) {
-        $css_file = str_replace ( '"', '', $css_file );
-        $new_filename = citation_save_file ( dirname ( $get_file ) . "/$css_file", $citation_number );
-        file_put_contents ( $new_file, str_replace ( $css_file, $new_filename, file_get_contents ( $new_file ) ) );
+  if(strtolower(substr($new_file, -4, 4)) == '.css'){
+    preg_match_all('/url\((.+?)\)/i', file_get_contents($new_file), $css_files);
+    if(is_array($css_files[1])){
+      foreach($css_files[1] as $css_file){
+        $css_file = str_replace('"', '', $css_file);
+        $new_filename = citation_save_file(dirname($get_file) . "/$css_file", $citation_number);
+        file_put_contents($new_file, str_replace($css_file, $new_filename, file_get_contents($new_file)));
       }
     }
   }
   // Return the new filename so that reference to $file in the $page string can
   // be changed
-  $_SESSION ['citations'] [$file] = url ( $new_file, array (
-    'absolute' => 1 ) );
-  return $_SESSION ['citations'] [$file];
+  $_SESSION['citations'][$file] = url($new_file, array(
+    'absolute' => 1
+  ));
+  return $_SESSION['citations'][$file];
 }
+
 /**
  * Callback to return the ajax for citations
  */
 function citation_get_citations(){
   global $_SESSION;
-  $citations = array ();
-  if (isset ( $_SESSION ['citation'] [$_GET ['page']] ['nids'] ) && is_array ( $_SESSION ['citation'] [$_GET ['page']] ['nids'] ) && count ( $_SESSION ['citation'] [$_GET ['page']] ['nids'] )) {
-    $nids = $_SESSION ['citation'] [$_GET ['page']] ['nids'];
-    $results = db_query ( "SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode ( ",", $_SESSION ['citation'] [$_GET ['page']] ['nids'] ) );
-    while ( $row = db_fetch_array ( $results ) ) {
-      $user = user_load ( $row ['uid'] );
-      $citations [] = l ( theme ( 'citation_user', $user ), 'user/' . $user->uid );
+  $citations = array();
+  if(isset($_SESSION['citation'][$_GET['page']]['nids']) && is_array($_SESSION['citation'][$_GET['page']]['nids']) && count($_SESSION['citation'][$_GET['page']]['nids'])){
+    $nids = $_SESSION['citation'][$_GET['page']]['nids'];
+    $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",", $_SESSION['citation'][$_GET['page']]['nids']));
+    while($row = db_fetch_array($results)){
+      $user = user_load($row['uid']);
+      $citations[] = l(theme('citation_user', $user), 'user/' . $user->uid);
     }
   }
-  if (isset ( $_SESSION ['citation'] [$_GET ['page']] ['urls'] ) && is_array ( $_SESSION ['citation'] [$_GET ['page']] ['urls'] ) && count ( $_SESSION ['citation'] [$_GET ['page']] ['urls'] )) {
-    foreach ($_SESSION ['citation'] [$_GET ['page']] ['urls'] as $url){
-      $citations [] = theme('citation_url', $url);
+  if(isset($_SESSION['citation'][$_GET['page']]['urls']) && is_array($_SESSION['citation'][$_GET['page']]['urls']) && count($_SESSION['citation'][$_GET['page']]['urls'])){
+    foreach($_SESSION['citation'][$_GET['page']]['urls'] as $url){
+      $citations[] = theme('citation_url', $url);
     }
   }
-  
   // FIXME - This doesn't seem to be working - WILL RESULT IN ODD CITATIONS
-  unset ( $_SESSION ['citation']);
+  unset($_SESSION['citation']);
   session_write_close();
-  
-  if (count ( $citations )) {
-    $output = theme ( 'citations', $citations );
-    $output .= '<form action="' . url ( 'citation/create_no_js' ) . '"><input type="button" value="' . t ( 'Create Citation' ) . '" onclick="';
-    $output .= "citation_create('" . url ( 'citation/create_citation', array (
-      'absolute' => TRUE ) ) . "', '" . url ( 'citation/popup' ) . "');return false";
+  if(count($citations)){
+    $output = theme('citations', $citations);
+    $output .= '<form action="' . url('citation/create_no_js') . '"><input type="button" value="' . t('Create Citation') . '" onclick="';
+    $output .= "citation_create('" . url('citation/create_citation', array(
+      'absolute' => TRUE
+    )) . "', '" . url('citation/popup') . "');return false";
     $output .= '"/></form>';
-  } else {
-    $output = t ( 'We have no information about the Authors and Sources on this page' );
+  }else{
+    $output = t('We have no information about the Authors and Sources on this page');
   }
-  print json_encode ( array (
-    'content' => $output, 
-    'nids' => $nids ) );
+  print json_encode(array(
+    'content' => $output, 'nids' => $nids
+  ));
   return;
 }
 
@@ -308,33 +307,50 @@ function citation_get_citations(){
  * Implementation of hook_perm
  */
 function citation_perm(){
-  return array (
-    'create citations' );
+  return array(
+    'create citations'
+  );
 }
 
 /**
  * Implementation of hook_theme
  */
 function citation_theme(){
-  return array (
-    'citations' => array (
-      'arguments' => array (
-        'citations' => array () ) ), 
-    'citation_user' => array (
-      'arguments' => array (
-        'user' => NULL ) ), 
-    'citation_plain' => array (
-      'arguments' => array (
-        'nids' => array (), 
-        'urls' => array (), 
-        'retrieved' => time (), 
-        'citation_number' => 1 ) ), 
-    'citation_url' => array (
-      'arguments' => array (
-        'urls' => array () ) ), 
-    'citation_popup' => array (
-      'arguments' => array (
-        'row' => array () ) ) );
+  return array(
+    
+    'citations' => array(
+      
+      'arguments' => array(
+        'citations' => array()
+      )
+    ), 
+    'citation_user' => array(
+      
+      'arguments' => array(
+        'user' => NULL
+      )
+    ), 
+    'citation_plain' => array(
+      
+      'arguments' => array(
+        'nids' => array(), 'urls' => array(), 
+        'retrieved' => time(), 
+        'citation_number' => 1
+      )
+    ), 
+    'citation_url' => array(
+      
+      'arguments' => array(
+        'urls' => array()
+      )
+    ), 
+    'citation_popup' => array(
+      
+      'arguments' => array(
+        'row' => array()
+      )
+    )
+  );
 }
 
 /**
@@ -343,8 +359,8 @@ function citation_theme(){
  * Implementation of hook_nodeapi
  */
 function citation_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
-  if ($op == 'view') {
-    citation_add_nid ( $node->nid );
+  if($op == 'view'){
+    citation_add_nid($node->nid);
   }
 }
 
@@ -354,20 +370,21 @@ function citation_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
  * Implementation of hook_views_pre_execute
  */
 function citation_views_pre_execute(&$view){
-  $query = db_rewrite_sql ( $view->build_info ['query'], $view->base_table, $view->base_field, array (
-    'view' => &$view ) );
-  $args = $view->build_info ['query_args'];
-  $replacements = module_invoke_all ( 'views_query_substitutions', $view );
-  $query = str_replace ( array_keys ( $replacements ), $replacements, $query );
-  if (is_array ( $args )) {
-    foreach ( $args as $id => $arg ) {
-      $args [$id] = str_replace ( array_keys ( $replacements ), $replacements, $arg );
+  $query = db_rewrite_sql($view->build_info['query'], $view->base_table, $view->base_field, array(
+    'view' => &$view
+  ));
+  $args = $view->build_info['query_args'];
+  $replacements = module_invoke_all('views_query_substitutions', $view);
+  $query = str_replace(array_keys($replacements), $replacements, $query);
+  if(is_array($args)){
+    foreach($args as $id => $arg){
+      $args[$id] = str_replace(array_keys($replacements), $replacements, $arg);
     }
   }
-  $result = db_query_range ( $query, $args, 0, $view->pager ['items_per_page'] );
-  while ( $row = db_fetch_array ( $result ) ) {
-    if (isset ( $row ['nid'] )) {
-      citation_add_nid ( $row ['nid'] );
+  $result = db_query_range($query, $args, 0, $view->pager['items_per_page']);
+  while($row = db_fetch_array($result)){
+    if(isset($row['nid'])){
+      citation_add_nid($row['nid']);
     }
   }
 }
@@ -381,15 +398,20 @@ function citation_add_nid($nid, $url = false){
     $result = db_query("SELECT * FROM {ispecies} WHERE nid = %d", $nid);
     $row = db_fetch_array($result);
     if($row){
-      $url_array = array('name' => $row['ispeciestype'], 'urls' => array($row['url']));
+      $url_array = array(
+        'name' => $row['ispeciestype'], 
+        'urls' => array(
+          $row['url']
+        )
+      );
       return citation_add_url($url_array, $url);
     }
   }
   global $_SESSION;
-  if (! $url) {
-    $url = request_uri ();
+  if(!$url){
+    $url = request_uri();
   }
-  $_SESSION ['citation'] [$url] ['nids'] [$nid] = $nid;
+  $_SESSION['citation'][$url]['nids'][$nid] = $nid;
 }
 
 /**
@@ -397,13 +419,13 @@ function citation_add_nid($nid, $url = false){
  */
 function citation_add_url($url_array, $url = false){
   global $_SESSION;
-  if (! $url) {
-    $url = request_uri ();
+  if(!$url){
+    $url = request_uri();
   }
-  if (strpos ( $url, "http" ) === 0) {
-    $url = substr ( $url, strpos ( $url, "/", 10 ) );
-  }   
-  foreach($url_array['urls'] as $url_to_add){ 
+  if(strpos($url, "http") === 0){
+    $url = substr($url, strpos($url, "/", 10));
+  }
+  foreach($url_array['urls'] as $url_to_add){
     $_SESSION['citation'][$url]['urls'][$url_array['name']]['urls'][$url_to_add] = $url_to_add;
   }
 }
@@ -412,26 +434,33 @@ function citation_add_url($url_array, $url = false){
  * Implementation of hook_block
  */
 function citation_block($op = 'list', $delta = 0, $edit = array()){
-  $blocks = array ();
-  switch ($op) {
+  $blocks = array();
+  switch($op){
     case 'list' :
-      $blocks [] = array (
-        'info' => t ( 'Authors & Sources' ), 
-        'description' => t ( 'A generated list of all authors and sources for the page being viewed.' ), 
-        'cache' => BLOCK_NO_CACHE );
+      $blocks[] = array(
+        'info' => t('Authors & Sources'), 
+        'description' => t('A generated list of all authors and sources for the page being viewed.'), 
+        'cache' => BLOCK_NO_CACHE
+      );
       break;
     case 'view' :
-      if (user_access ( 'create citations' )) {
-        drupal_add_js ( drupal_get_path ( 'module', 'citation' ) . '/citation.js' );
-        drupal_add_js ( "citation_email_success = \"" . t ( 'Your email has been sent.' ) . "\";
-citation_email_failure = \"" . t ( 'Your email has not been sent, the administrator of this site has been notified.' ) . "\";", 'inline' );
-        drupal_add_css ( drupal_get_path ( 'module', 'citation' ) . '/citation.css' );
-        $blocks = array (
-          'title' => t ( 'Authors & Sources' ), 
-          'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\'' . url ( 'citation/get_citations', array (
+      if(user_access('create citations')){
+        drupal_add_js(drupal_get_path('module', 'citation') . '/citation.js');
+        drupal_add_js("citation_email_success = \"" . t('Your email has been sent.') . "\";
+citation_email_failure = \"" . t('Your email has not been sent, the administrator of this site has been notified.') . "\";", 'inline');
+        drupal_add_css(drupal_get_path('module', 'citation') . '/citation.css');
+        $blocks = array(
+          
+          'title' => t('Authors & Sources'), 
+          'content' => '<div id="citation"><script type="text/javascript">citation_get_citations(\'' . url('citation/get_citations', array(
+            
             'absolute' => TRUE, 
-            'query' => array (
-              'page' => request_uri () ) ) ) . '\');</script></div>' );
+            'query' => array(
+              
+              'page' => request_uri()
+            )
+          )) . '\');</script></div>'
+        );
       }
       break;
   }
@@ -439,9 +468,10 @@ citation_email_failure = \"" . t ( 'Your email has not been sent, the administra
 }
 
 function theme_citation_popup($row){
-  $output .= '<div><h2>Reference</h2><div><p>' . $row ['reference'] . '</p></div></div>';
-  $output .= '<div><h2>Permalink</h2><div><p>' . l ( url ( 'citations/' . $row ['cid'], array (
-    'absolute' => 1 ) ), 'citations/' . $row ['cid'] ) . '</p></div></div>';
+  $output .= '<div><h2>Reference</h2><div><p>' . $row['reference'] . '</p></div></div>';
+  $output .= '<div><h2>Permalink</h2><div><p>' . l(url('citations/' . $row['cid'], array(
+    'absolute' => 1
+  )), 'citations/' . $row['cid']) . '</p></div></div>';
   return $output;
 }
 
@@ -452,56 +482,57 @@ function theme_citation_plain($nids, $urls, $retrieved, $citation_number){
   // - Retrieved time/data
   // - Site title
   // - Link to this citation
-  $results = db_query ( "SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode ( ",", $nids ) );
-  $users_and_urls = array ();
-  while ( $row = db_fetch_array ( $results ) ) {
-    $user = user_load ( $row ['uid'] );
-    $users_and_urls [] = theme ( 'citation_user', $user );
+  $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",", $nids));
+  $users_and_urls = array();
+  while($row = db_fetch_array($results)){
+    $user = user_load($row['uid']);
+    $users_and_urls[] = theme('citation_user', $user);
   }
   // Add URLs
-  foreach ( $urls as $url ) {
-    $users_and_urls [] = $url;
+  foreach($urls as $url){
+    $users_and_urls[] = $url;
   }
-  $output = implode ( ", ", $users_and_urls );
-  $title = variable_get ( 'site_name', 'Drupal' );
-  $slogan = variable_get ( 'site_slogan', '' );
-  if (trim ( $slogan ) != '') {
+  $output = implode(", ", $users_and_urls);
+  $title = variable_get('site_name', 'Drupal');
+  $slogan = variable_get('site_slogan', '');
+  if(trim($slogan) != ''){
     $title .= " | $slogan";
   }
-  $output .= ". " . t ( 'Retrieved on ' ) . format_date ( $retrieved, 'long' ) . ". <b>$title</b> <span style=\"text-decoration:underline\">" . url ( 'citations/' . $citation_number, array (
-    'absolute' => TRUE ) ) . "</span>";
+  $output .= ". " . t('Retrieved on ') . format_date($retrieved, 'long') . ". <b>$title</b> <span style=\"text-decoration:underline\">" . url('citations/' . $citation_number, array(
+    'absolute' => TRUE
+  )) . "</span>";
   return $output;
 }
 
 function theme_citation_url($url_array){
-  $output = l ( $url_array ['name'], $url_array ['url'] );
-  $urls = array ();
+  $output = l($url_array['name'], $url_array['url']);
+  $urls = array();
   $i = 1;
-  if (is_array ( $url_array ['urls'] ) && count ( $url_array ['urls'] )) {
-    foreach ( $url_array ['urls'] as $url ) {
-      $urls [] = l ( $i, $url );
-      $i ++;
+  if(is_array($url_array['urls']) && count($url_array['urls'])){
+    foreach($url_array['urls'] as $url){
+      $urls[] = l($i, $url);
+      $i++;
     }
-    $output .= " (" . implode ( ", ", $urls ) . ")";
+    $output .= " (" . implode(", ", $urls) . ")";
   }
   return $output;
 }
 
 function theme_citation_user($user){
-  if (is_object ( $user )) {
-    if (isset ( $user->family_name ) && isset ( $user->given_names )) {
-      $given_names = explode ( " ", $user->given_names );
-      $initials = array ();
-      foreach ( $given_names as $name ) {
-        $initials [] = strtoupper ( substr ( $name, 0, 1 ) ) . ".";
+  if(is_object($user)){
+    if(isset($user->family_name) && isset($user->given_names)){
+      $given_names = explode(" ", $user->given_names);
+      $initials = array();
+      foreach($given_names as $name){
+        $initials[] = strtoupper(substr($name, 0, 1)) . ".";
       }
-      return $user->family_name . ", " . implode ( " ", $initials );
-    } else {
+      return $user->family_name . ", " . implode(" ", $initials);
+    }else{
       return $user->name;
     }
   }
 }
 
 function theme_citations($citations){
-  return "<ul><li>" . implode ( "</li><li>", $citations ) . "</li></ul>";
+  return "<ul><li>" . implode("</li><li>", $citations) . "</li></ul>";
 }
