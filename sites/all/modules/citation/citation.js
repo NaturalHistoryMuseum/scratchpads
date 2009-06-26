@@ -3,8 +3,6 @@ var local_citations = false;
 var additional_citations = new Array();
 var citation_nids = Array();
 var citation_urls = Array();
-var citation_email_success;
-var citation_email_failure;
 
 function citation_get_citations(callback){
   var ajax_options = {
@@ -26,9 +24,9 @@ function citation_email(callback, cid, uid){
     success:function(data){
       var result = eval('(' + data + ')');
       if(result){
-        alert(citation_email_success);
+        alert(Drupal.settings.citation.email.success);
       } else {
-        alert(citation_email_failure);
+        alert(Drupal.settings.citation.email.failure);
       }
     },
     data:{cid:cid,uid:uid},
