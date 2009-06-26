@@ -30,12 +30,19 @@ $(document).ready(function() {
       });
       $('#mado').sortable({
         start: function(event, ui){
+          $('.mado_content > *').hide();
           $('.mado_close').css('display','none');
         },
         stop: function(event, ui){
+          $('.mado_content > *').show();
           mado_after_sort();
-        }
+        },
+        tolerance: 'pointer',
+        handle: '.mado-handle',
+        revert: true
+        
       });
+      $('.boxtitle').addClass('boxtitle-hover');
       $('#mado > *').bind("mouseenter", function(){
           // Mouse over a sort block
           var position = $(this).position();

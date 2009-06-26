@@ -67,10 +67,6 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
             <h1 id="mado-start-sort">
               <a>'.t('Sort this page').'</a>
             </h1>
-          </div>
-          <div id="mado_apply">
-            <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
-            <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
           </div>';
         jquery_ui_add(array('ui.dialog'));
         jquery_ui_add(array('ui.draggable'));
@@ -82,7 +78,11 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       foreach($theme as $id => $block){
         $output .= theme('mado_block', $block, $id);
       }      
-      return $output."</div>";
+      return $output.'</div>
+          <div id="mado_apply">
+            <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
+            <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
+          </div>';
     }
   }
   drupal_not_found();
@@ -157,8 +157,8 @@ function theme_mado_block($block, $id) {
       break;
     case 'divider':
       $id = 'divider';
-      $block['#css'] = 'mado_block_2';
-      $content = '&nbsp;'; // Can't be empty as then the block would be hidden
+      $block['#css'] = 'mado_block_2 mado-handle';
+      $content = '<div class="mado-handle" style="height: 100%;width: 100%">&nbsp;</div>'; // Can't be empty as then the block would be hidden
       break;
     default:
       return false;
@@ -167,18 +167,20 @@ function theme_mado_block($block, $id) {
   if (trim($content)==''){
     return false;
   }
-  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">
-  <div class="mado_close">
+  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
+  if($id != 'divider' && !$block['#hidden']){
+    $output .= '<div class="mado_close">
     <img src="'.url(drupal_get_path('module','mado').'/images/close.png').'" alt="Close"/>
-  </div>
-  <div>
+  </div>';
+  }
+  $output .='<div>
     <div class="boxtop">
       <div class="bc ctr"></div>
       <div class="bc ctl"></div>
     </div>
     <div class="boxcontent">';
   if($id != 'divider'){
-    $output .= '<div class="boxtitle">
+    $output .= '<div class="boxtitle mado-handle">
           <h1>'.$title.'</h1>';
     if(user_access('mado sort')){
       $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'"/></a></li>';
