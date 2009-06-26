@@ -49,6 +49,9 @@ function mado_apply_to_all(){
   $ident_parts = explode("/", $_GET['ident']);
   db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
   db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $blocks);
+  // Also delete the shit for this ident, as then we can update it from any
+  // other page.
+  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['ident']);
   drupal_goto('taxonomy/term/'.$ident_parts[1]);
 }
 
