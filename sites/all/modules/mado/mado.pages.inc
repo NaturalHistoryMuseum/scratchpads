@@ -94,7 +94,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 function theme_mado_block($block, $id) {
   $title = '&nbsp;';
   $content = '';
-  $hidden_content = t('The content of this element is currently hidden, content will be displayed once it is moved above the divider.');
+  $hidden_content = t('The content of this element is currently hidden, content (if there is any) will be displayed once it is moved above the divider.');
   switch($block['#type']){
     case 'view':
       
@@ -103,25 +103,27 @@ function theme_mado_block($block, $id) {
         $view->get_total_rows = 'TRUE';
         $view_content = $view->preview($display_id, array(arg(2)));
         if((isset($view->total_rows) && !$view->total_rows) && trim($view->display['default']->display_options['empty'])==''){
-          return false;
-        }
-        // A little messy (Shit, VERY MESSY), but here we pull out the added
-        // links for "Sort" and "Add" if they have been added by the views-sort
-        // module.
-        $start_of_links = strpos($view_content, '<ul class="view_sort-links">');
-        if($start_of_links){
-          $end_of_links = strpos($view_content, "</ul>", $start_of_links);
-          $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
-          if(isset($block['#hidden']) && $block['#hidden']){
-            $content = $hidden_content;
-          } else {
-            $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
-          }
-        } else {        
-          if(isset($block['#hidden']) && $block['#hidden']){
-            $content = $hidden_content;
-          } else {
-            $content = $view_content;
+          $content = $hidden_content;
+          $block['#hidden'] = TRUE;
+        } else {
+          // A little messy (Shit, VERY MESSY), but here we pull out the added
+          // links for "Sort" and "Add" if they have been added by the views-sort
+          // module.
+          $start_of_links = strpos($view_content, '<ul class="view_sort-links">');
+          if($start_of_links){
+            $end_of_links = strpos($view_content, "</ul>", $start_of_links);
+            $list_of_links = substr($view_content,$start_of_links+28,$end_of_links-$start_of_links-28);
+            if(isset($block['#hidden']) && $block['#hidden']){
+              $content = $hidden_content;
+            } else {
+              $content = substr($view_content,0,$start_of_links).substr($view_content,$end_of_links+5);
+            }
+          } else {        
+            if(isset($block['#hidden']) && $block['#hidden']){
+              $content = $hidden_content;
+            } else {
+              $content = $view_content;
+            }
           }
         }
         if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
@@ -149,7 +151,8 @@ function theme_mado_block($block, $id) {
           $content = $module_block['content'];
         }
         if(trim($content)==''){
-          return false;
+          $cotent = $hidden_content;
+          $block['#hidden'] = TRUE;
         }
       } else {
         return false;
@@ -165,7 +168,8 @@ function theme_mado_block($block, $id) {
       break;
   }
   if (trim($content)==''){
-    return false;
+    $cotent = $hidden_content;
+    $block['#hidden'] = TRUE;
   }
   $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
   if($id != 'divider' && !$block['#hidden']){

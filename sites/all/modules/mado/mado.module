@@ -11,29 +11,26 @@
  * Implementation of hook_menu
  */
 function mado_menu(){
-  $items = array ();
-  $items ['taxonomy/term/%'] = array (
-    'title' => 'Taxonomy term', 
-    'page callback' => 'mado_term_page', 
-    'page arguments' => array (
-      2 ), 
-    'access arguments' => array (
-      'access content' ), 
-    'type' => MENU_CALLBACK, 
-    'file' => 'mado.pages.inc' );
-  $items ['mado/save'] = array (
-    'title' => '', 
-    'page callback' => 'mado_save_layout', 
-    'access arguments' => array ('mado sort' ), 
-    'type' => MENU_CALLBACK );
-  $items['mado/applytoall'] = array(
-    'title' => '', 
-    'page arguments' => array (2), 
-    'page callback' => 'mado_apply_to_all',
-    'access arguments' => array('mado sort'),
-    'type'=> MENU_CALLBACK
-  );
-  return $items;
+  return array('taxonomy/term/%' => array (
+      'title' => 'Taxonomy term', 
+      'page callback' => 'mado_term_page', 
+      'page arguments' => array (
+        2 ), 
+      'access arguments' => array (
+        'access content' ), 
+      'type' => MENU_CALLBACK, 
+      'file' => 'mado.pages.inc' ),
+    'mado/save' => array (
+      'title' => '', 
+      'page callback' => 'mado_save_layout', 
+      'access arguments' => array ('mado sort' ), 
+      'type' => MENU_CALLBACK ),
+    'mado/applytoall' => array(
+      'title' => '', 
+      'page arguments' => array (2), 
+      'page callback' => 'mado_apply_to_all',
+      'access arguments' => array('mado sort'),
+      'type'=> MENU_CALLBACK));
 }
 
 /**
@@ -45,13 +42,14 @@ function mado_perm(){
 
 function mado_apply_to_all(){
   $row = db_fetch_array(db_query("SELECT * FROM {mado} WHERE identifier = '%s'", $_GET['ident']));
-  $blocks = $row['blocks'];
   $ident_parts = explode("/", $_GET['ident']);
-  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
-  db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $blocks);
-  // Also delete the shit for this ident, as then we can update it from any
-  // other page.
-  db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['ident']);
+  if($row){
+    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
+    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $row['blocks']);
+    // Also delete the shit for this ident, as then we can update it from any
+    // other page.
+    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['ident']);
+  }
   drupal_goto('taxonomy/term/'.$ident_parts[1]);
 }
 
@@ -93,7 +91,6 @@ function mado_taxonomy_form_vocabulary_submit($form, $form_state){
  */
 function mado_get_blocks(){
   $blocks_and_views = array ();
-  $views = views_get_all_views ();
   $i = 0;
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', array(
       'views' => array(
@@ -133,7 +130,7 @@ function mado_get_blocks(){
         'scratchpadify' => array('ids' => array('1','3')),
         'search' => array('ids' => array('0')),
       )));
-  foreach ( $views as $view ) {
+  foreach ( views_get_all_views () as $view ) {
     if (($view->display ['default']->display_options ['arguments'] ['tid'] || 
         $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth']) &&
         !in_array($view->name, $views_blocks_to_ignore['views'])) {
@@ -150,8 +147,7 @@ function mado_get_blocks(){
     if(isset($views_blocks_to_ignore['blocks'][$module]['all']) && $views_blocks_to_ignore['blocks'][$module]['all']){
       continue;
     }
-    $blocks = call_user_func ( $module . '_block', 'list' );
-    foreach ( $blocks as $id => $block ) {
+    foreach ( array_keys(call_user_func ( $module . '_block', 'list' )) as $id) {
       if(isset($views_blocks_to_ignore['blocks'][$module]['ids']) && in_array($id, $views_blocks_to_ignore['blocks'][$module]['ids'])){
         continue;
       }
@@ -177,27 +173,36 @@ function mado_save_layout(){
     $all_blocks = mado_get_blocks ();
     $parts = explode("/", $_GET['identifier']);
     $current_blocks = mado_get_theme($parts[0], $parts[1]);
+    $divider_passed = FALSE;
     foreach ( $_GET ['blocks'] as $block ) {
       if (isset ( $current_blocks [$block] )) {
         $blocks [$block] = $current_blocks [$block];
       } else {
         $blocks [$block] = $all_blocks [$block];
+      }    
+      if(isset($blocks[$block]['#hidden']) && !$divider_passed){
+        unset($blocks[$block]['#hidden']);
       }
       if ($block == 'divider') {
+        $divider_passed = TRUE;
         break;
       }
     }
     db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
     db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
   } else if (isset ( $_GET ['resize'] )) {
-    $class = str_replace ( " mado_block", "", $_GET ['class'] );
-    $scroll = $_GET ['scroll'];
     $identifier_parts = explode("/", $_GET['identifier']);
     $blocks = mado_get_theme ($identifier_parts[0], $identifier_parts[1]);
-    $blocks [$_GET ['resize']] ['#scroll'] = $scroll;
-    $blocks [$_GET ['resize']] ['#css'] = $class;
-    db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
-    db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
+    $blocks [$_GET ['resize']] ['#scroll'] = $_GET ['scroll'];
+    $blocks [$_GET ['resize']] ['#css'] = str_replace ( " mado_block", "", $_GET ['class'] );
+    // Lets find out if the layout is set for nothing, or everything, or just
+    // one page
+    $identifier = db_fetch_array(db_query("SELECT identifier FROM {mado} WHERE identifier = '%s' OR identifier = '%s' ORDER BY identifier DESC", $identifier_parts[0], $_GET['identifier']));
+    if($identifier){
+      db_query ( "UPDATE {mado} SET blocks = '%s' WHERE identifier = '%s'", serialize ( $blocks ), $identifier['identifier']);      
+    } else {
+      db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
+    }
   }
 }
 
