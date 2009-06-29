@@ -74,8 +74,12 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       
       $output .= '<div id="mado">';
       
+      $before_divider = TRUE;
       foreach($theme as $id => $block){
-        $output .= theme('mado_block', $block, $id);
+        if($id == 'divider'){
+          $before_divider = FALSE;
+        }
+        $output .= theme('mado_block', $block, $id, $before_divider);
       }      
       return $output.'</div>
           <div id="mado_apply">
@@ -90,7 +94,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 /**
  * These are simply provided so that they can be overridden
  */
-function theme_mado_block($block, $id) {
+function theme_mado_block($block, $id, $before_divider = TRUE) {
   $title = '&nbsp;';
   $content = '';
   $hidden_content = t('The content of this element is currently hidden, content (if there is any) will be displayed once it is moved above the divider.');
@@ -171,7 +175,7 @@ function theme_mado_block($block, $id) {
     $block['#hidden'] = TRUE;
   }
   $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
-  if($id != 'divider' && !$block['#hidden']){
+  if($id != 'divider' && $before_divider){
     $output .= '<div class="mado_close">
     <img src="'.url(drupal_get_path('module','mado').'/images/close.png').'" alt="Close"/>
   </div>';
