@@ -7,8 +7,7 @@ $(document).ready(function() {
     draggable: true,
     modal: true,
     width: 'auto',
-    height: 'auto',
-    title: 'Apply to "This page" or "All"'
+    height: 'auto'
   });
   $('.mado_close').click(function(){
     var this_id = $(this).parent().attr('id');
@@ -28,6 +27,7 @@ $(document).ready(function() {
           $(this).css('overflow','hidden');        
         }
       });
+      $('#mado #divider .mado_content').height(173);
       $('#mado').sortable({
         start: function(event, ui){
           $('.mado_content > *').hide();

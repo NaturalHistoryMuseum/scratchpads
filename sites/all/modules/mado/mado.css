@@ -8,20 +8,19 @@
  clear: both;
 }
 #mado_apply p{
- font-size: 110%;
+ font-size: 130%;
+ font-weight: 600;
+ text-align: center;
  font-family: Helvetica, Arial, sans-serif;
 }
 #mado_apply a{
  display:block;
  padding: 10px;
  margin: 10px;
- border: outset 3px #555;
+ border: solid 1px #ccc;
  color: black;
-}
-#mado_apply a:hover{
- border-style: inset;
- text-decoration: none;
- background-color: #eee;
+ background-image: url('images/button.png');
+ background-position: 50% 50%;
 }
 #divider{
  background-image: url('images/mado-divider.png');
@@ -30,9 +29,6 @@
 }
 .mado-hidden{
  display:none;
-}
-#divider .mado_content{
- height: 346px;
 }
 .mado_block{
  margin: 1px;
