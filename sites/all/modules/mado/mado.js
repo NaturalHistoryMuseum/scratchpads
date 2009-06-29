@@ -24,7 +24,7 @@ $(document).ready(function() {
       $('.mado-title-links').css('display','none');
       $('#mado .mado_content').each( function (){
         if($(this).height()>150){
-          $(this).height($(this).height()/2);
+          $(this).height(150);
           $(this).css('overflow','hidden');        
         }
       });
