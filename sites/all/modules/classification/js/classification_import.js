@@ -16,10 +16,10 @@ function classification_import() {
     	/*if(result[1] > 15000) {
   			alert("Sorry, that import will exceed 15,000 names. Please focus your search.");
   			$('#import_classification_button').hide();
-  		}*/
-  		else {
-  			$('#import_classification_button').show();
   		}
+  		else {*/
+  			$('#import_classification_button').show();
+  		//}
     },
     import_status: function(content) {
       switch(content.status) {
