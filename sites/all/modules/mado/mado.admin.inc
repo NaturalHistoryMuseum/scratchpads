@@ -44,6 +44,7 @@ function mado_save_layout(){
     db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
     db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
   } else if (isset ( $_GET ['resize'] )) {
+    module_load_include('theme-functions.inc','mado');
     $identifier_parts = explode("/", $_GET['identifier']);
     $blocks = mado_get_theme ($identifier_parts[0], $identifier_parts[1]);
     $blocks [$_GET ['resize']] ['#scroll'] = $_GET ['scroll'];
