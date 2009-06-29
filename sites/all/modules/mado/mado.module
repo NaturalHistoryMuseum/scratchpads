@@ -175,7 +175,8 @@ function mado_save_layout(){
   if (isset ( $_GET ['blocks'] )) {
     $blocks = array ();
     $all_blocks = mado_get_blocks ();
-    $current_blocks = mado_get_theme ( $_GET ['identifier'] );
+    $parts = explode("/", $_GET['identifier']);
+    $current_blocks = mado_get_theme($parts[0], $parts[1]);
     foreach ( $_GET ['blocks'] as $block ) {
       if (isset ( $current_blocks [$block] )) {
         $blocks [$block] = $current_blocks [$block];
