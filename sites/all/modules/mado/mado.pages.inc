@@ -29,6 +29,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
     }    
     // We'll get the vid from the first term, we can't start pissing about
     // checking every bloody term
+    module_load_include('theme-functions.inc','mado');
     $theme = mado_get_theme($vids[0], $tids[0]);
     if(!$theme || $op != 'page'){
       module_load_include("pages.inc", "taxonomy");
