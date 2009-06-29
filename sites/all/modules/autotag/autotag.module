@@ -447,7 +447,10 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     $form['autotag']['#collapsed'] = true;
     $form['autotag']['#collapsible'] = false;
     $form['autotag']['#weight'] = -100;
-    $form['autotag']['#description'] = t('The terms in the "Terms to tag" box were found in your text. Drag \'n\' drop the terms from the "Terms to tag" box to the "Terms to ignore" box if you don\'t want this page/node to be tagged with that term');
+    $form['autotag']['description'] = array(
+      '#value' => '<p class="messages autotag-whack-in-face">'.t('Review the terms below, and then "Save"').'</p><p class="description">'.t('The terms in the "Terms to tag" box were found in your text. Drag \'n\' drop the terms from the "Terms to tag" box to the "Terms to ignore" box if you don\'t want this page/node to be tagged with that term') .'</p>',
+      '#weight' => -1000
+    );
     $form['autotag']['ignoreterms'] = array(
       '#type' => 'hidden'
     );
@@ -534,7 +537,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   // scroll down.  
   if(isset($form['autotag']['dragndropfields'])){
     $form['autotag']['submit'] = $form['buttons']['submit'];
-    $form['autotag']['submit']['#prefix'] = '<div class="description">'.t('Once finished reviewing the taxonomy terms, simply press save.  You may also review what you have entered below, if you feel a tag hasn\'t been found').'</div>';
+    $form['autotag']['submit']['#attributes']['class'] = 'autotag-for-the-blind';
     $form['autotag']['submit']['#weight'] = 1000;
   }
   
