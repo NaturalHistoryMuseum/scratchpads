@@ -32,7 +32,7 @@ function nexus_menu_alter(&$items){
 }
 
 function nexus_node_page_clone($node){
-  if($node->type == 'nexus_project'){
+  if($node->type == 'nexus_project' || $node->type == 'biblio'){
     drupal_set_message(t('This node type can not be cloned'), 'error');
     if($referer = referer_uri()){
       drupal_goto($referer);
@@ -40,7 +40,7 @@ function nexus_node_page_clone($node){
       drupal_goto('node/' . $node->nid);
     }
   }else{
-    clone_node_check($node);
+    return clone_node_check($node);
   }
 }
 
