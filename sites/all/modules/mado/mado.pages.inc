@@ -15,8 +15,6 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
     drupal_not_found();
   }
   
-  drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
-
   if ($terms['tids']) {
     $result = db_query(db_rewrite_sql('SELECT t.vid, t.tid, t.name FROM {term_data} t WHERE t.tid IN ('. db_placeholders($terms['tids']) .')', 't', 'tid'), $terms['tids']);
     $tids = array(); // we rebuild the $tids-array so it only contains terms the user has access to.
@@ -67,6 +65,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
         $output .= '<div class="mado_sort">
             <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.url(drupal_get_path('module','mado').'/images/unlock.png').'"/></h1>
           </div>';
+        drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
         jquery_ui_add(array('ui.dialog'));
         jquery_ui_add(array('ui.draggable'));
         drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
@@ -81,11 +80,14 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
         }
         $output .= theme('mado_block', $block, $id, $before_divider);
       }      
-      return $output.'</div>
-          <div id="mado_apply">
+      $output .= '</div>';
+      if(user_access('mado sort')){
+        $output .= '<div id="mado_apply">
             <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
             <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
           </div>';
+      }
+      return $output;
     }
   }
   drupal_not_found();
@@ -97,7 +99,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 function theme_mado_block($block, $id, $before_divider = TRUE) {
   $title = '&nbsp;';
   $content = '';
-  $hidden_content = t('The content of this element is currently hidden, content (if there is any) will be displayed once it is moved above the divider.');
+  $hidden_content = '<div>'.t('The content of this element is currently hidden, content (if there is any) will be displayed once it is moved above the divider.').'</div>';
   switch($block['#type']){
     case 'view':
       
@@ -163,8 +165,8 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
       break;
     case 'divider':
       $id = 'divider';
-      $block['#css'] = 'mado_block_2 mado-handle';
-      $content = '<div class="mado-handle" style="height: 100%;width: 100%">&nbsp;</div>'; // Can't be empty as then the block would be hidden
+      $block['#css'] = 'mado_block mado-handle';
+      $content = '<div class="mado-handle" style="height: 100%;width: 100%"><h1>'.t('Content below this block will be hidden').'</h1></div>'; // Can't be empty as then the block would be hidden
       break;
     default:
       return false;

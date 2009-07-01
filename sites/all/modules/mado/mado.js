@@ -16,7 +16,6 @@ $(document).ready(function() {
   });
   $('#mado-start-sort').click( function() {
     if(!currently_sorting){
-      $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
       $('#divider').css('display','block');
       $('.mado-hidden').removeClass('mado-hidden');
       $('#mado > *').css('background-color','white');
@@ -27,7 +26,7 @@ $(document).ready(function() {
           $(this).css('overflow','hidden');        
         }
       });
-      $('#mado #divider .mado_content').height(173);
+      $('#mado #divider .mado_content').height(20);
       $('#mado').sortable({
         start: function(event, ui){
           $('.mado_content > *').hide();
@@ -39,8 +38,8 @@ $(document).ready(function() {
         },
         tolerance: 'pointer',
         handle: '.mado-handle',
-        revert: true
-        
+        revert: true,
+        helper: 'clone'        
       });
       $('.boxtitle').addClass('boxtitle-hover');
       $('#mado > *').bind("mouseenter", function(){
@@ -57,6 +56,7 @@ $(document).ready(function() {
           $(this).children('.mado_close').css('display','none');
         }
       );
+      $('#mado-start-sort').html(Drupal.settings.mado.finished_sorting);
     }
     currently_sorting = true;
   });
