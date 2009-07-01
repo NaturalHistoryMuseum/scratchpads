@@ -33,7 +33,7 @@ function ispecies_success(data, viewname){
   }
 }
 function add_event_handlers(context){
-  $(context).parents('.content').find("a.thickbox").each(function(){
+  $(context).parents().find("a.thickbox").each(function(){
     $(this).unbind('click');
     tb_init($(this));
   })
