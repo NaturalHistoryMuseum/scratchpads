@@ -215,23 +215,23 @@ function autotag_form_submit($form, &$form_state){
 }
 
 /**
- * Array_walk function for helping to restore values to the form when there is
- * an error on the page.
+ * Look through the form for some shit!
  */
-function _autotag_form_walk(&$form, $key, $form_state_array){
-  if(is_array($form)){
-    if($key == $form_state_array['key'] && ((isset($form['#type']) && $form['#type'] != 'fieldset') || is_array($form_state_array['value']))){
-      if(is_array($form_state_array['value'])){
-        _autotag_form_set_from_array($form, $form_state_array['value']);
-      } else {
-        if(isset($form['#default_value'])){
-          $form['#default_value'] = $form_state_array['value'];
+function autotag_restore_form_values($form, $value){
+  foreach($form as $key => $form_part){
+    if(is_array($form_part)){
+      if($key == $value['key'] && ((isset($form_part['#type']) && $form_part['#type'] != 'fieldset') || is_array($value['value']))){
+        if(is_array($value['value'])){
+          _autotag_form_set_from_array($form_part, $value['value']);
+        } else {
+          $form[$key]['#default_value'] = $value['value'];
         }
+      } else {
+        $form[$key] = autotag_restore_form_values($form_part, $value);
       }
-    } else {
-      array_walk($form, '_autotag_form_walk', $form_state_array);
     }
   }
+  return $form;
 }
 // Recursive function called by the above function.
 function _autotag_form_set_from_array(&$form, $form_state){
@@ -327,7 +327,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       foreach($form_state['values'] as $key => $value){
         // We need to walk the $form variable for each key, and set the 
         // #default_value to be $value.
-        array_walk($form, '_autotag_form_walk', array('key' => $key, 'value' => $value));
+        $form = autotag_restore_form_values($form, array('key' => $key, 'value' => $value));
       }
     }
     foreach($form['taxonomy'] as $key=>$value){
