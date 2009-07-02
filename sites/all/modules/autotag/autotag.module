@@ -233,12 +233,14 @@ function _autotag_form_walk(&$form, $key, $form_state_array){
 }
 // Recursive function called by the above function.
 function _autotag_form_set_from_array(&$form, $form_state){
-  foreach($form_state as $key => $value){
-    if(isset($form[$key])){
-      if(is_array($value)  && !isset($form[$key]['#default_value'])){
-        _autotag_form_set_from_array($form[$key], $value);
-      } else {
-        $form[$key]['#default_value'] = $value;
+  if(is_array($form)){
+    foreach($form_state as $key => $value){
+      if(isset($form[$key])){
+        if(is_array($value)  && !isset($form[$key]['#default_value'])){
+          _autotag_form_set_from_array($form[$key], $value);
+        } else {
+          $form[$key]['#default_value'] = $value;
+        }
       }
     }
   }
