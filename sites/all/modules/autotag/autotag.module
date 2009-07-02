@@ -224,7 +224,9 @@ function _autotag_form_walk(&$form, $key, $form_state_array){
       if(is_array($form_state_array['value'])){
         _autotag_form_set_from_array($form, $form_state_array['value']);
       } else {
-        //$form['#default_value'] = $form_state_array['value'];
+        if(isset($form['#default_value'])){
+          $form['#default_value'] = $form_state_array['value'];
+        }
       }
     } else {
       array_walk($form, '_autotag_form_walk', $form_state_array);
