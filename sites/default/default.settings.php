@@ -14,10 +14,7 @@ if(!isset($user_password[$database])){
   exit;
 }
 
-$database_user = $user_password[$database]['user'];
-$database_pass = $user_password[$database]['pass'];
-
-$db_url = 'mysqli://' . $database_user . ':'. $database_pass . '@localhost/'. $database;
+$db_url = 'mysqli://' . $user_password[$database]['user'] . ':'. $user_password[$database]['password'] . '@localhost/'. $database;
 $db_prefix = '';
 /* if(
     $_SERVER['REMOTE_ADDR'] == '157.140.4.52' ||
