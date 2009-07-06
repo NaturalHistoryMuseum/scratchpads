@@ -33,10 +33,6 @@ function ispecies_success(data, viewname){
   }
 }
 function add_event_handlers(context){
-  $(context).parents().find("a.thickbox").each(function(){
-    $(this).unbind('click');
-    tb_init($(this));
-  })
   if(typeof Lightbox == 'object'){
     Lightbox.initList(context);
   }
