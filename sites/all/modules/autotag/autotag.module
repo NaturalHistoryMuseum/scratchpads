@@ -288,7 +288,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   
   // Autotag doesn't work with the following content types, return if this node
   // is one of these.
-  $node_types_to_ignore = variable_get('autotag_broken_node_types', array('webform', 'biblio'));
+  $node_types_to_ignore = variable_get('autotag_broken_node_types', array('webform', 'biblio', 'image'));
   if(in_array($form['type']['#value'], $node_types_to_ignore)){
     if(in_array($form['type']['#value'], variable_get('autotag_totally_borked', array()))){
       return;
