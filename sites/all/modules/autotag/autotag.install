@@ -21,6 +21,15 @@ function autotag_update_6102(){
   variable_set('node_preview',0);
   return array('#finished' => TRUE);  
 }
+
+function autotag_update_6103(){
+  variable_set('autotag_node_preview',variable_get('node_preview',1));
+  variable_set('autotag_broken_node_types', array_unique(array_merge(
+    variable_get('autotag_broken_node_types', array('webform', 'biblio')),
+    array('image')
+  )));
+  return array('#finished' => TRUE);  
+}
 /**
  * Implementation of hook_schema
  */
