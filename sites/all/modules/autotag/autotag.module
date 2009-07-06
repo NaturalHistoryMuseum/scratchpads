@@ -135,7 +135,7 @@ function autotag_menu(){
   $items['autotag/autocomplete'] = array(
     'title' => 'Autocomplete autotag thingumy',
     'page callback' => 'autotag_autocomplete',
-    'access arguments' => array('create node content'),
+    'access arguments' => array('access content'),// Hmmm, not ideal!
     'type' => MENU_CALLBACK    
   );
   $items['admin/settings/autotag'] = array(
