@@ -727,7 +727,7 @@ function darwincore_views_default_views() {
     'macro' => '[gmap ]',
     'datasource' => 'location',
     'markers' => 'static',
-    'markertype' => 'drupal',
+    'markertype' => 'white',
   ));
   
   $views[$view->name] = $view;
