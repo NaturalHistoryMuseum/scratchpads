@@ -640,6 +640,9 @@ function darwincorelocation_form(&$node, &$param){
  * Implementation of hook_access()
  */
 function darwincore_access($op, $node, $account){
+  if($op == 'view'){
+    return user_access('access content', $account);
+  }
   if($op == 'create'){
     return user_access('create darwincore content', $account);
   }
