@@ -865,6 +865,13 @@ function darwincore_nodeapi(&$node, $op, $teaser, $page){
       // Delete the shit that the location module adds.
       unset($node->content['locations']);
       break;
+    case 'insert' :
+    case 'update' :
+      // Save the darwincoreloation location to the speciemen also
+      $node->locations = location_load_locations($node->locationnode, 'nid');
+      if ($node->locations) {
+        location_save_locations($node->locations, array('nid' => $node->nid, 'vid' => $node->vid));
+      }
   }
 }
 
@@ -996,18 +1003,25 @@ function _darwincore_get_vocabulary_form($vocabulary_name, $default, $descriptio
 }
 
 function _darwincore_get_taxonomicname($name){
-  if(is_numeric($name)){
-    $term = taxonomy_get_term($name);
-    return $term->name;
-  }else{
-    $term = taxonomy_get_term_by_name($name);
-    if($term){
-      return $term[0]->tid;
+  if(trim($name)==''){
+    if(isset($_GET['tid'])){
+      $term = taxonomy_get_term($_GET['tid']);
+      return $term->name;
     }
-    $term_array = db_fetch_array(db_query("SELECT tid FROM {term_synonym} WHERE LOWER(name) = '%s'", strtolower($name)));
-    if(is_array($term_array)){
-      $term = taxonomy_get_term(array_pop($term_array));
-      return $term->tid;
+  } else {
+    if(is_numeric($name)){
+      $term = taxonomy_get_term($name);
+      return $term->name;
+    }else{
+      $term = taxonomy_get_term_by_name($name);
+      if($term){
+        return $term[0]->tid;
+      }
+      $term_array = db_fetch_array(db_query("SELECT tid FROM {term_synonym} WHERE LOWER(name) = '%s'", strtolower($name)));
+      if(is_array($term_array)){
+        $term = taxonomy_get_term(array_pop($term_array));
+        return $term->tid;
+      }
     }
   }
 }
