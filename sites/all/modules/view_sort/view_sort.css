@@ -12,7 +12,28 @@
  top: 0px;
  right: 0px;
 }
-.view-sort-drag > *{
- border: solid 1px #666;
- margin: 2px;
+#view-sort-select-number{
+ font-size:160%;
+ padding:10px;
+ margin:10px 0;
+ border: solid 1px #ccc;
+}
+#view-sort-select-number select{
+ font-size: 100%;
+}
+.view-sort-clear{
+ float:none !important;
+ display:block;
+ clear:both;
+ border:none !important;
+}
+.view-sort-top,.view-sort-bottom{
+ border: solid 1px #ccc;
+ margin: 5px 0;
+}
+.view-sort-top{
+ background-color:green;
+}
+.view-sort-bottom{
+ background-color:red;
 }

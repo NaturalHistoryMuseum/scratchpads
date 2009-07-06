@@ -8,9 +8,15 @@ function view_sort_menu(){
     'type' => MENU_CALLBACK, 
     'access arguments' => array (
       'assign node weight' ) );
-  $items['views-sort/callback'] = array (
+  $items['views-sort/sorted'] = array (
     'title' => '', 
-    'page callback' => 'views_sort_callback', 
+    'page callback' => 'views_sort_sorted', 
+    'type' => MENU_CALLBACK, 
+    'access arguments' => array (
+      'assign node weight' ) );
+  $items['views-sort/number'] = array (
+    'title' => '', 
+    'page callback' => 'views_sort_number', 
     'type' => MENU_CALLBACK, 
     'access arguments' => array (
       'assign node weight' ) );
@@ -27,6 +33,18 @@ function view_sort_perm(){
   return array('view sort sort');
 }
 
+function view_sort_init(){
+  // Gah, I hate doing this, FIXME!
+  drupal_add_js(array('view_sort' => array(
+        'callbacks' => array(
+          'ispecies' => url('ispecies'),
+          'number' => url('views-sort/number'),
+          'sorted' => url('views-sort/sorted'),
+          'pin' => url('views-sort/pin')
+        )
+      )
+    ), 'setting');
+}
 function view_sort_views_pre_render(&$view){
   // Check to see if the view is being filtered by node type, and if it is being
   // sorted by weight.  If so, we add the links.
@@ -41,7 +59,8 @@ function view_sort_views_pre_render(&$view){
         isset($view->display['default']->display_options['sorts']['weight'])
     ) && (
       user_access('view sort sort')    
-    )){
+    ))
+  {      
     $view->attachment_before = '<ul class="view_sort-links"><li>'.l(t("Sort"), "views-sort/popup/".$view->name."/".urlencode(json_encode($view->args)), array('attributes' => array('class'=>'thickbox'), 'query'=>array('height'=>'600','width'=>'600')))."</li>";    
     if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
       $keys = array_keys($view->display['default']->display_options['filters']['type']['value']);
@@ -89,7 +108,7 @@ function view_sort_views_api() {
   return array('api' => 2);
 }
 
-function views_sort_callback($viewname=false, $tid=false){
+function views_sort_sorted($viewname=false, $tid=false){
   // We keep things simple, and use the variable table to save limits
   if($viewname){
     // First we set the limit according to where the divider was
@@ -137,21 +156,32 @@ function views_sort_callback($viewname=false, $tid=false){
 function views_sort_popup_html($view_name = "", $view_args = ""){
   $view_args = json_decode(urldecode($view_args));
   $items = view_sort_get_items($view_name, $view_args);
-  $output = '<div class="view-sort-drag">';
+  //print_r($items);exit;
+  $output = '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
+  for($i=0; $i<=50; $i++){
+    $output .= '<option value="'.$i.'">'.$i.'</option>';
+  }
+  $output .='</select></form></div>';
   $i = 0;
   $sort_orders = variable_get('view_sort-limits', array());
-  $divider = '<div view-sort="divider" class="sort-div divider">&nbsp;</div>';
+  $sort_orders = array('flickr' => 10);
   if (isset($sort_orders[$view_name])){
     $divider_position = $sort_orders[$view_name];
   } else {
     $divider_position = false;
   }
-  $output = '<div id="'.$view_name.'" class="view-sort-drag">';
+  $output .= '<div id="'.$view_name.'" class="view-sort-top view-sort-drag class-'.$view_name.'">';
   foreach($items as $id => $item){
     // FIXME - This needs looking at
     // Remove links from the output (we don't want users clicking, just dragging
     
-      $output .= '<div view-sort="'.$view_name.'---'.$view_args[0].'---'.$id.'" class="sort-div"><div style="position:relative;clear:both;">';
+    $output .= '<div view-sort="'.$view_name.'---'.$view_args[0].'---'.$id.'" class="sort-div';
+    if(isset($item['local']) && $item['local']){
+      $output .= ' sortable';
+    } else {
+      $output .= ' notsortable';
+    }
+    $output .= '"><div style="position:relative;clear:both;">';
     if(!isset($item['local']) || !$item['local']){
       $output .='<div class="view-sort-toggle"><img src="'.url(drupal_get_path('module','view_sort')).'/close.png" id="view-sort-hide"/><img src="'.url(drupal_get_path('module','view_sort')).'/pin.png" id="view-sort-pin"/></div>';
     }
@@ -159,14 +189,14 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   </div></div>';
     $i ++;
     if($divider_position && $divider_position == $i){
-      $output .= $divider;
+      $output .= '<div class="view-sort-clear"></div></div><div class="class-'.$view_name.' view-sort-bottom">';
     }
   }
   if(!$divider_position){
     $output .= $divider;
   }
-  $output .= "</div><script type=\"text/javascript\">
-    view_sort_add_draggable('".url('views-sort/callback', array('absolute'=>1))."', '$view_name', '".url('ispecies', array('absolute'=>1))."','".url('views-sort/pin', array('absolute'=>1))."');
+  $output .= '<div class="view-sort-clear"></div></div><script type="text/javascript">
+    '."view_sort_add_draggable('$view_name');
   </script>";
   print $output;
   exit;
