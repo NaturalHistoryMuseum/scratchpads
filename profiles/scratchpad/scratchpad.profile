@@ -451,7 +451,7 @@ function scratchpad_profile_tasks_3(){
 function scratchpad_profile_set_perms(){
   // Add roles and permissions
   db_query("DELETE FROM {role} WHERE name IN ('contributor','editor','maintainer')");
-  db_query("INSERT INTO {role} (name) VALUES ('contributor'),('editor'),('maintainer')");
+  db_query("INSERT INTO {role} (rid, name) VALUES (3, 'contributor'),(4, 'editor'),(5, 'maintainer')");
 
   $contributor_perms = array();
   $editor_perms = array();
