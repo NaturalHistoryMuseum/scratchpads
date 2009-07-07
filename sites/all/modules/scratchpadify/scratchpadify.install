@@ -83,3 +83,9 @@ function scratchpadify_update_6102(){
   db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6103(){
+  // Remove the fileshare module
+  variable_set('weight_range', 90);
+  return array('#finished' => TRUE);
+}
