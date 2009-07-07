@@ -89,3 +89,12 @@ function scratchpadify_update_6103(){
   variable_set('weight_range', 90);
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6104(){
+  // Update permissions
+  require_once("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+  return array('#finished' => TRUE);
+}
