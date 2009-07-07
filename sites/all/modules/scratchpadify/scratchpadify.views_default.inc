@@ -73,6 +73,12 @@ function scratchpadify_views_default_views(){
     $handler->override_option('access', array('type' => 'none'));
     $handler->override_option('row_plugin', 'node');
     $handler->override_option('title', $type_details['name']);
+    // Additional page without arguments
+    $handler = $view->new_display('page', 'Page', 'page_1');
+    $handler->override_option('title', $type_details['name']);
+    $handler->override_option('arguments', array());
+    $handler->override_option('path', 'content/' . $type);
+    $handler->override_option('use_pager', '1');
     $views[$view->name] = $view;
   }
   // ---------------------- BIBLIO TABLE ---------------------------------------
