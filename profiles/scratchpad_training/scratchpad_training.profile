@@ -31,13 +31,18 @@ function scratchpad_training_profile_tasks(&$task, $url){
   require_once("./profiles/scratchpad/scratchpad.profile");
   if($task == 'profile'){
     scratchpad_profile_tasks_1();
-    
-    db_query("INSERT INTO {profile_values} (fid, uid, value) VALUES 
-      (1,2,'Mr/Mrs/Miss'), 
-      (2,2,'Scratchpad'), 
-      (3,2,'Trainer'),
-      (4,2,'My Institution'),
-      (5,2,'Life')");
+
+    $node = new stdClass();
+    $node->type = 'profile';
+    $node->uid = 2;
+    $node->field_title = array(array('value'=>'Mr/Mrs/Miss'));
+    $node->field_givennames = array(array('value'=>'Scratchpad'));
+    $node->field_familyname = array(array('value'=>'Trainer'));
+    $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
+    $node->auto_nodetitle_applied = TRUE;  
+    $node->field_institution = array(array('value'=>'My Institution'));
+    $node->field_taxonomicinterest = array(array('value'=>'Life'));
+    node_save($node);
     $values = array('values'=>array('gmapkey'=>'INSERT KEY HERE'));
     scratchpad_gmapkey_submit(array(), $values);
         

@@ -23,7 +23,7 @@ function scratchpad_profile_modules(){
   return array(
     // Core - optional
       'blog','color','comment','contact','locale','dblog','help','menu','openid'
-      ,'path','poll','profile','search','taxonomy','trigger','upload','forum',
+      ,'path','poll','search','taxonomy','trigger','upload','forum',
       'translation','tracker',
     // No requirements/Other
       'biblio','boost','node_import','creativecommons_lite','simplenews',
@@ -47,6 +47,8 @@ function scratchpad_profile_modules(){
       'og','og_access','og_user_roles','og_views',
     // Views
       'views','views_ui',
+    // Content profile
+      'content_profile','content_profile_registration',
     // LifeDesk
       'classification',
     // EDIT
@@ -109,17 +111,94 @@ function scratchpad_profile_tasks_1(){
   }
   // Set the "group" type, to be a group
   variable_set('og_content_type_usage_group','group');
-  // Add the default profile fields.
+  // Add the default profile fields to the content type profile
+  scratchpad_profile_install_profile();
+  /*
   db_query("INSERT INTO {profile_fields} (title, name, category, type, weight, required, register, visibility,autocomplete) VALUES 
     ('".st('Title')."','profile_title','".st('Personal information')."','textfield',0,1,1,3,1),
     ('".st('Given name(s)')."','profile_givennames','".st('Personal information')."','textfield',1,1,1,3,0), 
     ('".st('Family name')."','profile_familyname','".st('Personal information')."','textfield',2,1,1,3,0), 
     ('".st('Institution')."','profile_institution','".st('Personal information')."','textfield',3,0,1,3,0),
     ('".st('Area of Taxonomic Interest')."','profile_taxonomy','".st('Personal information')."','textfield',4,0,1,3,1)");
-  // Set a variable so that we know what the defined ones are
-  variable_set('scratchpad_profile_fields', array('profile_title','profile_givennames','profile_familyname','profile_institution','profile_taxonomy'));
+  */
 }
 
+function scratchpad_profile_install_profile(){
+  // Load the file for doing the stuff!
+  module_load_include('inc', 'content', 'includes/content.crud');
+  
+  fieldgroup_save_group('profile', array(
+    'label' => 'Personal Information',
+    'group_name' => 'group_personal',
+    'group_type' => 'standard'
+  ));
+  
+  $fields = array(
+    array(
+      'label' => 'Title',
+      'field_name' => 'field_title',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'type_name' => 'profile',
+      'weight' => 0,
+      'required' => 1
+    ),
+    array(
+      'label' => 'Given name(s)',
+      'field_name' => 'field_givennames',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'type_name' => 'profile',
+      'weight' => 1,
+      'required' => 1
+    ),
+    array(
+      'label' => 'Family name',
+      'field_name' => 'field_familyname',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'type_name' => 'profile',
+      'weight' => 2,
+      'required' => 1
+    ),
+    array(
+      'label' => 'Institution',
+      'field_name' => 'field_institution',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'type_name' => 'profile',
+      'weight' => 3
+    ),
+    array(
+      'label' => 'Area of Taxonomic Interest',
+      'field_name' => 'field_taxonomicinterest',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'type_name' => 'profile',
+      'weight' => 4
+    ),
+  );
+  foreach($fields as $field){
+    content_field_instance_create($field);
+    db_query("INSERT INTO {content_group_fields} (type_name, group_name, field_name) VALUES ('profile','group_personal','%s')", $field['field_name']);
+  }
+  variable_set('content_profile_profile', array(
+    'weight' => 0,
+    'user_display' => 'full',
+    'edit_link' => 1,
+    'edit_tab' => 'sub',
+    'add_link' => 1,
+    'registration_use' => 1,
+    'admin_user_create_use' => 1,
+    'registration_hide' => array('other') 
+  ));
+  db_query("UPDATE {node_type} SET has_body = 0 WHERE type = 'profile'");
+  variable_set('content_profile_use_profile', TRUE);
+  variable_set('ant_pattern_profile', '[field_title-formatted] [field_givennames-formatted] [field_familyname-formatted]');
+  variable_set('ant_php_profile',0);
+  variable_set('ant_profile',1);
+  variable_set('node_options_profile', array('status'));
+}
 
 function scratchpad_profile_tasks_2(){
   // Finally, do the following
@@ -713,13 +792,17 @@ function scratchpad_personal($form_state, $url){
  */
 function scratchpad_personal_submit($form, &$form_state){
   variable_set('personal_submitted', TRUE);
-  db_query("INSERT INTO {profile_values} (fid, uid, value) VALUES 
-    (1,2,'%s'), 
-    (2,2,'%s'), 
-    (3,2,'%s'),
-    (4,2,'%s'),
-    (5,2,'%s')  
-  ", $form_state['values']['title'], $form_state['values']['given'], $form_state['values']['family'], $form_state['values']['institution'], $form_state['values']['expertise']);
+  $node = new stdClass();
+  $node->type = 'profile';
+  $node->uid = 2;
+  $node->field_title = array(array('value'=>$form_state['values']['title']));
+  $node->field_givennames = array(array('value'=>$form_state['values']['given']));
+  $node->field_familyname = array(array('value'=>$form_state['values']['family']));
+  $node->field_institution = array(array('value'=>$form_state['values']['institution']));
+  $node->field_taxonomicinterest = array(array('value'=>$form_state['values']['expertise']));
+  $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
+  $node->auto_nodetitle_applied = TRUE;
+  node_save($node);
 }
 
 /**
