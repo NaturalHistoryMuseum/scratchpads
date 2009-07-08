@@ -123,7 +123,7 @@ function scratchpadify_update_6105(){
       $node->field_title = array(array('value'=> $results_array['profile_title']));
       $node->field_givennames = array(array('value'=> $results_array['profile_givennames']));
       $node->field_familyname = array(array('value'=> $results_array['profile_familyname']));
-      $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
+      $node->title = "{$results_array['profile_title']} {$results_array['profile_givennames']} {$results_array['profile_familyname']}";
       $node->auto_nodetitle_applied = TRUE;  
       $node->field_institution = array(array('value'=> $results_array['profile_institution']));
       $node->field_taxonomicinterest = array(array('value'=> $results_array['profile_taxonomy']));
