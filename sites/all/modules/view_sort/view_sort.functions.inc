@@ -1,6 +1,8 @@
 <?php
 
-
+/**
+ * Cache an ispecies object
+ */
 function views_sort_pin(){
   $data = explode("---", $_POST['pin']);
   $items = view_sort_get_items($data[0], array($data[1]));
@@ -17,27 +19,20 @@ function views_sort_pin(){
   exit;
 }
 
-function views_sort_sorted($viewname=false, $tid=false){
+function views_sort_number(){
+  if(isset($_POST['view']) && isset($_POST['number'])){  
+    $sort_orders = variable_get('view_sort-limits', array());
+    $sort_orders[$_POST['view']] = $_POST['number'];
+    variable_set('view_sort-limits', $sort_orders);
+  }
+}
+
+function views_sort_sorted($viewname=false){
   // We keep things simple, and use the variable table to save limits
   if($viewname){
-    // First we set the limit according to where the divider was
-    $sort_orders = variable_get('view_sort-limits', array());
-    // Split up the order variable that we've been sent
     $order = split(" ",trim($_POST['order']));
-    // Find the divider
-    $divider_position = array_search("divider", $order);
-    // if the divider is at the end, we don't set it
-    if($divider_position < count($order)-1 && $divider_position){
-      $sort_orders[$viewname] = $divider_position;
-    } else {
-      unset($sort_orders[$viewname]);
-    }
-    variable_set('view_sort-limits', $sort_orders);
-    
-    // Next we set the weights if the view is of nodes
-    $items = view_sort_get_items($viewname, array($tid));
-    $new_order = array();
-    $weight = -99;
+    //print_r($order);exit;
+    $weight = -90;
     $set_weight_as_zero = false;
     foreach($order as $item){
       if($item == 'divider'){
@@ -49,17 +44,21 @@ function views_sort_sorted($viewname=false, $tid=false){
         if($set_weight_as_zero){
           $node->node_weight = 0;
         } else {
-          $node->sticky = 1;
           $node->node_weight = $weight;
           $weight ++;
+        }
+        if($node->sticky){
+          $sticky_node = TRUE;
         }
         node_save($node);
       }
     }
+    if($sticky_node){
+      echo "<p>".t("It is not possible to sort Sticky nodes with Non-Sticky nodes.  Sticky nodes will always be at the top of a list.")."</p>";
+    }
   } else {
     watchdog('view_sort', 'ERROR sorting views, no viewname set (Referer: '.referer_uri().') : '.print_r($_REQUEST));
   }
-  exit;
 }
 
 function views_sort_popup_html($view_name = "", $view_args = ""){
@@ -67,13 +66,16 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   $items = view_sort_get_items($view_name, $view_args);
   //print_r($items);exit;
   $output = '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
-  for($i=0; $i<=50; $i++){
-    $output .= '<option value="'.$i.'">'.$i.'</option>';
+  $sort_orders = variable_get('view_sort-limits', array());
+  for($i=0; $i<=20; $i++){
+    $output .= '<option value="'.$i.'"';
+    if($sort_orders[$view_name] == $i){
+      $output .= ' SELECTED';
+    }
+    $output .= '>'.$i.'</option>';
   }
   $output .='</select></form></div>';
   $i = 0;
-  $sort_orders = variable_get('view_sort-limits', array());
-  $sort_orders = array('flickr' => 10);
   if (isset($sort_orders[$view_name])){
     $divider_position = $sort_orders[$view_name];
   } else {
@@ -104,7 +106,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   if(!$divider_position){
     $output .= $divider;
   }
-  $output .= '<div class="view-sort-clear"></div></div><script type="text/javascript">
+  $output .= '<div class="view-sort-clear"></div></div><div id="view-sort-error"></div><script type="text/javascript">
     '."view_sort_add_draggable('$view_name');
   </script>";
   print $output;

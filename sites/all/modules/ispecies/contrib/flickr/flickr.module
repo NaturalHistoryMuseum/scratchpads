@@ -14,7 +14,7 @@ function flickr_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'flickr' ) . '/flickr.css' );
 }
 
-function flickr_ajax_callback($term_name, $limit = 20, $offset = 0){
+function flickr_ajax_callback($term_name, $limit = 50, $offset = 0){
   $items = array ();
   $urls = array();
   $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&text=' . $term_name );

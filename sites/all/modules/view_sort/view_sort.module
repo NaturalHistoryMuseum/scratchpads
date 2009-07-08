@@ -88,6 +88,9 @@ function view_sort_views_pre_render(&$view){
     $view->attachment_before .= '</ul>';
     drupal_add_js(drupal_get_path('module', 'view_sort')."/view_sort.js");
     drupal_add_css(drupal_get_path('module', 'view_sort')."/view_sort.css");
+    jquery_ui_add(array('ui.dialog'));
+    jquery_ui_add(array('ui.draggable'));
+    drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
     jquery_ui_add(array('ui.sortable'),'none');    
   }
 }

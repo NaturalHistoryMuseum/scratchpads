@@ -17,6 +17,7 @@
  padding:10px;
  margin:10px 0;
  border: solid 1px #ccc;
+ background-color:#ffffee;
 }
 #view-sort-select-number select{
  font-size: 100%;
@@ -31,9 +32,38 @@
  border: solid 1px #ccc;
  margin: 5px 0;
 }
+.view-sort-top,.view-sort-bottom{
+ overflow:hidden;
+}
+.sort-div:hover{
+ cursor:move;
+}
+.view-sort-top > *,.view-sort-bottom > *{
+ border:solid 1px black;
+ overflow:hidden;
+ background-color:white;
+ margin:3px;
+ padding:3px;
+}
+.sort-div .node{
+ border:none !important;
+ padding:0 !important;
+ margin:0 !important;
+ line-height:1em !important;
+}
+.sort-div .links{
+ display:none;
+}
 .view-sort-top{
- background-color:green;
+ background-color:#eeffee;
 }
 .view-sort-bottom{
- background-color:red;
+ background-color:#ffeeee;
 }
+#view-sort-error{
+ color:red;
+}
+.notsortable:hover{
+ cursor:pointer !important;
+}
+ 

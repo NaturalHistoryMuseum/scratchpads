@@ -1,13 +1,27 @@
 <?php
-/*
 function view_sort_install(){
   // Install function
+  variable_set('weight_range', 90);
+  drupal_install_schema('view_sort');
 }
 
 function view_sort_uninstall(){
-  // Uninstall function
+  drupal_uninstall_schema('view_sort');
 }
 
 function view_sort_schema(){
-  // Schema
-}*/
+  return array(
+    'view_sort_hide' => array(
+      'fields' => array(
+        'tid' => array('type' => 'int', 'not null' => true),
+        'hide' => array('type' => 'varchar', 'length' => 255),
+        'ispeciestype' => array('type' => 'varchar' , 'length' => 255)
+      ),
+      'primary key' => array('tid','ispeciestype')
+    )
+  );
+}
+
+function view_sort_update_6101(){
+  return drupal_install_schema('view_sort');
+}

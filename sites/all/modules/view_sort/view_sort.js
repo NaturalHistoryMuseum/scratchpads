@@ -23,7 +23,12 @@ function view_sort_add_draggable(viewname){
         type:"POST",
         url:Drupal.settings.view_sort.callbacks.sorted+"/"+viewname+"/"+Drupal.settings.ispecies.page_tid,
         success:function(data){
-          //alert(data);
+          if(data.length){
+            alert(data);
+            $('#view-sort-error').html(data);
+            $('#view-sort-error').dialog('open');
+            $('#view-sort-error').css('width','250px');
+          }
           ispecies_callback(Drupal.settings.view_sort.callbacks.ispecies,viewname);
         },
         data:"order="+items
@@ -52,8 +57,16 @@ function view_sort_add_draggable(viewname){
     // Change the number to show
     var ajax_options = {
       type:"POST",
-      url:Drupal.settings.view_sort.callbacks.number
+      url:Drupal.settings.view_sort.callbacks.number,
+      data:{view:viewname, number:$('#view-sort-select').val()}
     };
     $.ajax(ajax_options);
+  });
+  $('#view-sort-error').dialog({
+    autoOpen: false,
+    bgiframe: true,
+    draggable: true,
+    modal: true,
+    height: 150
   });
 }
