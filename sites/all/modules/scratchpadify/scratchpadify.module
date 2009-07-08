@@ -170,29 +170,6 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
       }      
     }
   }
-  // Following prevents editing/deleting of hidden fields
-  else if($form_id == 'profile_field_delete' || $form_id == 'profile_field_form'){
-    if(isset($form['fid']['#value']) && is_numeric($form['fid']['#value'])){
-      $name = array_pop(db_fetch_array(db_query("SELECT name FROM {profile_fields} WHERE fid = %d", $form['fid']['#value'])));
-      $hidden_fields = variable_get('scratchpad_profile_fields', array());
-      if(in_array($name, $hidden_fields)){
-        drupal_set_message(t('You can not edit or delete standard profile fields'),'error');
-        drupal_goto(referer_uri());
-      }
-    }
-  }
-  // Prevents viewing of hidden fields
-  else if($form_id == 'profile_admin_overview'){
-    $hidden_fields = variable_get('scratchpad_profile_fields', array());
-    foreach($form as $key => $values){
-      if(isset($values['name']['#value'])){
-        if(in_array($values['name']['#value'], $hidden_fields)){
-          $form[$key]['edit']['#value'] = "<strike>".t('edit')."</strike>";
-          $form[$key]['delete']['#value'] = "<strike>".t('delete')."</strike>";
-        }
-      }
-    }
-  }
   else if($form['#id'] == 'node-form'){
     if(isset($form['attachments']['wrapper']['new']['upload']['#description'])){
       global $user;
