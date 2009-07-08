@@ -324,10 +324,32 @@ function classification_scratchpads_import(&$form_state){
   $form['#submit'] = array('classification_import_form_submit');
   drupal_add_js(drupal_get_path('module','classification_scratchpads').'/classification_scratchpads.js');
   $form['eol_import']['taxonomic_name']['#attributes']['onkeypress'] = 'return classification_scratchpads_keypress(this, event);';
-  //exit;
+  $form['tcs_import'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Import from hosted TCS files',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'tcs_url' => array(
+      '#type' => 'textfield',
+      '#title' => t('Enter the URL of the TCS file which represents the highest taxon to import')
+    ),
+    'tcs_url_import' => array(
+      '#type' => 'submit',
+      '#attributes' => array(
+        'class' => 'classification-buttons import'
+      ),
+      '#value' => t('Import from TCS'),
+      '#executes_submit_callback' => TRUE,
+      '#submit' => array('classification_scratchpads_import_tcs_submit')
+    )
+  );
+  //print_r($form);exit;
   return $form;
 }
 
+function classification_scratchpads_import_tcs_submit($form, $form_state){
+  classification_import_tcs_init($form_state['values']['tcs_url'], $form_state['values']['vid'], 1000);
+}
 /**
  * Duplication of classification_edit_form with minor changes to allow for 
  */
