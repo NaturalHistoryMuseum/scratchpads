@@ -97,3 +97,41 @@ function scratchpadify_update_6104(){
   }
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6105(){
+  // If the content_profile module is installed
+  if(function_exists('content_profile_init')){
+    // Convert profile.module to content_profile.module
+    variable_del('scratchpad_profile_fields');
+    
+    // Install the profile
+    require_once("profiles/scratchpad/scratchpad.profile");
+    if(function_exists("scratchpad_profile_install_profile")){
+      scratchpad_profile_install_profile();
+    }
+    
+    // Convert the current profile stuff to the new node type
+    $results = db_query("SELECT uid FROM {users} WHERE uid > 1");
+    while($row = db_fetch_array($results)){
+      $results2 = db_query("SELECT value,name FROM profile_values, profile_fields WHERE profile_values.fid = profile_fields.fid AND uid = %d", $row['uid']);
+      while($row2 = db_fetch_array($results2)){
+        $results_array[$row2['name']] = $row2['value'];
+      }
+      $node = new stdClass();
+      $node->type = 'profile';
+      $node->uid = $row['uid'];
+      $node->field_title = array(array('value'=> $results_array['profile_title']));
+      $node->field_givennames = array(array('value'=> $results_array['profile_givennames']));
+      $node->field_familyname = array(array('value'=> $results_array['profile_familyname']));
+      $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
+      $node->auto_nodetitle_applied = TRUE;  
+      $node->field_institution = array(array('value'=> $results_array['profile_institution']));
+      $node->field_taxonomicinterest = array(array('value'=> $results_array['profile_taxonomy']));
+      node_save($node);
+    }
+    
+    return array('#finished' => TRUE);
+  } else {
+    return array('#abort' => array('success' => FALSE, 'query' => 'The content_profile module is not installed'));
+  }
+}
