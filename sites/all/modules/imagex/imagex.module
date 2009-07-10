@@ -53,7 +53,7 @@ function imagex_upload_page(){
   drupal_add_js(drupal_get_path('module','imagex').'/imagex.js');
   drupal_add_css(drupal_get_path('module','imagex').'/imagex.css');
   return '<div class="messages imagex header"><p>'.t('Drop images into the box below, or click the "Add" button, and select the images you\'d like to upload').'</p></div><div class="imagex postlet">
-	<applet name="postlet" code="Main.class" archive="'.url(base_path().drupal_get_path('module','imagex').'/postlet/postlet.jar', array('absolute' => TRUE)).'" width="100%" height="300" mayscript>
+	<applet name="postlet" code="Main.class" archive="'.url(drupal_get_path('module','imagex').'/postlet/postlet.jar', array('absolute' => TRUE)).'" width="100%" height="300" mayscript>
 		<param name = "maxthreads"		value = "5" />
 		<param name = "language"		value = "EN" />
 		<param name = "type"			value = "application/x-java-applet;version=1.3.1" />
