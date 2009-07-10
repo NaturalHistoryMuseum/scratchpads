@@ -89,7 +89,6 @@ function scratchpadify_menu(){
 function scratchpadify_node_import_fields_alter(&$fields, $type){
   // Always remove the fields, lets make this simpler!
   unset($fields['comment']);
-  unset($fields['uid']);
   unset($fields['created']);
   unset($fields['log']);
   unset($fields['revision']);
