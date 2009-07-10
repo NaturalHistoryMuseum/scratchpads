@@ -67,7 +67,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   //print_r($items);exit;
   $output = '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
   $sort_orders = variable_get('view_sort-limits', array());
-  for($i=0; $i<=20; $i++){
+  for($i=1; $i<=20; $i++){
     $output .= '<option value="'.$i.'"';
     if($sort_orders[$view_name] == $i){
       $output .= ' SELECTED';
