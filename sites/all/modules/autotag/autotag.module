@@ -286,6 +286,10 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
   $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
   if(!count($hide_vids)){return;}
   
+  // Also check for if we're being called by the node_import module, as if we
+  // are, we need to return
+  if(strpos($_GET['q'], 'admin/content/node_import') !== FALSE){ return; }
+  
   // Autotag doesn't work with the following content types, return if this node
   // is one of these.
   $node_types_to_ignore = variable_get('autotag_broken_node_types', array('webform', 'biblio', 'image'));
