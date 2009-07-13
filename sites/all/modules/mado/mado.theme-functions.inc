@@ -7,7 +7,6 @@
  */
 function mado_get_blocks(){
   $blocks_and_views = array ();
-  $i = 0;
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', array(
       'views' => array(
         'taxonomy_term',
@@ -51,7 +50,7 @@ function mado_get_blocks(){
         'print' => array('ids' => array('1')),
         'forum' => array('ids' => array('0','1')),
         'scratchpadify' => array('all' => TRUE),
-        'sharethis' => array('all',TRUE),
+        'sharethis' => array('all' => TRUE),
         'search' => array('ids' => array('0')),
         'views' => array('ids' => array('og_members_block-block','og_my-block_1','og_files-block_1','og_members_block-block_1'))
       )));
