@@ -6,6 +6,7 @@ function ncbi_ispecies(){
   return array (
     'ncbi' => array (
       'title' => t ( 'National Center for Biotechnology Information' ), 
+      'single' => TRUE,
       'description' => t ( 'Some info about NCBI' ), 
       'callback' => 'ncbi_ajax_callback' ) );
 }

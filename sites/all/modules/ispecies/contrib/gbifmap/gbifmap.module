@@ -6,7 +6,8 @@ function gbifmap_ispecies(){
   return array (
     'gbifmap' => array (
       'title' => t ( 'Global Biodiverstiy Information Facility' ), 
-      'description' => t ( 'Some info about GBIF' ), 
+      'description' => t ( 'Some info about GBIF' ),
+      'single' => TRUE,
       'callback' => 'gbifmap_ajax_callback' ) );
 }
 

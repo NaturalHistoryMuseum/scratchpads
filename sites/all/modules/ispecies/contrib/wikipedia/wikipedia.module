@@ -5,7 +5,8 @@
 function wikipedia_ispecies() {
   return array (
     'wikipedia' => array (
-      'title' => 'Wikipedia', 
+      'title' => 'Wikipedia',
+      'single' => TRUE,
       'description' => t('Inserts text from a wikipedia article onto a page'), 
       'callback' => 'wikipedia_ajax_callback'));
 }
