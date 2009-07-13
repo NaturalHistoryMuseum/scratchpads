@@ -34,6 +34,7 @@ function mado_get_blocks(){
         'classification' => array('all' => TRUE),
         'creativecommons_lite' => array('all' => TRUE),
         'forum' => array('ids' => array('0','1')),
+        'glossary' => array('all' => TRUE),
         'gmap_location' => array('all' => TRUE),
         'image' => array('all' => TRUE),
         'image_attach' => array('all' => TRUE),
