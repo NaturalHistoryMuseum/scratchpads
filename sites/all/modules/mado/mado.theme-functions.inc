@@ -8,15 +8,13 @@
 function mado_get_blocks(){
   $blocks_and_views = array ();
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', array(
-      'views' => array(
-        'taxonomy_term',
-        'biblio', // Hide Biblio as we have the improved biblio_table view
+      'views' => array('biblio', // Hide Biblio as we have the improved biblio_table view
         'darwincore',
         'darwincorelocation',
         'nexus_controlled_state',
+        'nexus_free_state',
         'nexus_note',
         'nexus_project',
-        'nexus_free_state',
         'og',
         'og_files',
         'og_ghp_ron',
@@ -28,30 +26,31 @@ function mado_get_blocks(){
         'og_recent_type_term',
         'og_search',
         'og_tracker',
-        'og_unread'
+        'og_unread',
+        'taxonomy_term'
       ),
       'blocks' => array(
-        'user' => array('all' => TRUE),
         'boost' => array('all' => TRUE),
-        'locale' => array('all' => TRUE),
-        'image' => array('all' => TRUE),
-        'simplenews' => array('all' => TRUE),
-        'image_attach' => array('all' => TRUE),
-        'menu' => array('all' => TRUE),
-        'node' => array('ids' => array('0')),
-        'poll' => array('all' => TRUE),
-        'profile' => array('all' => TRUE),
-        'system' => array('all' => TRUE),
         'classification' => array('all' => TRUE),
         'creativecommons_lite' => array('all' => TRUE),
+        'forum' => array('ids' => array('0','1')),
         'gmap_location' => array('all' => TRUE),
+        'image' => array('all' => TRUE),
+        'image_attach' => array('all' => TRUE),
+        'locale' => array('all' => TRUE),
+        'menu' => array('all' => TRUE),
+        'node' => array('ids' => array('0')),
         'og' => array('all' => TRUE),
         'og_views' => array('all' => TRUE),
+        'poll' => array('all' => TRUE),
         'print' => array('ids' => array('1')),
-        'forum' => array('ids' => array('0','1')),
+        'profile' => array('all' => TRUE),
         'scratchpadify' => array('all' => TRUE),
-        'sharethis' => array('all' => TRUE),
         'search' => array('ids' => array('0')),
+        'sharethis' => array('all' => TRUE),
+        'simplenews' => array('all' => TRUE),
+        'system' => array('all' => TRUE),
+        'user' => array('all' => TRUE),
         'views' => array('ids' => array('og_members_block-block','og_my-block_1','og_files-block_1','og_members_block-block_1'))
       )));
   foreach ( views_get_all_views () as $view ) {
