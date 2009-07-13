@@ -14,6 +14,10 @@ function mado_get_blocks(){
         'biblio', // Hide Biblio as we have the improved biblio_table view
         'darwincore',
         'darwincorelocation',
+        'nexus_controlled_state',
+        'nexus_note',
+        'nexus_project',
+        'nexus_free_state',
         'og',
         'og_files',
         'og_ghp_ron',
@@ -31,6 +35,9 @@ function mado_get_blocks(){
         'user' => array('all' => TRUE),
         'boost' => array('all' => TRUE),
         'locale' => array('all' => TRUE),
+        'image' => array('all' => TRUE),
+        'simplenews' => array('all' => TRUE),
+        'image_attach' => array('all' => TRUE),
         'menu' => array('ids' => array('primary-links','secondary-links')),
         'node' => array('ids' => array('0')),
         'poll' => array('all' => TRUE),
@@ -43,8 +50,9 @@ function mado_get_blocks(){
         'og_views' => array('all' => TRUE),
         'print' => array('ids' => array('1')),
         'forum' => array('ids' => array('0','1')),
-        'scratchpadify' => array('ids' => array('1','3')),
+        'scratchpadify' => array('all' => TRUE),
         'search' => array('ids' => array('0')),
+        'views' => array('ids' => array('og_members_block-block','og_my-block_1','og_files-block_1','og_members_block-block_1'))
       )));
   foreach ( views_get_all_views () as $view ) {
     if (($view->display ['default']->display_options ['arguments'] ['tid'] || 
