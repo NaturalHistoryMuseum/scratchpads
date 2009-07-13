@@ -57,7 +57,7 @@ function scratchpad_profile_modules(){
       'node_term_edit','autotag','leftandright','taxtab','tinytax','tree',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
       'classification_biblio','classification_scratchpads','nagger','bio_image',
-      'taxonomy_tree','ahah_action','matrix_editor','nexus'
+      'taxonomy_tree','ahah_action','matrix_editor','nexus','morphbank'
   );
 }
 
