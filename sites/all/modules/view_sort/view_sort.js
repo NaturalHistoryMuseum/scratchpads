@@ -5,7 +5,7 @@ function view_sort_add_draggable(viewname){
     var children = $(this).parent().parent().children();
     var ajax_options = {
       type: "POST",
-      url:callback,
+      url:Drupal.settings.view_sort.callbacks.pin,
       data:{pin:$(this).parent().parent().parent().attr('view-sort'),html:$(children[1]).html()}
     };
     $.ajax(ajax_options);  

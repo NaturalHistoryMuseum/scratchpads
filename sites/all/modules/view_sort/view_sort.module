@@ -63,6 +63,14 @@ function view_sort_init(){
  * Implementation of hook_views_pre_render
  */
 function view_sort_views_pre_render(&$view){
+  if($view->display['default']->display_options['filters']['type']['value']['ispecies']=='ispecies' &&
+     function_exists($view->name . '_ispecies')){
+    //function_exists($view->))
+    $ispecies_definition = call_user_func($view->name . '_ispecies');
+    if(isset($ispecies_definition[$view->name]['single']) && $ispecies_definition[$view->name]['single']){
+      return;
+    }
+  }
   // Check to see if the view is being filtered by node type, and if it is being
   // sorted by weight.  If so, we add the links.
   if(((

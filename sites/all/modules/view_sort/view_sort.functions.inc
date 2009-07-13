@@ -67,6 +67,12 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   //print_r($items);exit;
   $output = '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
   $sort_orders = variable_get('view_sort-limits', array());
+  if(!isset($sort_orders[$view_name])){
+    $sort_orders[$view_name] = 20;
+    $divider_position = false;
+  } else {
+    $divider_position = $sort_orders[$view_name];
+  }
   for($i=1; $i<=20; $i++){
     $output .= '<option value="'.$i.'"';
     if($sort_orders[$view_name] == $i){
@@ -76,11 +82,6 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   }
   $output .='</select></form></div>';
   $i = 0;
-  if (isset($sort_orders[$view_name])){
-    $divider_position = $sort_orders[$view_name];
-  } else {
-    $divider_position = false;
-  }
   $output .= '<div id="'.$view_name.'" class="view-sort-top view-sort-drag class-'.$view_name.'">';
   foreach($items as $id => $item){
     // FIXME - This needs looking at
@@ -104,7 +105,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
     }
   }
   if(!$divider_position){
-    $output .= $divider;
+    $output .= '<div class="view-sort-clear"></div></div><div class="class-'.$view_name.' view-sort-bottom">';
   }
   $output .= '<div class="view-sort-clear"></div></div><div id="view-sort-error"></div><script type="text/javascript">
     '."view_sort_add_draggable('$view_name');
