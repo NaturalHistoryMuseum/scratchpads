@@ -99,10 +99,9 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
 function theme_mado_block($block, $id, $before_divider = TRUE) {
   $title = '&nbsp;';
   $content = '';
-  $hidden_content = '<div>'.t('The content of this element is currently hidden, content (if there is any) will be displayed once it is moved above the divider.').'</div>';
+  $hidden_content = '<div>'.t('This block is currently either hidden, or has no content. Content (if there is any) will be displayed once it is moved above the divider.').'</div>';
   switch($block['#type']){
-    case 'view':
-      
+    case 'view':      
       $view = views_get_view($block['#name']);
       if($view){
         $view->get_total_rows = 'TRUE';
@@ -156,7 +155,7 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
           $content = $module_block['content'];
         }
         if(trim($content)==''){
-          $cotent = $hidden_content;
+          $content = $hidden_content;
           $block['#hidden'] = TRUE;
         }
       } else {
@@ -172,10 +171,12 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
       return false;
       break;
   }
-  if (trim($content)==''){
-    $cotent = $hidden_content;
+  $is_there_content = preg_replace("/[\ \r\n\t]/","",trim(strip_tags($content, '<img>')));
+  if ($is_there_content=='' || $is_there_content == 'EditExportClone'){
+    $content = $hidden_content;
     $block['#hidden'] = TRUE;
   }
+  //$content = "***".trim(strip_tags($content, '<img>'))."***";
   $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
   if($id != 'divider' && $before_divider){
     $output .= '<div class="mado_close">
