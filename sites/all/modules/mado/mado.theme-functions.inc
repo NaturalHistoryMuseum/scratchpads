@@ -38,7 +38,7 @@ function mado_get_blocks(){
         'image' => array('all' => TRUE),
         'simplenews' => array('all' => TRUE),
         'image_attach' => array('all' => TRUE),
-        'menu' => array('ids' => array('primary-links','secondary-links')),
+        'menu' => array('all' => TRUE),
         'node' => array('ids' => array('0')),
         'poll' => array('all' => TRUE),
         'profile' => array('all' => TRUE),
