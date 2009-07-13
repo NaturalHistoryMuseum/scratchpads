@@ -58,15 +58,13 @@ function mado_get_blocks(){
     if (($view->display ['default']->display_options ['arguments'] ['tid'] || 
         $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth']) &&
         !in_array($view->name, $views_blocks_to_ignore['views'])) {
-      $blocks_and_views ['view-' . $i] = array (
+      $blocks_and_views ['view-' . $view->name] = array (
         '#type' => 'view', 
         '#name' => $view->name, 
         '#scroll' => TRUE, 
-        '#css' => 'mado_block_2' );
-      $i ++;
+        '#css' => 'mado_block_2');
     }
   }
-  $i = 0;
   foreach ( module_implements ( 'block' ) as $module ) {
     if(isset($views_blocks_to_ignore['blocks'][$module]['all']) && $views_blocks_to_ignore['blocks'][$module]['all']){
       continue;
@@ -75,12 +73,11 @@ function mado_get_blocks(){
       if(isset($views_blocks_to_ignore['blocks'][$module]['ids']) && in_array($id, $views_blocks_to_ignore['blocks'][$module]['ids'])){
         continue;
       }
-      $blocks_and_views ['block-' . $i] = array (
+      $blocks_and_views ['block-'.$module.'/'.$id] = array (
         '#type' => 'block', 
         '#name' => "$module/$id", 
         '#scroll' => TRUE, 
         '#css' => 'mado_block_2' );
-      $i ++;
     }
   }
   $blocks_and_views ['divider'] = array (
