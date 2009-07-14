@@ -151,7 +151,74 @@ function scratchpadify_menu_alter(&$items){
 
 function scratchpadify_form_alter($form, $form_state, $form_id){
   // Prevent displaying of admin user on user list.
-  if($form_id == 'user_admin_account'){
+  if($form_id == 'node_import_add_form'  && isset($_GET['type']) && !$form_state['submitted']){
+    $form_state = array ( 
+      'storage' => array ( 
+        'page' => 'file', 
+        'back_button' => 'Back', 
+        'reload_button' => 'Reload page', 
+        'reset_button' => 'Reset page', 
+        'op' => 'Reload page', 
+        'next_button' => 'Next',  
+        'form_id' => 'node_import_add_form', 
+        'type' => 'node:'.$_GET['type'], 
+        'file_upload' => '', 
+        'file_upload_button' => 'Upload file', 
+      ), 
+      'submitted' => true, 
+      'values' => array ( 
+        'file_upload' => '', 
+        'file_upload_button' => 'Upload file', 
+        'back_button' => 'Back', 
+        'op' => 'Reload page', 
+        'reload_button' => 'Reload page', 
+        'reset_button' => 'Reset page', 
+        'next_button' => 'Next', 
+        'form_id' => 'node_import_add_form', 
+      ), 
+      'clicked_button' => array ( 
+        '#type' => 'submit',
+        '#value' => 'Reload page',
+        '#submit' => array ( 
+          0 => 'node_import_add_form_submit_reload', 
+        ), 
+        '#disabled' => false, 
+        '#post' => array ( 
+          'op' => 'Reload page', 
+          'form_id' => 'node_import_add_form', 
+        ), 
+        '#programmed' => false, 
+        '#tree' => false, 
+        '#parents' => array ( 
+          0 => 'reload_button', 
+        ), 
+        '#array_parents' => array ( 
+          0 => 'buttons-top', 
+          1 => 'reload_button', 
+        ), 
+        '#weight' => 0.001, 
+        '#processed' => false, 
+        '#description' => NULL, 
+        '#attributes' => array ( ), 
+        '#required' => false, 
+        '#input' => true, 
+        '#name' => 'op', 
+        '#button_type' => 'submit', 
+        '#executes_submit_callback' => true, 
+        '#process' => array ( 
+          0 => 'form_expand_ahah', 
+        ), 
+        '#id' => 'edit-reload-button-1', 
+      ), 
+      'submit_handlers' => array ( 
+        0 => 'node_import_add_form_submit_reload', 
+      ), 
+      'redirect' => NULL, 
+      'rebuild' => true, 
+    );
+    unset($_GET['type']);
+  }
+  else if($form_id == 'user_admin_account'){
     $form_parts = array('status','name','roles','member_for','last_access','operations');
     foreach($form_parts as $form_part){
       unset($form[$form_part][1]);
@@ -368,19 +435,19 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
           return array('subject'=>'Statistics','content'=>theme_item_list($items));
         case 1:
-          $additional_items = array(
-            'biblio' => array(array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager'))))),
+          $links_override = array(
+            'biblio' => array(
+              'view' => 'biblio',
+              'import' => array(array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager')))))
+            ),
             'image' => array(
-              array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'imagex/imagex', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
-            )
-          );     
-          /*$items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
-          $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');*/
-          $special_links = array(
-            'biblio' => 'biblio',
-            'image' => 'image',
-            'forum' => 'forum',
-            'blog' => 'blog'
+              'view' => 'image',
+              'import' => array(
+                array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'imagex/imagex', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
+              )
+            ), 
+            'forum' => array('view' => 'forum'),
+            'blog' => array('view' => 'blog')
           );
           if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
             $query = array('tid' => arg(2));
@@ -388,23 +455,35 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             $query = array();
           }
           $results = db_query("SELECT type, name FROM node_type, menu_links WHERE link_path = CONCAT('node/add/', type) AND hidden = 0");
+          $sub_menu_item = menu_get_item('admin/content/node_import/add');
+          $can_access_import = call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']));
+            
           while($row = db_fetch_array($results)){
-            $link_path = isset($special_links[$row['type']]) ? $special_links[$row['type']] : 'content/'.$row['type'];
+            $link_path = isset($links_override[$row['type']]['view']) ? $links_override[$row['type']]['view'] : 'content/'.$row['type'];
             $items[$row['name']] = l($row['name'], $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])))));
             $menu_item = menu_get_item('node/add/'.$row['type']);
             if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
               $items[$row['name']] .= ' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/add.gif').'"/>', 'node/add/'.$row['type'], array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
               // We'll assume that a many permission won't exist when a single
               // doesn't.
-              if(isset($additional_items[$row['type']])){
-                foreach($additional_items[$row['type']] as $additional_item){
+              if(isset($links_override[$row['type']]['import'])){
+                foreach($links_override[$row['type']]['import'] as $additional_item){
                   $sub_menu_item = menu_get_item($additional_item[1]);
                   if(call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']))){
                     $items[$row['name']] .= call_user_func_array('l',$additional_item);
                   }
                 }
+              } else {
+                if($can_access_import){
+                  $items[$row['name']] .= l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'admin/content/node_import/add', array('query' => array('type' => $row['type']), 'html' => TRUE, 'attributes' => array('title' => t('Import from CSV file'))));           
+                }
               }
             }
+          }
+          // Additional item for taxonomy
+          $menu_item = menu_get_item('admin/content/taxonomy');
+          if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
+            $items['Taxonomy'] = l('Taxonomy', 'admin/content/taxonomy').' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification'))));
           }
           uksort($items, "strnatcasecmp");
           return array('subject'=>'Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
