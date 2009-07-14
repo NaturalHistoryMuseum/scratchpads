@@ -483,7 +483,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           // Additional item for taxonomy
           $menu_item = menu_get_item('admin/content/taxonomy');
           if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
-            $items['Taxonomy'] = l('Taxonomy', 'admin/content/taxonomy').' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification'))));
+            $items['Taxonomy'] = l('Taxonomy', 'admin/content/taxonomy', array('attributes' => array('title' => 'View your site\'s taxonomies'))).' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification'))));
           }
           uksort($items, "strnatcasecmp");
           return array('subject'=>'Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
