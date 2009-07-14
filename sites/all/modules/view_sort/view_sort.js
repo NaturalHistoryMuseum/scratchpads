@@ -3,12 +3,49 @@ function view_sort_add_draggable(viewname){
   // Lock/Hide
   $('.view-sort-toggle > img').click(function(){
     var children = $(this).parent().parent().children();
-    var ajax_options = {
-      type: "POST",
-      url:Drupal.settings.view_sort.callbacks.pin,
-      data:{pin:$(this).parent().parent().parent().attr('view-sort'),html:$(children[1]).html()}
-    };
-    $.ajax(ajax_options);  
+    if($(this).attr("id") == 'view-sort-hide'){
+      // Hiding
+      var hide_me = $(this).parent().parent().parent();
+      var ajax_options = {
+        type: "POST",
+        url:Drupal.settings.view_sort.callbacks.hide,
+        data:{hide:hide_me.attr('view-sort'),html:$(children[1]).html()},
+        data:{pin:hide_me.attr('view-sort'),html:$(children[1]).html()},
+        success:function(data){
+          hide_me.hide();
+        }
+      };
+      $.ajax(ajax_options);
+    } else if ($(this).attr("id") == 'view-sort-pin'){
+      // Pin/Lock
+      var pin_me = $(this).parent().parent().parent();
+      var ajax_options = {
+        type: "POST",
+        url:Drupal.settings.view_sort.callbacks.pin,
+        data:{pin:pin_me.attr('view-sort'),html:$(children[1]).html()},
+        success:function(data){
+          // We can move this block up to the top
+          var something = pin_me.clone();
+          something.appendTo(".view-sort-top"); 
+          pin_me.remove();
+          // Count the number of blocks at the top, if it's more than the drop
+          // down value, increase it
+          if($(".view-sort-top > .sort-div").length > $('#view-sort-select').val()){
+            $('#view-sort-select').val($(".view-sort-top > .sort-div").length);
+            // Unfortunately the onchange isn't called, so we need to call it 
+            // ourselves
+            var dropdown_number = $('#view-sort-select').val();
+            var ajax_options = {
+              type:"POST",
+              url:Drupal.settings.view_sort.callbacks.number,
+              data:{view:viewname, number:dropdown_number}
+            };
+            $.ajax(ajax_options);            
+          }
+        }
+      };
+      $.ajax(ajax_options);      
+    }  
   });
   // Sortable block
   $('.view-sort-drag').sortable({
@@ -18,18 +55,16 @@ function view_sort_add_draggable(viewname){
       $('.view-sort-drag > *').each(function(){
         items += " "+$(this).attr('view-sort');
       });
-      //alert(items);
       var ajax_options = {
         type:"POST",
         url:Drupal.settings.view_sort.callbacks.sorted+"/"+viewname+"/"+Drupal.settings.ispecies.page_tid,
         success:function(data){
           if(data.length){
-            alert(data);
             $('#view-sort-error').html(data);
             $('#view-sort-error').dialog('open');
             $('#view-sort-error').css('width','250px');
           }
-          ispecies_callback(Drupal.settings.view_sort.callbacks.ispecies,viewname);
+          //ispecies_callback(Drupal.settings.view_sort.callbacks.ispecies,viewname);
         },
         data:"order="+items
       };
@@ -90,7 +125,7 @@ function view_sort_add_draggable(viewname){
 
 function view_sort_add_mouseover(){
   // Show the Lock/Hide images
-  $('.view-sort-drag > div > *').mouseover(function(){
+  $('.view-sort-bottom > div > *').mouseover(function(){
     $(this).children().each(function(){
       if($(this).hasClass('view-sort-toggle')){
         $(this).show();
@@ -98,7 +133,7 @@ function view_sort_add_mouseover(){
     })
   });  
   // Hide the Lock/Hide images
-  $('.view-sort-drag > div > *').mouseout(function(){
+  $('.view-sort-bottom > div > *').mouseout(function(){
     $(this).children().each(function(){
       if($(this).hasClass('view-sort-toggle')){
         $(this).hide();

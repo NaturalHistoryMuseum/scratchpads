@@ -33,6 +33,13 @@ function view_sort_menu(){
     'file' => 'view_sort.functions.inc',
     'access arguments' => array (
       'assign node weight' ) );
+  $items['views-sort/hide'] = array(
+    'title' => '', 
+    'page callback' => 'views_sort_hide', 
+    'type' => MENU_CALLBACK,
+    'file' => 'view_sort.functions.inc',
+    'access arguments' => array (
+      'assign node weight' ) );  
   return $items;
 }
 
@@ -53,7 +60,8 @@ function view_sort_init(){
           'ispecies' => url('ispecies'),
           'number' => url('views-sort/number'),
           'sorted' => url('views-sort/sorted'),
-          'pin' => url('views-sort/pin')
+          'pin' => url('views-sort/pin'),
+          'hide' => url('views-sort/hide'),
         )
       )
     ), 'setting');

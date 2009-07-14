@@ -13,10 +13,19 @@ function views_sort_pin(){
   $node->body = substr($_POST['html'], strpos($_POST['html'], "<div"));
   $node->type = 'ispecies';
   $node->format = 2;
+  global $user;
+  $node->uid = $user->uid;
   $node->taxonomy = array($data[1]=> taxonomy_get_term($data[1]));
   node_save($node);
   db_query("INSERT INTO {ispecies} (nid, url, ispeciestype) VALUES (%d, '%s', '%s');", $node->nid, $node->title, $data[0]);
-  exit;
+}
+
+/**
+ * Hide an ispecies object
+ */
+function views_sort_hide(){
+  $data = explode("---", $_POST['pin']);
+  db_query("INSERT INTO {view_sort_hide} (tid, hide, ispeciestype) VALUES (%d, '%s', '%s')", $data[1], $data[2], $data[0]);
 }
 
 function views_sort_number(){
@@ -65,7 +74,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   $view_args = json_decode(urldecode($view_args));
   $items = view_sort_get_items($view_name, $view_args);
   //print_r($items);exit;
-  $output = '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
+  echo '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
   $sort_orders = variable_get('view_sort-limits', array());
   if(!isset($sort_orders[$view_name])){
     $sort_orders[$view_name] = 20;
@@ -73,45 +82,50 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   } else {
     $divider_position = $sort_orders[$view_name];
   }
-  for($i=1; $i<=20; $i++){
-    $output .= '<option value="'.$i.'"';
-    if($sort_orders[$view_name] == $i){
-      $output .= ' SELECTED';
-    }
-    $output .= '>'.$i.'</option>';
+  $num_local_results = view_sort_get_local_items_count($view_name, $view_args);
+  if($num_local_results < $sort_orders[$view_name]){
+    $sort_orders[$view_name] = $num_local_results;
   }
-  $output .='</select></form></div>';
+  for($i=1; $i<=20; $i++){
+    echo '<option value="',$i,'"';
+    if($sort_orders[$view_name] == $i){
+      echo ' SELECTED';
+    }
+    echo '>',$i,'</option>';
+  }
+  echo '</select></form></div>';
   $i = 0;
-  $output .= '<div id="'.$view_name.'" class="view-sort-top view-sort-drag class-'.$view_name.'">';
+  echo '<div id="',$view_name,'-popup" class="view-sort-top view-sort-drag class-',$view_name,'">';
+  $divider_output = FALSE;
+  //echo $sort_orders[$view_name];exit;
   foreach($items as $id => $item){
-    // FIXME - This needs looking at
-    // Remove links from the output (we don't want users clicking, just dragging
-    
-    $output .= '<div view-sort="'.$view_name.'---'.$view_args[0].'---'.$id.'" class="sort-div';
-    if(isset($item['local']) && $item['local']){
-      $output .= ' sortable';
-    } else {
-      $output .= ' notsortable';
+    // Add the divider
+    if(((!isset($item['local']) || !$item['local']) || $i == $sort_orders[$view_name]) && !$divider_output){
+      echo '<div class="view-sort-clear"></div></div><div class="class-',$view_name,' view-sort-bottom">';
+      $divider_output = TRUE;
     }
-    $output .= '"><div style="position:relative;clear:both;">';
+    $class = (isset($item['local']) && $item['local']) ? "sortable" : "notsortable";
+    echo '<div view-sort="',$view_name,'---',$view_args[0],'---',$id,'" class="sort-div ',$class,'"><div style="position:relative;clear:both;">';    
     if(!isset($item['local']) || !$item['local']){
-      $output .='<div class="view-sort-toggle"><img src="'.url(drupal_get_path('module','view_sort')).'/close.png" id="view-sort-hide"/><img src="'.url(drupal_get_path('module','view_sort')).'/pin.png" id="view-sort-pin"/></div>';
+      echo '<div class="view-sort-toggle"><img src="',url(drupal_get_path('module','view_sort')),'/close.png" id="view-sort-hide"/><img src="',url(drupal_get_path('module','view_sort')),'/pin.png" id="view-sort-pin"/></div>';
     }
-    $output .= $item['body'].'
-  </div></div>';
+    echo $item['body'],'</div></div>';
     $i ++;
-    if($divider_position && $divider_position == $i){
-      $output .= '<div class="view-sort-clear"></div></div><div class="class-'.$view_name.' view-sort-bottom">';
-    }
   }
   if(!$divider_position){
-    $output .= '<div class="view-sort-clear"></div></div><div class="class-'.$view_name.' view-sort-bottom">';
+    echo '<div class="view-sort-clear"></div></div><div class="class-',$view_name,' view-sort-bottom">';
   }
-  $output .= '<div class="view-sort-clear"></div></div><div id="view-sort-error"></div><script type="text/javascript">
-    '."view_sort_add_draggable('$view_name');
-  </script>";
-  print $output;
-  exit;
+  echo '<div class="view-sort-clear"></div></div><div id="view-sort-error"></div><script type="text/javascript">
+    view_sort_add_draggable(\'',$view_name,'\');
+  </script>';
+}
+
+function view_sort_get_local_items_count($view_name, $view_args){
+  // Get the view
+  $view = views_get_view($view_name);
+  $view->args = $view_args;
+  $view->execute();
+  return count($view->result);
 }
 
 function view_sort_get_items($view_name, $view_args){
