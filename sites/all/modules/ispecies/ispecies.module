@@ -83,17 +83,25 @@ function ispecies_get_data($module, $tid){
   $sort_orders = variable_get('view_sort-limits', array());
   if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
     if(function_exists($ispecies_views[$module]['callback'])){
-      return call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
+      $results = call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
     } else {
       watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
+      return false;
     }
   } else {
     if(function_exists($ispecies_views[$module]['callback'])){
-      return call_user_func($ispecies_views[$module]['callback'], $term_name);
+      $results = call_user_func($ispecies_views[$module]['callback'], $term_name);
     } else {
       watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
+      return false;
     }
   }
+  // We have the results, now we should remove any that we don't want
+  $db_results = db_query("SELECT hide FROM {view_sort_hide} WHERE tid = %d AND ispeciestype = '%s'", $tid, $module);
+  while($row = db_fetch_array($db_results)){
+    unset($results[$row['hide']]);
+  }
+  return $results;
 }
 
 /**
