@@ -368,26 +368,46 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
           return array('subject'=>'Statistics','content'=>theme_item_list($items));
         case 1:
-          if(user_access('create type content')){ // This is a "fixperms" permission, go get it!
-            if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
-              $query = array('tid' => arg(2));
-            } else {
-              $query = array();
-            }
-            drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
-            $item = menu_get_item("node/add");
-            $content = system_admin_menu_block($item);
-            $items = array();
-            foreach($content as $item){
-              $items[$item['title']] = l($item['title'],$item['link_path'], array('query' => $query));
-            }
-            $items[t('Import bibliography')] = l(t('Import bibliography'), 'biblio/import/form', array('query'=>$query));
-            $items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
-            $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');
-            $items[t('Image galleries')] = l(t('Image galleries'),'admin/content/image',array('query'=> array('sidebar'=>'yes')));
-            uksort($items, "strnatcasecmp");
-            return array('subject'=>'Create Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
+          $additional_items = array(
+            'biblio' => array(array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager'))))),
+            'image' => array(
+              array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'imagex/imagex', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
+            )
+          );     
+          /*$items[t('Import CSV file')] = l(t('Import CSV file'),'admin/content/node_import/add');
+          $items[t('Taxonomy')] = l(t('Taxonomy'), 'admin/content/taxonomy');*/
+          $special_links = array(
+            'biblio' => 'biblio',
+            'image' => 'image',
+            'forum' => 'forum',
+            'blog' => 'blog'
+          );
+          if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
+            $query = array('tid' => arg(2));
+          } else {
+            $query = array();
           }
+          $results = db_query("SELECT type, name FROM node_type, menu_links WHERE link_path = CONCAT('node/add/', type) AND hidden = 0");
+          while($row = db_fetch_array($results)){
+            $link_path = isset($special_links[$row['type']]) ? $special_links[$row['type']] : 'content/'.$row['type'];
+            $items[$row['name']] = l($row['name'], $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])))));
+            $menu_item = menu_get_item('node/add/'.$row['type']);
+            if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
+              $items[$row['name']] .= ' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/add.gif').'"/>', 'node/add/'.$row['type'], array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
+              // We'll assume that a many permission won't exist when a single
+              // doesn't.
+              if(isset($additional_items[$row['type']])){
+                foreach($additional_items[$row['type']] as $additional_item){
+                  $sub_menu_item = menu_get_item($additional_item[1]);
+                  if(call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']))){
+                    $items[$row['name']] .= call_user_func_array('l',$additional_item);
+                  }
+                }
+              }
+            }
+          }
+          uksort($items, "strnatcasecmp");
+          return array('subject'=>'Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           break;
         case 2:
           $uid = array_pop(db_fetch_array(db_query("SELECT uid FROM users WHERE uid > 1 ORDER BY uid ASC LIMIT 1")));
