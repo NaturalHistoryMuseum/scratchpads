@@ -19,8 +19,13 @@ function femail_drush_help($section) {
 function femail_drush_callback(){
   // Read in the email and save it to a new node
   $node = new stdClass();
-  $node->body = fread(STDIN, 1000000) . print_r($_SERVER, TRUE);
-  $node->title = substr($node->body, 0,100);
+  $node->body = fread(STDIN, 1000000);
+  $lines = preg_split("/[\n\r]/", $node->body);
+  foreach($lines as $line){
+    if(strtolower(substr($line, 0, 8)) == 'subject:'){
+      $node->title = substr($line,8);
+    }
+  }
   $node->uid = 1;
   $node->promote = 1;
   $node->type = 'page';
