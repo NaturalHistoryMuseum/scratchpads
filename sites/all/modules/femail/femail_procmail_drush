@@ -1,4 +1,7 @@
 #!/bin/bash
-
-DOMAIN=`cat $@ | grep ^To | head -n1 | sed "s/.*@//"`
-cat $@ | /var/www/simon.rycroft.name/scratchpad/drush/drush mail -r /var/www/drupal6 -l http://$DOMAIN
+while read line
+do
+	MESSAGE=${MESSAGE}"\n"$line
+done
+DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed "s/.*@//"`
+echo -e $MESSAGE | /var/www/simon.rycroft.name/scratchpad/drush/drush -r /var/www/simon.rycroft.name/scratchpad -l http://$DOMAIN femail
