@@ -1,7 +1,12 @@
 #!/bin/bash
+
+# Inorder for the script to work properly, the "drush" script MUST be in the
+# path, and drushrc.php MUST be set up with the root directory of the Drupal
+# install.
+
 while read line
 do
 	MESSAGE=${MESSAGE}"\n"$line
 done
 DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed "s/.*@//"`
-echo -e $MESSAGE | /var/www/simon.rycroft.name/scratchpad/drush/drush -r /var/www/simon.rycroft.name/scratchpad -l http://$DOMAIN femail
+echo -e $MESSAGE | drush -l http://$DOMAIN femail
