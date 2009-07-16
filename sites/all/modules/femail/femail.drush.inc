@@ -26,6 +26,9 @@ function femail_drush_callback(){
       $node->title = substr($line,8);
     }
   }
+  $mimemail = mailparse_msg_create();
+  mailparse_msg_parse($mimemail, $node->body);
+  $node->body = print_r(mailparse_msg_get_part_data($mimemail), TRUE);
   $node->uid = 1;
   $node->promote = 1;
   $node->type = 'page';
