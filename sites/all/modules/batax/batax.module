@@ -138,7 +138,7 @@ function batax_menu(){
   $items['batax/autocomplete'] = array(
     'title' => 'Batax autocomplete',
     'page callback' => 'batax_autocomplete',
-    'access arguments' => array('create node content'),
+    'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
   );
   return $items;
