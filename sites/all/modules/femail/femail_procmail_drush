@@ -6,7 +6,12 @@
 
 while read line
 do
-	MESSAGE=${MESSAGE}"\n"$line
+	if [ -z "$MESSAGE" ]
+	then
+		MESSAGE=$line
+	else
+		MESSAGE=${MESSAGE}"\n"$line
+	fi
 done
 DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed "s/.*@//"`
 echo -e $MESSAGE | drush -l http://$DOMAIN femail
