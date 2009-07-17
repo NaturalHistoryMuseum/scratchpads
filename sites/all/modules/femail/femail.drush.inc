@@ -40,7 +40,10 @@ function femail_drush_callback(){
     }
     // Get the From: header, which will be used to work out which user to
     // attribute this node/comment to
-    
+    if(isset($part_data['from'])){
+      $from = mailparse_rfc822_parse_addresses($part_data['from']);
+      $node->title .= ' FROM '.$from['address'];
+    }    
   }
   $node->uid = 2;
   $node->promote = 1;
