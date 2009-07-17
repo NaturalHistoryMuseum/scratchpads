@@ -286,6 +286,32 @@ function scratchpadify_menu($may_cache){
 }
 
 /**
+ * hook_cron
+ */
+function scratchpadify_cron(){
+  // Run this once every 168 cron runs (which given we run cron every hour, means
+  // once every week)
+  $run = variable_get("scratchpadify_cron", 168);
+  if($run == 168){
+    // Reset the run count
+    $run = 0;
+    // Now run through every file in the files directory, and update as needed
+    $results = db_query("SELECT * FROM {files}");
+    while($row = db_fetch_array($results)){
+      // Check file exists, if not, ignore (should probably remove, but that
+      // could have horrible consequences.
+      if(file_exists($row['filepath'])){
+        if(filesize($row['filepath']) != $row['filesize']){
+          db_query("UPDATE {files} SET filesize = %d WHERE fid = %d", filesize($row['filepath']), $row['fid']);
+        }
+      }
+    }    
+  }
+  // Increase the run
+  variable_set("scratchpadify_cron", $run + 1);
+}
+
+/**
  * scratchpadify_comment_feed
  */
 function scratchpadify_comment_feed() {
