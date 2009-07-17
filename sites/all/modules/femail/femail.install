@@ -1,9 +1,45 @@
 <?php
 
-// hook_install
+/**
+ * Implementation of hook_install
+ */
+function femail_install(){
+  // All we need to do here is loop through all of the forums, and set the email
+  // variable accordingly.
+  $forum_containers = variable_get('forum_containers', array());
+  if($forum_containers){
+    $container_sql = 'AND tid NOT IN (' . implode(",", $forum_containers) . ')';
+  } 
+  $results = db_query("SELECT * FROM {term_data} WHERE vid = %d $container_sql", variable_get('forum_nav_vocabulary',0));
+  $emails = array();
+  global $base_url;
+  $parts = parse_url($base_url);
+  while($row = db_fetch_array($results)){
+    $email = preg_replace("/[^0-9a-z\-]/","",strtolower(str_replace(" ", "-", $row['name'])));
+    if(array_search($email, $emails)){
+      $i = 2;
+      while(array_search($email."_".$i, $emails)){
+        $i++;
+      }
+      $email = $email."_".$i;
+    }
+    $emails[$row['tid']] = $email . '@' . $parts['host'];
+  }
+  variable_set('femail_emails', $emails);
+}
+
+/**
+ * Implementation of hook_uninstall
+ */
+function femail_uninstall(){
+  variable_del('femail_emails');
+}
+
+/**
+ * Implementation of hook_requirements
+ */
 function femail_requirements($phase){
-  // Main reason for this is to check that we have the mailparse functions
-  // installed
+  // Check that we have the mailparse functions installed
   $t = get_t();
   $requirements = array(
     'femail' => array(
@@ -21,5 +57,8 @@ function femail_requirements($phase){
       $requirements['femail']['value'] = $t('Installed');
     }
   }
+  
+  // Check that there are no MX records set for the domain, and if there are,
+  // that they're pointing at the right place.
   return $requirements;
 }

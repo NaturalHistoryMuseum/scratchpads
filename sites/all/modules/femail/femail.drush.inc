@@ -25,17 +25,22 @@ function femail_drush_callback(){
   mailparse_msg_parse($mailparse, $node->body);
   $structure = mailparse_msg_get_structure($mailparse);
   foreach ($structure as $s){
+    // Get the subject to use as the node/comment title
     $part = mailparse_msg_get_part($mailparse, $s);
     $part_data = mailparse_msg_get_part_data($part);
     if(isset($part_data['headers']['subject'])){
       $node->title = $part_data['headers']['subject'];
     }
+    // Get the body for the node/comment body
     if(isset($part_data['headers']['content-type'])){
       if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
         $node->body = substr($node->body, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']);
         break;
       }
     }
+    // Get the From: header, which will be used to work out which user to
+    // attribute this node/comment to
+    
   }
   $node->uid = 2;
   $node->promote = 1;
