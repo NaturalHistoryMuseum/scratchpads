@@ -54,10 +54,10 @@ function scratchpad_profile_modules(){
     // EDIT
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
-      'node_term_edit','autotag','leftandright','taxtab','tinytax','tree',
+      'node_term_edit','autotag','leftandright','taxtab','tinytax','morphbank',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
       'classification_biblio','classification_scratchpads','nagger','bio_image',
-      'taxonomy_tree','ahah_action','matrix_editor','nexus','morphbank'
+      'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail'
   );
 }
 
