@@ -31,6 +31,13 @@ function femail_drush_callback(){
     if(isset($part_data['headers']['subject'])){
       $node->title = $part_data['headers']['subject'];
     }
+    // Get the From: header, which will be used to work out which user to
+    // attribute this node/comment to
+    if(isset($part_data['headers']['from'])){
+      $from = mailparse_rfc822_parse_addresses($part_data['headers']['from']);
+      $from = $from[0]['address'];
+      $node->title .= ' '.$from;
+    }
     // Get the body for the node/comment body
     if(isset($part_data['headers']['content-type'])){
       if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
@@ -38,12 +45,6 @@ function femail_drush_callback(){
         break;
       }
     }
-    // Get the From: header, which will be used to work out which user to
-    // attribute this node/comment to
-    if(isset($part_data['from'])){
-      $from = mailparse_rfc822_parse_addresses($part_data['from']);
-      $node->title .= ' FROM '.$from['address'];
-    }    
   }
   $node->uid = 2;
   $node->promote = 1;
