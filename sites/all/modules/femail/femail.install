@@ -1,1 +1,23 @@
 <?php
+
+// hook_install
+function femail_requirements($phase){
+  // Main reason for this is to check that we have the mailparse functions
+  // installed
+  
+  if(!(function_exists('mailparse_msg_create') && function_exists('mailparse_msg_get_part_data') && function_exists('mailparse_msg_parse'))){
+    $t = get_t();
+    return array('femail' => array(
+      'title' => $t('Forum Email Integration'),
+      'description' => $t('Forum Email integration requires the PECL MailParse module to be installed on your server'),
+      'severity' => REQUIREMENT_ERROR,
+      'value' => $t('Never run')
+    ));
+  } else {
+    return array('femail' => array(
+      'title' => $t('Forum Email Integration'),
+      'description' => $t('PECL MailParse module installed'),
+      'severity' => REQUIREMENT_OK
+    ));
+  }
+}
