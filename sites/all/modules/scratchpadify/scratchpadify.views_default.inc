@@ -104,7 +104,7 @@ function scratchpadify_views_default_views(){
       'field' => 'biblio_authors', 
       'relationship' => 'none'), 
     'title' => array('label' => 'Title', 'alter' => array(), 
-      'link_to_node' => 0, 'exclude' => 0, 
+      'link_to_node' => 1, 'exclude' => 0, 
       'id' => 'title', 'table' => 'node', 
       'field' => 'title', 'relationship' => 'none')));
   $handler->override_option('filters', array(
