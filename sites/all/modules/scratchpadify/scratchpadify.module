@@ -455,7 +455,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           } else {
             $query = array();
           }
-          $results = db_query("SELECT type, name FROM node_type, menu_links WHERE link_path = CONCAT('node/add/', type) AND hidden = 0");
+          $results = db_query("SELECT type, name FROM node_type, menu_links WHERE (link_path = CONCAT('node/add/', type) OR link_path = CONCAT('node/add/', REPLACE(type, '_', '-'))) AND hidden = 0");
           $sub_menu_item = menu_get_item('admin/content/node_import/add');
           $can_access_import = call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']));
             
