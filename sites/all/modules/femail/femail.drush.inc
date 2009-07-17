@@ -46,7 +46,12 @@ function femail_drush_callback(){
       }
     }
   }
-  $node->uid = 2;
+  $user = user_load(array('mail' => $from));
+  if($user){
+    $node->uid = $user->uid;
+  } else {
+    $node->uid = 0;
+  }
   $node->promote = 1;
   $node->type = 'page';
   node_save($node);
