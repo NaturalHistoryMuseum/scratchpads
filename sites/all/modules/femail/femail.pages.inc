@@ -1,5 +1,5 @@
 <?php
-function femail_user_settings($user){
+function femail_user_settings($account){
   drupal_set_title(check_plain($account->name));
   drupal_add_css(drupal_get_path('module', 'openid') .'/openid.css', 'module');
 
