@@ -62,14 +62,13 @@ function femail_drush_callback(){
     $account = user_load(array('mail' => $msg['from']));
     if($account){
       $user = $account;
-      $node->uid = $user->uid;
     } else {
-      // Add the option here to associate more emails with a single user.
-      $node->uid = 0;
+      $user = user_load(array('uid' => 0));
     }
     // Check we have permission to post a forum post.
     if(user_access('create forum content')){
       $node = new stdClass();
+      $node->uid = $user->uid;
       $node->body = $msg['body']; 
       $node->title = $msg['title'];
       $node->promote = 1;
