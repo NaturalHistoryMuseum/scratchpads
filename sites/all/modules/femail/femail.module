@@ -65,3 +65,13 @@ function femail_taxonomy($op, $type, $array = NULL){
     }
   }
 }
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  if($op == 'insert' && $node->type == 'forum'){
+    // We've added a new forum post, lets mail it out
+    
+  }
+}

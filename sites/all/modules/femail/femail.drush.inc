@@ -37,6 +37,12 @@ function femail_drush_callback(){
       $from = mailparse_rfc822_parse_addresses($part_data['headers']['from']);
       $msg['from'] = $from[0]['address'];
     }
+    // Get the To: header, which will be used to work out which forum this 
+    // message wants to go into
+    if(isset($part_data['headers']['to'])){
+      $to = mailparse_rfc822_parse_addresses($part_data['headers']['to']);
+      $msg['to'] = $to[0]['address'];
+    }
     // Get the body for the node/comment body
     if(!$body_is_set){
       if(isset($part_data['headers']['content-type'])){
@@ -67,12 +73,16 @@ function femail_drush_callback(){
     }
     // Check we have permission to post a forum post.
     if(user_access('create forum content')){
+      // Get the tid of the forum that this post will go into
+      $emails = variable_get('femail_emails', array());
+      $tid = array_search($msg['to'], $emails);
       $node = new stdClass();
       $node->uid = $user->uid;
       $node->body = $msg['body']; 
       $node->title = $msg['title'];
       $node->promote = 1;
       $node->type = 'forum';
+      $node->taxonomy = array($tid => $tid);
       node_save($node);
     }
   }
