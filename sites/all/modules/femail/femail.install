@@ -37,11 +37,18 @@ function femail_install(){
  */
 function femail_schema(){
   return array(
-    'femail' => array(
+    'femail_msgs' => array(
       'fields' => array(
         'vid' => array('type' => 'int', 'not null' => true),
         'msgid' => array('type' => 'varchar', 'length' => 255)),
       'primary key' => array('vid', 'msgid')
+    ),
+    'femail_user_emails' => array(
+      'fields' => array(
+        'uid' => array('type' => 'int', 'not null' => true),
+        'email' => array('type' => 'varchar', 'length' => 255)),
+        'status' => array('type' => 'int'),
+      'primary key' => array('uid', 'email')
     )
   );
 }
