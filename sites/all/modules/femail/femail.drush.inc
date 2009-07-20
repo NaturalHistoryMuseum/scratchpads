@@ -17,42 +17,64 @@ function femail_drush_help($section) {
 }
 
 function femail_drush_callback(){
-  // Read in the email and save it to a new node
-  $node = new stdClass();
-  $node->body = fread(STDIN, 1000000);
-  $lines = preg_split("/[\n\r]/", $node->body);
+  $msg = array(
+    'body' => fread(STDIN, 1000000)
+  );
+  $lines = preg_split("/[\n\r]/", $msg['body']);
   $mailparse = mailparse_msg_create();
-  mailparse_msg_parse($mailparse, $node->body);
+  mailparse_msg_parse($mailparse, $msg['body']);
   $structure = mailparse_msg_get_structure($mailparse);
   foreach ($structure as $s){
     // Get the subject to use as the node/comment title
     $part = mailparse_msg_get_part($mailparse, $s);
     $part_data = mailparse_msg_get_part_data($part);
     if(isset($part_data['headers']['subject'])){
-      $node->title = $part_data['headers']['subject'];
+      $msg['title'] = $part_data['headers']['subject'];
     }
     // Get the From: header, which will be used to work out which user to
     // attribute this node/comment to
     if(isset($part_data['headers']['from'])){
       $from = mailparse_rfc822_parse_addresses($part_data['headers']['from']);
-      $from = $from[0]['address'];
-      $node->title .= ' '.$from;
+      $msg['from'] = $from[0]['address'];
     }
     // Get the body for the node/comment body
-    if(isset($part_data['headers']['content-type'])){
-      if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
-        $node->body = substr($node->body, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']);
-        break;
+    if(!$body_is_set){
+      if(isset($part_data['headers']['content-type'])){
+        if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
+          $msg['body'] = substr($msg['body'], $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']);
+          $body_is_set = TRUE;
+        }
       }
     }
+    // Get the InReplyTo header for possibly putting this message as a reply to 
+    // another forum post
+    if(isset($part_data['headers']['in-reply-to'])){
+      $msg['in-reply-to'] = $part_data['headers']['in-reply-to'];
+    }
   }
-  $user = user_load(array('mail' => $from));
-  if($user){
-    $node->uid = $user->uid;
+  
+  // If the in-reply-to is set, then we need to create a comment
+  if(isset($msg['in-reply-to'])){
+    
   } else {
-    $node->uid = 0;
+    // else we need to create a node
+    global $user;
+    $account = user_load(array('mail' => $msg['from']));
+    if($account){
+      $user = $account;
+      $node->uid = $user->uid;
+    } else {
+      // Add the option here to associate more emails with a single user.
+      $node->uid = 0;
+    }
+    // Check we have permission to post a forum post.
+    if(user_access('create forum content')){
+      $node = new stdClass();
+      $node->body = $msg['body']; 
+      $node->title = $msg['title'];
+      $node->promote = 1;
+      $node->type = 'forum';
+      node_save($node);
+    }
   }
-  $node->promote = 1;
-  $node->type = 'page';
-  node_save($node);
 }
