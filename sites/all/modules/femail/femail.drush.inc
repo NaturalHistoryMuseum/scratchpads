@@ -78,7 +78,8 @@ function femail_drush_callback(){
       $tid = array_search($msg['to'], $emails);
       $node = new stdClass();
       $node->uid = $user->uid;
-      $node->body = $msg['body']; 
+      $node->body = $msg['body'];
+      $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
       $node->title = $msg['title'];
       $node->promote = 1;
       $node->type = 'forum';
