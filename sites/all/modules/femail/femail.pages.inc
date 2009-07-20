@@ -1,7 +1,6 @@
 <?php
 function femail_user_settings($account){
   drupal_set_title(check_plain($account->name));
-  drupal_add_css(drupal_get_path('module', 'openid') .'/openid.css', 'module');
 
   $header = array(t('Email'), t('Status'), t('Operations'));
   $rows = array();
@@ -18,16 +17,25 @@ function femail_user_settings($account){
 }
 
 /**
- * Form builder; Add an OpenID identity.
- *
- * @ingroup forms
- * @see openid_user_add_validate()
+ * Following all stollen from the OpenID module
  */
 function femail_user_add() {
-  $form['openid_identifier'] = array(
+  $form['femail_email'] = array(
     '#type' => 'textfield',
     '#title' => t('Email'),
   );
   $form['submit'] = array('#type' => 'submit', '#value' => t('Add an additional Email'));
   return $form;
+}
+
+function openid_user_add_validate($form, &$form_state) {
+  // Check for existing entries.
+  if (db_result(db_query("SELECT email FROM {femail_user_emails} WHERE email='%s' UNION SELECT mail FROM {users} WHERE mail='%s'", $form_state['values']['femail_email'], $form_state['values']['femail_email']))) {
+    form_set_error('femail_email', t('That OpenID is already in use on this site.'));
+  } else {
+    // Sod it, lets just do the insert here.
+    global $user;
+    db_query("INSERT INTO {femail_user_emails} (uid, email, status) VALUES (%d, '%s', 0)", $user->uid, $form_state['values']['femail_email']);
+    drupal_goto('user/'.arg(1).'/femail');
+  }
 }
