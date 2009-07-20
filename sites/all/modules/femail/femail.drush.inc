@@ -52,6 +52,10 @@ function femail_drush_callback(){
         }
       }
     }
+    // Get the msgid
+    if(isset($part_data['headers']['message-id'])){
+      $msg['msgid'] = $part_data['headers']['message-id'];
+    }
     // Get the InReplyTo header for possibly putting this message as a reply to 
     // another forum post
     if(isset($part_data['headers']['in-reply-to'])){
@@ -69,7 +73,12 @@ function femail_drush_callback(){
     if($account){
       $user = $account;
     } else {
-      $user = user_load(array('uid' => 0));
+      $result = db_query("SELECT uid FROM {femail_user_emails} WHERE email = '%s' AND status !=0", $msg['from']);
+      if($result){
+        $user = user_load(array('uid' => array_pop(db_fetch_array($result))));
+      } else {
+        $user = user_load(array('uid' => 0));
+      }
     }
     // Check we have permission to post a forum post.
     if(user_access('create forum content')){
@@ -85,6 +94,8 @@ function femail_drush_callback(){
       $node->type = 'forum';
       $node->taxonomy = array($tid => $tid);
       node_save($node);
+      // Insert the msgid into the database for use later
+      db_query("INSERT INTO {femail_msgs} (vid, msgid) VALUES (%d, '%s')", $node->vid, $msg['msgid']);
     }
   }
 }
