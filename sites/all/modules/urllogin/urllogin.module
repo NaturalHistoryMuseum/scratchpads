@@ -18,3 +18,7 @@ function urllogin_login($md5){
   $user = $account;
   drupal_goto();
 }
+
+function urllogin_mail_alter($message){
+  $message['body'][0] = str_replace("!loginurl", url('urllogin/'.md5($message['params']['account']->uid.$message['params']['account']->name.$message['params']['account']->mail), array('absolute' => TRUE)), $message['body'][0]);
+}
