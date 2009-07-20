@@ -31,7 +31,7 @@ function femail_user_add() {
 function femail_user_add_validate($form, &$form_state) {
   // Check for existing entries.
   if (db_result(db_query("SELECT email FROM {femail_user_emails} WHERE email='%s' UNION SELECT mail FROM {users} WHERE mail='%s'", $form_state['values']['femail_email'], $form_state['values']['femail_email']))) {
-    form_set_error('femail_email', t('That OpenID is already in use on this site.'));
+    form_set_error('femail_email', t('That Email is already in use on this site.'));
   } else {
     // Sod it, lets just do the insert here.
     global $user;
