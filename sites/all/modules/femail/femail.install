@@ -46,8 +46,8 @@ function femail_schema(){
     'femail_user_emails' => array(
       'fields' => array(
         'uid' => array('type' => 'int', 'not null' => true),
-        'email' => array('type' => 'varchar', 'length' => 255)),
-        'mailstatus' => array('type' => 'int', 'not null' => true),
+        'email' => array('type' => 'varchar', 'length' => 255),
+        'status' => array('type' => 'int', 'not null' => true)),
       'primary key' => array('uid', 'email')
     )
   );
