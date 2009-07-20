@@ -1,0 +1,20 @@
+<?php
+
+// Will login a user from a URL.
+function urllogin_menu(){
+  return array(
+    'urllogin' => array(  
+      'title' => 'URL Login',
+      'page callback' => 'urllogin_login',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK      
+    )
+  );
+}
+
+function urllogin_login($md5){
+  global $user;
+  $account = db_fetch_object(db_query("SELECT * FROM {user} WHERE MD5(CONCAT(uid, name, mail)) = '%s'", $md5));
+  $user = $account;
+  drupal_goto();
+}
