@@ -26,6 +26,24 @@ function femail_install(){
     $emails[$row['tid']] = $email . '@' . $parts['host'];
   }
   variable_set('femail_emails', $emails);
+  
+  // Add the femail table (which simply stores message IDs
+  drupal_install_schema('femail');
+}
+
+
+/**
+ * Implementation of hook_schema
+ */
+function femail_schema(){
+  return array(
+    'femail' => array(
+      'fields' => array(
+        'vid' => array('type' => 'int', 'not null' => true),
+        'msgid' => array('type' => 'varchar', 'length' => 255)),
+      'primary key' => array('vid', 'msgid')
+    )
+  );
 }
 
 /**
@@ -33,6 +51,7 @@ function femail_install(){
  */
 function femail_uninstall(){
   variable_del('femail_emails');
+  drupal_uninstall_schema('femail');
 }
 
 /**
