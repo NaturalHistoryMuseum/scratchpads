@@ -35,7 +35,7 @@ function femail_user_add_validate($form, &$form_state) {
   } else {
     // Sod it, lets just do the insert here.
     global $user;
-    db_query("INSERT INTO {femail_user_emails} (uid, email, status) VALUES (%d, '%s', 0)", $user->uid, $form_state['values']['femail_email']);
+    db_query("INSERT INTO {femail_user_emails} (uid, email, mailstatus) VALUES (%d, '%s', 0)", $user->uid, $form_state['values']['femail_email']);
     drupal_goto('user/'.arg(1).'/femail');
   }
 }
