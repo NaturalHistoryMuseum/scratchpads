@@ -86,7 +86,7 @@ function femail_drush_callback(){
     $row = db_fetch_array($result);
     if($row){
       // Check we have permission to post a forum post.
-      if(user_access('create forum content')){ // Change to the create comment permission FIXME
+      if(user_access('post comments')){
         // Get the tid of the forum that this post will go into
         $edit = array(
           'author' => $user->name,
@@ -111,7 +111,7 @@ function femail_drush_callback(){
   // else we need to create a node, or creating a comment has failed as the 
   // msgid could not be found.
   // Check we have permission to post a forum post.
-  if(user_access('create forum content')){
+  if(user_access('create forum topics')){
     // Get the tid of the forum that this post will go into
     $emails = variable_get('femail_emails', array());
     $tid = array_search($msg['to'], $emails);
