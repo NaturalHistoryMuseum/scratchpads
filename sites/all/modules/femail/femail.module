@@ -32,7 +32,7 @@ function femail_theme_registry_alter(&$theme_registry){
 function template_preprocess_femail_forums(&$variables){
   if($variables['tid']){
     // We're viewing a Forum, or a Container, lets check this isn't a container
-    if(!in_array($variables['tid'], variable_get('forum_containers'))){
+    if(!in_array($variables['tid'], variable_get('forum_containers', array()))){
       // We're viewing a forum
       $variables['show_femail_link'] = $variables['tid'];
     }
