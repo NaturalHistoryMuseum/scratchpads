@@ -110,7 +110,7 @@ function femail_comment($form_values, $op){
         // Set the msgid        
         global $base_url;
         $parts = parse_url($base_url);
-        $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]).'@'.$parts['host'].'>';
+        $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]).time().'@'.$parts['host'].'>';
         db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', %d)", $node->nid, $msgid, $form_values['cid']);
         // Get the parent msgid so that we can set the "In-reply-to" header
         $inreplyto = array_pop(db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $form_values['pid']?$form_values['pid']:0)));
@@ -157,7 +157,7 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
         } else {
           global $base_url;
           $parts = parse_url($base_url);
-          $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]).'@'.$parts['host'].'>';
+          $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]) . time() . '@'.$parts['host'].'>';
           db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', 0)", $node->nid, $msgid);
         }
         $message = array(
