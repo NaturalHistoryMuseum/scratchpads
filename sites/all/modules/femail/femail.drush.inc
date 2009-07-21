@@ -123,10 +123,10 @@ function femail_drush_callback(){
     $node->title = $msg['title'];
     $node->type = 'forum';
     $node->taxonomy = array($term->vid => $tid);
-    node_save($node);
     // Insert the msgid into the database for use later
     if($msg['msgid']){
       db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', 0)", $node->vid, $msg['msgid']);
     }
+    node_save($node);
   }
 }
