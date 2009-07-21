@@ -13,5 +13,6 @@ do
 		MESSAGE=${MESSAGE}"\n"$line
 	fi
 done
-DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed "s/.*@//"`
+DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed -r "s/.*@//;s/([a-zA-Z0-9\-\.]*).*/\1/"`
+echo $DOMAIN
 echo -e $MESSAGE | drush -l http://$DOMAIN femail
