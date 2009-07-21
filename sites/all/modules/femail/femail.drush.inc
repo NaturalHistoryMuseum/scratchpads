@@ -82,9 +82,9 @@ function femail_drush_callback(){
   if(isset($msg['in-reply-to'])){
     // First we'll make sure the in-reply-to is in the msgid table, if not, we
     // will have to add this as a new thread.
-    $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $mgs['in-reply-to']);
+    $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
     $row = db_fetch_array($result);
-    if(count($row)){
+    if($row){
       // Check we have permission to post a forum post.
       if(user_access('create forum content')){ // Change to the create comment permission FIXME
         // Get the tid of the forum that this post will go into
