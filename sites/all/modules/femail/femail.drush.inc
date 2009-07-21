@@ -62,13 +62,8 @@ function femail_drush_callback(){
       $msg['in-reply-to'] = $part_data['headers']['in-reply-to'];
     }
   }
-  
-  // If the in-reply-to is set, then we need to create a comment
-  if(isset($msg['in-reply-to'])){
-    
-  }
-  // else we need to create a node, or creating a comment has failed as the 
-  // msgid could not be found.
+
+  // User needed for both comments, and nodes, so load first.
   global $user;
   $account = user_load(array('mail' => $msg['from']));
   if($account){
@@ -81,6 +76,40 @@ function femail_drush_callback(){
       $user = user_load(array('uid' => 0));
     }
   }
+  // If the in-reply-to is set, then we need to create a comment else we need to
+  // create a node, or creating a comment has failed as the msgid could not be
+  // found.
+  if(isset($msg['in-reply-to'])){
+    // First we'll make sure the in-reply-to is in the msgid table, if not, we
+    // will have to add this as a new thread.
+    $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $mgs['in-reply-to']);
+    $row = db_fetch_array($result);
+    if(count($row)){
+      // Check we have permission to post a forum post.
+      if(user_access('create forum content')){ // Change to the create comment permission FIXME
+        // Get the tid of the forum that this post will go into
+        $edit = array(
+          'author' => $user->name,
+          'subject' => $msg['title'],
+          'comment' => $msg['body'],
+          'pid' => $row['cid'],
+          'nid' => $row['nid'],
+          'uid' => $user->uid,
+          'op' => 'Save',
+          'date' => 'now',
+          'name' => $user->name
+        );
+        $cid = comment_save($edit);
+        // Insert the msgid into the database for use later
+        if($msg['msgid']){
+          db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', %d)", $node->vid, $msg['msgid'], $cid);
+        }
+      }
+      return;
+    }
+  }
+  // else we need to create a node, or creating a comment has failed as the 
+  // msgid could not be found.
   // Check we have permission to post a forum post.
   if(user_access('create forum content')){
     // Get the tid of the forum that this post will go into
@@ -92,7 +121,6 @@ function femail_drush_callback(){
     $node->body = $msg['body'];
     $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
     $node->title = $msg['title'];
-    $node->promote = 1;
     $node->type = 'forum';
     $node->taxonomy = array($term->vid => $tid);
     node_save($node);
