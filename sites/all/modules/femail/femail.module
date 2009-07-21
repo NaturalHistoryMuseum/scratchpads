@@ -125,6 +125,10 @@ function femail_comment($form_values, $op){
             'In-reply-to' => $inreplyto
           )
         );
+        foreach($emails as $email){
+          $message['to'] = $email;
+          drupal_mail_send($message);
+        }
       }
     }
   }
