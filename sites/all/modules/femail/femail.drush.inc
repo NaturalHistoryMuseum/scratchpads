@@ -100,10 +100,6 @@ function femail_drush_callback(){
           'name' => $user->name
         );
         $cid = comment_save($edit);
-        // Insert the msgid into the database for use later
-        if($msg['msgid']){
-          db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', %d)", $node->vid, $msg['msgid'], $cid);
-        }
       }
       return;
     }
