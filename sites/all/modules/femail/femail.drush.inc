@@ -86,6 +86,7 @@ function femail_drush_callback(){
     // Get the tid of the forum that this post will go into
     $emails = variable_get('femail_emails', array());
     $tid = array_search($msg['to'], $emails);
+    $term = taxonomy_get_term($tid);
     $node = new stdClass();
     $node->uid = $user->uid;
     $node->body = $msg['body'];
@@ -93,7 +94,7 @@ function femail_drush_callback(){
     $node->title = $msg['title'];
     $node->promote = 1;
     $node->type = 'forum';
-    $node->taxonomy = array($tid => $tid);
+    $node->taxonomy = array($term->vid => $tid);
     node_save($node);
     // Insert the msgid into the database for use later
     if($msg['msgid']){
