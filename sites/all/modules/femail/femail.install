@@ -42,7 +42,7 @@ function femail_schema(){
         'nid' => array('type' => 'int', 'not null' => true),
         'cid' => array('type' => 'int', 'not null' => true),
         'msgid' => array('type' => 'varchar', 'length' => 255)),
-      'primary key' => array('nid', 'msgid')
+      'primary key' => array('nid', 'msgid', 'cid')
     ),
     'femail_user_emails' => array(
       'fields' => array(
