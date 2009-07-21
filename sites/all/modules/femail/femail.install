@@ -39,7 +39,8 @@ function femail_schema(){
   return array(
     'femail_msgs' => array(
       'fields' => array(
-        'vid' => array('type' => 'int', 'not null' => true),
+        'nid' => array('type' => 'int', 'not null' => true),
+        'cid' => array('type' => 'int', 'not null' => true),
         'msgid' => array('type' => 'varchar', 'length' => 255)),
       'primary key' => array('vid', 'msgid')
     ),
@@ -49,6 +50,12 @@ function femail_schema(){
         'email' => array('type' => 'varchar', 'length' => 255),
         'status' => array('type' => 'int', 'not null' => true)),
       'primary key' => array('uid', 'email')
+    ),
+    'femail_user_subscriptions' => array(
+      'fields' => array(
+        'uid' => array('type' => 'int', 'not null' => true),
+        'tid' => array('type' => 'int', 'not null' => true)),
+      'primary key' => array('uid', 'tid')
     )
   );
 }

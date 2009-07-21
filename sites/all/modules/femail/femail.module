@@ -82,12 +82,95 @@ function femail_taxonomy($op, $type, $array = NULL){
   }
 }
 
+function _femail_get_emails($tid, $account){
+  $results = db_query("SELECT DISTINCT CONCAT(name, ' <', mail, '>') as mail FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $forum_tid, $account->uid);
+  $emails = array();
+  while($row = db_fetch_array($results)){
+    $emails[] = $row['mail'];
+  }
+  return $emails;
+}
+
+/**
+ * Implementation of hook_comment
+ */
+function femail_comment($form_values, $op){
+  if($op == 'insert'){
+    $node = node_load($form_values['nid']);
+    if(isset($node->forum_tid) && $node->forum_tid){
+      // This comment is being added to a forum topic, lets do the do!
+      // Lets get the parent msgid so that we can send this out with the 
+      // in-reply-to header set
+      $msgid = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $form_values['nid'], $form_values['pid'] ? $form_values['pid']:0));
+      global $user;
+      $emails = _femail_get_emails($node->forum_tid, $user);
+      if(count($emails)){
+        // We're sending out a message, lets prepare the message
+        $from_emails = variable_get('femail_emails', array());
+        // Set the msgid        
+        global $base_url;
+        $parts = parse_url($base_url);
+        $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]).'@'.$parts['host'].'>';
+        db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', %d)", $node->nid, $msgid, $form_values['vid']);
+        // Get the parent msgid so that we can set the "In-reply-to" header
+        $inreplyto = array_pop(db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $form_values['pid']?$form_values['pid']:0)));
+        $message = array(
+          'id' => 'femail_message',
+          'from' => $from_emails[$forum_tid],
+          'subject' => $form_values['subject'],
+          'body' => drupal_wrap_mail($form_values['comment']),
+          'headers' => array(
+            'From' => $from_emails[$forum_tid],
+            'Message-id' => $msgid,
+            'In-reply-to' => $inreplyto
+          )
+        );
+      }
+    }
+  }
+}
 /**
  * Implementation of hook_nodeapi
  */
 function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   if($op == 'insert' && $node->type == 'forum'){
     // We've added a new forum post, lets mail it out
-    
+    // First, we'll get the forum that this has been posted to.
+    $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
+    if($forum_tid){
+      // Looks set, now lets get the subscription to this forum, excluding the
+      // poster of this message.
+      global $user;
+      $emails = _femail_get_emails($forum_tid, $user);
+      if(count($emails)){
+        // We're sending out a message, lets prepare the message
+        $from_emails = variable_get('femail_emails', array());
+        // Get the message-id (or set it if this was posted directly to the 
+        // forum
+        $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = 0", $node->nid));
+        if($row){
+          $msgid = array_pop(db_fetch_array($result));
+        } else {
+          global $base_url;
+          $parts = parse_url($base_url);
+          $msgid = '<'.md5($node->vid . $from_emails[$forum_tid]).'@'.$parts['host'].'>';
+          db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', 0)", $node->nid, $msgid);
+        }
+        $message = array(
+          'id' => 'femail_message',
+          'from' => $from_emails[$forum_tid],
+          'subject' => $node->title,
+          'body' => drupal_wrap_mail($node->body),
+          'headers' => array(
+            'From' => $from_emails[$forum_tid],
+            'Message-id' => $msgid
+          )
+        );
+        foreach($emails as $email){
+          $message['to'] = $email;
+          drupal_mail_send($message);
+        }
+      }
+    }
   }
 }

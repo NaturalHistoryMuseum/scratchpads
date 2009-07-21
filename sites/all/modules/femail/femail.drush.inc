@@ -66,36 +66,38 @@ function femail_drush_callback(){
   // If the in-reply-to is set, then we need to create a comment
   if(isset($msg['in-reply-to'])){
     
+  }
+  // else we need to create a node, or creating a comment has failed as the 
+  // msgid could not be found.
+  global $user;
+  $account = user_load(array('mail' => $msg['from']));
+  if($account){
+    $user = $account;
   } else {
-    // else we need to create a node
-    global $user;
-    $account = user_load(array('mail' => $msg['from']));
-    if($account){
-      $user = $account;
+    $result = db_query("SELECT uid FROM {femail_user_emails} WHERE email = '%s' AND status !=0", $msg['from']);
+    if($result){
+      $user = user_load(array('uid' => array_pop(db_fetch_array($result))));
     } else {
-      $result = db_query("SELECT uid FROM {femail_user_emails} WHERE email = '%s' AND status !=0", $msg['from']);
-      if($result){
-        $user = user_load(array('uid' => array_pop(db_fetch_array($result))));
-      } else {
-        $user = user_load(array('uid' => 0));
-      }
+      $user = user_load(array('uid' => 0));
     }
-    // Check we have permission to post a forum post.
-    if(user_access('create forum content')){
-      // Get the tid of the forum that this post will go into
-      $emails = variable_get('femail_emails', array());
-      $tid = array_search($msg['to'], $emails);
-      $node = new stdClass();
-      $node->uid = $user->uid;
-      $node->body = $msg['body'];
-      $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
-      $node->title = $msg['title'];
-      $node->promote = 1;
-      $node->type = 'forum';
-      $node->taxonomy = array($tid => $tid);
-      node_save($node);
-      // Insert the msgid into the database for use later
-      db_query("INSERT INTO {femail_msgs} (vid, msgid) VALUES (%d, '%s')", $node->vid, $msg['msgid']);
+  }
+  // Check we have permission to post a forum post.
+  if(user_access('create forum content')){
+    // Get the tid of the forum that this post will go into
+    $emails = variable_get('femail_emails', array());
+    $tid = array_search($msg['to'], $emails);
+    $node = new stdClass();
+    $node->uid = $user->uid;
+    $node->body = $msg['body'];
+    $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
+    $node->title = $msg['title'];
+    $node->promote = 1;
+    $node->type = 'forum';
+    $node->taxonomy = array($tid => $tid);
+    node_save($node);
+    // Insert the msgid into the database for use later
+    if($msg['msgid']){
+      db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', 0)", $node->vid, $msg['msgid']);
     }
   }
 }
