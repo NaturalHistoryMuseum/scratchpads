@@ -120,7 +120,7 @@ function femail_comment($form_values, $op){
           'subject' => $form_values['subject'],
           'body' => drupal_wrap_mail($form_values['comment']),
           'headers' => array(
-            'From' => $from_emails[$forum_tid],
+            'From' => $from_emails[$node->forum_tid],
             'Message-id' => $msgid,
             'In-reply-to' => $inreplyto
           )
