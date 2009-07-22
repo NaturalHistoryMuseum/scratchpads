@@ -109,7 +109,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
     $parts = parse_url($base_url);
     $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
     $node = node_load(array('nid' => $nid));
-    db_query("INSERT INTO {femail_msgs} (nid, msgid, cid) VALUES (%d, '%s', %d)", $nid, $cid);
+    db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);
     $message = array(
       'id' => 'femail_message',
       'from' => $from,
