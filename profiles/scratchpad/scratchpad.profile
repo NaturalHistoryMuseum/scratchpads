@@ -582,6 +582,7 @@ function scratchpad_profile_set_perms(){
                             "view uploaded files",
                             "vote on polls");
   $authenticated_perms = array_merge($anonymous_perms, array(
+                            "post by femail",
                             "edit own forum topics",
                             "post comments without approval",
                             "submit form without hashcash",
