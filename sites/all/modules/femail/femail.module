@@ -70,11 +70,11 @@ function femail_taxonomy($op, $type, $array = NULL){
     } else {
       // Check if this is a term from the forum vocab
       if($array['vid'] == variable_get('forum_nav_vocabulary', 0)){
-        $emails = variable_get('femail_emails', array());
         unset($emails[$array['tid']]);
         global $base_url;
         $parts = parse_url($base_url);
-        $email = preg_replace("/[^0-9a-z\-]/","",strtolower(str_replace(" ", "-", $array['name'])));
+        $email = preg_replace("/[^0-9a-z-]/","",strtolower(str_replace(" ", "-", $array['name'])));
+        // Make sure this email isn't already in use.
         if(array_search($email . '@' . $parts['host'], $emails)){
           $i = 2;
           while(array_search($email."_".$i.'@'.$parts['host'], $emails)){
@@ -82,57 +82,11 @@ function femail_taxonomy($op, $type, $array = NULL){
           }
           $email = $email."_".$i;
         }
+        // Set it and save it
         $emails[$array['tid']] = $email . '@' . $parts['host'];
         variable_set('femail_emails', $emails);      
       }      
     }
-  }
-}
-
-function _femail_get_emails($tid, $account){
-  $results = db_query("SELECT DISTINCT CONCAT(name, ' <', mail, '>') as mail FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $tid, $account->uid);
-  $emails = array();
-  while($row = db_fetch_array($results)){
-    $emails[] = $row['mail'];
-  }
-  return $emails;
-}
-
-function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto = FALSE){
-  global $user;
-  $emails = _femail_get_emails($tid, $user);
-  $forum_term = taxonomy_get_term($tid);
-  if(count($emails)){
-    $from_emails = variable_get('femail_emails', array());
-    $from = ($user->name?$user->name." ":"").'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
-    global $base_url;
-    $parts = parse_url($base_url);
-    $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
-    $node = node_load(array('nid' => $nid));
-    db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);
-    $message = array(
-      'id' => 'femail_message',
-      'from' => $from,
-      'subject' => $subject,
-      'body' => drupal_wrap_mail($body),
-      'to' => $from_emails[$tid], 
-      'headers' => array(
-        // 'Return-path' => $from_emails[$tid], // Looks like this depends on the user that the Drush script is running as (thanks Sendmail)
-        'From' => $from,
-        'Message-id' => $msgid,
-        'Reply-to' => $from_emails[$tid],
-        'List-id' => check_plain($forum_term->name) . '<' . str_replace("@",".", $from_emails[$tid]),
-        'List-post' => '<'.$from_emails[$tid].'>',
-        'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
-        'Thread-topic' => check_plain($node->title),
-        'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>',
-        'Bcc' => implode(", ", $emails)
-      )
-    );
-    if($inreplyto){
-      $message['headers']['In-reply-to'] = $inreplyto;
-    }
-    drupal_mail_send($message);
   }
 }
 
@@ -143,9 +97,18 @@ function femail_comment($form_values, $op){
   if($op == 'insert'){
     $node = node_load($form_values['nid']);
     if(isset($node->forum_tid) && $node->forum_tid){    
-      // Get the parent msgid so that we can set the "In-reply-to" header
-      $inreplyto = array_pop(db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $form_values['pid']?$form_values['pid']:0)));
-      _femail_send_message($node->forum_tid, $form_values['subject'], $form_values['comment'], $node->nid, $form_values['cid'], $inreplyto);
+      // Get the parent msgid so that we can set the "In-reply-to" header, Note,
+      // this may not be set if there are no users subscribed to the forum, OR
+      // if the only user subscribed posted the comment.  We'll still caryy on
+      // trying to send the message though.
+      $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $form_values['pid']?$form_values['pid']:0));
+      // Include file
+      module_load_include('mail.inc','femail');
+      if(is_array($row)){
+        _femail_send_message($node->forum_tid, $form_values['subject'], $form_values['comment'], $node->nid, $form_values['cid'], array_pop($row));        
+      } else {
+        _femail_send_message($node->forum_tid, $form_values['subject'], $form_values['comment'], $node->nid, $form_values['cid']);
+      }
     }
   }
 }
@@ -159,6 +122,7 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     // First, we'll get the forum that this has been posted to.
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
     if($forum_tid){
+      module_load_include('mail.inc','femail');
       _femail_send_message($forum_tid, $node->title, $node->body, $node->nid);
     }
   }
