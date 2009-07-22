@@ -94,6 +94,7 @@ function _femail_post_comment($msg, $user){
     }
     return TRUE;
   }
+  watchdog('femail','Failed to create comment for "@subject" FROM "@email"', array('@subject' => $msg['title'], '@email' => $msg['from']), WATCHDOG_INFO);
   return FALSE;
 }
 
