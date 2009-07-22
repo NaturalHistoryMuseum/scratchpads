@@ -345,8 +345,11 @@ function scratchpad_profile_tasks_2(){
   
   // Forum
   variable_set('forum_order', 2);
-  db_query("INSERT INTO {term_data} (vid,name) VALUES (1,'%s')", st('General'));
-  db_query("INSERT INTO {term_hierarchy} (tid,parent) VALUES (%d,0)", db_last_insert_id('term_data','tid'));
+  $term = array(
+    'vid' => variable_get('forum_nav_vocabulary', 0),
+    'name' => st('General')
+  );
+  taxonomy_save_term($term)
   
   // Users settings
   variable_set('user_register',2);
