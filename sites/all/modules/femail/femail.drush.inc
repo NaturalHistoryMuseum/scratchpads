@@ -144,7 +144,7 @@ function femail_drush_callback(){
   // create a node, or creating a comment has failed as the msgid could not be
   // found.
   if(isset($msg['in-reply-to'])){
-    if(_femail_post_comment()){
+    if(_femail_post_comment($msg, $user)){
       return;
     }
   }
