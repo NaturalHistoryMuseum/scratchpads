@@ -114,24 +114,26 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
       'id' => 'femail_message',
       'from' => $from,
       'subject' => $subject,
-      'body' => drupal_wrap_mail($body),
-      'to' => $from_emails[$tid], 
+      'body' => drupal_wrap_mail($body), 
       'headers' => array(
+        'To' => $from,
         'From' => $from,
         'Message-id' => $msgid,
         'Reply-to' => $from_emails[$tid],
         'List-id' => check_plain($forum_term->name) . '<' . str_replace("@",".", $from_emails[$tid]),
         'List-post' => '<'.$from_emails[$tid].'>',
-        'List-archive' => '<' . url('forum/'.$tid).'>',
+        'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
         'Thread-topic' => check_plain($node->title),
-        'List-subscribe' => '<'.url('user/register').'>',
-        'Bcc' => implode(", ", $emails)
+        'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>'
       )
     );
     if($inreplyto){
       $message['headers']['In-reply-to'] = $inreplyto;
     }
-    drupal_mail_send($message);
+    foreach($emails as $email){
+      $message['to'] = $email;
+      drupal_mail_send($message); 
+    }
   }
 }
 
