@@ -349,7 +349,7 @@ function scratchpad_profile_tasks_2(){
     'vid' => variable_get('forum_nav_vocabulary', 0),
     'name' => st('General')
   );
-  taxonomy_save_term($term)
+  taxonomy_save_term($term);
   
   // Users settings
   variable_set('user_register',2);
