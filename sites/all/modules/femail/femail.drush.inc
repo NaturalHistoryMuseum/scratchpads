@@ -16,7 +16,7 @@ function femail_drush_help($section) {
   }
 }
 
-function femail_drush_callback(){
+function _femail_get_msg(){
   $msg = array(
     'body' => fread(STDIN, 1000000)
   );
@@ -62,6 +62,53 @@ function femail_drush_callback(){
       $msg['in-reply-to'] = $part_data['headers']['in-reply-to'];
     }
   }
+  return $msg;
+}
+
+function _femail_post_comment($msg, $user){
+  // First we'll make sure the in-reply-to is in the msgid table, if not, we
+  // will have to add this as a new thread.
+  $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
+  $row = db_fetch_array($result);
+  if($row){
+    // Check we have permission to post a forum post.
+    if(user_access('post comments')){
+      // Get the tid of the forum that this post will go into
+      $edit = array(
+        'author' => $user->name,
+        'subject' => $msg['title'],
+        'comment' => $msg['body'],
+        'pid' => $row['cid'],
+        'nid' => $row['nid'],
+        'uid' => $user->uid,
+        'op' => 'Save',
+        'date' => 'now',
+        'name' => $user->name
+      );
+      comment_save($edit);
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function _femail_post_forum_topic($msg, $user){
+  // Get the tid of the forum that this post will go into
+  $emails = variable_get('femail_emails', array());
+  $tid = array_search($msg['to'], $emails);
+  $term = taxonomy_get_term($tid);
+  $node = new stdClass();
+  $node->uid = $user->uid;
+  $node->body = $msg['body'];
+  $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
+  $node->title = $msg['title'];
+  $node->type = 'forum';
+  $node->taxonomy = array($term->vid => $tid);
+  node_save($node);
+}
+
+function femail_drush_callback(){
+  $msg = _femail_get_msg();
 
   // User needed for both comments, and nodes, so load first.
   global $user;
@@ -76,49 +123,21 @@ function femail_drush_callback(){
       $user = user_load(array('uid' => 0));
     }
   }
+  if(!user_access('post by femail')){
+    // Add a message to the logs so that we know we received a message, but 
+    // threw it away
+    watchdog('femail','Message "@subject" FROM "@email" has been discarded', array('@subject' => $msg['title'], '@email' => $msg['from']), WATCHDOG_INFO);
+    return;
+  }
   // If the in-reply-to is set, then we need to create a comment else we need to
   // create a node, or creating a comment has failed as the msgid could not be
   // found.
   if(isset($msg['in-reply-to'])){
-    // First we'll make sure the in-reply-to is in the msgid table, if not, we
-    // will have to add this as a new thread.
-    $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
-    $row = db_fetch_array($result);
-    if($row){
-      // Check we have permission to post a forum post.
-      if(user_access('post comments')){
-        // Get the tid of the forum that this post will go into
-        $edit = array(
-          'author' => $user->name,
-          'subject' => $msg['title'],
-          'comment' => $msg['body'],
-          'pid' => $row['cid'],
-          'nid' => $row['nid'],
-          'uid' => $user->uid,
-          'op' => 'Save',
-          'date' => 'now',
-          'name' => $user->name
-        );
-        $cid = comment_save($edit);
-      }
+    if(_femail_post_comment()){
       return;
     }
   }
   // else we need to create a node, or creating a comment has failed as the 
   // msgid could not be found.
-  // Check we have permission to post a forum post.
-  if(user_access('create forum topics')){
-    // Get the tid of the forum that this post will go into
-    $emails = variable_get('femail_emails', array());
-    $tid = array_search($msg['to'], $emails);
-    $term = taxonomy_get_term($tid);
-    $node = new stdClass();
-    $node->uid = $user->uid;
-    $node->body = $msg['body'];
-    $node->comment = variable_get('comment_forum', COMMENT_NODE_READ_WRITE);
-    $node->title = $msg['title'];
-    $node->type = 'forum';
-    $node->taxonomy = array($term->vid => $tid);
-    node_save($node);
-  }
+  _femail_post_forum_topic($msg, $user);
 }

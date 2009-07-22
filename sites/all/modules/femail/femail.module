@@ -16,6 +16,13 @@ function femail_menu(){
     )
   );
 }
+
+/**
+ * Implementation of hook_perm
+ */
+function femail_perm(){
+  return array('post by femail');
+}
 /**
  * Implementation of hook_theme_registry_alter
  */
