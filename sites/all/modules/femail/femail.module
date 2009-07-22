@@ -103,8 +103,8 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
   $emails = _femail_get_emails($tid, $user);
   $forum_term = taxonomy_get_term($tid);
   if(count($emails)){
-    $from = "{$user->name} <{$user->mail}>";
     $from_emails = variable_get('femail_emails', array());
+    $from = ($user->name?$user->name." ":"").'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
     global $base_url;
     $parts = parse_url($base_url);
     $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
@@ -117,7 +117,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
       'body' => drupal_wrap_mail($body),
       'to' => $from_emails[$tid], 
       'headers' => array(
-        'Return-path' => $from_emails[$tid],
+        // 'Return-path' => $from_emails[$tid], // Looks like this depends on the user that the Drush script is running as (thanks Sendmail)
         'From' => $from,
         'Message-id' => $msgid,
         'Reply-to' => $from_emails[$tid],
