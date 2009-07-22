@@ -92,6 +92,6 @@ function femail_requirements($phase){
   }
   
   // Check that there are no MX records set for the domain, and if there are,
-  // that they're pointing at the right place.
+  // that they're pointing at the right place (this server).
   return $requirements;
 }

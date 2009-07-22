@@ -20,10 +20,10 @@ function _femail_get_msg(){
   $msg = array(
     'body' => fread(STDIN, 1000000)
   );
-  $lines = preg_split("/[\n\r]/", $msg['body']);
   $mailparse = mailparse_msg_create();
   mailparse_msg_parse($mailparse, $msg['body']);
   $structure = mailparse_msg_get_structure($mailparse);
+  $body_is_set = FALSE;
   foreach ($structure as $s){
     // Get the subject to use as the node/comment title
     $part = mailparse_msg_get_part($mailparse, $s);

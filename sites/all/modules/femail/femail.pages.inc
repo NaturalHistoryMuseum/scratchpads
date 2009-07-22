@@ -90,6 +90,7 @@ function femail_user_subscribe_submit($form, $form_state){
       }
     }
   }
+  drupal_set_message("Subscription updated");
 }
 
 /**
@@ -108,14 +109,15 @@ function femail_user_add($form_state, $account) {
   return $form;
 }
 
+function femail_user_add_submit($form, $form_state){
+  // FIXME - Send the email out for validation
+  db_query("INSERT INTO {femail_user_emails} (uid, email, status) VALUES (%d, '%s', 0)", $form_state['values']['femail_uid'], $form_state['values']['femail_email']);
+  drupal_set_message($form_state['values']['femail_email']." added. Please now check your email to validate this address.");
+}
+
 function femail_user_add_validate($form, &$form_state) {
   // Check for existing entries.
   if (db_result(db_query("SELECT email FROM {femail_user_emails} WHERE email='%s' UNION SELECT mail FROM {users} WHERE mail='%s'", $form_state['values']['femail_email'], $form_state['values']['femail_email']))) {
     form_set_error('femail_email', t('That Email is already in use on this site.'));
-  } else {
-    // Sod it, lets just do the insert here.
-    db_query("INSERT INTO {femail_user_emails} (uid, email, status) VALUES (%d, '%s', 0)", $form_state['values']['femail_uid'], $form_state['values']['femail_email']);
-    drupal_set_message($form_state['values']['femail_email']." added. Please now check your email to validate this address.");
-    // FIXME - Send the email for validation
   }
 }
