@@ -114,9 +114,9 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
       'id' => 'femail_message',
       'from' => $from,
       'subject' => $subject,
-      'body' => drupal_wrap_mail($body), 
+      'body' => drupal_wrap_mail($body),
+      'to' => $from_emails[$tid], 
       'headers' => array(
-        'To' => $from,
         'From' => $from,
         'Message-id' => $msgid,
         'Reply-to' => $from_emails[$tid],
@@ -124,16 +124,14 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
         'List-post' => '<'.$from_emails[$tid].'>',
         'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
         'Thread-topic' => check_plain($node->title),
-        'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>'
+        'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>',
+        'Bcc' => implode(", ", $emails)
       )
     );
     if($inreplyto){
       $message['headers']['In-reply-to'] = $inreplyto;
     }
-    foreach($emails as $email){
-      $message['to'] = $email;
-      drupal_mail_send($message); 
-    }
+    drupal_mail_send($message);
   }
 }
 

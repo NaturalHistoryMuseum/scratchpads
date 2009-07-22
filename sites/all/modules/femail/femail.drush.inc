@@ -37,6 +37,11 @@ function _femail_get_msg(){
       $from = mailparse_rfc822_parse_addresses($part_data['headers']['from']);
       $msg['from'] = $from[0]['address'];
     }
+    // Get the reply-to header, this will tell us whether or not we should
+    // continue parsing this message
+    if(isset($part_data['headers']['reply-to'])){
+      $msg['reply-to'] = $part_data['headers']['reply-to'];
+    }
     // Get the To: header, which will be used to work out which forum this 
     // message wants to go into
     if(isset($part_data['headers']['to'])){
@@ -109,6 +114,11 @@ function _femail_post_forum_topic($msg, $user){
 
 function femail_drush_callback(){
   $msg = _femail_get_msg();
+  
+  // Check to see this isn't a message that we've just sent out
+  if($msg['reply-to'] == $msg['to']){
+    return;
+  }
 
   // User needed for both comments, and nodes, so load first.
   global $user;
