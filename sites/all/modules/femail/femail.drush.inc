@@ -116,9 +116,9 @@ function femail_drush_callback(){
   if($account){
     $user = $account;
   } else {
-    $result = db_query("SELECT uid FROM {femail_user_emails} WHERE email = '%s' AND status !=0", $msg['from']);
-    if($result){
-      $user = user_load(array('uid' => array_pop(db_fetch_array($result))));
+    $row = db_fetch_array(db_query("SELECT uid FROM {femail_user_emails} WHERE email = '%s' AND status !=0", $msg['from']));
+    if(is_array($row)){
+      $user = user_load(array('uid' => array_pop($row)));
     } else {
       $user = user_load(array('uid' => 0));
     }
