@@ -117,6 +117,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
       'body' => drupal_wrap_mail($body),
       'to' => $from_emails[$tid], 
       'headers' => array(
+        'Return-path' => $from_emails[$tid],
         'From' => $from,
         'Message-id' => $msgid,
         'Reply-to' => $from_emails[$tid],
