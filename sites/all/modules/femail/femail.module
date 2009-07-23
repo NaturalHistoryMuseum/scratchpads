@@ -13,8 +13,41 @@ function femail_menu(){
       'access arguments' => array(1),
       'type' => MENU_LOCAL_TASK,
       'file' => 'femail.pages.inc',
+    ),
+    'femail/verify/%/%' => array(
+      'title' => 'Forum/E-mail integration',
+      'page callback' => 'femail_email_verify',
+      'page arguments' => array(2, 3),
+      'access arguments' => array('post by femail'),
+      'type' => MENU_CALLBACK,
+      'file' => 'femail.pages.inc'    
+    ),
+    'femail/remove/%user/%' => array(
+      'title' => 'Forum/E-mail integration',
+      'page callback' => 'femail_email_remove',
+      'page arguments' => array(2, 3),
+      'access callback' => 'user_edit_access',
+      'access arguments' => array(2),
+      'type' => MENU_CALLBACK,
+      'file' => 'femail.pages.inc'    
     )
   );
+}
+
+
+/**
+ * Implementation of hook_mail
+ */
+function femail_mail($key, &$message, $params){
+  $language = $message['language'];
+  switch($key){
+    case 'verify':
+      $message['subject'] = t('!site requests verification', array('!site' => variable_get('site_name', 'Drupal')), $language->language);
+      $message['body']  = t('Please click on the following link to verify your email address');
+      $message['body'] .= "\n\n";
+      $message['body'] .= url('femail/verify/'.$params.'/'.md5($params . variable_get('femail_install_time', 'INSTALLTIME')), array('absolute' => TRUE));
+      break;
+  }
 }
 
 /**

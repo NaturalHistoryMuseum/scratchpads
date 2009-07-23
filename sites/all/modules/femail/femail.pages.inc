@@ -12,12 +12,35 @@ function femail_user_settings($account){
   $result = db_query("SELECT * FROM {femail_user_emails} WHERE uid = %d", $account->uid);
   while ($mail_bits = db_fetch_array($result)) {
     $status = $mail_bits['status'] ? t('Verified') : t('Not verified');
-    $rows[] = array(check_plain($mail_bits['email']), $status, 'Remove, Make primary');
+    $rows[] = array(check_plain($mail_bits['email']), $status, l(t('Remove'),'femail/remove/'.$account->uid.'/'.$mail_bits['email']));
   }
 
-  $output .= theme('box', t('Your email addresses'), theme('table', $header, $rows) . drupal_get_form('femail_user_add', $account));
+  $output .= theme('box', t('Your additional email addresses'), theme('table', $header, $rows) . drupal_get_form('femail_user_add', $account));
   
   return $output;
+}
+
+/**
+ * Verify an email
+ */
+function femail_email_verify($email, $hash){
+  if(md5($email . variable_get('femail_install_time', 'INSTALLTIME')) == $hash){
+    db_query("UPDATE {femail_user_emails} SET status = 1 WHERE email = '%s'", $email);
+    drupal_set_message(t('Email verified'));
+  } else {
+    drupal_set_message(t('Email verification failed'));
+  }
+  drupal_goto();
+}
+
+/**
+ * remove an email
+ */
+function femail_email_remove($account, $email){
+  // If we're here, we just remove
+  db_query("DELETE FROM {femail_user_emails} WHERE email = '%s'", $email);
+  drupal_set_message("Email removed");
+  drupal_goto('user/'.$account->uid.'/femail');
 }
 
 /**
@@ -110,14 +133,19 @@ function femail_user_add($form_state, $account) {
 }
 
 function femail_user_add_submit($form, $form_state){
-  // FIXME - Send the email out for validation
+  $account = user_load(array('uid' => $form_state['values']['femail_uid']));
+  drupal_mail('femail','verify',$form_state['values']['femail_email'],user_preferred_language($account),$form_state['values']['femail_email']);
   db_query("INSERT INTO {femail_user_emails} (uid, email, status) VALUES (%d, '%s', 0)", $form_state['values']['femail_uid'], $form_state['values']['femail_email']);
   drupal_set_message($form_state['values']['femail_email']." added. Please now check your email to validate this address.");
 }
 
 function femail_user_add_validate($form, &$form_state) {
+  // Check that it is a valid email address
+  if(!valid_email_address($form_state['values']['femail_email'])){
+    form_set_error('femail_email', t('Email address provided is not valid'));
+  }
   // Check for existing entries.
   if (db_result(db_query("SELECT email FROM {femail_user_emails} WHERE email='%s' UNION SELECT mail FROM {users} WHERE mail='%s'", $form_state['values']['femail_email'], $form_state['values']['femail_email']))) {
-    form_set_error('femail_email', t('That Email is already in use on this site.'));
+    form_set_error('femail_email', t('Email is already in use on this site.'));
   }
 }

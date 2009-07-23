@@ -27,6 +27,9 @@ function femail_install(){
   }
   variable_set('femail_emails', $emails);
   
+  // Set the install time for use in hashes
+  variable_set('femail_install_time', time());
+  
   // Add the femail table (which simply stores message IDs
   drupal_install_schema('femail');
   
