@@ -32,14 +32,14 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
       'id' => 'femail_message',
       'from' => $from,
       'subject' => $subject,
-      'body' => drupal_wrap_mail($body),
+      'body' => drupal_wrap_mail(strip_tags($body)),
       'to' => $from_emails[$tid], 
       'headers' => array(
         // 'Return-path' => $from_emails[$tid], // Looks like this depends on the user that the Drush script is running as (thanks Sendmail)
         'From' => $from,
         'Message-id' => $msgid,
         'Reply-to' => $from_emails[$tid],
-        'List-id' => check_plain($forum_term->name) . '<' . str_replace("@",".", $from_emails[$tid]),
+        'List-id' => check_plain($forum_term->name) . ' <' . str_replace("@",".", $from_emails[$tid]).'>',
         'List-post' => '<'.$from_emails[$tid].'>',
         'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
         'Thread-topic' => check_plain($node->title),
