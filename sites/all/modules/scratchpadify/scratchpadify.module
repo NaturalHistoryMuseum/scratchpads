@@ -455,14 +455,14 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           } else {
             $query = array();
           }
-          $results = db_query("SELECT REPLACE(type,'_','-') type, name FROM node_type, menu_links WHERE (link_path = CONCAT('node/add/', type) OR link_path = CONCAT('node/add/', REPLACE(type, '_', '-'))) AND hidden = 0");
+          $results = db_query("SELECT type, name FROM node_type, menu_links WHERE (link_path = CONCAT('node/add/', type) OR link_path = CONCAT('node/add/', REPLACE(type, '_', '-'))) AND hidden = 0");
           $sub_menu_item = menu_get_item('admin/content/node_import/add');
           $can_access_import = call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']));
             
           while($row = db_fetch_array($results)){
             $link_path = isset($links_override[$row['type']]['view']) ? $links_override[$row['type']]['view'] : 'content/'.$row['type'];
             $items[$row['name']] = l($row['name'], $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])))));
-            $menu_item = menu_get_item('node/add/'.$row['type']);
+            $menu_item = menu_get_item('node/add/'.str_replace('_','-',$row['type']));
             if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
               $items[$row['name']] .= ' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/add.gif').'"/>', 'node/add/'.$row['type'], array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
               // We'll assume that a many permission won't exist when a single
