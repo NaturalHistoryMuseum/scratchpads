@@ -30,7 +30,11 @@ function scratchpadify_views_default_views(){
         'id' => 'weight', 
         'table' => 'node_weight', 
         'field' => 'weight', 
-        'relationship' => 'none')));
+        'relationship' => 'none'),
+      'changed' => array('order' => 'DESC',
+        'id' => 'changed',
+        'table' => 'node',
+        'field' => 'changed')));
     $handler->override_option('arguments', array(
       'tid' => array('default_action' => 'not found', 
         'style_plugin' => 'default_summary', 
