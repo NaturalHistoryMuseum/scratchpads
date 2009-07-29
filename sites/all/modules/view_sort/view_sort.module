@@ -116,7 +116,7 @@ function view_sort_views_pre_render(&$view){
  */
 function view_sort_views_query_alter(&$view, &$query){
   // We don't alter if the URL is for the popup
-  if(arg(0)!='views-sort'){
+  if(arg(0)=='taxonomy' && arg(1)=='term'){
     $sort_orders = variable_get('view_sort-limits', array());
     if(isset($sort_orders[$view->name])){
       $view->pager['items_per_page'] = $sort_orders[$view->name]; 
