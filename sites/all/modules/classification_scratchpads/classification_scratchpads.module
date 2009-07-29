@@ -319,7 +319,7 @@ function classification_scratchpads_import(&$form_state){
       '#required' => 1, 
       '#options' => $classifications );
   }
-  $form ['title'] ['#value'] = t('<h2>Import</h2><div class=\'messages status\'><h3>You have three options to import your taxonomy. Please see the <a href="!url">help page</a> for instruction.</h3></div>', array('!url' => url('classification_scratchpads/help')));
+  $form ['title'] ['#value'] = t('<h2>Import</h2><div class=\'messages status\'><h3>You have four options to import your taxonomy. Please see the <a href="!url">help page</a> for instruction.</h3></div>', array('!url' => url('classification_scratchpads/help')));
   
   $form['#submit'] = array('classification_import_form_submit');
   drupal_add_js(drupal_get_path('module','classification_scratchpads').'/classification_scratchpads.js');
