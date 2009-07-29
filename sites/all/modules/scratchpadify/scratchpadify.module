@@ -464,7 +464,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             $items[$row['name']] = l($row['name'], $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])))));
             $menu_item = menu_get_item('node/add/'.str_replace('_','-',$row['type']));
             if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
-              $items[$row['name']] .= ' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/add.gif').'"/>', 'node/add/'.$row['type'], array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
+              $items[$row['name']] .= ' '.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/add.gif').'"/>', 'node/add/'.str_replace("_","-",$row['type']), array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
               // We'll assume that a many permission won't exist when a single
               // doesn't.
               if(isset($links_override[$row['type']]['import'])){
