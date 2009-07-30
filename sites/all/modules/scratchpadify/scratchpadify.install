@@ -147,3 +147,10 @@ function scratchpadify_update_6106(){
   variable_set('preprocess_js',1);
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6107(){
+  // we'll try this one again
+  db_query("DELETE FROM {variable} WHERE name LIKE 'boost%'");
+  variable_set('boost_enabled',1);
+  return array('#finished' => TRUE);
+}
