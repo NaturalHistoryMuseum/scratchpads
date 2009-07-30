@@ -289,12 +289,7 @@ function scratchpad_profile_tasks_2(){
   variable_set('mollom_private_key','f86117722dcd1d12aa1a1065edfb0fb2');
 
   // Boost/Performance
-  variable_set('boost',1);
-  variable_set('boost_gzip',0);
-  variable_set('boost_expire_cron',1);
-  variable_set('cache_lifetime',3600);
-  variable_set('boost_clear_cache_offline',1);
-  variable_set('boost_halt_on_errors',1);
+  variable_set('boost_enabled',1);
   variable_set('preprocess_css',1);
   variable_set('preprocess_js',1);
   
