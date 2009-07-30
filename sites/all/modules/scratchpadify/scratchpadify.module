@@ -556,8 +556,10 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               if(isset($links_override[$row['type']]['import'])){
                 foreach($links_override[$row['type']]['import'] as $additional_item){
                   $sub_menu_item = menu_get_item($additional_item[1]);
-                  if(call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']))){
-                    $items[$row['name']] .= call_user_func_array('l',$additional_item);
+                  if(function_exists($sub_menu_item['access_callback'])){
+                    if(call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']))){
+                      $items[$row['name']] .= call_user_func_array('l',$additional_item);
+                    }
                   }
                 }
               } else {

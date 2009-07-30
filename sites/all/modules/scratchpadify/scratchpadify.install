@@ -95,7 +95,6 @@ function scratchpadify_update_6104(){
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
-  return array('#finished' => TRUE);
 }
 
 function scratchpadify_update_6105(){
@@ -134,4 +133,17 @@ function scratchpadify_update_6105(){
   } else {
     return array('#abort' => array('success' => FALSE, 'query' => 'The content_profile module is not installed'));
   }
+}
+
+function scratchpadify_update_6106(){
+  // Boost/Performance
+  variable_set('boost',1);
+  variable_set('boost_gzip',0);
+  variable_set('boost_expire_cron',1);
+  variable_set('cache_lifetime',3600);
+  variable_set('boost_clear_cache_offline',1);
+  variable_set('boost_halt_on_errors',1);
+  variable_set('preprocess_css',1);
+  variable_set('preprocess_js',1);
+  return array('#finished' => TRUE);
 }
