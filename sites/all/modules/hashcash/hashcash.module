@@ -78,6 +78,9 @@ function hashcash_init(){
  * @param Array $form
  */
 function hashcash_form_alter(&$form, &$form_state, $form_id){
+  // This module is currently broken due to a conflict with Boost.  For now, it
+  // will be disabled.
+  return;
   // Firstl check to see if this user's role requires hashcash
   if(user_access('submit form without hashcash')){
     return;
