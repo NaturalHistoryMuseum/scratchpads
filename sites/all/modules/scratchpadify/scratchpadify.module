@@ -394,7 +394,7 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
  */
 function scratchpadify_footer($main=0){
   // Add the following HTML to the footer of ALL pages]
-  global $user;
+  /*global $user;
   if($user->uid) {
     $uservoice = '<script type="text/javascript">
        var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
@@ -413,8 +413,8 @@ function scratchpadify_footer($main=0){
        params: { sso: "'._uservoice_generate_encrypted_sso('biodiversityinformatics', 'cc1340651bf304d5d58bb703d20890d6').'" }
        })
      </script>';
-  }
-  return $uservoice . '<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
+  }*/
+  return '<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
 href="http://e-taxonomy.eu/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/edit_small.png').'" 
 alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.url(drupal_get_path('module','scratchpadify').'/images/scratchpads.png').'"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
@@ -443,7 +443,6 @@ urchinTracker();
  * 
  * @param $api_key
  * String containing UserVoice api key.
- */
 function _uservoice_generate_encrypted_sso($account_key, $api_key) {
   global $user;
   
@@ -483,6 +482,7 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key) {
     return $encrypted_data;
   }
 }
+ */
 
 /**
  * Generate expiration timestamp for UserVoice
@@ -490,13 +490,13 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key) {
  * 
  * @param $duration
  * Time in minutes from now until expiration default 10 minutes
- */
 function _uservoice_expiration_timestamp($duration=10) {
   $format = "Y-m-d H:i:s";
   $expiration_timestamp = time() + ($duration * 60);
   $gmt_expiration = gmdate($format,$expiration_timestamp);
   return $gmt_expiration;
 }
+ */
 
 /**
  * Implementation of hook_block().
