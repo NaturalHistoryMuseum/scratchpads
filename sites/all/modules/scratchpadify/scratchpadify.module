@@ -453,7 +453,11 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key) {
     
     $site_name = variable_get('site_name', '');
     $user_guid = $site_name.$user->uid;
-    $user_name = $user->name;
+    if($user->uid == 1){
+      $user_name = 'Scratchpad Team';
+    } else {
+      $user_name = $user->name;
+    }
     $expiration_timestamp = _uservoice_expiration_timestamp(30);
     $user_data = array(
      "expiration" => $expiration_timestamp,
