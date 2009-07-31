@@ -394,25 +394,27 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
  */
 function scratchpadify_footer($main=0){
   // Add the following HTML to the footer of ALL pages]
-  global $user;
-  if($user->uid) {
-    $uservoice = '<script type="text/javascript">
-       var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
-       document.write(unescape("%3Cscript src=\'" + uservoiceJsHost + "/javascripts/widgets/tab.js\' type=\'text/javascript\'%3E%3C/script%3E"))
-     </script>
-     <script type="text/javascript">
-       UserVoice.Tab.show({ 
-       key: "biodiversityinformatics",
-       host: "biodiversityinformatics.uservoice.com", 
-       forum: "general", 
-       alignment: "right",
-       background_color:"#000", 
-       text_color: "white",
-       hover_color: "#444",
-       lang: "en",
-       params: { sso: "'._uservoice_generate_encrypted_sso('biodiversityinformatics', 'cc1340651bf304d5d58bb703d20890d6').'" }
-       })
-     </script>';
+  if(function_exists('mcrypt_module_open')){
+    global $user;
+    if($user->uid) {
+      $uservoice = '<script type="text/javascript">
+         var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
+         document.write(unescape("%3Cscript src=\'" + uservoiceJsHost + "/javascripts/widgets/tab.js\' type=\'text/javascript\'%3E%3C/script%3E"))
+       </script>
+       <script type="text/javascript">
+         UserVoice.Tab.show({ 
+         key: "biodiversityinformatics",
+         host: "biodiversityinformatics.uservoice.com", 
+         forum: "general", 
+         alignment: "right",
+         background_color:"#000", 
+         text_color: "white",
+         hover_color: "#444",
+         lang: "en",
+         params: { sso: "'._uservoice_generate_encrypted_sso('biodiversityinformatics', 'cc1340651bf304d5d58bb703d20890d6').'" }
+         })
+       </script>';
+    }
   }
   return $uservoice.'<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
 href="http://e-taxonomy.eu/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/edit_small.png').'" 
