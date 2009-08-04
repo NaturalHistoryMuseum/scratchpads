@@ -396,7 +396,6 @@ function scratchpadify_footer($main=0){
   // Add the following HTML to the footer of ALL pages]
   if(function_exists('mcrypt_module_open')){
     global $user;
-    break;
     if($user->uid && (isset($user->roles[5])||$user->uid == 1)) {
       $uservoice = '<script type="text/javascript">
          var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
