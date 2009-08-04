@@ -396,7 +396,8 @@ function scratchpadify_footer($main=0){
   // Add the following HTML to the footer of ALL pages]
   if(function_exists('mcrypt_module_open')){
     global $user;
-    if($user->uid) {
+    break;
+    if($user->uid && (isset($user->roles[5])||$user->uid == 1)) {
       $uservoice = '<script type="text/javascript">
          var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
          document.write(unescape("%3Cscript src=\'" + uservoiceJsHost + "/javascripts/widgets/tab.js\' type=\'text/javascript\'%3E%3C/script%3E"))
@@ -405,11 +406,11 @@ function scratchpadify_footer($main=0){
          UserVoice.Tab.show({ 
          key: "biodiversityinformatics",
          host: "biodiversityinformatics.uservoice.com", 
-         forum: "general", 
+         forum: "scratchpads", 
          alignment: "right",
-         background_color:"#000", 
+         background_color:"#aaa", 
          text_color: "white",
-         hover_color: "#444",
+         hover_color: "#ddd",
          lang: "en",
          params: { sso: "'._uservoice_generate_encrypted_sso('biodiversityinformatics', 'cc1340651bf304d5d58bb703d20890d6').'" }
          })
