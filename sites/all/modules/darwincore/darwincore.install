@@ -226,5 +226,15 @@ function darwincore_update_6103(){
       )
     )
   );
+}
+
+function darwincore_update_6104(){
+  // This update should have been update 6100, but given that we have already
+  // run the above two updates, it'll need to be here.
+  // If the column "location" exists in the darwincore table, then rename it to
+  // "locationnode".
+  db_query("ALTER TABLE {darwincore} CHANGE location locationnode INT(10)");
+  // This is either going to fail and we can ignore it, or work, so always
+  // return success.
   return array('#finished' => TRUE);
 }
