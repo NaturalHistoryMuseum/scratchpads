@@ -23,14 +23,14 @@ function darwincore_node_import_fields($type){
     $vocabularies = taxonomy_get_vocabularies();
     foreach($vocabularies as $vocabulary){
       if($vocabulary->module == 'darwincore'){
-        $options[$vocabulary->name] = taxonomy_get_tree($vocabulary->vid);
+        $options[strtolower($vocabulary->name)] = taxonomy_get_tree($vocabulary->vid);
       }
     }
   }
   if($type == 'node:darwincore'){
     $fields = array();
     $allowed_values = array();
-    foreach($options['Basis of record'] as $option){
+    foreach($options['basis of record'] as $option){
       $allowed_values[$option->tid] = $option->name;
     }
     $fields['basisofrecord'] = array(
@@ -39,7 +39,7 @@ function darwincore_node_import_fields($type){
       'allowed_values' => $allowed_values
     );
     $allowed_values = array();
-    foreach($options['Sex'] as $option){
+    foreach($options['sex'] as $option){
       $allowed_values[$option->tid] = $option->name;
     }
     $fields['sex'] = array(
@@ -77,7 +77,7 @@ function darwincore_node_import_fields($type){
       'group' => t('Darwincore fields')
     );
     $allowed_values = array();
-    foreach($options['Type status'] as $option){
+    foreach($options['type status'] as $option){
       $allowed_values[$option->tid] = $option->name;
     }
     $fields['typestatus'] = array(
@@ -144,7 +144,7 @@ function darwincore_node_import_fields($type){
       'group' => t('Location')
     );
     $allowed_values = array();
-    foreach($options['Continent/BodyOfWater'] as $option){
+    foreach($options['continent/bodyofwater'] as $option){
       $allowed_values[$option->tid] = $option->name;
     }
     $fields['continentocean'] = array(
