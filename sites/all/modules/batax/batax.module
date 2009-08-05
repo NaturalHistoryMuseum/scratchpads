@@ -159,6 +159,12 @@ function batax_admin_settings() {
     '#description' => t('Maximum number of terms allowed before the BATAX field is used'),
     '#required' => TRUE,
   );  
+  $form['batax_contains'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Search within words'),
+    '#description' => t('Check this box to enable searching within terms, leave unchecked to force terms to start with the phrase entered.'),
+    '#default_value' => variable_get('batax_contains',0)
+  );
   return system_settings_form($form);
 }
 
@@ -177,7 +183,8 @@ function batax_autocomplete($vid, $string = '') {
   $last_string = trim(array_pop($array));
   $matches = array();
   if ($last_string != '') {
-    $result = db_query_range(db_rewrite_sql("SELECT t.tid, CONCAT(t.name,':',t.tid) AS name FROM {term_data} t , {term_lowername} l WHERE t.vid = %d AND l.tid = t.tid AND lowername LIKE LOWER('%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
+    $contains = variable_get('batax_contains',0)? '%%' : '';
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, CONCAT(t.name,':',t.tid) AS name FROM {term_data} t , {term_lowername} l WHERE t.vid = %d AND l.tid = t.tid AND lowername LIKE LOWER('$contains%s%%')", 't', 'tid'), $vid, $last_string, 0, 10);
     $prefix = count($array) ? implode(', ', $array) .', ' : '';
     while ($tag = db_fetch_object($result)) {
       $n = $tag->name;
