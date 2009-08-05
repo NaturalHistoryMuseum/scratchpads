@@ -154,3 +154,21 @@ function scratchpadify_update_6107(){
   variable_set('boost_enabled',1);
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6108(){
+  $relationTypes = array (
+    1  => "synonym", 
+    2  => "synonym (objective = homotypic)", 
+    3  => "synonym (subjective = heterotypic)", 
+    4  => "lexical variant", 
+    5  => "disputed synonym", 
+    6  => "spelling alternative", 
+    7  => "incorrect spelling", 
+    8  => "incorrect authority information", 
+    9  => "vernacular name", 
+    10 => "usage reference" );
+  foreach ( $relationTypes as $key => $value ){
+    db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')", $key, $value );
+  }
+  return array('#finished' => TRUE);
+}
