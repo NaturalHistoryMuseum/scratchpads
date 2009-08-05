@@ -11,8 +11,10 @@ function scratchpadify_views_default_views(){
    * description
    * callback_url 
    */
-  // Don't create an iSpecies view
+  // Don't create the following views
   unset($content_types['ispecies']);
+  unset($content_types['glossary']);
+  
   foreach($content_types as $type => $type_details){
     // Begin copy and paste of output from the Export tab of a view.
     $view = new view();
