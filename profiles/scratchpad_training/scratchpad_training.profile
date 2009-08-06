@@ -55,7 +55,10 @@ function scratchpad_training_profile_tasks(&$task, $url){
     db_query("UPDATE {users} SET pass = MD5('password') , status = 1 WHERE uid = 2");
     
     // Update the menu router information.
-    menu_rebuild();    
+    drupal_rebuild_theme_registry();
+    node_types_rebuild();
+    menu_rebuild();
+    cache_clear_all('schema', 'cache');
     $task = 'profile-finished';
   }
 }

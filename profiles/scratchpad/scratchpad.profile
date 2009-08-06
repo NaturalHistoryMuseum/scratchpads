@@ -520,7 +520,10 @@ function scratchpad_profile_tasks_3(){
   drupal_mail_send($message);
 
   // Update the menu router information.
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
   menu_rebuild();
+  cache_clear_all('schema', 'cache');
 }
 
 /**
