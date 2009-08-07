@@ -4,7 +4,11 @@
  */
 function leftandright_overview_terms($vid){
   // Lets make sure this vocabulary wants to use leftandright
-  if(!leftandright_use_leftandright($vid)){
+  // Get the count of terms in this vocab, if more than x use leftandright
+  // overview
+  $result = db_query('SELECT COUNT(*) FROM {term_data} WHERE vid = %d', $vid);
+  $row = db_fetch_array($result);
+  if($row['vid']>variable_get('leftandright_num_terms_for_overview',1000)){
     $vocabulary = taxonomy_get_vocabularies();
     module_load_include("admin.inc", "taxonomy");
     return drupal_get_form('taxonomy_overview_terms',$vocabulary[$vid]);
@@ -100,11 +104,7 @@ function leftandright_overview_vocabularies() {
     if(array_search($vocabulary->vid,$rebuilding)){
       $rebuild = t('This tree is currently being rebuilt');
     } else {
-      if(leftandright_use_leftandright($vocabulary->vid)){
-        $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
-      } else {
-        $rebuild = t('This vocabulary has fewer terms than is required (@leftandright_number)', array('@leftandright_number'=>variable_get('leftandright_minimum_terms',1000)));
-      }
+      $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
     }
     $rows[] = array(
       'name' => check_plain($vocabulary->name),

@@ -1,5 +1,5 @@
 <?php
-function leftandright_hook_taxonomy_helper_insert($array){  
+function leftandright_hook_taxonomy_helper_insert($array){ 
   // Lets shove the stuff into leftandright.  Tricky bit here is getting the right
   // values;
   

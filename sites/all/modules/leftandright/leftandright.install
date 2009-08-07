@@ -1,9 +1,5 @@
 <?php
 /**
- * This file helps with the install of the autotag module.  All it does is sets the highest node ID for 
- * nodes which cron will search.  Cron eventually becomes unnecessary for this module.
- */
-/**
  * Implementation of hook_install
  */
 function leftandright_install(){
@@ -13,9 +9,7 @@ function leftandright_install(){
   // Add an index on vid to the term_data table
   db_add_index($ret = array(), 'term_data', 'vid', array('vid'));
   
-  // Set the default number of terms required before leftandright is used
-  variable_set('leftandright_minimum_terms', 1000);
-  
+  /*
   // Lets now initiate a tree rebuild for all the vocabularies on the site.
   module_load_include("module", "leftandright");
   $vocabularies = taxonomy_get_vocabularies();
@@ -25,8 +19,12 @@ function leftandright_install(){
     }
   }
   drupal_set_message(t('Leftandright module has been installed, and a full tree rebuild has been started'));
+*/
 }
 
+/**
+ * Implementation of hook_requirements
+ */
 function leftandright_requirements($phase) {
   $requirements = array();
   $t = get_t();
@@ -50,18 +48,13 @@ function leftandright_requirements($phase) {
 function leftandright_schema(){  
   return array('leftandright' => array(
     'fields' => array(
-      'lft' => array('type' => 'float', 'size' => 'big', 'not null' => 'true'),
-      'rgt' => array('type' => 'float', 'size' => 'big', 'not null' => 'true'),
-      'tid' => array('type' => 'int', 'not null' => true),
-      'vid' => array('type' => 'int', 'not null' => true),
+      'lft' => array('type' => 'int', 'not null' => TRUE),
+      'rgt' => array('type' => 'int', 'not null' => TRUE),
+      'tid' => array('type' => 'int', 'not null' => TRUE),
+      'vid' => array('type' => 'int', 'not null' => TRUE),
       'depth' => array('type' => 'int', 'size' => 'small')),
     'primary key' => array('tid'),
-    'unique keys' => array(
-      'lft_vid' => array('vid','lft'),
-      'rgt_vid' => array('vid','rgt')),
     'indexes' => array(
-      'left_index' => array('lft'),
-      'right_index' => array('rgt'),
       'vocab_index' => array('vid'))));
 }
 
@@ -70,4 +63,16 @@ function leftandright_uninstall(){
   drupal_uninstall_schema('leftandright');
 
   db_query("DELETE FROM {variable} WHERE name LIKE 'leftandright_%'");
+}
+
+function leftandright_update_6101(){
+  $ret = array();
+  db_drop_field($ret, 'leftandright', 'lowername');
+  db_drop_index($ret, 'leftandright', 'lft_vid');
+  db_drop_index($ret, 'leftandright', 'rgt_vid');
+  db_drop_index($ret, 'leftandright', 'left_index');
+  db_drop_index($ret, 'leftandright', 'right_index');
+  db_change_field($ret, 'leftandright', 'lft', 'lft', array('type' => 'int', 'not null' => TRUE));
+  db_change_field($ret, 'leftandright', 'rgt', 'rgt', array('type' => 'int', 'not null' => TRUE));
+  return $ret;
 }

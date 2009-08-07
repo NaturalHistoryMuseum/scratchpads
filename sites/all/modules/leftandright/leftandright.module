@@ -81,42 +81,101 @@ function leftandright_help($path, $arg) {
 // hook_taxonomy
 function leftandright_taxonomy($op, $type, $array = NULL){
   if($type=='term'){
-    // First check that this terms vocabulary uses leftandright
-    if(leftandright_use_leftandright($array['vid'])){
-      switch($op){
-        case 'delete':
-          // Easy, just delete the term from leftandright!
-          db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
-          break;
-        case 'update':
-        case 'insert':
-           module_load_include("functions.inc", "leftandright");
-           leftandright_hook_taxonomy_helper_insert($array);
-           // Finally update the variable storing the total number of terms in
-           // each of the vocabularies.
-           leftandright_update_totals_variable();
-      }
+    switch($op){
+      case 'delete':
+        $result = db_query('SELECT lft, rgt FROM {leftandright} WHERE tid = %d', $array['tid']);
+        $row = db_fetch_array($result);
+        db_query('UPDATE {leftandright} SET lft = lft-1, rgt=rgt-1 WHERE lft > %d', $row['lft']);
+        db_query('UPDATE {leftandright} SET lft = lft-1, rgt=rgt-1 WHERE lft > %d', $row['rgt']);
+        db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
+        break;
+      case 'update':
+        // Get the current leftandright values
+        $result = db_query('SELECT * FROM {leftandright} WHERE tid = %d', $array['tid']);
+        $current_left_and_right = db_fetch_array($result);
+        // Get the current parent leftandright values
+        $result = db_query('SELECT * FROM {leftandright} WHERE depth = %d AND lft < %d and rgt > %d', $current_left_and_right['lft'], $current_left_and_right['rgt'], $depth);
+        $current_parent_left_and_right = db_fetch_array($result);
+        // Get the new parent leftandright values
+        $result = db_query('SELECT * FROM {leftandright} WHERE depth = %d AND lft < %d and rgt > %d', $current_left_and_right['lft'], $current_left_and_right['rgt'], $depth);
+        $new_parent_left_and_right = db_fetch_array($result);
+        
+        // Calculate the new leftandright values
+        $previous_sibling = FALSE;
+        foreach($array['parent'] as $parent_tid){
+          $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND vid = %d ORDER BY weight ASC, name', $parent_tid, $array['vid']);
+          $previous_sibling = FALSE;
+          while($row = db_fetch_array($result)){
+            if($row['tid'] == $array['tid']){
+              // We should now have the previous sibling
+              break;
+            }
+            $previous_sibling = $row['tid'];
+          }
+        }
+        if($previous_sibling){
+          // Get the right of this sibling, then we set out leftandright
+          // relative to that
+          $result = db_query('SELECT rgt AS leftof FROM {leftandright} WHERE tid = %d', $previous_sibling); 
+        } else {
+          // Else it's the left of the parent.
+          $result = db_query('SELECT lft AS leftof FROM {leftandright} WHERE tid = %d', $parent_tid);
+        }
+        $row = db_fetch_array($result);
+        $new_left = $row['leftof']+1;
+        $move_factor = $new_left - $current_left_and_right['lft'];
+        db_query('UPDATE {leftandright} SET lft = -(lft + %d), rgt = -(rgt + %d) WHERE vid = %d AND lft>=%d AND rgt<=%d', $move_factor, $move_factor, $array['vid'], $current_left_and_right['lft'], $current_left_and_right['rgt']);
+        db_query('UPDATE {leftandright} SET lft = lft + %d');
+        break;
+      case 'insert':
+        // Work out correct position - if no siblings, then this is easy, else
+        // we have to do some calculating.
+        drupal_set_message(print_r($array, TRUE));
+        foreach($array['parent'] as $parent_tid){
+          $result = db_query('SELECT lft,rgt FROM {leftandright} WHERE tid = %d', $parent_tid);
+          $row = db_fetch_array($result);
+          if($row && $row['lft']+1 == $row['rgt']){
+            // We have no siblings, lft and rgt are easy to set
+            $lft_position = $row['lft']+1;
+          } else {
+            // We have siblings, so lets get the previous sibling (or parent)
+            // to set the correct leftandright
+            $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND vid = %d ORDER BY weight ASC, name', $parent_tid, $array['vid']);
+            $previous_sibling = FALSE;
+            while($row = db_fetch_array($result)){
+              if($row['tid'] == $array['tid']){
+                // We should now have the previous sibling
+                break;
+              }
+              $previous_sibling = $row['tid'];
+            }
+            if($previous_sibling){
+              // Get the right of this sibling, then we set out leftandright
+              // relative to that
+              $result = db_query('SELECT rgt AS leftof FROM {leftandright} WHERE tid = %d', $previous_sibling); 
+            } else {
+              // Else it's the left of the parent.
+              $result = db_query('SELECT lft AS leftof FROM {leftandright} WHERE tid = %d', $parent_tid);
+            }
+            $row = db_fetch_array($result);
+            $lft_position = $row['leftof']+1;
+          }
+          db_query('UPDATE {leftandright} SET rgt = rgt+2 WHERE rgt >= %d AND vid = %d', $lft_position, $array['vid']);
+          db_query('UPDATE {leftandright} SET lft = lft+2 WHERE lft >= %d AND vid = %d', $lft_position, $array['vid']);
+          $result = db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid);
+          $row = db_fetch_array($result);
+          if($row){
+            $depth = $row['depth'] + 1;
+          } else {
+            $depth = 0;
+          }
+          db_query('INSERT INTO {leftandright} (lft, rgt, depth, tid, vid) VALUES (%d, %d, %d, %d, %d)', $lft_position, $lft_position+1, $depth, $array['tid'], $array['vid']);
+        }
+        break;
     }
   }
 }
 
-/**
- * Following function updates the numbers in the leftandright_something_blah
- * variable
- */
-// hook_form_alter
-function leftandright_form_alter($form, $form_state, $form_id){
-  // Rebuild the numbers if we're looking at the main taxonomy page
-  if($form_id == 'taxonomy_overview_vocabularies'){
-    leftandright_update_totals_variable();
-  }
-  
-  // Remove the weight field if we're on a term edit page and this vocabulary
-  // uses leftandright
-  if($form_id == 'taxonomy_form_term'){
-    unset($form['advanced']['weight']);
-  }
-}
 /*******************************************************************************
  * ADDITIONAL leftandright FUNCTIONS FOR OTHER MODULES!
  ******************************************************************************/
@@ -135,32 +194,6 @@ function leftandright_descendant_used($tid){
 }
 
 /**
- * Following function returns true if a vocabulary has more than the minimum
- * number of terms required to use "leftandright"
- */
-function leftandright_use_leftandright($vid){
-  if(is_array($vid)){
-    foreach($vid as $single_vid){
-      if(!leftandright_use_leftandright($single_vid)){
-        return false;
-      }
-    }
-    return true;
-  }
-  $totals = variable_get('leftandright_vocab_totals', false);
-  if(!$totals){
-    leftandright_update_totals_variable();
-    $totals = variable_get('leftandright_vocab_totals', false);    
-  }
-  if($totals){
-    if($totals[$vid]>variable_get('leftandright_minimum_terms', 1000)){
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
  * Update the variable
  */
 function leftandright_update_totals_variable(){
@@ -176,6 +209,9 @@ function leftandright_update_totals_variable(){
  * REPLACEMENT FUNCTIONS FOR taxonomy module
  ******************************************************************************/
 function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=1000){
+  if(is_null($parent)){
+    return array();
+  }
   $lftandrgt_sql = '';
   $params = array($vid);
   if($parent != 0){
@@ -280,11 +316,7 @@ function leftandright_rebuild_tree_page($vid){
   if(leftandright_trees_rebuilding($vid)){
     drupal_set_message(t('Already rebuilding vocabulary'));
   } else {
-    if(leftandright_use_leftandright($vid)){
-      leftandright_rebuild_tree($vid);
-    } else {
-      drupal_set_message(t('Vocabulary has too few terms to use Left and right'));
-    }
+    leftandright_rebuild_tree($vid);
   }
   drupal_goto('admin/content/taxonomy/leftandright');
 }
