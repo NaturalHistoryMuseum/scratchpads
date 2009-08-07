@@ -2549,12 +2549,7 @@ function sandbox_profile_tasks(&$task, $url){
     $region = system_default_region(variable_get('theme_default', 'garland'));
     db_query("UPDATE {blocks} SET status = 1, weight = -100, theme = 'garland', region = '%s' WHERE delta = 'tinytax-13'", $region);
     
-    // Update the menu router information.
-    drupal_rebuild_theme_registry();
-    node_types_rebuild();
-    menu_rebuild();
-    cache_clear_all('schema', 'cache');
-    variable_set('site_offline',0);
+    scratchpad_profile_tasks_4();
     $task = 'profile-finished';
   }
 }

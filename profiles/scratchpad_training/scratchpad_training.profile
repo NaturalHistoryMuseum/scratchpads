@@ -54,11 +54,7 @@ function scratchpad_training_profile_tasks(&$task, $url){
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('password') , status = 1 WHERE uid = 2");
     
-    // Update the menu router information.
-    drupal_rebuild_theme_registry();
-    node_types_rebuild();
-    menu_rebuild();
-    cache_clear_all('schema', 'cache');
+    scratchpad_profile_tasks_4();
     $task = 'profile-finished';
   }
 }

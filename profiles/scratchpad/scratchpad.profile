@@ -518,7 +518,10 @@ function scratchpad_profile_tasks_3(){
     'headers' => array()
   );
   drupal_mail_send($message);
+}
 
+
+function scratchpad_profile_tasks_4(){
   // Update the menu router information.
   drupal_rebuild_theme_registry();
   node_types_rebuild();
@@ -742,6 +745,7 @@ function scratchpad_profile_tasks(&$task, $url){
   if($task == 'scratchpadcleanup'){
     scratchpad_profile_tasks_2();  
     scratchpad_profile_tasks_3();  
+    scratchpad_profile_tasks_4();  
     $task = 'profile-finished';
   }
 }
