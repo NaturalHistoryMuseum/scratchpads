@@ -90,87 +90,12 @@ function leftandright_taxonomy($op, $type, $array = NULL){
         db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
         break;
       case 'update':
-        // Get the current leftandright values
-        $result = db_query('SELECT * FROM {leftandright} WHERE tid = %d', $array['tid']);
-        $current_left_and_right = db_fetch_array($result);
-        // Get the current parent leftandright values
-        $result = db_query('SELECT * FROM {leftandright} WHERE depth = %d AND lft < %d and rgt > %d', $current_left_and_right['lft'], $current_left_and_right['rgt'], $depth);
-        $current_parent_left_and_right = db_fetch_array($result);
-        // Get the new parent leftandright values
-        $result = db_query('SELECT * FROM {leftandright} WHERE depth = %d AND lft < %d and rgt > %d', $current_left_and_right['lft'], $current_left_and_right['rgt'], $depth);
-        $new_parent_left_and_right = db_fetch_array($result);
-        
-        // Calculate the new leftandright values
-        $previous_sibling = FALSE;
-        foreach($array['parent'] as $parent_tid){
-          $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND vid = %d ORDER BY weight ASC, name', $parent_tid, $array['vid']);
-          $previous_sibling = FALSE;
-          while($row = db_fetch_array($result)){
-            if($row['tid'] == $array['tid']){
-              // We should now have the previous sibling
-              break;
-            }
-            $previous_sibling = $row['tid'];
-          }
-        }
-        if($previous_sibling){
-          // Get the right of this sibling, then we set out leftandright
-          // relative to that
-          $result = db_query('SELECT rgt AS leftof FROM {leftandright} WHERE tid = %d', $previous_sibling); 
-        } else {
-          // Else it's the left of the parent.
-          $result = db_query('SELECT lft AS leftof FROM {leftandright} WHERE tid = %d', $parent_tid);
-        }
-        $row = db_fetch_array($result);
-        $new_left = $row['leftof']+1;
-        $move_factor = $new_left - $current_left_and_right['lft'];
-        db_query('UPDATE {leftandright} SET lft = -(lft + %d), rgt = -(rgt + %d) WHERE vid = %d AND lft>=%d AND rgt<=%d', $move_factor, $move_factor, $array['vid'], $current_left_and_right['lft'], $current_left_and_right['rgt']);
-        db_query('UPDATE {leftandright} SET lft = lft + %d');
+        module_load_include('functions.inc','leftandright');
+        _leftandright_taxonomy_update($array);
         break;
       case 'insert':
-        // Work out correct position - if no siblings, then this is easy, else
-        // we have to do some calculating.
-        drupal_set_message(print_r($array, TRUE));
-        foreach($array['parent'] as $parent_tid){
-          $result = db_query('SELECT lft,rgt FROM {leftandright} WHERE tid = %d', $parent_tid);
-          $row = db_fetch_array($result);
-          if($row && $row['lft']+1 == $row['rgt']){
-            // We have no siblings, lft and rgt are easy to set
-            $lft_position = $row['lft']+1;
-          } else {
-            // We have siblings, so lets get the previous sibling (or parent)
-            // to set the correct leftandright
-            $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND vid = %d ORDER BY weight ASC, name', $parent_tid, $array['vid']);
-            $previous_sibling = FALSE;
-            while($row = db_fetch_array($result)){
-              if($row['tid'] == $array['tid']){
-                // We should now have the previous sibling
-                break;
-              }
-              $previous_sibling = $row['tid'];
-            }
-            if($previous_sibling){
-              // Get the right of this sibling, then we set out leftandright
-              // relative to that
-              $result = db_query('SELECT rgt AS leftof FROM {leftandright} WHERE tid = %d', $previous_sibling); 
-            } else {
-              // Else it's the left of the parent.
-              $result = db_query('SELECT lft AS leftof FROM {leftandright} WHERE tid = %d', $parent_tid);
-            }
-            $row = db_fetch_array($result);
-            $lft_position = $row['leftof']+1;
-          }
-          db_query('UPDATE {leftandright} SET rgt = rgt+2 WHERE rgt >= %d AND vid = %d', $lft_position, $array['vid']);
-          db_query('UPDATE {leftandright} SET lft = lft+2 WHERE lft >= %d AND vid = %d', $lft_position, $array['vid']);
-          $result = db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid);
-          $row = db_fetch_array($result);
-          if($row){
-            $depth = $row['depth'] + 1;
-          } else {
-            $depth = 0;
-          }
-          db_query('INSERT INTO {leftandright} (lft, rgt, depth, tid, vid) VALUES (%d, %d, %d, %d, %d)', $lft_position, $lft_position+1, $depth, $array['tid'], $array['vid']);
-        }
+        module_load_include('functions.inc','leftandright');
+        _leftandright_taxonomy_insert($array);
         break;
     }
   }
@@ -193,103 +118,6 @@ function leftandright_descendant_used($tid){
   }
 }
 
-/**
- * Update the variable
- */
-function leftandright_update_totals_variable(){
-  $result = db_query("SELECT COUNT(*) count, vid FROM term_data GROUP BY vid");
-  $totals = array();
-  while($row = db_fetch_array($result)){
-    $totals[$row['vid']] = $row['count'];    
-  }
-  variable_set('leftandright_vocab_totals', $totals);
-}
-
-/*******************************************************************************
- * REPLACEMENT FUNCTIONS FOR taxonomy module
- ******************************************************************************/
-function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=1000){
-  if(is_null($parent)){
-    return array();
-  }
-  $lftandrgt_sql = '';
-  $params = array($vid);
-  if($parent != 0){
-    $results = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d", $parent);
-    $row = db_fetch_array($results);
-    $left = $row['lft'];
-    $right = $row['rgt'];
-    if(isset($max_depth) && $max_depth != NULL){
-      $max_depth += $row['depth']+1;
-    }
-    $lftandrgt_sql = 'AND lft>%f AND rgt <%f';
-    $params[] = $left;
-    $params[] = $right; 
-  }
-  $depth_sql = '';
-  if(isset($max_depth) && $max_depth != NULL){
-    $depth_sql = 'AND depth<%d';
-    $params[] = $max_depth;
-  }
-  $params[] = $offset;
-  $params[] = $count;
-  db_query_temporary("SELECT lft, tid, depth FROM {leftandright} WHERE vid = %d $lftandrgt_sql $depth_sql ORDER BY lft LIMIT %d,%d", $params, 'leftandrighttemp');
-  $tree = array();
-  // FIXME - We're not returning the parents for a term - is this an issue?
-  // leftandrighttemp doesn't need {}
-  $results = db_query("SELECT t.*, depth FROM {term_data} t, leftandrighttemp l WHERE t.tid = l.tid ORDER BY lft", $tids);
-  while($row = db_fetch_object($results)){
-    $tree[] = $row;
-  }
-  // Hmmm, we need to drop the temporary table - FFS, I thought the whole idea
-  // of a temporary table was I could just whack it in there! Oh well.
-  db_query("DROP TEMPORARY TABLE leftandrighttemp");
-  return $tree;
-}
-
-// FIXME - This doesn't use the max_depth variable
-function leftandright_get_tree_count($vid, $parent = 0, $max_depth = NULL){
-  // Get parent left and right
-  $lftandrgt_sql = '';
-  $arguments = array($vid);
-  if($parent != 0){
-    $results = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d", $parent);
-    $row = db_fetch_array($results);
-    $arguments[] = $row['lft'];
-    $arguments[] = $row['rgt'];
-    //$max_depth += $row['depth']; // Is this right???
-    $lftandrgt_sql = 'AND lft>=%f AND rgt <=%f';
-  }
-  return array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {leftandright} WHERE vid=%d $lftandrgt_sql", $arguments)));
-}
-
-// Hmmm, does this need rewriting to use db_rewrite_query?? FIXME
-function leftandright_select_nodes($tids, $operator, $depth, $pager, $order) {
-  if (count($tids) > 0) {
-    if($depth =='all'){
-      $depth = null;
-    }
-    $leftandrights = array();
-    foreach($tids as $tid){
-      $result = db_query("SELECT lft,rgt,depth FROM {leftandright} WHERE tid = %d",$tid);
-      $row = db_fetch_array($result);
-      $sql = "(lft>=".$row['lft']." AND rgt<=".$row['rgt'];
-      if(isset($depth) && $depth!=null){
-        $sql .= "AND depth<=".$row['depth']+$depth;
-      }
-      $sql .= ")";
-      $leftandrights[] = $sql;
-    }
-    $sql = "SELECT DISTINCT(n.nid), n.sticky, n.title, n.created FROM {node} n, {term_node} t, {leftandright} l WHERE t.nid = n.nid AND l.tid=t.tid AND (".implode(" $operator ",$leftandrights).") ORDER BY ".$order;
-    if ($pager) {
-      $result = pager_query($sql, variable_get('default_nodes_main', 10), 0, $sql_count, $args);
-    }
-    else {
-      $result = db_query_range($sql, $args, 0, variable_get('feed_default_items', 10));
-    }
-  }
-  return $result;  
-}
 /*******************************************************************************
  * REBUILD TREE
  ******************************************************************************/

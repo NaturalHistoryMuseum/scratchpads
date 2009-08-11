@@ -1,84 +1,157 @@
 <?php
-function leftandright_hook_taxonomy_helper_insert($array){ 
-  // Lets shove the stuff into leftandright.  Tricky bit here is getting the right
-  // values;
+function _leftandright_taxonomy_update($array){
+  // Get the right plus one value for this term (what it should be)
+  $new_right = _leftandright_get_new_right($array['tid']);
+  $new_left = _leftandright_get_new_left($array['tid']);
   
-  // Firstly we get the current values of leftandright - these will be used
-  // for updating children of this term
-  $result = db_query("SELECT lft,rgt,depth FROM leftandright WHERE tid = %d", $array['tid']);
-  if($result){
+  // Get what it is set as now.
+  $current_right = array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = %d', $array['tid'])));
+  $current_left = array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = %d', $array['tid'])));
+  
+  // If we have a change, then we'd best do stuff to reflect this change.
+  //if($current_right != ($new_right -1)){
+  if($current_right != $new_right || $current_left != $new_left){
+    // We have three possible movements:
+    // - left
+    // - right
+    // - up
+    // Lets work out which one we've got.  If we calculate whether or not
+    // we've moved up, and we haven't, then left is 
+    // $current_right>$new_right
+    // else
+    // $current_right<$new_right
+    // Get current ancestors (from leftandright)
+    $result = db_query('SELECT tid FROM {leftandright} WHERE lft<(SELECT lft FROM {leftandright} WHERE tid = %d) AND rgt>(SELECT rgt FROM {leftandright} WHERE tid = %d ORDER BY lft DESC)', $array['tid'], $array['tid']);
+    // Throw away the first result, if it hasn't moved up, then this will
+    // still be the parent
+    db_fetch_array($result);
+    $shift = ($current_right - $current_left) + 1;
+    if($new_right > $current_right){
+      // We're moving right
+      // Firstly, move the branch to the right position (but with
+      // negative values).
+      $new_left = $new_right - ($current_right - $current_left);
+      $branch_change = $new_left - $current_left;
+      drupal_set_message("$new_left $new_right $current_left $current_right $branch_change");
+      db_query('UPDATE {leftandright} SET rgt = -(rgt + %d), lft = -(lft + %d) WHERE lft>=%d AND rgt<=%d', $branch_change, $branch_change, $current_left, $current_right);
+      // Then close make the space moving stuff to the left that is 
+      // between where we were, and where we will be.
+      db_query('UPDATE {leftandright} SET rgt = (rgt - %d) WHERE rgt > %d AND rgt <= %d', $shift, $current_right, $new_right);
+      db_query('UPDATE {leftandright} SET lft = (lft - %d) WHERE lft > %d AND lft < %d', $shift, $current_right, $new_left);
+    } else {
+      // We're moving left
+      $new_right = $new_left + ($current_right - $current_left);
+      $branch_change = $current_left - $new_left;
+      db_query('UPDATE {leftandright} SET rgt = -(rgt - %d), lft = -(lft - %d) WHERE lft>=%d AND rgt<=%d', $branch_change, $branch_change, $current_left, $current_right);
+      db_query('UPDATE {leftandright} SET rgt = (rgt + %d) WHERE rgt > %d AND rgt < %d', $shift, $new_left, $current_left);
+      db_query('UPDATE {leftandright} SET lft = (lft + %d) WHERE lft >= %d AND lft < %d', $shift, $new_left, $current_left);
+    }
+    // Ensure the depth is correctly set.
+    $parent_tid = array_pop($array['parent']);
+    $parent_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid)));
+    $current_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $array['tid'])));
+    drupal_set_message("Current depth: $current_depth\nParent depth: $parent_depth");
+    if($current_depth != ($parent_depth -1)){
+      // Depth has changed, lets do something about it
+      $depth_change = ($parent_depth + 1)-$current_depth;
+      db_query('UPDATE {leftandright} SET depth = (depth + %d) WHERE lft < 0 AND rgt < 0', $depth_change);
+    }    
+    // Finally restore the branch
+    db_query('UPDATE {leftandright} SET rgt = -rgt, lft = -lft WHERE lft < 0 AND rgt < 0');
+  }
+}
+
+function _leftandright_taxonomy_insert($array){
+  // Work out correct position - if no siblings, then this is easy, else
+  // we have to do some calculating.
+  foreach($array['parent'] as $parent_tid){
+    $result = db_query('SELECT lft,rgt FROM {leftandright} WHERE tid = %d', $parent_tid);
     $row = db_fetch_array($result);
-    $current_left = $row['lft'];
-    $current_right = $row['rgt'];
-    $current_depth = $row['depth'];
-  }
-  // First things first, delete the current values.  I know this is a rather
-  // poor way of doing things as updates are better. FIXME  
-  db_query('DELETE FROM {leftandright} WHERE tid=%d',$array['tid']);
-  
-  if($array['parent'] == array(0=>0)){
-    // If the term has no parents, just shove it on the end - Note, this won't be
-    // alphabetical
-    $lft = array_pop(db_fetch_array(db_query("SELECT rgt FROM {leftandright} ORDER BY rgt DESC LIMIT 1")))+1;
-    $rgt = $lft+1;
-    db_query("INSERT INTO {leftandright} (lft,rgt,tid,vid,depth) VALUES (%f,%f,%d,%d,%d)",$lft,$rgt,$array['tid'],$array['vid'],0);
-  } else {
-    // The term has at least one parent lets run through them all
-    if(!is_array($array['parent'])){
-      $array['parent'] = array($array['parent']);
+    if($row && $row['lft']+1 == $row['rgt']){
+      // We have no siblings, lft and rgt are easy to set
+      $lft_position = $row['lft']+1;
+    } else {
+      // We have siblings, so lets get the previous sibling (or parent)
+      // to set the correct leftandright
+      $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND vid = %d ORDER BY weight ASC, name', $parent_tid, $array['vid']);
+      $previous_sibling = FALSE;
+      while($row = db_fetch_array($result)){
+        if($row['tid'] == $array['tid']){
+          // We should now have the previous sibling
+          break;
+        }
+        $previous_sibling = $row['tid'];
+      }
+      if($previous_sibling){
+        // Get the right of this sibling, then we set out leftandright
+        // relative to that
+        $result = db_query('SELECT rgt AS leftof FROM {leftandright} WHERE tid = %d', $previous_sibling); 
+      } else {
+        // Else it's the left of the parent.
+        $result = db_query('SELECT lft AS leftof FROM {leftandright} WHERE tid = %d', $parent_tid);
+      }
+      $row = db_fetch_array($result);
+      $lft_position = $row['leftof']+1;
     }
-    foreach($array['parent'] as $parent){
-      // We need to place this term at the right place below the parents, lets
-      // find the direct descendants of this parent directly before and after
-      // the term that we're trying to insert      
-      // We've already deleted the current values for this term from the
-      // database which should make things a little simpler
-      // Get the parent info, get direct descendants, and see if there are gaps
-      $result = db_query('SELECT lft,rgt,depth FROM {leftandright} WHERE tid=%d', $parent);
-      $parent = db_fetch_array($result);
-      $max_right_result_array = db_fetch_array(db_query("SELECT lft FROM leftandright l,term_lowername t WHERE l.tid=t.tid AND lft > %f AND rgt < %f AND depth = %d AND lowername > LOWER('%s') ORDER BY lft ASC LIMIT 1",$parent['lft'],$parent['rgt'],$parent['depth']+1,$array['name']));
-      $min_left_result_array = db_fetch_array(db_query("SELECT rgt FROM leftandright l,term_lowername t WHERE l.tid=t.tid AND lft > %f AND rgt < %f AND depth = %d AND lowername < LOWER('%s') ORDER BY lft DESC LIMIT 1",$parent['lft'],$parent['rgt'],$parent['depth']+1,$array['name']));
-      if($min_left_result_array){
-        $min_left = array_pop($min_left_result_array);
-      } else {
-        $min_left = $parent['lft'];
-      }
-      if($max_right_result_array){
-        $max_right = array_pop($max_right_result_array);
-      } else {
-        $max_right = $parent['rgt'];
-      }
-      if($max_right-$min_left>=3){
-        $lft = round($min_left+1);
-        $rgt = round($max_right-1);
-      } else {
-        $diff = round(($max_right - $min_left)/3,10);
-        if($diff < 0.0000000001){
-          drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.  YOU WILL EXPERIENCE ERRORS OTHERWISE.', array('!url' => url("leftandright/update/".$array['vid'], array('absolute' => TRUE)))),'error');
-        }
-        else if($diff < 0.00000001){
-          // Farp, the tree needs rebuilding - give an error message
-          drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.', array('!url' => url("leftandright/update/".$array['vid'], array('absolute' => TRUE)))),'error');
-        }
-        $rgt = $max_right - $diff;
-        $lft = $rgt - $diff;
-      }
-      db_query("INSERT INTO {leftandright} (lft,rgt,tid,vid,depth) VALUES (%f,%f,%d,%d,%d)",$lft,$rgt,$array['tid'],$array['vid'],$parent['depth']+1);
-      // Finally we need to update the children - this only needs to be done if
-      // we're updating (are current left and right set?)
-      if(isset($current_left) && isset($current_right)){
-        $depth_change = ($parent['depth'] + 1) - $current_depth; 
-        $insert_factor = ($rgt - $lft) / ($current_right - $current_left);
-        if($insert_factor < 0.0000000001){
-          drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.  YOU WILL EXPERIENCE ERRORS OTHERWISE.', array('!url' => url("leftandright/update/".$array['vid'], array('absolute' => TRUE)))),'error');
-        }
-        else if($insert_factor < 0.00000001){
-          // Farp, the tree needs rebuilding - give an error message
-          drupal_set_message(t('The tree for this vocabulary needs <a href="!url">rebuilding</a>.', array('!url' => url("leftandright/update/".$array['vid'], array('absolute' => TRUE)))),'error');
-        }
-        drupal_set_message("Insert factor: $insert_factor - Current left: $current_left - Current right: $current_right - Left: $lft - Right: $rgt");
-        db_query("UPDATE {leftandright} SET lft = ((lft - %f) * %f) + %f , rgt = ((rgt - %f) * %f) + %f , depth = depth + %d WHERE lft > %f and rgt < %f", $current_left, $insert_factor, $lft, $current_left, $insert_factor, $lft, $depth_change, $current_left, $current_right);
-      }
+    db_query('UPDATE {leftandright} SET rgt = rgt+2 WHERE rgt >= %d AND vid = %d', $lft_position, $array['vid']);
+    db_query('UPDATE {leftandright} SET lft = lft+2 WHERE lft >= %d AND vid = %d', $lft_position, $array['vid']);
+    $result = db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid);
+    $row = db_fetch_array($result);
+    if($row){
+      $depth = $row['depth'] + 1;
+    } else {
+      $depth = 0;
+    }
+    db_query('INSERT INTO {leftandright} (lft, rgt, depth, tid, vid) VALUES (%d, %d, %d, %d, %d)', $lft_position, $lft_position+1, $depth, $array['tid'], $array['vid']);
+  }
+}
+
+/**
+ * Following function returns an int which reflects the value to the right of
+ * the insert position for the term.  This is the next sibling's left value, or
+ * the parent's right value (depending on the order/presence of siblings).
+ *
+ * @param int $tid
+ */
+function _leftandright_get_new_right($tid){
+  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) ORDER BY weight ASC, name', $tid);
+  $next_value = FALSE;
+  while($row = db_fetch_array($result)){
+    if($next_value){
+      return array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = %d', $row['tid']))) - 1;
+    }
+    if($row['tid'] == $tid){
+      $next_value = TRUE;
     }
   }
+  // If we've reached this point, the term has no siblings (or none to the 
+  // right) so we return the rgt value of the parent
+  return array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)', $tid)))-1;
+}
+
+/**
+ * Following function returns an int which reflects the value to the left of
+ * the insert position for the term.  This is the previous sibling's right 
+ * value, or the parent's left value (depending on the order/presence of 
+ * siblings).
+ *
+ * @param int $tid
+ */
+function _leftandright_get_new_left($tid){
+  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) ORDER BY weight ASC, name', $tid);  
+  $previous_value = FALSE;
+  while($row = db_fetch_array($result)){
+    if($row['tid'] == $tid){
+      if($previous_value){
+        return array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = %d', $previous_value))) + 1;
+      } else {
+        // Return the parent left
+        break;
+      }
+    }
+    $previous_value = $row['tid'];
+  }
+  // If we've reached this point, the term has no siblings (or none to the left)
+  // so we return the right value of the parent
+  return array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)', $tid))) + 1;
 }
