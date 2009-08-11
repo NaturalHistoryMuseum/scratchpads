@@ -90,7 +90,10 @@ function _femail_post_comment($msg, $user){
         'date' => 'now',
         'name' => $user->name
       );
-      comment_save($edit);
+      $cid = comment_save($edit);
+      watchdog('femail','Posted forum comment: '.l($msg['title'], 'node/'.$row['nid'], array('fragment', 'comment-'.$cid)));
+    } else {
+      watchdog('femail','Failed to post forum comment: '.$msg['title']);
     }
     return TRUE;
   }
@@ -111,10 +114,13 @@ function _femail_post_forum_topic($msg, $user){
   $node->type = 'forum';
   $node->taxonomy = array($term->vid => $tid);
   node_save($node);
+  watchdog('femail','Posted forum topic: '.l($node->title,'node/'.$node->nid), WATCHDOG_INFO);
 }
 
 function femail_drush_callback(){
   $msg = _femail_get_msg();
+  
+  watchdog('femail', "Following message was received:\n\n".print_r($msg, TRUE), WATCHDOG_INFO);
   
   // Check to see this isn't a message that we've just sent out
   if($msg['reply-to'] == $msg['to']){
