@@ -1,5 +1,6 @@
 <?php
 function _leftandright_taxonomy_update($array){
+  //drupal_set_message(print_r($array, TRUE));return;
   // Get the right plus one value for this term (what it should be)
   $new_right = _leftandright_get_new_right($array['tid']);
   $new_left = _leftandright_get_new_left($array['tid']);
@@ -32,25 +33,27 @@ function _leftandright_taxonomy_update($array){
       // negative values).
       $new_left = $new_right - ($current_right - $current_left);
       $branch_change = $new_left - $current_left;
-      drupal_set_message("$new_left $new_right $current_left $current_right $branch_change");
       db_query('UPDATE {leftandright} SET rgt = -(rgt + %d), lft = -(lft + %d) WHERE lft>=%d AND rgt<=%d', $branch_change, $branch_change, $current_left, $current_right);
       // Then close make the space moving stuff to the left that is 
       // between where we were, and where we will be.
       db_query('UPDATE {leftandright} SET rgt = (rgt - %d) WHERE rgt > %d AND rgt <= %d', $shift, $current_right, $new_right);
-      db_query('UPDATE {leftandright} SET lft = (lft - %d) WHERE lft > %d AND lft < %d', $shift, $current_right, $new_left);
+      db_query('UPDATE {leftandright} SET lft = (lft - %d) WHERE lft > %d AND lft <= %d', $shift, $current_right, $new_left);
     } else {
       // We're moving left
       $new_right = $new_left + ($current_right - $current_left);
       $branch_change = $current_left - $new_left;
       db_query('UPDATE {leftandright} SET rgt = -(rgt - %d), lft = -(lft - %d) WHERE lft>=%d AND rgt<=%d', $branch_change, $branch_change, $current_left, $current_right);
-      db_query('UPDATE {leftandright} SET rgt = (rgt + %d) WHERE rgt > %d AND rgt < %d', $shift, $new_left, $current_left);
+      db_query('UPDATE {leftandright} SET rgt = (rgt + %d) WHERE rgt >= %d AND rgt < %d', $shift, $new_left, $current_left);
       db_query('UPDATE {leftandright} SET lft = (lft + %d) WHERE lft >= %d AND lft < %d', $shift, $new_left, $current_left);
     }
     // Ensure the depth is correctly set.
-    $parent_tid = array_pop($array['parent']);
+    if(is_array($array['parent'])){
+      $parent_tid = array_pop($array['parent']);
+    } else {
+      $parent_tid = $array['parent'];
+    }
     $parent_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid)));
     $current_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $array['tid'])));
-    drupal_set_message("Current depth: $current_depth\nParent depth: $parent_depth");
     if($current_depth != ($parent_depth -1)){
       // Depth has changed, lets do something about it
       $depth_change = ($parent_depth + 1)-$current_depth;

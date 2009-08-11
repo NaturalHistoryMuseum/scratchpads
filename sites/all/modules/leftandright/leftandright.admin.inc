@@ -8,7 +8,7 @@ function leftandright_overview_terms($vid){
   // overview
   $result = db_query('SELECT COUNT(*) FROM {term_data} WHERE vid = %d', $vid);
   $row = db_fetch_array($result);
-  if($row['vid']>variable_get('leftandright_num_terms_for_overview',1000)){
+  if($row['vid']<variable_get('leftandright_num_terms_for_overview',1000)){
     $vocabulary = taxonomy_get_vocabularies();
     module_load_include("admin.inc", "taxonomy");
     return drupal_get_form('taxonomy_overview_terms',$vocabulary[$vid]);

@@ -29,7 +29,7 @@ function leftandright_requirements($phase) {
   $requirements = array();
   $t = get_t();
   if ($phase == 'runtime') {
-    if(strpos(file_get_contents(drupal_get_path('module','taxonomy').'/taxonomy.module'), 'leftandright')){
+    if(strpos(file_get_contents(drupal_get_path('module','taxonomy').'/taxonomy.module'), 'leftandright.taxonomy.module')){
       $requirement = REQUIREMENT_OK;
       $message = $t('"taxonomy.module" appears to have been replaced correctly.');
     } else {

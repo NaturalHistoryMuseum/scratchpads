@@ -28,8 +28,9 @@ function leftandright_get_tree($vid, $parent, $max_depth, $offset = 0, $count=10
   $tree = array();
   // FIXME - We're not returning the parents for a term - is this an issue?
   // leftandrighttemp doesn't need {}
-  $results = db_query("SELECT t.*, depth FROM {term_data} t, leftandrighttemp l WHERE t.tid = l.tid ORDER BY lft", $tids);
+  $results = db_query("SELECT t.*, depth, parent as parents FROM {term_data} t, leftandrighttemp l, {term_hierarchy} h WHERE t.tid = l.tid AND t.tid = h.tid ORDER BY lft", $tids);
   while($row = db_fetch_object($results)){
+    $row->parents = array($row->parents);
     $tree[] = $row;
   }
   // Hmmm, we need to drop the temporary table - FFS, I thought the whole idea
