@@ -213,6 +213,7 @@ function _tinytax_view_blocks($delta){
       // Make sure this term exists, else we delete the variable
       $term = taxonomy_get_term($tid);
       if(!$term){
+        variable_del('tinytax-'.$delta);
         $tid = _tinytax_first_term_with_many_children($delta);
       }
     }
