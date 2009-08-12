@@ -55,6 +55,7 @@ function leftandright_rebuild_form_submit($form, $form_state){
     'progress_message' => t('Written record @current of @total'),
     'error_message' => t('Something went wrong, please contact an administrator')
   );
+  watchdog('batch', print_r($batch, TRUE));
   batch_set($batch);
 }
 
