@@ -116,6 +116,7 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
     $leftright = 2;
   }
   $nextstepup = $leftright + $count;
+  watchdog('batch',"$leftright $max $leftright $nextstepup");
   while($leftright <= $max && $leftright < $nextstepup){
     if(isset($branches[$depth+1])){
       // We're moving down the array
