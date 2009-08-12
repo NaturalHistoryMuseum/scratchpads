@@ -31,9 +31,10 @@ function leftandright_perm(){
 function leftandright_menu(){
   $items['admin/content/taxonomy/leftandright'] = array(
     'title' => 'Rebuild Tree',
-    'page callback' => 'leftandright_overview_vocabularies',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('leftandright_rebuild_form'),
     'access arguments' => array('administer taxonomy'),
-    'file' => 'leftandright.admin.inc',
+    'file' => 'leftandright.rebuild.inc',
     'type' => MENU_LOCAL_TASK);
   $items['leftandright/update'] = array(
     'title' => '',
@@ -116,39 +117,4 @@ function leftandright_descendant_used($tid){
   } else {
     return false;
   }
-}
-
-/*******************************************************************************
- * REBUILD TREE
- ******************************************************************************/
-// Returns an indexed array of PIDs and the vocabularies associated with these PIDs
-function leftandright_trees_rebuilding($vid = 0){
-  exec('ps -ef | grep landr | grep -v grep',$exec_output);
-  $rebuilding=array();
-  foreach($exec_output as $process){
-    // Split the process by " " as the last part should be the vocabulary ID
-    $parts = explode(" ",preg_replace("/[\ ]*\ /"," ",$process));
-    $exec_vid = array_pop($parts);
-    if($vid == $exec_vid){
-      return true;
-    }
-    $pid = $parts[1];
-    $rebuilding[$pid]=$exec_vid;
-  }
-  if($vid){
-    return false;
-  } 
-  return $rebuilding;
-}
-function leftandright_rebuild_tree_page($vid){
-  if(leftandright_trees_rebuilding($vid)){
-    drupal_set_message(t('Already rebuilding vocabulary'));
-  } else {
-    leftandright_rebuild_tree($vid);
-  }
-  drupal_goto('admin/content/taxonomy/leftandright');
-}
-function leftandright_rebuild_tree($vid){
-  module_load_include("rebuild.inc", "leftandright");
-  _leftandright_rebuild_tree($vid);
 }

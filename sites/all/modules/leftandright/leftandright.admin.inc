@@ -24,7 +24,7 @@ function leftandright_overview_terms($vid){
   drupal_set_title(check_plain($vocabulary->name));
   $start_from      = $_GET['page'] ? $_GET['page'] : 0;
   $total_entries   = 0;  // total count for pager
-  $page_increment  = 25; // number of tids per page
+  $page_increment  = 50; // number of tids per page
   $displayed_count = 0;  // number of tids shown
 
   if ($vocabulary->tags) {
@@ -63,6 +63,7 @@ function leftandright_overview_terms($vid){
   return $output;
   
 }
+
 /**
  * autotag settings page
  */
@@ -73,48 +74,4 @@ function leftandright_admin_settings() {
     '#default_value' => variable_get('leftandright_minimum_terms', 1000)
   );
   return system_settings_form($form);
-}
-/**
- * List and manage vocabularies.
- */
-function leftandright_overview_vocabularies() {
-  $rebuilding = leftandright_trees_rebuilding();
-  $above_table = false;
-  if(count($rebuilding)){
-    $processes = variable_get('leftandright_rebuild_pids',array());
-    $current_pids = array();
-    foreach($rebuilding as $pid=>$vid){
-      // Check that this process was started by this site
-      if(in_array($pid,$processes)){
-        if(!$above_table){
-          $above_table = '<p><strong>'.t('Currently rebuilding the following vocabularies:').'</strong></p><ul>';
-        }
-        $vocabulary = taxonomy_vocabulary_load($vid);
-        $above_table .='<li>'.check_plain($vocabulary->name).'</li>';
-        $current_pids[] = $pid;
-        $display_above_table = true;
-      }
-    }
-    variable_set('leftandright_rebuild_pids',$current_pids);
-    $above_table .= '</ul>';
-  }
-  $vocabularies = taxonomy_get_vocabularies();
-  $rows = array();
-  foreach ($vocabularies as $vocabulary) {
-    if(array_search($vocabulary->vid,$rebuilding)){
-      $rebuild = t('This tree is currently being rebuilt');
-    } else {
-      $rebuild = l(t('rebuild tree'), 'leftandright/update/'.$vocabulary->vid);
-    }
-    $rows[] = array(
-      'name' => check_plain($vocabulary->name),
-      'rebuild' => $rebuild
-    );
-  }
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No categories available.'), 'colspan' => '5'));
-  }
-  $header = array(t('Name'),t('Rebuild Tree'));
-
-  return $above_table . theme('table', $header, $rows, array('id' => 'taxonomy'));
 }

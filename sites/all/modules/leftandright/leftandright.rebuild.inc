@@ -1,120 +1,211 @@
 <?php
-function _leftandright_rebuild_tree($vid){
-  // Lets load this vocabulary, firstly to make sure it exists, and secondly
-  // so that we know its name
-  $vocabulary = taxonomy_vocabulary_load($vid);
-  if(!$vocabulary){return;}
-  // Check that the vocabulary has terms, if not, just return
-  $result = db_query("SELECT COUNT(tid) c FROM {term_data} WHERE vid = %d", $vid);
-  $array_results = db_fetch_array($result);
-  if(!$array_results['c']){
-    drupal_set_message(check_plain($vocabulary->name).' has no terms');
-    return;
+/**
+ * rebuild form
+ */
+function leftandright_rebuild_form($form_state){
+  $vocabularies = taxonomy_get_vocabularies();
+  $form['vocabularies'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Vocabulary to rebuild'),
+    '#description' => t('Select which vocabularies you would like to rebuild, and then click Rebuild')
+  );  
+  foreach ($vocabularies as $vocabulary) {
+    $form['vocabularies']['#options'][$vocabulary->vid] = check_plain($vocabulary->name);
   }
-  
-  // Get the DB connection shit in the same way as core does
-  global $db_url;  
-  $url = parse_url($db_url);
-  $url['user'] = urldecode($url['user']);
-  if(isset($url['pass'])) {
-    $url['pass'] = urldecode($url['pass']);
-  } else {
-    $url['pass'] = '';}
-  $url['host'] = urldecode($url['host']);
-  $url['path'] = urldecode($url['path']);
-  $url['port'] = $url['port'] ? $url['port'] : 3306;
-  
-  // Calculate the tid to start from (creating a parent if the vocabulary
-  // has multiple roots (forest not tree).
-  $results = db_query("SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
-  // Following query added as db_num_rows no longer exists GAH!
-  $results_count = db_query("SELECT COUNT(t.tid) FROM {term_data} t, {term_hierarchy} h WHERE parent = 0 AND vid = %d AND t.tid = h.tid;", $vid);
-  $num_rows = array_pop(db_fetch_array($results_count));
-  $tid;
-  $temporary_root_created = false;
-    
-  if($num_rows==1){
-    // Single tree, woot
-    $tid = array_pop(db_fetch_array($results));
-  } else {
-    $temporary_root_created = true;
-    // Either no results (Farp), Or we have a forest.  Lets tree it!
-    // Create new term to be the base of the tree.
-    // Because the term is temporary, we don't use taxonomy_ functions, but instead
-    // use trusty SQL.
-    // Create term
-    db_query("INSERT INTO {term_data} (vid, name) VALUES (%d , 'TEMPORARY TERM')", $vid);
-    $tid = db_last_insert_id('term_data','tid');
-    db_query("INSERT INTO {term_hierarchy} (tid, parent) VALUES (%d , 0)", $tid);
-    // Set parent of current roots as this term
-    $result = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE t.tid = h.tid AND parent =0 AND vid = %d AND t.tid != %d",$vid, $tid);
-    $tids = array();
-    while($row=db_fetch_array($result)){
-      $tids[] = $row['tid'];
-    }
-    db_query("UPDATE {term_hierarchy} SET parent = %d WHERE tid IN (".implode(",",$tids).")",$tid,$tid);
-  }
-  
-  // Create the string which will become the PHP file to execute
-  /**
-   * FIXME - The following doesn't use Drupal's {table_name} shenanigans
-   */  
-  $tmp_php_file_string = '<?php
-mysql_connect(\''.$url['host'].'\',\''.$url['user'].'\',\''.$url['pass'].'\','.$url['port'].');
-mysql_select_db(\''.substr($url['path'], 1).'\');
-mysql_query("'.db_prefix_tables("LOCK TABLES {term_data} READ, {term_hierarchy} READ, {leftandright} WRITE;").'");
-function rebuild_tree($tid, $left, $depth) {
-  $right = $left+1;
-  $results = mysql_query("SELECT h.tid FROM '.db_prefix_tables('{term_hierarchy}').' h,'.db_prefix_tables('{term_data}').' t  WHERE parent = $tid AND t.tid=h.tid ORDER BY name");
-  while ($row = mysql_fetch_array($results)){
-    $right = rebuild_tree($row[0], $right, $depth+1);
-  }  
-  echo "($tid,'.$vid.',$left,$right,$depth)";
-  if($left != 1){
-    echo ",";
-  }
-  return $right+1;
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit')
+  );
+  return $form;
 }
-mysql_query("UNLOCK TABLES;"); 
-echo "'.db_prefix_tables("LOCK TABLES {term_data} READ, {term_hierarchy} READ, {leftandright} WRITE;").'";
-echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE vid = '.$vid.'; INSERT INTO '.db_prefix_tables('{leftandright}').' (tid, vid, lft, rgt, depth) VALUES ";
-rebuild_tree('.$tid.',1, ';
-  if($temporary_root_created){
-    $tmp_php_file_string .= '-1';
+
+/**
+ * Ensure a vocabulary has been selected
+ */
+function leftandright_rebuild_form_validate($form, $form_state){
+  foreach($form_state['values']['vocabularies'] as $vid => $set){
+    if($set){
+      return;
+    }
+  }
+  form_set_error('vocabularies', t('Please select a vocabulary'));
+}
+
+/**
+ * Submit the rebuild form, and start the batch.
+ *
+ * @param unknown_type $form
+ * @param unknown_type $form_state
+ */
+function leftandright_rebuild_form_submit($form, $form_state){
+  // Lets 
+  $operations = array();
+  foreach($form_state['values']['vocabularies'] as $key => $vid){
+    if($vid){
+      $operations[] = array(
+        'leftandright_rebuild_tree', array($vid, 10)
+      );
+    }
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'leftandright_rebuild_finished',
+    'title' => t('Rebuilding Vocabularies'),
+    'init_message' => t('The rebuilding of your vocabularies is starting.'),
+    'progress_message' => t('Written record @current of @total'),
+    'error_message' => t('Something went wrong, please contact an administrator')
+  );
+  batch_set($batch);
+}
+
+/**
+ * Heavy lifting function, does the rebuilding.
+ */
+function leftandright_rebuild_tree($vid, $count, &$context){
+  watchdog('batch','HERE');
+  if(!isset($context['sandbox'])){
+    $context['sandbox'] = array(
+      'progress' => 0,
+      'max' => db_result(db_query('SELECT COUNT(*)*2 FROM {term_data} WHERE vid = %d', $vid))
+    );
+    // While we're at it, we'll wipe the previous tree, and initialise the
+    // tree
+    db_query('DELETE FROM {leftandright} WHERE vid = %d', $vid);
+    db_query('DELETE FROM {leftandright_rebuild_left} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d)', $vid);
+    db_query('DELETE FROM {leftandright_rebuild_right} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d)', $vid);
+  }
+  if($context['sandbox']['progress']){
+    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['progress'], $context['progress']));
   } else {
-    $tmp_php_file_string .= '0';    
+    $tid = 0;
   }
-  $tmp_php_file_string .= ');
-echo ";";';
-  
-  // Add the deletion of the temporary term, if required, to the PHP file
-  if($temporary_root_created){
-    $tmp_php_file_string .= '
-echo "DELETE FROM '.db_prefix_tables('{leftandright}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_data}').' WHERE tid = '.$tid.';DELETE FROM '.db_prefix_tables('{term_hierarchy}').' WHERE tid = '.$tid.';";
-echo "UPDATE '.db_prefix_tables('{term_hierarchy}').' SET parent = 0 WHERE parent = '.$tid.';";';
-  }
-  $tmp_php_file_string .= '
-echo "UNLOCK TABLES;";';
-  // Write this out to a temporary file which we'll EXEC!
-  $filepath = file_create_filename('leftandright.php', file_directory_temp());
-  file_save_data($tmp_php_file_string, $filepath, FILE_EXISTS_REPLACE);
-  
-  // FIXME - TEST FOR WINDOWS HERE, IF WINDOWS, EXECUTE BAT FILE INSTEAD
-  // Lets try to execute the file
-  if($windoze){
-    
+  $context['sandbox']['progress'] = _leftandright_get_tree_part($vid, $tid, $count, $context['sandbox']['progress'], $context['sandbox']['max']);
+  if($context['sandbox']['progress']){
+    $context['finished'] = $context['sandbox']['progress']/$context['sandbox']['max'];
   } else {
-    $file_to_execute = $_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','leftandright').'/landr';
-    // FIXME - Needs port
-    $command = $file_to_execute.' '.$filepath.' '.$url['host'].' '.$url['user'].' '.$url['pass'].' '.substr($url['path'], 1).' '.$vid;
-    $pid = shell_exec("nohup $command > /dev/null & echo $!");
-    variable_set('leftandright_rebuild_pids',array_merge(variable_get('leftandright_rebuild_pids',array()),array($pid=>$pid)));
+    $context['sandbox']['progress'] = 0;
   }
+}
+
+function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // CHANGE NAME - FIXME!
+  // This function gets the parts of a tree after a term (going back up the tree
+  // if required).
+  if(!$tid){
+    // We've got zero, we're at the start, depth = 0, and lft = 1    
+    $branches = _leftandright_add_parents_to_array(array(), $tid, $vid);
+    $tid = $branches[0][0];
+    $branches = _leftandright_add_children_to_array($branches, $tid, $vid);
+    $depth = 0;
+  } else {
+    // We've got a $tid, we need a depth
+    $depth = db_result(db_query('SELECT depth FROM {leftandright_rebuild_left} WHERE tid = %d', $tid));
+    // Also populate the branches array
+    $branches = _leftandright_add_parents_to_array(array(), $tid, $vid);
+    $depth = count($branches);
+    $branches = _leftandright_add_children_to_array($branches, $tid, $vid);
+  }
+  $tid_lft_values = array();
+  $tid_rgt_values = array();
+  // We've now got a branch which we can work with, lets move down through it 
+  // (and along and up) setting the lft and rgt values as we go.
   
-  // Finally delete the file
-  sleep(2); // Not sure if this sleep is necesary, but it seems to be
-  file_delete($filepath);
+  if($leftright == 0){
+    $tid_lft_values[$branches[0][0]] = array('tid' => $tid, 'lft' => 1, 'depth' => 0);
+    $leftright = 2;
+  }
+  $nextstepup = $leftright + $count;
+  while($leftright <= $max && $leftright < $nextstepup){
+    if(isset($branches[$depth+1])){
+      // We're moving down the array
+      $tid_lft_values[$branches[$depth+1][0]] = array('tid' => $branches[$depth+1][0], 'lft' => $leftright, 'depth' => $depth+1);
+      $depth ++;
+      $leftright ++;
+    } else {
+      // We're moving along, lets set the right value, and then pop the tid from
+      // the array
+      $tid = array_shift($branches[$depth]);
+      // Set left first
+      if(!isset($tid_lft_values[$tid])){
+        $tid_lft_values[$tid] = array('tid' => $tid, 'lft' => $leftright, 'depth' => $depth);
+        $leftright ++;        
+      }
+      $tid_rgt_values[$tid] = array('tid' => $tid, 'rgt' => $leftright);
+      $leftright ++;
+      // If there are other tids on this level, then we'll need to get the 
+      // children of the next tid
+      if(count($branches[$depth])){
+        $branches = _leftandright_add_children_to_array($branches, $branches[$depth][0]);
+      } else {
+        // else we'll need to move up on the next cycle
+        unset($branches[$depth]);
+        $depth --;
+      }
+    }
+  }
+  // Save the stuff to the leftandright_rebuild_x tables  
+  $lft_placeholders = implode(',', array_fill(0, count($tid_lft_values), '(%d,%d,%d)'));
+  $rgt_placeholders = implode(',', array_fill(0, count($tid_rgt_values), '(%d,%d)'));
+  foreach($tid_lft_values as $tid => $values){
+    foreach($values as $value){
+      $lft_values[] = $value;
+    }
+  }
+  foreach($tid_rgt_values as $tid => $values){
+    foreach($values as $value){
+      $rgt_values[] = $value;
+    }
+  }
+  // Do the insert
+  db_query('INSERT INTO {leftandright_rebuild_left} (tid,lft,depth) VALUES '.$lft_placeholders, $lft_values);
+  db_query('INSERT INTO {leftandright_rebuild_right} (tid,rgt) VALUES '.$rgt_placeholders, $rgt_values);
   
-  // Set message to say that we're doing the rebuild
-  drupal_set_message(t('Rebuilding the tree for vocabulary:').' '.check_plain($vocabulary->name));
+  return $leftright;
+}
+
+function _leftandright_add_parents_to_array($branches, $tid, $vid){
+  if(!$tid){
+    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = 0 AND t.tid = h.tid AND vid = %d ORDER BY weight ASC, name', $vid);
+    while($branch_tid = db_result($result)){
+      $branches[0][] = $branch_tid;
+    }
+    return $branches;
+  }
+  // We also need to populate the array above this term, so we'll do that here
+  $ancestors = taxonomy_get_parents_all($tid);
+  $ancestors = array_reverse($ancestors);
+  $root = new stdClass();
+  $root->tid = 0;
+  array_unshift($ancestors, $root);
+  $depth = 0;
+  foreach($ancestors as $ancestor){
+    $ancestor_reached = FALSE;
+    if($ancestor->tid == $tid){
+      break;
+    }
+    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = %d AND t.tid = h.tid AND vid = %d AND tid NOT IN (SELECT tid FROM {leftandright_rebuild_right} ORDER BY weight ASC, name', $ancestor->tid, $vid);  
+    while($branch_tid = db_result($result)){
+      if($branch_tid == $ancestors[$depth+1]->tid){
+        $ancestor_reached = TRUE;
+      }
+      if($ancestor_reached){
+        $branches[$depth][] = $branch_tid;
+      }
+    }
+    $depth ++;
+  }
+  return $branches;
+}
+
+function _leftandright_add_children_to_array($branches, $tid){
+  // We don't want to add anything that is already in the 
+  // leftandright_rebuild_right table, so lets not!
+  $depth = count($branches);
+  $result = db_query('SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.tid = t.tid WHERE parent = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight, name', $tid);
+  while ($additional_tid = db_result($result)){
+    $branches[$depth][] = $additional_tid;
+  }
+  if(isset($branches[$depth])){
+    $branches = _leftandright_add_children_to_array($branches, $branches[$depth][0]);
+  }
+  return $branches;
 }

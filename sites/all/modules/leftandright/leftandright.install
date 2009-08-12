@@ -46,16 +46,29 @@ function leftandright_requirements($phase) {
 }
 
 function leftandright_schema(){  
-  return array('leftandright' => array(
-    'fields' => array(
-      'lft' => array('type' => 'int', 'not null' => TRUE),
-      'rgt' => array('type' => 'int', 'not null' => TRUE),
-      'tid' => array('type' => 'int', 'not null' => TRUE),
-      'vid' => array('type' => 'int', 'not null' => TRUE),
-      'depth' => array('type' => 'int', 'size' => 'small')),
-    'primary key' => array('tid'),
-    'indexes' => array(
-      'vocab_index' => array('vid'))));
+  return array(
+    'leftandright' => array(
+      'fields' => array(
+        'lft' => array('type' => 'int', 'not null' => TRUE),
+        'rgt' => array('type' => 'int', 'not null' => TRUE),
+        'tid' => array('type' => 'int', 'not null' => TRUE),
+        'vid' => array('type' => 'int', 'not null' => TRUE),
+        'depth' => array('type' => 'int', 'size' => 'small')),
+      'primary key' => array('tid'),
+      'indexes' => array(
+        'vocab_index' => array('vid'))),
+    'leftandright_rebuild_left' => array(
+      'fields' => array(
+        'tid' => array('type' => 'int', 'not null' => TRUE),
+        'lft' => array('type' => 'int', 'not null' => TRUE),
+        'depth' => array('type' => 'int', 'size' => 'small')),
+      'primary key' => array('tid')),
+    'leftandright_rebuild_right' => array(
+      'fields' => array(
+        'tid' => array('type' => 'int', 'not null' => TRUE),
+        'rgt' => array('type' => 'int', 'not null' => TRUE)),
+      'primary key' => array('tid'))
+  );
 }
 
 function leftandright_uninstall(){
@@ -75,4 +88,11 @@ function leftandright_update_6101(){
   db_change_field($ret, 'leftandright', 'lft', 'lft', array('type' => 'int', 'not null' => TRUE));
   db_change_field($ret, 'leftandright', 'rgt', 'rgt', array('type' => 'int', 'not null' => TRUE));
   return $ret;
+}
+
+function leftandright_update_6102(){
+  // easiest way is to uninstall and reinstall, not keen, but hey ho.
+  drupal_uninstall_schema('leftandright');
+  leftandright_install();
+  return array('#finished' => TRUE);
 }
