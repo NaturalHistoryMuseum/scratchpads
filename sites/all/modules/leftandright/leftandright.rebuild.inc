@@ -143,22 +143,24 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
     }
   }
   // Save the stuff to the leftandright_rebuild_x tables  
-  $lft_placeholders = implode(',', array_fill(0, count($tid_lft_values), '(%d,%d,%d)'));
-  $rgt_placeholders = implode(',', array_fill(0, count($tid_rgt_values), '(%d,%d)'));
-  foreach($tid_lft_values as $tid => $values){
-    foreach($values as $value){
-      $lft_values[] = $value;
+  if(count($tid_lft_values)){
+    $lft_placeholders = implode(',', array_fill(0, count($tid_lft_values), '(%d,%d,%d)'));
+    foreach($tid_lft_values as $tid => $values){
+      foreach($values as $value){
+        $lft_values[] = $value;
+      }
     }
+    db_query('INSERT INTO {leftandright_rebuild_left} (tid,lft,depth) VALUES '.$lft_placeholders, $lft_values);
   }
-  foreach($tid_rgt_values as $tid => $values){
-    foreach($values as $value){
-      $rgt_values[] = $value;
+  if(count($tid_rgt_values)){
+    $rgt_placeholders = implode(',', array_fill(0, count($tid_rgt_values), '(%d,%d)'));
+    foreach($tid_rgt_values as $tid => $values){
+      foreach($values as $value){
+        $rgt_values[] = $value;
+      }
     }
+    db_query('INSERT INTO {leftandright_rebuild_right} (tid,rgt) VALUES '.$rgt_placeholders, $rgt_values);
   }
-  // Do the insert
-  db_query('INSERT INTO {leftandright_rebuild_left} (tid,lft,depth) VALUES '.$lft_placeholders, $lft_values);
-  db_query('INSERT INTO {leftandright_rebuild_right} (tid,rgt) VALUES '.$rgt_placeholders, $rgt_values);
-  
   return $leftright;
 }
 
