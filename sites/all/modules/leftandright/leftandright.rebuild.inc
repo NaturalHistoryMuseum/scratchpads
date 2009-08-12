@@ -189,7 +189,7 @@ function _leftandright_add_parents_to_array($branches, $tid, $vid){
     if($ancestor->tid == $tid){
       break;
     }
-    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = %d AND t.tid = h.tid AND vid = %d AND tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight ASC, name', $ancestor->tid, $vid);  
+    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = %d AND t.tid = h.tid AND vid = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight ASC, name', $ancestor->tid, $vid);  
     while($branch_tid = db_result($result)){
       if($branch_tid == $ancestors[$depth+1]->tid){
         $ancestor_reached = TRUE;
