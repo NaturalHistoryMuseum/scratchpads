@@ -1,9 +1,8 @@
 <?php
 function _leftandright_taxonomy_update($array){
-  //drupal_set_message(print_r($array, TRUE));return;
   // Get the right plus one value for this term (what it should be)
-  $new_right = _leftandright_get_new_right($array['tid']);
-  $new_left = _leftandright_get_new_left($array['tid']);
+  $new_right = _leftandright_get_new_right($array);
+  $new_left = _leftandright_get_new_left($array);
   
   // Get what it is set as now.
   $current_right = array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = %d', $array['tid'])));
@@ -52,11 +51,15 @@ function _leftandright_taxonomy_update($array){
     } else {
       $parent_tid = $array['parent'];
     }
-    $parent_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid)));
+    if($parent_tid){
+      $new_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $parent_tid))) + 1;
+    } else {
+      $new_depth = 0;
+    }
     $current_depth = array_pop(db_fetch_array(db_query('SELECT depth FROM {leftandright} WHERE tid = %d', $array['tid'])));
-    if($current_depth != ($parent_depth -1)){
+    if($current_depth != $new_depth){
       // Depth has changed, lets do something about it
-      $depth_change = ($parent_depth + 1)-$current_depth;
+      $depth_change = $new_depth - $current_depth;
       db_query('UPDATE {leftandright} SET depth = (depth + %d) WHERE lft < 0 AND rgt < 0', $depth_change);
     }    
     // Finally restore the branch
@@ -116,20 +119,28 @@ function _leftandright_taxonomy_insert($array){
  *
  * @param int $tid
  */
-function _leftandright_get_new_right($tid){
-  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) ORDER BY weight ASC, name', $tid);
+function _leftandright_get_new_right($term){
+  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) AND vid = %d ORDER BY weight ASC, name', $term['tid'], $term['vid']);
   $next_value = FALSE;
   while($row = db_fetch_array($result)){
     if($next_value){
       return array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = %d', $row['tid']))) - 1;
     }
-    if($row['tid'] == $tid){
+    if($row['tid'] == $term['tid']){
       $next_value = TRUE;
     }
   }
   // If we've reached this point, the term has no siblings (or none to the 
   // right) so we return the rgt value of the parent
-  return array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)', $tid)))-1;
+  // First get the parent and check that it isn't "0"
+  $parent = array_pop(db_fetch_array(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1', $term['tid'])));
+  if($parent != 0){
+    return array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = %d', $parent))) - 1;
+  } else {
+    // We've got a Zero parent, and we're the far right root, so our right value
+    // is calculated from the total number of terms in the tree *2
+    return array_pop(db_fetch_array(db_query('SELECT COUNT(*)*2 FROM term_data WHERE vid = %d', $term['vid'])));
+  }
 }
 
 /**
@@ -140,11 +151,11 @@ function _leftandright_get_new_right($tid){
  *
  * @param int $tid
  */
-function _leftandright_get_new_left($tid){
-  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) ORDER BY weight ASC, name', $tid);  
+function _leftandright_get_new_left($term){
+  $result = db_query('SELECT tid FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)) AND vid = %d ORDER BY weight ASC, name', $term['tid'], $term['vid']);  
   $previous_value = FALSE;
   while($row = db_fetch_array($result)){
-    if($row['tid'] == $tid){
+    if($row['tid'] == $term['tid']){
       if($previous_value){
         return array_pop(db_fetch_array(db_query('SELECT rgt FROM {leftandright} WHERE tid = %d', $previous_value))) + 1;
       } else {
@@ -156,5 +167,13 @@ function _leftandright_get_new_left($tid){
   }
   // If we've reached this point, the term has no siblings (or none to the left)
   // so we return the right value of the parent
-  return array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = (SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1)', $tid))) + 1;
+  // First get the parent and check that it isn't "0"
+  $parent = array_pop(db_fetch_array(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d LIMIT 1', $term['tid'])));
+  if($parent != 0){
+    return array_pop(db_fetch_array(db_query('SELECT lft FROM {leftandright} WHERE tid = %d', $parent))) + 1;
+  } else {
+    // We've got a Zero parent, and we're the far left root, so our left value
+    // is 1
+    return 1;
+  }
 }
