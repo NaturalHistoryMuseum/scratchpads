@@ -115,9 +115,7 @@ function _tinytax_get_vocabulary_name($vid){
 function tinytax_js($tid) {
   // This function handles the URLs "tinytax/get/1 ..."
   // We need the parents and the children of the TID.
-  $parents;
-  $children;
-  $vid;
+  $parents=array();
   if(substr($tid,0,3)=='vid'){
     $vid = substr($tid,3);
     $parent->tid=$tid;
@@ -211,7 +209,12 @@ function _tinytax_view_blocks($delta){
     $tid = variable_get('tinytax-'.$delta, FALSE);
     if (!$tid){
       $tid = _tinytax_first_term_with_many_children($delta);
-      variable_set('tinytax-'.$delta, $tid);
+    } else {
+      // Make sure this term exists, else we delete the variable
+      $term = taxonomy_get_term($tid);
+      if(!$term){
+        $tid = _tinytax_first_term_with_many_children($delta);
+      }
     }
     // Check to see if the taxonomy has multiple roots
     $parents = taxonomy_get_parents_all($tid);
