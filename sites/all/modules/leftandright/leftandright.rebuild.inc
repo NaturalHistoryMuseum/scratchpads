@@ -75,7 +75,10 @@ function leftandright_rebuild_tree($vid, $count, &$context){
     db_query('DELETE FROM {leftandright_rebuild_right} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d)', $vid);
   }
   if($context['sandbox']['progress']){
-    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['progress'], $context['progress']));
+    $max_left = db_result(db_query('SELECT CONCAT(tid,\' \',lft) FROM {leftandright_rebuild_left} ORDER BY lft DESC LIMIT 1'));
+    $max_right = db_result(db_query('SELECT CONCAT(tid,\' \',rgt) FROM {leftandright_rebuild_right} ORDER BY rgt DESC LIMIT 1'));
+    watchdog('batch', "{$context['sandbox']['progress']} $max_left $max_right");
+    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['sandbox']['progress'], $context['sandbox']['progress']));
   } else {
     $tid = 0;
   }
@@ -129,7 +132,7 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
       // Set left first
       if(!isset($tid_lft_values[$tid])){
         $tid_lft_values[$tid] = array('tid' => $tid, 'lft' => $leftright, 'depth' => $depth);
-        $leftright ++;        
+        $leftright ++;
       }
       $tid_rgt_values[$tid] = array('tid' => $tid, 'rgt' => $leftright);
       $leftright ++;
