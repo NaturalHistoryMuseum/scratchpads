@@ -143,9 +143,6 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
         $depth --;
       }
     }
-    if(!count($branches)){
-      break;
-    }
   }
   // Save the stuff to the leftandright_rebuild_x tables  
   $lft_placeholders = implode(',', array_fill(0, count($tid_lft_values), '(%d,%d,%d)'));
