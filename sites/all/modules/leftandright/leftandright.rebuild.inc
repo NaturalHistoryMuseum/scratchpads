@@ -53,7 +53,8 @@ function leftandright_rebuild_form_submit($form, $form_state){
     'title' => t('Rebuilding Vocabularies'),
     'init_message' => t('The rebuilding of your vocabularies is starting.'),
     'progress_message' => t('Written record @current of @total'),
-    'error_message' => t('Something went wrong, please contact an administrator')
+    'error_message' => t('Something went wrong, please contact an administrator'),
+    'file' => drupal_get_path('module','leftandright').'/leftandright.rebuild.inc'
   );
   watchdog('batch', print_r($batch, TRUE));
   batch_set($batch);
