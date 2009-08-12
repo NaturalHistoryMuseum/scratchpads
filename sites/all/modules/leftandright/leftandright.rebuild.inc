@@ -78,7 +78,7 @@ function leftandright_rebuild_tree($vid, $count, &$context){
     $max_left = db_result(db_query('SELECT CONCAT(tid,\' \',lft) FROM {leftandright_rebuild_left} ORDER BY lft DESC LIMIT 1'));
     $max_right = db_result(db_query('SELECT CONCAT(tid,\' \',rgt) FROM {leftandright_rebuild_right} ORDER BY rgt DESC LIMIT 1'));
     watchdog('batch', "{$context['sandbox']['progress']} $max_left $max_right");
-    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['sandbox']['progress'], $context['sandbox']['progress']));
+    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['sandbox']['progress']-1, $context['sandbox']['progress']-1));
   } else {
     $tid = 0;
   }
