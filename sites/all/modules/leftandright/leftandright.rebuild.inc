@@ -56,7 +56,6 @@ function leftandright_rebuild_form_submit($form, $form_state){
     'error_message' => t('Something went wrong, please contact an administrator'),
     'file' => drupal_get_path('module','leftandright').'/leftandright.rebuild.inc'
   );
-  watchdog('batch', print_r($batch, TRUE));
   batch_set($batch);
 }
 
@@ -64,8 +63,7 @@ function leftandright_rebuild_form_submit($form, $form_state){
  * Heavy lifting function, does the rebuilding.
  */
 function leftandright_rebuild_tree($vid, $count, &$context){
-  watchdog('batch','HERE');
-  if(!isset($context['sandbox'])){
+  if(!isset($context['sandbox']['max'])){
     $context['sandbox'] = array(
       'progress' => 0,
       'max' => db_result(db_query('SELECT COUNT(*)*2 FROM {term_data} WHERE vid = %d', $vid))
@@ -116,7 +114,6 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
     $leftright = 2;
   }
   $nextstepup = $leftright + $count;
-  watchdog('batch',"$leftright $max $leftright $nextstepup");
   while($leftright <= $max && $leftright < $nextstepup){
     if(isset($branches[$depth+1])){
       // We're moving down the array
