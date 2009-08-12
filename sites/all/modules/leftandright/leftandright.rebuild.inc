@@ -117,7 +117,9 @@ function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // C
   while($leftright <= $max && $leftright < $nextstepup){
     if(isset($branches[$depth+1])){
       // We're moving down the array
-      $tid_lft_values[$branches[$depth+1][0]] = array('tid' => $branches[$depth+1][0], 'lft' => $leftright, 'depth' => $depth+1);
+      if(!isset($tid_lft_values[$branches[$depth+1][0]])){
+        $tid_lft_values[$branches[$depth+1][0]] = array('tid' => $branches[$depth+1][0], 'lft' => $leftright, 'depth' => $depth+1);
+      }
       $depth ++;
       $leftright ++;
     } else {
