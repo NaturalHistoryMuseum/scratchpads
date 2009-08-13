@@ -80,18 +80,6 @@ function leftandright_uninstall(){
   db_query("DELETE FROM {variable} WHERE name LIKE 'leftandright_%'");
 }
 
-function leftandright_update_6101(){
-  $ret = array();
-  db_drop_field($ret, 'leftandright', 'lowername');
-  db_drop_index($ret, 'leftandright', 'lft_vid');
-  db_drop_index($ret, 'leftandright', 'rgt_vid');
-  db_drop_index($ret, 'leftandright', 'left_index');
-  db_drop_index($ret, 'leftandright', 'right_index');
-  db_change_field($ret, 'leftandright', 'lft', 'lft', array('type' => 'int', 'not null' => TRUE));
-  db_change_field($ret, 'leftandright', 'rgt', 'rgt', array('type' => 'int', 'not null' => TRUE));
-  return $ret;
-}
-
 function leftandright_update_6103(){
   // easiest way is to uninstall and reinstall, not keen, but hey ho.
   drupal_uninstall_schema('leftandright');
