@@ -60,12 +60,14 @@ function leftandright_schema(){
     'leftandright_rebuild_left' => array(
       'fields' => array(
         'tid' => array('type' => 'int', 'not null' => TRUE),
+        'vid' => array('type' => 'int', 'not null' => TRUE),
         'lft' => array('type' => 'int', 'not null' => TRUE),
         'depth' => array('type' => 'int', 'size' => 'small')),
       'primary key' => array('tid')),
     'leftandright_rebuild_right' => array(
       'fields' => array(
         'tid' => array('type' => 'int', 'not null' => TRUE),
+        'vid' => array('type' => 'int', 'not null' => TRUE),
         'rgt' => array('type' => 'int', 'not null' => TRUE)),
       'primary key' => array('tid'))
   );
@@ -90,7 +92,7 @@ function leftandright_update_6101(){
   return $ret;
 }
 
-function leftandright_update_6102(){
+function leftandright_update_6103(){
   // easiest way is to uninstall and reinstall, not keen, but hey ho.
   drupal_uninstall_schema('leftandright');
   leftandright_install();

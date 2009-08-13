@@ -43,7 +43,10 @@ function leftandright_rebuild_form_submit($form, $form_state){
   foreach($form_state['values']['vocabularies'] as $key => $vid){
     if($vid){
       $operations[] = array(
-        'leftandright_rebuild_tree', array($vid, 2000)
+        'leftandright_rebuild_tree', array($vid, 20)
+      );
+      $operations[] = array(
+        'leftandright_move_rebuilt_tree', array($vid)
       );
     }
   }
@@ -60,185 +63,167 @@ function leftandright_rebuild_form_submit($form, $form_state){
 }
 
 /**
+ * Move the rebuilt tree into the leftandright table
+ */
+function leftandright_rebuild_finished($success, $results, $operations){
+  if($success){
+    drupal_set_message(t('Your vocabulary has been rebuilt'));
+  } else {
+    drupal_set_message(t('Your vocabulary has <strong>not</strong> been rebuilt'), 'error');    
+  }
+}
+
+/**
+ * Move the rebuilt tree
+ */
+function leftandright_move_rebuilt_tree($vid){
+  db_query('INSERT INTO {leftandright} (tid, vid, lft, rgt, depth) SELECT l.tid,l.vid,lft,rgt,depth FROM {leftandright_rebuild_left} l, {leftandright_rebuild_right} r WHERE l.tid = r.tid AND l.vid = %d', $vid);
+}
+
+/**
  * Heavy lifting function, does the rebuilding.
  */
 function leftandright_rebuild_tree($vid, $count, &$context){
   if(!isset($context['sandbox']['max'])){
     $context['sandbox'] = array(
-      'progress' => 0,
-      'max' => db_result(db_query('SELECT COUNT(*)*2 FROM {term_data} WHERE vid = %d', $vid))
+      'progress' => 1,
+      'max' => db_result(db_query('SELECT COUNT(*)*2 FROM {term_data} WHERE vid = %d', $vid))+1
     );
     // While we're at it, we'll wipe the previous tree, and initialise the
     // tree
     db_query('DELETE FROM {leftandright} WHERE vid = %d', $vid);
-    db_query('DELETE FROM {leftandright_rebuild_left} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d) OR tid = 0', $vid); // Remove the = 0
-    db_query('DELETE FROM {leftandright_rebuild_right} WHERE tid IN (SELECT tid FROM {term_data} WHERE vid = %d) OR tid = 0', $vid); // Remove the = 0
+    db_query('DELETE FROM {leftandright_rebuild_left} WHERE vid = %d', $vid);
+    db_query('DELETE FROM {leftandright_rebuild_right} WHERE vid = %d', $vid);
   }
-  if($context['sandbox']['progress']){
-    $tid = db_result(db_query('SELECT tid FROM {leftandright_rebuild_left} WHERE lft = %d UNION SELECT tid FROM {leftandright_rebuild_right} WHERE rgt = %d', $context['sandbox']['progress']-1, $context['sandbox']['progress']-1));
-    watchdog('batch','Second run tid is: '.$tid);
-  } else {
-    $tid = 0;
-  }
-  $context['sandbox']['progress'] = _leftandright_get_tree_part($vid, $tid, $count, $context['sandbox']['progress'], $context['sandbox']['max']);
-  if($context['sandbox']['progress']){
-    $context['finished'] = $context['sandbox']['progress']/$context['sandbox']['max'];
-  } else {
-    $context['sandbox']['progress'] = 0;
-  }
-}
-
-function _leftandright_get_tree_part($vid, $tid, $count, $leftright, $max){ // CHANGE NAME - FIXME!
-  // This function gets the parts of a tree after a term (going back up the tree
-  // if required).
-  $tid_lft_values = array();
-  $tid_rgt_values = array();
-  if($tid){
-    // We've got a $tid, we need a depth
-    $depth = db_result(db_query('SELECT depth FROM {leftandright_rebuild_left} WHERE tid = %d', $tid));
-    // Also populate the branches array
-    $branches = _leftandright_add_parents_to_array(array(), $tid, $vid);
-    $branches = _leftandright_add_children_to_array($branches, $tid, $vid);
-    // Set $tid_lft_values and $tid_rgt_values with previous highest entry
-    $tid_lft_values[$tid] = db_fetch_array(db_query('SELECT tid, lft, depth, 1 AS readyset FROM {leftandright_rebuild_left} ORDER BY lft DESC LIMIT 1'));
-    $tid_rgt_values[$tid] = db_fetch_array(db_query('SELECT tid, rgt, 1 AS readyset FROM {leftandright_rebuild_right} ORDER BY rgt DESC LIMIT 1'));
-  } else {
-    // We've got zero, we're at the start, depth = 0, and lft = 1    
-    $branches = _leftandright_add_parents_to_array(array(), $tid, $vid);
-    $tid = $branches[0][0];
-    $branches = _leftandright_add_children_to_array($branches, $tid, $vid);
-    $depth = 0;
-  }
-  // We've now got a branch which we can work with, lets move down through it 
-  // (and along and up) setting the lft and rgt values as we go.
-  
-  if($leftright == 0){
-    $tid_lft_values[$branches[0][0]] = array('tid' => $tid, 'lft' => 1, 'depth' => 0);
-    $leftright = 2;
-  }
-  $nextstepup = $leftright + $count;
-  while($leftright <= $max && $leftright < $nextstepup){
-    if(isset($branches[$depth+1])){
-      // We're moving down the array
-      if(!isset($tid_lft_values[$branches[$depth+1][0]])){
-        $tid_lft_values[$branches[$depth+1][0]] = array('tid' => $branches[$depth+1][0], 'lft' => $leftright, 'depth' => $depth+1);
-      }
-      $depth ++;
-      $leftright ++;
-    } elseif(isset($branches[$depth])) {
-      // We're moving along, lets set the right value, and then pop the tid from
-      // the array
-      $tid = array_shift($branches[$depth]);
-      // Set left first
-      if(!isset($tid_lft_values[$tid])){
-        $tid_lft_values[$tid] = array('tid' => $tid, 'lft' => $leftright, 'depth' => $depth);
-        $leftright ++;
-      }
-      $tid_rgt_values[$tid] = array('tid' => $tid, 'rgt' => $leftright);
-      $leftright ++;
-      // If there are other tids on this level, then we'll need to get the 
-      // children of the next tid
-      if(count($branches[$depth])){
-        $branches = _leftandright_add_children_to_array($branches, $branches[$depth][0]);
+  if($context['sandbox']['progress']>1){
+    $result = db_query('SELECT * FROM (SELECT lft as leftright, tid, depth, \'LEFT\' AS leftorright FROM {leftandright_rebuild_left} WHERE vid = %d UNION SELECT rgt AS leftright, r.tid, depth, \'RIGHT\' AS leftorright FROM {leftandright_rebuild_left} l, {leftandright_rebuild_right} r WHERE l.tid = r.tid AND l.vid = %d) AS something ORDER BY leftright DESC LIMIT 1', $vid, $vid);
+    $row = db_fetch_array($result);
+    if($row['leftorright'] == 'RIGHT'){
+      // We finished with this term, we need to move up or along (not down).
+      $siblings = _leftandright_get_sibling_tids($row['tid'], $vid);
+      if(count($siblings)){
+        $depth = $row['depth'];
+        $tid = array_shift($siblings);
+        $left = TRUE;
       } else {
-        // else we'll need to move up on the next cycle
-        unset($branches[$depth]);
-        $depth --;
+        // We need to move up
+        $ancestors = _leftandright_get_ancestors_as_array_of_tids($row['tid']);
+        array_shift($ancestors); // Remove this term
+        $tid = array_shift($ancestors);
+        $depth = $row['depth'] - 1;
+        $left = FALSE; 
       }
     } else {
-      $depth --;
-      if(!is_array($branches[$depth])){
-        watchdog('batch','Branch is not an array at depth '.$depth.': '.print_r($branches));
-        exit;
-      }
-      $tid = array_shift($branches[$depth]);
-      $tid_rgt_values[$tid] = $leftright;
-      $leftright ++;
-      // If there are other tids on this level, then we'll need to get the 
-      // children of the next tid
-      if(count($branches[$depth])){
-        $branches = _leftandright_add_children_to_array($branches, $branches[$depth][0]);
-      } else {
-        // else we'll need to move up on the next cycle
-        unset($branches[$depth]);
-        $depth --;
-      }
+      $depth = $row['depth'];
+      $tid = $row['tid'];
+      $left = FALSE;
     }
+  } else {
+    // Get the root tid as the left
+    $tid = db_result(db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE t.tid = h.tid AND parent = 0 AND vid = %d ORDER BY weight ASC, name', $vid));
+    $left = TRUE;
+    $depth = 0;
   }
-  // Save the stuff to the leftandright_rebuild_x tables
-  if(count($tid_lft_values)){
-    $lft_placeholders = implode(',', array_fill(0, count($tid_lft_values), '(%d,%d,%d)'));
-    foreach($tid_lft_values as $tid => $values){
-      if(!isset($values['readyset'])){
-        foreach($values as $value){
-          $lft_values[] = $value;
-        }
-      }
-    }
-    //watchdog('batch', print_r($lft_values, TRUE));
-    //watchdog('batch', print_r($lft_placeholders, TRUE));
-    db_query('INSERT INTO {leftandright_rebuild_left} (tid,lft,depth) VALUES '.$lft_placeholders, $lft_values);
-  }
-  if(count($tid_rgt_values)){
-    $rgt_placeholders = implode(',', array_fill(0, count($tid_rgt_values), '(%d,%d)'));
-    foreach($tid_rgt_values as $tid => $values){
-      if(!isset($values['readyset'])){
-        foreach($values as $value){
-          $rgt_values[] = $value;
-        }
-      }
-    }
-    db_query('INSERT INTO {leftandright_rebuild_right} (tid,rgt) VALUES '.$rgt_placeholders, $rgt_values);
-  }
-  /*watchdog('batch',$leftright);
-  exit;*/
-  return $leftright;
+  global $stop_at_leftright;
+  global $leftright;
+  global $max;
+  global $original_tid_call_ancestors;
+  $original_tid_call_ancestors = _leftandright_get_ancestors_as_array_of_tids($tid);
+  $max = $context['sandbox']['max'];
+  $stop_at_leftright = $context['sandbox']['progress'] + $count;
+  $leftright = $context['sandbox']['progress']; 
+  
+  // Build the part
+  _leftandright_rebuild_tree_part($vid, $tid, $depth, $left);
+  
+  $context['sandbox']['progress'] = $leftright;
+  $context['finished'] = $context['sandbox']['progress']/$context['sandbox']['max'];
 }
 
-function _leftandright_add_parents_to_array($branches, $tid, $vid){
-  if(!$tid){
-    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = 0 AND t.tid = h.tid AND vid = %d ORDER BY weight ASC, name', $vid);
-    while($branch_tid = db_result($result)){
-      $branches[0][] = $branch_tid;
-    }
-    return $branches;
+function _leftandright_rebuild_tree_part($vid, $tid, $depth, $left = TRUE){//, $from_sibling = FALSE){
+  // Simply walk through a tree, getting the children, followed by parents so
+  // that we can set the leftandright values.
+  global $stop_at_leftright;
+  global $leftright;
+  global $max;
+  global $original_tid_call_ancestors;
+  
+  // Lets make sure that we've not equalled the max, or that we've passed the
+  // stop point.
+  if($leftright > $stop_at_leftright || $leftright > $max){
+    // Tell the parent calls to stop
+    return FALSE; 
   }
-  // We also need to populate the array above this term, so we'll do that here
+  if($left){
+    // Else we're safe to continue, lets get the term we're working on, and set
+    // the left value
+    db_query('INSERT INTO {leftandright_rebuild_left} (tid, lft, depth) VALUES (%d, %d, %d)', $tid, $leftright, $depth);
+    $leftright++;
+  }
+  
+  // Next get the children, and call this function for them
+  $children = _leftandright_get_children_tids($tid);
+  foreach($children as $child){
+    if(!_leftandright_rebuild_tree_part($vid, $child, $depth+1)){
+      return FALSE;
+    }
+  }
+  
+  // Set the right value
+  db_query('INSERT INTO {leftandright_rebuild_right} (tid, rgt) VALUES (%d, %d)', $tid, $leftright);
+  $leftright++;
+  
+  // Now we need to move back up the tree.  We can do this by either returning
+  // to the function that called us, or if this is the tid (or one of its
+  // ancestors) that was originally called, then we'll need to call the 
+  // function but with left set to false.
+  if(isset($original_tid_call_ancestors[$tid])){
+    watchdog('batch', 'We"re using ancestors');
+    // We're an ancestor, and we're moving up, we can use the ancestors array
+    // to work out the call
+    $current_found = FALSE;
+    foreach($original_tid_call_ancestors as $ancestor){
+      if($current_found){
+        _leftandright_rebuild_tree_part($vid, $ancestor, $depth-1, FALSE);
+      }
+      if($ancestor == $tid){
+        $current_found = TRUE;
+      }
+    }
+  }
+  // Move back up the tree
+  return TRUE;
+}
+
+function _leftandright_get_ancestors_as_array_of_tids($tid){
   $ancestors = taxonomy_get_parents_all($tid);
-  $ancestors = array_reverse($ancestors);
-  $root = new stdClass();
-  $root->tid = 0;
-  array_unshift($ancestors, $root);
-  $depth = 0;
+  $ancestors_tids = array();
   foreach($ancestors as $ancestor){
-    $ancestor_reached = FALSE;
-    if($ancestor->tid == $tid){
-      break;
-    }
-    $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t  WHERE parent = %d AND t.tid = h.tid AND vid = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight ASC, name', $ancestor->tid, $vid);  
-    while($branch_tid = db_result($result)){
-      if($branch_tid == $ancestors[$depth+1]->tid){
-        $ancestor_reached = TRUE;
-      }
-      if($ancestor_reached){
-        $branches[$depth][] = $branch_tid;
-      }
-    }
-    $depth ++;
+    $ancestors_tids[$ancestor->tid] = $ancestor->tid;
   }
-  return $branches;
+  return $ancestors_tids;
 }
 
-function _leftandright_add_children_to_array($branches, $tid){
-  // We don't want to add anything that is already in the 
-  // leftandright_rebuild_right table, so lets not!
-  $depth = count($branches);
-  $result = db_query('SELECT t.tid FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.tid = t.tid WHERE parent = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight, name', $tid);
-  while ($additional_tid = db_result($result)){
-    $branches[$depth][] = $additional_tid;
+function _leftandright_get_children_tids($tid){
+  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE t.tid = h.tid AND parent = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight ASC, name', $tid);
+  $children = array();
+  while($tid = db_result($result)){
+    $children[] = $tid;
   }
-  if(isset($branches[$depth])){
-    $branches = _leftandright_add_children_to_array($branches, $branches[$depth][0]);
+  return $children;
+}
+
+function _leftandright_get_sibling_tids($tid, $vid){
+  // This function only returns siblings AFTER the current term
+  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d) AND vid = %d AND t.tid = h.tid ORDER BY weight ASC, name', $tid, $vid);
+  $siblings = array();
+  while($sibling = db_result($result)){
+    if($this_tid_reached){
+      $siblings[] = $sibling;
+    }
+    if($tid == $sibling){
+      $this_tid_reached = TRUE;
+    }
   }
-  return $branches;
+  return $siblings;
 }
