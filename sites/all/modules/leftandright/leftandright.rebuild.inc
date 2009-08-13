@@ -10,7 +10,10 @@ function leftandright_rebuild_form($form_state){
     '#description' => t('Select which vocabularies you would like to rebuild, and then click Rebuild')
   );  
   foreach ($vocabularies as $vocabulary) {
-    $form['vocabularies']['#options'][$vocabulary->vid] = check_plain($vocabulary->name);
+    // Make sure we've got terms
+    if(db_result(db_query('SELECT COUNT(*) FROM {term_data} WHERE vid = %d', $vocabulary->vid))){
+      $form['vocabularies']['#options'][$vocabulary->vid] = check_plain($vocabulary->name);
+    }
   }
   $form['submit'] = array(
     '#type' => 'submit',
@@ -78,6 +81,9 @@ function leftandright_rebuild_finished($success, $results, $operations){
  */
 function leftandright_move_rebuilt_tree($vid){
   db_query('INSERT INTO {leftandright} (tid, vid, lft, rgt, depth) SELECT l.tid,l.vid,lft,rgt,depth FROM {leftandright_rebuild_left} l, {leftandright_rebuild_right} r WHERE l.tid = r.tid AND l.vid = %d', $vid);
+  // Don't really need to do this here, but may as well.
+  db_query('DELETE FROM {leftandright_rebuild_left} WHERE vid = %d', $vid);
+  db_query('DELETE FROM {leftandright_rebuild_right} WHERE vid = %d', $vid);
 }
 
 /**
@@ -157,12 +163,12 @@ function _leftandright_rebuild_tree_part($vid, $tid, $depth, $left = TRUE){//, $
   if($left){
     // Else we're safe to continue, lets get the term we're working on, and set
     // the left value
-    db_query('INSERT INTO {leftandright_rebuild_left} (tid, lft, depth) VALUES (%d, %d, %d)', $tid, $leftright, $depth);
+    db_query('INSERT INTO {leftandright_rebuild_left} (tid, vid, lft, depth) VALUES (%d, %d, %d, %d)', $tid, $vid, $leftright, $depth);
     $leftright++;
   }
   
   // Next get the children, and call this function for them
-  $children = _leftandright_get_children_tids($tid);
+  $children = _leftandright_get_children_tids($tid, $vid);
   foreach($children as $child){
     if(!_leftandright_rebuild_tree_part($vid, $child, $depth+1)){
       return FALSE;
@@ -170,7 +176,7 @@ function _leftandright_rebuild_tree_part($vid, $tid, $depth, $left = TRUE){//, $
   }
   
   // Set the right value
-  db_query('INSERT INTO {leftandright_rebuild_right} (tid, rgt) VALUES (%d, %d)', $tid, $leftright);
+  db_query('INSERT INTO {leftandright_rebuild_right} (tid, vid, rgt) VALUES (%d, %d, %d)', $tid, $vid, $leftright);
   $leftright++;
   
   // Now we need to move back up the tree.  We can do this by either returning
@@ -204,8 +210,8 @@ function _leftandright_get_ancestors_as_array_of_tids($tid){
   return $ancestors_tids;
 }
 
-function _leftandright_get_children_tids($tid){
-  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE t.tid = h.tid AND parent = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right}) ORDER BY weight ASC, name', $tid);
+function _leftandright_get_children_tids($tid, $vid){
+  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE t.tid = h.tid AND parent = %d AND t.tid NOT IN (SELECT tid FROM {leftandright_rebuild_right} WHERE vid = %d) ORDER BY weight ASC, name', $tid, $vid);
   $children = array();
   while($tid = db_result($result)){
     $children[] = $tid;
@@ -215,7 +221,7 @@ function _leftandright_get_children_tids($tid){
 
 function _leftandright_get_sibling_tids($tid, $vid){
   // This function only returns siblings AFTER the current term
-  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d) AND vid = %d AND t.tid = h.tid ORDER BY weight ASC, name', $tid, $vid);
+  $result = db_query('SELECT t.tid FROM {term_data} t, {term_hierarchy} h WHERE parent = (SELECT parent FROM {term_hierarchy} WHERE tid = %d AND vid = %d) AND vid = %d AND t.tid = h.tid ORDER BY weight ASC, name', $tid, $vid, $vid);
   $siblings = array();
   while($sibling = db_result($result)){
     if($this_tid_reached){
