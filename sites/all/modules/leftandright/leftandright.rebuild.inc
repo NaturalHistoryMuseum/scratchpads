@@ -46,7 +46,7 @@ function leftandright_rebuild_form_submit($form, $form_state){
   foreach($form_state['values']['vocabularies'] as $key => $vid){
     if($vid){
       $operations[] = array(
-        'leftandright_rebuild_tree', array($vid, 20)
+        'leftandright_rebuild_tree', array($vid, 10000)
       );
       $operations[] = array(
         'leftandright_move_rebuilt_tree', array($vid)
