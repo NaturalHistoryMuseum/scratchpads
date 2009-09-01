@@ -698,7 +698,7 @@ function darwincore_validate($node, &$form){
 
 function darwincorelocation_validate($node, &$form){
   // Lets make sure the location title is UNIQUE!
-  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND type = 'darwincorelocation' AND TRIM(LOWER(r.title)) = '%s' AND vid != %d", trim(strtolower($node->title)), $node->vid)));
+  $count = array_pop(db_fetch_array(db_query("SELECT COUNT(*) FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND type = 'darwincorelocation' AND TRIM(LOWER(r.title)) = '%s' AND n.vid != %d", trim(strtolower($node->title)), $node->vid)));
   if($count){
     form_set_error('title', t('The title must be unique'));
   }
