@@ -1,0 +1,195 @@
+<?php
+// $Id: openidurl.module,v 1.5.2.7 2008/03/09 12:37:27 robloach Exp $
+
+/**
+ * @file
+ * Module based on this document:
+ *   http://www.openidenabled.com/openid/use-your-own-url-as-an-openid/
+ */ 
+ 
+/**
+ * Implementation of hook_help
+ */
+function openidurl_help($section) {
+  switch ($section) {
+    case 'admin/help#openidurl':
+      $output = '<p>'. t('Allows using your own website as an identifier for third-party OpenID providers.') .'</p>';
+      $output.= '<ol><li>'. t('Set the <a href="@openidurlsettings">global OpenID URL</a> to change the OpenID provider that appears on the <a href="@frontpage">front page</a>', array('@openidurlsettings' => url('admin/settings/openidurl'), '@frontpage' => url())) .'</li>';
+      $output.= '<li>'. t('Configure the <a href="@userpermissions">user permission</a> to allow users to set their own personal OpenID provider that appears in their <a href="@user">user profile</a>', array('@user' => url('user'), '@userpermissions' => url('admin/user/permissions'))) .'</li></ol>';
+      return $output;
+    case 'admin/settings/openidurl':
+      return '<p>'. t('The following allows you to modify the global OpenID provider that appears on the <a href="@front">front page</a>.', array('@front' => url()));
+  }
+} // function openidurl_help
+
+/**
+ * Implementation of hook_menu
+ */
+function openidurl_menu($maycache = NULL) {
+  if(!$maycache) {
+    if (drupal_is_front_page()) { // only display global one on front page
+      $server = variable_get('openidurl_server', NULL);
+      $delegate = variable_get('openidurl_delegate', NULL);
+      $xrds = variable_get('openidurl_xrds', NULL);
+      _openidurl_set_html_head($server, $delegate, $xrds);
+    }
+  }
+  else {
+    $items = array();
+    $items[] = array(
+      'path' => 'admin/settings/openidurl',
+      'title' => t('OpenID URL'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'openidurl_settings',
+      'access' => user_access('administer site configuration'),
+      'description' => t('Delegate your URL as an OpenID'),
+      );
+    return $items;
+  }
+}
+
+/**
+ * Adds the required HTML to delegate the OpenID authentication
+ */ 
+function _openidurl_set_html_head($server = NULL, $delegate = NULL, $xrds = NULL) {
+  if (!empty($server) || !empty($delegate)) {
+    drupal_set_html_head('<link rel="openid.server" href="'. check_url($server) .'" />');
+    drupal_set_html_head('<link rel="openid.delegate" href="'. check_url($delegate) .'" />');
+  }
+  if (!empty($xrds)) {
+    drupal_set_html_head('<meta http-equiv="X-XRDS-Location" content="'. check_url($xrds) .'" />');
+  }
+}
+
+/**
+ * Menu callback to display the global OpenID URL settings
+ */ 
+function openidurl_settings() {
+  $form = array();
+  $form['openidurl_server'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenID Server'),
+    '#default_value' => variable_get('openidurl_server', ''),
+    '#description' => t("This is the OpenID server (e.g. http://www.myopenid.com/server)."),
+  );
+  $form['openidurl_delegate'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenID Delegate'),
+    '#default_value' => variable_get('openidurl_delegate', ''),
+    '#description' => t("This is the OpenID delegate (e.g. http://yourname.myopenid.com/)."),
+  );
+  $form['openidurl_xrds'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenID XRDS Location'),
+    '#default_value' => variable_get('openidurl_xrds', ''),
+    '#description' => t("This is the OpenID XRDS location (e.g. http://yourname.myopenid.com/xrds)."),
+  );
+  return system_settings_form($form);
+};
+
+/**
+* Valid permissions for this module
+* @return array An array of valid permissions for the onthisdate module
+*/
+function openidurl_perm() {
+  return array('set personal openid url');
+} // function openidurl_perm()
+
+/**
+* Implementation of hook_user()
+*/  
+function openidurl_user($type, &$edit, &$user, $category = NULL) {
+  switch ($type) {
+    case 'load':
+      return openidurl_load_profile($user);
+    case 'update':
+      return openidurl_save_profile($edit, $user, $category);
+    case 'insert':
+      return openidurl_save_profile($edit, $user, $category, TRUE);
+    case 'view':
+      return openidurl_view_profile($user);
+    case 'form':
+      return openidurl_form_profile($edit, $user, $category);
+    case 'validate':
+      return openidurl_validate_profile($edit, $category);
+    case 'delete':
+      db_query("DELETE FROM {variable} WHERE name LIKE 'openidurl_%d_%'", $user->uid);
+  }
+} // function openidurl_user
+
+/**
+* Constructs the openidurl fields in the form profile
+*/
+function openidurl_form_profile($edit, $user, $category, $register = FALSE) {
+  $fields = array();
+  if(user_access('administer users') || user_access('set personal openid url')) {
+    $fields['openidurl'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'OpenID URL',
+      '#description' => t('Delegate your user profile as an <a href="@openid">OpenID</a>.', array('@openid' => 'http://openid.net')),
+      '#collapsible' => TRUE,
+      '#collapsed' => isset($edit['openidurl_server']) ? empty($edit['openidurl_server']) : empty($user->openidurl['server']),
+    );
+    $fields['openidurl']['openidurl_server'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Server',
+      '#description' => t('Your personal OpenID server URL (e.g. http://www.myopenid.com/server).'),
+      '#default_value' => isset($edit['openidurl_server']) ? $edit['openidurl_server'] : $user->openidurl['server'],
+    );
+    $fields['openidurl']['openidurl_delegate'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Delegate',
+      '#description' => t('This is your personal OpenID delegate (e.g. http://yourname.myopenid.com/).'),
+      '#default_value' => isset($edit['openidurl_delegate']) ? $edit['openidurl_delegate'] : $user->openidurl['delegate'],
+    );
+    $fields['openidurl']['openidurl_xrds'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Delegate',
+      '#description' => t('This is your personal OpenID XRDS location (e.g. http://yourname.myopenid.com/xrds).'),
+      '#default_value' => isset($edit['openidurl_xrds']) ? $edit['openidurl_xrds'] : $user->openidurl['xrds'],
+    );
+  }
+  return $fields;
+} // function openidurl_form_profile
+
+/**
+* Validates the profile input for the openidurl account information
+*/
+function openidurl_validate_profile($edit, $category) {
+  // No validation required
+  return $edit; 
+} // function openidurl_validate_profile
+
+/**
+* Loads the OpenID URL account information from the database into the user account
+*/
+function openidurl_load_profile(&$user) {
+  if(empty($user->openidurl)) {
+    $user->openidurl = array();
+    $user->openidurl['server'] = variable_get('openidurl_'. $user->uid .'_server', NULL);
+    $user->openidurl['delegate'] = variable_get('openidurl_'. $user->uid .'_delegate', NULL);
+    $user->openidurl['xrds'] = variable_get('openidurl_'. $user->uid .'_xrds', NULL);
+  }
+} // function openidurl_load_profile
+
+/**
+* Saves the OpenID URL account information into the database
+*/
+function openidurl_save_profile(&$edit, &$user, $category, $register = FALSE) {
+  variable_set('openidurl_' . $user->uid .'_server', $edit['openidurl_server']);
+  variable_set('openidurl_' . $user->uid .'_delegate', $edit['openidurl_delegate']);
+  variable_set('openidurl_' . $user->uid .'_xrds', $edit['openidurl_xrds']);
+  $edit['openidurl'] = NULL;
+} // function openidurl_save_profile
+
+/**
+* Loads and constructs the openidurl information to be displayed
+*/
+function openidurl_view_profile($user) {
+  $fields = array();
+  openidurl_load_profile($user);
+  if($user->openidurl) {
+    _openidurl_set_html_head($user->openidurl['server'], $user->openidurl['delegate'], $user->openidurl['xrds']);
+  }
+  return $fields;
+} // function openidurl_view_profile
