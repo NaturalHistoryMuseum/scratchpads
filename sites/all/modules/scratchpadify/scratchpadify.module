@@ -444,10 +444,10 @@ function scratchpadify_footer($main=0){
     }
   }
   return $uservoice.'<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
-href="http://e-taxonomy.eu/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/edit_small.png').'" 
-alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.url(drupal_get_path('module','scratchpadify').'/images/scratchpads.png').'"/></a><a rel="license" 
+href="http://e-taxonomy.eu/"><img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit_small.png" 
+alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.base_path().drupal_get_path('module','scratchpadify').'/images/scratchpads.png"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
-style="border-width: 0pt;" src="'.url(drupal_get_path('module','scratchpadify').'/images/cc.logo.1.png').'"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/drupal_small.png').'" alt="drupal logo" style="padding: 0px 30px"/></a>
+style="border-width: 0pt;" src="'.base_path().drupal_get_path('module','scratchpadify').'/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
 <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
