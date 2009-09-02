@@ -12,6 +12,8 @@
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
+drupal_set_message('This website will be taken offline between 18:00 and 20:00 on Tuesday 8 September.');
+
 $return = menu_execute_active_handler();
 
 // Menu status constants are integers; page content is a string.

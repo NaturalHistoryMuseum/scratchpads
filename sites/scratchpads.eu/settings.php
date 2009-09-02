@@ -40,7 +40,7 @@ if(!isset($user_password[$db_url_part])){
   header('Location: http://scratchpads.eu/');
   exit;
 } else {
-  $db_url = 'mysqli://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
+  $db_url = 'mysql://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
 }
 $db_prefix="";
 

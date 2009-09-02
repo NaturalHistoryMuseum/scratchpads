@@ -731,7 +731,7 @@ function _fileshare_download($node) {
       );
       _fileshare_transfer($fullpath, $headers);
       return;
-    } else { 
+    } else {
       return drupal_not_found();
     }
   } else {

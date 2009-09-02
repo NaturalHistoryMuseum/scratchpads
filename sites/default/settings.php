@@ -40,7 +40,7 @@ if(!isset($user_password[$db_url_part])){
   header('Location: http://scratchpads.eu/');
   exit;
 } else {
-  $db_url = 'mysqli://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
+  $db_url = 'mysql://'.$user_password[$db_url_part]['user'].':'.$user_password[$db_url_part]['password'].'@127.0.0.1/'.$db_url_part;
 }
 $db_prefix="";
 
@@ -74,6 +74,7 @@ ini_set('session.cache_limiter',    'none');
 ini_set('session.cookie_lifetime',  2000000);
 ini_set('session.gc_maxlifetime',   200000);
 ini_set('session.save_handler',     'user');
+ini_set('session.use_cookies',      1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid',    0);
 ini_set('url_rewriter.tags',        '');

@@ -4,7 +4,7 @@
 cd /var/www/html/sites
 
 # Get a list of all the directories and CD in to them
-for i in $( ls -l|grep ^d|sed -r "s|.*:[0-9][0-9]\ ||"|grep -v all$ ); do
+for i in $( ls -1|grep -v all$|grep -v settings ); do
 	echo $i
 	cd $i
 	rm settings.php
