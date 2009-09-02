@@ -1,0 +1,1059 @@
+# $Id: de.po,v 1.4.6.1 2008/05/29 13:12:15 pluess Exp $
+#
+# German translation of Drupal (general)
+# Copyright 2008 Ernst Plüss ernst{at}pluess-production{dot}ch
+# Generated from files:
+#  ical.inc,v 1.11.2.1 2008/05/06 21:54:01 killes
+#  event.module,v 1.348.2.8 2008/05/08 22:53:51 killes
+#  event_views.module,v 1.25 2008/01/06 00:31:11 killes
+#  event.theme,v 1.61 2007/12/03 14:38:48 killes
+#  event.install,v 1.24 2007/09/04 10:34:53 killes
+#  event.info,v 1.4 2007/06/18 22:53:41 dww
+#  event_all_day.info,v 1.2 2007/06/18 22:53:41 dww
+#  event_views.info,v 1.2 2007/06/18 22:53:41 dww
+#  contrib/event_all_day/event_all_day.module: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2008-05-29 09:52+0200\n"
+"PO-Revision-Date: 2008-05-29 09:52+0200\n"
+"Last-Translator: Ernst Plüss ernst{at}pluess-production{dot}ch\n"
+"Language-Team: German <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=0; plural=;\n"
+
+#: ical.inc:302
+msgid "iCalendar API for Events Modules"
+msgstr "iCalendar API für Event Module"
+
+#: event.module:44;47
+msgid "Calendar"
+msgstr "Kalender"
+
+#: event.module:54;262 contrib/event_views/event_views.module:647
+msgid "Month"
+msgstr "Monat"
+
+#: event.module:56
+msgid "Month view"
+msgstr "Monatsansicht"
+
+#: event.module:57;262
+msgid "Week"
+msgstr "Woche"
+
+#: event.module:59
+msgid "Week view"
+msgstr "Wochenansicht"
+
+#: event.module:60;262 contrib/event_views/event_views.module:653
+msgid "Day"
+msgstr "Tag"
+
+#: event.module:62
+msgid "Day view"
+msgstr "Tagesansicht"
+
+#: event.module:63;262
+msgid "Table"
+msgstr "Tabelle"
+
+#: event.module:65
+msgid "Table view"
+msgstr "Tabellenansicht"
+
+#: event.module:66;262
+msgid "List"
+msgstr "Alle anzeigen"
+
+#: event.module:68
+msgid "List view"
+msgstr "Listenansicht"
+
+#: event.module:106;136;324;454;1843
+msgid "Events"
+msgstr "Veranstaltungen"
+
+#: event.module:111
+msgid "Filter by content type"
+msgstr "Nach Inhaltstyp filtern"
+
+#: event.module:116
+msgid "Filter by taxonomy"
+msgstr "Nach Kategorie filtern"
+
+#: event.module:121
+msgid "Event rss feed"
+msgstr "RSS Feed des Events"
+
+#: event.module:126
+msgid "Event dst view"
+msgstr "dst Ansicht des Events"
+
+#: event.module:131
+msgid "Event ical feed"
+msgstr "ical Feed des Events"
+
+#: event.module:138
+msgid "Set up how your site handles events."
+msgstr "Legen Sie fest, wie ihre Seite Events behandelt."
+
+#: event.module:141
+msgid "Timezone handling"
+msgstr "Zeitzonenmanagement"
+
+#: event.module:144
+msgid "Change how timezone information is saved and displayed."
+msgstr "Legen sie fest wie Zeitzoneniformationen gespeichert und angezeigt werden sollen."
+
+#: event.module:147
+msgid "Event overview"
+msgstr "Eventansicht"
+
+#: event.module:150
+msgid "Change how event summary information is displayed."
+msgstr "Legen sie fest wie Eventzusammenfassungen angezeigt werden."
+
+#: event.module:159
+msgid "Event ical"
+msgstr "Eveant ical"
+
+#: event.module:195;217
+msgid "Event time zone input"
+msgstr "Event Zeitzoneninput"
+
+#: event.module:197;205;219;227
+msgid "Use the sitewide time zone"
+msgstr "Die Site weite Zeitzone verwenden"
+
+#: event.module:197;219
+msgid "Use the time zone of the user editing or creating the event"
+msgstr "Die Zeitzone des Benutzers der das Event ändert oder erstellt verwenden"
+
+#: event.module:197;219
+msgid "Allow users to set event time zones"
+msgstr "Die Benutzer können die Event Zeitzone setzen"
+
+#: event.module:198
+msgid "Events are saved with a time zone value. This setting allows you to determine how the time zone is determined when creating or editing an event."
+msgstr "Events werden mit einer eigenen Zeitzone gespeichert. Diese Einstellung erlaubt ihnen festzustellen, wie die Zeitzone beim Erstellen oder Editieren festgelegt wurde."
+
+#: event.module:203;225
+msgid "Event time zone display"
+msgstr "Event Zeitzonenanzeige"
+
+#: event.module:205;227
+msgid "Use the event's time zone"
+msgstr "Verwende die Zeitzone des Events"
+
+#: event.module:205
+msgid "Use the user's time zone"
+msgstr "Verwende die Zeitzone des Benuzters"
+
+#: event.module:206
+msgid "Events are saved with a time zone value. This setting allows you to determine if the event's time zone, the sitewide time zone, or the user's personal time zone setting is used to display the time for an event."
+msgstr "Events werden mit einer eigenen Zeitzone gespeichert. Diese Einstellung erlaubt ihnen festzustellen, ob die Zeitzone des Events, die Site weite Zeitzone oder die persönliche Zeitzone des Benutzers verwendet wird, um die Zeit für das Event anzuzeigen."
+
+#: event.module:220
+msgid "Events are saved with a time zone value. This setting allows you to determine how the time zone is determined when creating or editing an event. You must have 'Configurable time zones' enabled in the !url before you can enable user's time zones for this feature."
+msgstr "Events werden mit einer eigenen Zeitzone gespeichert. Diese Einstellung erlaubt ihnen festzustellen, wie die Zeitzone beim Erstellen oder Editieren festgelegt wurde. Sie müssen unter !url 'Konfigurierbare Zeitzonen' eingeschaltet haben bevor sie hier Benutzer Zeitzonen einschalten können."
+
+#: event.module:220;228
+msgid "date/time settings"
+msgstr "Datum/Zeit Einstellungen"
+
+#: event.module:228
+msgid "Events are saved with a time zone value. This setting allows you to determine if the event's time zone, the sitewide time zone, or the user's personal time zone setting is used to display the time for an event. You must have 'Configurable time zones' enabled in the !url before you can enable user's time zones for this feature."
+msgstr "Events werden mit einer eigenen Zeitzone gespeichert. Diese Einstellung erlaubt ihnen festzustellen, ob die Zeitzone des Events, die Site weite Zeitzone oder die persönliche Zeitzone des Benutzers verwendet wird, um die Zeit für das Event anzuzeigen. Sie müssen unter !url 'Konfigurierbare Zeitzonen' eingeschaltet haben bevor sie hier Benutzer Zeitzonen einschalten können."
+
+#: event.module:233
+msgid "Time notation preference"
+msgstr "gewünschtes Zeitformat"
+
+#: event.module:235
+msgid "24h"
+msgstr "24-stündig"
+
+#: event.module:235
+msgid "12h"
+msgstr "12-stündig"
+
+#: event.module:236
+msgid "The time notation system used for entering event times."
+msgstr "Das Zeitformatsystem für die Erfassung der Eventzeiten"
+
+#: event.module:252
+msgid "Upcoming event block limit"
+msgstr "Maximale Anzahl Events im Nächste Events Block"
+
+#: event.module:256
+msgid "Limit the amount of events displayed in the upcoming events block by this amount."
+msgstr "Begrenze die Maximale Anzahl Events im Nächste Events Block auf diesen Wert."
+
+#: event.module:260
+msgid "Default overview"
+msgstr "Standardübersicht"
+
+#: event.module:263
+msgid "The default event view to display when no format is specifically requested. This is also the view that will be displayed from the block calendar links."
+msgstr "Die Standardeventansicht, wenn kein spezifisches Format verlangt wurde. Diese Ansicht wird auch vom Block Kalenderlinks verwendet."
+
+#: event.module:266
+msgid "Table view default period"
+msgstr "Standardbereich für Tabellenansicht"
+
+#: event.module:270
+msgid "The default number of days to display in the table view. You can specify a different number of days in the url. More info on the event url format !link"
+msgstr "Die Standardanzahl von Tagen für die Tabellenansicht. Sie können eine andere Anzahl von Tagen in der URL angeben. Weiter Information über das Event-URL Format finden sie hier !link."
+
+#: event.module:270
+msgid "here"
+msgstr "hier"
+
+#: event.module:275
+msgid "Taxonomy filter controls"
+msgstr "Kategorienfilter"
+
+#: event.module:277
+msgid "Show taxonomy filter control on calendar views"
+msgstr "Kategorienfilter in Kalenderansicht anzeigen"
+
+#: event.module:277
+msgid "Only show taxonomy filter control when taxonomy filter view is requested"
+msgstr "Kategorienfilter nur anzeigen, wenn sie verlangt werden"
+
+#: event.module:277
+msgid "Never show taxonomy filter control"
+msgstr "Kategorienfilter nie anzeigen"
+
+#: event.module:281
+msgid "Content type filter controls"
+msgstr "Inhaltsfilter"
+
+#: event.module:283
+msgid "Show content type filter control on calendar views"
+msgstr "Inhaltsfilter in Kalenderansicht anzeigen"
+
+#: event.module:283
+msgid "Only show content type filter control when content type filter view is requested"
+msgstr "Inahltsfilter nur anzeigen, wenn sie verlangt werden"
+
+#: event.module:283
+msgid "Never show content type filter control"
+msgstr "Inhaltsfilter nie anzeigen"
+
+#: event.module:323
+msgid "Home"
+msgstr "Start"
+
+#: event.module:339;350
+msgid "View all"
+msgstr "Alle anzeigen"
+
+#: event.module:340
+msgid "Filter"
+msgstr "Filter"
+
+#: event.module:372 event.theme:350
+msgid "l F d, Y"
+msgstr ""
+
+#: event.module:381
+msgid "Week of !month !day, !year"
+msgstr "Woche vom !month !day, !year"
+
+#: event.module:387;528
+msgid "F Y"
+msgstr ""
+
+#: event.module:452
+msgid "Events at %site"
+msgstr "Events auf %site"
+
+#: event.module:500
+msgid "iCal support not enabled"
+msgstr "iCall unterstützung ist nicht eingeschaltet"
+
+#: event.module:744
+msgid "Start"
+msgstr "Start"
+
+#: event.module:745
+msgid "End"
+msgstr "Ende"
+
+#: event.module:763
+msgid " - Events Feed"
+msgstr " - Events Feed"
+
+#: event.module:1403;1406
+msgid "Mon"
+msgstr "Mon"
+
+#: event.module:1403;1406
+msgid "Tue"
+msgstr "Die"
+
+#: event.module:1403;1406
+msgid "Wed"
+msgstr "Mit"
+
+#: event.module:1403;1406
+msgid "Thu"
+msgstr "Don"
+
+#: event.module:1403;1406
+msgid "Fri"
+msgstr "Fre"
+
+#: event.module:1403;1406
+msgid "Sat"
+msgstr "Sam"
+
+#: event.module:1403;1406
+msgid "Sun"
+msgstr "Son"
+
+#: event.module:1517
+msgid "g"
+msgstr ""
+
+#: event.module:1519;2786
+msgid "am"
+msgstr "vormittags"
+
+#: event.module:1519;2789
+msgid "pm"
+msgstr "nachmittags"
+
+#: event.module:1532
+msgid "H"
+msgstr "Std"
+
+#: event.module:1596
+msgid "The year has to be a number."
+msgstr "Das Jahr muss eine Nummer sein."
+
+#: event.module:1599
+msgid "Only years from 1000 to 9999 are supported."
+msgstr "Es werden nur die Jahre 1000 bis 9999 unterstützt."
+
+#: event.module:1602
+msgid "A year has only 12 months in the Gregorian calendar."
+msgstr "Im Gregoriansichen Kalender hat ein Jahr nur 12 Monate."
+
+#: event.module:1605
+msgid "Months with more than 31 day don't exist."
+msgstr "Es gibt keine Monate mit mehr als 31 Tagen."
+
+#: event.module:1608
+msgid "A day needs to be a number."
+msgstr "Ein Tag muss eine Nummer sein."
+
+#: event.module:1612
+msgid "There are only 12 hours in the day for the am/pm time format."
+msgstr "Für das am/pm format können nur 12 Stunden verwendet werden."
+
+#: event.module:1617
+msgid "There are only 24 hours in the day."
+msgstr "Für einen Tag können nur 25 Stunden verwendet werden."
+
+#: event.module:1621
+msgid "There are only 60 minutes in the day."
+msgstr "Eine Stunde hat höchstens 60 Minuten."
+
+#: event.module:1731;1779
+msgid "(all)"
+msgstr "(Alles)"
+
+#: event.module:1743
+msgid "Select event terms to filter by"
+msgstr "Wählen sie den Eventbegriff nachdem gefiltert werden soll"
+
+#: event.module:1790
+msgid "Select event type to filter by"
+msgstr "Wählen sie den Eventtyp nachdem gefiltert werden soll"
+
+#: event.module:1817
+msgid "Calendar to browse events."
+msgstr "Veranstaltungskalender"
+
+#: event.module:1818
+msgid "List of upcoming events."
+msgstr "Liste der nächsten Veranstaltungen"
+
+#: event.module:1821
+msgid "List of upcoming events for node type @name."
+msgstr "Liste der nächsten Veranstaltungen für den Node Typ @name."
+
+#: event.module:1847
+msgid "Upcoming events"
+msgstr "Nächste Veranstaltungen"
+
+#: event.module:1881
+msgid "No upcoming events available"
+msgstr "Keine weiteren Events vorhanden"
+
+#: event.module:1942
+msgid "Now"
+msgstr "Jetzt"
+
+#: event.module:1972
+msgid "Show in event calendar"
+msgstr "Im Eventkalender anzeigen"
+
+#: event.module:1974
+msgid "All views"
+msgstr "Alle Ansichten"
+
+#: event.module:1974
+msgid "Only in views for this type"
+msgstr "Nur in den Ansichten für diesen Typ"
+
+#: event.module:1974
+msgid "Never"
+msgstr "Nie"
+
+#: event.module:1975
+msgid "All views: This content type will be available for display on all calendar views, including with other events.<br />Only in views for this type: This content type will only appear in calendar views specific to this type and never with other events.<br />Never: This content type will not be associated with the events calendar."
+msgstr "Alle Ansichten: Dieser Inhaltstyp wird in allen Kalenderansichten zum Anzeigen zur Verfügung stehen, auch bei anderen Events.<br />Nur in Ansichten für diesen Typ: Dieser Inahltstyp wird nur in Kalenderansichten für diesen Typ angezeigt und nie zusammen mit anderen Events<br />Nie: Dieser Inhaltstyp wird nie mit den Eventkalender angezeigt."
+
+#: event.module:1984
+msgid "Event has time"
+msgstr "Das Event hat eine Zeit"
+
+#: event.module:1987
+msgid "Is time important for this event? Uncheck if event takes all day."
+msgstr "Ist die Zeit wichtig für dieses Event? Nicht ankreuzen, wenn das Event den ganzen Tag dauert."
+
+#: event.module:1992
+msgid "Event has end date"
+msgstr "Das Event hat eine Enddatum"
+
+#: event.module:1995
+msgid "Check if you want to specify end date for this event, then choose end date below."
+msgstr "Bitte auswählen, wenn sie für diesen Event ein Enddatum setzen wollen, danach setzen sie bitte unten das Enddatum."
+
+#: event.module:2000
+msgid "Please <a href=\"!url\">select the default timezone</a> for your website before creating events."
+msgstr "Bitte <a href=\"!url\">wählen sie die Standardzeitzone</a> für ihre Website aus, bevor sie Events erstellen."
+
+#: event.module:2019;2048
+msgid "Start date"
+msgstr "Startdatum"
+
+#: event.module:2029;2042
+msgid "YYYY-MM-DD HH:MM"
+msgstr "DD. MM. YYYY HH:MM"
+
+#: event.module:2032 contrib/event_views/event_views.module:557
+msgid "End Date"
+msgstr "Enddatum"
+
+#: event.module:2055
+msgid "End date"
+msgstr "Enddatum"
+
+#: event.module:2064;2107
+msgid "Time zone"
+msgstr "Zeitzone"
+
+#: event.module:2067
+msgid "Select the time zone this event occurs in."
+msgstr "Wählen sie die Zeitzone für dieses Event."
+
+#: event.module:2093
+msgid "Default time zone"
+msgstr "Standard-Zeitzone"
+
+#: event.module:2096
+msgid "Select the default site time zone."
+msgstr "Auswahl der Standard-Zeitzone der Website."
+
+#: event.module:2110
+msgid "Select your current local time. Dates and times throughout this site will be displayed using this time zone."
+msgstr ""
+"Auswahl der Zeitzone. Daten und Zeiten auf der Website werden mit "
+"dieser Zeitzone angezeigt werden."
+
+#: event.module:2419
+msgid "Daylight Savings Regions | Current GMT: !date"
+msgstr "Sommerzeit Regionen | Aktuelle GMT: !date"
+
+#: event.module:2794
+msgid "AM"
+msgstr "AM"
+
+#: event.module:2797
+msgid "PM"
+msgstr "PM"
+
+#: event.module:2827
+msgid "st"
+msgstr "st"
+
+#: event.module:2827
+msgid "nd"
+msgstr "nd"
+
+#: event.module:2827
+msgid "rd"
+msgstr "rd"
+
+#: event.module:2832
+msgid "th"
+msgstr "."
+
+#: event.module:2896
+msgid "None"
+msgstr "Keine"
+
+#: event.module:2897
+msgid "Egypt"
+msgstr "Ägypten"
+
+#: event.module:2898
+msgid "Namibia"
+msgstr "Namibia"
+
+#: event.module:2899
+msgid "Asia - Former USSR"
+msgstr "Asien - Frührer UdSSR"
+
+#: event.module:2900
+msgid "Iraq, Syria"
+msgstr "Irak, Syrien"
+
+#: event.module:2901
+msgid "Israel"
+msgstr "Israel"
+
+#: event.module:2902
+msgid "Lebanon, Kirgizstan"
+msgstr "Libanon, Kirgiesien"
+
+#: event.module:2903
+msgid "Palestine"
+msgstr "Palästina"
+
+#: event.module:2904
+msgid "Iran"
+msgstr "Iran"
+
+#: event.module:2905
+msgid "South Australia"
+msgstr "Süd Australien"
+
+#: event.module:2906
+msgid "Australia, Tasmania"
+msgstr "Australien, Tasmanien"
+
+#: event.module:2907
+msgid "New Zealand"
+msgstr "Neu Seeland"
+
+#: event.module:2908
+msgid "Tonga"
+msgstr "Tongaisch"
+
+#: event.module:2909
+msgid "EU and other European countries"
+msgstr "EU und andere Europäische Länder"
+
+#: event.module:2910
+msgid "Russian Federation"
+msgstr "Russische Förderation"
+
+#: event.module:2911
+msgid "North America"
+msgstr "Nordamerika"
+
+#: event.module:2912
+msgid "Cuba"
+msgstr "Kuba"
+
+#: event.module:2913
+msgid "Brazil"
+msgstr "Brasilien"
+
+#: event.module:2914
+msgid "Chile"
+msgstr "Chile"
+
+#: event.module:2915
+msgid "Falklands"
+msgstr "Falklandinseln"
+
+#: event.module:2916
+msgid "Paraguay"
+msgstr "Paraguay"
+
+#: event.module:3065
+msgid "January"
+msgstr "Januar"
+
+#: event.module:3065
+msgid "February"
+msgstr "Februar"
+
+#: event.module:3065
+msgid "March"
+msgstr "März"
+
+#: event.module:3065
+msgid "April"
+msgstr "April"
+
+#: event.module:3065;3072
+msgid "May"
+msgstr "Mai"
+
+#: event.module:3065
+msgid "June"
+msgstr "Juni"
+
+#: event.module:3065
+msgid "July"
+msgstr "Juli"
+
+#: event.module:3065
+msgid "August"
+msgstr "August"
+
+#: event.module:3065
+msgid "September"
+msgstr "September"
+
+#: event.module:3065
+msgid "October"
+msgstr "Oktober"
+
+#: event.module:3065
+msgid "November"
+msgstr "November"
+
+#: event.module:3065
+msgid "December"
+msgstr "Dezember"
+
+#: event.module:3072
+msgid "Jan"
+msgstr "Jan"
+
+#: event.module:3072
+msgid "Feb"
+msgstr "Feb"
+
+#: event.module:3072
+msgid "Mar"
+msgstr "Mär"
+
+#: event.module:3072
+msgid "Apr"
+msgstr "Apr"
+
+#: event.module:3072
+msgid "Jun"
+msgstr "Jun"
+
+#: event.module:3072
+msgid "Jul"
+msgstr "Jul"
+
+#: event.module:3072
+msgid "Aug"
+msgstr "Aug"
+
+#: event.module:3072
+msgid "Sep"
+msgstr "Sep"
+
+#: event.module:3072
+msgid "Oct"
+msgstr "Okt"
+
+#: event.module:3072
+msgid "Nov"
+msgstr "Nov"
+
+#: event.module:3072
+msgid "Dec"
+msgstr "Dez"
+
+#: event.module:3137
+msgid "The event module allows for any type of content to be event enabled,  meaning content can have a start and end time, and appear in calendars.  The ability to event enable any content type combined with the ability to create new types of content make it possible to create unlimited types of calendars.  The ability to broadly event enable content will allow for creative applications combining information and real world events."
+msgstr "Das Eventmodul kann aus jedem Inhaltstyp ein Event machen, das bedeutet, dass Inhalte ein Start- und Enddatum haben und in Kalendern erscheinen. Die Möglichkeit aus jedem Inhaltstyp ein Event zu machen, kombiniert mit der Möglichkeit neue Inhaltstypen zu erstellen macht es möglich eine unlimitierte Anzahl von verschiedenen Kalendern zu erstellen. Die Möglichkeit beliebige Inhalte als Events zu verwenden ermöglicht kreative Applikaton in denen Informationen mit realen Events kombiniert werden."
+
+#: event.module:3138
+msgid "The administrator can decide which content types should be events for their site.  In content type configuration, administrators can select the calendar view options: never, all views, or only views for this type. For example, this makes it possible to have a general calendar which shows all meetups and house parties in the same calendar, and have a separate calendar for rallies which only contains the rallies content type. Calendars can be customized to view a specific content type or a category of content, using taxonomies."
+msgstr "Der Administrator kann frei entscheiden welche Inhaltstpyen dieser Website zu Events werden. In der Inhaltstypen Konfiguration können Administratoren die Anzeige Optionen auswählen: Nie, alle Ansichten, nur Ansichten für diesen Typ. Dies macht es z.B. möglich einen generellen Kalender zu haben, der alle Hausgruppen und Parties anzeigt, und einen separaten Kalender für andere Treffen der nur die 'andere Treffe' Inhaltstypen anzeigt. Kalender können je nach Konfiguration einen spezifischen Inhaltsypt oder eine bestimmte Kategorie anzeigen."
+
+#: event.module:3139
+msgid "Administrators can also set two types of options for events; general event options, and event overview options.  General event options are for timezone configuration, time notation formats, and event block configuration.  Event overview options allow calendar and table event default views.  Administrators can also set general filter controls for content types and categories, via the event taxonomy controls."
+msgstr "Administratoren können für die Events zwei Typen von Optionen festlegen; generelle Eventoptionen und Event Ansichtsoptionen. Generelle Eventoptionen setzen die Zeitzone, das Zeitformat und die Eventblockkonfiguration. Event Ansichtsoptionen ermöglichen standard Kalender- und Tabellenansichten. Administratoren können auch generelle Filter für Inhaltstypen und Kategorien setzen, dies geschiet mit Hilfe der Kategoriencontrols."
+
+#: event.module:3140
+msgid "<p>You can</p>\n<ul>\n<li>enable content types to be event enabled at <a href=\"!admin-node-configure-types\" title=\"content type configuration\">administer &gt;&gt; content &gt;&gt; content types </a> then click configure for a content type.</li>\n<li>administer general event options <a href=\"!admin-settings-event\" title=\"administer events\">administer &gt;&gt; settings &gt;&gt; events</a>.</li>\n<li><a href=\"!node-add\" title=\"list of content types that can be created\">create content</a> and set a start and end time, if the administrator has set that content type to be event enabled.</li>\n<li>use <a href=\"!external-http-drupal-org-handbook-modules-rsvp\">RSVP</a> or <a href=\"!external-http-drupal-org-handbook-modules-signup\">signup</a> module to invite users to events.</li>\n"
+msgstr "<p>Sie können </p>\n<ul>\n<li>Inhatstypen Eventfähigkeiten verleihen unter <a href=\"!admin-node-configure-types\" title=\"content type configuration\">Verwalten &gt;&gt; Inhaltsverwaltung &gt;&gt; Inhaltstypen </a> dann clicken sie beim entsprechenden Inhaltstyp auf bearbeiten.</li>\n<li>Generelle Eventoptionen bearbeiten <a href=\"!admin-settings-event\" title=\"administer events\">Verwalten &gt;&gt; Einstellungen &gt;&gt; Events</a>.</li>\n<li><a href=\"!node-add\" title=\"list of content types that can be created\">Erstellen sie neue Inhate</a> und setzen sie eine neue Start- und Endzeit falls der Administrator die Eventeigenschafte eingeschaltet hat.</li>\n<li>Benützen sie <a href=\"!external-http-drupal-org-handbook-modules-rsvp\">RSVP</a> oder das <a href=\"!external-http-drupal-org-handbook-modules-signup\">Signup</a> um andere zu Events einzuladen.</li>\n"
+
+#: event.module:3147
+msgid "For more information please read the configuration and customization handbook <a href=\"!event\">Event page</a>."
+msgstr "Für weitere Informationen lesen sie bitte das Konfigurationshandbuch <a href=\"!event\">Event Seite</a>."
+
+#: event.module:3150
+msgid "This is a listing of all the event system's time zones, sorted by daylight savings time regions, and their respective offsets from GMT in seconds. Time zones in the 'None' region do not observe daylight savings time. If you believe there is an error, please first search for the locale on !timeanddate and confirm it. If there is indeed an error please submit a !bugreport on drupal.org so we can fix it."
+msgstr "Dies ist eine Auflistung aller Zeitzonen des Eventsystems, sortiert nach Sommerzeit regionen und deren Offset von GMT in Sekunden. Zeitzonen in der 'Keine' Region berücksichtigen keine Sommerzeit. Wenn sie glauben eine Fehler gefunden zu haben, überprüfen sie zuerst die Spracheinstellungen auf !timeanddate. Handelt es sich tatsächlich um einen Fehler, erfassen sie bitte einen Bugreport (!bugreport)auf drupal.org damit wir den ihn beheben können."
+
+#: event.module:3159
+msgid "The year the event starts."
+msgstr "Startjahr des Events."
+
+#: event.module:3160
+msgid "The two-digit month (01-12) the event starts."
+msgstr "Monat (01-12) an dem des Event startet."
+
+#: event.module:3161
+msgid "The three-letter month (jan-dec) the event starts."
+msgstr "Monat (Jan-Dec) an dem das Event startet."
+
+#: event.module:3162
+msgid "The two-digit day of the month (01-31) the event starts."
+msgstr "Tag des Monats (01-31) an dem das Event startet."
+
+#: event.module:3163
+msgid "The three-letter day of the week (sun-sat) the event starts."
+msgstr "Der Wochentag (Mon-Son)an dem das Event startet."
+
+#: event.module:3164
+msgid "The week number (1-52) of the year the event starts."
+msgstr "Die Woche im Jahr (1-52) and dem das Event startet."
+
+#: event.module:1853
+msgid "Upcoming @name"
+msgid_plural "Upcoming @count @names"
+msgstr[0] "Nächste @name"
+msgstr[1] "Nächste @count @names"
+
+#: event.module:1926;1931
+msgid "1 day"
+msgid_plural "@count days"
+msgstr[0] "1 Tage"
+msgstr[1] "@count Tage"
+
+#: event.module:1934
+msgid "1 hour"
+msgid_plural "@count hours"
+msgstr[0] "1 Stunde"
+msgstr[1] "@count Stunden"
+
+#: event.module:1937
+msgid "1 minute"
+msgid_plural "@count minutes"
+msgstr[0] "1 Minute"
+msgstr[1] "@count Minuten"
+
+#: event.module:0 event.theme:0
+msgid "event"
+msgstr "Veranstaltung"
+
+#: event.theme:76;141;193;230;293
+msgid "limit view to events of this type"
+msgstr "Beschränke die Ansicht auf Events von diesem Typ."
+
+#: event.theme:80;144;196;233;296
+msgid "view this event"
+msgstr "Dieses Event ansehen"
+
+#: event.theme:82;118;124;175;181;237;243;256;300;306;319;392
+msgid "Start: "
+msgstr "Start:"
+
+#: event.theme:84;120;127;177;184;239;246;258;302;309;321;395
+msgid "End: "
+msgstr "Ende:"
+
+#: event.theme:135;188;250;313
+msgid "all day"
+msgstr ""
+
+#: event.theme:265;328
+msgid "more info"
+msgstr "Weitere Informationen"
+
+#: event.theme:267;330
+msgid "Show detailed information for this event."
+msgstr "Detaillierte Informatinoen für dieses Event anzeigen."
+
+#: event.theme:347;370
+msgid "%month / %day"
+msgstr "%month / %day"
+
+#: event.theme:400
+msgid "Timezone: "
+msgstr "Zeitzone: "
+
+#: event.theme:454
+msgid "Add to iCalendar"
+msgstr "Zu iCalendar hinzufügen"
+
+#: event.theme:454
+msgid "Add this calendar to your iCalendar"
+msgstr "Diesen Kalender zu ihrem iCalendar hinzufügen"
+
+#: event.theme:464
+msgid "more"
+msgstr "mehr"
+
+#: event.theme:464
+msgid "More events."
+msgstr "Weitere Veranstaltungen"
+
+#: event.install:97;248 event.info:0;0 contrib/event_all_day/event_all_day.info:0 contrib/event_views/event_views.info:0
+msgid "Event"
+msgstr "Event"
+
+#: event.install:99;250
+msgid "Events have a start date and an optional end date as well as a teaser and a body. They can be extended by other modules, too."
+msgstr "Event haben ein Startdatum und ein optionales Enddatum wie einen Teaser und einen Body. Sie können auch von anderen Modulen erweitert werden."
+
+#: event.install:109
+msgid "Event module was successfully installed with default options. To customize event and/or location settings for events, please view the <a href=\"!settings\">event content type settings page</a>. Make sure to <a href=\"!url\">select the default timezone</a> for your website before creating events."
+msgstr "Das Eventmodu ist mit den Standardoptionen erfolgreich installiert worden. Um Event- und Ortseinstellungen vorzunehemen, zeigen sie bitte die  <a href=\"!settings\">Event Inhaltstyp Einstellungsseite an</a>. Stellen sie sicher  <a href=\"!url\">die Standardzeitzone einzustellen</a> bevor sie damit beginnen Events zu erstellen."
+
+#: event.install:134
+msgid "Event module successfully uninstalled"
+msgstr "Das Eventmodul wurde erfolgreich installiert"
+
+#: event.install:263
+msgid "The basicevent module is no longer supported, it was disabled during the upgrade process."
+msgstr "Das Basiceventmodul wird nicht mehr unterstützt, es wrude während dem Upgradeprozess augeschaltet."
+
+#: (duplicate) event.install:15 
+msgid "MySQL database for event module"
+msgstr "MySQL Datenbank für das Eventmodul"
+
+#: (duplicate) event.install:21 
+msgid "Your MySQL Server is too old. Event module 5.2 requires at least MySQL %version. The 5.1 version is compatible with MySQL 3."
+msgstr "Ihr MySQL Server ist zu alt. Eventmodul 5.2 benötigt mindestens MySQL %version. Die Version 5.1 ist kompatibel mit MySQL 3."
+
+#: event.info:0
+msgid "Calendaring API, calendar display and export"
+msgstr "Kalender API, Kalender anzeige und export"
+
+#: contrib/event_all_day/event_all_day.module:19
+msgid "All day"
+msgstr "ganzer Tag"
+
+#: contrib/event_all_day/event_all_day.module:0
+msgid "event_all_day"
+msgstr "event_all_day"
+
+#: contrib/event_all_day/event_all_day.info:0
+msgid "Event All Day"
+msgstr "ganztägiges Event"
+
+#: contrib/event_all_day/event_all_day.info:0
+msgid "Allows creation of all-day events."
+msgstr "Erlaube das erstellen von ganztägigen Events."
+
+#: contrib/event_views/event_views.module:14
+msgid "<p>The Event Views module makes the event fields available to the Views module, and creates default event views that filter dates using a drop-down date selector, the jscalendar selector, or by arguments in the url. Set up a default event view by going to %link and select <strong>add</strong>. Save the default views as-is or make any changes you like.</p>"
+msgstr "<p>Das Eventviewsmodul stellt die Evensfelder dem Viewsmodul zur Verfügung. Damit erstellt es Standardeventansichten mit eine Drop-Down Datumcontrol, dem jscalendar selector oder mit argument aus der URL. Sie können eine Standardeventque unter %link und dann <strong>Hinzufügen</strong> erstellen. Speichern sie die Standardview oder nehemn sie beliebige Änderungen vor.</p>"
+
+#: contrib/event_views/event_views.module:15
+msgid "<p>You can change the format of the output. The default views display a list of events, but you can change it to a table or a teaser list in the <strong>Page</strong> settings. You can also add or remove fields from the view.</p>"
+msgstr "Sie können das Outputformat anpassen. Die Standardansicht zeigt eine Liste von Events, aber sie können in den  <strong>Page</strong> Einstellungen auch eine Tabellen oder Teaseransicht wählen. Sie können auch Felder von der Ansicht entfernen oder hinzufügen."
+
+#: contrib/event_views/event_views.module:16
+msgid "<p>You can filter events in several ways. Use filters to pre-select a date range, expose those filters to allow the viewer to select a date range, or eliminate the filters and give the view year, month, and day arguments to filter the events by the url (i.e. YYYY/MM/DD).</p>"
+msgstr "<p>Events können auf verschiende Arten gefiltert werden. Verwenden sie Filter um einen Datumsbreich auszuwählen, sie können diese Filter dem Benutzer anzeigen damit er selbst einen Datumsbereich auswählen kann oder eleminieren sie die Filter und geben der Ansicht Jah, Monat und Tag Argumente um die Events via URL zu filtern (z.B. YYYY/MM/DD).</p>"
+
+#: contrib/event_views/event_views.module:34
+msgid "now"
+msgstr "jetzt"
+
+#: contrib/event_views/event_views.module:56;77
+msgid "Event: Start Time"
+msgstr "Event: Startzeit"
+
+#: contrib/event_views/event_views.module:63;78
+msgid "Event: End Time"
+msgstr "Event: Endzeit"
+
+#: contrib/event_views/event_views.module:70
+msgid "Event: Timezone"
+msgstr "Event: Zeitzone"
+
+#: contrib/event_views/event_views.module:83
+msgid "Event: Start Date"
+msgstr "Event: Startdatum"
+
+#: contrib/event_views/event_views.module:88
+msgid "This filter allows events to be filtered by their start date. Enter dates in the format: YYYY-MM-DD HH:MM:SS. Enter 'now' to use the current time. You may enter a delta (in seconds) to the option that will be added to the time; this is most useful when combined with now. If you have the jscalendar module from jstools installed, you can use a popup date picker here."
+msgstr "Dieser Filter ermöglicht Event nach Startdatum zu filtern. Geben Sie die Daten im Format YYYY-MM-DD HH:MM:SS ein. Geben sie 'jetzt' ein um die aktuelle Ziet zu verwenden. Sie können ein Delta (in Sekunden) eingeben das zur Zeit hnzugezählt wird; das ist sehr nützlich in Kombination mit jetzt. Wenn sie das jscalendar modul von jstools installiert haben, können sie hier einen Popup Datepicker verwenden."
+
+#: contrib/event_views/event_views.module:92
+msgid "Event: End Date"
+msgstr "Event: Enddatum"
+
+#: contrib/event_views/event_views.module:97
+msgid "This filter allows events to be filtered by their end date. Enter dates in the format: YYYY-MM-DD HH:MM:SS. Enter 'now' to use the current time. You may enter a delta (in seconds) to the option that will be added to the time; this is most useful when combined with now. If you have the jscalendar module from jstools installed, you can use a popup date picker here."
+msgstr "Dieser Filter ermöglicht Event nach Enddatum zu filtern. Geben Sie die Daten im Format YYYY-MM-DD HH:MM:SS ein. Geben sie 'jetzt' ein um die aktuelle Ziet zu verwenden. Sie können ein Delta (in Sekunden) eingeben das zur Zeit hnzugezählt wird; das ist sehr nützlich in Kombination mit jetzt. Wenn sie das jscalendar modul von jstools installiert haben, können sie hier einen Popup Datepicker verwenden."
+
+
+#: contrib/event_views/event_views.module:101;167
+msgid "Event: Start Year"
+msgstr "Evenat: Startjahr"
+
+#: contrib/event_views/event_views.module:107
+msgid "Filter by year. Use the option to select the date field to filter on."
+msgstr "Nach Jahr filtern."
+
+#: contrib/event_views/event_views.module:111;172
+msgid "Event: Start Month"
+msgstr "Event: Startmonat"
+
+#: contrib/event_views/event_views.module:117
+msgid "Filter by month. Use the option to select the date field to filter on."
+msgstr "Nach Monat filtern."
+
+#: contrib/event_views/event_views.module:121;177
+msgid "Event: Start Day"
+msgstr "Event: Starttag"
+
+#: contrib/event_views/event_views.module:127
+msgid "Filter by day. Use the option to select the date field to filter on."
+msgstr "Nach Tag filtern."
+
+#: contrib/event_views/event_views.module:148
+msgid "Event: Type"
+msgstr "Event: Typ"
+
+#: contrib/event_views/event_views.module:153
+msgid "A node type selector that is limited to event-enabled node types. Use as exposed filter that only contains event node types."
+msgstr "Eine Inahltstyp Auswahl, die auf eventfähige Inhaltstpyen beschränkt ist. Wird als Filter für den Benutzer verwendet, das nur eventfähige Inhaltstpyen anzeigt."
+
+#: contrib/event_views/event_views.module:169
+msgid "Filter by the event year (YYYY)."
+msgstr "Nach Eventjahr (YYYY) filtern."
+
+#: contrib/event_views/event_views.module:174
+msgid "Filter by the event month (1-12). Place this argument after a 'Year' argument."
+msgstr "Nach Eventmonat (1-12) filtern. Dieses Argument kommt nach dem 'Jahr' Argument"
+
+#: contrib/event_views/event_views.module:179
+msgid "Filter by the event day (1-31). Place this argument after a 'Year' and a 'Month' argument."
+msgstr "Nach Eventtag (1-31) filtern. Dieses Argument kommt nach dem 'Jahr' und 'Monat' argument."
+
+#: contrib/event_views/event_views.module:182
+msgid "Event: Start Week"
+msgstr "Event: Startowche"
+
+#: contrib/event_views/event_views.module:184
+msgid "Filter by the week number (1-52). Place this argument after a 'Year' argument."
+msgstr "Nach Eventwoche (1-52) fltern. Dieses Argument kommt nach dem 'Jahr' Argument." 
+
+#: contrib/event_views/event_views.module:288
+msgid "Week "
+msgstr "Woche"
+
+#: contrib/event_views/event_views.module:297;320
+msgid "N/A"
+msgstr "leer"
+
+#: contrib/event_views/event_views.module:343
+msgid "event_select"
+msgstr "Event Auswahl"
+
+#: contrib/event_views/event_views.module:344
+msgid "Events list filtered by drop-down date selector."
+msgstr "Eventliste nach Drop-Down Datum Auswahl gefiltert."
+
+#: contrib/event_views/event_views.module:350;471;577
+msgid "event list"
+msgstr "Eventliste"
+
+#: contrib/event_views/event_views.module:374;495;601
+msgid "Title"
+msgstr "Überschrift"
+
+#: contrib/event_views/event_views.module:381;502;608
+msgid "Start Time:"
+msgstr "Startzeit:"
+
+#: contrib/event_views/event_views.module:388;509;615
+msgid "End Time:"
+msgstr "Endzeit:"
+
+#: contrib/event_views/event_views.module:435
+msgid "Start Year:"
+msgstr "Startjahr:"
+
+#: contrib/event_views/event_views.module:444
+msgid "Start Month:"
+msgstr "Startmonat:"
+
+#: contrib/event_views/event_views.module:453
+msgid "Start Day:"
+msgstr "Starttag:"
+
+#: contrib/event_views/event_views.module:464
+msgid "event_js"
+msgstr "event_js"
+
+#: contrib/event_views/event_views.module:465
+msgid "Events list filtered by js date selector."
+msgstr "Event wird von Javascript Datumselektor gefiltert."
+
+#: contrib/event_views/event_views.module:548
+msgid "Start Date"
+msgstr "Startdatum"
+
+#: contrib/event_views/event_views.module:570
+msgid "event_date"
+msgstr "Eventdatum"
+
+#: contr:900ib/event_views/event_views.module:571
+msgid "Events list filtered by url arguments."
+msgstr "Eventliste nach URL Argumenten gefiltert."
+
+#: contrib/event_views/event_views.module:641
+msgid "Year"
+msgstr "Jahr"
+
+#: contrib/event_views/event_views.module:668
+msgid "As Short Date"
+msgstr "Als kurzes Datum"
+
+#: contrib/event_views/event_views.module:669
+msgid "As Medium Date"
+msgstr "Als mitleres Datum"
+
+#: contrib/event_views/event_views.module:670
+msgid "As Long Date"
+msgstr "Als langes DAtum"
+
+#: contrib/event_views/event_views.module:671
+msgid "As Custom Date"
+msgstr "Als benutzerdefiniertes Datum"
+
+#: contrib/event_views/event_views.module:672
+msgid "As Time Ago"
+msgstr "Als vergangene Zeit"
+
+#: contrib/event_views/event_views.module:0
+msgid "event_views"
+msgstr "Eventansicht"
+
+#: contrib/event_views/event_views.info:0
+msgid "Event Views"
+msgstr "Eventansicht"
+
+#: contrib/event_views/event_views.info:0
+msgid "Views-enables the event fields and creates default event views."
+msgstr "Views schaltet die Eventfelder ein und erstellt Standardeventansichten."
+

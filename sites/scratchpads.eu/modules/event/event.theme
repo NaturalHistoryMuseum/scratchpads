@@ -1,0 +1,493 @@
+<?php
+// $Id: event.theme,v 1.61.2.1 2008/10/26 19:45:18 killes Exp $
+
+/**
+ * @addtogroup themeable
+ * @{
+ */
+
+/**
+ * Format a calendar view
+ *
+ * @param day
+ *   The day to display.
+ */
+function theme_event_calendar_month($op, $header, $rows, $attributes = array(), $caption = NULL) {
+  $output = theme("table", $header, $rows, $attributes, $caption);
+  return '<div class="event-calendar"><div class="month-view">'. $output ."</div></div>\n";
+}
+
+/**
+ * Format a calendar view
+ *
+ * @param day
+ *   The day to display.
+ */
+function theme_event_calendar_week($op, $header, $rows, $attributes = array(), $caption = NULL) {
+  $output = theme("table", $header, $rows, $attributes, $caption);
+  return '<div class="event-calendar"><div class="week-view">'. $output ."</div></div>\n";
+}
+
+/**
+ * Format a calendar view
+ *
+ * @param day
+ *   The day to display.
+ */
+function theme_event_calendar_day($op, $header, $rows, $attributes = array(), $caption = NULL) {
+  $output = theme("table", $header, $rows, $attributes, $caption);
+  return '<div class="event-calendar"><div class="day-view">'. $output ."</div></div>\n";
+}
+
+/**
+ * Format a calendar view
+ *
+ * @param day
+ *   The day to display.
+ */
+function theme_event_calendar_table($op, $header, $rows, $attributes = array(), $caption = NULL) {
+  $output = theme("table", $header, $rows, $attributes, $caption);
+  return '<div class="event-calendar"><div class="table-view">'. $output ."</div></div>\n";
+}
+
+/**
+ * Format a calendar view
+ *
+ * @param day
+ *   The day to display.
+ */
+function theme_event_calendar_list($op, $header, $rows) {
+  return '<div class="event-calendar"><div class="list-view">'. $rows ."</div></div>\n";
+}
+
+/**
+ * Format an event node for display in an expanded calendar, like a calendar page
+ *
+ * @param node
+ *   The node being displayed
+ */
+function theme_event_node_day($node) {
+  static $zebra;
+	
+  $output .= '<div class="event dayview vevent'. ($zebra++%2? ' odd' : '') .'">'."\n";
+
+  if (variable_get('event_type_control', 'all') != 'never') {
+    if ((count(event_get_types('all')) + count(event_get_types('solo'))) > 1) {
+      $output .= '<div class="type">'. l('('. $node->event['node_type'] .')', 'event/'. _event_format_url($node->event['start_exploded']) .'/day/'. $node->type, array('title' => t('limit view to events of this type'))).'</div>'."\n";
+    }
+  }
+
+  $output .= '<div class="title summary">'. l($node->title, "node/$node->nid", array('title' => t('view this event'))) .'</div>'."\n";
+  if ($node->event['state'] != 'allday' && $node->event['state'] != 'ongoing') {
+    $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+    if ($node->event['start'] != $node->event['end']) {
+      $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+    }
+  }
+
+  $output .= '<div class="content description">'. check_markup($node->teaser, $node->format) ."</div>\n";
+  $output .= '<div class="links">'. theme('links', $node->event['links']) ."\n</div>";
+  $output .= "</div>\n";
+  return $output;
+}
+
+/**
+ * Format an event node for display in an expanded calendar, like a calendar page
+ *
+ * @param node
+ *   The node being displayed
+ */
+function theme_event_node_week($node) {
+  static $stripe, $stripe_map;
+
+  if(!$stripe_map[$node->nid]) {
+    if($stripe >= 10) {
+      $stripe = 1;
+    }
+    else {
+      $stripe++;
+    }
+    $stripe_map[$node->nid] = $stripe;
+  }
+
+  $output .= '<div class="event weekview vevent">'."\n";
+  $output .= '<div class="stripe-'. $stripe_map[$node->nid] .'"></div>'."\n";
+
+  switch ($node->event['state']) {
+    case 'singleday':
+      $times = '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      if ($node->event['start'] != $node->event['end']) {
+        $times .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      }
+      break;
+    case 'start':
+      $times = '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      break;
+    case 'end':
+      $times .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      break;
+    case 'allday':
+    case 'ongoing':
+      /*TODO: not sure if using dtstart in this case is correct,
+       * or even if it should be marked up at all! skipping
+       * marking it up!
+       */
+      $times .= '<div class="ongoing" >'. t('all day') .'</div>'."\n";
+      break;
+  }
+
+  if (variable_get('event_type_control', 'all') != 'never') {
+    if ((count(event_get_types('all')) + count(event_get_types('solo'))) > 1) {
+      $output .= '<div class="type">'. l('('. $node->event['node_type'] .')', 'event/'. _event_format_url($node->event['current_date']) .'/month/'. $node->type, array('title' => t('limit view to events of this type'))).'</div>'."\n";
+    }
+  }
+  $output .= '<div class="title">'. l($node->title, "node/$node->nid", array('title' => t('view this event'))) .'</div>'."\n";
+  $output .= $times;
+  $output .= '<div class="links">'. theme('links', $node->event['links']) ."\n</div>";
+  $output .= '</div>' . "\n";
+  return $output;
+}
+
+/**
+ * Format an event node for display in an expanded calendar, like a calendar page
+ *
+ * @param node
+ *   The node being displayed
+ */
+function theme_event_node_month($node) {
+  static $stripe, $stripe_map;
+
+  if (!$stripe_map[$node->nid]) {
+    if ($stripe >= 10) {
+      $stripe = 1;
+    }
+    else {
+      $stripe++;
+    }
+    $stripe_map[$node->nid] = $stripe;
+  }
+
+  $output .= '<div class="event monthview vevent">'."\n";
+  $output .= '<div class="stripe-'. $stripe_map[$node->nid] .'"></div>'."\n";
+
+  switch ($node->event['state']) {
+    case 'singleday':
+      $times = '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      if ($node->event['start'] != $node->event['end']) {
+        $times .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      }
+      break;
+    case 'start':
+      $times = '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      break;
+    case 'end':
+      $times = '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      break;
+    case 'allday':
+    case 'ongoing':
+      $times = '<div class="ongoing">'. t('all day') .'</div>'."\n";
+      break;
+  }
+  if (variable_get('event_type_control', 'all') != 'never') {
+    if ((count(event_get_types('all')) + count(event_get_types('solo'))) > 1) {
+      $output .= '<div class="type">'. l('('. $node->event['node_type'] .')', 'event/'.  _event_format_url($node->event['current_date']) .'/month/'.$node->type, array('title' => t('limit view to events of this type'))).'</div>'."\n";
+    }
+  }
+  $output .= '<div class="title summary">'. l($node->title, "node/$node->nid", array('title' => t('view this event'))) .'</div>'."\n";
+  $output .= $times;
+  $output .= '<div class="links">'. theme('links', $node->event['links']) ."\n</div>";
+  $output .= '</div>' . "\n";
+
+  return $output;
+}
+
+/**
+ * Format an event node for display in an expanded calendar, like a calendar page
+ *
+ * @param node
+ *   The node being displayed
+ */
+
+function theme_event_node_table($node) {
+  static $stripe, $stripe_map, $link_count;
+  drupal_add_js(drupal_get_path('module', 'event') .'/event.js');
+  $link_count++;
+
+  if (!$stripe_map[$node->nid]) {
+    if ($stripe >= 10) {
+      $stripe = 1;
+    }
+    else {
+      $stripe++;
+    }
+    $stripe_map[$node->nid] = $stripe;
+  }
+
+  $output .= '<div class="event tableview vevent">'."\n";
+  $output .= '<div class="stripe-'. $stripe_map[$node->nid] .'"></div>'."\n";
+  if (variable_get('event_type_control', 'all') != 'never') {
+    if (!$module && (count(event_get_types('all')) + count(event_get_types('solo'))) > 1) {
+      $output .= '<div class="type">'. l('('. $node->event['node_type'] .')', 'event/'. _event_format_url($node->event['start_exploded']) .'/table/'.$node->type, array('title' => t('limit view to events of this type'))).'</div>'."\n";
+    }
+  }
+  $output .= '<div class="title summary">'. l($node->title, "node/$node->nid", array('title' => t('view this event'))) .'</div>'."\n";
+
+  switch ($node->event['state']) {
+    case 'singleday':
+      $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      if ($node->event['start'] != $node->event['end']) {
+        $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      }
+      break;
+    case 'start':
+      $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      break;
+    case 'end':
+      $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      break;
+    case 'allday':
+    case 'ongoing':
+      $output .= '<div class="ongoing">('. t('all day') .')</div>'."\n";
+      break;
+  }
+
+  $output .= '<div id="info_'. $link_count .'" class="info vevent">'."\n";
+  if ($node->event['state'] != 'singleday' && $node->event['state'] != 'allday') {
+    $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+    if ($node->event['start'] != $node->event['end']) {
+      $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+    }
+  }
+  $output .= '<div class="content description">'. check_markup($node->teaser, $node->format) .'</div></div>'."\n";
+
+  $links = $node->event['links'];
+  $links['more_info'] = array(
+    'title' => t('more info'),
+    'href' => 'node/'.$node->nid,
+    'attributes' => array('onclick' => "popupnotes('info_". $link_count ."'); return false;", 'title' => t('Show detailed information for this event.')),
+  );
+  $output .= '<div class="links">'. theme('links', $links) ."\n</div>";
+  $output .= '</div>'."\n";
+  return $output;
+}
+
+function theme_event_node_list($node, $module = NULL) {
+  static $stripe, $stripe_map, $link_count;
+  drupal_add_js(drupal_get_path('module', 'event') .'/event.js');
+  $link_count++;
+
+  if (!$stripe_map[$node->nid]) {
+    if ($stripe >= 10) {
+      $stripe = 1;
+    }
+    else {
+      $stripe++;
+    }
+    $stripe_map[$node->nid] = $stripe;
+  }
+
+  $output = '<div class="event tableview">'."\n";
+  $output .= '<div class="stripe-'. $stripe_map[$node->nid] .'"></div>'."\n";
+  if (variable_get('event_type_control', 'all') != 'never') {
+    if (!$module && (count(event_get_types('all')) + count(event_get_types('solo'))) > 1) {
+      $output .= '<div class="type">'. l('('. $node->event['node_type'] .')', 'event/'. _event_format_url($node->event['start_exploded']) .'/table/'.$node->type, array('title' => t('limit view to events of this type'))).'</div>'."\n";
+    }
+  }
+  $output .= '<div class="title summary">'. l($node->title, "node/$node->nid", array('title' => t('view this event'))) .'</div>'."\n";
+
+  switch ($node->event['state']) {
+    case 'singleday':
+      $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      if ($node->event['start'] != $node->event['end']) {
+        $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      }
+      break;
+    case 'start':
+      $output .= '<div class="start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'">'. t('Start: ') . $node->event['start_time_format'] .'</div>'."\n";
+      break;
+    case 'end':
+      $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+      break;
+    case 'allday':
+    case 'ongoing':
+      $output .= '<div class="ongoing">('. t('all day') .')</div>'."\n";
+      break;
+  }
+
+  $output .= '<div id="info_'. $link_count .'" class="info vevent">'."\n";
+  if ($node->event['state'] != 'singleday' && $node->event['state'] != 'allday') {
+    $output .= '<div class="end dstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('Start: ') . $node->event['end_time_format'] .'</div>'."\n";
+    if ($node->event['start'] != $node->event['end']) {
+      $output .= '<div class="end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z"). '">' . t('End: ') . $node->event['end_time_format'] .'</div>'."\n";
+    }
+  }
+  $output .= '<div class="content description">'. check_markup($node->teaser, $node->format) .'</div></div>'."\n";
+
+  $links = $node->event['links'];
+  $links['more_info'] = array(
+    'title' => t('more info'),
+    'href' => 'node/'.$node->nid,
+    'attributes' => array('onclick' => "popupnotes('info_". $link_count ."'); return false;", 'title' => t('Show detailed information for this event.')),
+  );
+  $output .= '<div class="links">'. theme('links', $links) ."\n</div>";
+  $output .= '</div>'."\n";
+  return $output;
+}
+
+/**
+ * Format an date's day box in a calendar
+ *
+ * @param date
+ *   The day to display.
+ */
+function theme_event_calendar_date_box($date, $view) {
+  $output = '';
+  switch ($view) {
+    case 'table':
+      $output = '<div class="day">'. t('%month / %day', array('%month' => $date['month'], '%day' => (int)$date['day'])) .'</div>'."\n";
+      break;
+    case 'list':
+      $output = '<div class="day">'. event_format_date($date, 'custom', t('l F d, Y')) .'</div>'."\n";
+      break;
+    case 'day':
+     break;
+    default:
+      $output = '<div class="day">'. (int)$date['day'] .'</div>'."\n";
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Format an empty day on a calendar
+ *
+ * @param date
+ *   The day to display.
+ */
+function theme_event_empty_day($date, $view) {
+  switch ($view) {
+    case 'table':
+      $output = '<div class="day">'. t('%month / %day', array('%month' => $date['month'], '%day' => (int)$date['day'])) .'</div>'."\n";
+      $output .= '<div class="event-empty"></div>'."\n";
+      break;
+    case 'day':
+    case 'list':
+     break;
+    default:
+      $output = '<div class="day">'. (int) $date['day'] .'</div>'."\n";
+      $output .= '<div class="event-empty"></div>'."\n";
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Format an date value for a nodeapi insert
+ *
+ * @param node
+ *   The node which needs it's dates formatted
+ */  
+function theme_event_nodeapi($node) {
+  $output = '<div class="event-nodeapi">
+    <div class="'. $node->type. '-start dtstart" title="'. event_format_date($node->event['start'], 'custom', "Y-m-d\TH:i:s\Z") .'"><label>'. t('Start: ') .'</label>'. $node->event['start_format'] .'</div></div>'."\n";
+  if ($node->event['start'] != $node->event['end']) {
+    $output .= '<div class="event-nodeapi">
+    <div class="'. $node->type. '-end dtend" title="'. event_format_date($node->event['end'], 'custom', "Y-m-d\TH:i:s\Z") . '"><label>'. t('End: ') .'</label>'. $node->event['end_format'] .'</div></div>'."\n";
+  }
+  if (variable_get('configurable_timezones', 1)) {
+    $zone = event_zonelist_by_id($node->event['timezone']);
+    $output .= '<div class="event-nodeapi">
+    <div class="'. $node->type. '-tz"><label>'. t('Timezone: ') .'</label>'. t($zone['name']) .'</div></div>'."\n";
+  }
+  return $output;
+}
+
+/**
+ * Format the event filter control dropdown
+ *
+ * @param form
+ *   The form containing the taxonomy controls
+ */
+function theme_event_filter_control($form) {
+  return '<div class="event-filter-control">'. $form .'</div>';
+}
+
+/**
+ * Format the 'next' navigation controls for event calendars
+ *
+ * @param link
+ *   The url for the navigation
+ */
+function theme_event_nav_next($url, $attributes = array()) {
+  return '<span class="next">'. l('»', $url, $attributes) .'</span>';
+}
+
+/**
+ * Format the 'previous' navigation controls for event calendars
+ *
+ * @param link
+ *   The url for the navigation
+ */
+function theme_event_nav_prev($url, $attributes = array()) {
+  return '<span class="prev">'. l('«', $url, $attributes) .'</span>';
+}
+
+/**
+ * Format the links for event calendars
+ *
+ * @param links
+ *   An array of links to render
+ * @param view
+ *   The current view being rendered
+ */
+function theme_event_links($links, $view) {
+  return theme('links', $links);
+}
+
+/**
+ * Format the ical link
+ *
+ * @param path
+ *   The url for the ical feed
+ */
+function theme_event_ical_link($path) {
+  return '<div class="ical-link">'. l('<img src="'. base_path() . drupal_get_path('module', 'event') .'/images/ical16x16.gif" alt="'.t('Add to iCalendar').'" />', $path, array('title' => t('Add this calendar to your iCalendar')), NULL, NULL, TRUE, TRUE) .'</div>';
+}
+
+/**
+ * Format the 'read more' link for events
+ *
+ * @param path
+ *   The url to use for the read more link
+ */
+function theme_event_more_link($path) {
+  return '<div class="more-link">'. l(t('more'), $path, array('title' => t('More events.'))) .'</div>';
+}
+
+/**
+ * Format an individual upcoming event block item
+ *
+ * @param node
+ *   The node to render as an upcoming event
+ * TODO: decorate with hcalendar
+ */
+function theme_event_upcoming_item($node, $types = array()) {
+  $output = l($node->title, "node/$node->nid", array('title' => $node->title));
+  if (count($types) > 1) {
+    $output .= '<span class="event-nodetype">('. $node->event['node_type'] .')</span>';
+  }
+  $output .= '<span class="event-timeleft">('. $node->event['timeleft'] .')</span>';
+  return $output;
+}
+
+/**
+ * Format the upcoming event block for event calendars
+ *
+ * @param items
+ *   An array of themed upcoming events
+ */
+function theme_event_upcoming_block($items) {
+  $output = theme("item_list", $items);
+  return $output;
+}
+/** @} End of addtogroup themeable */
