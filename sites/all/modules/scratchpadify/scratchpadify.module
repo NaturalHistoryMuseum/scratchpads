@@ -420,12 +420,34 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
  * Implementation of hook_footer()
  */
 function scratchpadify_footer($main=0){
-  // Add the following HTML to the footer of ALL pages
-  $string = '<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
-href="http://e-taxonomy.eu/"><img src="/sites/all/images/edit_small.png" 
-alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="/sites/all/images/scratchpads.png"/></a><a rel="license" 
+  // Add the following HTML to the footer of ALL pages]
+  if(function_exists('mcrypt_module_open')){
+    global $user;
+    if($user->uid && (isset($user->roles[5])||$user->uid == 1)) {
+      $uservoice = '<script type="text/javascript">
+         var uservoiceJsHost = ("https:" == document.location.protocol) ? "https://uservoice.com" : "http://cdn.uservoice.com";
+         document.write(unescape("%3Cscript src=\'" + uservoiceJsHost + "/javascripts/widgets/tab.js\' type=\'text/javascript\'%3E%3C/script%3E"))
+       </script>
+       <script type="text/javascript">
+         UserVoice.Tab.show({ 
+         key: "biodiversityinformatics",
+         host: "biodiversityinformatics.uservoice.com", 
+         forum: "scratchpads", 
+         alignment: "right",
+         background_color:"#aaa", 
+         text_color: "white",
+         hover_color: "#ddd",
+         lang: "en",
+         params: { sso: "'._uservoice_generate_encrypted_sso('biodiversityinformatics', 'cc1340651bf304d5d58bb703d20890d6').'" }
+         })
+       </script>';
+    }
+  }
+  return $uservoice.'<div id="scratchpadify-footer" align="center" style="padding: 20px"><a 
+href="http://e-taxonomy.eu/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/edit_small.png').'" 
+alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.url(drupal_get_path('module','scratchpadify').'/images/scratchpads.png').'"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
-style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="/sites/all/images/drupal_small.png" alt="drupal logo" style="padding: 0px 30px"/></a>
+style="border-width: 0pt;" src="'.url(drupal_get_path('module','scratchpadify').'/images/cc.logo.1.png').'"  style="padding: 0px 30px"/></a><a href="http://drupal.org/"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/drupal_small.png').'" alt="drupal logo" style="padding: 0px 30px"/></a>
 <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
@@ -436,8 +458,77 @@ style="border-width: 0pt;" src="/sites/all/images/cc.logo.1.png"  style="padding
 <script type="text/javascript">
 _uacct = "UA-2428547-2";
 urchinTracker();
-</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft, Drupal developer London</a> & Dave Roberts</div>';
-  return $string;
+</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft</a> & Dave Roberts</div>';
+}
+
+/**
+ * Generate encrypted data for single sign-on to UserVoice
+ * 
+ * Requires mcrypt extension for PHP
+ * @see http://php.net/mcrypt
+ * 
+ * @param $account_key
+ * String containing UserVoice account key (same as account name or subdomain)
+ * 
+ * @param $api_key
+ * String containing UserVoice api key.
+ */
+function _uservoice_generate_encrypted_sso($account_key, $api_key) {
+  global $user;
+  
+  if($user->uid) {
+    $saltedHash = substr(sha1($api_key.$account_key, TRUE),0,16);
+    $iv = "OpenSSL for Ruby";
+    
+    $site_name = variable_get('site_name', '');
+    $user_guid = $site_name.$user->uid;
+    if($user->uid == 1){
+      $user_name = 'Scratchpad Team';
+    } else {
+      $user_name = $user->name;
+    }
+    $expiration_timestamp = _uservoice_expiration_timestamp(30);
+    $user_data = array(
+     "expiration" => $expiration_timestamp,
+     "guid" => $user_guid,
+     "display_name" => $user_name,
+     "email" => $user->mail,
+     "url" => "http://".$_SERVER["SERVER_NAME"]."/user/".$user->uid
+    );
+    
+    $data = json_encode($user_data);
+    
+    // double XOR first block
+    for ($i = 0; $i < 16; $i++)
+    {
+     $data[$i] = $data[$i] ^ $iv[$i];
+    }
+    
+    $pad = 16 - (strlen($data) % 16);
+    $data = $data . str_repeat(chr($pad), $pad);
+      
+    $cipher = mcrypt_module_open(MCRYPT_RIJNDAEL_128,'','cbc','');
+    mcrypt_generic_init($cipher, $saltedHash, $iv);
+    $encrypted_data = mcrypt_generic($cipher,$data);
+    mcrypt_generic_deinit($cipher);
+    
+    $encrypted_data = urlencode(base64_encode($encrypted_data));
+    return $encrypted_data;
+  }
+}
+
+/**
+ * Generate expiration timestamp for UserVoice
+ * UserVoice requires expration timestamp in GMT of format Y-M-D H:i:s
+ * 
+ * @param $duration
+ * Time in minutes from now until expiration default 10 minutes
+ */
+function _uservoice_expiration_timestamp($duration=10) {
+  $format = "Y-m-d H:i:s";
+  $expiration_timestamp = time() + ($duration * 60);
+  $gmt_expiration = gmdate($format,$expiration_timestamp);
+  return $gmt_expiration;
 }
 
 /**
