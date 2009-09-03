@@ -5,7 +5,7 @@
  * Returns an array of all the possible blocks a page can have
  *
  */
-function mado_get_blocks(){
+function mado_get_blocks($all_views = FALSE){
   $blocks_and_views = array ();
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', array(
       'views' => array('biblio', // Hide Biblio as we have the improved biblio_table view
@@ -55,9 +55,11 @@ function mado_get_blocks(){
         'views' => array('ids' => array('og_members_block-block','og_my-block_1','og_files-block_1','og_members_block-block_1'))
       )));
   foreach ( views_get_all_views () as $view ) {
-    if (($view->display ['default']->display_options ['arguments'] ['tid'] || 
+    if ((($view->display ['default']->display_options ['arguments'] ['tid'] || 
         $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth']) &&
-        !in_array($view->name, $views_blocks_to_ignore['views'])) {
+        !in_array($view->name, $views_blocks_to_ignore['views']))
+        ||
+        $all_views) {
       $blocks_and_views ['view-' . $view->name] = array (
         '#type' => 'view', 
         '#name' => $view->name, 
@@ -104,6 +106,30 @@ function mado_get_theme($vid, $tid = false){
     $blocks = array();
   }
   $additional_blocks = mado_get_blocks ();
+  if(!$blocks){
+    return $additional_blocks;
+  }
+  foreach($additional_blocks as $key => $additional_block){
+    if(!isset($blocks[$key])){
+      $blocks[$key] = $additional_block;
+      $blocks[$key]['#hidden'] = TRUE;
+    }
+  }
+  return $blocks;
+}
+
+/**
+ * Get the theme for the front page.
+ */
+function mado_get_theme_front_page(){
+  // try and get the blocks
+  $blocks = db_fetch_array(db_query("SELECT blocks FROM {mado} WHERE identifier = 'frontpage'"));
+  if ($blocks) {
+    $blocks = unserialize ( array_pop ( $blocks ) );
+  } else {
+    $blocks = array();
+  }
+  $additional_blocks = mado_get_blocks(TRUE); // True to not filter by views with term arguments
   if(!$blocks){
     return $additional_blocks;
   }

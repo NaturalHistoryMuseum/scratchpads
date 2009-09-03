@@ -20,6 +20,13 @@ function mado_menu(){
         'access content' ), 
       'type' => MENU_CALLBACK, 
       'file' => 'mado.pages.inc' ),
+    'madofrontpage' => array(
+      'title' => variable_get('site_name',''),
+      'page callback' => 'mado_front_page',
+      'access arguments' => array (
+        'access content'),
+      'type' => MENU_CALLBACK,
+      'file' => 'mado.pages.inc'),
     'mado/save' => array (
       'title' => '', 
       'file' => 'mado.admin.inc',

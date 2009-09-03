@@ -7,6 +7,57 @@
  */
 
 /**
+ * Front page mado style
+ */
+function mado_front_page(){
+  module_load_include('theme-functions.inc','mado');
+  $theme = mado_get_theme_front_page();
+  if(!$theme){
+    drupal_goto('node');
+  }
+  // Add mado CSS
+  drupal_add_css(drupal_get_path('module','mado').'/mado.css');
+  // Add the callback URL for sorting
+  drupal_add_js(array('mado' => array(
+    'callback_url' => url('mado/save',array('absolute'=>TRUE)),
+    'ident' => 'frontpage',
+    'finished_sorting' => l('<img title="Click to save" alt="Lock" src="'.url(drupal_get_path('module','mado').'/images/lock.png').'"/>',$_GET['q'],array('html' => TRUE))
+  )), 'setting');
+  // Add jquery_ui
+  jquery_ui_add(array('ui.sortable'),'none');
+      
+  // Blank title
+  drupal_set_title('');
+  
+  if(user_access('mado sort')){
+    $output .= '<div class="mado_sort">
+        <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.url(drupal_get_path('module','mado').'/images/unlock.png').'"/></h1>
+      </div>';
+    drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
+    jquery_ui_add(array('ui.dialog'));
+    jquery_ui_add(array('ui.draggable'));
+    drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
+  }      
+  $output .= '<div id="mado">';
+  
+  $before_divider = TRUE;
+  foreach($theme as $id => $block){
+    if($id == 'divider'){
+      $before_divider = FALSE;
+    }
+    $output .= theme('mado_block', $block, $id, $before_divider);
+  }      
+  $output .= '</div>';
+  if(user_access('mado sort')){
+    $output .= '<div id="mado_apply">
+        <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
+        <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
+      </div>';
+  }
+  return $output;  
+}
+
+/**
  * Menu callback; displays all nodes associated with a term.
  */
 function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
