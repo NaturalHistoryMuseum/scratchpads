@@ -51,6 +51,8 @@ function scratchpad_profile_modules(){
       'content_profile','content_profile_registration',
     // LifeDesk
       'classification',
+    // Webforms
+      'webform',
     // EDIT
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
@@ -586,6 +588,7 @@ function scratchpad_profile_set_perms(){
                             "view uploaded files",
                             "vote on polls");
   $authenticated_perms = array_merge($anonymous_perms, array(
+                            "access own webform submissions",
                             "post by femail",
                             "edit own forum topics",
                             "post comments without approval",
@@ -594,6 +597,7 @@ function scratchpad_profile_set_perms(){
                             "view own user location",
                             "view revisions"));
   $contributor_perms = array_merge($contributor_perms, $authenticated_perms, array(
+                            "access webform results",
                             "assign node weight",
                             "clone own nodes",
                             "create biblio",
@@ -602,6 +606,7 @@ function scratchpad_profile_set_perms(){
                             "create images",
                             "create nexus projects",
                             "create url aliases",
+                            "create webforms",
                             "delete own blog entries",
                             "delete own darwincore content",
                             "delete own forum topics",
@@ -612,6 +617,7 @@ function scratchpad_profile_set_perms(){
                             "edit own darwincore content",
                             "edit own images",
                             "edit own nexus projects",
+                            "edit own webforms",
                             "fotonotes add notes to all images",
                             "fotonotes add notes to own images",
                             "fotonotes edit own notes",
@@ -648,6 +654,7 @@ function scratchpad_profile_set_perms(){
                             "edit classification",
                             "edit darwincore content",
                             "edit images",
+                            "edit webforms",
                             "export classification",
                             "fotonotes edit all notes",
                             "import classification",
@@ -677,7 +684,9 @@ function scratchpad_profile_set_perms(){
                             "administer url aliases",
                             "administer user locations",
                             "assign roles",
+                            "clear webform results",
                             "delete revisions",
+                            "edit webform submissions",
                             "make backups"));
   $anonymous_perms = implode(", ", $anonymous_perms);
   $authenticated_perms = implode(", ", $authenticated_perms);
