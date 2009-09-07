@@ -18,6 +18,10 @@ function urllogin_menu(){
   );
 }
 
+function urllogin_perm(){
+  return array('view urls');
+}
+
 function urllogin_login($md5){
   global $user;
   $account = db_fetch_object(db_query("SELECT * FROM {users} WHERE MD5(CONCAT(uid, name, mail)) = '%s' AND uid != 1", $md5));
