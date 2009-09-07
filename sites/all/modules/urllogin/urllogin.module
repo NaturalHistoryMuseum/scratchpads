@@ -34,7 +34,10 @@ function urllogin_list(){
   $header = array('Name','URL');
   $rows = array();
   while($row = db_fetch_array($results)){
-    $rows[] = $row;
+    $rows[] = array(
+      $row['name'],
+      url('urllogin/'.$row['mdfive'])
+    );
   }
   return theme('table', $header, $rows);
 }
