@@ -56,10 +56,11 @@ function mado_get_blocks($all_views = FALSE){
       )));
   foreach ( views_get_all_views () as $view ) {
     if ((($view->display ['default']->display_options ['arguments'] ['tid'] || 
-        $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth']) &&
-        !in_array($view->name, $views_blocks_to_ignore['views']))
+        $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth'])
         ||
-        $all_views) {
+        $all_views)        
+        &&
+        !in_array($view->name, $views_blocks_to_ignore['views'])) {
       $blocks_and_views ['view-' . $view->name] = array (
         '#type' => 'view', 
         '#name' => $view->name, 
