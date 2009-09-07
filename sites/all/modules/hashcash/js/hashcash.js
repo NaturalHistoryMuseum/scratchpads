@@ -1,9 +1,22 @@
 function hashcash_create(formfield) {
+  var ajax_options = {
+    async:false,
+    cache:false,
+    url:Drupal.settings.hashcash.url+'/'+document.getElementById(formfield).value,
+    dataType:'text',
+    success:function(formfield_value){
+      set_form_field(formfield, formfield_value);
+    }
+  };
+  $.ajax(ajax_options);
+}
+
+function set_form_field(formfield, formfield_value){
   var shafound = false;
   var hashcash = '';
-  var new_field_value = '';
+  var new_field_value = ''; 
   while(!shafound){
-    new_field_value = document.getElementById(formfield).value+""+randomString(20);
+    new_field_value = formfield_value+randomString(20);
     hashcash = SHA1(new_field_value);
     if(hashcash.substring(0,2) == "00"){
       shafound=true;

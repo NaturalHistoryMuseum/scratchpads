@@ -57,12 +57,28 @@ function hashcash_menu(){
     'page arguments' => array('hashcash_admin_settings'),
     'access arguments' => array('administer site configuration')
   );
+  $items['hashcash'] = array(
+    'title' => 'Get Hashcash',
+    'description' => 'Returns the start part of a hashcash string',
+    'page callback' => 'hashcash_get_hashcash',
+    'access arguments' => array('access content')
+  );
   return $items;
+}
+
+function hashcash_get_hashcash($form_id){
+  // Set the headers and cache stuff so that this URL/Page is _NEVER_ cached.
+  header("Content-Type: text/plain");
+            
+  // Cookie domain is added to hashcash to prevent same hashcash being used on multiple sites
+  global $cookie_domain;
+  print '1:'.date('ymd').':'.$form_id.':'.ip_address().':'.$cookie_domain.':';
 }
 
 function hashcash_init(){
   if(!user_access('submit form without hashcash')){
     drupal_add_js(drupal_get_path('module','hashcash').'/js/hashcash.js');
+    drupal_add_js(array('hashcash' => array('url' => url('hashcash'))), 'setting');
   }
 }
 
@@ -78,9 +94,6 @@ function hashcash_init(){
  * @param Array $form
  */
 function hashcash_form_alter(&$form, &$form_state, $form_id){
-  // This module is currently broken due to a conflict with Boost.  For now, it
-  // will be disabled.
-  return;
   // Firstl check to see if this user's role requires hashcash
   if(user_access('submit form without hashcash')){
     return;
@@ -94,14 +107,11 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
   if (($hc_addorignore && in_array($form_id,$hc_form_ids)) || 
       (!$hc_addorignore && !in_array($form_id,$hc_form_ids))){
     // Looks like we're adding the hashcash.
-            
-    // Cookie domain is added to hashcash to prevent same hashcash being used on multiple sites
-    global $cookie_domain;
     
     // Hidden form field which will contain the hashcash once the client "changes" it
     $form['hashcash'] = array( // Should probably check that this isn't already set. FIXME
       '#type' => 'hidden',
-      '#default_value' => '1:'.date('ymd').':'.$form_id.':'.ip_address().':'.$cookie_domain.':',
+      '#default_value' => $form_id,
       '#id' => 'hashcash-'.$form_id
     );
     // Alter validation to check the hashcash once submitted
