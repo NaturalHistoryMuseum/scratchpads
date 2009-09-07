@@ -36,7 +36,7 @@ function urllogin_list(){
   while($row = db_fetch_array($results)){
     $rows[] = array(
       $row['name'],
-      url('urllogin/'.$row['mdfive'])
+      url('urllogin/'.$row['mdfive'], array('absolute' => TRUE))
     );
   }
   return theme('table', $header, $rows);
