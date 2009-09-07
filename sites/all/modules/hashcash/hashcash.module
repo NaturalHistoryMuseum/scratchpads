@@ -61,7 +61,8 @@ function hashcash_menu(){
     'title' => 'Get Hashcash',
     'description' => 'Returns the start part of a hashcash string',
     'page callback' => 'hashcash_get_hashcash',
-    'access arguments' => array('access content')
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
   );
   return $items;
 }
@@ -128,40 +129,44 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
  * Validation function to check the hashcash sent is actually SORTED!
  */
 function hashcash_validate($form, $form_state){
-  // Check the hashcash passes
-  $hashcash = $form_state['values']['hashcash'];
-  if(substr(sha1($hashcash),0,2)!="00"){
-    // failed;
-    form_set_error('hashcash',t('Your hashcash value failed.  Please ensure you have JavaScript enabled in your browser'));
-  } else {
-    // Hashcash passed, now check the parts.
-    $hashcash_parts = explode(':',$hashcash);
-    global $cookie_domain;
-    if( $hashcash_parts[0]!='1'||
-        ($hashcash_parts[1]!=date('ymd') && $hashcash_parts!=date('ymd',time()-(24*60*60))) ||
-        $hashcash_parts[2]!=$form['form_id']['#value'] ||
-        $hashcash_parts[3]!=ip_address() ||
-        $hashcash_parts[4]!=$cookie_domain ||
-        !(isset($hashcash_parts[5]) && strlen($hashcash_parts[5])>10)){
-      if(!isset($hashcash_parts[5])){
-        $hashcash_parts[5] = 'NOT SET';
-      }
-      watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form['form_id']['#value'].' - '.$hashcash_parts[3].':'.ip_address().' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
-      form_set_error('hashcash',t('Your hashcash string is not valid. Are you a spammer?'));
+  // Only validate the form if the form has been posted (views executes the form
+  // validation bananas when rendering a view - me thinks).
+  if($_SERVER['REQUEST_METHOD'] == 'POST' && $form['hashcash']['#default_value'] != 'views_exposed_form'){
+    // Check the hashcash passes
+    $hashcash = $form_state['values']['hashcash'];
+    if(substr(sha1($hashcash),0,2)!="00"){
+      // failed;
+      form_set_error('hashcash',t('Your hashcash value failed.  Please ensure you have JavaScript enabled in your browser'));
     } else {
-      // Everything fine so far, final check.
-      // Has this been used before?
-      
-      // First thing, delete all the stale hashcash values from the database.
-      db_query("DELETE FROM {hashcash} WHERE hcdate < '%s'", date('ymd',time()-(24*60*60*variable_get('hashcash_expire',2))));
-      
-      $result = db_query("SELECT COUNT(*) FROM {hashcash} WHERE hashcash = '%s'",$hashcash);
-      if(array_pop(db_fetch_array($result))==0){
-        // No rows, add it, and we're HOT TO TROT!
-        db_query("INSERT INTO {hashcash} (hcdate,hashcash) VALUES('%s','%s')",date('ymd'),$hashcash);
+      // Hashcash passed, now check the parts.
+      $hashcash_parts = explode(':',$hashcash);
+      global $cookie_domain;
+      if( $hashcash_parts[0]!='1'||
+          ($hashcash_parts[1]!=date('ymd') && $hashcash_parts!=date('ymd',time()-(24*60*60))) ||
+          $hashcash_parts[2]!=$form['form_id']['#value'] ||
+          $hashcash_parts[3]!=ip_address() ||
+          $hashcash_parts[4]!=$cookie_domain ||
+          !(isset($hashcash_parts[5]) && strlen($hashcash_parts[5])>10)){
+        if(!isset($hashcash_parts[5])){
+          $hashcash_parts[5] = 'NOT SET';
+        }
+        watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form['form_id']['#value'].' - '.$hashcash_parts[3].':'.ip_address().' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
+        form_set_error('hashcash',t('Your hashcash string is not valid. Are you a spammer?'));
       } else {
-        // There must be a row, eep, SPAM
-        form_set_error('hashcash',t('Your hashcash has already been submitted before.  Have you attempted to submit this form twice?'));
+        // Everything fine so far, final check.
+        // Has this been used before?
+        
+        // First thing, delete all the stale hashcash values from the database.
+        db_query("DELETE FROM {hashcash} WHERE hcdate < '%s'", date('ymd',time()-(24*60*60*variable_get('hashcash_expire',2))));
+        
+        $result = db_query("SELECT COUNT(*) FROM {hashcash} WHERE hashcash = '%s'",$hashcash);
+        if(array_pop(db_fetch_array($result))==0){
+          // No rows, add it, and we're HOT TO TROT!
+          db_query("INSERT INTO {hashcash} (hcdate,hashcash) VALUES('%s','%s')",date('ymd'),$hashcash);
+        } else {
+          // There must be a row, eep, SPAM
+          form_set_error('hashcash',t('Your hashcash has already been submitted before.  Have you attempted to submit this form twice?'));
+        }
       }
     }
   }
