@@ -8,6 +8,12 @@ function urllogin_menu(){
       'page callback' => 'urllogin_login',
       'access callback' => TRUE,
       'type' => MENU_CALLBACK      
+    ),
+    'viewurllogin' => array(  
+      'title' => "User's URL Login'",
+      'page callback' => 'urllogin_list',
+      'access arguments' => array('view urls'),
+      'type' => MENU_CALLBACK    
     )
   );
 }
@@ -21,4 +27,14 @@ function urllogin_login($md5){
 
 function urllogin_mail_alter($message){
   $message['body'][0] = str_replace("!loginurl", url('urllogin/'.md5($message['params']['account']->uid.$message['params']['account']->name.$message['params']['account']->mail), array('absolute' => TRUE)), $message['body'][0]);
+}
+
+function urllogin_list(){
+  $results = db_query('SELECT name, MD5(CONCAT(uid,name,mail)) mdfive FROM {users} WHERE uid > 1');
+  $header = array('Name','URL');
+  $rows = array();
+  while($row = db_fetch_array($results)){
+    $rows[] = $row;
+  }
+  return theme('table', $header, $rows);
 }
