@@ -30,7 +30,7 @@ function urllogin_mail_alter($message){
 }
 
 function urllogin_list(){
-  $results = db_query('SELECT name, MD5(CONCAT(uid,name,mail)) mdfive FROM {users} WHERE uid > 1');
+  $results = db_query('SELECT name, MD5(CONCAT(uid,name,mail)) mdfive FROM {users} WHERE uid > 1 ORDER BY name');
   $header = array('Name','URL');
   $rows = array();
   while($row = db_fetch_array($results)){
