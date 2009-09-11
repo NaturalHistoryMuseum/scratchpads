@@ -789,12 +789,12 @@ function scratchpad_personal($form_state, $url){
       '#default_value' => $familyname
     ),
     'institution' => array(
-      '#required' => TRUE,
+      '#required' => FALSE,
       '#type' => 'textfield',
       '#title' => st('Institution')
     ),
     'expertise' => array(
-      '#required' => TRUE,
+      '#required' => FALSE,
       '#type' => 'textfield',
       '#title' => st('Area of Taxonomic expertise')
     ),
