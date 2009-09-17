@@ -152,7 +152,7 @@ function scratchpadify_menu_alter(&$items){
 function scratchpadify_form_alter($form, $form_state, $form_id){
   // Prevent displaying of admin user on user list.
   if($form_id == 'block_admin_display_form'){
-    unset($form['scratchpadify_4']);
+    //unset($form['scratchpadify_4']);
   }
   if($form_id == 'node_import_add_form'  && isset($_GET['type']) && !$form_state['submitted']){
     $form_state = array ( 
@@ -493,6 +493,11 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key) {
   }
 }
 
+function scratchpadify_init(){
+  // Always add the CSS
+  drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
+}
+
 /**
  * Generate expiration timestamp for UserVoice
  * UserVoice requires expration timestamp in GMT of format Y-M-D H:i:s
@@ -609,7 +614,6 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           if(trim($scratchpad_notification['message']) != ''){
             $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
           }
-          drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
           return array('subject' => '', 'content' => $scratchpad_notification['message']);
       }
       break; 
