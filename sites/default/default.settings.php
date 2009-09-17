@@ -16,15 +16,17 @@ if(!isset($user_password[$database])){
 
 $db_url = 'mysqli://' . $user_password[$database]['user'] . ':'. $user_password[$database]['password'] . '@localhost/'. $database;
 $db_prefix = '';
-/* if(
+if(
     $_SERVER['REMOTE_ADDR'] == '157.140.4.52' ||
     $_SERVER['REMOTE_ADDR'] == '157.140.2.32' ||
-    $_SERVER['REMOTE_ADDR'] == '127.0.0.1'
+    $_SERVER['REMOTE_ADDR'] == '127.0.0.1' 
+
   ){
-  $update_free_access = 1;
-} else {*/
-  $update_free_access = 0;
-/* } */
+//  $update_free_access = 1;
+  ini_set('display_errors',1);
+} else {
+  $update_free_access =0;
+}
 
 ini_set('arg_separator.output',     '&amp;');
 ini_set('magic_quotes_runtime',     0);

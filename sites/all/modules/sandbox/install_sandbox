@@ -4,19 +4,13 @@
 # Simply comment out the following line (like this one) to
 # stop the sandbox wipe process.
 
-# Starg a Virtual Frame Buffer for firefox
-Xvfb :2 -screen 0 1040x768x24 -fbdir /tmp -nolisten inet6 &
-sleep 60
-
 # Move the sandbox.html file into place
 mv /var/www/drupal6/sites/all/modules/sandbox/sandbox.html~ /var/www/drupal6/sites/all/modules/sandbox/sandbox.html
 
 # Recreate the database.
 echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;" | mysql -uroot -pOecey9cheehiphohngeiwi8lahH1ohNi sandboxscratchpadseu
 
-DISPLAY=:2.0 /root/bin/firefox -width 1038 -height 768 "http://sandbox.scratchpads.eu/install.php?profile=sandbox" &
-sleep 200
-killall firefox firefox-bin Xvfb &>/dev/null
+screen -D -m "./install_sandbox_help"
 
 # Hide sandbox.html
 mv /var/www/drupal6/sites/all/modules/sandbox/sandbox.html /var/www/drupal6/sites/all/modules/sandbox/sandbox.html~
