@@ -152,7 +152,7 @@ function scratchpadify_menu_alter(&$items){
 function scratchpadify_form_alter($form, $form_state, $form_id){
   // Prevent displaying of admin user on user list.
   if($form_id == 'block_admin_display_form'){
-    //unset($form['scratchpadify_4']);
+    unset($form['scratchpadify_4']);
   }
   if($form_id == 'node_import_add_form'  && isset($_GET['type']) && !$form_state['submitted']){
     $form_state = array ( 
