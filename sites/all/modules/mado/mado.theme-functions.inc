@@ -14,7 +14,6 @@ function mado_get_blocks($all_views = FALSE){
         'nexus_controlled_state',
         'nexus_free_state',
         'nexus_note',
-        'nexus_project',
         'og',
         'og_files',
         'og_ghp_ron',
