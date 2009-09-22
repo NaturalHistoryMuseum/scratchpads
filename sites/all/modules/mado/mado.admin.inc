@@ -23,9 +23,14 @@ function mado_save_layout(){
   if (isset ( $_GET ['blocks'] )) {
     module_load_include('theme-functions.inc','mado');
     $blocks = array ();
-    $all_blocks = mado_get_blocks ();
     $parts = explode("/", $_GET['identifier']);
-    $current_blocks = mado_get_theme($parts[0], $parts[1]);
+    if($parts[0] == 'frontpage'){
+      $current_blocks = mado_get_theme_front_page();
+      $all_blocks = mado_get_blocks(TRUE);
+    } else {
+      $current_blocks = mado_get_theme($parts[0], $parts[1]);
+      $all_blocks = mado_get_blocks ();
+    }    
     $divider_passed = FALSE;
     foreach ( $_GET ['blocks'] as $block ) {
       if (isset ( $current_blocks [$block] )) {
