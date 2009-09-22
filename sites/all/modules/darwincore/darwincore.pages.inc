@@ -43,11 +43,13 @@ function _theme_darwincorelocation_help($path){
     array("Minimum Elevation",$path->minelevation),
     array("Elevation",$path->maxelevation),
     array("Minimum Depth",$path->mindepth),
-    array("Maximum Depth",$path->maxdepth),
-    array("Latitude",$path->locations[0]['latitude']),
-    array("Longitude",$path->locations[0]['longitude']),
-    array("Country Code",t($countries[$path->locations[0]['country']]))
+    array("Maximum Depth",$path->maxdepth)
   );
+  if($path->locations[0]['latitude'] != '0.000000' || $path->locations[0]['longitude'] != '0.000000'){
+    $location[] = array("Latitude",$path->locations[0]['latitude']);
+    $location[] = array("Longitude",$path->locations[0]['longitude']);
+  }
+  $location[] = array("Country Code",t($countries[$path->locations[0]['country']]));
   return $location;  
 }
 /**
