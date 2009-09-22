@@ -11,10 +11,10 @@ function theme_darwincorelocation_full_page($node) {
   $location = _theme_darwincorelocation_help($node);
   // Unset latitude and longitude, they'll be displayed by the location module
   foreach($location as $key=>$value){
-    if($value[0] == 'Latitude' && $value[1] !== 0){
+    if($value[0] == 'Latitude' && $value[1] != '0.000000'){
       $location[$key][1] = theme('location_latitude_dms', $value[1]);      
     }
-    if($value[0] == 'Longitude' && $value[1] !== 0){
+    if($value[0] == 'Longitude' && $value[1] != '0.000000'){
       $location[$key][1] = theme('location_longitude_dms', $value[1]);
     }
   }
