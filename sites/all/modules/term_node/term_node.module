@@ -1,0 +1,162 @@
+<?php
+
+/**
+ * This module extends the taxonomy module's terms with additional metadata from
+ * a user customized node.  Editing of a node associated with a term and whose
+ * content type is associated with a vocabulary can ONLY be done from the term
+ * interface page.
+ * 
+ * GPLv3
+ * simon.rycroft.name
+ * sdrycroft
+ */
+
+/**
+ * Implementation of hook_form_alter
+ * 
+ * - Add option to select content type when editing a vocabulary
+ * - Prevent editing of a term node from the node/edit page
+ * - Add node fields to the term edit form
+ */
+function term_node_form_alter(&$form, $form_state, $form_id){
+  // Add option to select content type when editing a vocabulary
+  if($form_id == 'taxonomy_form_vocabulary'){
+    $node_types = node_get_types();
+    $node_type_names = array(0 => t('< None >'));
+    foreach($node_types as $node_type){
+      $node_type_names[$node_type->type] = $node_type->name;
+    }
+    uksort($node_type_names, "strnatcasecmp");
+    $default_value = 0;
+    if(isset($form['vid']['#value'])){
+      $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
+      if(isset($vocabs_and_contenttypes[$form['vid']['#value']])){
+        $default_value = $vocabs_and_contenttypes[$form['vid']['#value']];
+      }
+    }
+    $form['settings']['contenttype'] = array(
+      '#type' => 'select',
+      '#title' => t('Content type'),
+      '#description' => t('Please select a content type, if any, to extend all terms of this vocabulary with'),
+      '#default_value' => $default_value,
+      '#options' => $node_type_names
+    );
+    // Add a submit function to save the shizzle
+    $form['#submit'][] = 'term_node_taxonomy_form_vocabulary_submit';
+  }
+  
+  // Prevent editing of a content type if it is associated with a vocabulary.
+  if($form['#id'] == 'node-form'){
+    if(isset($form_state['term_node']) && $form_state['term_node']){
+      return;
+    }
+    $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
+    foreach($vocabs_and_contenttypes as $vid => $vocab_and_contenttype){
+      if($vocab_and_contenttype == $form['type']['#value']){
+        // We're trying to edit a node that is associated with a vocabulary, 
+        // lets not do this!
+        $vocabularies = taxonomy_get_vocabularies();
+        drupal_set_message(t('Editing of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)), 'error');
+        drupal_goto(referer_uri());
+      }
+    }
+  }
+  
+  // Add the node form to the taxonomy term form.
+  if($form_id == 'taxonomy_form_term'){
+    $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
+    if(isset($vocabs_and_contenttypes[$form['vid']['#value']]) && $vocabs_and_contenttypes[$form['vid']['#value']]){
+      // We've got a content type, just for sanity checking purposes, lets make
+      // sure that it still exists in the list of content types, else we'll warn
+      // users that it has been deleted.
+      $node_types = node_get_types();
+      if(!isset($node_types[$vocabs_and_contenttypes[$form['vid']['#value']]])){
+        drupal_set_message(t('The content type that this vocabulary was associated with has been deleted'), 'error');
+        unset($vocabs_and_contenttypes[$form['vid']['#value']]);
+        variable_set('term_node_vocabularies-contenttypes', $vocabs_and_contenttypes);
+        return;
+      }
+      $node_form = _term_node_get_form_for_type($vocabs_and_contenttypes[$form['vid']['#value']]);
+      // Unset the additional crap from the node form
+      $node_form['revision_information']['#type'] = 'hidden';
+      $node_form['author']['#type'] = 'hidden';
+      $node_form['options']['#type'] = 'hidden';
+      $node_form['buttons']['#type'] = 'hidden';
+      $node_form['body_field']['#type'] = 'hidden';
+      $node_form['menu']['#type'] = 'hidden';
+      $node_form['comment_settings']['#type'] = 'hidden';
+      $form['term_node'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Additional metadata'),
+        '#collapsed' => TRUE,
+        '#collapsible' => TRUE,
+        '#weight' => 2
+      );
+      $form['term_node']['node_form'] = $node_form;
+      $form['identification']['#weight'] = -2;
+      $form['advanced']['#weight'] = 0;
+      $form['submit']['#weight'] = 4;
+    }
+  }
+}
+
+/**
+ * Private helper function used to get a form without rendering it.
+ */
+function _term_node_get_form_for_type($type, $node = null){
+  global $user;
+  $types = node_get_types();
+  $type = isset($type) ? str_replace('-', '_', $type) : NULL;
+  // If a node type has been specified, validate its existence.
+  if (isset($types[$type]) && node_access('create', $type)) {
+    // Initialize settings:
+    if(is_null($node)){
+      $node = array('uid' => $user->uid, 'name' => $user->name, 'type' => $type, 'language' => '');
+    }
+    $output = _term_node_get_form_no_render($type.'_node_form', $node);
+  }
+  return $output;
+}
+/**
+ * Helper function for the above method.
+ *
+ * @param unknown_type $form_id
+ * @return unknown
+ */
+function _term_node_get_form_no_render($form_id) {
+  // Get the form from a form_id.  This is a rip off of drupal_get_form from
+  // form.inc with a few tweaks.
+  
+  // We're almost certainly going to need node.pages.inc, so lets get it
+  module_load_include('pages.inc','node');
+  $form_state = array('storage' => NULL, 'submitted' => FALSE, 'term_node' => TRUE);
+
+  $args = func_get_args();
+  $args_temp = $args;
+  $args_temp[0] = &$form_state;
+  array_unshift($args_temp, $form_id);
+
+  $form = call_user_func_array('drupal_retrieve_form', $args_temp);
+  $form_build_id = 'form-'. md5(uniqid(mt_rand(), true));
+  $form['#build_id'] = $form_build_id;
+  drupal_prepare_form($form_id, $form, $form_state);
+  // Store a copy of the unprocessed form for caching and indicate that it
+  // is cacheable if #cache will be set.
+  unset($form_state['post']);
+  $form['#post'] = $_POST;
+  drupal_process_form($form_id, $form, $form_state);
+  if (!empty($form_state['rebuild']) || !empty($form_state['storage'])) {
+    $form = drupal_rebuild_form($form_id, $form_state, $args);
+  }
+  return $form;
+}
+
+/**
+ * Save the association between vocabulary and content type sent to us by the 
+ * taxonomy_form_vocabulary form.
+ */
+function term_node_taxonomy_form_vocabulary_submit($form, &$form_state){
+  $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
+  $vocabs_and_contenttypes[$form_state['values']['vid']] = $form_state['values']['contenttype'];
+  variable_set('term_node_vocabularies-contenttypes', $vocabs_and_contenttypes);
+}
