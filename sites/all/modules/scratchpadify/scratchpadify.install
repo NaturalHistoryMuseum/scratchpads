@@ -203,7 +203,7 @@ function scratchpadify_update_6109(){
     'path'
   );
   foreach($node_types as $node_type){
-    return variable_set('vertical_tabs_fieldsets_'. $node_type, seriazlize($fieldsets));
+    return variable_set('vertical_tabs_fieldsets_'. $node_type, serialize($fieldsets));
   }
   return array('#finished' => TRUE);
 }
