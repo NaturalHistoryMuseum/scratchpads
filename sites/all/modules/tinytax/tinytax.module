@@ -14,6 +14,9 @@ function tinytax_theme() {
     'tinytax_term_list' => array(
       'arguments' => array('parents', 'children', 'vid'),
     ),
+    'tinytax_view_blocks' => array(
+      'arguments' => array('delta')
+    )
   );
 }
 /**
@@ -26,7 +29,7 @@ function tinytax_block($op = 'list', $delta = 0, $edit = array()){
     case 'configure': // No need to add any extra configuration - Open to suggestions.
       return _tinytax_configure($delta);
     case 'view':
-      return _tinytax_view_blocks($delta);
+      return theme('tinytax_view_blocks',$delta);
     case 'save':
       _tinytax_save($delta, $edit);
       break;    
@@ -182,7 +185,7 @@ function tinytax_taxonomy($op, $type, $vocabulary){
 /**
  * Helper function for displaying a single block. 
  */
-function _tinytax_view_blocks($delta){
+function theme_tinytax_view_blocks($delta){
   $delta = substr($delta,8);
   $vocabulary = taxonomy_vocabulary_load($delta);
   $block['subject'] = check_plain($vocabulary->name);
