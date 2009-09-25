@@ -100,6 +100,12 @@ function darwincore_install(){
   drupal_install_schema('darwincore');
   // Increase the module's weight so that it is executed after location and after taxonomy (Don't fuck up).
   db_query("UPDATE {system} SET weight = 11 WHERE name = 'darwincore'");
+  
+  // Add the Tapirlink files.  This is VERY VERY VERY Quartz specific, so we'll
+  // check that we're on Quartz, and not some other Scratchpad server.
+  if($_SERVER['SERVER_ADDR'] == '157.140.2.32'){
+    darwincore_update_6105();
+  }
 }
 
 function darwincore_schema(){
@@ -236,5 +242,48 @@ function darwincore_update_6104(){
   db_query("ALTER TABLE {darwincore} CHANGE location locationnode INT(10)");
   // This is either going to fail and we can ignore it, or work, so always
   // return success.
+  return array('#finished' => TRUE);
+}
+
+function darwincore_update_6105(){
+  // Only add the files if we're on Quartz
+  if($_SERVER['SERVER_ADDR'] == '157.140.2.32'){
+    // Magic for adding the files.
+    //$database_name = 
+    global $db_url;
+    $url = parse_url($db_url);
+    $url['path'] = substr($url['path'],1);
+    // Write capabilities
+    file_copy(drupal_get_path('module','darwincore').'/tapir/default_capabilities.xml', '/var/www/html/tapirlink/config/'.$url['path'].'_capabilities.xml');
+    
+    // Write config
+    $default_config = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_config.xml');
+    $default_config = str_replace('DATABASEUSERNAME', $url['user'], $default_config);
+    $default_config = str_replace('DATABASEPASSWORD', $url['pass'], $default_config);
+    $default_config = str_replace('DATABASEDATABASE', $url['path'], $default_config);
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_config.xml', $default_config);
+    
+    // Write metadata
+    $default_metadata = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_metadata.xml');
+    $default_metadata = str_replace('SITETITLE', variable_get('site_name','Drupal'), $default_metadata);
+    $default_metadata = str_replace('SITEDOMAIN', $_SERVER['HTTP_HOST'], $default_metadata);
+    $result = db_query('SELECT name, mail FROM {users} u, {users_roles} r WHERE u.uid = r.uid AND rid = 5 ORDER BY u.uid DESC LIMIT 1;');
+    if($result){
+      $user = db_fetch_array($result);
+    } else {
+      $user = array(
+        'name' => 'Scratchpad User',
+        'mail' => 'scratchpad@nhm.ac.uk'
+      );
+    }
+    $default_metadata = str_replace('MAINTAINERUSERNAME', $user['name'], $default_metadata);
+    $default_metadata = str_replace('MAINTAINEREMAIL', $user['mail'], $default_metadata);
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_metadata.xml', $default_metadata);
+    
+    // Alter resouces file
+    $string_to_add = '<resource code="'.$url['path'].'" status="active" accesspoint="http://quartz.nhm.ac.uk/tapir/tapir.php/'.$url['path'].'" metadataFile="'.$url['path'].'_metadata.xml" configFile="'.$url['path'].'_config.xml" capabilitiesFile="'.$url['path'].'_capabilities.xml"/>';
+    $resources = file_get_contents('/var/www/html/tapirlink/config/resources.xml');
+    str_replace('</resouces>', "\t$string_to_add\n</resouces>", $resources);
+  }
   return array('#finished' => TRUE);
 }
