@@ -285,7 +285,7 @@ function darwincore_update_6105(){
     // Alter resouces file
     $string_to_add = '<resource code="'.$url['path'].'" status="active" accesspoint="http://quartz.nhm.ac.uk/tapir/tapir.php/'.$url['path'].'" metadataFile="'.$url['path'].'_metadata.xml" configFile="'.$url['path'].'_config.xml" capabilitiesFile="'.$url['path'].'_capabilities.xml"/>';
     $resources = file_get_contents('/var/www/html/tapirlink/config/resources.xml');
-    $resources = str_replace('</resouces>', "\t$string_to_add\n</resouces>", $resources);
+    $resources = str_replace('</resources>', "\t$string_to_add\n</resouces>", $resources);
     file_put_contents('/var/www/html/tapirlink/config/resources.xml', $resources);
   }
   return array('#finished' => TRUE);
