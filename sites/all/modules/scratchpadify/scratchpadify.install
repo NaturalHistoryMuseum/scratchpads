@@ -172,3 +172,38 @@ function scratchpadify_update_6108(){
   }
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6109(){
+  $node_types = array(
+    'biblio',
+    'blog',
+    'countriesmap',
+    'forum',
+    'group',
+    'image',
+    'darwincorelocation',
+    'darwincore',
+    'simplenews',
+    'page',
+    'tree',
+    'poll',
+    'profile',
+    'webform'    
+  );
+  $fieldsets = array(
+    'menu',
+    'weight_form',
+    'og_nodeapi',
+    'author',
+    'revision_information',
+    'options',
+    'print',
+    'comment_settings',
+    'attachments',
+    'path'
+  );
+  foreach($node_types as $node_type){
+    return variable_set('vertical_tabs_fieldsets_'. $node_type, seriazlize($fieldsets));
+  }
+  return array('#finished' => TRUE);
+}
