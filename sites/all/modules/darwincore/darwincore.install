@@ -253,9 +253,10 @@ function darwincore_update_6105(){
     global $db_url;
     $url = parse_url($db_url);
     $url['path'] = substr($url['path'],1);
+
     // Write capabilities
-    $source = drupal_get_path('module','darwincore').'/tapir/default_capabilities.xml';
-    file_copy($source, '/var/www/html/tapirlink/config/'.$url['path'].'_capabilities.xml');
+    $default_capabilites = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_capabilities.xml');
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_capabilities.xml', $default_capabilites);
     
     // Write config
     $default_config = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_config.xml');
