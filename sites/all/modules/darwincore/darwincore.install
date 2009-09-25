@@ -104,7 +104,7 @@ function darwincore_install(){
   // Add the Tapirlink files.  This is VERY VERY VERY Quartz specific, so we'll
   // check that we're on Quartz, and not some other Scratchpad server.
   if($_SERVER['SERVER_ADDR'] == '157.140.2.32'){
-    darwincore_update_6105();
+    darwincore_update_6106();
   }
 }
 
@@ -245,7 +245,7 @@ function darwincore_update_6104(){
   return array('#finished' => TRUE);
 }
 
-function darwincore_update_6105(){
+function darwincore_update_6106(){
   // Only add the files if we're on Quartz
   if($_SERVER['SERVER_ADDR'] == '157.140.2.32'){
     // Magic for adding the files.
