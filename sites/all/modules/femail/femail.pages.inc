@@ -1,6 +1,9 @@
 <?php
 function femail_user_settings($account){
   drupal_set_title(check_plain($account->name));
+  if(!user_access('post by femail', $account)){
+    drupal_set_message(t('This user account can not post messages to the forum by email'), 'error');
+  }
   
   // ---------------- Subscribe to forums --------------------------------------
   $output = theme('box',t('Subscriptions'),drupal_get_form('femail_user_subscribe', $account));

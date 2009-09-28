@@ -18,7 +18,7 @@ function femail_menu(){
       'title' => 'Forum/E-mail integration',
       'page callback' => 'femail_email_verify',
       'page arguments' => array(2, 3),
-      'access arguments' => array('post by femail'),
+      'access arguments' => array('access content'),
       'type' => MENU_CALLBACK,
       'file' => 'femail.pages.inc'    
     ),
