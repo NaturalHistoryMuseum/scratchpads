@@ -122,7 +122,9 @@ function darwincore_schema(){
       'cataloguenumbertext' => array('type' => 'text'),
       'identificationqualifier' => array('type' => 'text'),
       'identifiedby' => array('type' => 'varchar', 'length' => 255),
-      'dateidentified' => array('type' => 'datetime'),
+      'dateidentifiedyear' => array('type' => 'int', 'length' => 4),
+      'dateidentifiedmonth' => array('type' => 'int', 'length' => 2),
+      'dateidentifiedday' => array('type' => 'int', 'length' => 2),
       'collectornumber' => array('type' => 'varchar', 'length' => 255),
       'fieldnumber' => array('type' => 'varchar', 'length' => 255),
       'collector' => array('type' => 'varchar', 'length' => 255),
@@ -289,4 +291,23 @@ function darwincore_update_6106(){
     file_put_contents('/var/www/html/tapirlink/config/resources.xml', $resources);
   }
   return array('#finished' => TRUE);
+}
+
+/**
+ * Update the dateidentified field to be dateidentifiedyear,month,day!
+ */
+function darwincore_update_6107(){
+  $ret = array();
+  db_add_field($ret, 'darwincore', 'dateidentifiedyear', array('type' => 'int', 'length' => 4));
+  db_add_field($ret, 'darwincore', 'dateidentifiedmonth', array('type' => 'int', 'length' => 2));
+  db_add_field($ret, 'darwincore', 'dateidentifiedday', array('type' => 'int', 'length' => 2));
+  // Copy the data over
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%Y\') AS year, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifiedyeartemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedyear = (SELECT year FROM dateidentifiedyeartemp WHERE d.nid = nid)');
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%m\') AS month, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifiedmonthtemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedmonth = (SELECT month FROM dateidentifiedmonthtemp WHERE d.nid = nid)');
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%%d\') AS day, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifieddaytemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedday = (SELECT day FROM dateidentifieddaytemp WHERE d.nid = nid)');
+  db_drop_field($ret, 'darwincore', 'dateidentified');
+  return $ret;
 }

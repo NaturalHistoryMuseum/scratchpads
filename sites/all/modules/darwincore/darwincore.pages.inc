@@ -93,8 +93,19 @@ function theme_darwincore_full_page($node) {
     array("Identification qualifier",$node->identificationqualifier),
     array("Identified By",$node->identifiedby)
   );
-  if($node->dateidentified)
-    $identification[] = array("Date Identified",format_date(strtotime($node->dateidentified), 'custom', 'j F Y'));
+  if($node->dateidentifiedyear){
+    if($node->dateidentifiedmonth){
+      if($node->dateidentifiedday){
+        $format_string = 'j F Y';
+      } else {        
+        $format_string = 'F Y';
+      }
+    } else {
+        $format_string = 'Y';
+    }
+    $months = array('December','January','February','March','April','May','June','July','August','September','October','November','December');// 0 is set as a month to ensure strtotime works!
+    $identification[] = array("Date Identified", format_date(strtotime($node->dateidentifiedday.' - '.$months[$node->dateidentifiedmonth].' - '.$node->dateidentifiedyear), 'custom', $format_string));
+  }
   $output = '<div class="darwincore">';
   $output .= _theme_darwincore_full_page_help($collection, "Collection");
   $output .= _theme_darwincore_full_page_help($identification, "Identification");

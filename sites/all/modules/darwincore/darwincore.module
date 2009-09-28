@@ -357,11 +357,33 @@ function darwincore_form(&$node){
   );
   $number_of_years_to_1700 = 1700 - date("Y");
   $form['tabs']['taxonomy']['dateidentified'] = array(
-    '#type' => 'date_popup', 
-    '#title' => t('Date identified'), '#date_format' => 'j F Y', 
-    '#date_year_range' => $number_of_years_to_1700.':0', 
-    '#default_value' => $node->dateidentified, 
+    '#type' => 'fieldset',
+    '#title' => t('Date identified'),
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
     '#description' => t('The date in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the Scientific Name.')
+  );
+  $form['tabs']['taxonomy']['dateidentified']['dateidentifiedyear'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Year'), 
+    '#default_value' => $node->dateidentifiedyear,
+    '#description' => 'yyyy'
+  );
+  $form['tabs']['taxonomy']['dateidentified']['dateidentifiedmonth'] = array(
+    '#type' => 'select',
+    '#title' => t('Month'),
+    '#options' => array(t('-- Unknown --'), t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')), 
+    '#default_value' => $node->dateidentifiedmonth
+  );
+  $days = array(t('-- Unkown --'));
+  for($i=1;$i<32;$i++){
+    $days[]=$i;
+  }
+  $form['tabs']['taxonomy']['dateidentified']['dateidentifiedday'] = array(
+    '#type' => 'select',
+    '#title' => t('Day'),
+    '#options' => $days, 
+    '#default_value' => $node->dateidentifiedday
   );
   $form['tabs']['taxonomy']['typestatus'] = _darwincore_get_vocabulary_form('Type Status', $node->typestatus, t('A list of one or more nomenclatural types represented by the object.'));
   //-- Collection tab ---------------------------------------
@@ -785,7 +807,7 @@ function darwincore_insert($node){
     // The only required field is set for the location, lets set it, and then set the other field to the nid of this new
     // location
     $location_node = clone $node;
-    unset($location_node->nid, $location_node->vid, $location_node->created, $location_node->changed, $location_node->basisofrecord, $location_node->institutioncode, $location_node->collectioncode, $location_node->cataloguenumbertext, $location_node->taxonomicname, $location_node->identificationqualifier, $location_node->identifiedby, $location_node->dateidentified, $location_node->typestatus, $location_node->collectornumber, $location_node->fieldnumber, $location_node->collector, $location_node->earliestdatecollected, $location_node->latestdatecollected, $location_node->fieldnotes, $location_node->sex, $location_node->lifestage, $location_node->count, $location_node->genbanknum, $location_node->othercataloguenum, $location_node->remarks, $location_node->locationnode, $location_node->creatingnewlocation);
+    unset($location_node->nid, $location_node->vid, $location_node->created, $location_node->changed, $location_node->basisofrecord, $location_node->institutioncode, $location_node->collectioncode, $location_node->cataloguenumbertext, $location_node->taxonomicname, $location_node->identificationqualifier, $location_node->identifiedby, $location_node->dateidentifiedyear, $location_node->dateidentifiedmonth, $location_node->dateidentifiedday, $location_node->typestatus, $location_node->collectornumber, $location_node->fieldnumber, $location_node->collector, $location_node->earliestdatecollected, $location_node->latestdatecollected, $location_node->fieldnotes, $location_node->sex, $location_node->lifestage, $location_node->count, $location_node->genbanknum, $location_node->othercataloguenum, $location_node->remarks, $location_node->locationnode, $location_node->creatingnewlocation);
     $location_node->type = 'darwincorelocation';
     $location_node->title = $location_node->locationtitle;
     $location_node->locations = array(
@@ -798,14 +820,9 @@ function darwincore_insert($node){
   $node->taxonomicname = _darwincore_get_taxonomicname($node->taxonomicname);
   //print_r($node);
   //exit();
-  $values = array($node->nid, $node->vid, $node->institutioncode, $node->collectioncode, $node->cataloguenumbertext, $node->identificationqualifier, $node->identifiedby, $node->dateidentified, $node->collectornumber, $node->fieldnumber, $node->collector, $node->earliestdatecollected, $node->latestdatecollected, $node->fieldnotes, $node->count, $node->genbanknum, $node->remarks, $node->lifestage, $node->basisofrecord, $node->sex, $node->taxonomicname, $node->typestatus, $node->othercataloguenum, $node->locationnode);
-  $dateidentified_place_holder = "'%s'";
+  $values = array($node->nid, $node->vid, $node->institutioncode, $node->collectioncode, $node->cataloguenumbertext, $node->identificationqualifier, $node->identifiedby, $node->dateidentifiedyear, $node->dateidentifiedmonth, $node->dateidentifiedday, $node->collectornumber, $node->fieldnumber, $node->collector, $node->earliestdatecollected, $node->latestdatecollected, $node->fieldnotes, $node->count, $node->genbanknum, $node->remarks, $node->lifestage, $node->basisofrecord, $node->sex, $node->taxonomicname, $node->typestatus, $node->othercataloguenum, $node->locationnode);
   $earliestdatecollected_place_holder = "'%s'"; 
   $latestdatecollected_place_holder = "'%s'";
-  if(!strtotime($node->dateidentified)){
-    $dateidentified_place_holder = "NULL";
-    unset($values[7]); // Position in array.
-  }
   if(!strtotime($node->earliestdatecollected)){
     $earliestdatecollected_place_holder = "NULL";
     unset($values[11]); // Position in array.    
@@ -814,7 +831,7 @@ function darwincore_insert($node){
     $latestdatecollected_place_holder = "NULL";
     unset($values[12]); // Position in array.    
   }
-  db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentified,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s',$dateidentified_place_holder,'%s','%s','%s', $earliestdatecollected_place_holder , $latestdatecollected_place_holder , '%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);", $values);
+  db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentifiedyear,dateidentifiedmonth,dateidentifiedday,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s',%d, %d, %d,'%s','%s','%s', $earliestdatecollected_place_holder , $latestdatecollected_place_holder , '%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);", $values);
   // Also need to link the taxonomies to the entry (duplication - FUCK, I know).
   $node->taxonomy = array_merge(is_array($node->taxonomy) ? $node->taxonomy : array(), array(
     $node->basisofrecord, $node->sex, $node->taxonomicname, 
