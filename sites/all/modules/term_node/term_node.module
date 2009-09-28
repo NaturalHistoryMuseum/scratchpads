@@ -63,7 +63,7 @@ function term_node_form_alter(&$form, $form_state, $form_id){
   }
   
   // Add the node form to the taxonomy term form.
-  if($form_id == 'taxonomy_form_term'){
+  if($form_id == 'taxonomy_form_term' && !count($_POST)){
     $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
     if(isset($vocabs_and_contenttypes[$form['vid']['#value']]) && $vocabs_and_contenttypes[$form['vid']['#value']]){
       // We've got a content type, just for sanity checking purposes, lets make
@@ -77,14 +77,34 @@ function term_node_form_alter(&$form, $form_state, $form_id){
         return;
       }
       $node_form = _term_node_get_form_for_type($vocabs_and_contenttypes[$form['vid']['#value']]);
-      // Unset the additional crap from the node form
-      $node_form['revision_information']['#type'] = 'hidden';
-      $node_form['author']['#type'] = 'hidden';
-      $node_form['options']['#type'] = 'hidden';
-      $node_form['buttons']['#type'] = 'hidden';
+      // We only want the stuff in '#field_info' so lets loop through that, and
+      // find each of the fields in the form (as some may be in fieldsets), and
+      // lets just use those bits!
+      /*
+      foreach($node_form as $key => $value){
+        if(substr($key, 0, 1)!='#'){
+          if(is_array($value) && isset($value['#type']) && $value['#type'] == 'fieldset'){
+            // Check this isn't a fieldset for one of our fields
+            foreach($node_form['#field_info'] as $field_key => $fields){
+              if(isset($value[$field_key])){
+                $dont_hide = TRUE;
+              }
+            }
+            if(!$dont_hide){
+              $node_form[$key]['#type'] = 'hidden';
+            }
+          }
+        }
+      }
+      $node_form['title']['#type'] = 'hidden';
+      $node_form['title']['#value'] = 'Node for a term';
       $node_form['body_field']['#type'] = 'hidden';
-      $node_form['menu']['#type'] = 'hidden';
-      $node_form['comment_settings']['#type'] = 'hidden';
+      // Special ones:
+      unset($node_form['vertical_tabs']);
+      unset($node_form['og_nodeapi']);
+      unset($node_form['buttons']);
+      unset($node_form['#submit']);
+      //kprint_r($node_form);
       $form['term_node'] = array(
         '#type' => 'fieldset',
         '#title' => t('Additional metadata'),
@@ -92,10 +112,12 @@ function term_node_form_alter(&$form, $form_state, $form_id){
         '#collapsible' => TRUE,
         '#weight' => 2
       );
+      kprint_r($node_form);
       $form['term_node']['node_form'] = $node_form;
       $form['identification']['#weight'] = -2;
       $form['advanced']['#weight'] = 0;
       $form['submit']['#weight'] = 4;
+*/
     }
   }
 }
@@ -137,6 +159,7 @@ function _term_node_get_form_no_render($form_id) {
   array_unshift($args_temp, $form_id);
 
   $form = call_user_func_array('drupal_retrieve_form', $args_temp);
+  $form['#programmed'] = TRUE;
   $form_build_id = 'form-'. md5(uniqid(mt_rand(), true));
   $form['#build_id'] = $form_build_id;
   drupal_prepare_form($form_id, $form, $form_state);
@@ -144,6 +167,7 @@ function _term_node_get_form_no_render($form_id) {
   // is cacheable if #cache will be set.
   unset($form_state['post']);
   $form['#post'] = $_POST;
+  unset($form['#post']['name']);
   drupal_process_form($form_id, $form, $form_state);
   if (!empty($form_state['rebuild']) || !empty($form_state['storage'])) {
     $form = drupal_rebuild_form($form_id, $form_state, $args);
