@@ -25,9 +25,6 @@ function mado_front_page(){
   )), 'setting');
   // Add jquery_ui
   jquery_ui_add(array('ui.sortable'),'none');
-      
-  // Blank title
-  drupal_set_title('');
   
   if(user_access('mado sort')){
     $output .= '<div class="mado_sort">
@@ -54,6 +51,8 @@ function mado_front_page(){
         <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
       </div>';
   }
+  // Blank title
+  drupal_set_title('');
   return $output;  
 }
 
