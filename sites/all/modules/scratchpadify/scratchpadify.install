@@ -208,3 +208,12 @@ function scratchpadify_update_6111(){
   }
   return array('#finished' => TRUE);
 }
+
+/**
+ * Set the weight of nodes as upgrading and adding the weight module has screwed
+ * things up.
+ */
+function scratchpadify_update_6112(){
+  db_query('UPDATE {node} SET sticky = -100 WHERE sticky = 0');
+  db_query('UPDATE {node} SET sticky = 100 WHERE sticky = 1');
+}
