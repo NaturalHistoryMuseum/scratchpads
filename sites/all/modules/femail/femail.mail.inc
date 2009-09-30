@@ -8,7 +8,7 @@
 
 function _femail_get_emails($tid, $account){
   // We'll let our SQL do the magic
-  $results = db_query("SELECT DISTINCT CONCAT(name, ' <', mail, '>') as mail FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $tid, $account->uid);
+  $results = db_query("SELECT DISTINCT CONCAT('<', LOWER(mail), '>') as mail FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $tid, $account->uid);
   $emails = array();
   while($row = db_fetch_array($results)){
     $emails[] = $row['mail'];
@@ -21,37 +21,35 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
   $emails = _femail_get_emails($tid, $user);
   $forum_term = taxonomy_get_term($tid);
   if(count($emails)){
-    foreach($emails as $bcc_email){
-      $from_emails = variable_get('femail_emails', array());
-      $from = ($user->name?$user->name." ":"").'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
-      global $base_url;
-      $parts = parse_url($base_url);
-      $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
-      $node = node_load(array('nid' => $nid));
-      db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);
-      $message = array(
-        'id' => 'femail_message',
-        'from' => $from,
-        'subject' => $subject,
-        'body' => drupal_wrap_mail(strip_tags($body)),
-        'to' => $from_emails[$tid], 
-        'headers' => array(
-          'Return-path' => $from_emails[$tid],
-          'From' => $from,
-          'Message-id' => $msgid,
-          'Reply-to' => $from_emails[$tid],
-          'List-id' => check_plain($forum_term->name) . ' <' . str_replace("@",".", $from_emails[$tid]).'>',
-          'List-post' => '<'.$from_emails[$tid].'>',
-          'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
-          'Thread-topic' => check_plain($node->title),
-          'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>',
-          'Bcc' => $bcc_email
-        )
-      );
-      if($inreplyto){
-        $message['headers']['In-reply-to'] = $inreplyto;
-      }
-      drupal_mail_send($message);
+    $from_emails = variable_get('femail_emails', array());
+    $from = ($user->name?$user->name." ":"").'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
+    global $base_url;
+    $parts = parse_url($base_url);
+    $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
+    $node = node_load(array('nid' => $nid));
+    db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);
+    $message = array(
+      'id' => 'femail_message',
+      'from' => $from,
+      'subject' => $subject,
+      'body' => drupal_wrap_mail(strip_tags($body)),
+      'to' => $from_emails[$tid], 
+      'headers' => array(
+        'Return-path' => $from_emails[$tid],
+        'From' => $from,
+        'Message-id' => $msgid,
+        'Reply-to' => $from_emails[$tid],
+        'List-id' => check_plain($forum_term->name) . ' <' . str_replace("@",".", $from_emails[$tid]).'>',
+        'List-post' => '<'.$from_emails[$tid].'>',
+        'List-archive' => '<' . url('forum/'.$tid, array('absolute' => TRUE)).'>',
+        'Thread-topic' => check_plain($node->title),
+        'List-subscribe' => '<'.url('user/register', array('absolute' => TRUE)).'>',
+        'Bcc' => implode(", ", $emails)
+      )
+    );
+    if($inreplyto){
+      $message['headers']['In-reply-to'] = $inreplyto;
     }
+    drupal_mail_send($message);
   }
 }
