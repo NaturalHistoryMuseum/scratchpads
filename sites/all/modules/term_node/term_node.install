@@ -1,0 +1,12 @@
+<?php 
+
+/**
+ * hook_install
+ * 
+ * This function is only required to increase the weight of this module so that
+ * it is executed after the taxonomy and CCK modules (and probably others).
+ */
+function term_node_install(){
+  $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='term_node'", $taxonomy_or_cck_weight+10);
+}
