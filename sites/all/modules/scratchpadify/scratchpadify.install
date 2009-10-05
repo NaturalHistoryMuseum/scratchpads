@@ -220,10 +220,11 @@ function scratchpadify_update_6112(){
   return $ret;
 }
 
-function scratchpadify_update_6113(){
+function scratchpadify_update_6114(){
   $ret = array();
   $ret[] = update_sql("DELETE FROM url_alias WHERE src = 'taxonomy/term/'");
   $ret[] = update_sql("DELETE FROM path_redirect WHERE redirect = 'taxonomy/term/'");
   $ret[] = update_sql("DELETE FROM path_redirect WHERE path IS NULL");
+  $ret[] = update_sql("TRUNCATE {boost_cache}");
   return $ret;
 }
