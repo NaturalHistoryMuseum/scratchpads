@@ -214,6 +214,16 @@ function scratchpadify_update_6111(){
  * things up.
  */
 function scratchpadify_update_6112(){
-  db_query('UPDATE {node} SET sticky = -100 WHERE sticky = 0');
-  db_query('UPDATE {node} SET sticky = 100 WHERE sticky = 1');
+  $ret = array();
+  $ret[] = update_sql('UPDATE {node} SET sticky = -100 WHERE sticky = 0');
+  $ret[] = update_sql('UPDATE {node} SET sticky = 100 WHERE sticky = 1');
+  return $ret;
+}
+
+function scratchpadify_update_6113(){
+  $ret = array();
+  $ret[] = update_sql("DELETE FROM url_alias WHERE src = 'taxonomy/term/'");
+  $ret[] = update_sql("DELETE FROM path_redirect WHERE redirect = 'taxonomy/term/'");
+  $ret[] = update_sql("DELETE FROM path_redirect WHERE path IS NULL");
+  return $ret;
 }
