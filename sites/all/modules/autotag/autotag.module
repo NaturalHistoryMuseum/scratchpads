@@ -687,8 +687,12 @@ function _autotag_search_field($field, $vids){
     // Only search if there is text
     if(trim($field)==''){return array();}
     // Field is raw text search it for stuff
+    /**
+     * Discovered that the following only seems to work in PHP 5.2, FARP!
     // Thanks to http://stackoverflow.com/questions/790596/split-a-text-into-single-words
     $words_including_small = preg_split('/[\p{P}\s\{\}\[\]\(\)]/', strtolower($field), -1, PREG_SPLIT_NO_EMPTY);
+     */
+    $words_including_small = preg_split('/[\ `!"£$%^&*()_-+={\[}\]:;@\'~#<,>.?\/|\\]', strtolower($field), -1, PREG_SPLIT_NO_EMPTY);
     // lets remove the shitty small words.
     $words = array();
     foreach($words_including_small as $word){
