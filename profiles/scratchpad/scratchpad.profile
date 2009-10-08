@@ -45,6 +45,7 @@ function scratchpad_profile_modules(){
       'location','gmap','gmap_location','location_user','location_node',
     // Messaging
       'messaging','notifications','notifications_lite','notifications_content',
+      'messaging_mail',
     // Organic Groups
       'og','og_access','og_user_roles','og_views','og_notifications',
     // Views
