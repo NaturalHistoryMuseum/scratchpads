@@ -235,4 +235,5 @@ function scratchpadify_update_6115(){
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+  return array('#finished' => TRUE);
 }
