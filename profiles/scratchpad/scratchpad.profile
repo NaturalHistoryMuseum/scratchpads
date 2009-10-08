@@ -43,8 +43,10 @@ function scratchpad_profile_modules(){
       'image_attach','lightbox2',
     // Location
       'location','gmap','gmap_location','location_user','location_node',
+    // Messaging
+      'messaging','notifications','notifications_lite','notifications_content',
     // Organic Groups
-      'og','og_access','og_user_roles','og_views',
+      'og','og_access','og_user_roles','og_views','og_notifications',
     // Views
       'views','views_ui',
     // Content profile
@@ -56,12 +58,13 @@ function scratchpad_profile_modules(){
     // EDIT
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
-      'node_term_edit','autotag',
+      'node_term_edit','autotag','nbnmap',
 //'leftandright',
       'taxtab','tinytax','morphbank',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
       'classification_biblio','classification_scratchpads','nagger','bio_image',
-      'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail'
+      'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail',
+      'term_node'
   );
 }
 
