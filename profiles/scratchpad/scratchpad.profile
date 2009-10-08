@@ -595,10 +595,12 @@ function scratchpad_profile_set_perms(){
                             "vote on polls");
   $authenticated_perms = array_merge($anonymous_perms, array(
                             "access own webform submissions",
-                            "post by femail",
                             "edit own forum topics",
+                            "maintain own subscriptions",
+                            "post by femail",
                             "post comments without approval",
                             "submit form without hashcash",
+                            "subscribe to content in groups",
                             "subscribe to newsletters",
                             "view own user location",
                             "view revisions"));
@@ -678,7 +680,9 @@ function scratchpad_profile_set_perms(){
                             "administer forums",
                             "administer languages",
                             "administer lightbox2",
+                            "administer messaging",
                             "administer nodes",
+                            "administer notifications",
                             "administer organic groups",
                             "administer print",
                             "administer redirects",
