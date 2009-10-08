@@ -230,8 +230,8 @@ function scratchpad_profile_tasks_2(){
   // Delete the filter HTML filter, and update Full to be the default
   db_query("DELETE FROM {filters} WHERE format = 1");
   db_query("DELETE FROM {filter_formats} WHERE format = 1");
-  db_query("UPDATE {filters} SET format = 1");
-  db_query("UPDATE {filter_formats} SET format = 1");
+  db_query("UPDATE {filters} SET format = 1 WHERE format = 2");
+  db_query("UPDATE {filter_formats} SET format = 1 WHERE format = 2");
   db_query("INSERT INTO {filter_formats} (format, name, cache) VALUES (2, 'Full HTML (script allowed)', 1)");
   db_query("INSERT INTO {filters} (format,module,delta,weight) VALUES (1,'biblio',0,10),(1,'gmap',0,10),(1,'quote',0,10),(1,'scratchpadify',0,10)");
   db_query("INSERT INTO {filters} (format, module, delta, weight) VALUES (2,'gmap',0,10),(2,'quote',0,10),(2,'biblio',0,10),(2,'filter',2,0),(2,'filter',1,1),(2,'filter',3,10)");
