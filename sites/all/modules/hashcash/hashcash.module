@@ -95,8 +95,9 @@ function hashcash_init(){
  * @param Array $form
  */
 function hashcash_form_alter(&$form, &$form_state, $form_id){
-  // Firstl check to see if this user's role requires hashcash
-  if(user_access('submit form without hashcash')){
+  // Firstl check to see if this user's role requires hashcash, or if we're
+  // being called by the pesky upload_js form.
+  if(user_access('submit form without hashcash') || $form_id == 'upload_js'){
     return;
   }
 
@@ -108,7 +109,6 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
   if (($hc_addorignore && in_array($form_id,$hc_form_ids)) || 
       (!$hc_addorignore && !in_array($form_id,$hc_form_ids))){
     // Looks like we're adding the hashcash.
-    
     // Hidden form field which will contain the hashcash once the client "changes" it
     $form['hashcash'] = array( // Should probably check that this isn't already set. FIXME
       '#type' => 'hidden',
@@ -177,16 +177,16 @@ function hashcash_validate($form, $form_state){
  */
 function hashcash_admin_settings() {
   $form['hashcash_addorignore'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Add Or Ignore'),
-    '#default_value' => variable_get('hashcash_addorignore', false),
-    '#description' => t('If checked, the box below states the forms that will have hashcash added.<br/>If unchecked the box below states the forms to NOT add hashcash to')
+    '#type' => 'radios',
+    '#title' => t('Use hashcash on specific forms'),
+    '#default_value' => variable_get('hashcash_addorignore', 0),
+    '#options' => array(0 => t('Add to every form except the listed ones'), 1 => t('Add to only the listed forms'))
   );
   $form['hashcash_form_ids'] = array(
     '#type' => 'textarea',
     '#title' => t('Form IDs'),
     '#default_value' => variable_get('hashcash_form_ids',"user_login\nuser_login_block"),
-    '#description' => t('As stated above, the form IDs to ignore or add hashcash to')
+    '#description' => t('Enter one form ID per line.')
   );
   $days = array(1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7);
   $form['hashcash_expire'] = array(
