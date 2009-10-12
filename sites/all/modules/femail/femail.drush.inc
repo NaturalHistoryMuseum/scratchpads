@@ -146,11 +146,11 @@ function femail_drush_callback(){
     // Add a message to the logs so that we know we received a message and that
     // it hasn't been published
     watchdog('femail','Message "@subject" FROM "@email" has been posted, but unpublished', array('@subject' => $msg['title'], '@email' => $msg['from']), WATCHDOG_INFO);
-    $comment_status = 0;
-    $node_status = 1;
-  } else {
     $comment_status = 1;
     $node_status = 0;
+  } else {
+    $comment_status = 0;
+    $node_status = 1;
   }
   // If the in-reply-to is set, then we need to create a comment else we need to
   // create a node, or creating a comment has failed as the msgid could not be
