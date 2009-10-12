@@ -114,7 +114,7 @@ function _femail_post_forum_topic($msg, $user, $status){
   $node->title = $msg['title'];
   $node->type = 'forum';
   $node->taxonomy = array($term->vid => $tid);
-  $node->published = $status;
+  $node->status = $status;
   node_save($node);
   watchdog('femail','Posted forum topic: '.l($node->title,'node/'.$node->nid), array(), WATCHDOG_INFO);
 }
