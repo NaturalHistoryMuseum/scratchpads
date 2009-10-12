@@ -70,7 +70,7 @@ function _femail_get_msg(){
   return $msg;
 }
 
-function _femail_post_comment($msg, $user){
+function _femail_post_comment($msg, $user, $status){
   // First we'll make sure the in-reply-to is in the msgid table, if not, we
   // will have to add this as a new thread.
   $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
@@ -88,7 +88,8 @@ function _femail_post_comment($msg, $user){
         'uid' => $user->uid,
         'op' => 'Save',
         'date' => 'now',
-        'name' => $user->name
+        'name' => $user->name,
+        'status' => $status
       );
       $cid = comment_save($edit);
       watchdog('femail','Posted forum comment: '.l($msg['title'], 'node/'.$row['nid'], array('fragment', 'comment-'.$cid)));
@@ -101,7 +102,7 @@ function _femail_post_comment($msg, $user){
   return FALSE;
 }
 
-function _femail_post_forum_topic($msg, $user){
+function _femail_post_forum_topic($msg, $user, $status){
   // Get the tid of the forum that this post will go into
   $emails = variable_get('femail_emails', array());
   $tid = array_search($msg['to'], $emails);
@@ -113,14 +114,15 @@ function _femail_post_forum_topic($msg, $user){
   $node->title = $msg['title'];
   $node->type = 'forum';
   $node->taxonomy = array($term->vid => $tid);
+  $node->status = $status;
   node_save($node);
-  watchdog('femail','Posted forum topic: '.l($node->title,'node/'.$node->nid), WATCHDOG_INFO);
+  watchdog('femail','Posted forum topic: '.l($node->title,'node/'.$node->nid), array(), WATCHDOG_INFO);
 }
 
 function femail_drush_callback(){
   $msg = _femail_get_msg();
   
-  watchdog('femail', "Following message was received:\n\n".print_r($msg, TRUE), WATCHDOG_INFO);
+  watchdog('femail', "Following message was received:\n\n".print_r($msg, TRUE), array(), WATCHDOG_INFO);
   
   // Check to see this isn't a message that we've just sent out
   if($msg['reply-to'] == $msg['to']){
@@ -141,20 +143,24 @@ function femail_drush_callback(){
     }
   }
   if(!user_access('post by femail')){
-    // Add a message to the logs so that we know we received a message, but 
-    // threw it away
-    watchdog('femail','Message "@subject" FROM "@email" has been discarded', array('@subject' => $msg['title'], '@email' => $msg['from']), WATCHDOG_INFO);
-    return;
+    // Add a message to the logs so that we know we received a message and that
+    // it hasn't been published
+    watchdog('femail','Message "@subject" FROM "@email" has been posted, but unpublished', array('@subject' => $msg['title'], '@email' => $msg['from']), WATCHDOG_INFO);
+    $comment_status = 0;
+    $node_status = 1;
+  } else {
+    $comment_status = 1;
+    $node_status = 0;
   }
   // If the in-reply-to is set, then we need to create a comment else we need to
   // create a node, or creating a comment has failed as the msgid could not be
   // found.
   if(isset($msg['in-reply-to'])){
-    if(_femail_post_comment($msg, $user)){
+    if(_femail_post_comment($msg, $user, $comment_status)){
       return;
     }
   }
   // else we need to create a node, or creating a comment has failed as the 
   // msgid could not be found.
-  _femail_post_forum_topic($msg, $user);
+  _femail_post_forum_topic($msg, $user, $node_status);
 }
