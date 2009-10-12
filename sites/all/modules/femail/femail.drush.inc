@@ -122,12 +122,12 @@ function _femail_post_forum_topic($msg, $user, $status){
 function femail_drush_callback(){
   $msg = _femail_get_msg();
   
-  watchdog('femail', "Following message was received:\n\n".print_r($msg, TRUE), array(), WATCHDOG_INFO);
-  
   // Check to see this isn't a message that we've just sent out
   if($msg['reply-to'] == $msg['to']){
     return;
   }
+  
+  watchdog('femail', "Following message was received:\n\n".print_r($msg, TRUE), array(), WATCHDOG_INFO);
 
   // User needed for both comments, and nodes, so load first.
   global $user;
