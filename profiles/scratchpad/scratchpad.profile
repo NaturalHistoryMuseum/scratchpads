@@ -549,162 +549,164 @@ function scratchpad_profile_set_perms(){
 
   $contributor_perms = array();
   $editor_perms = array();
-  $content_types = array_keys(content_types());
-  $content_types[] = "type";
-  foreach($content_types as $content_type){
-    if($content_type != 'group'){
-      variable_set('og_content_type_usage_'.$content_type, 'group_post_standard');
+  if(function_exists('content_types')){
+    $content_types = array_keys(content_types());
+    $content_types[] = "type";
+    foreach($content_types as $content_type){
+      if($content_type != 'group'){
+        variable_set('og_content_type_usage_'.$content_type, 'group_post_standard');
+      }
+      $contributor_perms[] = "create $content_type content";
+      $contributor_perms[] = "delete own $content_type content";
+      $contributor_perms[] = "edit own $content_type content";
+      
+      $editor_perms[] = "edit any $content_type content";
+      $editor_perms[] = "delete any $content_type content";
     }
-    $contributor_perms[] = "create $content_type content";
-    $contributor_perms[] = "delete own $content_type content";
-    $contributor_perms[] = "edit own $content_type content";
     
-    $editor_perms[] = "edit any $content_type content";
-    $editor_perms[] = "delete any $content_type content";
+    $anonymous_perms = array("access all views",
+                              "access biblio content",
+                              "access comments",
+                              "access content",
+                              "access print",
+                              "access site-wide contact form",
+                              "access user profiles",
+                              "create citations",
+                              "create forum topics",
+                              "download original image",
+                              "fotonotes view notes",
+                              "post comments",
+                              "search content",
+                              "show download links",
+                              "show export links",
+                              "show filter tab",
+                              "show node map",
+                              "show own download links",
+                              "show sort links",
+                              "show user map",
+                              "use advanced search",
+                              "use share this",
+                              "user locations",
+                              "view all user locations",
+                              "view full text",
+                              "view original images",
+                              "view search_files results",
+                              "view Terms and Conditions",
+                              "view uploaded files",
+                              "vote on polls");
+    $authenticated_perms = array_merge($anonymous_perms, array(
+                              "access own webform submissions",
+                              "edit own forum topics",
+                              "maintain own subscriptions",
+                              "post by femail",
+                              "post comments without approval",
+                              "submit form without hashcash",
+                              "subscribe to content in groups",
+                              "subscribe to newsletters",
+                              "view own user location",
+                              "view revisions"));
+    $contributor_perms = array_merge($contributor_perms, $authenticated_perms, array(
+                              "access webform results",
+                              "assign node weight",
+                              "clone own nodes",
+                              "create biblio",
+                              "create blog entries",
+                              "create darwincore content",
+                              "create images",
+                              "create nexus projects",
+                              "create url aliases",
+                              "create webforms",
+                              "delete own blog entries",
+                              "delete own darwincore content",
+                              "delete own forum topics",
+                              "delete own nexus projects",
+                              "edit biblio authors",
+                              "edit own biblio entries",
+                              "edit own blog entries",
+                              "edit own darwincore content",
+                              "edit own images",
+                              "edit own nexus projects",
+                              "edit own webforms",
+                              "fotonotes add notes to all images",
+                              "fotonotes add notes to own images",
+                              "fotonotes edit own notes",
+                              "import content",
+                              "post with no checking",
+                              "set own user location",
+                              "set user location",
+                              "submit latitude/longitude",
+                              "translate content",
+                              "translate interface",
+                              "upload files",
+                              "view advanced help index",
+                              "view advanced help popup",
+                              "view advanced help topic"));
+    $editor_perms = array_merge($editor_perms, $contributor_perms, array(
+                              "administer comments",
+                              "administer images",
+                              "administer imports",
+                              "administer menu",
+                              "administer newsletters",
+                              "administer taxonomy",
+                              "administer users",
+                              "administer views",
+                              "clone node",
+                              "delete any blog entry",
+                              "delete any forum topic",
+                              "delete any nexus projects",
+                              "delete classification",
+                              "delete darwincore content",
+                              "edit all biblio entries",
+                              "edit any blog entry",
+                              "edit any forum topic",
+                              "edit any nexus projects",
+                              "edit classification",
+                              "edit darwincore content",
+                              "edit images",
+                              "edit webforms",
+                              "export classification",
+                              "fotonotes edit all notes",
+                              "import classification",
+                              "import from file",
+                              "inspect all votes",
+                              "mado sort",
+                              "revert revisions",
+                              "send newsletter",
+                              "view sort sort"));
+    $maintainer_perms = array_merge($editor_perms, array("access administration pages",
+                              "administer biblio",
+                              "administer blocks",
+                              "administer content types",
+                              "administer creative commons lite",
+                              "administer forums",
+                              "administer languages",
+                              "administer lightbox2",
+                              "administer messaging",
+                              "administer nodes",
+                              "administer notifications",
+                              "administer organic groups",
+                              "administer print",
+                              "administer redirects",
+                              "administer simplenews settings",
+                              "administer simplenews subscriptions",
+                              "administer site configuration",
+                              "administer site-wide contact form",
+                              "administer Terms and Conditions",
+                              "administer url aliases",
+                              "administer user locations",
+                              "assign roles",
+                              "clear webform results",
+                              "delete revisions",
+                              "edit webform submissions",
+                              "make backups"));
+    $anonymous_perms = implode(", ", $anonymous_perms);
+    $authenticated_perms = implode(", ", $authenticated_perms);
+    $contributor_perms = implode(", ", $contributor_perms);
+    $editor_perms = implode(", ", $editor_perms);
+    $maintainer_perms = implode(", ", $maintainer_perms);
+    db_query("TRUNCATE TABLE {permission}");
+    db_query("INSERT INTO {permission} (rid,perm) VALUES ((SELECT rid FROM {role} WHERE name = 'anonymous user'),'%s'),((SELECT rid FROM {role} WHERE name = 'authenticated user'),'%s'),((SELECT rid FROM {role} WHERE name = 'contributor'),'%s'),((SELECT rid FROM {role} WHERE name = 'editor'),'%s'),((SELECT rid FROM {role} WHERE name = 'maintainer'),'%s')", $anonymous_perms, $authenticated_perms, $contributor_perms, $editor_perms, $maintainer_perms);
   }
-  
-  $anonymous_perms = array("access all views",
-                            "access biblio content",
-                            "access comments",
-                            "access content",
-                            "access print",
-                            "access site-wide contact form",
-                            "access user profiles",
-                            "create citations",
-                            "create forum topics",
-                            "download original image",
-                            "fotonotes view notes",
-                            "post comments",
-                            "search content",
-                            "show download links",
-                            "show export links",
-                            "show filter tab",
-                            "show node map",
-                            "show own download links",
-                            "show sort links",
-                            "show user map",
-                            "use advanced search",
-                            "use share this",
-                            "user locations",
-                            "view all user locations",
-                            "view full text",
-                            "view original images",
-                            "view search_files results",
-                            "view Terms and Conditions",
-                            "view uploaded files",
-                            "vote on polls");
-  $authenticated_perms = array_merge($anonymous_perms, array(
-                            "access own webform submissions",
-                            "edit own forum topics",
-                            "maintain own subscriptions",
-                            "post by femail",
-                            "post comments without approval",
-                            "submit form without hashcash",
-                            "subscribe to content in groups",
-                            "subscribe to newsletters",
-                            "view own user location",
-                            "view revisions"));
-  $contributor_perms = array_merge($contributor_perms, $authenticated_perms, array(
-                            "access webform results",
-                            "assign node weight",
-                            "clone own nodes",
-                            "create biblio",
-                            "create blog entries",
-                            "create darwincore content",
-                            "create images",
-                            "create nexus projects",
-                            "create url aliases",
-                            "create webforms",
-                            "delete own blog entries",
-                            "delete own darwincore content",
-                            "delete own forum topics",
-                            "delete own nexus projects",
-                            "edit biblio authors",
-                            "edit own biblio entries",
-                            "edit own blog entries",
-                            "edit own darwincore content",
-                            "edit own images",
-                            "edit own nexus projects",
-                            "edit own webforms",
-                            "fotonotes add notes to all images",
-                            "fotonotes add notes to own images",
-                            "fotonotes edit own notes",
-                            "import content",
-                            "post with no checking",
-                            "set own user location",
-                            "set user location",
-                            "submit latitude/longitude",
-                            "translate content",
-                            "translate interface",
-                            "upload files",
-                            "view advanced help index",
-                            "view advanced help popup",
-                            "view advanced help topic"));
-  $editor_perms = array_merge($editor_perms, $contributor_perms, array(
-                            "administer comments",
-                            "administer images",
-                            "administer imports",
-                            "administer menu",
-                            "administer newsletters",
-                            "administer taxonomy",
-                            "administer users",
-                            "administer views",
-                            "clone node",
-                            "delete any blog entry",
-                            "delete any forum topic",
-                            "delete any nexus projects",
-                            "delete classification",
-                            "delete darwincore content",
-                            "edit all biblio entries",
-                            "edit any blog entry",
-                            "edit any forum topic",
-                            "edit any nexus projects",
-                            "edit classification",
-                            "edit darwincore content",
-                            "edit images",
-                            "edit webforms",
-                            "export classification",
-                            "fotonotes edit all notes",
-                            "import classification",
-                            "import from file",
-                            "inspect all votes",
-                            "mado sort",
-                            "revert revisions",
-                            "send newsletter",
-                            "view sort sort"));
-  $maintainer_perms = array_merge($editor_perms, array("access administration pages",
-                            "administer biblio",
-                            "administer blocks",
-                            "administer content types",
-                            "administer creative commons lite",
-                            "administer forums",
-                            "administer languages",
-                            "administer lightbox2",
-                            "administer messaging",
-                            "administer nodes",
-                            "administer notifications",
-                            "administer organic groups",
-                            "administer print",
-                            "administer redirects",
-                            "administer simplenews settings",
-                            "administer simplenews subscriptions",
-                            "administer site configuration",
-                            "administer site-wide contact form",
-                            "administer Terms and Conditions",
-                            "administer url aliases",
-                            "administer user locations",
-                            "assign roles",
-                            "clear webform results",
-                            "delete revisions",
-                            "edit webform submissions",
-                            "make backups"));
-  $anonymous_perms = implode(", ", $anonymous_perms);
-  $authenticated_perms = implode(", ", $authenticated_perms);
-  $contributor_perms = implode(", ", $contributor_perms);
-  $editor_perms = implode(", ", $editor_perms);
-  $maintainer_perms = implode(", ", $maintainer_perms);
-  db_query("TRUNCATE TABLE {permission}");
-  db_query("INSERT INTO {permission} (rid,perm) VALUES ((SELECT rid FROM {role} WHERE name = 'anonymous user'),'%s'),((SELECT rid FROM {role} WHERE name = 'authenticated user'),'%s'),((SELECT rid FROM {role} WHERE name = 'contributor'),'%s'),((SELECT rid FROM {role} WHERE name = 'editor'),'%s'),((SELECT rid FROM {role} WHERE name = 'maintainer'),'%s')", $anonymous_perms, $authenticated_perms, $contributor_perms, $editor_perms, $maintainer_perms);
 }
 
 /**
