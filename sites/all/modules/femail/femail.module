@@ -250,8 +250,8 @@ function femail_comment($form_values, $op){
  * Implementation of hook_nodeapi
  */
 function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
-  if($op == 'insert' && $node->type == 'forum'){
-    // We've added a new forum post, lets mail it out
+  if(($op == 'insert' || $op == 'update') && $node->type == 'forum' && $node->status){
+    // We've added/updated a forum post, lets mail it out
     // First, we'll get the forum that this has been posted to.
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
     if($forum_tid){
