@@ -51,6 +51,106 @@ function femail_mail($key, &$message, $params){
 }
 
 /**
+ * Implementation of hook_filter
+ */
+function femail_filter($op, $delta=0, $format=-1, $text=''){
+  switch($op){
+    case 'list':
+      return array(
+        t('Femail: Remove signature'),
+        t('Femail: Blockquote reply text')
+      );
+    case 'description':
+      switch($delta){
+        case 0:
+          return t('Removes email signatures from posts created from an email message');
+        case 1:
+          return t('Alters message so that lines starting with ">" are marked as "blockquotes"');
+      }
+    case 'settings':
+      break;
+    case 'no cache':
+      return TRUE;
+    case 'prepare':
+      // Nothing to do here!
+      return $text;
+    case 'process':
+      switch($delta){
+        case 0:
+          return femail_filter_remove_signature($text);
+        case 1:
+          return femail_filter_blockquote($text);
+      }     
+    default:
+      return $text;
+  }
+}
+
+function femail_init(){
+  drupal_add_js(drupal_get_path('module','femail').'/femail.js');
+  drupal_add_css(drupal_get_path('module','femail').'/femail.css');  
+}
+/**
+ * Helper function for femail_filter
+ */
+function femail_filter_remove_signature($text){
+  // Split by lines, and look for a line that starts with "--".  Anything after
+  // this line is the signature
+  $lines = preg_split('/[\n\r]+/',$text);
+  $return_text = '';
+  $started_sig = FALSE;
+  foreach($lines as $line){
+    if((substr($line, 0, 2)=='--' || substr($line, 0, 5)=='<p>--') && !$started_sig){
+      $return_text .= '<div class="femail-signature"><p>--</p><div>';
+      $line = substr($line, strpos($line, '--')+2);
+      $started_sig = TRUE;
+    }
+    $return_text .= $line . "\n";
+  }
+  if($started_sig){
+    $return_text .= '</div></div>';
+  }
+  return $return_text;
+}
+
+/**
+ * helper function for femail_filter
+ */
+function femail_filter_blockquote($text){
+  $lines = preg_split('/[\n\r]+/',$text);
+  //kprint_r($lines);
+  $return_text = '';
+  $started_block = FALSE;
+  foreach($lines as $line){
+    if( substr($line, 0, 1)=='>' || 
+        substr($line, 0, 5)=='&#62;' || 
+        substr($line, 0, 4)=='&gt;' || 
+        substr($line, 0, 8)=='<p>&#62;' || 
+        substr($line, 0, 7)=='<p>&gt;'){
+      if(!$started_block){
+        $return_text .= '<blockquote>';
+      }
+      // We'll remove the ">" if it isn't encoded, then we'll replace the first
+      // instance of an html entity encoded ">"
+      if(substr($line, 0, 1)=='>'){
+        $line = substr($line, 1);
+      }
+      // replace entity encoded ">"
+      $line = preg_replace("/(&#62;|&gt;)/","", $line, 1);
+      $return_text .= $line."\n";
+      $started_block = TRUE;
+    } else {
+      if($started_block){
+        $return_text .= '</blockquote>';
+        $started_block = FALSE;
+      }
+      $return_text .= $line ."\n";
+    }
+  }
+  return $return_text;
+}
+
+/**
  * Implementation of hook_perm
  */
 function femail_perm(){
