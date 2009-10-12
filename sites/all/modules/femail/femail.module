@@ -226,21 +226,21 @@ function femail_taxonomy($op, $type, $array = NULL){
 /**
  * Implementation of hook_comment
  */
-function femail_comment($form_values, $op){
-  if($op == 'insert'){
-    $node = node_load($form_values['nid']);
+function femail_comment($comment, $op){
+  if($op == 'publish'){
+    $node = node_load($comment['nid']);
     if(isset($node->forum_tid) && $node->forum_tid){    
       // Get the parent msgid so that we can set the "In-reply-to" header, Note,
       // this may not be set if there are no users subscribed to the forum, OR
       // if the only user subscribed posted the comment.  We'll still caryy on
       // trying to send the message though.
-      $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $form_values['pid']?$form_values['pid']:0));
+      $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $comment['pid']?$comment['pid']:0));
       // Include file
       module_load_include('mail.inc','femail');
       if(is_array($row)){
-        _femail_send_message($node->forum_tid, $form_values['subject'], $form_values['comment'], $node->nid, $form_values['cid'], array_pop($row));        
+        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid'], array_pop($row));        
       } else {
-        _femail_send_message($node->forum_tid, $form_values['subject'], $form_values['comment'], $node->nid, $form_values['cid']);
+        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid']);
       }
     }
   }
