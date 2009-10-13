@@ -22,7 +22,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
   $forum_term = taxonomy_get_term($tid);
   if(count($emails)){
     $from_emails = variable_get('femail_emails', array());
-    $from = ($user->name?'=?UTF-8?B?'.base64_encode($user->mail).'?= ':'').'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
+    $from = ($user->name?'=?UTF-8?B?'.base64_encode($user->name).'?= ':'').'<'.($user->mail?$user->mail:$from_emails[$tid]).'>';
     global $base_url;
     $parts = parse_url($base_url);
     $msgid = '<'.md5(microtime()) . '@'.$parts['host'].'>';
