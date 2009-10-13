@@ -73,7 +73,13 @@ function _femail_get_msg(){
 function _femail_post_comment($msg, $user, $status){
   // First we'll make sure the in-reply-to is in the msgid table, if not, we
   // will have to add this as a new thread.
-  $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
+  if(isset($msg['in-reply-to'])){
+    db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
+  } else {
+    // We need to select the nid and 0 as cid from node where title is the same
+    // as the subject line (less "re:")
+    $result = db_query("SELECT 0 AS cid, nid FROM node WHERE title = '%s' AND type = 'forum' LIMIT 1", trim(substr($msg['title'], 3)));
+  }
   $row = db_fetch_array($result);
   if($row){
     // Check we have permission to post a forum post.
@@ -155,7 +161,7 @@ function femail_drush_callback(){
   // If the in-reply-to is set, then we need to create a comment else we need to
   // create a node, or creating a comment has failed as the msgid could not be
   // found.
-  if(isset($msg['in-reply-to'])){
+  if(isset($msg['in-reply-to']) || strtolower(substr($msg['title'],0,3))=='re:'){
     if(_femail_post_comment($msg, $user, $comment_status)){
       return;
     }
