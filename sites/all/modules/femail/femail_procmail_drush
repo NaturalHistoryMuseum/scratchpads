@@ -4,6 +4,8 @@
 # path, and drushrc.php MUST be set up with the root directory of the Drupal
 # install.
 
+# Set the Internal Field Separator to prevent stripping of leading spaces
+IFS=""
 while read line
 do
 	if [ -z "$MESSAGE" ]
