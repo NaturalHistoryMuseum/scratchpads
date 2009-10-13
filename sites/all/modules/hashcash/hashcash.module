@@ -57,10 +57,11 @@ function hashcash_menu(){
     'page arguments' => array('hashcash_admin_settings'),
     'access arguments' => array('administer site configuration')
   );
-  $items['hashcash'] = array(
+  $items['hashcash/%'] = array(
     'title' => 'Get Hashcash',
     'description' => 'Returns the start part of a hashcash string',
     'page callback' => 'hashcash_get_hashcash',
+    'page arguments' => array(1),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
   );
