@@ -43,6 +43,5 @@ function hashcash_uninstall() {
 
 function hashcash_update_6101(){
   // Update the menu stuff
-  menu_rebuild();
   return array('#finished' => TRUE);
 }
