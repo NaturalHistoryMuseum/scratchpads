@@ -86,10 +86,17 @@ function femail_filter($op, $delta=0, $format=-1, $text=''){
   }
 }
 
+/**
+ * Implementation of hook_init
+ * 
+ * Gah!  I hate doing this, I'm adding JS and CSS files on init as there doesn't
+ * seem to be any other location (due to caching) where I can add them.
+ */
 function femail_init(){
   drupal_add_js(drupal_get_path('module','femail').'/femail.js');
   drupal_add_css(drupal_get_path('module','femail').'/femail.css');  
 }
+
 /**
  * Helper function for femail_filter
  */
@@ -118,7 +125,6 @@ function femail_filter_remove_signature($text){
  */
 function femail_filter_blockquote($text){
   $lines = preg_split('/[\n\r]+/',$text);
-  //kprint_r($lines);
   $return_text = '';
   $started_block = FALSE;
   foreach($lines as $line){
@@ -160,9 +166,6 @@ function femail_perm(){
  * Implementation of hook_theme_registry_alter
  */
 function femail_theme_registry_alter(&$theme_registry){
-  $theme_registry['forums']['template'] = drupal_get_path('module','femail').'/forums';
-  $theme_registry['forums']['theme path'] = drupal_get_path('module','femail');
-  $theme_registry['forums']['theme paths'] = array(drupal_get_path('module','femail'));
   $theme_registry['forums']['preprocess functions'] = array_merge($theme_registry['forums']['preprocess functions'], array('template_preprocess_femail_forums'));
 }
 
@@ -174,21 +177,21 @@ function template_preprocess_femail_forums(&$variables){
     // We're viewing a Forum, or a Container, lets check this isn't a container
     if(!in_array($variables['tid'], variable_get('forum_containers', array()))){
       // We're viewing a forum
-      $variables['show_femail_link'] = $variables['tid'];
+      $emails = variable_get('femail_emails', array());
+      if(isset($emails[$variables['tid']])){
+        if(user_access('post by femail')){
+          $variables['links']['femail'] = array(
+            'title' => t('Or post by email:') .' '. $emails[$variables['tid']],
+            'href' => 'mailto:'.$emails[$variables['tid']],
+            'absolute' => TRUE
+          );
+        }
+      } else {
+        // This should be set, we need to warn the admin
+        watchdog('femail', 'Femail address not set %term_id', array('%term_id', $variables['tid']));
+      }
     }
   }
-}
-
-/**
- * Implementation of hook_theme
- */
-function femail_theme($existing, $type, $theme, $path) {
-  return array(
-    'femail_link' => array(
-      'arguments' => array('tid' => NULL),
-      'file' => 'femail.theme-functions.php'
-    )
-  );
 }
 
 /**
