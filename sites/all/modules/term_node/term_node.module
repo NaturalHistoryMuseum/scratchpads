@@ -25,14 +25,16 @@ function term_node_form_alter(&$form, $form_state, $form_id){
     $node_type_names = array(0 => t('< None >'));
     // We only add the node type to the list if there are no nodes associated
     // with it.
+    $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
     foreach($node_types as $node_type){
-      if(!db_result(db_query("SELECT COUNT(*) FROM {node} WHERE type = '%s'", $node_type->type))){
+      if(array_search($node_type->type, $vocabs_and_contenttypes)){
+        $node_type_names[$node_type->type] = $node_type->name;
+      } elseif(!db_result(db_query("SELECT COUNT(*) FROM {node} WHERE type = '%s'", $node_type->type))){
         $node_type_names[$node_type->type] = $node_type->name;
       }
     }
     $additional_description = '';
     if(isset($form['vid']['#value'])){
-      $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
       if(isset($vocabs_and_contenttypes[$form['vid']['#value']])){
         // Check the default value is in the $node_type_names array, and if not
         // we need to add it, and disable the form.
@@ -70,25 +72,37 @@ function term_node_form_alter(&$form, $form_state, $form_id){
     // node associated with a term, or to the term add page if trying to add a
     // node.
     $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
-    foreach($vocabs_and_contenttypes as $vid => $vocab_and_contenttype){
-      if($vocab_and_contenttype == $form['type']['#value']){
-        // We're trying to edit or add a node that is associated with a 
-        // vocabulary, lets not do this!
-        // If we're adding, redirect to add a term else redirect to edit the
-        // term
-        $vocabularies = taxonomy_get_vocabularies();
-        if(arg(0) == 'node' && arg(1) == 'add'){
-          drupal_set_message(t('Adding nodes of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary. You may add a new term instead.', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)));
-          drupal_goto('admin/content/taxonomy/'.$vid.'/add/term');
+    if($vids = array_keys($vocabs_and_contenttypes, $form['type']['#value'])){
+      // We're trying to edit or add a node that is associated with a 
+      // vocabulary, lets not do this!
+      // If we're adding, redirect to add a term else redirect to edit the
+      // term
+      $vocabularies = taxonomy_get_vocabularies();
+      if(arg(0) == 'node' && arg(1) == 'add'){
+        if(count($vids)==1){
+          $vid = array_pop($vids);
         } else {
-          // Lets get the single (feck, if this fails then something somewhere
-          // has gone horribly wrong, lets hide under the desk and pretend this
-          // will never happen) term associated with this term from this
-          // vocabulary.
-          $tid = db_result(db_query("SELECT n.tid FROM {term_node} n INNER JOIN {term_data} t ON t.tid = n.tid WHERE t.vid = %d AND nid = %d", $vid, arg(1)));
-          drupal_set_message(t('Editing nodes of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary. You may edit the term instead.', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)));
-          drupal_goto('admin/content/taxonomy/edit/term/'.$tid);
+          // We have one content type associated with multiple classifications,
+          // we need to warn users, and link to the various classifications.
+          $links = array();
+          $vocabs = taxonomy_get_vocabularies();
+          //print_r($vocabs);exit;
+          foreach($vids as $vid){
+            $links[] = t('Add term to').' '.l($vocabs[$vid]->name, 'admin/content/taxonomy/'.$vid.'/add/term');
+          }
+          drupal_set_message(t('Adding nodes of this content type is restricted as it is associated with multiple vocabularies, instead you may add terms to these vocabularies. !links', array('!links' => implode(", ",$links))));
+          drupal_goto(referer_uri());
         }
+        drupal_set_message(t('Adding nodes of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary. You may add a new term instead.', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)));
+        drupal_goto('admin/content/taxonomy/'.$vid.'/add/term');
+      } else {
+        // Lets get the single (feck, if this fails then something somewhere
+        // has gone horribly wrong, lets hide under the desk and pretend this
+        // will never happen) term associated with this term from this
+        // vocabulary.
+        $tid = db_result(db_query("SELECT n.tid FROM {term_node} n INNER JOIN {term_data} t ON t.tid = n.tid WHERE t.vid IN (%s) AND nid = %d", implode(",", $vids), arg(1)));
+        drupal_set_message(t('Editing nodes of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary. You may edit the term instead.', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)));
+        drupal_goto('admin/content/taxonomy/edit/term/'.$tid);
       }
     }
   }
