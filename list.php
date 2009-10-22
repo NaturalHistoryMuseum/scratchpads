@@ -24,7 +24,7 @@ else{
 	if (isset($_GET['missions'])){
 		$_GET['mission']="";
 	}	
-	$files = scandir("/var/www/html/sites");
+	$files = array_merge(scandir("/var/www/html/sites"),scandir("/var/www/drupal6/sites"));
 	$domains = array();
 	for ($i=2;$i<count($files);$i++){
 	  if (substr($files[$i],0,3)!="www"
@@ -37,7 +37,8 @@ else{
 	    && $files[$i]!="bibref.editwebrevisions.info"
             && substr($files[$i],0,8) != 'training'
 	    && $files[$i]!="sandbox.scratchpads.eu"
-	    && is_dir("/var/www/html/sites/".$files[$i])
+	    && 
+	      (is_dir("/var/www/html/sites/".$files[$i]) || is_dir("/var/www/html/drupal6/".$files[$i]))
 	  )
 	    $domains[]=$files[$i];
 	}
