@@ -49,7 +49,7 @@ function scratchpad_profile_modules(){
     // Organic Groups
       'og','og_access','og_user_roles','og_views','og_notifications',
     // Views
-      'views','views_ui',
+      'views','views_ui','views_xml',
     // Content profile
       'content_profile','content_profile_registration',
     // LifeDesk
