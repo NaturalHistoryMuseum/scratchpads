@@ -255,7 +255,7 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
     $output .= '<div class="boxtitle mado-handle">
           <h1>'.$title.'</h1>';
     if(user_access('mado sort')){
-      $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'"/></a></li>';
+      $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'" alt="Resize x"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'" alt="Resize y"/></a></li>';
     }
     if($list_of_links != ''){
       $output .= '<ul class="mado-title-links">'.$list_of_links.'</ul>';
