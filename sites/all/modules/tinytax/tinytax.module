@@ -325,7 +325,7 @@ function _theme_tinytax_term_list_link($term, $vid){
   }
   if (substr($term->tid,0,3)!='vid'){
     $return_string .= l(
-      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'"/>',
+      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'" alt="Expand"/>',
       'taxonomy/term/'.$term->tid,
       array(
         'attributes' => array(
@@ -337,7 +337,7 @@ function _theme_tinytax_term_list_link($term, $vid){
     );
   } else {
     $return_string .= l(
-      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'"/>',
+      '<img src="'.url(drupal_get_path('module','tinytax').'/images/plus.gif').'" alt="Expand"/>',
       '',
       array(
         'attributes' => array(
