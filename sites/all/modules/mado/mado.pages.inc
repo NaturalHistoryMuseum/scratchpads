@@ -182,6 +182,18 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
         }
         if(isset($view->display['default']->display_options['title']) && $view->display['default']->display_options['title'] !=''){
           $title = $view->display['default']->display_options['title'];
+        } elseif($view->description) {
+          $title = $view->description;
+        } else {
+          $title = $view->name;
+        }
+        if(strlen($title)>50){
+          $title_words = explode(" ", $title);
+          $title = '';
+          while(strlen($title)<40){
+            $title .= " ".array_shift($title_words);
+          }
+          $title .="...";
         }
       } else {
         return false;

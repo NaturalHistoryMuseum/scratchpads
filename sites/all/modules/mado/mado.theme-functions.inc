@@ -36,7 +36,7 @@ function mado_get_blocks($all_views = FALSE){
         'forum' => array('ids' => array('0','1')),
         'glossary' => array('all' => TRUE),
         'gmap_location' => array('all' => TRUE),
-        'image' => array('all' => TRUE),
+        'image' => array('ids' => array('0')),
         'image_attach' => array('all' => TRUE),
         'locale' => array('all' => TRUE),
         'menu' => array('all' => TRUE),
