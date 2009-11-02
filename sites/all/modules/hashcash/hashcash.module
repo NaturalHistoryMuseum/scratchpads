@@ -122,7 +122,16 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
     $form['#attributes'] = array('onsubmit'=>'return hashcash_create("hashcash-'.$form_id.'");');
     
     // Finally, and VERY importantly, prevent caching of the form
-    $form['#cache'] = FALSE;    
+    $form['#cache'] = FALSE;  
+
+    // Check to see if the user has Javascript, and if not, we'll show a polite
+    // warning, and disable the form submission button(s)
+    if(count($_COOKIE) && (!isset($_COOKIE['has_js']) || (!$_COOKIE['has_js']))){
+      drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page has been disabled as you do not have JavaScript enabled in your browser.')), 'status', FALSE);
+      if(isset($form['submit'])){
+        $form['submit']['#disabled'] = TRUE;
+      }
+    }
   }
 }
 
@@ -137,7 +146,7 @@ function hashcash_validate($form, $form_state){
     $hashcash = $form_state['values']['hashcash'];
     if(substr(sha1($hashcash),0,2)!="00"){
       // failed;
-      form_set_error('hashcash',t('Your hashcash value failed.  Please ensure you have JavaScript enabled in your browser'));
+      form_set_error('hashcash',t('Your hashcash value failed.  Please ensure you have JavaScript enabled in your browser.'));
     } else {
       // Hashcash passed, now check the parts.
       $hashcash_parts = explode(':',$hashcash);
@@ -177,6 +186,11 @@ function hashcash_validate($form, $form_state){
  * hashcash settings page
  */
 function hashcash_admin_settings() {
+  $form['hashcash_submit_disabled'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Warning message for those with JavaScript disabled'),
+    '#default_value' => t(variable_get('hashcash_submit_disabled','Submission of a form on this page has been disabled as you do not have JavaScript enabled in your browser.'))
+  );
   $form['hashcash_addorignore'] = array(
     '#type' => 'radios',
     '#title' => t('Use hashcash on specific forms'),
