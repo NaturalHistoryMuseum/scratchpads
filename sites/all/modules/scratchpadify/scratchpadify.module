@@ -58,7 +58,7 @@ function scratchpadify_cron(){
   }
   
   // Don't report if we're the central site
-  if($_SERVER['HTTP_HOST'] != 'home.scratchpads.eu'){
+  if($_SERVER['HTTP_HOST'] != 'home.scratchpads.eu' && substr($_SERVER['HTTP_HOST'],0,3)!='d6.'){
     // Once a week (this could be made more frequent) we'll report that we exist
     // to a central repository which can then build a list of all Scratchpads.
     $last_reported = variable_get('scratchpadify_last_reported',0);
