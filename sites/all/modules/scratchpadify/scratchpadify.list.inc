@@ -11,7 +11,7 @@ function scratchpadify_list_scratchpads($output='HTML'){
     foreach($sites as $domain => $title){
       $items[] = l($title . ' (http://' . $domain . ')', 'http://'.$domain);
     }
-    return theme('item_list', $items);
+    return theme('item_list', $items, count($sites).' sites');
   } else {
     // We'll output the list serialized
     echo serialize(variable_get('scratchpadify_sites_list',array()));
