@@ -23,5 +23,6 @@ function scratchpadify_add_scratchpad_to_list($site){
   if(strpos($front_page,'UA-2428547-2')){
     $sites = variable_get('scratchpadify_sites_list', array());  
     $sites[$site] = $site;
+    variable_set('scratchpadify_sites_list', $sites); 
   }
 }
