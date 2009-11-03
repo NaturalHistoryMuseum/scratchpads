@@ -6,7 +6,7 @@
 function scratchpadify_list_scratchpads($output='HTML'){
   if($output == 'HTML'){
     $sites = variable_get('scratchpadify_sites_list',array());
-    asort($sites);
+    asort($sites, 'strnatcasecmp');
     $items = array();
     foreach($sites as $domain => $title){
       $items[] = l($title . ' (http://' . $domain . ')', 'http://'.$domain);
