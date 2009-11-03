@@ -268,6 +268,13 @@ function scratchpadify_menu($may_cache){
       'callback' => 'scratchpadify_comment_feed',
       'access' => user_access('access content'),
       'type' => MENU_CALLBACK);
+    $items[] = array(
+      'path' => 'scratchpads',
+      'title' => 'Scratchpad List',
+      'callback' => 'scratchpadify_list_scratchpads',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK
+    );
   }else {
     // Reset the menus (ONLY FOR UID 1)
     if(user_access('SCRATCHPADIFY')){
@@ -283,6 +290,18 @@ function scratchpadify_menu($may_cache){
     drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
   }
   return $items;
+}
+
+/**
+ * Provides a page that lists all the Scratchpads.
+ */
+function scratchpadify_list_scratchpads(){
+  $sites = variable_get('scratchpadify_sites_list',array());
+  $items = array();
+  foreach($sites as $domain => $title){
+    $items[] = l($title . '(http://' . $domain . ')', 'http://'.$domain);
+  }
+  return theme('items_list', $items);
 }
 
 /**
