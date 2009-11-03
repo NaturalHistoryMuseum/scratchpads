@@ -239,5 +239,7 @@ function scratchpadify_update_6115(){
 }
 
 function scratchpadify_update_6116(){
+  variable_del('scratchpadify_sites_list');
+  variable_del('scratchpadify_last_reported');
   return array('#finished' => TRUE);
 }
