@@ -66,6 +66,9 @@ function scratchpadify_cron(){
       // Send the update to our central server
       file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST'].'/'.urlencode(variable_get('site_name','Scratchpad')));
       variable_set('scratchpadify_last_reported', time());
+    }
+    $last_updated = variable_get('scratchpadify_last_updated',0);
+    if($last_updated < time()-86400){// 86400 = seconds in a day
       // Also update the sites list for this site
       variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
     }
