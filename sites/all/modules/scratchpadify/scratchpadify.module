@@ -309,6 +309,20 @@ function scratchpadify_cron(){
   }
   // Increase the run
   variable_set("scratchpadify_cron", $run + 1);
+  
+  // Don't report if we're the central site
+  if($_SERVER['HTTP_HOST'] != 'home.scratchpads.eu'){
+    // Once a week (this could be made more frequent) we'll report that we exist
+    // to a central repository which can then build a list of all Scratchpads.
+    $last_reported = variable_get('scratchpadify_last_reported',0);
+    if($last_reported < time()-604800){// 604800 = seconds in a week
+      // Send the update to our central server
+      file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST']);
+      variable_set('scratchpadify_last_reported', time());
+      // Also update the sites list for this site
+      variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
+    }
+  }
 }
 
 /**
