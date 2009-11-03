@@ -64,7 +64,7 @@ function scratchpadify_cron(){
     $last_reported = variable_get('scratchpadify_last_reported',0);
     if($last_reported < time()-604800){// 604800 = seconds in a week
       // Send the update to our central server
-      file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST']);
+      file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST'].'/'.urlencode(variable_get('site_name','Scratchpad')));
       variable_set('scratchpadify_last_reported', time());
       // Also update the sites list for this site
       variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
@@ -97,11 +97,11 @@ function scratchpadify_menu(){
     'file' => 'scratchpadify.admin.inc',
     'type' => MENU_CALLBACK
   );
-  $items['report_scratchpad/%'] = array(
+  $items['report_scratchpad/%/%'] = array(
     'title' => '',
     'page callback' => 'scratchpadify_add_scratchpad_to_list',
     'access arguments' => array('access content'),
-    'page arguments' => array(1),
+    'page arguments' => array(1, 2),
     'file' => 'scratchpadify.list.inc',
     'type' => MENU_CALLBACK
   );
