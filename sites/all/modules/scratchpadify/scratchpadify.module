@@ -57,13 +57,18 @@ function scratchpadify_cron(){
     }
   }
   
-  // Once a week (this could be made more frequent) we'll report that we exist
-  // to a central repository which can then build a list of all Scratchpads.
-  $last_reported = variable_get('scratchpadify_last_reported',0);
-  if($last_reported < time()-604800){// 604800 = seconds in a week
-    // Send the update to our central server
-    file_get_contents('http://scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST']);
-    variable_set('scratchpadify_last_reported', time());
+  // Don't report if we're the central site
+  if($_SERVER['HTTP_HOST'] != 'scratchpads.eu'){
+    // Once a week (this could be made more frequent) we'll report that we exist
+    // to a central repository which can then build a list of all Scratchpads.
+    $last_reported = variable_get('scratchpadify_last_reported',0);
+    if($last_reported < time()-604800){// 604800 = seconds in a week
+      // Send the update to our central server
+      file_get_contents('http://scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST']);
+      variable_set('scratchpadify_last_reported', time());
+      // Also update the sites list for this site
+      variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://scratchpads.eu/scratchpads/serial')));
+    }
   }
 }
 /**
@@ -90,6 +95,21 @@ function scratchpadify_menu(){
     'page callback' => 'scratchpadify_set_cookie',
     'access arguments' => array('access content'),
     'file' => 'scratchpadify.admin.inc',
+    'type' => MENU_CALLBACK
+  );
+  $items['report_scratchpad/%'] = array(
+    'title' => '',
+    'page callback' => 'scratchpadify_add_scratchpad_to_list',
+    'access arguments' => array('access content'),
+    'page arguments' => array(1),
+    'file' => 'scratchpadify.list.inc',
+    'type' => MENU_CALLBACK
+  );
+  $items['scratchpads'] = array(
+    'title' => 'Scratchpad List',
+    'page callback' => 'scratchpadify_list_scratchpads',
+    'access arguments' => array('access content'),
+    'file' => 'scratchpadify.list.inc',
     'type' => MENU_CALLBACK
   );
   return $items;
