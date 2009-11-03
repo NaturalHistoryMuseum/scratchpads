@@ -302,7 +302,7 @@ function scratchpadify_list_scratchpads(){
   foreach($sites as $domain => $title){
     $items[] = l($title . ' (http://' . $domain . ')', 'http://'.$domain);
   }
-  return theme('item_list', $items);
+  return theme('item_list', $items, count($sites).' sites');
 }
 
 /**
