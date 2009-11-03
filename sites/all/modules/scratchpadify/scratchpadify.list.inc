@@ -8,7 +8,7 @@ function scratchpadify_list_scratchpads($output='HTML'){
     $sites = variable_get('scratchpadify_sites_list',array());
     $items = array();
     foreach($sites as $domain => $title){
-      $items[] = l($title . '(http://' . $domain . ')', 'http://'.$domain);
+      $items[] = l($title . ' (http://' . $domain . ')', 'http://'.$domain);
     }
     return theme('item_list', $items);
   } else {
