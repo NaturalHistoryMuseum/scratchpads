@@ -71,6 +71,7 @@ function scratchpadify_cron(){
     if($last_updated < time()-86400){// 86400 = seconds in a day
       // Also update the sites list for this site
       variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
+      variable_set('scratchpadify_last_updated', time());
     }
   }
 }
