@@ -2,6 +2,9 @@
 
 function scratchpadify_views_default_views(){
   // Lets get all the content types
+  if(!function_exists('content_types')){
+    return;
+  }
   $content_types = content_types();
   /*
    * What do we need from hook_ispecies array
