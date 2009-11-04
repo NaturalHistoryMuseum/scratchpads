@@ -27,9 +27,13 @@ else{
 	$files = array_merge(scandir("/var/www/html/sites"),scandir("/var/www/drupal6/sites"));
 	$domains = array();
 	for ($i=2;$i<count($files);$i++){
-	  if (substr($files[$i],0,3)!="www"
+	  if (
+	    substr($files[$i],0,3)!="d6." 
+      && substr($files[$i],0,3)!="www"
+      && substr($files[$i],0,1)!="."
+      && substr($files[$i],-3,3)!="dev"
 	    && $files[$i]!="all"
-            && $files[$i]!=".svn"
+      && $files[$i]!=".svn"
 	    && $files[$i]!="default"
 	    && $files[$i]!="default.myspecies.info"
 	    && $files[$i]!="edit.nhm.ac.uk"
@@ -49,31 +53,42 @@ else{
 	  ?>document.write('<style type="text/css">.listhidden{display:none}.listnothidden{display:inline}.siteslistlinks a{position:relative;padding: 3px 20px;margin:3px;}</style><h3 style="padding:0;margin:0;line-height:12px;font-weight:normal">Sort by</h3><h3 class="siteslistlinks"><a onclick="prevBlock(\'allsites\');" class="listhidden" id="prevscratchpads">&lt; Previous</a><a onclick="sortDivs(\'allsites\',\'nodes\');" id="sortbynodes"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Nodes</a><a onclick="sortDivs(\'allsites\',\'domain\');" id="sortbydomain"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Domain</a><a onclick="sortDivs(\'allsites\',\'views\');" id="sortbyviews"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/desc.gif"/>Views</a><a onclick="sortDivs(\'allsites\',\'random\');" id="sortbyrandom"><img src="http://scratchpads.eu/sites/all/modules/tablesorter/extras/blue/bg.gif"/>Random</a><a id="nextscratchpads" style="listnothidden" onclick="nextBlock(\'allsites\');">Next &gt;</a></h3><div id="allsites"><?php
 	  $number_visible = 15;
 	  $visible_count = 0;
+	  $domains = array_unique($domains);
 	  shuffle($domains);
 	  $domain_array = array();
+	  print_r($domains);exit;
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
-	    mysql_select_db($short_domain); // Do I need to do this if I specify a database in the select statement. DUMB!
-	    $nodes = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(nid) AS nodes FROM node;")));
-      $users = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(uid) AS users FROM users")));
-      $views = 0;
-      $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
-	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
-      $output_before = '<div style="float:left;height:270px;width:300px;" ';
-      $output_after = 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
-      while(isset($domain_array[$views])){
-        $views += 1;
-      }
-	    $domain_array[$views] = array(
-	      'views' => $views,
-	      'nodes' => $nodes,
-	      'domain' => $domain,
-	      'users' => $users,
-	      'output_before' => $output_before,
-	      'output_after' => $output_after,
-	      'random' => $visible_count
-	    );
-      $visible_count ++;
+	    if(!mysql_select_db($short_domain)){ // Do I need to do this if I specify a database in the select statement. DUMB!
+	      // Connection failed, must be d6 style.
+	      if(mysql_select_db(preg_replace("/[\.\-]+/","",$domain))){
+	        $connected = TRUE;
+	      }
+	    } else {
+	      $connected = TRUE;
+	    }
+	    if($connected){	      
+  	    $nodes = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(nid) AS nodes FROM node;")));
+        $users = array_pop(mysql_fetch_array(mysql_query("SELECT COUNT(uid) AS users FROM users")));
+        $views = 0;
+        $views += array_pop(mysql_fetch_array(mysql_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;")));
+  	    $site_title = htmlspecialchars(unserialize(array_pop(mysql_fetch_array(mysql_query("SELECT value FROM variable WHERE name='site_name';")))),ENT_QUOTES);
+        $output_before = '<div style="float:left;height:270px;width:300px;" ';
+        $output_after = 'nodes="'.$nodes.'" domain="'.$domain.'" views="'.$views.'" random="'.$visible_count.'"><a href="http://'.$domain.'"><img id="img'.$short_domain.'" src="http://quartz.nhm.ac.uk/screenshots/'.$domain.'.medium.drop.png" style="border:0;padding:0;margin:0;" onMouseOver="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',image'.$short_domain.');" onMouseOut="mouseOverScreenshots(\\\'img'.$short_domain.'\\\',originalimage'.$short_domain.');"/></a><br/>'.$site_title.'</div>';
+        while(isset($domain_array[$views])){
+          $views += 1;
+        }
+  	    $domain_array[$views] = array(
+  	      'views' => $views,
+  	      'nodes' => $nodes,
+  	      'domain' => $domain,
+  	      'users' => $users,
+  	      'output_before' => $output_before,
+  	      'output_after' => $output_after,
+  	      'random' => $visible_count
+  	    );
+        $visible_count ++;
+	    }
     }
     krsort($domain_array, SORT_NUMERIC);
     $visible_count=0;
