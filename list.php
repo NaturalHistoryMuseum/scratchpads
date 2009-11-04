@@ -35,7 +35,7 @@ else{
 	    && $files[$i]!="all"
       && $files[$i]!=".svn"
 	    && $files[$i]!="default"
-	    && $files[$i]!="default.myspecies.info"
+	    && $files[$i]!="defaultscratch.myspecies.info"
 	    && $files[$i]!="edit.nhm.ac.uk"
 	    && $files[$i]!="scratchpads.eu"
 	    && $files[$i]!="bibref.editwebrevisions.info"
@@ -60,7 +60,7 @@ else{
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
 	    if(!mysql_select_db($short_domain)){ // Do I need to do this if I specify a database in the select statement. DUMB!
 	      // Connection failed, must be d6 style.
-	      if(mysql_select_db(preg_replace("/[\.\-]+/","",$domain))){
+	      if(mysql_select_db(preg_replace("/[\.-]/","",$domain))){
 	        $connected = TRUE;
 	      }
 	    } else {
