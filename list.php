@@ -56,7 +56,6 @@ else{
 	  $domains = array_unique($domains);
 	  shuffle($domains);
 	  $domain_array = array();
-	  print_r($domains);exit;
 	  foreach ($domains as $domain){
 	    $short_domain = str_replace('-','',array_shift(explode('.',$domain)));
 	    if(!mysql_select_db($short_domain)){ // Do I need to do this if I specify a database in the select statement. DUMB!
