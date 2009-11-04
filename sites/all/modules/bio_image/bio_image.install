@@ -35,6 +35,9 @@ function bio_image_install(){
         array (
           'name' => 'Light Micrograph', 
           'description' => 'Captured through a regular microscope.' ), 
+        array(
+          'name' => 'Scan',
+          'description' => 'A scan of a printed image/diagram/text'),
         array (
           'name' => 'Scanning Electron Micrograph', 
           'description' => 'Captured through a Scanning Electron Microscope.' ), 
@@ -176,4 +179,20 @@ function bio_image_uninstall(){
       taxonomy_del_vocabulary ( $vocabulary->vid );
     }
   }
+}
+
+function bio_image_update_6101(){
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocab){
+    if($vocab->name == 'Imaging Technique'){// I feel dirty!
+      $additional_terms = array(
+        array('name' => 'Scan','description' => 'A scan of a printed image/diagram/text')
+      );
+      foreach($additional_terms as $term){
+        $term['vid'] = $vocab->vid;
+        taxonomy_save_term($term);
+      }
+    }
+  }
+  return array('#finished' => TRUE);
 }
