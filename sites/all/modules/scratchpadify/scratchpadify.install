@@ -243,3 +243,8 @@ function scratchpadify_update_6117(){
   variable_del('scratchpadify_last_reported');
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6118(){
+  variable_set('preprocess_js', 0);
+  return array('#finished' => TRUE);
+}
