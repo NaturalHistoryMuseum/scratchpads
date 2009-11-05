@@ -74,7 +74,7 @@ function _femail_post_comment($msg, $user, $status){
   // First we'll make sure the in-reply-to is in the msgid table, if not, we
   // will have to add this as a new thread.
   if(isset($msg['in-reply-to'])){
-    db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
+    $result = db_query("SELECT cid, nid FROM {femail_msgs} WHERE msgid = '%s'", $msg['in-reply-to']);
   } else {
     // We need to select the nid and 0 as cid from node where title is the same
     // as the subject line (less "re:")
