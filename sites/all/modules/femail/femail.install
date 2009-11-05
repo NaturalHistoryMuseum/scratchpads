@@ -60,6 +60,21 @@ function femail_install(){
   
   // Finally set a variable so that we know what the id is of this format
   variable_set('femail_input_format', $format);
+  
+  // Set the order, so that the line break thingy is after the html thingy
+  $form_state = array(
+    'values' => array(
+      'weights' => array(
+        'femail/0' => -9,
+        'femail/1' => -8,
+        'filter/0' => -7,
+        'filter/1' => -6,
+        'filter/2' => -10
+      ),
+      'format' => $format
+    )
+  );
+  filter_admin_order_submit(NULL, $form_state);
 }
 
 
@@ -191,6 +206,21 @@ function femail_update_6102(){
   
   // Finally set a variable so that we know what the id is of this format
   variable_set('femail_input_format', $format);
+  
+  // Set the order, so that the line break thingy is after the html thingy
+  $form_state = array(
+    'values' => array(
+      'weights' => array(
+        'femail/0' => -9,
+        'femail/1' => -8,
+        'filter/0' => -7,
+        'filter/1' => -6,
+        'filter/2' => -10
+      ),
+      'format' => $format
+    )
+  );
+  filter_admin_order_submit(NULL, $form_state);
   
   return array('#finished' => TRUE);
 }
