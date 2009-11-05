@@ -65,11 +65,11 @@ function femail_install(){
   $form_state = array(
     'values' => array(
       'weights' => array(
-        'femail/0' => -9,
-        'femail/1' => -8,
-        'filter/0' => -7,
+        'femail/0' => -8,
+        'femail/1' => -7,
+        'filter/0' => -10,
         'filter/1' => -6,
-        'filter/2' => -10
+        'filter/2' => -9
       ),
       'format' => $format
     )
@@ -211,11 +211,11 @@ function femail_update_6102(){
   $form_state = array(
     'values' => array(
       'weights' => array(
-        'femail/0' => -9,
-        'femail/1' => -8,
-        'filter/0' => -7,
+        'femail/0' => -8,
+        'femail/1' => -7,
+        'filter/0' => -10,
         'filter/1' => -6,
-        'filter/2' => -10
+        'filter/2' => -9
       ),
       'format' => $format
     )
