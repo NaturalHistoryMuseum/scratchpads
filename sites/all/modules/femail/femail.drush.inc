@@ -95,7 +95,8 @@ function _femail_post_comment($msg, $user, $status){
         'op' => 'Save',
         'date' => 'now',
         'name' => $user->name,
-        'status' => $status
+        'status' => $status,
+        'format' => variable_get('femail_input_format', NULL)
       );
       $cid = comment_save($edit);
       watchdog('femail','Posted forum comment: '.l($msg['title'], 'node/'.$row['nid'], array('fragment', 'comment-'.$cid)));
@@ -121,6 +122,7 @@ function _femail_post_forum_topic($msg, $user, $status){
   $node->type = 'forum';
   $node->taxonomy = array($term->vid => $tid);
   $node->status = $status;
+  $node->format = variable_get('femail_input_format', NULL);
   node_save($node);
   watchdog('femail','Posted forum topic: '.l($node->title,'node/'.$node->nid), array(), WATCHDOG_INFO);
 }
