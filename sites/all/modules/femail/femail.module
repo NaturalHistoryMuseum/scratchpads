@@ -34,6 +34,25 @@ function femail_menu(){
   );
 }
 
+/**
+ * Implementation of hook_form_alter
+ */
+function femail_form_alter($form, $form_state, $form_id){
+  if($form_id == 'forum_node_form' || $form_id == 'comment_form'){
+    if($form_id == 'forum_node_form'){
+      $part = 'body_field';
+    } else {
+      $part = 'comment_filter';
+    }
+    $format = variable_get('femail_input_format', 4);
+    foreach($form[$part]['format'] as $key => $array){
+      if(is_numeric($key) && isset($array['#default_value'])){
+        $form[$part]['format'][$key]['#default_value'] = $format;
+      }
+    }
+  }
+}
+
 
 /**
  * Implementation of hook_mail
