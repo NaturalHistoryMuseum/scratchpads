@@ -49,6 +49,10 @@ function batax_form_alter(&$form, &$form_state, $form_id){
       $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($edit['tid'])), $form['#vocabulary']['vid'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
     }
   } elseif ($form['#id'] == 'node-form'){
+    if($form_state['submitted'] && $form_state['clicked_button']['#id'] == 'edit-delete'){
+      unset($form_state['storage']['batax']);
+      drupal_goto('node/' . $form['nid']['#value'] . '/delete');
+    }
     if(isset($form['taxonomy'])){
       // Check for autotag module
       $ignore_vids = array();
