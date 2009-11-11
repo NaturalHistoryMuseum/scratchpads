@@ -273,7 +273,7 @@ function citation_get_citations(){
   $citations = array();
   if(isset($_SESSION['citation'][$_GET['page']]['nids']) && is_array($_SESSION['citation'][$_GET['page']]['nids']) && count($_SESSION['citation'][$_GET['page']]['nids'])){
     $nids = $_SESSION['citation'][$_GET['page']]['nids'];
-    $results = db_query("SELECT DISTINCT uid FROM {node_revisions} WHERE nid IN (%s)", implode(",", $_SESSION['citation'][$_GET['page']]['nids']));
+    $results = db_query("SELECT DISTINCT uid FROM {node} WHERE nid IN (%s)", implode(",", $_SESSION['citation'][$_GET['page']]['nids']));
     while($row = db_fetch_array($results)){
       $user = user_load($row['uid']);
       $citations[] = l(theme('citation_user', $user), 'user/' . $user->uid);
