@@ -403,6 +403,7 @@ function scratchpad_profile_tasks_2(){
         'justifyleft' => 1,
         'justifycenter' => 1,
         'justifyfull' => 1,
+        'justifyright' => 1,
         'bullist' => 1,
         'numlist' => 1,
         'outdent' => 1,
