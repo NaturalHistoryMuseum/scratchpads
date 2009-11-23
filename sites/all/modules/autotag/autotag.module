@@ -104,10 +104,10 @@ function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
         }      
       }
       if($terms_are_objects){
-        taxonomy_node_save($node, array_keys($terms));
-      } else {
-        taxonomy_node_save($node, array_unique(array_flatten(array($terms))));
+        $terms = array_unique(array_flatten(array($terms)));
       }
+      $terms['tags'] = $node->taxonomy['tags'];
+      taxonomy_node_save($node, $terms);
       _autotag_update_table($node->nid, $tids_to_ignore);
       break;
   }
