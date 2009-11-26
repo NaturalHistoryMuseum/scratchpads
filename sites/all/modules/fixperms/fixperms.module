@@ -14,6 +14,35 @@ function fixperms_form_alter(&$form, $form_state, $form_id){
     $form['#submit'][] = 'fixperms_submit';
   }
 }
+
+/**
+ * Implementation of hook_menu
+ */
+function fixperms_menu(){
+  return array(
+    'admin/settings/fixperms' => array(
+      'title' => 'Fixperms settings',
+      'description' => 'Change the default Fixperms settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('fixperms_admin_settings'),
+      'access arguments' => array('administer site configuration')
+    )
+  );
+}
+
+/**
+ * Callback for Fixperms admin
+ */
+function fixperms_admin_settings(){  
+  $form['fixperms_do_not_remove'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Do not remove additional permissions.'),
+    '#default_value' => variable_get('fixperms_do_not_remove', false),
+    '#description' => t('If checked, additional permissions added to the permissions table will not be removed.')
+  );
+  return system_settings_form($form);
+}
+
 /**
  * Fix the perms on cron.
  */
@@ -32,15 +61,18 @@ function fixperms_submit(){
   }
   $content_types = array_keys(content_types());
   $perms = fixperms_perm();
+  $fixperms_do_not_remove = variable_get('fixperms_do_not_remove', false);
   foreach($current_permissions as $rid => $permission){
     foreach($perms as $perm){
       // If the perm is in the current_permission, then we need to set all the
       // content type permissions, else we need to remove them.
       if(strpos($permission,$perm) === FALSE){
-        // The string isn't in there, we need to remove all the content type 
-        foreach($content_types as $type){
-          $type = str_replace("type", $type, $perm).", ";
-          $permission = str_replace($type, "", $permission);
+        if(!$fixperms_do_not_remove){
+          // The string isn't in there, we need to remove all the content type 
+          foreach($content_types as $type){
+            $type = str_replace("type", $type, $perm).", ";
+            $permission = str_replace($type, "", $permission);
+          }
         }
       } else {
         // String is in there, lets add all the content type values 
