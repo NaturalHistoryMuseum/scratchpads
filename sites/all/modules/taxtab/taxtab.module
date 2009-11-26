@@ -10,6 +10,7 @@
  * Implementation of hook_form_alter()
  */
 function taxtab_form_alter(&$form, &$form_state, $form_id){
+  drupal_add_css(drupal_get_path('module','taxtab').'/taxtab.css');
   if ('search_block_form' == $form_id) {
     $form['submit']['#value'] = t('Go!');
     $form['search_block_form']['#title'] = '';
