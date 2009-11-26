@@ -28,9 +28,9 @@ function scratchpad_profile_modules(){
     // No requirements/Other
       'biblio','boost','node_import','creativecommons_lite','simplenews',
       'advanced_help','auto_nodetitle','checkbox_validate','clone',
-      'globalredirect','legal','path_redirect','pathauto','quote','robotstxt',
+      'globalredirect','legal','path_redirect','pathauto','quote','statistics',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','wysiwyg','print','sharethis','imce','imce_wysiwyg',
+      'jstools','wysiwyg','print','sharethis','imce','imce_wysiwyg','robotstxt',
     // Spam control
       'mollom','hashcash',
     // JQuery
