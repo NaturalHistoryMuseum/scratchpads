@@ -364,23 +364,35 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     // submits)
     $form['buttons']['submit']['#submit'] = array('autotag_form_submit');
     $form['#submit'] = array();
-  
-    // Add 'upload_node_form_submit' - it's special!!
-    /*
-    $key = array_search('upload_node_form_submit', $form_state['storage']['formsubmit']);
-    if($key){
-      $form['#submit'][] = 'upload_node_form_submit';
-    }
-    $key = array_search('upload_node_form_submit', $form_state['storage']['formbuttons']['submit']['#submit']);
-    if($key){
-      $form['buttons']['submit']['#submit'] = array('upload_node_form_submit','autotag_form_submit');
-    }
-    */
   } else {
     // Else we likely have either a submitted form, or one with post shit
     if(count($form_state['storage']['formsubmitted'])){
       // Restore the values to the form from t' previous page.
       $form = $form_state['storage']['formsubmitted'];
+      // We're going to have to look for nodereference fields here, specifically
+      // the autocomplete variety.  I suspect this is a bug with the 
+      // nodereference module, and not autotag, but I'm not certain where the
+      // bug actually is.  Surely CCK/Nodereference should be setting the #value
+      // part of the field array!
+      foreach($form['#field_info'] as $field => $field_details){
+        if($field_details['type_name'] == 'nodereference' && $field_details['widget']['type'] == 'nodereference_autocomplete'){
+          //print_r($field);exit;
+          // We've got a node reference, lets fix it dude!
+          // Check first if the field is a root field, if not, its part of a
+          // group, and we'll need to hunt it down!
+          if(isset($form[$field])){
+            $form[$field][0]['#value'] = $form[$field][0]['#post'][$field][0]['nid'];    
+          } else {
+            foreach($form as $group => $group_array){
+              if(is_array($group_array) && isset($group_array[$field]) && $group_array['#type'] == 'fieldset'){
+                // FOUND IT!
+                $form[$group][$field][0]['#value'] = $form[$group][$field][0]['#post'][$field][0]['nid'];
+                break;                
+              }
+            }
+          } 
+        }
+      }
       unset($form_state['storage']['formsubmitted']);
       $form['buttons'] = $form_state['storage']['formbuttons'];
       $form['#submit'] = $form_state['storage']['formsubmit'];
