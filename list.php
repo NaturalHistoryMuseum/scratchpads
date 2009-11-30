@@ -1,6 +1,6 @@
 <?php
 
-// Broken!
+// Broken, will be rewritten into a module (perhaps)
 
 header("Content-Type: text/html;charset=ISO-8859-1");
 
