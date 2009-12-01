@@ -27,7 +27,10 @@ function mado_get_blocks($all_views = FALSE){
         'og_search',
         'og_tracker',
         'og_unread',
-        'taxonomy_term'
+        'taxonomy_term',
+        'matrix_page',
+        'matrix_editor_specimens',
+        'matrix_images'
       ),
       'blocks' => array(
         'boost' => array('all' => TRUE),
