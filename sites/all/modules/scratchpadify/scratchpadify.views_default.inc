@@ -17,6 +17,10 @@ function scratchpadify_views_default_views(){
   // Don't create the following views
   unset($content_types['ispecies']);
   unset($content_types['glossary']);
+  unset($content_types['nexus_project']);
+  unset($content_types['nexus_free_state']);
+  unset($content_types['nexus_note']);
+  unset($content_types['nexus_controlled_state']);
   
   foreach($content_types as $type => $type_details){
     // Begin copy and paste of output from the Export tab of a view.
