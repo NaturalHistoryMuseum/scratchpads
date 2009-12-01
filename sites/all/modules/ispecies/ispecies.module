@@ -108,7 +108,7 @@ function ispecies_get_data($module, $tid){
  * Implementation of hook_init
  */
 function ispecies_init(){
-  if(is_numeric(arg(2)) && arg(0)=='taxonomy' && arg(1)=='term'){
+  if((is_numeric(arg(2)) && arg(0)=='taxonomy' && arg(1)=='term')||arg(0) == 'madofrontpage'){
     ispecies_add_js(arg(2));
   }
 }
