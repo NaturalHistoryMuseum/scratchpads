@@ -296,8 +296,7 @@ function scratchpad_profile_tasks_2(){
   variable_set('mollom_public_key','ebe52536e33b662497bad0f451187161');
   variable_set('mollom_private_key','f86117722dcd1d12aa1a1065edfb0fb2');
 
-  // Boost/Performance
-  variable_set('boost_enabled',1);
+  // Performance
   variable_set('preprocess_css',1);
   variable_set('preprocess_js',1);
   
