@@ -645,21 +645,21 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             return;
           }
           if(trim($scratchpad_notification['message']) != ''){
-            $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
+            $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.base_path().url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
           }
           return array('subject' => '', 'content' => $scratchpad_notification['message']);
       }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
       if($delta == 0){
-        $form['additional_text']=array(
-          '#description' => t('Enter any additional text you would like above the statistics.'),
-          '#title' => t('Additional text'),
-          '#type' => 'textfield',
-          '#weight' => -9,
-          '#default_value' => variable_get('scratchpadify-stats-block-text','')
+        return array('additional_text' => array(
+            '#description' => t('Enter any additional text you would like above the statistics.'),
+            '#title' => t('Additional text'),
+            '#type' => 'textfield',
+            '#weight' => -9,
+            '#default_value' => variable_get('scratchpadify-stats-block-text','')
+          )
         );
-        return $form;
       }
     case 'save':
       if($delta == 0){
