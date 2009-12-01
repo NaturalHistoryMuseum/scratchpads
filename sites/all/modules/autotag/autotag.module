@@ -375,7 +375,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
       // bug actually is.  Surely CCK/Nodereference should be setting the #value
       // part of the field array!
       foreach($form['#field_info'] as $field => $field_details){
-        if($field_details['type_name'] == 'nodereference' && $field_details['widget']['type'] == 'nodereference_autocomplete'){
+        if($field_details['widget']['type'] == 'nodereference_autocomplete'){
           //print_r($field);exit;
           // We've got a node reference, lets fix it dude!
           // Check first if the field is a root field, if not, its part of a
