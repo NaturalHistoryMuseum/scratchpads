@@ -282,7 +282,10 @@ function scratchpadify_form_alter($form, $form_state, $form_id){
     if($form['type']['#value'] == 'image'){
       $vid = variable_get('image_gallery_nav_vocabulary',0);
       if(is_array($form['taxonomy'][$vid]) && (!isset($form['taxonomy'][$vid]['#description']) || trim($form['taxonomy'][$vid]['#description']) == '')){
-        $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/image/add', array('query' => array('sidebar' => 'no', 'destination' => 'node/add/image'))) . ".  (".t('N.B. Any changes you have made on this page will be lost').")";
+        $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
+        if($vid){
+          $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/taxonomy/'.$vid.'/add/term') . ".  (".t('N.B. Any changes you have made on this page will be lost').")";
+        }
       }
     }
     else if($form['type']['#value'] == 'biblio'){
