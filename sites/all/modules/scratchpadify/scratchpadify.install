@@ -184,7 +184,9 @@ function scratchpadify_update_6118(){
   return array('#finished' => TRUE);
 }
 
-function scratchpadify_update_6119(){
+// 6119 removed as 6120 replaces it completely.
+
+function scratchpadify_update_6120(){
   // Setup TinyMCE and WYSIWYG
   $tinymce_settings = array(
     'default' => 1,
@@ -226,6 +228,9 @@ function scratchpadify_update_6119(){
       'paste' => array(
         'pasteword' => 1,
         'pastetext' => 1
+      ),
+      'table' => array(
+        'tablecontrols' => 1
       ),
       'safari' => array(
         'safari' => 1

@@ -428,6 +428,9 @@ function scratchpad_profile_tasks_2(){
         'pasteword' => 1,
         'pastetext' => 1
       ),
+      'table' => array(
+        'tablecontrols' => 1
+      ),
       'safari' => array(
         'safari' => 1
       ),
