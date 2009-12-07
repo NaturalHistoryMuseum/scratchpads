@@ -259,3 +259,8 @@ function scratchpadify_update_6120(){
   db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6121(){
+  variable_set('statistics_count_content_views', 1);
+  return array('#finished' => TRUE);
+}
