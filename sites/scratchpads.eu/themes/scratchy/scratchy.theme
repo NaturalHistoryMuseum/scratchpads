@@ -176,7 +176,7 @@ function scratchy_primarylinks($links, $css){
     }
     $output .='>'.$link['title'].'</a></li>';
     */
-    $output .= '<li>'.l($link['title'], $link['href'], $link['attributes'], $link['query'], $link['fragment'], FALSE, $html).'</li>';
+    $output .= '<li>'.l($link['title'], $link['href']).'</li>';
   }
   $output .= '</ul>';
   return $output;
@@ -260,7 +260,7 @@ function scratchy_comment($comment, $node, $links = array()) {
   </div>
   <div class="boxcontent">
     <div class="boxtitle-none boxtitle">
-      <h1>'. l($comment->subject, $_GET['q'], NULL, NULL, "comment-$comment->cid") .'</h1>
+      <h1>'. l($comment->subject, $_GET['q'], array('class' => comment-$comment->cid)) .'</h1>
     </div>
     <div class="subboxcontent">
       <div class="content">'.$comment->comment.'</div>
