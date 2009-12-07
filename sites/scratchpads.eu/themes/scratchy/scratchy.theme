@@ -54,7 +54,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
     }
   }
   $output .='</div>';
-  $primary_links = theme('primarylinks', menu_primary_links(), array('class' => 'links'));
+  $primary_links = scratchy_primarylinks(menu_primary_links(), array('class' => 'links'));
   if (isset($primary_links) || isset($secondary_links)) {
     $output .='<div class="navlinks">';
     if (isset($primary_links)) {
