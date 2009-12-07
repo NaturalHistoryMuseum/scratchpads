@@ -264,3 +264,12 @@ function scratchpadify_update_6121(){
   variable_set('statistics_count_content_views', 1);
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6122(){
+  // The creativecommons_lite module has not been professionally maintained, 
+  // leaving us in a shite situation.  This fixes the modules shitness.
+  $ret = array();
+  $ret[] = update_sql('ALTER TABLE creativecommons_lite CHANGE data license VARCHAR(12)');
+  $ret[] = update_sql('ALTER TABLE creativecommons_lite DROP COLUMN id;');
+  return $ret;
+}
