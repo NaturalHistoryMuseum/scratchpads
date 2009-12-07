@@ -1,27 +1,13 @@
 <?php
 // $Id$
-
 /**
- * @file
- * A slim, CSS-driven theme which does not depend on a template engine like phptemplate
+ * Implementation of hook_theme. Auto-discover theme functions.
  */
-
-function scratchy_features() {
-  return array(
-       'toggle_logo',
-       'toggle_favicon',
-       'toggle_name',
-       'toggle_mission');
+function scratchy_theme($existing, $type, $theme, $path) {
+  return drupal_find_theme_functions($existing, array($theme));
 }
 
-function scratchy_regions() {
-  return array(
-       'right' => t('Right sidebar'),
-       'bottom' => t('Bottom footer')
-  );
-}
-
-function scratchy_page($content, $show_blocks = TRUE) {
+function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   $language = $GLOBALS['locale'];
   if (theme_get_setting('toggle_favicon')) {
     drupal_set_html_head('<link rel="shortcut icon" href="'. check_url(theme_get_setting('favicon')) .'" type="image/x-icon" />');
@@ -109,7 +95,7 @@ function scratchy_page($content, $show_blocks = TRUE) {
       }
     }
   }
-  
+
   if ($tabs = theme('menu_local_tasks')) {
     $output .= $tabs;
   }
@@ -262,7 +248,7 @@ function scratchy_node($node, $teaser = 0, $page = 0) {
   return $output;
 }
 
-function scratchy_comment($comment, $links = "") {
+function scratchy_comment($comment, $node, $links = array()) {
   $submitted['comment_submitted'] = array(
     'title' => t('By !author at @date', array('!author' => theme('username', $comment), '@date' => format_date($comment->timestamp, 'small'))),
     'html' => TRUE,
@@ -289,7 +275,7 @@ function scratchy_comment($comment, $links = "") {
   return $output;
 }
 
-function scratchy_menu_local_tasks($args1, $args2){
+function scratchy_menu_local_tasks(){
   $output = '';
   if ($primary = menu_primary_local_tasks()) {
     $output .= '<ul class="primary">'. $primary .'</ul>';
@@ -306,6 +292,8 @@ function scratchy_help() {
   }
 }
 
+/**
+ * FIXME - This doesn't work!  Will use the default maintenance theme for now.
 function scratchy_maintenance_page($content, $messages = TRUE, $partial = FALSE) {
   drupal_set_header('Content-Type: text/html; charset=utf-8');
   drupal_add_css(path_to_theme() .'/common.css', 'theme');
@@ -333,6 +321,7 @@ function scratchy_maintenance_page($content, $messages = TRUE, $partial = FALSE)
 
   return $output;
 }
+*/
 
 function scratchy_block($block) {
   if(strpos($block->content,'class="boxtop"')>0 || $block->region != 'right'){
