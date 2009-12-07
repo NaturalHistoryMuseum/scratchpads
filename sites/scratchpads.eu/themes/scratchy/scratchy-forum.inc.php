@@ -224,6 +224,17 @@ function _scratchy_forum_list($forums, $parents, $tid) {
 
 }
 
+// No longer in D6, so here instead!
+function _forum_format($topic) {
+  if ($topic && $topic->timestamp) {
+    return t('@time ago<br />by !author', array('@time' => format_interval(time() - $topic->timestamp), '!author' => theme('username', $topic)));
+  }
+  else {
+    return t('n/a');
+  }
+}
+
+
 function _scratchy_theme_forum($node, $teaser, $page){
   
   $parents = taxonomy_get_parents_all($node->tid);  
