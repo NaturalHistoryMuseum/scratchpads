@@ -4,14 +4,11 @@
  * Implementation of hook_theme. Auto-discover theme functions.
  */
 function scratchy_theme($existing, $type, $theme, $path) {
-  return array_merge(
-    drupal_find_theme_functions($existing, array($theme)),
-    array(
-      'scratchy_primarylinks' => array(
-        'arguments' => array('links'=> NULL, 'css'=> NULL)
-      )
-    )
+  $theme_array = drupal_find_theme_functions($existing, array($theme));
+  $theme_array['scratchy_primarylinks'] = array(
+    'arguments' => array('links'=> NULL, 'css'=> NULL)
   );
+  return $theme_array;
 }
 
 function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
