@@ -5,7 +5,7 @@
  */
 function scratchy_theme($existing, $type, $theme, $path) {
   $theme_array = drupal_find_theme_functions($existing, array($theme));
-  $theme_array['scratchy_primarylinks'] = array(
+  $theme_array['primarylinks'] = array(
     'arguments' => array('links'=> NULL, 'css'=> NULL)
   );
   return $theme_array;
