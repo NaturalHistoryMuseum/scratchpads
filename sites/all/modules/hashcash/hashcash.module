@@ -110,8 +110,9 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
   if (($hc_addorignore && in_array($form_id,$hc_form_ids)) || 
       (!$hc_addorignore && !in_array($form_id,$hc_form_ids))){
     // Looks like we're adding the hashcash.
-    // Hidden form field which will contain the hashcash once the client "changes" it
-    $form['hashcash'] = array( // Should probably check that this isn't already set. FIXME
+    // Hidden form field which will contain the hashcash once the client
+    // "changes" it
+    $form['hashcash'] = array(
       '#type' => 'hidden',
       '#default_value' => $form_id,
       '#id' => 'hashcash-'.$form_id
@@ -127,10 +128,7 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
     // Check to see if the user has Javascript, and if not, we'll show a polite
     // warning, and disable the form submission button(s)
     if(count($_COOKIE) && (!isset($_COOKIE['has_js']) || (!$_COOKIE['has_js']))){
-      drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page has been disabled as you do not have JavaScript enabled in your browser.')), 'status', FALSE);
-      if(isset($form['submit'])){
-        $form['submit']['#disabled'] = TRUE;
-      }
+      drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page may not work as you do not appear to have JavaScript enabled in your browser.')), 'error', FALSE);
     }
   }
 }
@@ -161,7 +159,7 @@ function hashcash_validate($form, $form_state){
           $hashcash_parts[5] = 'NOT SET';
         }
         watchdog('hashcash',$hashcash_parts[1].':'.date('ymd').' - '.$hashcash_parts[2].':'.$form['form_id']['#value'].' - '.$hashcash_parts[3].':'.ip_address().' - '.$hashcash_parts[4].':'.$cookie_domain.' - '.$hashcash_parts[5]);
-        form_set_error('hashcash',t('Your hashcash string is not valid. Are you a spammer?'));
+        form_set_error('hashcash','<p>'.t('Your hashcash string is not valid.').'</p><p>'.t('Please try "Hard-refreshing" this page (Most users should press Ctrl-F5)'));
       } else {
         // Everything fine so far, final check.
         // Has this been used before?
