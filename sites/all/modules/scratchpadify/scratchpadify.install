@@ -273,3 +273,11 @@ function scratchpadify_update_6122(){
   $ret[] = update_sql('ALTER TABLE creativecommons_lite DROP COLUMN id;');
   return $ret;
 }
+
+function scratchpadify_update_6123(){
+  // Update permissions
+  require_once("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+}
