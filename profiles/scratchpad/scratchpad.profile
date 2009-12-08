@@ -30,7 +30,7 @@ function scratchpad_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone',
       'globalredirect','legal','path_redirect','pathauto','quote','statistics',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','wysiwyg','print','sharethis','imce','imce_wysiwyg',
+      'jstools','wysiwyg','print','imce','imce_wysiwyg',
     // Spam control
       'mollom','hashcash',
     // JQuery
@@ -367,9 +367,6 @@ function scratchpad_profile_tasks_2(){
   // Change the newsletter name (Set to Drupal newsletter, as the site name
   // wasn't known when the module was installed).
   db_query("UPDATE {term_data} SET name = '%s' WHERE vid = '%d'", variable_get('site_name', 'Drupal')." ".st('newsletter'), variable_get('simplenews_vid',0));
-  
-  // Share this code
-  variable_set('sharethis_sharethis_this_code','<script type="text/javascript" src="http://w.sharethis.com/button/sharethis.js#publisher=d088be71-038a-4513-a8b7-3ee237518b9f&amp;type=website&amp;buttonText=&amp;send_services=email%2Csms&amp;post_services=facebook%2Cdigg%2Cdelicious%2Ctwitter%2Ctechnorati%2Cwordpress%2Clivejournal%2Cstumbleupon%2Cybuzz%2Creddit%2Cfriendfeed%2Cfriendster%2Cmixx%2Cblogger%2Ctypepad%2Cgoogle_bmarks%2Cwindows_live%2Cmyspace%2Cfark%2Cbus_exchange%2Cpropeller%2Cnewsvine%2Csphinn%2Clinkedin%2Cmeneame%2Cxanga%2Corkut%2Ckirtsy%2Cdiigo%2Cdealsplus%2Ccare2%2Cfresqui%2Cfunp%2Coknotizie%2Ccurrent%2Cfaves%2Cyigg%2Cslashdot%2Csimpy%2Cmister_wong%2Cblogmarks%2Cfurl%2Cblinklist%2Cn4g%2Cyahoo_bmarks"></script>');
   
   // Error level
   variable_set('error_level','0');
