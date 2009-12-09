@@ -37,15 +37,6 @@ function scratchpadify_filter_tips($tips='', $long = FALSE, $extra = '') {
   return '';
 }
 
-/*
-function phptemplate_filter_tips($tips, $long = FALSE, $extra = '') {
-  return '';
-}
-function phptemplate_filter_tips_more_info () {
-  return '';
-}
-*/
-
 function scratchpadify_cron(){
   // As a way of cleaning up the system table, we'll delete entries where the
   // files they point to don't exist.
@@ -54,24 +45,6 @@ function scratchpadify_cron(){
     if(!file_exists($row['filename'])){
       watchdog('scratchpadify','Excess entry in system table for "'.$row['filename'].'" has been removed');
       db_query("DELETE FROM {system} WHERE filename = '%s'", $row['filename']);
-    }
-  }
-  
-  // Don't report if we're the central site
-  if($_SERVER['HTTP_HOST'] != 'home.scratchpads.eu' && substr($_SERVER['HTTP_HOST'],0,3)!='d6.'){
-    // Once a week (this could be made more frequent) we'll report that we exist
-    // to a central repository which can then build a list of all Scratchpads.
-    $last_reported = variable_get('scratchpadify_last_reported',0);
-    if($last_reported < time()-604800){// 604800 = seconds in a week
-      // Send the update to our central server
-      file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST'].'/'.urlencode(variable_get('site_name','Scratchpad')));
-      variable_set('scratchpadify_last_reported', time());
-    }
-    $last_updated = variable_get('scratchpadify_last_updated',0);
-    if($last_updated < time()-86400){// 86400 = seconds in a day
-      // Also update the sites list for this site
-      variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
-      variable_set('scratchpadify_last_updated', time());
     }
   }
 }
@@ -99,21 +72,6 @@ function scratchpadify_menu(){
     'page callback' => 'scratchpadify_set_cookie',
     'access arguments' => array('access content'),
     'file' => 'scratchpadify.admin.inc',
-    'type' => MENU_CALLBACK
-  );
-  $items['report_scratchpad/%/%'] = array(
-    'title' => '',
-    'page callback' => 'scratchpadify_add_scratchpad_to_list',
-    'access arguments' => array('access content'),
-    'page arguments' => array(1, 2),
-    'file' => 'scratchpadify.list.inc',
-    'type' => MENU_CALLBACK
-  );
-  $items['scratchpads'] = array(
-    'title' => 'Scratchpad List',
-    'page callback' => 'scratchpadify_list_scratchpads',
-    'access arguments' => array('access content'),
-    'file' => 'scratchpadify.list.inc',
     'type' => MENU_CALLBACK
   );
   return $items;
@@ -466,11 +424,7 @@ style="border-width: 0pt;" src="'.base_path().drupal_get_path('module','scratchp
   <dc:type rdf:resource="http://purl.org/dc/dcmitype/Text" />
   </Work>
   <License rdf:about="http://creativecommons.org/licenses/by-nc-sa/3.0/"><permits rdf:resource="http://web.resource.org/cc/Reproduction"/><permits rdf:resource="http://web.resource.org/cc/Distribution"/><requires rdf:resource="http://web.resource.org/cc/Notice"/><requires rdf:resource="http://web.resource.org/cc/Attribution"/><prohibits rdf:resource="http://web.resource.org/cc/CommercialUse"/><permits rdf:resource="http://web.resource.org/cc/DerivativeWorks"/><requires rdf:resource="http://web.resource.org/cc/ShareAlike"/></License></rdf:RDF> --></div>
-<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-_uacct = "UA-2428547-2";
-urchinTracker();
-</script><div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft, Drupal Developer London</a> & Dave Roberts</div>';
+  <div style="display:none">Scratchpads developed and conceived by: <a href="http://vsmith.info/">Vince Smith</a>, <a href="http://simon.rycroft.name">Simon Rycroft, Drupal Developer London</a> & Dave Roberts</div>';
 }
 
 /**
