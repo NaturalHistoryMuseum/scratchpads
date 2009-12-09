@@ -7,7 +7,7 @@ function scratchpad_list_scratchpads($output='HTML'){
   if($output == 'HTML'){
     $sites = variable_get('scratchpad_sites_list',array());
     $items = array();
-    uksort($sites);
+    ksort($sites);
     foreach($sites as $data){
       $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']);
     }
