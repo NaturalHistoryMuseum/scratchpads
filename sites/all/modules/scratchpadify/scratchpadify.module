@@ -296,11 +296,11 @@ function scratchpadify_menu($may_cache){
  * Provides a page that lists all the Scratchpads.
  */
 function scratchpadify_list_scratchpads(){
-  $sites = variable_get('scratchpadify_sites_list',array());
-  uasort($sites, 'strnatcasecmp');
+  $sites = variable_get('scratchpad_sites_list',array());
   $items = array();
-  foreach($sites as $domain => $title){
-    $items[] = l($title . ' (http://' . $domain . ')', 'http://'.$domain);
+  ksort($sites);
+  foreach($sites as $data){
+    $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']);
   }
   return theme('item_list', $items, count($sites).' sites');
 }
@@ -331,16 +331,37 @@ function scratchpadify_cron(){
   variable_set("scratchpadify_cron", $run + 1);
   
   // Don't report if we're the central site
-  if($_SERVER['HTTP_HOST'] != 'home.scratchpads.eu' && substr($_SERVER['HTTP_HOST'],0,3)!='d6.'){
+  if(substr($_SERVER['HTTP_HOST'],0,4)!='dev.' && substr($_SERVER['HTTP_HOST'],0,3)!='d6.'){
     // Once a week (this could be made more frequent) we'll report that we exist
     // to a central repository which can then build a list of all Scratchpads.
-    $last_reported = variable_get('scratchpadify_last_reported',0);
-    if($last_reported < time()-604800){// 604800 = seconds in a week
+    if(variable_get('scratchpad_last_reported',0) < time()-604800){// 604800 = seconds in a week
       // Send the update to our central server
-      file_get_contents('http://home.scratchpads.eu/report_scratchpad/'.$_SERVER['HTTP_HOST'].'/'.urlencode(variable_get('site_name','Scratchpad')));
-      variable_set('scratchpadify_last_reported', time());
+      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
+      $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
+      $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
+      $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
+      $report_data = array(
+        'site_url' => $_SERVER['HTTP_HOST'],
+        'site_title' => variable_get('site_name','Scratchpad'),
+        'site_mission' => variable_get('site_mission',''),
+        'nodes' => $nodes['nodes'],
+        'users' => $users['users'] - 2,
+        'views' => $views['totalcount']
+      );
+      foreach($central_servers as $central_server){
+        file_get_contents($central_server . 'report_scratchpad/?data=' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!
+      }
+      variable_set('scratchpad_last_reported', time());
+    }
+    if(variable_get('scratchpad_last_updated',0) < time()-86400){// 86400 = seconds in a day
       // Also update the sites list for this site
-      variable_set('scratchpadify_sites_list', unserialize(file_get_contents('http://home.scratchpads.eu/scratchpads/serial')));
+      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
+      $sites = array();
+      foreach($central_servers as $central_server){
+        $sites = array_merge($sites, unserialize(file_get_contents($central_server . 'scratchpads/serial')));     
+      }
+      variable_set('scratchpad_sites_list', $sites);
+      variable_set('scratchpad_last_updated', time());
     }
   }
 }
