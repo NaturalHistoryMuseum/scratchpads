@@ -5,7 +5,7 @@
  */
 function scratchpad_list_scratchpads($output='HTML'){
   if($output == 'HTML'){
-    $sites = variable_get('scratchpadify_sites_list',array());
+    $sites = variable_get('scratchpad_sites_list',array());
     uasort($sites, 'strnatcasecmp');
     $items = array();
     foreach($sites as $domain => $data){
@@ -14,7 +14,7 @@ function scratchpad_list_scratchpads($output='HTML'){
     return theme('item_list', $items, count($sites).' sites');
   } else {
     // We'll output the list serialized
-    echo serialize(variable_get('scratchpadify_sites_list',array()));
+    echo serialize(variable_get('scratchpad_sites_list',array()));
     exit;
   }
 }
@@ -31,9 +31,9 @@ function scratchpad_report_site($data){
     // page of the reporting site, if it is there, then it's a Scratchpad.
     $front_page = file_get_contents('http://'.$data['site_url']);
     if(strpos($front_page,'UA-2428547-2')){
-      $sites = variable_get('scratchpadify_sites_list', array());  
+      $sites = variable_get('scratchpad_sites_list', array());  
       $sites[$data['site_url']] = $data;
-      variable_set('scratchpadify_sites_list', $sites); 
+      variable_set('scratchpad_sites_list', $sites); 
     }
   }
 }
