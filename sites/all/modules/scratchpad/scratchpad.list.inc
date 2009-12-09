@@ -2,11 +2,12 @@
 
 /**
  * Provides a page that lists all the Scratchpads.
+ * 
+ * FIXME - The sites list needs sorting.
  */
 function scratchpad_list_scratchpads($output='HTML'){
   if($output == 'HTML'){
     $sites = variable_get('scratchpad_sites_list',array());
-    uasort($sites, 'strnatcasecmp');
     $items = array();
     foreach($sites as $domain => $data){
       $items[] = l($data['site_title'] . ' (http://' . $domain . ')', 'http://'.$domain);
@@ -14,6 +15,7 @@ function scratchpad_list_scratchpads($output='HTML'){
     return theme('item_list', $items, count($sites).' sites');
   } else {
     // We'll output the list serialized
+    drupal_set_header('Content-Type: text/plain');
     echo serialize(variable_get('scratchpad_sites_list',array()));
     exit;
   }
