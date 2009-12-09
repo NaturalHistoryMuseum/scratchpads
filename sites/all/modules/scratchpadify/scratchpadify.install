@@ -290,3 +290,8 @@ function scratchpadify_update_6125(){
   variable_del('scratchpad_last_reported');
   return array('#finished' => TRUE);
 }
+
+function scratchpadify_update_6126(){
+  // Blank just to update the menu.
+  return array('#finished' => TRUE);
+}

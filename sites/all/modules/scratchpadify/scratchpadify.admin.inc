@@ -21,6 +21,25 @@ function scratchpadify_set_cookie(){
 }
 
 /**
+ * Admin form for setting the notification message.
+ */
+function scratchpadify_notification_message_form(){
+  $form['scratchpadify_notification_message'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Scratchpad notification.'),
+    '#default_value' => variable_get('scratchpadify_notification_message', ''),
+    '#description' => t('Enter the message to be displayed on the top of all of the Scratchpads.')
+  );
+  return system_settings_form($form);
+}
+
+function scratchpadify_notification_message(){
+  drupal_set_header('Content-type: text/html');
+  echo variable_get('scratchpadify_notification_message', '');
+  exit;
+}
+
+/**
  * Taskguide function
  */
 function scratchpadify_taskguide(){

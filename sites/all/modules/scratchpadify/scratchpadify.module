@@ -52,29 +52,45 @@ function scratchpadify_cron(){
  * Implementation of hook_menu
  */
 function scratchpadify_menu(){
-  $items = array();
-  $items['taskguide'] = array(      
-    'title' => 'Task guide',
-    'page callback' => 'scratchpadify_taskguide',
-    'access arguments' => array('create type content'),
-    'type' => MENU_NORMAL_ITEM,
-    'file' => 'scratchpadify.admin.inc'
+  return array(
+    'admin/settings/scratchpadmessage' => array( 
+      'title' => 'Scratchpad Notification Message',
+      'description' => 'Change the default autotag settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('scratchpadify_notification_message_form'),
+      'access arguments' => array('SCRATCHPADIFY'),// Only for UID 1
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'scratchpadify.admin.inc'  
+    ),
+    'notification.txt' => array(
+      'title' => '',
+      'page callback' => 'scratchpadify_notification_message',
+      'access arguments' => array('access content'),
+      'file' => 'scratchpadify.admin.inc',
+      'type' => MENU_CALLBACK
+    ),
+    'taskguide' => array(
+      'title' => 'Task guide',
+      'page callback' => 'scratchpadify_taskguide',
+      'access arguments' => array('create type content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'scratchpadify.admin.inc'
+    ),
+    'basicadmin' => array(
+      'title' => 'Administer',
+      'page callback' => 'scratchpadify_admin_page',
+      'access arguments' => array('access administration pages'),
+      'file' => 'scratchpadify.admin.inc',
+      'type' => MENU_NORMAL_ITEM
+    ),
+    'hidenotification' => array(
+      'title' => '',
+      'page callback' => 'scratchpadify_set_cookie',
+      'access arguments' => array('access content'),
+      'file' => 'scratchpadify.admin.inc',
+      'type' => MENU_CALLBACK
+    )
   );
-  $items['basicadmin'] = array(
-    'title' => 'Administer',
-    'page callback' => 'scratchpadify_admin_page',
-    'access arguments' => array('access administration pages'),
-    'file' => 'scratchpadify.admin.inc',
-    'type' => MENU_NORMAL_ITEM
-  );
-  $items['hidenotification'] = array(
-    'title' => '',
-    'page callback' => 'scratchpadify_set_cookie',
-    'access arguments' => array('access content'),
-    'file' => 'scratchpadify.admin.inc',
-    'type' => MENU_CALLBACK
-  );
-  return $items;
 }
 
 function scratchpadify_node_import_fields_alter(&$fields, $type){
