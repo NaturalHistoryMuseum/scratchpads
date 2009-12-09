@@ -9,7 +9,7 @@ function scratchpad_list_scratchpads($output='HTML'){
     $items = array();
     ksort($sites);
     foreach($sites as $data){
-      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']);
+      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
     }
     return theme('item_list', $items, count($sites).' sites');
   } else {
