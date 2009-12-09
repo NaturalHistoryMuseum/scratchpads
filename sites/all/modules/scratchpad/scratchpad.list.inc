@@ -2,15 +2,14 @@
 
 /**
  * Provides a page that lists all the Scratchpads.
- * 
- * FIXME - The sites list needs sorting.
  */
 function scratchpad_list_scratchpads($output='HTML'){
   if($output == 'HTML'){
     $sites = variable_get('scratchpad_sites_list',array());
     $items = array();
-    foreach($sites as $domain => $data){
-      $items[] = l($data['site_title'] . ' (http://' . $domain . ')', 'http://'.$domain);
+    uksort($sites);
+    foreach($sites as $data){
+      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']);
     }
     return theme('item_list', $items, count($sites).' sites');
   } else {
