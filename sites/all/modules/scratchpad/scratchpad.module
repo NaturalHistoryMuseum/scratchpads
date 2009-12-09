@@ -19,11 +19,10 @@
  */
 function scratchpad_menu(){
   return array(
-    'report_scratchpad/%' => array(
+    'report_scratchpad' => array(
       'title' => '',
       'page callback' => 'scratchpad_report_site',
       'access arguments' => array('access content'),
-      'page arguments' => array(1),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
@@ -62,13 +61,13 @@ function scratchpad_cron(){
         'views' => $views['totalcount']
       );
       foreach($central_servers as $central_server){
-        file_get_contents($central_server . 'report_scratchpad/' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!
+        file_get_contents($central_server . 'report_scratchpad/?data=' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!
       }
       variable_set('scratchpad_last_reported', time());
     }
     if(variable_get('scratchpad_last_updated',0) < time()-86400){// 86400 = seconds in a day
       // Also update the sites list for this site
-      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/report_scratchpad/'));
+      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
       $sites = array();
       foreach($central_servers as $central_server){
         $sites = array_merge($sites, unserialize(file_get_contents($central_server . 'scratchpads/serial')));     

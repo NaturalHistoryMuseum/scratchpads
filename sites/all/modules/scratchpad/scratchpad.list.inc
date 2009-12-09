@@ -22,10 +22,10 @@ function scratchpad_list_scratchpads($output='HTML'){
 /**
  * Provides a callback for reporting a Scratchpad
  */
-function scratchpad_report_site($data){
+function scratchpad_report_site(){
   // First lets check that $site is a Scratchpad.  We can do this be getting the
   // front page and looking for our Google Analytics code
-  $data = @unserialize($data);
+  $data = @unserialize($_GET['data']);
   if(is_array($data) && isset($data['site_url'])){
     // Check for presence of the Scratchpad Google analytics code on the front
     // page of the reporting site, if it is there, then it's a Scratchpad.
