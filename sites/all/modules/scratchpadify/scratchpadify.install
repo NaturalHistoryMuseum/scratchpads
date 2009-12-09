@@ -282,9 +282,11 @@ function scratchpadify_update_6123(){
   }
 }
 
-function scratchpadify_update_6124(){
+function scratchpadify_update_6125(){
   // Delete the variables and start again with the new stuff.
   variable_del('scratchpadify_sites_list');
   variable_del('scratchpadify_last_reported');
+  variable_del('scratchpad_sites_list');
+  variable_del('scratchpad_last_reported');
   return array('#finished' => TRUE);
 }
