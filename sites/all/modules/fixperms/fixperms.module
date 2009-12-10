@@ -3,7 +3,7 @@
  * Implementation of hook_perm
  */
 function fixperms_perm(){
-  return array('create type content','edit own type content','edit any type content','delete own type content','delete any type content');
+  return array('create type content','edit own type content','delete own type content','edit any type content','delete any type content');
 }
 /**
  * Implementation of hook_form_alter

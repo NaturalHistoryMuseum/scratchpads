@@ -76,10 +76,10 @@ function fixperms_admin_settings($form_state){
     if($content_type_array['module'] == 'node'){
       $form['percck']['permission'][$content_type_number]['#value'] = $content_type_array['name'];
       $form['percck']['permission']['create '.$content_type_id.' content']['#value'] = 'create '.$content_type_id.' content';
-      $form['percck']['permission']['delete own '.$content_type_id.' content']['#value'] = 'delete own '.$content_type_id.' content';
       $form['percck']['permission']['edit own '.$content_type_id.' content']['#value'] = 'edit own '.$content_type_id.' content';
-      $form['percck']['permission']['delete any '.$content_type_id.' content']['#value'] = 'delete any '.$content_type_id.' content';
+      $form['percck']['permission']['delete own '.$content_type_id.' content']['#value'] = 'delete own '.$content_type_id.' content';
       $form['percck']['permission']['edit any '.$content_type_id.' content']['#value'] = 'edit any '.$content_type_id.' content';
+      $form['percck']['permission']['delete any '.$content_type_id.' content']['#value'] = 'delete any '.$content_type_id.' content';
       $percck_permissions = array_merge($percck_permissions, array(
         'create '.$content_type_id.' content' => '',
         'delete own '.$content_type_id.' content' => '',
