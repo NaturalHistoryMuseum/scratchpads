@@ -7,8 +7,6 @@ function fixperms_perm(){
 }
 /**
  * Implementation of hook_form_alter
- * 
- * FIXME - Add this submit function to the create a new content type form!
  */
 function fixperms_form_alter(&$form, $form_state, $form_id){
   if($form_id == 'user_admin_perm' || $form_id == 'node_type_form'){
@@ -33,12 +31,12 @@ function fixperms_menu(){
 /**
  * Keep the .module file as small as possible. 
  */
-function fixperms_submit(){
+function fixperms_submit($form, $form_state){
   module_load_include('admin.inc','fixperms');
-  _fixperms_submit();
+  _fixperms_submit($form, $form_state);
 }
 /**
- * hook_theme
+ * Implementation of hook_theme
  */
 function fixperms_theme(){
   return array(

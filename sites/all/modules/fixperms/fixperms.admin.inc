@@ -117,25 +117,53 @@ function fixperms_admin_settings_submit($form, &$form_state) {
   while ($rid = db_result($result)) {
     $rids[$rid] = $rid;
   }
+  // Lets get each of the "default_$rid" values and then set them.
+  // We do this even if the box isn't checked, as these values will
+  // be used as the defaults for new content types.
+  foreach($rids as $rid){
+    // Get the current settings.s
+    $current_permission = drupal_map_assoc(explode(", ", db_fetch_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
+    foreach($form_state['values']['default_'.$rid] as $permission){
+      if($permission){
+        // Add
+        $current_permission[$permission] = $permission;
+      } else {
+        // Remove
+        unset($current_permission[$permission]);
+      }
+      db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", implode(", ", $current_permission), $rid);
+    }
+  }
   if($form_state['values']['override']){
     // We're going to set all the content types exactly the same, yeah.  We need
     // to set the fixperms permissions, and then just run _fixperms_submit.
     variable_set('fixperms_override', 1);
-    // Lets get each of the "default_$rid" values and then set them
-    foreach($rids as $rid){
-      print_r($form_state['values']['default_'.$rid]);
-      exit;
-    }
+    _fixperms_submit();
   } else {
     // Delete the override variable to ensure that any changes the user makes
     // won't get overridden later.
     variable_del('fixperms_override');
-    print_r($form_state['values']);
+    foreach($rids as $rid){
+      // Get the current settings.s
+      $current_permission = drupal_map_assoc(explode(", ", db_fetch_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
+      foreach($form_state['values']['percck_'.$rid] as $permission){
+        if($permission){
+          // Add
+          $current_permission[$permission] = $permission;
+        } else {
+          // Remove
+          unset($current_permission[$permission]);
+        }
+        db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", implode(", ", $current_permission), $rid);
+      }
+    }
   }
-  exit;
 }
 
-function _fixperms_submit(){
+function _fixperms_submit($form, $form_state){
+  // Need to add a check to see if we're submitting a new node,
+  // as if we are, we need to set the permissions, regardless
+  // of the value of fixperms_override.
   if(variable_set('fixperms_override', 0)){
     $current_permissions = array();
     $result = db_query("SELECT rid, perm FROM {permission}");
