@@ -5,16 +5,16 @@
 function fixperms_perm(){
   return array('create type content','edit own type content','edit any type content','delete own type content','delete any type content');
 }
-
 /**
  * Implementation of hook_form_alter
+ * 
+ * FIXME - Add this submit function to the create a new content type form!
  */
 function fixperms_form_alter(&$form, $form_state, $form_id){
-  if($form_id == 'user_admin_perm'){
+  if($form_id == 'user_admin_perm' || $form_id == 'node_type_form'){
     $form['#submit'][] = 'fixperms_submit';
   }
 }
-
 /**
  * Implementation of hook_menu
  */
@@ -25,67 +25,26 @@ function fixperms_menu(){
       'description' => 'Change the default Fixperms settings.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('fixperms_admin_settings'),
-      'access arguments' => array('administer site configuration')
+      'access arguments' => array('administer site configuration'),
+      'file' => 'fixperms.admin.inc'
     )
   );
 }
-
 /**
- * Callback for Fixperms admin
- */
-function fixperms_admin_settings(){  
-  $form['fixperms_do_not_remove'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Do not remove additional permissions.'),
-    '#default_value' => variable_get('fixperms_do_not_remove', false),
-    '#description' => t('If checked, additional permissions added to the permissions table will not be removed.')
-  );
-  return system_settings_form($form);
-}
-
-/**
- * Fix the perms on cron.
- */
-function fixperms_cron(){
-  fixperms_submit();
-}
-
-/**
- * Receive the form, and update the perms
+ * Keep the .module file as small as possible. 
  */
 function fixperms_submit(){
-  $current_permissions = array();
-  $result = db_query("SELECT rid, perm FROM {permission}");
-  while($row = db_fetch_array($result)){
-    $current_permissions[$row['rid']] = $row['perm'].", ";
-  }
-  $content_types = array_keys(content_types());
-  $perms = fixperms_perm();
-  $fixperms_do_not_remove = variable_get('fixperms_do_not_remove', false);
-  foreach($current_permissions as $rid => $permission){
-    foreach($perms as $perm){
-      // If the perm is in the current_permission, then we need to set all the
-      // content type permissions, else we need to remove them.
-      if(strpos($permission,$perm) === FALSE){
-        if(!$fixperms_do_not_remove){
-          // The string isn't in there, we need to remove all the content type 
-          foreach($content_types as $type){
-            $type = str_replace("type", $type, $perm).", ";
-            $permission = str_replace($type, "", $permission);
-          }
-        }
-      } else {
-        // String is in there, lets add all the content type values 
-        foreach($content_types as $type){
-          $type = str_replace("type", $type, $perm).", ";
-          // First remove
-          $permission = str_replace($type, "", $permission);
-          // Then add
-          $permission .= $type;
-        }
-      }
-    }
-    // Save the permission
-    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", substr($permission,0,-2), $rid);
-  }
+  module_load_include('admin.inc','fixperms');
+  _fixperms_submit();
+}
+/**
+ * hook_theme
+ */
+function fixperms_theme(){
+  return array(
+    'fixperms_admin_settings' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'fixperms.admin.inc'
+    )
+  );
 }
