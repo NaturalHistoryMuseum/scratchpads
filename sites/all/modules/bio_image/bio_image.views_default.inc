@@ -43,6 +43,22 @@ function bio_image_views_default_views() {
       'relationship' => 'none',
     ),
   ));
+  $handler->override_option('sorts', array(
+    'lastname' => array(
+      'order' => 'ASC',
+      'id' => 'lastname',
+      'table' => 'biblio_contributor_data',
+      'field' => 'lastname',
+      'relationship' => 'none',
+    ),
+    'biblio_year' => array(
+      'order' => 'ASC',
+      'id' => 'biblio_year',
+      'table' => 'biblio',
+      'field' => 'biblio_year',
+      'relationship' => 'none',
+    ),
+  ));
   $handler->override_option('filters', array(
     'type' => array(
       'operator' => 'in',
