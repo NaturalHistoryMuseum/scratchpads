@@ -122,7 +122,7 @@ function fixperms_admin_settings_submit($form, &$form_state) {
   // be used as the defaults for new content types.
   foreach($rids as $rid){
     // Get the current settings.s
-    $current_permission = drupal_map_assoc(explode(", ", db_fetch_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
+    $current_permission = drupal_map_assoc(explode(", ", db_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
     foreach($form_state['values']['default_'.$rid] as $permission){
       if($permission){
         // Add
@@ -145,7 +145,7 @@ function fixperms_admin_settings_submit($form, &$form_state) {
     variable_del('fixperms_override');
     foreach($rids as $rid){
       // Get the current settings.s
-      $current_permission = drupal_map_assoc(explode(", ", db_fetch_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
+      $current_permission = drupal_map_assoc(explode(", ", db_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
       foreach($form_state['values']['percck_'.$rid] as $permission){
         if($permission){
           // Add
