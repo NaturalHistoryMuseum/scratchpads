@@ -16,7 +16,7 @@ function fixperms_admin_settings($form_state){
   $form['override'] = array(
     '#type' => 'checkbox',
     '#title' => t('Override'),
-    '#description' => t('Check this box to set the default for ALL custom content types (including newly created ones). Or you can "Fine tune" exactly what each role can do below.'),
+    '#description' => t('Check this box to set the default for ALL custom content types (including newly created ones). Or you can "Fine tune" exactly what each role can do below. (Note, even if the box is unchecked, the default will be applied to newly created content types)'),
     '#prefix' => '<div class="fixperms sticky">',
     '#weight' => -1000,
     '#default_value' => variable_get('fixperms_override', 0)
