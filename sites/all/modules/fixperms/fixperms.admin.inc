@@ -207,7 +207,7 @@ function _fixperms_submit($form, $form_state){
     while($row = db_fetch_array($result)){
       $row['perm'] = $row['perm'] . ", ";
       foreach($fixperms_permissions as $permission){
-        if(strpos($row['perm'], $permission) !==0){
+        if(strpos($row['perm'], "$permission,") !==0){
           $row['perm'] = $row['perm'] . str_replace("type", $form_state['values']['name'], $permission) . ", ";
         }
       }
