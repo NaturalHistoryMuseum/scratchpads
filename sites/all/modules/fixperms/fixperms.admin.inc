@@ -18,7 +18,8 @@ function fixperms_admin_settings($form_state){
     '#title' => t('Override'),
     '#description' => t('Check this box to set the default for ALL custom content types (including newly created ones). Or you can "Fine tune" exactly what each role can do below.'),
     '#prefix' => '<div class="fixperms sticky">',
-    '#weight' => -1000
+    '#weight' => -1000,
+    '#default_value' => variable_get('fixperms_override', 0)
   );
   // Values per content type fieldset
   $form['percck'] = array(
@@ -164,7 +165,7 @@ function _fixperms_submit($form, $form_state){
   // Need to add a check to see if we're submitting a new node,
   // as if we are, we need to set the permissions, regardless
   // of the value of fixperms_override.
-  if(variable_set('fixperms_override', 0)){
+  if(variable_get('fixperms_override', 0)){
     $current_permissions = array();
     $result = db_query("SELECT rid, perm FROM {permission}");
     while($row = db_fetch_array($result)){
