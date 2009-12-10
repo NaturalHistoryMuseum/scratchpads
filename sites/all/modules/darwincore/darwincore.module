@@ -413,6 +413,7 @@ function darwincore_form(&$node){
     '#collapsible' => false, '#collapsed' => false, 
     '#description' => t('The earliest and latest date-time (Common Era calendar) in a date-time period during which an organism or group of organisms was collected or observed. If the event is recorded as occurring at a single date-time, populate only the  Earliest Date Collected field')
   );
+  $number_of_years_to_1700 = 1700 - date("Y");
   $form['tabs']['collection']['daterange']['earliestdatecollected'] = array(
     '#type' => 'date_popup', 
     '#title' => t('Earliest date collected'), 
