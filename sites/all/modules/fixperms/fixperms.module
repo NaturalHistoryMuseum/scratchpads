@@ -19,7 +19,7 @@ function fixperms_form_alter(&$form, $form_state, $form_id){
 function fixperms_menu(){
   return array(
     'admin/settings/fixperms' => array(
-      'title' => 'Fixperms settings',
+      'title' => 'Content Type Editing Permissions',
       'description' => 'Change the default Fixperms settings.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('fixperms_admin_settings'),
