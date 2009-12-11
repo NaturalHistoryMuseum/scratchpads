@@ -46,11 +46,3 @@ function fixperms_theme(){
     )
   );
 }
-/**
- * Implementation of hook_update_N
- * 
- * I'm not creating an install file just for the following pathetic function!
- */
-function fixperms_update_6101(){
-  return array('#finished' => TRUE);  
-}
