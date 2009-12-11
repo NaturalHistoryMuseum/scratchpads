@@ -200,7 +200,7 @@ function _fixperms_submit($form, $form_state){
       // Save the permission
       db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", substr($permission,0,-2), $rid);
     }
-  } elseif($form['#node_type']->type != $form_state['values']['name']){
+  } elseif($form['#node_type']->type != $form_state['values']['type']){
     // We have a new content type, lets add the default values for it
     $fixperms_permissions = fixperms_perm();
     $result = db_query('SELECT rid, perm FROM {permission}');
@@ -208,7 +208,7 @@ function _fixperms_submit($form, $form_state){
       $row['perm'] = $row['perm'] . ", ";
       foreach($fixperms_permissions as $permission){
         if(strpos($row['perm'], "$permission,") !==0){
-          $row['perm'] = $row['perm'] . str_replace("type", $form_state['values']['name'], $permission) . ", ";
+          $row['perm'] = $row['perm'] . str_replace("type", $form_state['values']['type'], $permission) . ", ";
         }
       }
       db_query("UPDATE {permission} SET perm = '%s' WHERE rid = %d", substr($row['perm'],0, -2), $row['rid']);
