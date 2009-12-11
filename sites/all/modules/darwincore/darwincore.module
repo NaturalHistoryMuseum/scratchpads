@@ -444,7 +444,7 @@ function darwincore_form(&$node){
     '#type' => 'select', 
     '#title' => t('Select a previously created location'), 
     '#size' => 10, 
-    '#default_value' => array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d", $node->locationnode))), 
+    '#default_value' => $node->locationnode ? array_pop(db_fetch_array(db_query("SELECT r.title FROM {node} n, {node_revisions} r WHERE n.vid = r.vid AND n.nid = %d", $node->locationnode))):'', 
     '#options' => $location_nodes
   );
   $form['locate']['togglebelow'] = array(
@@ -841,11 +841,11 @@ function darwincore_insert($node){
   $latestdatecollected_place_holder = "'%s'";
   if(!strtotime($node->earliestdatecollected)){
     $earliestdatecollected_place_holder = "NULL";
-    unset($values[11]); // Position in array.    
+    unset($values[13]); // Position in array.    
   }
   if(!strtotime($node->latestdatecollected)){
     $latestdatecollected_place_holder = "NULL";
-    unset($values[12]); // Position in array.    
+    unset($values[14]); // Position in array.    
   }
   db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentifiedyear,dateidentifiedmonth,dateidentifiedday,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s',%d, %d, %d,'%s','%s','%s', $earliestdatecollected_place_holder , $latestdatecollected_place_holder , '%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);", $values);
   // Also need to link the taxonomies to the entry (duplication - FUCK, I know).
