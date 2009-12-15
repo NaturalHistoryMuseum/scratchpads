@@ -43,7 +43,7 @@ function scratchpad_list_scratchpads($output='HTML'){
         $data['users'],
         $data['nodes'],
         $data['views'],
-        implode(", ", $data['maintainer_emails'])
+        @implode(", ", $data['maintainer_emails'])
       );
     }
     return theme('table', $header, $rows);
