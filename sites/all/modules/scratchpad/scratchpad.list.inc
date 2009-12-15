@@ -16,9 +16,11 @@ function scratchpad_list_scratchpads($output='HTML'){
     // We'll output the list serialized
     drupal_set_header('Content-Type: text/plain');
     $scratchpad_details = variable_get('scratchpad_sites_list',array());
-    foreach($scratchpad_details as $site => $site_details){
-      unset($scratchpad_details[$site]['maintainer_emails']);
-      unset($scratchpad_details[$site]['last_login']);
+    if(!user_access('SCRATCHPADIFY')){
+      foreach($scratchpad_details as $site => $site_details){
+        unset($scratchpad_details[$site]['maintainer_emails']);
+        unset($scratchpad_details[$site]['last_login']);
+      }
     }
     echo serialize($scratchpad_details);
     exit;
