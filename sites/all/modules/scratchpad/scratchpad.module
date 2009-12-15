@@ -32,6 +32,13 @@ function scratchpad_menu(){
       'access arguments' => array('access content'),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
+    ),
+    'scratchpads/table' => array(
+      'title' => 'Scratchpad List',
+      'page callback' => 'scratchpad_list_scratchpads_table',
+      'access arguments' => array('SCRATCHPADIFY'),
+      'file' => 'scratchpad.list.inc',
+      'type' => MENU_CALLBACK
     )
   );
 }
