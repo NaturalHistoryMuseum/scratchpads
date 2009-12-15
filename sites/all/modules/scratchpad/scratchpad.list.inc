@@ -46,7 +46,7 @@ function scratchpad_list_scratchpads($output='HTML'){
         $data['maintainer_emails']
       );
     }
-    return them('table', $header, $rows);
+    return theme('table', $header, $rows);
   } else {
     $sites = variable_get('scratchpad_sites_list',array());
     $items = array();
