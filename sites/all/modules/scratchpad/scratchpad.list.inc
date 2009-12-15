@@ -4,15 +4,7 @@
  * Provides a page that lists all the Scratchpads.
  */
 function scratchpad_list_scratchpads($output='HTML'){
-  if($output == 'HTML'){
-    $sites = variable_get('scratchpad_sites_list',array());
-    $items = array();
-    ksort($sites);
-    foreach($sites as $data){
-      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
-    }
-    return theme('item_list', $items, count($sites).' sites');
-  } else {
+  if ($output == 'serial') {
     // We'll output the list serialized
     drupal_set_header('Content-Type: text/plain');
     $scratchpad_details = variable_get('scratchpad_sites_list',array());
@@ -24,6 +16,23 @@ function scratchpad_list_scratchpads($output='HTML'){
     }
     echo serialize($scratchpad_details);
     exit;
+  } elseif ($output == 'emails' && user_access('SCRATCHPADIFY')) {
+    // Output the emails as a list
+    $scratchpad_details = variable_get('scratchpad_sites_list', array());
+    foreach($scratchpad_details as $site => $site_details){
+      foreach($site_details=>maintainer_emails as $mail){
+        $mails[] = $mail;
+      }
+    }
+    return theme('item_list', $mails);
+  } else {
+    $sites = variable_get('scratchpad_sites_list',array());
+    $items = array();
+    ksort($sites);
+    foreach($sites as $data){
+      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+    }
+    return theme('item_list', $items, count($sites).' sites');
   }
 }
 
