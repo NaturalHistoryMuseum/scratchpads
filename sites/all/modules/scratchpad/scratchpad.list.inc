@@ -32,6 +32,21 @@ function scratchpad_list_scratchpads($output='HTML'){
     drupal_set_title('');
     return theme('item_list', $mails, 'Emails for '.count($mails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
       '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
+  } elseif ($output == 'table' && user_access('SCRATCHPADIFY')) {
+    $header = array('Site', 'Last Login','Last Edited','Users','Nodes','Views','Maintainer Emails');
+    $scratchpad_details = variable_get('scratchpad_sites_list',array());
+    foreach($scratchpad_details as $site=>$data){
+      $rows[] = array(
+        l('http://'.$site, 'http://'. $site, array('absolute' => TRUE)),
+        '',
+        '',
+        $data['users'],
+        $data['nodes'],
+        $data['views'],
+        $data['maintainer_emails']
+      );
+    }
+    return them('table', $header, $rows);
   } else {
     $sites = variable_get('scratchpad_sites_list',array());
     $items = array();
