@@ -38,12 +38,12 @@ function scratchpad_list_scratchpads($output='HTML'){
     foreach($scratchpad_details as $site=>$data){
       $rows[] = array(
         l('http://'.$site, 'http://'. $site, array('absolute' => TRUE)),
-        '',
-        '',
+        date('j F Y', $data['last_login_time']),
+        date('j F Y', $data['last_node_changed_time']),
         $data['users'],
         $data['nodes'],
         $data['views'],
-        $data['maintainer_emails']
+        implode(", ", $data['maintainer_emails'])
       );
     }
     return theme('table', $header, $rows);
