@@ -20,8 +20,12 @@ function scratchpad_list_scratchpads($output='HTML'){
     // Output the emails as a list
     $scratchpad_details = variable_get('scratchpad_sites_list', array());
     foreach($scratchpad_details as $site => $site_details){
-      foreach($site_details['maintainer_emails'] as $mail){
-        $mails[] = $mail;
+      if(isset($site_details['maintainer_emails']) && is_array($site_details['maintainer_emails'])){
+        foreach($site_details['maintainer_emails'] as $mail){
+          $mails[$mail] = $mail;
+        }
+      } else {
+        $mails['not_found@'.$site] = 'not_found@'.$site;
       }
     }
     return theme('item_list', $mails);
