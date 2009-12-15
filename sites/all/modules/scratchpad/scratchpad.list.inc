@@ -28,7 +28,8 @@ function scratchpad_list_scratchpads($output='HTML'){
         $mails['not_found@'.$site] = 'not_found@'.$site;
       }
     }
-    return theme('item_list', $mails, 'Emails for '.count($emails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
+    drupal_set_title('');
+    return theme('item_list', $mails, 'Emails for '.count($mails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
       '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
   } else {
     $sites = variable_get('scratchpad_sites_list',array());
