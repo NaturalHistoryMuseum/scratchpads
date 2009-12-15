@@ -52,13 +52,18 @@ function scratchpad_cron(){
       $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
       $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
       $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
+      $results = db_query("SELECT mail FROM {users} u, {users_roles} ur WHERE u.uid = ur.uid AND rid = 5");
+      while($mail = db_result($results)){
+        $mails[] = $mail;
+      }
       $report_data = array(
         'site_url' => $_SERVER['HTTP_HOST'],
         'site_title' => variable_get('site_name','Scratchpad'),
         'site_mission' => variable_get('site_mission',''),
         'nodes' => $nodes['nodes'],
         'users' => $users['users'] - 2,
-        'views' => $views['totalcount']
+        'views' => $views['totalcount'],
+        'maintainer_emails' => $mails
       );
       foreach($central_servers as $central_server){
         file_get_contents($central_server . 'report_scratchpad/?data=' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!

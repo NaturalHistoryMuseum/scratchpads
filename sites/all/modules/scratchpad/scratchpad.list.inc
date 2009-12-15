@@ -15,7 +15,12 @@ function scratchpad_list_scratchpads($output='HTML'){
   } else {
     // We'll output the list serialized
     drupal_set_header('Content-Type: text/plain');
-    echo serialize(variable_get('scratchpad_sites_list',array()));
+    $scratchpad_details = variable_get('scratchpad_sites_list',array());
+    foreach($scratchpad_details as $site => $site_details){
+      unset($scratchpad_details[$site]['maintainer_emails']);
+      unset($scratchpad_details[$site]['last_login']);
+    }
+    echo serialize($scratchpad_details);
     exit;
   }
 }
@@ -32,8 +37,17 @@ function scratchpad_report_site(){
     // page of the reporting site, if it is there, then it's a Scratchpad.
     $front_page = file_get_contents('http://'.$data['site_url']);
     if(strpos($front_page,'UA-2428547-2')){
-      $sites = variable_get('scratchpad_sites_list', array());  
+      $sites = variable_get('scratchpad_sites_list', array());
+      $data['last_reported'] = time(); 
       $sites[$data['site_url']] = $data;
+      // Loop through the sites, and delete the ones that haven't called
+      // in, in over a month.
+      $too_old_time = time() - 2592000;
+      foreach($sites as $site => $site_details){
+        if($site_details['last_reported'] < $too_old_time){
+          unset($sites[$site]);
+        }
+      }
       variable_set('scratchpad_sites_list', $sites); 
     }
   }
