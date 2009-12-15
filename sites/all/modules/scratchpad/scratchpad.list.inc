@@ -28,7 +28,7 @@ function scratchpad_list_scratchpads($output='HTML'){
         $mails['not_found@'.$site] = 'not_found@'.$site;
       }
     }
-    return theme('item_list', $mails, NULL, 'ul', array('style' => 'font-size:80%; padding:0; margin:0')) . 
+    return theme('item_list', $mails, NULL, 'ul', array('style' => 'font-size:80%; padding:50px')) . 
       '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
   } else {
     $sites = variable_get('scratchpad_sites_list',array());
