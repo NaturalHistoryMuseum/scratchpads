@@ -11,7 +11,8 @@ function scratchpad_list_scratchpads($output='HTML'){
     if(!user_access('SCRATCHPADIFY')){
       foreach($scratchpad_details as $site => $site_details){
         unset($scratchpad_details[$site]['maintainer_emails']);
-        unset($scratchpad_details[$site]['last_login']);
+        unset($scratchpad_details[$site]['last_login_time']);
+        unset($scratchpad_details[$site]['last_node_changed_time']);
       }
     }
     echo serialize($scratchpad_details);
@@ -36,7 +37,11 @@ function scratchpad_list_scratchpads($output='HTML'){
     $items = array();
     ksort($sites);
     foreach($sites as $data){
-      $items[] = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+      $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+      if(user_access('SCRATCHPADIFY')){
+        '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
+      }
+      $items[] = $output;
     }
     return theme('item_list', $items, count($sites).' sites');
   }
