@@ -63,7 +63,7 @@ function scratchpad_list_scratchpads_table(){
   }
   drupal_add_js (drupal_get_path('module', 'tablesorter') . '/tablesorter.js');
   drupal_add_css(drupal_get_path('module', 'tablesorter') . '/tablesorter.css');
-  return theme('table', $header, $rows);
+  return theme('table', $header, $rows, array('class' => 'views-table'));
 }
 
 /**
