@@ -68,47 +68,8 @@ function scratchpad_menu(){
  * Cron function reports this Scratchpad to central server(s).
  */
 function scratchpad_cron(){
-  // Don't report if we're a "dev" or D6 upgrade site.
-  if(substr($_SERVER['HTTP_HOST'],0,3)!='d6.' && substr($_SERVER['HTTP_HOST'],0,4)!='dev.'){
-    // Once a week (this could be made more frequent) we'll report that we exist
-    // to a central repository which can then build a list of all Scratchpads.
-    if(variable_get('scratchpad_last_reported',0) < time()-604800){// 604800 = seconds in a week
-      // Send the update to our central server
-      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
-      $nodes = db_fetch_array(db_query("SELECT COUNT(nid) AS nodes FROM node;"));
-      $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users"));
-      $views = db_fetch_array(db_query("SELECT SUM(totalcount) AS totalcount FROM node_counter;"));
-      $results = db_query("SELECT mail FROM {users} u, {users_roles} ur WHERE u.uid = ur.uid AND rid = 5");
-      while($mail = db_result($results)){
-        $mails[] = $mail;
-      }
-      $report_data = array(
-        'site_url' => $_SERVER['HTTP_HOST'],
-        'site_title' => variable_get('site_name','Scratchpad'),
-        'site_mission' => variable_get('site_mission',''),
-        'nodes' => $nodes['nodes'],
-        'users' => $users['users'] - 2,
-        'views' => $views['totalcount'],
-        'maintainer_emails' => $mails,
-        'last_login_time' => db_result(db_query('SELECT access FROM {users} WHERE uid > 1 ORDER BY access DESC LIMIT 1;')),
-        'last_node_changed_time' => db_result(db_query('SELECT created FROM {node} ORDER BY created DESC LIMIT 1'))
-      );
-      foreach($central_servers as $central_server){
-        file_get_contents($central_server . 'report_scratchpad/?data=' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!
-      }
-      variable_set('scratchpad_last_reported', time());
-    }
-    if(variable_get('scratchpad_last_updated',0) < time()-86400 && !in_array("http://".$_SERVER['HTTP_HOST']."/", variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/')))){// 86400 = seconds in a day
-      // Also update the sites list for this site
-      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
-      $sites = array();
-      foreach($central_servers as $central_server){
-        $sites = array_merge($sites, unserialize(file_get_contents($central_server . 'scratchpads/serial')));     
-      }
-      variable_set('scratchpad_sites_list', $sites);
-      variable_set('scratchpad_last_updated', time());
-    }
-  }
+  module_load_include('cron.inc','scratchpad');
+  _scratchpad_cron();
 }
 
 /**
