@@ -3,48 +3,50 @@
 /**
  * Provides a page that lists all the Scratchpads.
  */
-function scratchpad_list_scratchpads($output='HTML'){
-  if ($output == 'serial') {
-    // We'll output the list serialized
-    drupal_set_header('Content-Type: text/plain');
-    $scratchpad_details = variable_get('scratchpad_sites_list',array());
-    if(!user_access('SCRATCHPADIFY')){
-      foreach($scratchpad_details as $site => $site_details){
-        unset($scratchpad_details[$site]['maintainer_emails']);
-        unset($scratchpad_details[$site]['last_login_time']);
-        unset($scratchpad_details[$site]['last_node_changed_time']);
-      }
+function scratchpad_list_scratchpads(){
+  $sites = variable_get('scratchpad_sites_list',array());
+  $items = array();
+  ksort($sites);
+  foreach($sites as $data){
+    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+    if(user_access('SCRATCHPADIFY')){
+      '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
     }
-    echo serialize($scratchpad_details);
-    exit;
-  } elseif ($output == 'emails' && user_access('SCRATCHPADIFY')) {
-    // Output the emails as a list
-    $scratchpad_details = variable_get('scratchpad_sites_list', array());
-    foreach($scratchpad_details as $site => $site_details){
-      if(isset($site_details['maintainer_emails']) && is_array($site_details['maintainer_emails'])){
-        foreach($site_details['maintainer_emails'] as $mail){
-          $mails[$mail] = $mail;
-        }
-      } else {
-        $mails['not_found@'.$site] = 'not_found@'.$site;
-      }
-    }
-    drupal_set_title('');
-    return theme('item_list', $mails, 'Emails for '.count($mails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
-      '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
-  } else {
-    $sites = variable_get('scratchpad_sites_list',array());
-    $items = array();
-    ksort($sites);
-    foreach($sites as $data){
-      $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
-      if(user_access('SCRATCHPADIFY')){
-        '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
-      }
-      $items[] = $output;
-    }
-    return theme('item_list', $items, count($sites).' sites');
+    $items[] = $output;
   }
+  return theme('item_list', $items, count($sites).' sites');
+}
+
+function scratchpad_list_scratchpads_emails(){
+  // Output the emails as a list
+  $scratchpad_details = variable_get('scratchpad_sites_list', array());
+  foreach($scratchpad_details as $site => $site_details){
+    if(isset($site_details['maintainer_emails']) && is_array($site_details['maintainer_emails'])){
+      foreach($site_details['maintainer_emails'] as $mail){
+        $mails[$mail] = $mail;
+      }
+    } else {
+      $mails['not_found@'.$site] = 'not_found@'.$site;
+    }
+  }
+  drupal_set_title('');
+  return theme('item_list', $mails, 'Emails for '.count($mails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
+    '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
+}
+
+function scratchpad_list_scratchpads_serial(){
+  // We'll output the list serialized
+  drupal_set_header('Content-Type: text/plain');
+  $scratchpad_details = variable_get('scratchpad_sites_list',array());
+  if(!user_access('SCRATCHPADIFY')){
+    foreach($scratchpad_details as $site => $site_details){
+      unset($scratchpad_details[$site]['maintainer_emails']);
+      unset($scratchpad_details[$site]['last_login_time']);
+      unset($scratchpad_details[$site]['last_node_changed_time']);
+    }
+  }
+  echo serialize($scratchpad_details);
+  exit;
 }
 
 function scratchpad_list_scratchpads_table(){

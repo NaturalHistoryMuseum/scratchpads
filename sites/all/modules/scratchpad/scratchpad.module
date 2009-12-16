@@ -33,12 +33,31 @@ function scratchpad_menu(){
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
-    'scratchpads/table' => array(
+    'scratchpads/list' => array(
       'title' => 'Scratchpad List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10
+    ),
+    'scratchpads/serial' => array(
+      'title' => 'Serial',
+      'page callback' => 'scratchpad_list_scratchpads_serial',
+      'access arguments' => array('access content'),
+      'file' => 'scratchpad.list.inc',
+      'type' => MENU_LOCAL_TASK
+    ),
+    'scratchpads/table' => array(
+      'title' => 'Table',
       'page callback' => 'scratchpad_list_scratchpads_table',
       'access arguments' => array('SCRATCHPADIFY'),
       'file' => 'scratchpad.list.inc',
-      'type' => MENU_CALLBACK
+      'type' => MENU_LOCAL_TASK
+    ),
+    'scratchpads/table' => array(
+      'title' => 'Emails',
+      'page callback' => 'scratchpad_list_scratchpads_emails',
+      'access arguments' => array('SCRATCHPADIFY'),
+      'file' => 'scratchpad.list.inc',
+      'type' => MENU_LOCAL_TASK
     )
   );
 }
