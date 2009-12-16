@@ -61,6 +61,8 @@ function scratchpad_list_scratchpads_table(){
       @implode(", ", $data['maintainer_emails'])
     );
   }
+  drupal_add_js (drupal_get_path('module', 'tablesorter') . '/tablesorter.js');
+  drupal_add_css(drupal_get_path('module', 'tablesorter') . '/tablesorter.css');
   return theme('table', $header, $rows);
 }
 
