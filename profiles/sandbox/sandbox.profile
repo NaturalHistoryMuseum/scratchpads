@@ -38,6 +38,9 @@ function sandbox_profile_tasks(&$task, $url){
     variable_set('site_offline_message','The Scratchpad Sandbox is currently being rebuilt, please come back in two minutes.');
     scratchpad_profile_tasks_1();
 
+    // Set the last reported variable, so that this site doesn't
+    // get included in the sites list.
+    variable_set('scratchpad_last_reported',10000000000000000000);
     $node = new stdClass();
     $node->type = 'profile';
     $node->uid = 2;

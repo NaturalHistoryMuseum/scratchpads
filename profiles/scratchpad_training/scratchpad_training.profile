@@ -32,6 +32,10 @@ function scratchpad_training_profile_tasks(&$task, $url){
   if($task == 'profile'){
     scratchpad_profile_tasks_1();
 
+    // Set the last reported variable, so that this site doesn't
+    // get included in the sites list.
+    variable_set('scratchpad_last_reported',10000000000000000000);
+
     $node = new stdClass();
     $node->type = 'profile';
     $node->uid = 2;
