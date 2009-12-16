@@ -58,6 +58,13 @@ function scratchpad_menu(){
       'access arguments' => array('SCRATCHPADIFY'),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
+    ),
+    'scratchpads/stats' => array(
+      'title' => 'Statistics',
+      'page callback' => 'scratchpad_list_scratchpads_stats',
+      'access arguments' => array('access content'),
+      'file' => 'scratchpad.list.inc',
+      'type' => MENU_LOCAL_TASK
     )
   );
 }
