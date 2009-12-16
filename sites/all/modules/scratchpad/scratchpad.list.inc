@@ -8,7 +8,7 @@ function scratchpad_list_scratchpads(){
   $items = array();
   ksort($sites);
   foreach($sites as $data){
-    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
     if(user_access('SCRATCHPADIFY')){
       '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
     }
@@ -43,6 +43,8 @@ function scratchpad_list_scratchpads_serial(){
       unset($scratchpad_details[$site]['maintainer_emails']);
       unset($scratchpad_details[$site]['last_login_time']);
       unset($scratchpad_details[$site]['last_node_changed_time']);
+      unset($scratchpad_details[$site]['users']['week']);
+      unset($scratchpad_details[$site]['users']['month']);
     }
   }
   echo serialize($scratchpad_details);
@@ -57,7 +59,7 @@ function scratchpad_list_scratchpads_table(){
       l('http://'.$site, 'http://'. $site, array('absolute' => TRUE)),
       '<span style="display:none;">'.$data['last_login_time'].'</span>'.date('j-F-Y', $data['last_login_time']),
       '<span style="display:none;">'.$data['last_node_changed_time'].'</span>'.date('j-F-Y', $data['last_node_changed_time']),
-      $data['users'],
+      $data['users']['total'],
       $data['nodes'],
       $data['views'],
       @implode(", ", $data['maintainer_emails'])
@@ -92,6 +94,33 @@ function scratchpad_report_site(){
         }
       }
       variable_set('scratchpad_sites_list', $sites); 
+    }
+  }
+}
+
+function scratchpad_list_scratchpads_stats(){
+  $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
+  $total_users = 0;
+  $total_login_users = 0;
+  $total_users_week = 0;
+  $total_users_month = 0;
+  $total_sites_week = 0;
+  $total_sites_month = 0;
+  $total_nodes = array('total' => 0);
+  foreach($scratchpad_statistics as $site => $site_statistics){
+    $total_users += $site_statistics['users']['total'];
+    $total_login_users += $site_statistics['users']['login'];
+    $total_users_week += $site_statistics['users']['week'];
+    $total_users_month += $site_statistics['users']['month'];
+    if($site_statistics['last_login_time'] > date() - 604800){
+      $total_sites_week ++;
+    }
+    if($site_statistics['last_login_time'] > date() - 2592000){
+      $total_sites_month ++;
+    }
+    $total_nodes['total'] += array_sum($site_statistics['nodes']);
+    foreach($site_statistics['nodes'] as $type => $num){
+      $total_nodes[$type] += $num;
     }
   }
 }
