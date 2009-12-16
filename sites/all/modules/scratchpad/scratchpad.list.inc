@@ -60,7 +60,7 @@ function scratchpad_list_scratchpads_table(){
       '<span style="display:none;">'.$data['last_login_time'].'</span>'.date('j-F-Y', $data['last_login_time']),
       '<span style="display:none;">'.$data['last_node_changed_time'].'</span>'.date('j-F-Y', $data['last_node_changed_time']),
       $data['users']['total'],
-      $data['nodes'],
+      is_array($data['nodes']) ? array_sum($data['nodes']) : 0,
       $data['views'],
       @implode(", ", $data['maintainer_emails'])
     );
