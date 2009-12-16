@@ -119,8 +119,12 @@ function scratchpad_list_scratchpads_stats(){
       $total_sites_month ++;
     }
     $total_nodes['totaltotaltotal'] += array_sum($site_statistics['nodes']);
-    foreach($site_statistics['nodes'] as $type => $num){
-      $total_nodes[$type] += $num;
+    if(is_array($site_statistics['nodes'])){
+      foreach($site_statistics['nodes'] as $type => $num){
+        $total_nodes[$type] += $num;
+      }
+    } else {
+      $sites_with_no_nodes[] = $site;
     }
   }
   $output = '<pre>
@@ -141,5 +145,7 @@ Nodes: '.$total_nodes['totaltotaltotal'].'
   foreach($total_nodes as $type => $count){
     $output .= ' '.str_pad("$type:", 40, " ", STR_PAD_RIGHT)."$count\n";
   }
-  return $output .'</pre>';
+  return $output .'
+  
+Sites with no nodes: '. implode(", ", $sites_with_no_nodes).'</pre>';
 }
