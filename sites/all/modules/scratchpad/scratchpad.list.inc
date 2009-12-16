@@ -118,13 +118,13 @@ function scratchpad_list_scratchpads_stats(){
     if($site_statistics['last_login_time'] > time() - 2592000){
       $total_sites_month ++;
     }
-    $total_nodes['totaltotaltotal'] += array_sum($site_statistics['nodes']);
     if(is_array($site_statistics['nodes'])){
+      $total_nodes['totaltotaltotal'] += array_sum($site_statistics['nodes']);
       foreach($site_statistics['nodes'] as $type => $num){
         $total_nodes[$type] += $num;
       }
     } else {
-      $sites_with_no_nodes[] = $site;
+      $sites_with_no_nodes[] = "http://".$site;
     }
   }
   $output = '<pre>
