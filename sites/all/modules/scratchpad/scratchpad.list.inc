@@ -137,6 +137,7 @@ Nodes: '.$total_nodes['totaltotaltotal'].'
 
 ';
   unset($total_nodes['totaltotaltotal']);
+  asort($total_nodes);
   foreach($total_nodes as $type => $count){
     $output .= ' '.str_pad("$type:", 40, " ", STR_PAD_RIGHT)."$count\n";
   }
