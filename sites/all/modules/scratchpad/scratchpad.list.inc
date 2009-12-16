@@ -123,4 +123,14 @@ function scratchpad_list_scratchpads_stats(){
       $total_nodes[$type] += $num;
     }
   }
+  $output = 'Users: '.$total_users.' (Total activated)
+Users: '.$total_login_users.' (Active and have logged in)
+Users: '.$total_users_week.' (Logged in, in last 7 days)
+Users: '.$total_users_month.' (Logged in, in last 30 days)
+
+Sites: '.count($scratchpad_statistics).'
+Sites: '.$total_sites_week.' (With users logged in, in last 7 days)
+Sites: '.$total_sites_month.' (With users logged in, in last 30 days)
+  ';
+  return $output;
 }
