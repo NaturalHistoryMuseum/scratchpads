@@ -34,7 +34,7 @@ function scratchpad_menu(){
       'type' => MENU_CALLBACK
     ),
     'scratchpads/list' => array(
-      'title' => 'Scratchpad List',
+      'title' => 'List',
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'weight' => -10
     ),
@@ -52,7 +52,7 @@ function scratchpad_menu(){
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     ),
-    'scratchpads/table' => array(
+    'scratchpads/emails' => array(
       'title' => 'Emails',
       'page callback' => 'scratchpad_list_scratchpads_emails',
       'access arguments' => array('SCRATCHPADIFY'),
