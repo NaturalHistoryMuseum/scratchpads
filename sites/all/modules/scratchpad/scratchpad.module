@@ -79,7 +79,7 @@ function scratchpad_cron(){
       }
       variable_set('scratchpad_last_reported', time());
     }
-    if(variable_get('scratchpad_last_updated',0) < time()-86400){// 86400 = seconds in a day
+    if(variable_get('scratchpad_last_updated',0) < time()-86400 && !in_array("http://".$_SERVER['HTTP_HOST']."/", variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/')))){// 86400 = seconds in a day
       // Also update the sites list for this site
       $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
       $sites = array();
