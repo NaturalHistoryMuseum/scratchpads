@@ -112,10 +112,10 @@ function scratchpad_list_scratchpads_stats(){
     $total_login_users += $site_statistics['users']['login'];
     $total_users_week += $site_statistics['users']['week'];
     $total_users_month += $site_statistics['users']['month'];
-    if($site_statistics['last_login_time'] > date() - 604800){
+    if($site_statistics['last_login_time'] > time() - 604800){
       $total_sites_week ++;
     }
-    if($site_statistics['last_login_time'] > date() - 2592000){
+    if($site_statistics['last_login_time'] > time() - 2592000){
       $total_sites_month ++;
     }
     $total_nodes['total'] += array_sum($site_statistics['nodes']);
