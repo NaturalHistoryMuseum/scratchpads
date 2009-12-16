@@ -106,7 +106,7 @@ function scratchpad_list_scratchpads_stats(){
   $total_users_month = 0;
   $total_sites_week = 0;
   $total_sites_month = 0;
-  $total_nodes = array('total' => 0);
+  $total_nodes = array('totaltotaltotal' => 0);
   foreach($scratchpad_statistics as $site => $site_statistics){
     $total_users += $site_statistics['users']['total'];
     $total_login_users += $site_statistics['users']['login'];
@@ -118,12 +118,13 @@ function scratchpad_list_scratchpads_stats(){
     if($site_statistics['last_login_time'] > time() - 2592000){
       $total_sites_month ++;
     }
-    $total_nodes['total'] += array_sum($site_statistics['nodes']);
+    $total_nodes['totaltotaltotal'] += array_sum($site_statistics['nodes']);
     foreach($site_statistics['nodes'] as $type => $num){
       $total_nodes[$type] += $num;
     }
   }
-  $output = 'Users: '.$total_users.' (Total activated)
+  $output = '<pre>
+Users: '.$total_users.' (Total activated)
 Users: '.$total_login_users.' (Active and have logged in)
 Users: '.$total_users_week.' (Logged in, in last 7 days)
 Users: '.$total_users_month.' (Logged in, in last 30 days)
@@ -131,6 +132,13 @@ Users: '.$total_users_month.' (Logged in, in last 30 days)
 Sites: '.count($scratchpad_statistics).'
 Sites: '.$total_sites_week.' (With users logged in, in last 7 days)
 Sites: '.$total_sites_month.' (With users logged in, in last 30 days)
-  ';
-  return $output;
+
+Nodes: '.$total_nodes['totaltotaltotal'].'
+
+';
+  unset($total_nodes['totaltotaltotal']);
+  foreach($total_nodes as $type => $count){
+    $output .= ' '.str_pad("$type:", 40, " ", STR_PAD_RIGHT)."$count\n";
+  }
+  return $output .'</pre>';
 }
