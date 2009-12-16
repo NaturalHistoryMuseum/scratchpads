@@ -12,7 +12,7 @@ function _scratchpad_cron(){
       while($row = db_fetch_array($result)){
         $nodes[$row['type']] = $row['count'];
       }
-      $users = db_fetch_array(db_query("SELECT COUNT(uid) AS users FROM users WHERE status = 1"));//Total users
+      $users = db_result(db_query("SELECT COUNT(uid) AS users FROM users WHERE status = 1 AND uid > 1"));//Total users
       $users_login = db_result(db_query("SELECT COUNT(uid) AS users FROM users WHERE login != 0"));//Total users logged in
       $users_week = db_result(db_query("SELECT COUNT(uid) AS users FROM users WHERE login > UNIX_TIMESTAMP()-604800"));//Week users
       $users_month = db_result(db_query("SELECT COUNT(uid) AS users FROM users WHERE login > UNIX_TIMESTAMP()-2592000"));//Month users
@@ -28,7 +28,7 @@ function _scratchpad_cron(){
         'nodes' => $nodes,
         'users' => array(
           'login' => $users_login,
-          'total' => $users['users'] - 2,
+          'total' => $users,
           'week' => $users_week,
           'month' => $users_month
         ),
