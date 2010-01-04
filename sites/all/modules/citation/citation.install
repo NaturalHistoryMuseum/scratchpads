@@ -19,6 +19,17 @@ function citation_schema(){
   return $tables;
 }
 
+/**
+ * Update the table to the D6 schema.
+ */
+function citation_update_6000(){
+  // Easiest way is to drop and install
+  if(db_column_exists('citation','page_data')){
+    drupal_uninstall_schema('citation');
+    drupal_install_schema('citation');
+  }
+}
+
 function citation_uninstall(){
   drupal_uninstall_schema('citation');
 }
