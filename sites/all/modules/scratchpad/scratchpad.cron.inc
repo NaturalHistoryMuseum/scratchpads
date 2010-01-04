@@ -7,7 +7,7 @@ function _scratchpad_cron(){
     // to a central repository which can then build a list of all Scratchpads.
     if(variable_get('scratchpad_last_reported',0) < time()-86400){// Seconds in a day
       // Send the update to our central server
-      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
+      $central_servers = variable_get('scratchpad_central_servers', array('http://dev.scratchpads.eu/'));
       $result = db_query('SELECT COUNT(*) AS count, type FROM node GROUP BY type');
       while($row = db_fetch_array($result)){
         $nodes[$row['type']] = $row['count'];
@@ -42,9 +42,9 @@ function _scratchpad_cron(){
       }
       variable_set('scratchpad_last_reported', time());
     }
-    if(variable_get('scratchpad_last_updated',0) < time()-86400 && !in_array("http://".$_SERVER['HTTP_HOST']."/", variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/')))){// 86400 = seconds in a day
+    if(variable_get('scratchpad_last_updated',0) < time()-86400 && !in_array("http://".$_SERVER['HTTP_HOST']."/", variable_get('scratchpad_central_servers', array('http://dev.scratchpads.eu/')))){// 86400 = seconds in a day
       // Also update the sites list for this site
-      $central_servers = variable_get('scratchpad_central_servers', array('http://home.scratchpads.eu/'));
+      $central_servers = variable_get('scratchpad_central_servers', array('http://dev.scratchpads.eu/'));
       $sites = array();
       foreach($central_servers as $central_server){
         $sites = array_merge($sites, unserialize(file_get_contents($central_server . 'scratchpads/serial')));     
