@@ -104,7 +104,8 @@ function scratchpad_list_scratchpads_thumbs(){
   foreach($scratchpad_statistics as $site => $site_statistics){
     $items[] = '<img src="http://screenshots.scratchpads.eu/'.$site.'.medium.drop.png"/>';
   }
-  return theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
+  $output = theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
+  print theme('page', $output, FALSE);
 }
 
 function scratchpad_list_scratchpads_stats(){
