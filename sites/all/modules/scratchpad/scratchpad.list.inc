@@ -101,11 +101,15 @@ function scratchpad_report_site(){
 function scratchpad_list_scratchpads_thumbs(){  
   $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
   $items = array();
+  $i = 0;
   foreach($scratchpad_statistics as $site => $site_statistics){
-    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1));
+    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
+    $i++;
   }
-  $output = theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
+  $output = '<div class="scratchpad_thumbs_header"><p>Sort by: <a href="#" id="nodes">Pages</a> | <a href="#" id="views">Views</a> | <a href="#" id="users">Users</a></p></div>';
+  $output .= theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
   drupal_add_css(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.css');
+  drupal_add_js(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.js');
   print theme('page', $output, FALSE);
 }
 
