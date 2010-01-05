@@ -98,6 +98,15 @@ function scratchpad_report_site(){
   }
 }
 
+function scratchpad_list_scratchpads_thumbs(){  
+  $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
+  $items = array();
+  foreach($scratchpad_statistics as $site => $site_statistics){
+    $items[] = '<img src="http://screenshots.scratchpads.eu/'.$site.'.medium.drop.png"/>';
+  }
+  return theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
+}
+
 function scratchpad_list_scratchpads_stats(){
   $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
   $total_users = 0;

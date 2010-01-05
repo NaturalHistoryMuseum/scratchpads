@@ -43,6 +43,13 @@ function scratchpad_menu(){
       'page callback' => 'scratchpad_list_scratchpads_serial',
       'access arguments' => array('access content'),
       'file' => 'scratchpad.list.inc',
+      'type' => MENU_CALLBACK
+    ),
+    'scratchpads/thumbs' => array(
+      'title' => 'Thumbnails',
+      'page callback' => 'scratchpad_list_scratchpads_thumbs',
+      'access arguments' => array('access content'),
+      'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     ),
     'scratchpads/table' => array(
