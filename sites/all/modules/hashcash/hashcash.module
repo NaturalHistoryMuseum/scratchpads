@@ -104,7 +104,7 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
 
   // Secondly lets check if we actually want to add Hashcash to this form.
   $hc_addorignore = variable_get('hashcash_addorignore',false);
-  $hc_form_ids = preg_split('/[\n\r]+/',variable_get('hashcash_form_ids',"user_login\nuser_login_block"));
+  $hc_form_ids = preg_split('/[\n\r]+/',variable_get('hashcash_form_ids',"user_login\nuser_login_block\nlegal_login"));
   
   // Check to see if this form wants hashcash
   if (($hc_addorignore && in_array($form_id,$hc_form_ids)) || 
