@@ -102,11 +102,14 @@ function scratchpad_list_scratchpads_thumbs(){
   $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
   $items = array();
   $i = 0;
+  $total_sites = count($scratchpad_statistics);
+  // Ensure the array is alphabetical.
+  ksort($scratchpad_statistics);
   foreach($scratchpad_statistics as $site => $site_statistics){
-    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
+    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $total_sites - $i, 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
     $i++;
   }
-  $output = '<div class="scratchpad_thumbs_header"><p>Sort by: <a href="#" id="nodes">Pages</a> | <a href="#" id="views">Views</a> | <a href="#" id="users">Users</a></p></div>';
+  $output = '<div class="scratchpad_thumbs_header"><p>Sort by: <a href="#" id="domain">Domain</a> | <a href="#" id="nodes">Pages</a> | <a href="#" id="views">Views</a> | <a href="#" id="users">Users</a></p></div>';
   $output .= theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
   drupal_add_css(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.css');
   drupal_add_js(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.js');
@@ -142,7 +145,7 @@ function scratchpad_list_scratchpads_stats(){
       $sites_with_no_nodes[] = "http://".$site;
     }
   }
-  $output = '<pre>
+  $output = '<pre style="font-family: mono, monospace">
 Users: '.$total_users.' (Total activated)
 Users: '.$total_login_users.' (Active and have logged in)
 Users: '.$total_users_week.' (Logged in, in last 7 days)
