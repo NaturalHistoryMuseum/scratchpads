@@ -53,6 +53,14 @@ function autotag_update_6106(){
   $result[] = db_query("UPDATE {system} SET weight=10 WHERE name='autotag'");
   return array('#finished' => TRUE);
 }
+
+/**
+ * Update the menu.
+ */
+function autotag_update_6107(){
+  return array('#finished' => TRUE);
+}
+
 /**
  * Implementation of hook_schema
  */
