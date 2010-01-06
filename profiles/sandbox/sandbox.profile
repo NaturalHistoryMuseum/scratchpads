@@ -32,10 +32,6 @@ function sandbox_profile_modules(){
 function sandbox_profile_tasks(&$task, $url){
   require_once("./profiles/scratchpad/scratchpad.profile");
   if($task == 'profile'){
-    // Firstly, take the site off line in case anyone is trying to view the site
-    // now.
-    variable_set('site_offline',1);
-    variable_set('site_offline_message','The Scratchpad Sandbox is currently being rebuilt, please come back in two minutes.');
     scratchpad_profile_tasks_1();
 
     // Set the last reported variable, so that this site doesn't
