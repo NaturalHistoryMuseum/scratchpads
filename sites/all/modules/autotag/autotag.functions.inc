@@ -46,6 +46,12 @@ function _autotag_search_field($field, $vids){
         $words_placeholder[] = "'%s'";
       }
     }
+    // Are we tagging just leaves?
+    $tag_only_leaves = variable_get('autotag_only_leaves', FALSE);
+    if($tag_only_leaves){
+      $tag_only_leaves_sql = ' AND t.tid NOT IN (SELECT parent FROM {term_hierarchy}) ';
+    }
+    
     // Because I'm sending words as an array, I've also got to do vids in the same way
     $vids_placeholder = array();
     foreach($vids as $doesntmatter){
@@ -62,7 +68,7 @@ function _autotag_search_field($field, $vids){
           WHERE 
             t.tid = l.tid AND 
             lowername IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).") 
+            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql 
           UNION 
           SELECT 
             t.tid, t.vid 
@@ -72,7 +78,7 @@ function _autotag_search_field($field, $vids){
           WHERE 
             s.tid = t.tid AND 
             LOWER(s.name) IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).")",
+            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql",
         array_merge($words,$vids,$words,$vids));
         
       while($row=db_fetch_array($results)){
@@ -95,6 +101,9 @@ function _autotag_search_field($field, $vids){
           $words_array_syn[] = $words_including_small[$key+1];
         }
       }
+      if($tag_only_leaves){
+        $tag_only_leaves_sql = ' AND tid NOT IN (SELECT parent FROM {term_hierarchy}) ';
+      }
       if(count($sql_array)){
         $results = db_query("
             SELECT 
@@ -102,14 +111,14 @@ function _autotag_search_field($field, $vids){
             FROM 
               {term_lowername} l 
             WHERE 
-              ".implode(" OR ",$sql_array)." 
+              (".implode(" OR ",$sql_array).") $tag_only_leaves_sql 
             UNION
             SELECT 
               tid 
             FROM 
               {term_synonym} s
             WHERE 
-              ".implode(" OR ",$sql_array_syn),
+              (".implode(" OR ",$sql_array_syn).") $tag_only_leaves_sql",
           array_merge($words_array, $words_array_syn));
         
         while($row=db_fetch_array($results)){
