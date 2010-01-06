@@ -8,7 +8,7 @@ function scratchpad_list_scratchpads(){
   $items = array();
   ksort($sites);
   foreach($sites as $data){
-    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '.$data['nodes'] .' | Views: '.$data['views'].'</span>';
+    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '.array_sum($data['nodes']) .' | Views: '.$data['views'].'</span>';
     if(user_access('SCRATCHPADIFY')){
       '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
     }
