@@ -5,7 +5,7 @@
 # stop the sandbox wipe process.
 
 # Move the sandbox.html file into place
-mv /var/www/drupal6/sites/all/modules/sandbox/sandbox.html.hidden /var/www/drupal6/sites/all/modules/sandbox/sandbox.html
+mv /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden /var/lib/drupal6/all/modules/sandbox/sandbox.html
 
 # Recreate the database.
 echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;" | mysql -uroot -pOecey9cheehiphohngeiwi8lahH1ohNi
@@ -13,4 +13,4 @@ echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;"
 screen -D -m "./install_sandbox_help"
 
 # Hide sandbox.html
-mv /var/www/drupal6/sites/all/modules/sandbox/sandbox.html /var/www/drupal6/sites/all/modules/sandbox/sandbox.html.hidden
+mv /var/lib/drupal6/all/modules/sandbox/sandbox.html /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden
