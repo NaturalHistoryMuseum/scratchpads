@@ -270,6 +270,7 @@ function _autotag_form_alter(&$form, &$form_state, $form_id){
     $form['autotag']['dragndropfields'] = array(
       '#value' => '<div class="autotag-dnd" id="autotag-container">
   <div id="autotag-dnd-left">
+    <p id="autotag_remove_all">'.t('Remove all').'</p>
     <h3>'.t('Terms to use').'</h3>
     <ul>
       '.$lists.'
