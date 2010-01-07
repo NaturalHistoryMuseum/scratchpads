@@ -685,10 +685,6 @@ function darwincore_access($op, $node, $account){
   return false;
 }
 
-function darwincorelocation_access($op, $node, $account){
-  return darwincore_access($op, $node, $account);
-}
-
 /**
  * Implementation of hook_validate()
  */
@@ -890,32 +886,41 @@ function darwincorelocation_update($node){
  * Implementation of hook_nodeapi().
  */
 function darwincore_nodeapi(&$node, $op, $teaser, $page){
-  switch($op){
-    case 'delete revision' :
-      db_query('DELETE FROM {darwincore} WHERE vid = %d', $node->vid);
-      break;
-    case 'view' :
-      // Delete the shit that the location module adds.
-      unset($node->content['locations']);
-      break;
-    case 'insert' :
-    case 'update' :
-      // Save the darwincoreloation location to the speciemen also
-      $node->locations = location_load_locations($node->locationnode, 'nid');
-      if ($node->locations) {
-        location_save_locations($node->locations, array('nid' => $node->nid, 'vid' => $node->vid));
+  switch($node->type){
+    case 'darwincore':
+      switch($op){
+        case 'delete revision' :
+          db_query('DELETE FROM {darwincore} WHERE vid = %d', $node->vid);
+          break;
+        case 'view' :
+          // Delete the shit that the location module adds.
+          unset($node->content['locations']);
+          break;
+        case 'insert' :
+        case 'update' :
+          // Save the darwincoreloation location to the speciemen also
+          $node->locations = location_load_locations($node->locationnode, 'nid');
+          if ($node->locations) {
+            location_save_locations($node->locations, array('nid' => $node->nid, 'vid' => $node->vid));
+          }
       }
-  }
-}
-
-function darwincorelocation_nodeapi(&$node, $op, $teaser, $page){
-  switch($op){
-    case 'delete revision' :
-      db_query('DELETE FROM {darwincorelocation} WHERE vid = %d', $node->vid);
       break;
-    case 'view' :
-      // Delete the shit that the location module adds.
-      unset($node->content['locations']);
+    case 'darwincorelocation':
+      switch($op){
+        case 'delete revision' :
+          db_query('DELETE FROM {darwincorelocation} WHERE vid = %d', $node->vid);
+          break;
+        case 'view' :
+          // Delete the shit that the location module adds.
+          unset($node->content['locations']);
+          break;
+        case 'update':
+          // If we're updated a darwincorelocation node, then we also need to update
+          // the darwincore nodes that reference this darwincorelocation to update
+          // their locations (from the location module).
+          print_r($node);
+          exit;
+      }
       break;
   }
 }
