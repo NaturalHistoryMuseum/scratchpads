@@ -915,11 +915,15 @@ function darwincore_nodeapi(&$node, $op, $teaser, $page){
           unset($node->content['locations']);
           break;
         case 'update':
-          // If we're updated a darwincorelocation node, then we also need to update
-          // the darwincore nodes that reference this darwincorelocation to update
-          // their locations (from the location module).
-          print_r($node);
-          exit;
+          // If we're updated a darwincorelocation node, then we also need to 
+          // update the darwincore nodes that reference this darwincorelocation 
+          // to update their locations (from the location module).
+          $result = db_query("SELECT nid FROM {darwincore} WHERE locationnode = %d", $node->nid);
+          while($row = db_fetch_array($result)){
+            $darwincore_node = node_load(array('nid' => $row['nid']));
+            $darwincore_node->locations = $node->locations;
+            node_save($darwincore_node);
+          }
       }
       break;
   }
