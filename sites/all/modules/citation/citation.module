@@ -66,6 +66,14 @@ function citation_menu(){
 }
 
 /**
+ * Implementation of hook_init
+ */
+function citation_init(){
+  // Delete the data from citation_store for the URL that is being accessed.
+  db_query("DELETE FROM {citation_store} WHERE url = '%s'", request_uri());
+}
+
+/**
  * Return files (simply makes URLs nice - Hmmm, there must be a better way of
  * doing this)
  */
@@ -271,22 +279,27 @@ function citation_save_file($file, $citation_number){
 function citation_get_citations(){
   global $_SESSION;
   $citations = array();
-  if(isset($_SESSION['citation'][$_GET['page']]['nids']) && is_array($_SESSION['citation'][$_GET['page']]['nids']) && count($_SESSION['citation'][$_GET['page']]['nids'])){
-    $nids = $_SESSION['citation'][$_GET['page']]['nids'];
-    $results = db_query("SELECT DISTINCT uid FROM {node} WHERE nid IN (%s)", implode(",", $_SESSION['citation'][$_GET['page']]['nids']));
+  
+  $data = db_result(db_query("SELECT data FROM {citation_store} WHERE url = '%s'", $_GET['page']));
+  if($data){
+    $data = unserialize($data);
+  } else {
+    $data = array();
+  }
+  if(isset($data['nids'])){
+    $nids = $data['nids'];
+    $results = db_query("SELECT DISTINCT uid FROM {node} WHERE nid IN (%s)", implode(",", $data['nids']));
     while($row = db_fetch_array($results)){
       $user = user_load($row['uid']);
       $citations[] = l(theme('citation_user', $user), 'user/' . $user->uid);
     }
   }
-  if(isset($_SESSION['citation'][$_GET['page']]['urls']) && is_array($_SESSION['citation'][$_GET['page']]['urls']) && count($_SESSION['citation'][$_GET['page']]['urls'])){
-    foreach($_SESSION['citation'][$_GET['page']]['urls'] as $url){
+  if(isset($data['urls'])){
+    foreach($data['urls'] as $url){
       $citations[] = theme('citation_url', $url);
     }
   }
   // FIXME - This doesn't seem to be working - WILL RESULT IN ODD CITATIONS
-  unset($_SESSION['citation']);
-  session_write_close();
   if(count($citations)){
     $output = theme('citations', $citations);
     $output .= '<form action="' . url('citation/create_no_js') . '"><input type="button" value="' . t('Create Citation') . '" onclick="';
@@ -411,7 +424,14 @@ function citation_add_nid($nid, $url = false){
   if(!$url){
     $url = request_uri();
   }
-  $_SESSION['citation'][$url]['nids'][$nid] = $nid;
+  $data = db_result(db_query("SELECT data FROM {citation_store} WHERE url = '%s'", request_uri()));
+  if($data){
+    $data = unserialize($data);
+    $data['nids'][$nid] = $nid;
+    db_query("UPDATE {citation_store} SET data = '%s' WHERE url = '%s'", serialize($data), request_uri());
+  } else {    
+    db_query("INSERT INTO {citation_store} (url, data) VALUES ('%s','%s')", request_uri(), serialize(array('nids'=>array($nid=>$nid))));
+  }
 }
 
 /**
@@ -425,8 +445,14 @@ function citation_add_url($url_array, $url = false){
   if(strpos($url, "http") === 0){
     $url = substr($url, strpos($url, "/", 10));
   }
-  foreach($url_array['urls'] as $url_to_add){
-    $_SESSION['citation'][$url]['urls'][$url_array['name']]['urls'][$url_to_add] = $url_to_add;
+  
+  $data = db_result(db_query("SELECT data FROM {citation_store} WHERE url = '%s'", request_uri()));
+  if($data){
+    $data = unserialize($data);
+    $data['urls'] = array_merge($data['urls'], $url_array);
+    db_query("UPDATE {citation_store} SET data = '%s' WHERE url = '%s'", serialize($data), request_uri());
+  } else {
+    db_query("INSERT INTO {citation_store} (url, data) VALUES ('%s','%s')", request_uri(), serialize(array('urls'=>$url_array))); 
   }
 }
 
