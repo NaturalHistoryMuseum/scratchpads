@@ -239,7 +239,8 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
     $block['#hidden'] = TRUE;
   }
   //$content = "***".trim(strip_tags($content, '<img>'))."***";
-  $output .= '<div id="'.$id.'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
+  // Remove slashes from the ID field as they screw with jquery.
+  $output .= '<div id="'.str_replace("/","slash",$id).'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
   if($id != 'divider' && $before_divider){
     $output .= '<div class="mado_close">
     <img src="'.url(drupal_get_path('module','mado').'/images/close.png').'" alt="Close"/>
