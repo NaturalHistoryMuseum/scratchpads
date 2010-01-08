@@ -612,6 +612,7 @@ function scratchpad_profile_set_perms(){
                               "access webform results",
                               "assign node weight",
                               "clone own nodes",
+                              "configure member roles",
                               "create biblio",
                               "create blog entries",
                               "create darwincore content",
