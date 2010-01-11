@@ -17,7 +17,7 @@ function flickr_init(){
 function flickr_ajax_callback($term_name, $limit = 50, $offset = 0){
   $items = array ();
   $urls = array();
-  $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&text=' . $term_name );
+  $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&safe_search=2&text=' . $term_name );
   $results = unserialize ( file_get_contents ( $url ) );
   if ($results ['photos'] ['total'] > 0) {
     $photos = $results ['photos'] ['photo'];
