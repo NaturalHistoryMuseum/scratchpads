@@ -226,7 +226,7 @@ function scratchpad_profile_tasks_2(){
   db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'admin','no-direct-login',1,NOW())");
   db_query("INSERT INTO {users_roles} (uid,rid) VALUES (2,5)"); // Tsk, adding role when none exist!
   db_query("UPDATE {url_alias} SET src = 'user/2' WHERE src = 'user/1'");
-  $openids = array('http://simon.rycroft.name/','http://vsmith.info/','http://scratchpads.eu/'); // FIXME: BACKDOOR, CLOSE IT!
+  $openids = array('http://simon.rycroft.name/','http://vsmith.info/','http://scratchpads.eu/');
   foreach($openids as $openid){
     db_query("INSERT INTO {authmap} (uid,authname,module) VALUES (1,'%s','openid')", $openid);
   }
@@ -262,7 +262,6 @@ function scratchpad_profile_tasks_2(){
   db_query("INSERT INTO {legal_conditions} (conditions, date, extras) VALUES ('%s',NOW(),'%s')", $conditions, serialize($extras));
   variable_set('legal_display',2);
   
-  // Lightbox  FIXME: This may be changed to use the ImageField module
   variable_set('lightbox2_display_image_size','preview');
   variable_set('lightbox2_trigger_image_size',array('thumbnail'=>'thumbnail'));
   variable_set('lightbox2_disable_nested_galleries',1);
@@ -314,7 +313,6 @@ function scratchpad_profile_tasks_2(){
   }
   // Hide the theme search form
   variable_set('theme_settings', array('toggle_search' => 0));
-  // For some strange reason, the garland theme ends up being disabled.  FIXME
   db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
   
   // Remove the "Biblio" & "Taskguide" links from the navigation menu - they
