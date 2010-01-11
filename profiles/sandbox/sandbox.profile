@@ -55,6 +55,9 @@ function sandbox_profile_tasks(&$task, $url){
   
     scratchpad_profile_tasks_2();
     
+    // Set user_register variable (which is set in ..._tasks_2) back to 1
+    variable_set('user_register', 1);
+    
     // N.B. The following is normally executed by tasks_3, but we don't want an
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('pass') , status = 1 WHERE uid = 2");
