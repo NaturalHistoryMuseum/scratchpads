@@ -72,15 +72,15 @@ function scratchpadify_taskguide(){
   <div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/specimen.png').'" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
-      <h2>Images, Specimens and Locations</h2><p>'.l('Add images','node/add/image').', '.l('create galleries','admin/content/image').', and '.l('view images','image').' in the galleries. You can also '.l('add','node/add/darwincore').' and '.l('import','admin/content/node_import/add').' specimen records along with '.l('geographic locations','node/add/darwincorelocation').'.</p>
+      <h2>Images, Specimens and Locations</h2><p>'.l('Add images','node/add/image').', '.l('create galleries','admin/content/taxonomy/'.variable_get('image_gallery_nav_vocabulary','')).', and '.l('view images','image').' in the galleries. You can also '.l('add','node/add/darwincore').' and '.l('import','admin/content/node_import/add').' specimen records along with '.l('geographic locations','node/add/darwincorelocation').'.</p>
     </div>
   </div>
-  <div>
+  <!--<div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/dna.png').'" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
       <h2>Morphological and Molecular Data</h2><p>Create and import projects (collections of taxa, characters and data) that can be edited within the site matrix editor.</p>
     </div>
-  </div>
+  </div>-->
   <div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/language.png').'" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
@@ -107,7 +107,7 @@ function scratchpadify_taskguide(){
   </div>
   <div style="clear:both;">
     <p style="text-align:right">*Only site maintainers can change these settings.</p>
-    <p>For more help check out the Scratchpad resources ('.l('screencasts','http://scratchpads.eu/screencasts').', '.l('forum','http://scratchpads.eu/forum').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
+    <p>For more help check out the Scratchpad resources ('.l('FAQs','http://scratchpads.eu/faqs').', '.l('screencasts','http://scratchpads.eu/screencasts').', '.l('UserVoice','http://biodiversityinformatics.uservoice.com/forums/25435-scratchpads').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
   </div>
 </div>';
   return $output;
