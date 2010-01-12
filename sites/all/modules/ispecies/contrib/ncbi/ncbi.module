@@ -15,7 +15,7 @@ function ncbi_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'ncbi' ) . '/ncbi.css' );
 }
 
-function ncbi_ajax_callback($term_name, $limit = false, $offset = false){
+function ncbi_ajax_callback($term_name, $limit = false, $offset = false, $urls = array()){
   $items = array ();
   $esearch_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=taxonomy&term=' . str_replace(" ", "+", $term_name) . '&retmax=' . $limit );
   $esearch_xml = file_get_contents ( $esearch_request );

@@ -11,7 +11,7 @@ function wikipedia_ispecies() {
       'callback' => 'wikipedia_ajax_callback'));
 }
 
-function wikipedia_ajax_callback($term_name, $limit = false, $offset = false){
+function wikipedia_ajax_callback($term_name, $limit = false, $offset = false, $urls = array()){
   $wikipedia_url = 'http://en.wikipedia.org/wiki/Special:Export/';
   
   $items = array ();

@@ -15,7 +15,7 @@ function googlescholar_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'googlescholar' ) . '/googlescholar.css' );
 }
 
-function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0){
+function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://darwin.zoology.gla.ac.uk/cgi-bin/gsaJSON.cgi?q=' . $term_name );
   $json_str = file_get_contents ( $request );

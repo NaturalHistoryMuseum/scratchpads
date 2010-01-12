@@ -11,7 +11,7 @@ function nbnmap_ispecies(){
       'callback' => 'nbnmap_ajax_callback' ) );
 }
 
-function nbnmap_ajax_callback($term_name, $limit = 20){
+function nbnmap_ajax_callback($term_name, $limit = 20, $urls = array()){
   try{
     $items = array ();  
     $sc = new SoapClient('http://www.nbnws.net/ws/taxonomy/WSDL');

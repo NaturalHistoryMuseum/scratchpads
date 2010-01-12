@@ -14,7 +14,7 @@ function morphbank_init(){
   drupal_add_css(drupal_get_path('module','morphbank').'/morphbank.css');
 }
 
-function morphbank_ajax_callback($term_name, $limit = 20, $offset = 0){
+function morphbank_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();
   $urls = array();
   $url = 'http://fencedine.myspecies.info/?url=' . urlencode ("http://services.morphbank.net/mb/request?method=taxon&objecttype=Image&limit=$limit&taxonName=$term_name&format=id");

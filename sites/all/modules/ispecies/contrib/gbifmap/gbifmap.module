@@ -11,7 +11,7 @@ function gbifmap_ispecies(){
       'callback' => 'gbifmap_ajax_callback' ) );
 }
 
-function gbifmap_ajax_callback($term_name, $limit = 20){
+function gbifmap_ajax_callback($term_name, $limit = 20, $urls = array()){
   $items = array ();   
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://data.gbif.org/species/taxonName/ajax/returnType/concept/view/ajaxMapUrls/provider/1/?query=' . $term_name );
   $xml_response = file_get_contents ( $request );  

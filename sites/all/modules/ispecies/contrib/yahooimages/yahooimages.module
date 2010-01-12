@@ -14,7 +14,7 @@ function yahooimages_init(){
   drupal_add_css ( drupal_get_path ( 'module', 'yahooimages' ) . '/yahooimages.css' );
 }
 
-function yahooimages_ajax_callback($term_name, $limit = 20, $offset = 0){
+function yahooimages_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();  
   $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://search.yahooapis.com/ImageSearchService/V1/imageSearch?appid=oKvSo97V34Fj_xvmgvJCiVFF6sRd60NyUSxNJ5jijiuSKaAV3Hf_IoFiouBDm_c&query=' . $term_name . '&results=' . $limit . '&output=php' );
   $response = file_get_contents ( $request );  

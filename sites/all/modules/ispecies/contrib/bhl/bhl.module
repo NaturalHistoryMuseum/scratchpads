@@ -64,7 +64,7 @@ function _bhl_get_namebank_titles($term_name) {
   return $titles;
 }
 
-function bhl_ajax_callback($term_name, $limit = 20, $offset = 0){
+function bhl_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();
   $titles = _bhl_get_namebank_titles($term_name);
   $count_titles = count ( $titles );
