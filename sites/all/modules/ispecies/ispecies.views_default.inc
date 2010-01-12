@@ -174,6 +174,7 @@ function ispecies_views_default_views() {
     $handler->override_option('access', array(
       'type' => 'none',
     ));
+    $handler->override_option('items_per_page', 0);
     $handler->override_option('title', $ispecies_view['title']);
     if($ispecies_view['type'] == 'list'){
       $handler->override_option('empty', '<div><ul id="'.$module.'"></ul></div><script type="text/javascript">ispecies_callback(\''.url('ispecies',array('absolute' => TRUE)).'\',\''.$module.'\');</script>');      

@@ -82,19 +82,18 @@ function ispecies_get_data($module, $tid){
   $ispecies_views = module_invoke_all('ispecies');  
   $sort_orders = variable_get('view_sort-limits', array());
   if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
-    if(function_exists($ispecies_views[$module]['callback'])){
-      $results = call_user_func($ispecies_views[$module]['callback'], $term_name, $sort_orders[$module]);
-    } else {
-      watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
-      return false;
+    $count = $sort_orders[$module]; 
+  }
+  if(function_exists($ispecies_views[$module]['callback'])){
+    $results = db_query("SELECT url FROM {ispecies} WHERE ispeciestype = '%s'", $module);
+    $urls = array();
+    while($url = db_result($results)){
+      $urls[] = $url;
     }
+    $results = call_user_func($ispecies_views[$module]['callback'], $term_name, $count, 0, $urls);
   } else {
-    if(function_exists($ispecies_views[$module]['callback'])){
-      $results = call_user_func($ispecies_views[$module]['callback'], $term_name);
-    } else {
-      watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
-      return false;
-    }
+    watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
+    return false;
   }
   // We have the results, now we should remove any that we don't want
   $db_results = db_query("SELECT hide FROM {view_sort_hide} WHERE tid = %d AND ispeciestype = '%s'", $tid, $module);

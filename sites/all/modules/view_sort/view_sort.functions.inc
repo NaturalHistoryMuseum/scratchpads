@@ -12,7 +12,7 @@ function views_sort_pin(){
   $node->title = $data[2];
   $node->body = substr($_POST['html'], strpos($_POST['html'], "<div"));
   $node->type = 'ispecies';
-  $node->format = 2;
+  $node->node_weight = -100;
   global $user;
   $node->uid = $user->uid;
   $node->taxonomy = array($data[1]=> taxonomy_get_term($data[1]));
@@ -73,7 +73,6 @@ function views_sort_sorted($viewname=false){
 function views_sort_popup_html($view_name = "", $view_args = ""){
   $view_args = json_decode(urldecode($view_args));
   $items = view_sort_get_items($view_name, $view_args);
-  //print_r($items);exit;
   echo '<div id="view-sort-select-number"><form><label for="view-sort-select">Number to display:</label><select id="view-sort-select">';
   $sort_orders = variable_get('view_sort-limits', array());
   if(!isset($sort_orders[$view_name])){
@@ -83,25 +82,30 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
     $divider_position = $sort_orders[$view_name];
   }
   $num_local_results = view_sort_get_local_items_count($view_name, $view_args);
-  if($num_local_results < $sort_orders[$view_name]){
+  if($num_local_results < $sort_orders[$view_name] && $num_local_results){
     $sort_orders[$view_name] = $num_local_results;
   }
-  for($i=1; $i<=20; $i++){
-    echo '<option value="',$i,'"';
+  if($num_local_results){
+    $max = $num_local_results;
+  } else {
+    $max = 20;
+  }
+  for($i=1; $i<=$max; $i++){
+    echo '<option value="'.$i.'"';
     if($sort_orders[$view_name] == $i){
       echo ' SELECTED';
     }
-    echo '>',$i,'</option>';
+    echo '>'.$i.'</option>';
   }
   echo '</select></form></div>';
+  
   $i = 0;
   echo '<div id="',$view_name,'-popup" class="view-sort-top view-sort-drag class-',$view_name,'">';
   $divider_output = FALSE;
-  //echo $sort_orders[$view_name];exit;
   foreach($items as $id => $item){
     // Add the divider
     if(((!isset($item['local']) || !$item['local']) || $i == $sort_orders[$view_name]) && !$divider_output){
-      echo '<div class="view-sort-clear"></div></div><div class="class-',$view_name,' view-sort-bottom">';
+      echo '</div><div class="class-',$view_name,' view-sort-bottom">';
       $divider_output = TRUE;
     }
     $class = (isset($item['local']) && $item['local']) ? "sortable" : "notsortable";
@@ -124,6 +128,9 @@ function view_sort_get_local_items_count($view_name, $view_args){
   // Get the view
   $view = views_get_view($view_name);
   $view->args = $view_args;
+  // Looks to be a small bug in the views module, the pager element isn't
+  // being set, so well manually set it here.
+  $view->pager['items_per_page'] = 0;
   $view->execute();
   return count($view->result);
 }
@@ -132,6 +139,9 @@ function view_sort_get_items($view_name, $view_args){
   // Get the view
   $view = views_get_view($view_name);
   $view->args = $view_args;
+  // Looks to be a small bug in the views module, the pager element isn't
+  // being set, so well manually set it here.
+  $view->pager['items_per_page'] = 0;
   $view->execute();
   $items = array();
   if(count($view->result)){

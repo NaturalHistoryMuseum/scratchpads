@@ -26,12 +26,18 @@ function view_sort_add_draggable(viewname){
         success:function(data){
           // We can move this block up to the top
           var something = pin_me.clone();
-          something.appendTo(".view-sort-top"); 
+          something.prependTo(".view-sort-top"); 
           pin_me.remove();
           // Count the number of blocks at the top, if it's more than the drop
           // down value, increase it
-          if($(".view-sort-top > .sort-div").length > $('#view-sort-select').val()){
-            $('#view-sort-select').val($(".view-sort-top > .sort-div").length);
+          var new_val = $(".view-sort-top > .sort-div").length;
+          if(new_val != $('#view-sort-select').val()){
+            // Make sure the new val is actually an option
+            var option = $('#view-sort-select>option[value='+new_val+']');
+            if(!option.html()){
+              $('#view-sort-select').html($('#view-sort-select').html()+'<option value="'+new_val+'">'+new_val+'</option>');
+            }
+            $('#view-sort-select').val(new_val);
             // Unfortunately the onchange isn't called, so we need to call it 
             // ourselves
             var dropdown_number = $('#view-sort-select').val();
@@ -40,7 +46,7 @@ function view_sort_add_draggable(viewname){
               url:Drupal.settings.view_sort.callbacks.number,
               data:{view:viewname, number:dropdown_number}
             };
-            $.ajax(ajax_options);            
+            $.ajax(ajax_options);
           }
         }
       };
