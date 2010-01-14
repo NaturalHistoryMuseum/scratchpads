@@ -195,7 +195,7 @@ function citation_create_citation(){
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" id="cited-page">' . $page . '</html>';
     // Strip the link to create a citation
-    $page = preg_replace("/<p><a[^>]*>Create Citation<\/a><\/p>/i", "", $page);
+    $page = preg_replace("/<input value=\"Create Citation\"[^>]*>/i", "<p>".t('Citation created').': '.date("r")."</p>", $page);
     // Now save the contents of the file to filepath / citation / [citation_number].html
     file_put_contents("$file_path/citations/$citation_number.html", $page);
     print $citation_number; // Probably change this to return a link
