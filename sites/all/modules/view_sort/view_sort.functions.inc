@@ -97,7 +97,7 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
     }
     echo '>'.$i.'</option>';
   }
-  echo '</select></form></div>';
+  echo '</select><div class="description">This value will be set for ALL widgets of this type.</div></form></div>';
   
   $i = 0;
   echo '<div id="',$view_name,'-popup" class="view-sort-top view-sort-drag class-',$view_name,'">';
