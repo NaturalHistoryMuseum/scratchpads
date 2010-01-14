@@ -546,6 +546,10 @@ function darwincore_form(&$node){
 
 function darwincorelocation_form_pre_render($element){
   // No idea why CCK is doing this, but hey ho!
+  //print_r($element);exit;
+  unset($element['locations'][0]['name']);
+  unset($element['locations'][0]['street']);
+  unset($element['locations'][0]['additional']);
   $element['#content_extra_fields']['title']['weight'] = -200;
   return $element;
 }
