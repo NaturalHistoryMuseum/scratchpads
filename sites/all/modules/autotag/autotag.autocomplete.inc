@@ -1,6 +1,7 @@
 <?php
 
 function autotag_autocomplete($type = 'page', $string=''){
+  module_load_include('functions.inc','autotag');
   $vids = _autotag_get_vids_for_type($type);
   /**
    * The following is taken straight from the taxonomy module, with a small alteration to the SQL
