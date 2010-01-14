@@ -101,7 +101,7 @@ function darwincore_node_import_fields($type){
       'title' => t('Earliest date collected'), 
       'group' => t('Darwincore fields')
     );
-    $fields['lateestdatecollected'] = array(
+    $fields['latestdatecollected'] = array(
       'title' => t('Latest date collected'), 
       'group' => t('Darwincore fields')
     );
@@ -832,16 +832,21 @@ function darwincore_insert($node){
   $node->taxonomicname = _darwincore_get_taxonomicname($node->taxonomicname);
   //print_r($node);
   //exit();
+  // FIXME - Make this associative array - this is FUCKING HORRIBLE.
   $values = array($node->nid, $node->vid, $node->institutioncode, $node->collectioncode, $node->cataloguenumbertext, $node->identificationqualifier, $node->identifiedby, $node->dateidentifiedyear, $node->dateidentifiedmonth, $node->dateidentifiedday, $node->collectornumber, $node->fieldnumber, $node->collector, $node->earliestdatecollected, $node->latestdatecollected, $node->fieldnotes, $node->count, $node->genbanknum, $node->remarks, $node->lifestage, $node->basisofrecord, $node->sex, $node->taxonomicname, $node->typestatus, $node->othercataloguenum, $node->locationnode);
   $earliestdatecollected_place_holder = "'%s'"; 
   $latestdatecollected_place_holder = "'%s'";
   if(!strtotime($node->earliestdatecollected)){
     $earliestdatecollected_place_holder = "NULL";
     unset($values[13]); // Position in array.    
+  } else {
+    $values[13] = date("o-m-d", strtotime($node->earliestdatecollected));
   }
   if(!strtotime($node->latestdatecollected)){
     $latestdatecollected_place_holder = "NULL";
     unset($values[14]); // Position in array.    
+  } else {
+    $values[14] = date("o-m-d", strtotime($node->latestdatecollected));
   }
   db_query("INSERT INTO {darwincore} (nid,vid,institutioncode,collectioncode,cataloguenumbertext,identificationqualifier,identifiedby,dateidentifiedyear,dateidentifiedmonth,dateidentifiedday,collectornumber,fieldnumber,collector,earliestdatecollected,latestdatecollected,fieldnotes,count,genbanknum,remarks,lifestage,basisofrecord,sex,taxonomicname,typestatus,othercataloguenum,locationnode) VALUES (%d,%d,'%s','%s','%s','%s','%s',%d, %d, %d,'%s','%s','%s', $earliestdatecollected_place_holder , $latestdatecollected_place_holder , '%s',%d,'%s','%s','%s',%d,%d,%d,%d,'%s',%d);", $values);
   // Also need to link the taxonomies to the entry (duplication - FUCK, I know).
