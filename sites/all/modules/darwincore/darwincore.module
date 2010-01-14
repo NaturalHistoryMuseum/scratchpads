@@ -72,8 +72,17 @@ function darwincore_node_import_fields($type){
       'title' => t('Identified by'), 
       'group' => t('Darwincore fields')
     );
-    $fields['dateidentified'] = array(
-      'title' => t('Date identified'), 
+    $fields['dateidentifiedyear'] = array(
+      'title' => t('Year identified'), 
+      'group' => t('Darwincore fields')
+    );
+    $fields['dateidentifiedmonth'] = array(
+      'title' => t('Month identified (Number only)'), 
+      'group' => t('Darwincore fields'),
+      'options' => array(t('-- Unknown --'), t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December'))
+    ); 
+    $fields['dateidentifiedday'] = array(
+      'title' => t('Day identified'), 
       'group' => t('Darwincore fields')
     );
     $allowed_values = array();
@@ -725,7 +734,7 @@ function darwincore_validate($node, &$form){
   }
   if($node->dateidentifiedday){
     if(!checkdate($node->dateidentifiedmonth, $node->dateidentifiedday, $node->dateidentifiedyear)){
-      form_set_error('dateidentifiedday', t('The date you have entered is not valid, if entering a day, ensure you also enter a month'));      
+      form_set_error('dateidentifiedday', t('The date you have entered is not valid, if entering a day, ensure you also enter a month'));
     }
   }
 }
