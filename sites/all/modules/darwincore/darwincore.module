@@ -22,7 +22,7 @@ function darwincore_node_import_fields($type){
   if($type == 'node:darwincore' || $type == 'node:darwincorelocation'){
     $vocabularies = taxonomy_get_vocabularies();
     foreach($vocabularies as $vocabulary){
-      if($vocabulary->module == 'darwincore'){
+      if($vocabulary->module == 'darwincore' || $vocabulary->module == 'darwincorelocation'){
         $options[strtolower($vocabulary->name)] = taxonomy_get_tree($vocabulary->vid);
       }
     }
