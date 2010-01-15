@@ -104,7 +104,7 @@ function theme_darwincore_full_page($node) {
         $format_string = 'Y';
     }
     $months = array('December','January','February','March','April','May','June','July','August','September','October','November','December');// 0 is set as a month to ensure strtotime works!
-    $identification[] = array("Date Identified", format_date(strtotime($node->dateidentifiedday.' - '.$months[$node->dateidentifiedmonth].' - '.$node->dateidentifiedyear), 'custom', $format_string));
+    $identification[] = array("Date Identified", format_date(strtotime($node->dateidentifiedday.' - '.$months[$node->dateidentifiedmonth].' - '.$node->dateidentifiedyear)+1, 'custom', $format_string));
   }
   $output = '<div class="darwincore">';
   $output .= _theme_darwincore_full_page_help($collection, "Collection");
