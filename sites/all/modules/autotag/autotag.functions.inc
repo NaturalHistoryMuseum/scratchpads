@@ -256,13 +256,13 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
       // We've also got additional tags
       $regexp = '%(?:^|,\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^",]*))%x';
       preg_match_all($regexp, $node->additionaltags, $matches);
-      $words = $matches[1];
-      if(count($words)){
+      if(count($matches[1])){
         $words_place_holders = array();
-        foreach($words as $does_not_matter){
+        foreach($matches[1] as $key => $value){
+          $matches[1][$key] = trim($value, '"');
           $words_place_holders[] = "'%s'";
         }
-        $result = db_query("SELECT tid, name FROM {term_data} WHERE vid IN (%s) AND LOWER(name) IN (".implode(",",$words_place_holders).")", array_merge(array(implode(",",$vids)), $words));
+        $result = db_query("SELECT tid, name FROM {term_data} WHERE vid IN (%s) AND LOWER(name) IN (".implode(",",$words_place_holders).")", array_merge(array(implode(",",$vids)), $matches[1]));
         while($row = db_fetch_array($result)){
           if(!isset($terms[$row['vid']]) || !in_array($row['tid'], $terms[$row['vid']])){
             $terms[$row['vid']][] = $row['tid'];
