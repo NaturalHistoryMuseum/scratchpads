@@ -21,7 +21,7 @@ function scratchpad_training_form_alter(&$form, $form_state, $form_id){
           'pass' => 'password'), 
         'date_default_timezone' => '3600', 
         'clean_url' => '1',
-        'update_status_module' => array (1 => 1), 
+        'update_status_module' => array (1 => 0), 
         'op' => 'Save and continue', 
         'submit' => 'Save and continue', 
         'form_id' => 'install_configure_form'));

@@ -8,7 +8,8 @@ function _scratchpadify_install_configure_form_submit($form, &$form_state) {
 
   // Enable update.module if this option was selected.
   if ($form_state['values']['update_status_module'][1]) {
-    drupal_install_modules(array('update'));
+    // Stop enabling the update module, it's a right royal pain in the arse.
+    //drupal_install_modules(array('update'));
   }
 
   // Turn this off temporarily so that we can pass a password through.
