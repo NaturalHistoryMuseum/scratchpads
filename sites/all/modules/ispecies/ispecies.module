@@ -81,7 +81,7 @@ function ispecies_get_data($module, $tid){
   }
   $ispecies_views = module_invoke_all('ispecies');  
   $sort_orders = variable_get('view_sort-limits', array());
-  if (isset($sort_orders[$module]) && arg(0)!='views-sort'){
+  if (isset($sort_orders[$module]) && arg(0)!='views-sort' && is_numeric($sort_orders[$module])){
     $count = $sort_orders[$module]; 
   }
   if(function_exists($ispecies_views[$module]['callback'])){
@@ -89,6 +89,9 @@ function ispecies_get_data($module, $tid){
     $urls = array();
     while($url = db_result($results)){
       $urls[] = $url;
+    }
+    if(!$count){
+      $count = 50;
     }
     $results = call_user_func($ispecies_views[$module]['callback'], $term_name, $count, 0, $urls);
   } else {
