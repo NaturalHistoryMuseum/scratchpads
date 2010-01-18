@@ -1,0 +1,27 @@
+<?php
+
+function foundation_theme_registry_alter(&$theme_registry){  
+  unset($theme_registry['forum_topic_list']['template']);
+  $theme_registry['forum_topic_list']['theme path'] = drupal_get_path('module','foundation');
+  $theme_registry['forum_topic_list']['theme paths'] = array($theme_registry['forum_topic_list']['theme path']);
+  $theme_registry['forum_topic_list']['file'] = $theme_registry['forum_topic_list']['theme path'].'/forum_topic_list.inc';
+  $theme_registry['forum_topic_list']['function'] = 'foundation_forum_topic_list';
+  
+  unset($theme_registry['forum_list']['template']);
+  $theme_registry['forum_list']['theme path'] = drupal_get_path('module','foundation');
+  $theme_registry['forum_list']['theme paths'] = array($theme_registry['forum_list']['theme path']);
+  $theme_registry['forum_list']['file'] = $theme_registry['forum_list']['theme path'].'/forum_list.inc';
+  $theme_registry['forum_list']['function'] = 'foundation_forum_list';
+
+  unset($theme_registry['forum_topic_navigation']); // May restore this later.
+}
+
+// No longer in D6, so here instead!
+function _forum_format($topic) {
+  if ($topic && $topic->timestamp) {
+    return t('@time ago<br />by !author', array('@time' => format_interval(time() - $topic->timestamp), '!author' => theme('username', $topic)));
+  }
+  else {
+    return t('n/a');
+  }
+}
