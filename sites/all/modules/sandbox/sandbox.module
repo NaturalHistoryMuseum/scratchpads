@@ -8,7 +8,7 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
       $current_time = time();
       $time_passed = $current_time - $update_time;
       $time_passed_string = date('i:s',$time_passed); 
-      $time_left = date('i:s',3600-$time_passed);
+      $time_left = date('i:s',7200-$time_passed);
       return array('subject' => '', 'content' => "<p>The Sandbox was last updated $time_passed_string (mins:seconds) ago. You have approximately $time_left (mins:seconds) before the site is wiped.</p>");
   }
 }
