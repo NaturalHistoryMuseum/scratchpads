@@ -64,59 +64,56 @@ function _bhl_get_namebank_titles($term_name) {
   return $titles;
 }
 
-function bhl_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
+function bhl_ajax_callback($term_name, $limit, $offset = 0, $urls = array()){
   $items = array ();
   $titles = _bhl_get_namebank_titles($term_name);
-  $count_titles = count ( $titles );
   $urls = array();
-  if ($count_titles) {
-    // loop through all the titles   
-    $counter = 0;
-    foreach ( $titles as $title ) {
-      if ($counter >= $limit) {
-        break;
-      }
-      $publication_title = $title ['title'];
-      $pages = array ();
-      if (count ( $title ['items'] ) > 1) { // there is more than one items for the publication
-        $page_counter = 0;
-        // loop through all the items
-        foreach ( $title ['items'] as $title_item ) {
-          foreach ( $title_item->Item->Pages->Page as $page ) {
-            $item_id = intval ( $title_item->ItemID );
-            $page_number = intval ( $page->Number );
-            (intval ( $item->Item->VolumeInfo ) ? $volume_info = 'Vol. ' . $title_item->Item->VolumeInfo : $volume_info = $title_item->Item->VolumeInfo);
-            $viewer_url = str_replace ( 'http://', '/bhl_viewer/', $page->ImageUrl );
-            $pages [$page_number] = sprintf ( '<li><a class="thickbox" href="%s&width=380&height=420" title="%s %s of %s">%s %s%s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number, (strlen ( $volume_info ) > 0 ? ' (' . $volume_info . ')' : '') );
-            $page_counter ++;
-          }
-          ksort ( $pages );
-          $title_items [$item_id] = implode ( '', $pages );
-        }
-        ksort ( $title_items );
-        $page_output = implode ( '', $title_items );
-      } else {
-        foreach ( $title ['items'] [0]->Item->Pages->Page as $page ) {
+  // loop through all the titles   
+  $counter = 0;
+  foreach ( $titles as $title ) {
+    if ($counter >= $limit) {
+      break;
+    }
+    $publication_title = $title ['title'];
+    $pages = array ();
+    if (count ( $title ['items'] ) > 1) { // there is more than one items for the publication
+      $page_counter = 0;
+      // loop through all the items
+      foreach ( $title ['items'] as $title_item ) {
+        foreach ( $title_item->Item->Pages->Page as $page ) {
+          $item_id = intval ( $title_item->ItemID );
+          $page_number = intval ( $page->Number );
+          (intval ( $item->Item->VolumeInfo ) ? $volume_info = 'Vol. ' . $title_item->Item->VolumeInfo : $volume_info = $title_item->Item->VolumeInfo);
           $viewer_url = str_replace ( 'http://', '/bhl_viewer/', $page->ImageUrl );
-          $pages [intval ( $page->Number )] = sprintf ( '<li><a class="thickbox" href="%s&width=810&height=620" title="%s %s of %s">%s %s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number );
+          $pages [$page_number] = sprintf ( '<li><a class="thickbox" href="%s&width=380&height=420" title="%s %s of %s">%s %s%s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number, (strlen ( $volume_info ) > 0 ? ' (' . $volume_info . ')' : '') );
+          $page_counter ++;
         }
-        $page_counter = count ( $pages );
         ksort ( $pages );
-        $page_output = implode ( '', $pages );
+        $title_items [$item_id] = implode ( '', $pages );
       }
-      $number_of_pages = format_plural ( $page_counter, '@count page', '@count pages' );
-      if ($number_of_pages) {
-        $item = array(
-          'body' => "<li>" . sprintf ( '<a href="%s" title="%s" onclick="$(this).next().toggle(); return false">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul></li>',
-          'page_url' => $title ['title_url']
-        );
-        $urls = $item['page_url'];
-        $items[] = $item;
+      ksort ( $title_items );
+      $page_output = implode ( '', $title_items );
+    } else {
+      foreach ( $title ['items'] [0]->Item->Pages->Page as $page ) {
+        $viewer_url = str_replace ( 'http://', '/bhl_viewer/', $page->ImageUrl );
+        $pages [intval ( $page->Number )] = sprintf ( '<li><a class="thickbox" href="%s&width=810&height=620" title="%s %s of %s">%s %s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number );
       }
-      $counter ++;
-      if($counter > $limit){
-        break;
-      }
+      $page_counter = count ( $pages );
+      ksort ( $pages );
+      $page_output = implode ( '', $pages );
+    }
+    $number_of_pages = format_plural ( $page_counter, '@count page', '@count pages' );
+    if ($number_of_pages) {
+      $item = array(
+        'body' => "<li>" . sprintf ( '<a href="%s" title="%s" onclick="$(this).next().toggle(); return false">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul></li>',
+        'page_url' => $title ['title_url']
+      );
+      $urls = $item['page_url'];
+      $items[] = $item;
+    }
+    $counter ++;
+    if($counter > $limit){
+      break;
     }
   }
   $urls = array('name' => 'BHL', 'url'=>'http://biodiversitylibrary.org/name/'.$term_name, 'urls' => $urls);
