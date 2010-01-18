@@ -300,8 +300,7 @@ function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   $vids = array();
   $disable_vids = variable_get('autotag_disable_vids', array());
   foreach($vocabularies as $vocabulary){
-    if(in_array($type,$vocabulary->nodes) && 
-       $vocabulary->tags == 0 &&
+    if(in_array($type,$vocabulary->nodes) &&
        $vocabulary->required == 0 &&
        $vocabulary->multiple == 1 &&
        $vocabulary->module == 'taxonomy' &&
