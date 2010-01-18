@@ -111,7 +111,7 @@ function view_sort_add_draggable(viewname){
 
 function view_sort_add_mouseover(){
   // Show the Lock/Hide images
-  $('.view-sort-bottom > div > *').mouseover(function(){
+  $('.view-sort-bottom > div > *,.view-sort-top > div > *').mouseover(function(){
     $(this).children().each(function(){
       if($(this).hasClass('view-sort-toggle')){
         $(this).show();
@@ -119,7 +119,7 @@ function view_sort_add_mouseover(){
     })
   });  
   // Hide the Lock/Hide images
-  $('.view-sort-bottom > div > *').mouseout(function(){
+  $('.view-sort-bottom > div > *,.view-sort-top > div > *').mouseout(function(){
     $(this).children().each(function(){
       if($(this).hasClass('view-sort-toggle')){
         $(this).hide();

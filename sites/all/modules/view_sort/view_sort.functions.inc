@@ -24,8 +24,17 @@ function views_sort_pin(){
  * Hide an ispecies object
  */
 function views_sort_hide(){
-  $data = explode("---", $_POST['pin']);
-  db_query("INSERT INTO {view_sort_hide} (tid, hide, ispeciestype) VALUES (%d, '%s', '%s')", $data[1], $data[2], $data[0]);
+  if(is_numeric($_POST['pin'])){
+    // Check this is an ispecies node type first before deleting.  FIXME I guess 
+    // we should also check permissions somewhere too.
+    $node = node_load($_POST['pin']);
+    if($node->type == 'ispecies'){
+      node_delete($node->nid);
+    }
+  } else {
+    $data = explode("---", $_POST['pin']);
+    db_query("INSERT INTO {view_sort_hide} (tid, hide, ispeciestype) VALUES (%d, '%s', '%s')", $data[1], $data[2], $data[0]);
+  }
 }
 
 function views_sort_number(){
@@ -40,7 +49,6 @@ function views_sort_sorted($viewname=false){
   // We keep things simple, and use the variable table to save limits
   if($viewname){
     $order = split(" ",trim($_POST['order']));
-    //print_r($order);exit;
     $weight = -90;
     $set_weight_as_zero = false;
     foreach($order as $item){
@@ -102,18 +110,26 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
   $i = 0;
   echo '<div id="',$view_name,'-popup" class="view-sort-top view-sort-drag class-',$view_name,'">';
   $divider_output = FALSE;
+  $class = 'sortable';
   foreach($items as $id => $item){
     // Add the divider
     if(((!isset($item['local']) || !$item['local']) || $i == $sort_orders[$view_name]) && !$divider_output){
       echo '</div><div class="class-',$view_name,' view-sort-bottom">';
       $divider_output = TRUE;
+      $class = 'notsortable';
     }
-    $class = (isset($item['local']) && $item['local']) ? "sortable" : "notsortable";
-    echo '<div view-sort="',$view_name,'---',$view_args[0],'---',$id,'" class="sort-div ',$class,'"><div style="position:relative;clear:both;">';    
+    //$class = (isset($item['local']) && $item['local'] && ) ? "sortable" : "notsortable";
+    if(isset($item['local']) && $item['local']){
+      $view_sort = $id;
+    } else {
+      $view_sort = $view_name.'---'.$view_args[0].'---'.$id;
+    }
+    echo '<div view-sort="',$view_sort,'" class="sort-div ',$class,'"><div style="position:relative;clear:both;">';//***'.$id . print_r($item, 1) .'***';
+    echo '<div class="view-sort-toggle"><img src="',url(drupal_get_path('module','view_sort')),'/cross.png" id="view-sort-hide"/>';    
     if(!isset($item['local']) || !$item['local']){
-      echo '<div class="view-sort-toggle"><img src="',url(drupal_get_path('module','view_sort')),'/close.png" id="view-sort-hide"/><img src="',url(drupal_get_path('module','view_sort')),'/pin.png" id="view-sort-pin"/></div>';
+      echo '<img src="',url(drupal_get_path('module','view_sort')),'/tick.png" id="view-sort-pin"/>';
     }
-    echo $item['body'],'</div></div>';
+    echo '</div>',$item['body'],'</div></div>';
     $i ++;
   }
   if(!$divider_position){
