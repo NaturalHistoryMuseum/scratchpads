@@ -351,6 +351,16 @@ function darwincore_views_data() {
           'handler' => 'views_handler_filter_string'
         )
       ),
+      'locality' => array(
+        'title' => t('Locality'),
+        'help' => t('The description of the locality from which the cataloged item was collected, sans geographic information provided in other geographic fields.'),
+        'field' => array(
+          'handler' => 'views_handler_field'
+        ),
+        'filter' => array(
+          'handler' => 'views_handler_filter_string'
+        )
+      ),
       'continentocean' => array(
         'title' => t('Continent/BodyOfWater'),
         'help' => t('The full, unabbreviated name of the continent or ocean from which the cataloged item was collected.'),
