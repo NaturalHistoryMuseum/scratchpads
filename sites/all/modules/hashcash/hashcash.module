@@ -117,7 +117,8 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
     $form['hashcash'] = array(
       '#type' => 'hidden',
       '#default_value' => $form_id,
-      '#id' => 'hashcash-'.$form_id
+      '#id' => 'hashcash-'.$form_id,
+      '#after_build' => array('hashcash_after_build')
     );
     // Alter validation to check the hashcash once submitted
     $form['#validate'][] = 'hashcash_validate';
@@ -133,6 +134,15 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
       drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page may not work as you do not appear to have JavaScript enabled in your browser.')), 'error', FALSE);
     }
   }
+}
+
+/**
+ * After build, used to remove the value from the form if it has been set - 
+ * basically enables preview to work.
+ */
+function hashcash_after_build($form_element, &$form_state){
+  $form_element['#value'] = $form_element['#default_value'];
+  return $form_element;
 }
 
 /**
