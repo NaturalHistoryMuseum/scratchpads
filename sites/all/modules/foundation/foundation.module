@@ -37,6 +37,7 @@ function foundation_theme_registry_alter(&$theme_registry){
 function foundation_nodeapi($node, $op, $a3 = NULL, $a4 = NULL){
   if($op == 'view' && $node->type == 'forum'){
     drupal_add_css(drupal_get_path('module','foundation').'/foundation.css');
+    drupal_set_title('');
   }
 }
 
