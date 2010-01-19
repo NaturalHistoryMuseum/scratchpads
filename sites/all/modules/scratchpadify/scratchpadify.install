@@ -109,7 +109,8 @@ function scratchpadify_update_6108(){
   return array('#finished' => TRUE);
 }
 
-function scratchpadify_update_6111(){
+//function scratchpadify_update_6111(){
+function scratchpadify_update_6128(){
   $node_types = array(
     'biblio',
     'blog',
@@ -136,7 +137,8 @@ function scratchpadify_update_6111(){
     'print',
     'comment_settings',
     'attachments',
-    'path'
+    'path',
+    'notifications'
   );
   foreach($node_types as $node_type){
     variable_set('vertical_tabs_fieldsets_'. $node_type, $fieldsets);
