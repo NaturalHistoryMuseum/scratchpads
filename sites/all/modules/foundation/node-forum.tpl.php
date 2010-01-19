@@ -21,7 +21,7 @@
           <?php endif;?>
         </div>
         <?php if ($links): ?>
-        <div class="links"><?php print $links; ?></div>
+        <div class="links"><?php print str_replace("Add new comment","reply",$links); ?></div>
         <?php endif; ?>
       </div>
     </div>
