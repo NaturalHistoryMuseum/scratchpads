@@ -1,9 +1,13 @@
 <?php 
 
+/**
+ * This function lists all the containers and forums.
+ */
 function foundation_forum_list($forums, $parents, $tid) {
   global $user;
-
   if ($forums) {
+    drupal_set_title('');
+    drupal_add_css(drupal_get_path('module','foundation').'/foundation.css');
 
     $header = array(t('Forum'), t('Topics'), t('Posts'), t('Last post'));
 
@@ -36,16 +40,12 @@ function foundation_forum_list($forums, $parents, $tid) {
 
         $rows[] = array(
           array('data' => $description, 'class' => 'forum'),
-          array('data' => $forum->num_topics . ($new_topics ? '<br />'. l(format_plural($new_topics, '1 new', '@count new'), "forum/$forum->tid", NULL, NULL, 'new') : ''), 'class' => 'topics'),
+          array('data' => $forum->num_topics . ($new_topics ? '<br />'. l(format_plural($new_topics, '1 new', '@count new'), "forum/$forum->tid", array('class' => 'new')) : ''), 'class' => 'topics'),
           array('data' => $forum->num_posts, 'class' => 'posts'),
           array('data' => _forum_format($forum->last_post), 'class' => 'last-reply'));
       }
     }
-    
-    //return print_r($rows,true);
-
     return '<div class="node"><div class="content forum">'.theme('table', $header, $rows).'</div></div>
   ';
-
   }
 }
