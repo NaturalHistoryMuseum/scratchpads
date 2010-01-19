@@ -503,6 +503,7 @@ function scratchpadify_init(){
   // Always add the CSS & JS
   drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
   drupal_add_js(drupal_get_path('module','scratchpadify').'/scratchpadify.js');
+  drupal_add_js(array('scratchpadify' => array('show_advanced' => t('Show Advanced Options'))), 'setting');
 }
 
 /**

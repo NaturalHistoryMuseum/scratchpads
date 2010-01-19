@@ -6,7 +6,7 @@ $(document).ready(function(){
    $(this).children().children('img').hide(); 
  });
  $('.vertical-tabs').hide();
- $('.vertical-tabs').before('<p class="scratchpadify-show-advanced"><a class="scratchpadify-show-advanced" href="#">Show Advanced Options</a></p>');
+ $('.vertical-tabs').before('<p class="scratchpadify-show-advanced"><a class="scratchpadify-show-advanced" href="#">'+Drupal.settings.scratchpadify.show_advanced+'</a></p>');
  $('p.scratchpadify-show-advanced').bind("click", function(e){
    $('.vertical-tabs').slideDown('slow');
    $(this).remove();
