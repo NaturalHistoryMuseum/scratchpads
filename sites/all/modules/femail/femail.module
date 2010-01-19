@@ -250,6 +250,7 @@ function femail_taxonomy($op, $type, $array = NULL){
  */
 function femail_comment($comment, $op){
   if($op == 'publish'){
+    $comment = @(array)$comment;
     $node = node_load($comment['nid']);
     if(isset($node->forum_tid) && $node->forum_tid){    
       // Get the parent msgid so that we can set the "In-reply-to" header, Note,
