@@ -500,8 +500,9 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key) {
 }
 
 function scratchpadify_init(){
-  // Always add the CSS
+  // Always add the CSS & JS
   drupal_add_css(drupal_get_path('module','scratchpadify').'/scratchpadify.css');
+  drupal_add_js(drupal_get_path('module','scratchpadify').'/scratchpadify.js');
 }
 
 /**
@@ -541,7 +542,6 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           $items = array('Pages: '.$nodes['nodes'],'Users: '.($users['users']-2),'Total Page Views: '.$views['totalcount']);
           return array('subject'=>'Statistics','content'=>theme_item_list($items));
         case 1:
-          drupal_add_js(drupal_get_path('module','scratchpadify').'/scratchpadify.js');
           $links_override = array(
             'biblio' => array(
               'view' => 'biblio',
