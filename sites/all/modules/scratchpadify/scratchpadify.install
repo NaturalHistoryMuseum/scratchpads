@@ -109,43 +109,6 @@ function scratchpadify_update_6108(){
   return array('#finished' => TRUE);
 }
 
-//function scratchpadify_update_6111(){
-function scratchpadify_update_6128(){
-  $node_types = array(
-    'biblio',
-    'blog',
-    'countriesmap',
-    'forum',
-    'group',
-    'image',
-    'darwincorelocation',
-    'darwincore',
-    'simplenews',
-    'page',
-    'tree',
-    'poll',
-    'profile',
-    'webform'    
-  );
-  $fieldsets = array(
-    'menu',
-    'weight_form',
-    'og_nodeapi',
-    'author',
-    'revision_information',
-    'options',
-    'print',
-    'comment_settings',
-    'attachments',
-    'path',
-    'notifications'
-  );
-  foreach($node_types as $node_type){
-    variable_set('vertical_tabs_fieldsets_'. $node_type, $fieldsets);
-  }
-  return array('#finished' => TRUE);
-}
-
 /**
  * Set the weight of nodes as upgrading and adding the weight module has screwed
  * things up.
@@ -304,4 +267,61 @@ function scratchpadify_update_6127(){
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+}
+
+//function scratchpadify_update_6111(){
+function scratchpadify_update_6128(){
+  $node_types = array(
+    'biblio',
+    'blog',
+    'countriesmap',
+    'forum',
+    'group',
+    'image',
+    'darwincorelocation',
+    'darwincore',
+    'simplenews',
+    'page',
+    'tree',
+    'poll',
+    'profile',
+    'webform'    
+  );
+  $fieldsets = array(
+    'menu',
+    'weight_form',
+    'og_nodeapi',
+    'author',
+    'revision_information',
+    'options',
+    'print',
+    'comment_settings',
+    'attachments',
+    'path',
+    'notifications'
+  );
+  foreach($node_types as $node_type){
+    variable_set('vertical_tabs_fieldsets_'. $node_type, $fieldsets);
+  }
+  return array('#finished' => TRUE);
+}
+
+/**
+ * Add og_forum stuff
+ */
+function scratchpadify_update_6129(){
+  variable_set('forum_auto_public', 1);
+  variable_set('forum_default_container_yn', 1);  
+  $term = array(
+    'vid' => variable_get('forum_nav_vocabulary', 0),
+    'name' => st('Groups'),
+    'description' => 'Forums associated with this site\'s groups.',
+    'weight' => 1000
+  );
+  taxonomy_save_term($term);
+  $containers = variable_get('forum_containers', array());
+  $containers[] = $term['tid'];
+  variable_set('forum_containers', $containers);
+  variable_set('forum_default_container', $term['tid']);
+  og_forum_retroactively_apply();
 }

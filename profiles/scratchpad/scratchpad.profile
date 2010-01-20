@@ -357,6 +357,21 @@ function scratchpad_profile_tasks_2(){
   );
   taxonomy_save_term($term);
   
+  // Og_forum settings
+  variable_set('forum_auto_public', 1);
+  variable_set('forum_default_container_yn', 1);  
+  $term = array(
+    'vid' => variable_get('forum_nav_vocabulary', 0),
+    'name' => st('Groups'),
+    'description' => 'Forums associated with this site\'s groups.',
+    'weight' => 1000
+  );
+  taxonomy_save_term($term);
+  $containers = variable_get('forum_containers', array());
+  $containers[] = $term['tid'];
+  variable_set('forum_containers', $containers);
+  variable_set('forum_default_container', $term['tid']);
+  
   // Users settings
   variable_set('user_register',2);
   variable_set('user_signatures',1);
