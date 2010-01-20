@@ -545,7 +545,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
         case 1:
           $links_override = array(
             'biblio' => array(
-              'view' => 'biblio',
+              'view' => variable_get('biblio_base','biblio'),
               'import' => array(array('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager')))))
             ),
             'image' => array(
