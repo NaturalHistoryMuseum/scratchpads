@@ -510,41 +510,6 @@ function scratchpad_profile_tasks_2(){
     )
   );
   
-  // Set which fieldsets should be hidden for vertical tabs.
-  $node_types = array(
-    'biblio',
-    'blog',
-    'countriesmap',
-    'forum',
-    'group',
-    'image',
-    'darwincorelocation',
-    'darwincore',
-    'simplenews',
-    'page',
-    'tree',
-    'poll',
-    'profile',
-    'webform'    
-  );
-  $fieldsets = array(
-    'menu',
-    'weight_form',
-    'og_nodeapi',
-    'author',
-    'revision_information',
-    'options',
-    'print',
-    'comment_settings',
-    'attachments',
-    'path',
-    'notifications'
-  );
-  foreach($node_types as $node_type){
-    variable_set('vertical_tabs_fieldsets_'. $node_type, $fieldsets);
-  }
-  return array('#finished' => TRUE);
-  
   // Add an alias from 'content' to 'node'
   path_set_alias('node','content');
   // Update pathauto for users
