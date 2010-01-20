@@ -45,7 +45,7 @@ function foundation_forum_list($forums, $parents, $tid) {
           array('data' => _forum_format($forum->last_post), 'class' => 'last-reply'));
       }
     }
-    return '<div class="node"><div class="content forum">'.theme('table', $header, $rows).'</div></div>
+    return '<div class="forum-container"><div class="content forum">'.theme('table', $header, $rows).'</div></div>
   ';
   }
 }

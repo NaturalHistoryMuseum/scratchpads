@@ -28,5 +28,5 @@ function foundation_forum_topic_list($tid, $topics, $sortby, $forum_per_page) {
   }
   $output = theme('table', $forum_topic_list_header, $rows);
   $output .= theme('pager', NULL, $forum_per_page, 0);
-  return $output;
+  return '<div class="forum-container"><div class="content forum">'.$output.'</div></div>';
 }
