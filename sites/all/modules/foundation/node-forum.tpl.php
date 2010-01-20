@@ -9,6 +9,9 @@
   <div class="boxcontent">
     <div class="boxtitle<?php ($node->sticky && !$page) ? '-sticky' : ''?>">
       <h1><?php print $teaser ? l($node->title, "node/$node->nid") : check_plain($node->title)?></h1>
+      <?php if ($submitted): ?>
+      <span class="submitted"><?php print $submitted; ?></span>
+      <?php endif; ?>
     </div>
     <div class="subboxcontent">
       <div class="content">

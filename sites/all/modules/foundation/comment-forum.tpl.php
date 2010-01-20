@@ -4,11 +4,11 @@
     <div class="bc ctl"></div>
   </div>
   <div class="boxcontent">
-    <?php if ($submitted): ?>
-    <span class="submitted"><?php print $submitted; ?></span>
-    <?php endif; ?>
     <div class="boxtitle-none boxtitle">
       <h1><?php print $title; ?></h1>
+      <?php if ($submitted): ?>
+      <span class="submitted"><?php print $submitted; ?></span>
+      <?php endif; ?>
     </div>
     <div class="subboxcontent">
       <div class="content"><?php print $content; ?></div>

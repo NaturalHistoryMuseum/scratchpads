@@ -44,10 +44,11 @@ td.container a{
 .subboxcontent .links li span{
 	display: none !important;
 }
-.boxcontent .submitted{
- padding-right: 1em;
+.boxtitle .submitted{
+ float: right;
+ padding: 6px 20px;
+ line-height:100% !important;
 }
-
 
 /***************************************************************
  * CURVY BOX
@@ -86,9 +87,10 @@ td.container a{
 }
 .boxtitle h1,.boxtitle-sticky h1{
   font-size: 100%;
-  padding: 5px 20px;
+  padding: 6px 20px;
   margin: 0;
   line-height: 100%;
+  float:left;
 }
 .boxtitle-sticky h1 a{
   color: white;
