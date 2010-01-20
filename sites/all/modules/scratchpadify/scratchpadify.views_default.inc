@@ -92,6 +92,10 @@ function scratchpadify_views_default_views(){
     $handler->override_option('arguments', array());
     $handler->override_option('path', 'content/' . $type);
     $handler->override_option('use_pager', '1');
+    // Rename og as it causes issues
+    if($view->name == 'og'){
+      $view->name = 'scratchpadify_og';
+    }
     $views[$view->name] = $view;
   }
   // ---------------------- BIBLIO TABLE ---------------------------------------
