@@ -29,3 +29,9 @@ function gbifmap_ajax_callback($term_name, $limit = 20, $urls = array()){
   $items['citation'] = theme('citation_url', $urls);
   return $items;
 }
+
+function gbifmap_init(){
+  // Add the style sheet to improve the way the map looks.  Note, this will be
+  // added to ALL pages, even those not displaying the map (like I give a shit)
+  drupal_add_css(drupal_get_path('module','gbifmap').'/gbifmap.css');
+}
