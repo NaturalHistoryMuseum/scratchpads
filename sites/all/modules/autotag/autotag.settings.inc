@@ -26,5 +26,63 @@ function autotag_admin_settings() {
     '#options' => array_map('check_plain', node_get_types('names')),
     '#description' => t('Select content types to NEVER automatically tag.'),
   );
+  $form['autotag_by_content_type'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Re-Autotag by content type'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE
+  );
+  $form['autotag_by_content_type']['content_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Content types'),
+    '#default_value' => array_map('check_plain', node_get_types('names')),
+    '#options' => array_map('check_plain', node_get_types('names')),
+    '#theme' => 'autotag_admin_settings'
+  );
+  $form['autotag_by_content_type']['autotag_content_type_submit'] = array(
+    '#type' => 'button',
+    '#value' => t('Autotag selected content types'),
+    '#submit' => array('autotag_tag_content_type_submit'),
+    '#executes_submit_callback' => TRUE
+  );
   return system_settings_form($form);
+}
+
+
+/**
+ * Theme node administration overview.
+ *
+ * @ingroup themeable
+ */
+function theme_autotag_admin_settings($element) {
+  $headers = array(theme('table_select_header_cell'));
+  foreach($element['#options'] as $content_type => $content_type_name){
+    $rows[] = array(
+      drupal_render($element[$content_type])
+    );
+  }
+  return theme('table', $headers, $rows);
+}
+
+function autotag_tag_content_type_submit($form, &$form_state){
+  if($form_state['clicked_button']['#value'] == 'Autotag selected content types'){
+    // We're not goint to do the necessary shit we need to do here, yay.
+    $types = array();
+    foreach($form_state['values']['content_types'] as $type){
+      if($type){
+        $types[] = $type;
+      }
+    }
+    if(count($types)){
+      $types = "'".implode("','", $types)."'";
+      $result = db_query("SELECT nid FROM node WHERE type IN ($types)");
+      $nodes = array();
+      while($nid = db_result($result)){
+        $nodes[] = $nid;
+      }
+      autotag_mass_update($nodes);
+    } else {
+      drupal_set_message('Please select a content type to autotag', 'error');
+    }
+  }
 }

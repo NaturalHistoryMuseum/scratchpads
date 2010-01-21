@@ -24,6 +24,18 @@ function autotag_node_operations(){
 }
 
 /**
+ * Implementation of hook_theme()
+ */
+function autotag_theme() {
+  return array(
+    'autotag_admin_settings' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'autotag.settings.inc',
+    )
+  );
+}
+
+/**
  * Callback for node_operation to re-autotag nodes.
  */
 function autotag_mass_update($nodes){
