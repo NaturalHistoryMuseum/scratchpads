@@ -133,7 +133,7 @@ urchinTracker();
 '.$blocks_bottom.'
 </div>';
   }
-  $output .='</body>
+  $output .= drupal_get_js('footer') . '</body>
 </html>';
   return $output;
 }
