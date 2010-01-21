@@ -35,6 +35,7 @@ function autotag_admin_settings() {
   $form['autotag_by_content_type']['content_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Content types'),
+    '#description' => t('Note, re-autotagging existing content will not only update the tags associated with the node, but it will also update the date/time the node was last edited, and can also update other settings, like automatically generated aliases.'),
     '#default_value' => array_map('check_plain', node_get_types('names')),
     '#options' => array_map('check_plain', node_get_types('names')),
     '#theme' => 'autotag_admin_settings'
