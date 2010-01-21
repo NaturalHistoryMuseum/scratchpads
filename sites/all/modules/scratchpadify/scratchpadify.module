@@ -557,10 +557,14 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             'forum' => array('view' => 'forum'),
             'blog' => array('view' => 'blog')
           );
+          $query = array();
           if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
             $query = array('tid' => arg(2));
-          } else {
-            $query = array();
+          } elseif(arg(0) == 'node' && is_numeric(arg(1))){
+            $node = node_load(array('nid' => arg(1)));
+            if(variable_get('og_content_type_usage_'.$node->type, '') == 'group'){
+              $query = array('gids[]' => arg(1));
+            }
           }
           $results = db_query("SELECT type, name FROM node_type, menu_links WHERE (link_path = CONCAT('node/add/', type) OR link_path = CONCAT('node/add/', REPLACE(type, '_', '-'))) AND hidden = 0");
           $sub_menu_item = menu_get_item('admin/content/node_import/add');
