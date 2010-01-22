@@ -210,7 +210,7 @@ function scratchpad_profile_install_profile(){
 
 function scratchpad_profile_tasks_2(){
   // Og_user_roles  
-  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4, 5=>5));
+  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4));
   variable_set('ogur_assign_founder_group', 1);
   variable_set('ogur_founder_value_group', 4);
   variable_set('og_user_roles_admingrouprole_value', 4);

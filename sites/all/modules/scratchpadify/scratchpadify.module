@@ -563,6 +563,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
           } elseif(arg(0) == 'node' && is_numeric(arg(1))){
             $node = node_load(array('nid' => arg(1)));
             if(variable_get('og_content_type_usage_'.$node->type, '') == 'group'){
+              $viewing_group = $node->type;
               $query = array('gids[]' => arg(1));
             }
           }
@@ -592,6 +593,9 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
                   $items[$row['name']] .= l('<img src="'.url(drupal_get_path('module','scratchpadify').'/images/import.gif').'"/>', 'admin/content/node_import/add', array('query' => array('type' => $row['type']), 'html' => TRUE, 'attributes' => array('title' => t('Import from CSV file'))));           
                 }
               }
+            }
+            if($row['type'] == $viewing_group && og_menu_access_picture(arg(1))){
+              $items[$row['name']] .= '<br/><span style="font-size:80%">'.l(t('Members'),'og/users/'.arg(1).'/faces') . ' | '.l(t('My membership'), 'og/manage/'.arg(1)).'</span>';
             }
           }
           // Additional item for taxonomy
