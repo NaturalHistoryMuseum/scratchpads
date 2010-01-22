@@ -360,7 +360,8 @@ function scratchpad_profile_tasks_2(){
   variable_set('forum_order', 2);
   $term = array(
     'vid' => variable_get('forum_nav_vocabulary', 0),
-    'name' => st('General')
+    'name' => st('General'),
+    'description' => st('A forum for posts related, or not, to this site, and which do not fit in any other forum')
   );
   taxonomy_save_term($term);
   
