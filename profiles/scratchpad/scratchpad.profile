@@ -47,7 +47,7 @@ function scratchpad_profile_modules(){
       'messaging','notifications','notifications_lite','notifications_content',
       'messaging_mail',
     // Organic Groups
-      'og','og_access','og_user_roles','og_views','og_notifications',
+      'og','og_access','og_user_roles','og_views','og_notifications','og_forum',
     // Views
       'views','views_ui','views_xml',
     // Content profile
