@@ -209,6 +209,13 @@ function scratchpad_profile_install_profile(){
 }
 
 function scratchpad_profile_tasks_2(){
+  // Og_user_roles  
+  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4, 5=>5));
+  variable_set('ogur_assign_founder_group', 1);
+  variable_set('ogur_founder_value_group', 4);
+  variable_set('og_user_roles_admingrouprole_value', 4);
+  variable_set('og_user_roles_assign_admingrouprole', 1);
+  
   // Finally, do the following
   variable_set('date_default_timezone_name','Europe/London');
   
@@ -509,6 +516,16 @@ function scratchpad_profile_tasks_2(){
       1 => array('weight' => 12, 'pid' => 0),
     )
   );
+
+  // Set the og node type for all content types
+  $node_types = array_keys(array_map('check_plain', node_get_types('names')));
+  foreach($node_types as $node_type){
+    $usage = 'group_post_standard';
+    if($node_type == 'group'){
+      $usage = 'group';
+    }
+    variable_set('og_content_type_usage_'.$node_type, $usage);
+  }
   
   // Add an alias from 'content' to 'node'
   path_set_alias('node','content');
@@ -625,7 +642,6 @@ function scratchpad_profile_set_perms(){
                               "access webform results",
                               "assign node weight",
                               "clone own nodes",
-                              "configure member roles",
                               "create biblio",
                               "create blog entries",
                               "create darwincore content",
@@ -668,6 +684,7 @@ function scratchpad_profile_set_perms(){
                               "administer users",
                               "administer views",
                               "clone node",
+                              "configure member roles",
                               "delete any blog entry",
                               "delete any forum topic",
                               "delete any nexus projects",

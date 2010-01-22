@@ -325,3 +325,35 @@ function scratchpadify_update_6129(){
   variable_set('forum_default_container', $term['tid']);
   og_forum_retroactively_apply();
 }
+
+/**
+ * Set permissions of og_userroles and also set groups settings for all content
+ * types
+ */
+function scratchpadify_update_6130(){
+  // Og_user stuff
+  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4, 5=>5));
+  variable_set('ogur_assign_founder_group', 1);
+  variable_set('ogur_founder_value_group', 4);
+  variable_set('og_user_roles_admingrouprole_value', 4);
+  variable_set('og_user_roles_assign_admingrouprole', 1);
+
+  // Set the og node type for all content types
+  $node_types = array_keys(array_map('check_plain', node_get_types('names')));
+  foreach($node_types as $node_type){
+    $usage = 'group_post_standard';
+    if($node_type == 'group'){
+      $usage = 'group';
+    }
+    variable_set('og_content_type_usage_'.$node_type, $usage);
+  }
+  
+  // Update permissions
+  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once("../../../../profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+  
+  return array('#finished' => TRUE);
+}
