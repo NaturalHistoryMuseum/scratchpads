@@ -555,7 +555,8 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
               )
             ), 
             'forum' => array('view' => 'forum'),
-            'blog' => array('view' => 'blog')
+            'blog' => array('view' => 'blog'),
+            'group' => array('view' => 'og')
           );
           $query = array();
           if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
