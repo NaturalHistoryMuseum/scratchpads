@@ -350,7 +350,6 @@ function scratchpadify_update_6130(){
   
   // Update permissions
   require_once("profiles/scratchpad/scratchpad.profile");
-  require_once("../../../../profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
