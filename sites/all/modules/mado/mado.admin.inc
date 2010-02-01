@@ -50,6 +50,7 @@ function mado_save_layout(){
     db_query ( "DELETE FROM {mado} WHERE identifier = '%s'", $_GET ['identifier'] );
     db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
   } else if (isset ( $_GET ['resize'] )) {
+    $_GET ['resize'] = str_replace("-slash-", "/", $_GET ['resize']);
     module_load_include('theme-functions.inc','mado');
     if($_GET['identifier'] == 'frontpage'){
       $identifier = array('identifier' => 'frontpage');
