@@ -33,6 +33,7 @@ function mado_save_layout(){
     }    
     $divider_passed = FALSE;
     foreach ( $_GET ['blocks'] as $block ) {
+      $block = str_replace("-slash-", "/", $block);
       if (isset ( $current_blocks [$block] )) {
         $blocks [$block] = $current_blocks [$block];
       } else {
