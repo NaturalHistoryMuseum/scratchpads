@@ -43,54 +43,13 @@ function scratchpadify_notification_message(){
  * Taskguide function
  */
 function scratchpadify_taskguide(){
-  $output = '<div class="mission" style="text-align: justify">
+  return '<div class="mission" style="text-align: justify">
   <h1 style="text-decoration:underline;padding-bottom:20px">Some tips to get you started:</h1>
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/taxonomy.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Taxonomy</h2><p>Add a '.l('biological taxonomy','admin/content/taxonomy/add/vocabulary').' (vocabulary), and then '.l('import a classification','admin/content/taxonomy/classification/import').' into your new vocabulary. Adding a taxonomy allows you to create taxon pages, and automatically integrate and navigate content across your site.</p>
-    </div>
-  </div>
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/literature.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Literature</h2><p>'.l('Import a bibliography','biblio/import/form').', or '.l('add a new reference','node/add/biblio').'. To make this work with your biological taxonomy, make sure one or more taxon names are mentioned in the reference. You can access your '.l('full bibliographic list','biblio').' at any time.</p>
-    </div>
-  </div>
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/users.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Users</h2><p>'.l('Add','admin/user/user/create').' or '.l('list','admin/user/user').' site users in different \'roles\'. Contributors can add and edit their own content, editors can also edit other peoples content, and maintainers can also access advanced administrative features. The '.l('groups','node/add/group').' feature allows users to create private areas that can be selectively shared.</p>
-    </div>
-  </div>
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/content.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Content</h2><p>Use the '.l('list content','admin/content/node').' link to find and manage all content (nodes) within your site. Everything added to a site can be found from there.</p>
-    </div>
-  </div>
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/specimen.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Images, Specimens and Locations</h2><p>'.l('Add images','node/add/image').', '.l('create galleries','admin/content/taxonomy/'.variable_get('image_gallery_nav_vocabulary','')).', and '.l('view images','image').' in the galleries. You can also '.l('add','node/add/darwincore').' and '.l('import','admin/content/node_import/add').' specimen records along with '.l('geographic locations','node/add/darwincorelocation').'.</p>
-    </div>
-  </div>
-  <!--<div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/dna.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Morphological and Molecular Data</h2><p>Create and import projects (collections of taxa, characters and data) that can be edited within the site matrix editor.</p>
-    </div>
-  </div>-->
-  <div>
-    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/language.png').'" style="padding:10px;"/></div>
-    <div style="width:75%; float: left;">
-      <h2>Languages</h2><p>Make your site multilingual by '.l('adding languages','admin/settings/language/add').', allowing users to provide translations of site content.*</p>
-    </div>
-  </div>  
+<p>Set up your Scratchpad by going through the list below. It can be useful to attend a '.l('training course','http://scratchpads.eu/scratchpad-training-courses').' or go through the '.l('manual of the basic training course','http://scratchpads.eu/sites/scratchpads.eu/files/ScratchpadTrainingBasic.doc').' on your own.
   <div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/information.png').'" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
-      <h2>Site Information</h2><p>Change basic '.l('site information','admin/settings/site-information').', such as the site name, slogan, e-mail address, and mission. To present a static front page, specify the page address at the bottom of this page. Otherwise snippets of new content will appear on the front page as it is added to your site.*</p>
+      <h2>Site Information</h2><p>Change basic '.l('site information','admin/settings/site-information').', such as the site name, slogan, e-mail address, and mission. To present a static front page, specify the page address at the bottom of this page (after creating the respective page). Otherwise snippets of new content will appear on the front page as it is added to your site.*</p>
     </div>
   </div>
   <div>
@@ -105,12 +64,41 @@ function scratchpadify_taskguide(){
       <h2>Layout</h2><p>Change the layout of your site by changing the '.l('block','admin/build/block').' and '.l('menu','admin/build/menu').' items.*</p>
     </div>
   </div>
-  <div style="clear:both;">
+<div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/taxonomy.png').'" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Taxonomy</h2><p>Add a '.l('biological taxonomy','admin/content/taxonomy/add/vocabulary').' (vocabulary), and then '.l('import a classification','admin/content/taxonomy/classification/import').' into your new vocabulary. The classification is the backbone of your site and allows you to aggregate species pages with information from the web and information you have uploaded into your site. With a taxonomy you can automatically integrate and navigate content across your site.</p>
+    </div>
+  </div>
+    <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/users.png').'" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Users</h2><p>'.l('Add','admin/user/user/create').' or '.l('list','admin/user/user').' site users in different \'roles\'. Contributors can add and edit their own content, editors can also edit other peoples content, and maintainers can also access advanced administrative features. The '.l('groups','node/add/group').' feature allows users to create private areas that can be selectively shared.</p>
+    </div>
+  </div>
+  <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/content.png').'" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Content</h2><p>Use the Content menu in the sidebar to view (click on content type link), add (hover over content type link and click on the \'Add...\' icon which appears to the right) or import (hover over content type link and click on the \'Import...\' icon which appears to the right) data of this type. Use the '.l('list content','admin/content/node').' link to find and manage all content (nodes) within your site. Everything added to a site can be found from there. A useful sequence of adding data is starting with the bibliography followed by localities, specimens and images.</p>
+    </div>
+  </div>
+     <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/content.png').'" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Custom Content Types and Views</h2><p>'.l('Create new content types','admin/content/types/add').' tailored to your needs and '.l('add a view','admin/build/views/add').' to show data to their best advantage. Check the '.l('Manual for the advanved training course','http://scratchpads.eu/sites/scratchpads.eu/files/ScratchpadTrainingAdvanced.doc').' for instructions.*</p>
+    </div>
+  </div>
+ <div>
+    <div style="width:15%; float: left; text-align: right; clear: both;"><img src="'.url(drupal_get_path('module','scratchpadify').'/images/language.png').'" style="padding:10px;"/></div>
+    <div style="width:75%; float: left;">
+      <h2>Languages</h2><p>Make your site multilingual by '.l('adding languages','admin/settings/language/add').', allowing users to provide translations of site content.*</p>
+    </div>
+  </div>  
+    <div style="clear:both;">
     <p style="text-align:right">*Only site maintainers can change these settings.</p>
-    <p>For more help check out the Scratchpad resources ('.l('FAQs','http://scratchpads.eu/faqs').', '.l('screencasts','http://scratchpads.eu/screencasts').', '.l('UserVoice','http://biodiversityinformatics.uservoice.com/forums/25435-scratchpads').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
+    <p>For more help check out the Scratchpad resources ('.l('Help','http://scratchpads.eu/help').', '.l('UserVoice','http://biodiversityinformatics.uservoice.com/forums/25435-scratchpads').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
   </div>
 </div>';
-  return $output;
 }
 
 
