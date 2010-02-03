@@ -39,11 +39,12 @@ function _autotag_form_alter(&$form, &$form_state, $form_id){
   // If we're editing a node of type "x" which has been set to never autotag, 
   // then return
   $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
+  $dont_autotag = variable_get('autotag_dont_autotag', array());
   if(
       variable_get('autotag_without_user_input', 0) ||
       !count($hide_vids) ||
       strpos($_GET['q'], 'admin/content/node_import') !== FALSE ||
-      in_array($form['type']['#value'], variable_get('autotag_dont_autotag'))
+      ( isset($dont_autotag[$form['type']['#value']]) && $dont_autotag[$form['type']['#value']] )
     ){
     return;
   }  
