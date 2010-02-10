@@ -33,6 +33,19 @@ function scratchpadify_notification_message_form(){
   return system_settings_form($form);
 }
 
+/**
+ * Admin form for disabling uservoice
+ */
+function scratchpadify_disable_uservoice_form(){
+  $form['uservoice_enabled'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Uservoice enabled'),
+    '#default_value' => variable_get('uservoice_enabled', 1),
+    '#description' => t('Uncheck the box to disable uservoice')
+  );
+  return system_settings_form($form);
+}
+
 function scratchpadify_notification_message(){
   drupal_set_header('Content-type: text/html');
   echo variable_get('scratchpadify_notification_message', '');
