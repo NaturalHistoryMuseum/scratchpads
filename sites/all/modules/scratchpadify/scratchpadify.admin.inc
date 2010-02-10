@@ -38,7 +38,7 @@ function scratchpadify_notification_message_form(){
  */
 function scratchpadify_disable_uservoice_form(){
   $form['uservoice_enabled'] = array(
-    '#type' => 'textfield',
+    '#type' => 'checkbox',
     '#title' => t('Uservoice enabled'),
     '#default_value' => variable_get('uservoice_enabled', 1),
     '#description' => t('Uncheck the box to disable uservoice')
