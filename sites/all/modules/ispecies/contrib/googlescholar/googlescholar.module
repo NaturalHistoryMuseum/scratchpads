@@ -17,7 +17,7 @@ function googlescholar_init(){
 
 function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();
-  $request = 'http://googlescholarapi.scratchpads.eu/' . urlencode($term_name);
+  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ('http://googlescholarapi.scratchpads.eu/' . urlencode($term_name));
   $results = json_decode(file_get_contents($request));
   $counter = 0;
   $urls = array();
