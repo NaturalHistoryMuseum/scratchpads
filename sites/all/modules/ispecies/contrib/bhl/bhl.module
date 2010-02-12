@@ -32,7 +32,7 @@ function _bhl_get_namebank_titles($term_name) {
   $namebank_ids_xml = file_get_contents ( $request );
   if ($namebank_ids_xml) {
     $namebank_ids = new SimpleXMLElement ( $namebank_ids_xml );
-    foreach ( $namebank_ids->NameResult->Name as $data ) {
+    foreach ( $namebank_ids->Result->Name as $data ) {
       if (strtolower ( $data->NameConfirmed ) == str_replace ( "+", " ", strtolower ( $term_name ) )) {
         $detail_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameGetDetail&nameBankID=' . $data->NameBankID . '&format=xml' );
         $namebank_details_xml = file_get_contents ( $detail_request );
