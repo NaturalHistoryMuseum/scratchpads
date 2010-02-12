@@ -37,7 +37,7 @@ function _bhl_get_namebank_titles($term_name) {
         $detail_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameGetDetail&nameBankID=' . $data->NameBankID . '&format=xml' );
         $namebank_details_xml = file_get_contents ( $detail_request );
         $namebank_details = new SimpleXMLElement ( $namebank_details_xml );
-        foreach ( $namebank_details->NameResult->Titles->Title as $title ) {
+        foreach ( $namebank_details->Result->Titles->Title as $title ) {
           // no content so don't add
           if (! $title->Items->Item) {
             continue;
