@@ -17,28 +17,20 @@ function googlescholar_init(){
 
 function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
   $items = array ();
-  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://darwin.zoology.gla.ac.uk/cgi-bin/gsaJSON.cgi?q=' . $term_name );
-  $json_str = file_get_contents ( $request );
-  $json_str = substr ( $json_str, strpos ( $json_str, 'gs_results' ) );
-  $json_obj = json_decode ( $json_str );  
-  //the json string returned includes a functon call which we do not want
-  $json_str = str_replace ( 'gs_results({', '{', $json_str );
-  $json_str = str_replace ( '})', '}', $json_str );  
-  $json_obj = json_decode ( strval ( $json_str ) );  
+  $request = 'http://googlescholarapi/?q=' . urlencode($term_name);
+  $results = json_decode(file_get_contents($request));
   $counter = 0;
   $urls = array();
-  if (is_array ( $json_obj->Result )) {    
-    foreach ( $json_obj->Result as $key => $result ) {      
-      $counter ++;      
-      $item = array(
-        'body' => '<li><a target="_blank" href="'.$result->link.'">'.str_replace("&amp;","&",str_replace("&gt;",">",str_replace("&lt;","<",$result->title))).'</a></li>',
-        'page_url' => $result->link
-      );
-      $urls[] = $item['page_url'];
-      $items[] = $item;
-      if ($counter >= $limit) {
-        break;
-      }    
+  foreach($results as $result){      
+    $counter ++;      
+    $item = array(
+      'body' => '<li><a target="_blank" href="'.$result->link.'">'.$result->title.'</a></li>',
+      'page_url' => $result->link
+    );
+    $urls[] = $item['page_url'];
+    $items[] = $item;
+    if ($counter >= $limit) {
+      break;
     }  
   }
   $urls = array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.co.uk/scholar?q=' . $term_name, 'urls' => $urls);
