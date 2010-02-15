@@ -383,21 +383,23 @@ function citation_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
  * Implementation of hook_views_pre_execute
  */
 function citation_views_pre_execute(&$view){
-  $query = db_rewrite_sql($view->build_info['query'], $view->base_table, $view->base_field, array(
-    'view' => &$view
-  ));
-  $args = $view->build_info['query_args'];
-  $replacements = module_invoke_all('views_query_substitutions', $view);
-  $query = str_replace(array_keys($replacements), $replacements, $query);
-  if(is_array($args)){
-    foreach($args as $id => $arg){
-      $args[$id] = str_replace(array_keys($replacements), $replacements, $arg);
+  if($view->build_info['query']){
+    $query = db_rewrite_sql($view->build_info['query'], $view->base_table, $view->base_field, array(
+      'view' => &$view
+    ));
+    $args = $view->build_info['query_args'];
+    $replacements = module_invoke_all('views_query_substitutions', $view);
+    $query = str_replace(array_keys($replacements), $replacements, $query);
+    if(is_array($args)){
+      foreach($args as $id => $arg){
+        $args[$id] = str_replace(array_keys($replacements), $replacements, $arg);
+      }
     }
-  }
-  $result = db_query_range($query, $args, 0, $view->pager['items_per_page']);
-  while($row = db_fetch_array($result)){
-    if(isset($row['nid'])){
-      citation_add_nid($row['nid']);
+    $result = db_query_range($query, $args, 0, $view->pager['items_per_page']);
+    while($row = db_fetch_array($result)){
+      if(isset($row['nid'])){
+        citation_add_nid($row['nid']);
+      }
     }
   }
 }
