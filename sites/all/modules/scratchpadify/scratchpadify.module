@@ -47,6 +47,8 @@ function scratchpadify_cron(){
       db_query("DELETE FROM {system} WHERE filename = '%s'", $row['filename']);
     }
   }
+  // Clean up sessions older than a week.
+  db_query("DELETE FROM {sessions} WHERE timestamp < %d", time() - 604800);
 }
 /**
  * Implementation of hook_menu
