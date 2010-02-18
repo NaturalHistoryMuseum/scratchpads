@@ -43,8 +43,6 @@ function scratchpad_list_scratchpads_serial(){
       unset($scratchpad_details[$site]['maintainer_emails']);
       unset($scratchpad_details[$site]['last_login_time']);
       unset($scratchpad_details[$site]['last_node_changed_time']);
-      unset($scratchpad_details[$site]['users']['week']);
-      unset($scratchpad_details[$site]['users']['month']);
     }
   }
   echo serialize($scratchpad_details);
