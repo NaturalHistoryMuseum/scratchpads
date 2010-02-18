@@ -40,8 +40,8 @@ function scratchpad_list_scratchpads_serial(){
   $scratchpad_details = variable_get('scratchpad_sites_list',array());
   if(!user_access('SCRATCHPADIFY')){
     foreach($scratchpad_details as $site => $site_details){
+      // Sod it, lets just hide the maintainer emails.
       unset($scratchpad_details[$site]['maintainer_emails']);
-      unset($scratchpad_details[$site]['last_node_changed_time']);
     }
   }
   echo serialize($scratchpad_details);
