@@ -41,7 +41,6 @@ function scratchpad_list_scratchpads_serial(){
   if(!user_access('SCRATCHPADIFY')){
     foreach($scratchpad_details as $site => $site_details){
       unset($scratchpad_details[$site]['maintainer_emails']);
-      unset($scratchpad_details[$site]['last_login_time']);
       unset($scratchpad_details[$site]['last_node_changed_time']);
     }
   }
