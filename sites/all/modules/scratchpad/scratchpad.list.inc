@@ -101,12 +101,20 @@ function scratchpad_report_site(){
 function scratchpad_list_scratchpads_thumbs(){  
   $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
   $items = array();
-  $i = 0;
   $total_sites = count($scratchpad_statistics);
+  // Sort the array alphabetically first, so that we can save the alpha sort 
+  // order  
+  ksort($scratchpad_statistics);
+  $i = 0;
+  foreach($scratchpad_statistics as $key => $value){
+    $scratchpad_statistics[$key]['domain_sort'] = $total_sites - $i;
+    $i ++; 
+  }
+  $i = 0;
   // Ensure the array is sorted by pages, cos it looks kewl!
   uasort($scratchpad_statistics, '_scratchpad_list_scratchpads_thumbs_sort');
   foreach($scratchpad_statistics as $site => $site_statistics){
-    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $total_sites - $i, 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
+    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $site_statistics['domain_sort'], 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
     $i++;
   }
   $output = '<div class="scratchpad_thumbs_header"><p>Sort by: <a href="#" id="domain">Domain</a> | <a href="#" id="nodes">Pages</a> | <a href="#" id="views">Views</a> | <a href="#" id="users">Users</a></p></div>';
