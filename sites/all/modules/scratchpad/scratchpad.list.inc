@@ -117,7 +117,7 @@ function scratchpad_list_scratchpads_thumbs(){
 }
 
 function _scratchpad_list_scratchpads_thumbs_sort($first, $second){
-  return is_array($first['nodes']) ? array_sum($first['nodes']) : 1 / is_array($second['nodes']) ? array_sum($second['nodes']) : 1;
+  return (is_array($first['nodes']) ? array_sum($first['nodes']) : 1) / (is_array($second['nodes']) ? array_sum($second['nodes']) : 1);
 }
 
 function scratchpad_list_scratchpads_stats(){
