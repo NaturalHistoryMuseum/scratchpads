@@ -8,7 +8,7 @@ function scratchpad_list_scratchpads(){
   $items = array();
   ksort($sites);
   foreach($sites as $data){
-    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '. is_array($data['nodes']) ? array_sum($data['nodes']) : 0 .' | Views: '.$data['views'].'</span>';
+    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '.array_sum($data['nodes']) .' | Views: '.$data['views'].'</span>';
     if(user_access('SCRATCHPADIFY')){
       '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
     }
@@ -103,8 +103,8 @@ function scratchpad_list_scratchpads_thumbs(){
   $items = array();
   $i = 0;
   $total_sites = count($scratchpad_statistics);
-  // Ensure the array is sorted by pages, cos it looks kewl!
-  uasort($scratchpad_statistics, '_scratchpad_list_scratchpads_thumbs_sort');
+  // Ensure the array is alphabetical.
+  ksort($scratchpad_statistics);
   foreach($scratchpad_statistics as $site => $site_statistics){
     $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $total_sites - $i, 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
     $i++;
@@ -114,10 +114,6 @@ function scratchpad_list_scratchpads_thumbs(){
   drupal_add_css(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.css');
   drupal_add_js(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.js');
   print theme('page', $output, FALSE);
-}
-
-function _scratchpad_list_scratchpads_thumbs_sort($first, $second){
-  return is_array($first['nodes']) ? array_sum($first['nodes']) : 1 / is_array($second['nodes']) ? array_sum($second['nodes']) : 1;
 }
 
 function scratchpad_list_scratchpads_stats(){
