@@ -114,6 +114,14 @@ function scratchpad_list_scratchpads_thumbs(){
   // Ensure the array is sorted by pages, cos it looks kewl!
   uasort($scratchpad_statistics, '_scratchpad_list_scratchpads_thumbs_sort');
   foreach($scratchpad_statistics as $site => $site_statistics){
+    // If we're on the same server as screenshots.scratchpads.eu, we can 
+    // check to see if the thumbnails exist, and if they don't skip this entry.
+    if($_SERVER['SERVER_ADDR'] == gethostbyname('screenshots.scratchpads.eu')){
+      // We're on the same server, lets check for the files
+      if(!file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.png') || !file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.annotated.png')){
+        continue;
+      }
+    }
     $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $site_statistics['domain_sort'], 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
     $i++;
   }
