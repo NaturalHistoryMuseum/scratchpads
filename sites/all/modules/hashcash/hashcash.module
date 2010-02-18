@@ -131,7 +131,10 @@ function hashcash_form_alter(&$form, &$form_state, $form_id){
     // Check to see if the user has Javascript, and if not, we'll show a polite
     // warning, and disable the form submission button(s)
     if(count($_COOKIE) && (!isset($_COOKIE['has_js']) || (!$_COOKIE['has_js']))){
-      drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page may not work as you do not appear to have JavaScript enabled in your browser.')), 'error', FALSE);
+      // Don't add the message if we're localhost, or the same IP as the server
+      if(!($_SERVER['REMOTE_ADDR'] == '127.0.0.1' || $_SERVER['REMOTE_ADDR'] == $_SERVER['SERVER_ADDR'])){
+        drupal_set_message(t(variable_get('hashcash_submit_disabled','Submission of a form on this page may not work as you do not appear to have JavaScript enabled in your browser.')), 'error', FALSE);
+      }
     }
   }
 }
