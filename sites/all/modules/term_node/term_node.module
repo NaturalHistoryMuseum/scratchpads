@@ -146,7 +146,6 @@ function term_node_form_alter(&$form, $form_state, $form_id){
         $form['delete']['#weight'] = 4;
       }
       // Additional magic submit function
-      $form['#submit'][] = 'term_node_taxonomy_form_term_submit';
       $form['term_node_contenttype'] = array(
         '#type' => 'hidden',
         '#value' => $content_type
@@ -156,74 +155,58 @@ function term_node_form_alter(&$form, $form_state, $form_id){
 }
 
 /**
- * Additional submit function to create the node associated with a term (or to
- * edit the node associated with a term). 
- */
-function term_node_taxonomy_form_term_submit($form, &$form_state){
-  $node_fields = array();
-  foreach($form['term_node']['node_form'] as $key => $value){
-    if(substr($key, 0, 1) != '#'){
-      if($value['#type'] != 'fieldset'){
-        if(isset($form_state['values'][$key])){
-          $node_fields[] = $key;
-        }
-      } else {
-        // Only going to one level or depth, so no need to build a recursive 
-        // function.
-        foreach($value as $sub_key => $sub_value){
-          if(substr($sub_key, 0, 1) != '#' && $sub_value['#type'] != 'fieldset'){
-            if(isset($form_state['values'][$sub_key])){
-              $node_fields[] = $sub_key;
-            }
-          }
-        }
-      }
-    }
-  }
-  // Now we have the fields, lets check to see if we already have a node for
-  // this term, if not we'll create a new one.
-  $nid = db_result(db_query("SELECT n.nid FROM {term_node} t, {node} n WHERE type = '%s' AND tid = %d AND t.nid = n.nid", _term_node_get_content_type_for_vid($form_state['values']['vid']), $form_state['values']['tid']));
-  if($nid){
-    $node = node_load($nid);
-  } else {
-    $node = new stdClass();
-    $node->type = $form_state['values']['term_node_contenttype'];
-    $node->status = 1;
-    $node->comment = 0;
-    $node->promote = 0;
-    $node->moderate = 0;
-    $node->sticky = 0;
-    $node->taxonomy = array($form_state['values']['tid'] => taxonomy_get_term($form_state['values']['tid']));
-  }
-  foreach($node_fields as $field){    
-    $node->$field = $form_state['values'][$field];
-  }
-  // Change the user to the user who is editing this term.  There are potential
-  // permission issues here FIXME
-  $node_options = variable_get('node_options_'.$node->type, array('status', 'promote'));
-  global $user;
-  $node->uid = $user->uid;
-  $node->revision = in_array('revision', $node_options);
-  $node->title = $form_state['values']['name'];
-  node_save($node);
-}
-
-/**
  * Implementation of hook_taxonomy
  * 
  * Used to delete a node if a term is deleted.
  */
 function term_node_taxonomy($op, $type, $array = NULL){
-  if($op == 'delete'){
-    if($type == 'term'){
-      // We're deleting a term
-      $content_type = _term_node_get_content_type_for_vid($array['vid']);
-      if($content_type){
-        $result = db_query("SELECT nid FROM {node} WHERE type = '%s' AND nid NOT IN (SELECT nid FROM {term_data} t INNER JOIN {term_node} n ON t.tid = n.tid WHERE t.vid = %d)", $content_type, $array['vid']);
-        while($row = db_fetch_array($result)){
-          node_delete($row['nid']);
+  if($type == 'term'){
+    switch($op){
+      case 'delete':
+        // We're deleting a term
+        $content_type = _term_node_get_content_type_for_vid($array['vid']);
+        if($content_type){
+          $result = db_query("SELECT nid FROM {node} WHERE type = '%s' AND nid NOT IN (SELECT nid FROM {term_data} t INNER JOIN {term_node} n ON t.tid = n.tid WHERE t.vid = %d)", $content_type, $array['vid']);
+          while($row = db_fetch_array($result)){
+            node_delete($row['nid']);
+          }
         }
-      }
+        break;
+      case 'insert':
+        // We're creating a new node, we'll assume that
+        // the node validates (as the form passed validation).
+      case 'update':
+        // We're updating an existing term, so we need to 
+        // load the existing node associated with the term,
+        // and edit that
+        if($op == 'update'){
+          $nid = db_result(db_query("SELECT n.nid FROM {term_node} t, {node} n WHERE type = '%s' AND tid = %d AND t.nid = n.nid", _term_node_get_content_type_for_vid($array['vid']), $array['tid']));
+          $node = node_load($nid);
+        } else {
+          $node = new stdClass();
+          $node->type = _term_node_get_content_type_for_vid($array['vid']);
+          $node->status = 1;
+          $node->comment = 0;
+          $node->promote = 0;
+          $node->moderate = 0;
+          $node->sticky = 0;
+          $node->taxonomy = array($array['tid'] => taxonomy_get_term($array['tid']));
+        }
+        foreach($array as $key => $value){
+          if(substr($key, 0, 6) == 'field_'){
+            unset($node->$key);
+            $node->$key = $value;
+          }
+        }
+        // Change the user to the user who is editing this term.  There are potential
+        // permission issues here FIXME
+        $node_options = variable_get('node_options_'.$node->type, array('status', 'promote'));
+        global $user;
+        $node->uid = $user->uid;
+        $node->revision = in_array('revision', $node_options);
+        $node->title = $array['name'];
+        node_save($node);
+        break;
     }
   }
 }
