@@ -6,7 +6,7 @@
 function classification_import_menu(){
   return array(
     'admin/content/taxonomy/import' => array(
-      'title' => 'Taxonomy import',
+      'title' => 'Import',
       'description' => 'Import terms and metadata into a taxonomy',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('classification_import_form'),

@@ -201,7 +201,11 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
           if(!isset($line_parts['parent']) && isset($line_parts['parent_name'])){
             $line_parts['parent'] = $line_parts['parent_name'];
           }
-          db_query("INSERT INTO {classification_import_temp} (id, parent, data) VALUES ('%s', '%s', '%s')", $line_parts['name'], $line_parts['parent'], serialize($line_parts));
+          // We need to unset the parent, as it could be confusing the taxonomy
+          // module
+          $parent = $line_parts['parent'];
+          unset($line_parts['parent']);
+          db_query("INSERT INTO {classification_import_temp} (id, parent, data) VALUES ('%s', '%s', '%s')", $line_parts['name'], $parent, serialize($line_parts));
         }
         // Increase the progress.
         $linenumber ++;
