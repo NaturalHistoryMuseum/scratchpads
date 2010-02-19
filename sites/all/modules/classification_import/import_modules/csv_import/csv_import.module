@@ -200,6 +200,7 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
           // the "parent_name"
           if(!isset($line_parts['parent']) && isset($line_parts['parent_name'])){
             $line_parts['parent'] = $line_parts['parent_name'];
+            unset($line_parts['parent_name']);
           }
           // We need to unset the parent, as it could be confusing the taxonomy
           // module
