@@ -190,7 +190,7 @@ function term_node_taxonomy($op, $type, $array = NULL){
           $node->promote = 0;
           $node->moderate = 0;
           $node->sticky = 0;
-          $node->taxonomy = array($array['tid'] => taxonomy_get_term($array['tid']));
+          $node->taxonomy = array($array['tid'] => $array['tid']);
         }
         foreach($array as $key => $value){
           if(substr($key, 0, 6) == 'field_'){
