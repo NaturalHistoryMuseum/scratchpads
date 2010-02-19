@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implementation of hook_install
+ */
+function classification_import_install() {
+  drupal_install_schema('classification_import');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function classification_import_schema() {
+  return array(
+    'classification_import_temp' => array(
+      'fields' => array(
+        'id' => array('type' => 'varchar', 'length' => 255),
+        'parent' => array('type' => 'varchar', 'length' => 255),
+        'data' => array('type' => 'text')
+      ),
+      'primary key' => array('id'),
+      'indexes' => array(
+        'classification_import_temp_parent_index' => array('parent')
+      )
+    )
+  );
+}

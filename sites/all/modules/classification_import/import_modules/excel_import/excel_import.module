@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * DO DAH DO!
+ */
+
+/**
+ * Implementation of hook_classification_import_form
+ */
+function excel_import_classification_import_form(){
+  return array(
+    'excel' => array(
+      '#type' => 'fieldset',
+      '#title' => 'Excel',
+      '#description' => 'Import a classification directly from an Excel file',
+      '#collapsed' => TRUE,
+      '#collapsible' => TRUE,
+      'excel-file' => array(
+        '#type' => 'file',
+        '#title' => t('Upload an Excel file containing your complete classification')
+      ),
+      'submit' => array(
+        '#type' => 'submit',
+        '#title' => t('Import from Excel file'),
+        '#value' => t('Import from Excel file'),
+        '#submit' => array('excel_import_submit')
+      )
+    )
+  );
+}
+
+/**
+ * Callback for submitting the form with an Excel file.
+ */
