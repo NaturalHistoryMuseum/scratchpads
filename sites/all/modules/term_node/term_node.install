@@ -14,7 +14,7 @@ function term_node_install(){
 /**
  * Delete the blank nodes that have been accidentally created.
  */
-function term_node_6101(){
+function term_node_update_6101(){
   $ret = array();
   $ret[] = update_sql("CREATE TEMPORARY TABLE nodes_to_delete AS (SELECT n.nid FROM {term_node} tn, {term_data} td, {node} n WHERE tn.nid = n.nid AND td.tid = tn.tid AND title = name AND type = '')");
   $ret[] = update_sql("DELETE FROM {node} WHERE nid IN (SELECT nid FROM nodes_to_delete)");
