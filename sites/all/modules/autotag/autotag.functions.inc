@@ -297,6 +297,11 @@ function array_flatten($array) {
  * Return an array of vids which apply to a specific node type
  */
 function _autotag_get_vids_for_type($type, $just_vids = TRUE){
+  // First lets make sure this content type is being autotagged.
+  $types_to_not_tag = variable_get('autotag_dont_autotag', array());
+  if(isset($types_to_not_tag[$type]) && $types_to_not_tag[$type]){
+    return array();
+  }
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
   $disable_vids = variable_get('autotag_disable_vids', array());
