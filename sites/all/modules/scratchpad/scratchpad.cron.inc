@@ -3,8 +3,8 @@
 function _scratchpad_cron(){
   // Don't report if we're a "dev" or D6 upgrade site.
   if(substr($_SERVER['HTTP_HOST'],0,3)!='d6.' && substr($_SERVER['HTTP_HOST'],0,4)!='dev.'){
-    // Once a week (this could be made more frequent) we'll report that we exist
-    // to a central repository which can then build a list of all Scratchpads.
+    // Once a day we'll report that we exist to a central repository which can
+    // then build a list of all Scratchpads.
     if(variable_get('scratchpad_last_reported',0) < time()-86400){// Seconds in a day
       // Send the update to our central server
       $central_servers = variable_get('scratchpad_central_servers', array('http://dev.scratchpads.eu/'));
