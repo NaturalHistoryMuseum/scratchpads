@@ -21,6 +21,14 @@ function scratchpad_profile_details(){
  */
 function scratchpad_profile_modules(){
   return array(
+  
+    // -------------------------------------------------------------------------
+    // 
+    // NOTE - IF THE FOLLOWING IS CHANGED, THE UPGRADE SCRIPT 
+    // /home/simor/upgrade/createdatabase MUST ALSO BE CHANGED.
+    //
+    // -------------------------------------------------------------------------
+  
     // Core - optional
       'blog','color','comment','contact','locale','dblog','help','menu','openid'
       ,'path','poll','search','taxonomy','trigger','upload','forum',
