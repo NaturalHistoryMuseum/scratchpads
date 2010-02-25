@@ -45,7 +45,50 @@ function spm_menu(){
       'title' => 'Autocomplete darwincore thingumy', 
       'page callback' => 'spm_autocomplete', 
       'access arguments' => array('create spm content'), 
-      'type' => MENU_CALLBACK));
+      'type' => MENU_CALLBACK
+    ),
+    'spm/export' => array(
+      'title' => 'Test',
+      'page callback' => 'spm_export',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK
+    )
+  );
+}
+
+function spm_export(){
+  $contents = array(
+    'page_title' => 'Generate a XHTML page from XML+XSLT files',
+    'welcome_msg' => 'Simple XHTML document from XML+XSLT files!',
+    'prova' => array(
+      "gino" => array(
+        "innergino" => "gino inner value"
+      ),
+      "filo" => "filodata"
+    ),
+    'prova2' => array(
+      "gino" => array(
+        "cd:http://dublincore.org/blah/something" => "gino inner value"
+      ),
+      "filo" => "filodata"
+    ),
+    'prova3' => array(
+      "gino" => array(
+        "innergino" => "gino inner value"
+      ),
+      "filo" => "filodata"
+    ),
+    'prova4' => array(
+      "gino" => array(
+        "innergino" => "gino inner value"
+      ),
+      "filo" => "filodata"
+    ),
+  );
+  module_load_include('xml.class.php','spm');
+  $XmlConstruct = new XmlConstruct('root');
+  $XmlConstruct->fromArray($contents);
+  $XmlConstruct->output();
 }
 
 function spm_autocomplete($taxon_name){
