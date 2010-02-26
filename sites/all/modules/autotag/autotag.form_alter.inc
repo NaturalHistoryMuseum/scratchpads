@@ -121,6 +121,8 @@ function _autotag_form_alter(&$form, &$form_state, $form_id){
     // submits)
     $form['buttons']['submit']['#submit'] = array('autotag_form_submit');
     $form['#submit'] = array();
+    // FIXME: Force this form to be cached, as this breaks if it isn't
+    $form['#cache'] = TRUE;
   } else {
     // Else we likely have either a submitted form, or one with post shit
     if(count($form_state['storage']['formsubmitted'])){
