@@ -190,8 +190,10 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   }
   switch($op){
     case 'update':
-      foreach($_POST['files'] as $fid => $file_details){
-        db_query("UPDATE {upload} SET description = '%s', weight = %d, list = %d WHERE fid = %d AND nid = %d AND vid = %d", $file_details['description'], $file_details['weight'], $file_details['list'], $fid, $node->nid, $node->vid);
+      if(isset($_POST['files']) && is_array($_POST['files'])){
+        foreach($_POST['files'] as $fid => $file_details){
+          db_query("UPDATE {upload} SET description = '%s', weight = %d, list = %d WHERE fid = %d AND nid = %d AND vid = %d", $file_details['description'], $file_details['weight'], $file_details['list'], $fid, $node->nid, $node->vid);
+	}
       }
     case 'insert':
       // Return if this node doesn't have any autotag vids associated with it
