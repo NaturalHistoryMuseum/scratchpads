@@ -125,9 +125,9 @@ function views_sort_popup_html($view_name = "", $view_args = ""){
       $view_sort = $view_name.'---'.$view_args[0].'---'.$id;
     }
     echo '<div view-sort="',$view_sort,'" class="sort-div ',$class,'"><div style="position:relative;clear:both;">';//***'.$id . print_r($item, 1) .'***';
-    echo '<div class="view-sort-toggle"><img src="',url(drupal_get_path('module','view_sort')),'/cross.png" id="view-sort-hide"/>';    
+    echo '<div class="view-sort-toggle"><img src="',base_path(),drupal_get_path('module','view_sort'),'/cross.png" id="view-sort-hide"/>';    
     if(!isset($item['local']) || !$item['local']){
-      echo '<img src="',url(drupal_get_path('module','view_sort')),'/tick.png" id="view-sort-pin"/>';
+      echo '<img src="',base_path(),drupal_get_path('module','view_sort'),'/tick.png" id="view-sort-pin"/>';
     }
     echo '</div>',$item['body'],'</div></div>';
     $i ++;

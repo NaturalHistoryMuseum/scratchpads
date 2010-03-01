@@ -332,7 +332,7 @@ function countriesmap_theme() {
 function theme_countriesmap_display_map($node) {
   $output = '<div class="countriesmap_map">';
   $filename = array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid)));
-  $output .= '<img src="'.url($filename).'"/>';
+  $output .= '<img src="'.base_path().$filename.'"/>';
   $output .= '</div>';
   return $output;
 }

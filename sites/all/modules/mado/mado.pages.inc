@@ -21,14 +21,14 @@ function mado_front_page(){
   drupal_add_js(array('mado' => array(
     'callback_url' => url('mado/save',array('absolute'=>TRUE)),
     'ident' => 'frontpage',
-    'finished_sorting' => l('<img title="Click to save" alt="Lock" src="'.url(drupal_get_path('module','mado').'/images/lock.png').'"/>',$_GET['q'],array('html' => TRUE))
+    'finished_sorting' => l('<img title="Click to save" alt="Lock" src="'.base_path().drupal_get_path('module','mado').'/images/lock.png"/>',$_GET['q'],array('html' => TRUE))
   )), 'setting');
   // Add jquery_ui
   jquery_ui_add(array('ui.sortable'),'none');
   
   if(user_access('mado sort')){
     $output .= '<div class="mado_sort">
-        <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.url(drupal_get_path('module','mado').'/images/unlock.png').'"/></h1>
+        <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.base_path().drupal_get_path('module','mado').'/images/unlock.png"/></h1>
       </div>';
     drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
     jquery_ui_add(array('ui.dialog'));
@@ -90,7 +90,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       drupal_add_js(array('mado' => array(
         'callback_url' => url('mado/save',array('absolute'=>TRUE)),
         'ident' => $vids[0].'/'.$tids[0],
-	      'finished_sorting' => l('<img title="Click to save" alt="Lock" src="'.url(drupal_get_path('module','mado').'/images/lock.png').'"/>',$_GET['q'],array('attributes' => array('onclick' => "$('#mado_apply').dialog('open');return false;"), 'html' => TRUE))
+	      'finished_sorting' => l('<img title="Click to save" alt="Lock" src="'.base_path().drupal_get_path('module','mado').'/images/lock.png"/>',$_GET['q'],array('attributes' => array('onclick' => "$('#mado_apply').dialog('open');return false;"), 'html' => TRUE))
       )), 'setting');
       // Add jquery_ui
       jquery_ui_add(array('ui.sortable'),'none');
@@ -113,7 +113,7 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
       
       if(user_access('mado sort')){
         $output .= '<div class="mado_sort">
-            <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.url(drupal_get_path('module','mado').'/images/unlock.png').'"/></h1>
+            <h1 id="mado-start-sort"><img title="Click to edit the layout of this page" alt="Unlock" src="'.base_path().drupal_get_path('module','mado').'/images/unlock.png"/></h1>
           </div>';
         drupal_add_js(drupal_get_path('module', 'mado')."/mado.js");
         jquery_ui_add(array('ui.dialog'));
@@ -243,7 +243,7 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
   $output .= '<div id="'.str_replace("/","-slash-",$id).'" class="'.(isset($block['#css'])? $block['#css'].' ':"").'mado_block'.((isset($block['#hidden'])&&$block['#hidden'])?" mado-hidden":"").'">';
   if($id != 'divider' && $before_divider){
     $output .= '<div class="mado_close">
-    <img src="'.url(drupal_get_path('module','mado').'/images/close.png').'" alt="Close"/>
+    <img src="'.base_path().drupal_get_path('module','mado').'/images/close.png" alt="Close"/>
   </div>';
   }
   $output .='<div>
@@ -256,7 +256,7 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
     $output .= '<div class="boxtitle mado-handle">
           <h1>'.$title.'</h1>';
     if(user_access('mado sort')){
-      $list_of_links .= '<li><a class="resize-x resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-x.png').'" alt="Resize x"/></a></li><li><a class="resize-y resize"><img src="'.url(drupal_get_path('module','mado').'/images/arrow-y.png').'" alt="Resize y"/></a></li>';
+      $list_of_links .= '<li><a class="resize-x resize"><img src="'.base_path().drupal_get_path('module','mado').'/images/arrow-x.png" alt="Resize x"/></a></li><li><a class="resize-y resize"><img src="'.base_path().drupal_get_path('module','mado').'/images/arrow-y.png" alt="Resize y"/></a></li>';
     }
     if($list_of_links != ''){
       $output .= '<ul class="mado-title-links">'.$list_of_links.'</ul>';

@@ -639,7 +639,7 @@ function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
             return;
           }
           if(trim($scratchpad_notification['message']) != ''){
-            $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.base_path().url(drupal_get_path('module','scratchpadify').'/images/close.png').'"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
+            $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/close.png"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
           }
           return array('subject' => '', 'content' => $scratchpad_notification['message']);
       }
