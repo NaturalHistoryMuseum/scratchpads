@@ -212,6 +212,17 @@ function term_node_taxonomy($op, $type, $array = NULL){
         }
         break;
     }
+  } elseif($type == 'vocabulary'){
+    switch($op){
+      case 'delete':
+        // We need to remove this vocabulary from the contenttypes variable
+        $val = variable_get('term_node_vocabularies-contenttypes', array());
+        if(isset($val[$array['vid']])){
+          unset($val[$array['vid']]);
+        }
+        variable_set('term_node_vocabularies-contenttypes', $val);
+        break;
+    }
   }
 }
 
