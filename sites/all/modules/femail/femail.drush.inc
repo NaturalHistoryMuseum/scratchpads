@@ -53,6 +53,12 @@ function _femail_get_msg(){
       if(isset($part_data['headers']['content-type'])){
         if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
           $msg['body'] = quoted_printable_decode(substr($msg['body'], $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']));
+          // base64 decode the body - WTF, why are email clients sending plain
+          // text base64 encoded.  That is just plain silly.
+          $base64_decoded_body = base64_decode($msg['body']);
+          if($base64_decoded_body){
+            $msg['body'] = $base64_decoded_body;
+          }
           $body_is_set = TRUE;
         }
       }
