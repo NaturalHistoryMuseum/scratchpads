@@ -124,9 +124,6 @@ function eol_import_validate($form, &$form_state){
   if(!(isset($form_state['clicked_button']['#post']['eol-import-id']) && is_numeric($form_state['clicked_button']['#post']['eol-import-id']))){
     form_set_error('eol-name', t('Please ensure you select a classification to import.  Press "Search" again, and select one from the list that should appear below.'));
   }
-  if(variable_get('eol_import_doing_import', FALSE)){
-    form_set_error('eol-name', t('Another import is currently in progress, please wait for this to complete before continuing.'));
-  }
 }
 
 /**

@@ -1,6 +1,17 @@
 <?php 
 
 /**
+ * FIXME LIST
+ * 
+ * - Check for size of upload file, and ensure it has uploaded - validate
+ *   function should do this.
+ * 
+ * - _csv_import_batch_parse_lines_get_lines looks to be very inefficient. We 
+ *   should be reading in at least 1024bytes of data per file read, and not 1.
+ *   The function also starts from the beggining for each set of lines that it
+ *   reads - feck, it's shit
+ */
+/**
  * Implementation of hook_classification_import_form
  */
 function csv_import_classification_import_form(){
@@ -50,14 +61,13 @@ function csv_import_submit($form, $form_state){
   $file = file_save_upload('csv-file');
   $batch = array(
     'operations' => array(
-      array('csv_import_batch_parse_lines', array($file->filepath, $form_state['values']['csv-file-type'])),
+      array('csv_import_batch_parse_lines', array($file->filepath, $form_state['values']['csv-file-type'], arg(4))),
       array('classification_import_load_terms', array(arg(4)))
     ),
     'finished' => 'classification_import_batch_import_finished',
     'title' => t('Importing'),
-    // We use a single multi-pass operation, so the default
-    // 'Remaining x of y operations' message will be confusing here.
-    'error_message' => t('The import has encountered an error.')
+    'error_message' => t('The import has encountered an error.'),
+    'progressive' => TRUE
   );
   batch_set($batch);
 }
@@ -65,7 +75,7 @@ function csv_import_submit($form, $form_state){
 /**
  * Batch
  */
-function csv_import_batch_parse_lines($filename, $filetype, &$context) {
+function csv_import_batch_parse_lines($filename, $filetype, $vid, &$context) {
   if (!isset($context['sandbox']['progress'])) {
     $number_of_lines = 0;
     $file = fopen($filename, "r");
@@ -80,7 +90,7 @@ function csv_import_batch_parse_lines($filename, $filetype, &$context) {
   }
 
   // Call the helper
-  $lines = _csv_import_batch_parse_lines_get_lines($filename, $context['sandbox']['progress']);
+  $lines = _csv_import_batch_parse_lines_get_lines($filename, $context['sandbox']['fileposition']);
   // Save the headers (first line)
   if($context['sandbox']['progress'] == 0){
     $headers = _csv_import_explode(array_shift($lines));
@@ -93,7 +103,7 @@ function csv_import_batch_parse_lines($filename, $filetype, &$context) {
     $context['sandbox']['progress'] = 1;
   }
   // Save the lines to the database
-  _csv_import_batch_parse_lines_save($lines, $context['sandbox']['progress'], $filetype, $context['sandbox']['headers']);
+  _csv_import_batch_parse_lines_save($lines, $context['sandbox']['progress'], $filetype, $context['sandbox']['headers'], $vid);
   
   // Set the message
   $context['message'] = t('Imported %numnames names', array('%numnames' => $context['sandbox']['progress']));
@@ -138,20 +148,20 @@ if (!function_exists('str_getcsv')) {
 /**
  * Helper function for above
  */
-function _csv_import_batch_parse_lines_get_lines($filename, $linenumber){
+function _csv_import_batch_parse_lines_get_lines($filename, &$file_position = 0){
   // Get the ten lines we require.
   $current_line_number = 0;
   $file = fopen($filename, "r");
+  fseek($file, $file_position);
   $lines = array();
   while(!feof($file)){
     $char = fread($file, 1);
-    if($current_line_number >= $linenumber){
-      $lines[$current_line_number] .= $char;
-    }
+    $file_position = ftell($file);
+    $lines[$current_line_number] .= $char;
     if($char == "\n"){
       $current_line_number ++;
     }
-    if($current_line_number >= $linenumber + 10){
+    if($current_line_number >= 10){
       break;
     }
   }
@@ -161,7 +171,7 @@ function _csv_import_batch_parse_lines_get_lines($filename, $linenumber){
 /**
  * Another helper function for the above
  */
-function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $headers){
+function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $headers, $vid){
   switch($filetype){
     case 1: // Full hierarchy
       
@@ -206,7 +216,7 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
           // module
           $parent = $line_parts['parent'];
           unset($line_parts['parent']);
-          db_query("INSERT INTO {classification_import_temp} (id, parent, data) VALUES ('%s', '%s', '%s')", $line_parts['name'], $parent, serialize($line_parts));
+          classification_import_save_data($line_parts['name'], $parent, $line_parts, $vid);
         }
         // Increase the progress.
         $linenumber ++;

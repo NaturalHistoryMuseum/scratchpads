@@ -49,45 +49,186 @@ function classification_import_help($path, $arg){
 }
 
 /**
+ * hook_form_FORM_ID_alter
+ */
+function classification_import_form_taxonomy_form_term_alter(&$form, &$form_state){
+  // If we're using BATAX we need to mark the parent form element (and the 
+  // related terms) as validated, as validation messes things up for us.
+  //if(isset($form['advanced']['parent']['#type']) && $form['advanced']['parent']['#type'] == 'textfield'){
+    $form['advanced']['parent']['#element_validate'] = array('classification_import_element_validate');
+  //}
+  //if(isset($form['advanced']['relations']['#type']) && $form['advanced']['relations']['#type'] == 'textfield'){
+    $form['advanced']['relations']['#element_validate'] = array('classification_import_element_validate');
+  //}
+}
+
+/**
+ * Validate function for parent and related terms element
+ */
+function classification_import_element_validate($element, &$form_state){
+  return;
+}
+
+/**
  * Classification load terms
  * 
  * This function is called by the batch api of the contrib modules.
  */
-function classification_import_load_terms($vid){
-  // First we'll get the root term id so that we know where to start from
-  $parent_id = db_result(db_query("SELECT parent FROM {classification_import_temp} WHERE parent NOT IN (SELECT id FROM classification_import_temp)"));
-  classification_import_load_terms_recurse($parent_id, $vid);
-  // Finally clear the table.
-  db_query("TRUNCATE {classification_import_temp}");
-}
-
-function classification_import_load_terms_recurse($parent_id, $vid, $parent=0){
-  $results = db_query("SELECT id, data FROM {classification_import_temp} WHERE parent = '%s'", $parent_id);
-  while($row = db_fetch_array($results)){
-    $data = unserialize($row['data']);
-    foreach($data as $key => $value){
-      if(is_array($value)){
-        $data[$key] = $value[0];
-      }
-      // FIXME Hacky work around for the term_node module - this belongs in the
-      // term_node module itself.
-      $data['field_'.$key] = array(array('value' => $data[$key])); 
+function classification_import_load_terms($vid, &$context){
+  if($context['finished'] == 1 && !isset($context['sandbox']['data'])){
+    // First time call, we'll reset progress
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp} WHERE vid = %d", $vid));
+    $context['sandbox']['imported'] = 0;
+    // First we'll get the root terms so that we know where to start from
+    $result = db_query("SELECT id FROM {classification_import_temp} WHERE parent NOT IN (SELECT name FROM {classification_import_temp} WHERE vid = %d) AND vid = %d", $vid, $vid);
+    while($row = db_fetch_array($result)){      
+      $context['sandbox']['data'][] = $row['id']; 
     }
-    $data['vid'] = $vid;
-    $data['parent'] = $parent;
-    taxonomy_save_term($data);
-    classification_import_load_terms_recurse($row['id'], $vid, $data['tid']);
+    $context['sandbox']['timestarted'] = time();
+  }
+  if(!count($context['sandbox']['data'])){
+    // We're here because the data array is empty.  We must have some failed 
+    // terms, lets add them to the data array.
+    $context['sandbox']['data'] = $context['sandbox']['failed'];
+    unset($context['sandbox']['failed']);
+    // In order to ensure we don't end up in an infinte loop, we'll check to see
+    // if any terms have been imported since the last time we set the data array
+    // from the failed array.  If there hasn't been any imported, we're in a
+    // loop, and need to exit.  We'll also inform the user that certain terms
+    // could not be imported.
+    if(isset($context['sandbox']['failed_count'])){
+      if(count($context['sandbox']['data']) == $context['sandbox']['failed_count']){
+        // The count is the same as last time, we're in a loop, lets set some
+        // error messages, and try and get out.
+        drupal_set_message(t('We were not able to import').' '.format_plural(count($context['sandbox']['data']), '1 term', '@count terms').'. '.t('This could be because the terms are involved in a cyclic link (e.g. A links to B, and B links to A), or the terms do not have valid parent names.'), 'error');
+        foreach($context['sandbox']['data'] as $id){
+          $value = db_fetch_array(db_query('SELECT * FROM {classification_import_temp} WHERE id = %d', $id));
+          $value = unserialize($value['data']);
+          drupal_set_message(t('Unable to import %term', array('%term' => $value['name'])), 'error');
+        }
+        $we_are_in_a_loop = TRUE;
+      }
+    } else {
+      $context['sandbox']['failed_count'] = count($context['sandbox']['data']);
+    }
+  }
+  if(!$we_are_in_a_loop){
+    $additional_message = classification_import_load_terms_help($context['sandbox']['data'], $vid);
+    // Check to see if we have any failed terms, if so, we'll need to reduce the 
+    // progress
+    if(isset($context['sandbox']['data']['failed'])){
+      $context['sandbox']['failed'][] = $context['sandbox']['data']['failed'];
+      unset($context['sandbox']['data']['failed']);
+      // We'll also unset the error messages - we set our own later on, so don't
+      // need the ones being set.
+      drupal_get_messages('error');
+    } else {
+      $context['sandbox']['imported'] ++;
+    }
+    $context['sandbox']['progress'] = $context['sandbox']['imported']/$context['sandbox']['max'];
+    // Set the message
+    $time_taken_so_far = time() - $context['sandbox']['timestarted'];
+    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress'])/$context['sandbox']['progress']);
+    $context['message'] = '<p><br/>'.t('Saved %numnames of %total_names names', array('%numnames' => $context['sandbox']['imported'], '%total_names' => $context['sandbox']['max'])).'</p><p>'.t('Approximate time remaining').': '. format_interval($approx_time_remaining) . $additional_message;
+  } else {
+    $context['sandbox']['progress'] = 1;
+  }
+  if($context['sandbox']['progress'] >= 1){
+    $context['finished'] = 1;
+    // Finally clear the table.  We do this here, rather than in the finished
+    // function, as here we have the value of vid (don't want to rely on getting
+    // it from the URL).
+    db_query("DELETE FROM {classification_import_temp} WHERE vid = %d", $vid);
+  } else {
+    $context['finished'] = $context['sandbox']['progress'];
   }
 }
 
+function classification_import_load_terms_help(&$data, $vid){  
+  // We'll import this name first, then pop it from the list to import, and add
+  // its children 
+  $id = array_shift($data);
+  $row = db_fetch_array(db_query("SELECT * FROM {classification_import_temp} WHERE id = %d AND vid = %d", $id, $vid));
+  $form_state['values'] = unserialize($row['data']);
+  foreach($form_state['values'] as $key => $value){
+    if(is_array($value)){
+      $form_state['values'][$key] = $value[0];
+    }
+    $form_state['values']['field_'.$key] = array(array('value' => $form_state['values'][$key]), 'value' => $form_state['values'][$key]);
+  }
+  if(isset($form_state['values']['parent'])){
+    $form_state['values']['parent'] = array($form_state['values']['parent'] => $form_state['values']['parent']);
+  }
+/*
+  if($row['parent_tid']){
+    $form_state['values']['parent'] = array($row['parent_tid'] => $row['parent_tid']);
+  }
+*/
+  $vocabulary = taxonomy_vocabulary_load($vid);
+  
+  // Druapl execute is currently BROKEN http://drupal.org/node/260934, so we
+  // have our own work around for this.
+  module_load_include('drupal_execute.inc','classification_import');
+  module_load_include('admin.inc', 'taxonomy');
+  classification_import_drupal_execute('taxonomy_form_term', $form_state, $vocabulary);
+  
+  // Check to see if the term has been entered, if so, we continue, if not, 
+  // we add the data array to the end of the list, and we'll try again later
+  if(isset($form_state['tid'])){  
+    // Finally we need to add the the children of this term from the database to
+    // the context/data array.
+    $results = db_query("SELECT id, data FROM {classification_import_temp} WHERE parent = '%s' AND vid = %d", $row['name'], $vid);
+    while($row = db_fetch_array($results)){
+      $row['data'] = unserialize($row['data']);
+      $row['data']['parent'] = $form_state['values']['tid']; 
+      db_query("UPDATE {classification_import_temp} SET data = '%s' WHERE id = %d AND vid = %d", serialize($row['data']), $row['id'], $vid);
+      $data[] = $row['id'];
+    } 
+    // We delete this entry from the table - progress could be counted from this
+    db_query("DELETE FROM {classification_import_temp} WHERE id = %d", $id);
+    // Delete the status message which get in the way.
+    drupal_get_messages('status');
+    $additional_message = '<p>'.t('Imported').': '.$form_state['values']['name'].'</p>';
+  } else {
+    // This didn't import, lets add this row to a special array of "failed"
+    // terms
+    $data['failed'] = $id;
+    $additional_message = '<p class="error">'.t('Failed to import, will retry').': '.$form_state['values']['name'].'</p>';
+  }
 
+  // Why the fuck is this necesary, why?
+  // usleep(1000000);
+  // Turns out the above was necessary because of the time value that Drupal
+  // uses to decide whether another operation should be performed for this HTTP
+  // request.  The following fixes that issue.
+  // We need to set the timer value, to ensure that only ONE, I SAID ONLY 
+  // F**KING ONE term import is done per HTTP request.  This is due to the shit
+  // way that Drupal caches every little thing, and so form validation fails,
+  // when it shouldn't.
+  global $timers;
+  $timers['batch_processing']['start'] = 1;
+  // Return the additional message
+  return $additional_message;
+}
+
+/**
+ * Save data for import later
+ */
+function classification_import_save_data($name, $parent, $data, $vid){
+  db_query("INSERT INTO {classification_import_temp} (name, parent, data, vid) VALUES ('%s', '%s', '%s', %d)", $name, $parent, serialize($data), $vid);
+}
 /**
  * 
  */
 function classification_import_batch_import_finished($success, $results, $operations) {
+  // We delete the status messages, as there is likely to be far too many to
+  // display on the screen.
+  drupal_get_messages('status');
   variable_del('eol_import_doing_import');
   if ($success) {
     drupal_set_message(t('The import has been performed.'));
+    // FIXME - Add redirect.
   }
   else {
     drupal_set_message(t('An error occurred and processing did not complete.'), 'error');
