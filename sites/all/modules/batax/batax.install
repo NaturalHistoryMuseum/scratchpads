@@ -10,3 +10,11 @@ function batax_disable(){
 function batax_enable(){
   variable_set('taxonomy_override_selector', TRUE);
 }
+
+/**
+ * It looks like a number of sites may well have the taxonomy_override_selector
+ * set to FALSE.  This should correct them (http://www.youtube.com/watch?v=VjdgXqKjHvY)
+ */
+function batax_update_6101(){
+  batax_enable();
+}
