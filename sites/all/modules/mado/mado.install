@@ -18,9 +18,40 @@ function mado_uninstall(){
 function mado_schema(){
   $tables['mado'] = array(
     'fields' => array(
-      'mid' => array('type' => 'serial', 'unsigned' => true, 'not null' => true),
       'identifier' => array('type' => 'varchar', 'length' => '256', 'not null' => true),
       'blocks' => array('type' => 'text', 'not null' => true)),
-    'primary key' => array('mid'));
+    'primary key' => array('identifier'));
   return $tables;
+}
+
+/**
+ * Hmmm, messed up the table definition a little - fix it dude!
+ */
+function mado_update_6101(){
+  // We need to remove the mid column from the table, and update the primary key
+  // so that it is the identifier.  Before this though, we need to remove the 
+  // extra rows that are not needed.
+  $ret = array();
+  db_query_temporary('SELECT MAX(mid) mid FROM {mado} GROUP BY identifier', 'mado_dont_delete');
+  $ret[] = update_sql("DELETE FROM {mado} WHERE mid NOT IN (SELECT mid FROM mado_dont_delete)");
+  db_drop_field($ret, 'mado', 'mid');
+  db_add_primary_key($ret, 'mado', array('identifier'));
+  return $ret;
+}
+
+/**
+ * Hmmm, the Phasmid-study-group.org website has unfortunately got the matrix
+ * views saved in the mado table.  We need to get rid of them
+ */
+function mado_update_6102(){
+  // Can't really do an update_sql call here. Ho hum!
+  $results = db_query("SELECT * FROM {mado}");
+  while($row = db_fetch_array($results)){
+    $row['blocks'] = unserialize($row['blocks']);
+    unset($row['blocks']['view-matrix_images']);
+    unset($row['blocks']['view-matrix_editor_specimens']);
+    unset($row['blocks']['view-matrix_page']);
+    db_query("UPDATE {mado} SET blocks = '%s' WHERE identifier = '%s'", serialize($row['blocks']), $row['identifier']);
+  }
+  return array('#finished' => TRUE);
 }
