@@ -108,6 +108,8 @@ function classification_import_load_terms($vid, &$context){
           drupal_set_message(t('Unable to import %term', array('%term' => $value['name'])), 'error');
         }
         $we_are_in_a_loop = TRUE;
+      } else {
+        $context['sandbox']['failed_count'] = count($context['sandbox']['data']);
       }
     } else {
       $context['sandbox']['failed_count'] = count($context['sandbox']['data']);
