@@ -8,5 +8,5 @@ function batax_disable(){
   variable_set('taxonomy_override_selector', FALSE);
 }
 function batax_enable(){
-  variable_set('taxonomy_override_selector', FALSE);
+  variable_set('taxonomy_override_selector', TRUE);
 }
