@@ -12,84 +12,54 @@
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
+
 /**
- * hook_form_alter
- * 
- * This function does most of the hard work for this module.
+ * Implementation of hook_form_FORM_ID_alter
  */
-function batax_form_alter(&$form, &$form_state, $form_id){
-  if($form_id == 'taxonomy_form_term' && !$form_state['submitted']){
-    // If this taxonomy has loadsa terms, use batax, else use normal select
-    if(batax_use_batax($form['#vocabulary']['vid'])){
-      $form['advanced']['parent'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Parents'),
-        '#default_value' => batax_text_field_from_tids($form['#term']['parent']),
-        '#autocomplete_path' => 'batax/autocomplete/'.$form['#vocabulary']['vid']
-      );
-      $form['advanced']['relations'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Related terms'),
-        '#default_value' => batax_text_field_from_tids($form['#term']['relations']),
-        '#autocomplete_path' => 'batax/autocomplete/'.$form['#vocabulary']['vid']  
-      );
-      // Ensure our submit is executed first
-      $form['#submit'] = array_merge(array('batax_form_term_submit'),$form['#submit']);
-    } else {
-      $parent = array_keys(taxonomy_get_parents($form['#term']['tid']));
-      $children = taxonomy_get_tree($form['#vocabulary']['vid'], $form['#term']['tid']);
-  
-      // A term can't be the child of itself, nor of its children.
-      foreach ($children as $child) {
-        $exclude[] = $child->tid;
-      }
-      $exclude[] = $form['#term']['tid'];
-  
-      $form['advanced']['parent'] = _taxonomy_term_select(t('Parents'), 'parent', $parent, $form['#vocabulary']['vid'], t('Parent terms') .'.', 1, '<'. t('root') .'>', $exclude);
-      $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($edit['tid'])), $form['#vocabulary']['vid'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
-    }
-  } elseif ($form['#id'] == 'node-form'){
-    if($form_state['submitted'] && $form_state['clicked_button']['#id'] == 'edit-delete'){
-      unset($form_state['storage']['batax']);
-      drupal_goto('node/' . $form['nid']['#value'] . '/delete');
-    }
-    if(isset($form['taxonomy'])){
-      // Check for autotag module
-      $ignore_vids = array();
-      if(function_exists('_autotag_get_vids_for_type')){
-        $ignore_vids = _autotag_get_vids_for_type($form['type']['#value']);
-      }
-      $were_using_batax = false;
-      foreach($form['taxonomy'] as $vid => $taxonomy_element){
-        if(is_array($taxonomy_element)){
-          if(isset($taxonomy_element['#type']) && $taxonomy_element['#type'] == 'select' && !in_array($vid, $ignore_vids) && (!isset($taxonomy_element['#disablebatax']) || $taxonomy_element['#disablebatax'] == FALSE)){
-            // We have a select taxonomy, lets check if it should use batax
-            if(batax_use_batax($vid)){
-              // Set the following to true so that we know to add an extra submit
-              // function
-              $were_using_batax = true;
-              // Store the vid for use later
-              $form_state['storage']['batax'][$vid] = $vid;
-              // It should, lets replace the field
-              $form['taxonomy'][$vid] = array(
-                '#type' => 'textfield',
-                '#maxlength' => 10000,
-                '#title' => $form['taxonomy'][$vid]['#title'],
-                '#description' => $form['taxonomy'][$vid]['#description'],
-                '#default_value' => batax_text_field_from_tids($form['taxonomy'][$vid]['#default_value']),
-                '#autocomplete_path' => 'batax/autocomplete/'.$vid
-              );
-            }
-          }
-        }
-      }
-      if($were_using_batax){
-        // Add an additional submit
-        $form['#submit'] = array_merge(array('batax_node_submit'),$form['#submit']);      
-      }
-    }
+function batax_form_taxonomy_form_term_alter(&$form, &$form_state){
+  // No need to add the form elements if we are deleting.
+  if((isset($form_state['post']['op']) && $form_state['post']['op'] == t('Delete')) || $form_state['confirm_delete'] || $form_state['confirm_parents']) {
+    return;
   }
-  elseif($form_id == 'taxonomy_form_vocabulary' && $form['module']['#value']=='taxonomy'){
+  // Because we've set the taxonomy_override_selector, we have to either insert
+  // the autocomplete field, or the select box
+  if(batax_use_batax($form['#vocabulary']['vid'])){
+    $form['advanced']['parent'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Parents'),
+      '#default_value' => batax_text_field_from_tids($form['#term']['parent']),
+      '#autocomplete_path' => 'batax/autocomplete/'.$form['#vocabulary']['vid'],
+      '#element_validate' => array('batax_element_validate')
+    );
+    $form['advanced']['relations'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Related terms'),
+      '#default_value' => batax_text_field_from_tids($form['#term']['relations']),
+      '#autocomplete_path' => 'batax/autocomplete/'.$form['#vocabulary']['vid'],
+      '#element_validate' => array('batax_element_validate')  
+    );    
+  } else {
+    // Following code is ripped from the taxonomy.admin.inc file, with a few 
+    // tweaks to enable us to get the values of tid and vid.
+    // -- taxonomy.admin.inc START
+    $parent = array_keys(taxonomy_get_parents($form['#term']['tid']));
+    $children = taxonomy_get_tree($form['vid']['#value'], $form['#term']['tid']);
+    // A term can't be the child of itself, nor of its children.
+    foreach ($children as $child) {
+      $exclude[] = $child->tid;
+    }
+    $exclude[] = $form['#term']['tid'];
+    $form['advanced']['parent'] = _taxonomy_term_select(t('Parents'), 'parent', $parent, $form['vid']['#value'], t('Parent terms') .'.', 1, '<'. t('root') .'>', $exclude);
+    $form['advanced']['relations'] = _taxonomy_term_select(t('Related terms'), 'relations', array_keys(taxonomy_get_related($form['#term']['tid'])), $form['vid']['#value'], NULL, 1, '<'. t('none') .'>', array($form['#term']['tid']));
+    // -- taxonomy.admin.inc END
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter
+ */
+function batax_form_taxonomy_form_vocabulary_alter(&$form, &$form_state){
+  if($form['module']['#value'] == 'taxonomy'){
     // Here we can add the extra field
     $disable_vids = variable_get('batax_disable_vids', array());
     $form['settings']['disablebatax'] = array(
@@ -102,6 +72,140 @@ function batax_form_alter(&$form, &$form_state, $form_id){
     $form['#submit'][] = 'batax_vocabulary_form_submit';
   }
 }
+/**
+ * hook_form_alter
+ * Here we tweak the node form to add batax fields, instead of standard select
+ * fields.
+ */
+function batax_form_alter(&$form, &$form_state, $form_id){
+  if ($form['#id'] == 'node-form'){
+    // No need to add the form elements if we are deleting.
+    if((isset($form_state['post']['op']) && $form_state['post']['op'] == t('Delete')) || $form_state['confirm_delete']) {
+      return;
+    }    
+    /**
+     * Most of the code below has been taken from the taxonomy.module file, as
+     * we've set the taxonomy_override_selector, we need to replace what the
+     * form_alter function does.
+     */
+    $node = $form['#node'];
+
+    if (!isset($node->taxonomy)) {
+      $terms = empty($node->nid) ? array() : taxonomy_node_get_terms($node);
+    }
+    else {
+      // After preview the terms must be converted to objects.
+      if (isset($form_state['node_preview'])) {
+        $node->taxonomy = taxonomy_preview_terms($node);
+      }
+      $terms = $node->taxonomy;
+    }
+
+    $c = db_query(db_rewrite_sql("SELECT v.* FROM {vocabulary} v INNER JOIN {vocabulary_node_types} n ON v.vid = n.vid WHERE n.type = '%s' ORDER BY v.weight, v.name", 'v', 'vid'), $node->type);
+
+    while ($vocabulary = db_fetch_object($c)) {
+      if(batax_use_batax($vocabulary->vid)){
+        // We're using BATAX, lets do stuff!
+        
+        // Extract terms belonging to the vocabulary in question.
+        $default_terms = array();
+        foreach ($terms as $term) {
+          // Free tagging has no default terms and also no vid after preview.
+          if (isset($term->vid) && $term->vid == $vocabulary->vid) {
+            $default_terms[$term->tid] = $term;
+          }
+        }
+        $form['taxonomy'][$vocabulary->vid] = array(
+          '#type' => 'textfield',
+          '#title' => $vocabulary->name,
+          '#default_value' => batax_text_field_from_tids($default_terms),
+          '#autocomplete_path' => 'batax/autocomplete/'.$vocabulary->vid,
+          '#element_validate' => array('batax_element_validate')
+        );
+      } else {
+        if ($vocabulary->tags) {
+          if (isset($form_state['node_preview'])) {
+            // Typed string can be changed by the user before preview,
+            // so we just insert the tags directly as provided in the form.
+            $typed_string = $node->taxonomy['tags'][$vocabulary->vid];
+          }
+          else {
+            $typed_string = taxonomy_implode_tags($terms, $vocabulary->vid) . (array_key_exists('tags', $terms) ? $terms['tags'][$vocabulary->vid] : NULL);
+          }
+          if ($vocabulary->help) {
+            $help = filter_xss_admin($vocabulary->help);
+          }
+          else {
+            $help = t('A comma-separated list of terms describing this content. Example: funny, bungee jumping, "Company, Inc.".');
+          }
+          $form['taxonomy']['tags'][$vocabulary->vid] = array('#type' => 'textfield',
+            '#title' => $vocabulary->name,
+            '#description' => $help,
+            '#required' => $vocabulary->required,
+            '#default_value' => $typed_string,
+            '#autocomplete_path' => 'taxonomy/autocomplete/'. $vocabulary->vid,
+            '#weight' => $vocabulary->weight,
+            '#maxlength' => 1024,
+          );
+        }
+        else {
+          // Extract terms belonging to the vocabulary in question.
+          $default_terms = array();
+          foreach ($terms as $term) {
+            // Free tagging has no default terms and also no vid after preview.
+            if (isset($term->vid) && $term->vid == $vocabulary->vid) {
+              $default_terms[$term->tid] = $term;
+            }
+          }
+          $form['taxonomy'][$vocabulary->vid] = taxonomy_form($vocabulary->vid, array_keys($default_terms), filter_xss_admin($vocabulary->help));
+          $form['taxonomy'][$vocabulary->vid]['#weight'] = $vocabulary->weight;
+          $form['taxonomy'][$vocabulary->vid]['#required'] = $vocabulary->required;
+        }
+      }
+      if (!empty($form['taxonomy']) && is_array($form['taxonomy'])) {
+        if (count($form['taxonomy']) > 1) {
+          // Add fieldset only if form has more than 1 element.
+          $form['taxonomy'] += array(
+            '#type' => 'fieldset',
+            '#title' => t('Vocabularies'),
+            '#collapsible' => TRUE,
+            '#collapsed' => FALSE,
+          );
+        }
+        $form['taxonomy']['#weight'] = -3;
+        $form['taxonomy']['#tree'] = TRUE;
+      }
+    }    
+  }
+}
+
+/**
+ * Validate function for batax elements
+ */
+function batax_element_validate($element, &$form_state){
+  // We need to check if the value of this element is set as an array.  If it
+  // isn't, the string needs splitting, and the value setting
+  if($element['#tree']){
+    $form_state_values_to_change = & $form_state['values'];
+    foreach($element['#parents'] as $key){
+      $form_state_values_to_change = & $form_state_values_to_change[$key];
+      $vid = $key;
+    }
+  } else {    
+    $form_state_values_to_change = & $form_state['values'][$element['#name']];
+    $vid = $form_state['values']['vid'];
+  }
+  if(!is_array($form_state_values_to_change)){
+    $split = batax_split_field($form_state_values_to_change, $vid);
+    $form_state_values_to_change = array();
+    if(!is_array($split)){
+      $split = array($split);
+    }
+    foreach($split as $tid){
+      $form_state_values_to_change[$tid] = $tid;
+    }
+  }
+}
 
 /**
  * Simply save what was entered in the checkbox
@@ -111,20 +215,6 @@ function batax_vocabulary_form_submit($form, $form_values){
   $disable_vids = variable_get('batax_disable_vids', array());
   $disable_vids[$form_values['vid']] = $form_values['values']['disablebatax'];
   variable_set('batax_disable_vids', $disable_vids);
-}
-
-function batax_form_term_submit($form, &$form_state){
-  // At this point we need to change our text fields into arrays
-  $form_state['values']['parent'] = batax_split_field($form_state['values']['parent'], $form_state['values']['vid']); 
-  $form_state['values']['relations'] = batax_split_field($form_state['values']['relations'], $form_state['values']['vid']);  
-}
-
-function batax_node_submit($form, &$form_state){
-  // At this point we need to change our text fields into arrays
-  foreach($form_state['storage']['batax'] as $vid){
-    $form_state['values']['taxonomy'][$vid] = batax_split_field($form_state['values']['taxonomy'][$vid], $vid);
-  }
-  unset($form_state['storage']['batax']);
 }
 
 /**
@@ -225,7 +315,8 @@ function batax_use_batax($vid){
     return false;
   }
   $num_terms = array_pop(db_fetch_array(db_query("SELECT COUNT(tid) FROM {term_data} WHERE vid = %d", $vid)));
-  return $num_terms > variable_get('batax_max_options', 100);
+  $minimum_to_use_batax = variable_get('batax_max_options', 100);
+  return $num_terms > $minimum_to_use_batax;
 }
 /**
  * Simple helper function which returns an array of tids
@@ -263,6 +354,9 @@ function batax_text_field_from_tids($tids = array()){
     return '';
   }
   foreach($tids as $tid){
+    if(is_object($tid)){
+      $tid = $tid->tid;
+    }
     $term = taxonomy_get_term($tid);
     $field_terms[] = check_plain($term->name).':'.$term->tid;
   }
