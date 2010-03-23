@@ -6,6 +6,9 @@ $database = preg_replace("/[-\.]/", "", $_SERVER['HTTP_HOST']);
 if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'd6'){
   $database = substr($database, 2);
 }
+if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'dev' && $_SERVER['HTTP_HOST'] != 'dev.scratchpads.eu'){
+  $database = substr($database, 3);
+}
 
 $user_password = parse_ini_file("/etc/drupal/6/drupal_db_passwords",true);
 if(!isset($user_password[$database])){

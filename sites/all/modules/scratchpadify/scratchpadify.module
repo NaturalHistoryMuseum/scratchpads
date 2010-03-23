@@ -441,7 +441,10 @@ function scratchpadify_footer($main=0){
        </script>';
     }
   }
-  return $uservoice.'<div id="scratchpadify-footer" align="center" style="padding: 20px"><p><a 
+  if($_SERVER['SERVER_ADDR'] == '157.140.105.254'){
+    $dev_server_message = '<h1 style="font-size:300%">DEVELOPMENT SERVER VERSION</h1>';
+  }
+  return $uservoice.'<div id="scratchpadify-footer" align="center" style="padding: 20px">'.$dev_server_message.'<p><a 
 href="http://e-taxonomy.eu/"><img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit_small.png" 
 alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="'.base_path().drupal_get_path('module','scratchpadify').'/images/scratchpads.png"/></a><a rel="license" 
 href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" 
