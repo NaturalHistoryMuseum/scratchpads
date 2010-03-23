@@ -1,13 +1,18 @@
 <?php
-/**
- * Automatic DB, user, password configuration
- */
+
+$conf = array(
+  'file_directory_temp' => '/tmp',  
+  'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files',
+);
+
+// Automatic DB, user, password configuration
 $database = preg_replace("/[-\.]/", "", $_SERVER['HTTP_HOST']);
 if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'd6'){
   $database = substr($database, 2);
 }
 if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'dev' && $_SERVER['HTTP_HOST'] != 'dev.scratchpads.eu'){
   $database = substr($database, 3);
+  $conf['file_directory_path'] = 'sites/'.substr($_SERVER['HTTP_HOST'], 4).'/files';
 }
 
 $user_password = parse_ini_file("/etc/drupal/6/drupal_db_passwords",true);
@@ -50,8 +55,3 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.use_trans_sid',    0);
 ini_set('url_rewriter.tags',        '');
 ini_set('mysql.default_socket',     '/var/lib/mysql/mysql.sock');
-
-$conf = array(
-  'file_directory_temp' => '/tmp',  
-  'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files',
-);
