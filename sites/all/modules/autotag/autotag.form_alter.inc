@@ -150,6 +150,11 @@ function _autotag_form_alter(&$form, &$form_state, $form_id){
               }
             }
           } 
+        } else if ($field_details['widget']['module'] == 'date'){
+          date_api_elements(); // Easy way of loading the required file.
+          $corrected_date = date_convert_from_custom($form[$field][0]['#post'][$field][0]['value']['date'], substr($field_details['widget']['input_format'],1,-1));
+          $form[$field][0]['#default_value'] = array('value' => $corrected_date);
+          unset($form[$field][0]['#value']);
         }
       }
       unset($form_state['storage']['formsubmitted']);
