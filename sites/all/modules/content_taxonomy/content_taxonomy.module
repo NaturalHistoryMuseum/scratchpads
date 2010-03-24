@@ -87,13 +87,7 @@ function content_taxonomy_field_settings($op, $field) {
 function content_taxonomy_field($op, &$node, $field, &$items, $teaser, $page) {
   switch ($op) {         
     case 'presave':
-      if ($field['save_term_node']) {
-        static $_content_taxonomy_array_cleared;
-        if (!is_array($_content_taxonomy_array_cleared) || !$_content_taxonomy_array_cleared[$node->nid][$field['vid']]) {
-          _content_taxonomy_taxonomy_unset($node->taxonomy, array($field['vid']));
-          $_content_taxonomy_array_cleared[$node->nid][$field['vid']] = TRUE;
-        }
-        
+      if ($field['save_term_node']) {        
         foreach ($items as $key => $entry) {
           if ($entry['value']) {
             if (is_object($node->taxonomy[$entry['value']]) 
@@ -253,51 +247,6 @@ function content_taxonomy_field_get_parent($field) {
   return $field['parent'];
 }
 
-
-/**
- * Implementation of hook_form_alter().
- *
- * hides the taxonomy form if there exists a content taxonomy field, which is set to 'hide default taxonomy fields'
- */
-function content_taxonomy_form_alter(&$form, $form_state, $form_id) {
-  if (isset($form['type']['#value']) && $form['type']['#value'] .'_node_form' == $form_id && isset($form['taxonomy'])) {
-    if (!is_array($form['taxonomy'])) {
-      // empty taxonomy arrays can cause errors on preview
-      if ($form_state['post']['op'] == t('Preview')) {
-        $form['taxonomy'] = array('#tree' => TRUE);
-        $form['taxonomy']['key'] = array('#type' => 'value', '#value' => '');
-        return;
-      }
-    }
-    $_content_taxonomy_vids = array();
-    $info = _content_type_info();
-    $content_type = $info['content types'][$form['type']['#value']];
-    foreach ($content_type['fields'] as $field) {
-      if ($field['type'] == 'content_taxonomy' && (!in_array($field['vid'], $_content_taxonomy_vids))) {
-        $_content_taxonomy_vids[] = $field['vid'];
-      }
-    }
-    _content_taxonomy_taxonomy_unset($form['taxonomy'], $_content_taxonomy_vids);
-    
-    //hide empty 'Vocabularies' fieldsets
-    $empty_fieldset = TRUE;
-    if (is_array($form['taxonomy'])) {
-      foreach ($form['taxonomy'] as $key => $value) {
-        if (is_array($value) && !empty($value)) {
-          $empty_fieldset = FALSE; 
-          break;
-        }
-      }
-    }
-    if ($empty_fieldset) {
-      // creating an empty taxonomy array is causing errors on preview in the taxonomy module
-      // so we create an empty value field as placeholder, which is going to prevent the errors
-      $form['taxonomy'] = array('#tree' => TRUE);
-      $form['taxonomy']['key'] = array('#type' => 'value', '#value' => '');
-    }
-  }
-}
-
 /**
  * Implementation of hook_taxonomy().
  */
@@ -398,30 +347,6 @@ function _content_taxonomy_localize_vocabulary(&$vocabulary) {
   // If this vocabulary supports localization.
   if (module_exists('i18ntaxonomy') && i18ntaxonomy_vocabulary($vocabulary->vid) == I18N_TAXONOMY_LOCALIZE) {
     $vocabulary->name = tt("taxonomy:vocabulary:$vocabulary->vid:name", $vocabulary->name);
-  }
-}
-
-/**
- * carefully unsets node or node form taxonomy items
- * 
- *
- * @param $form the node or node form's taxonomy selections. nodes are objects and forms are arrays, so only the actual taxonomy value or property is passed
- * @param $vids an array containing a list of vocabulary IDs whose terms should be unset
- */
-function _content_taxonomy_taxonomy_unset(&$form, $vids) {
-  if (empty($vids) || !is_array($form)) {
-    return;
-  }
-  foreach ($form as $key => $value) {
-    if ($key == 'tags') {
-      _content_taxonomy_taxonomy_unset($form[$key], $vids);
-    }
-    elseif (is_object($value) && in_array($value->vid, $vids)) {
-      unset($form[$key]);
-    }
-    elseif (in_array($key, $vids)) {
-      unset($form[$key]);
-    }
   }
 }
 
