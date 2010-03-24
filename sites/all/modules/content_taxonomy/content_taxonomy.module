@@ -300,26 +300,6 @@ function content_taxonomy_fields() {
   return $ct_fields;
 }
 
-
-/** 
- * Helper functions that returns all terms group by their vocabulary
- *
- * needed for some settings forms
- */
-function _content_taxonomy_get_all_terms() {
-  static $options = array();
-  if (!count($options)) {
-    $options[0] = '---';
-    foreach (taxonomy_get_vocabularies() as $voc) {
-      foreach (taxonomy_get_tree($voc->vid) as $term) {
-        _content_taxonomy_localize_term($term);
-        $options[$voc->name][$term->tid] = str_repeat('- ', $term->depth) . $term->name;
-      }
-    } 
-  }
-  return $options;
-}
-
 /**
  * Localize a term by replacing its name attribute with its localized version
  * for the current language.
