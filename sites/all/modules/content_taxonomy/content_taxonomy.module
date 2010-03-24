@@ -380,10 +380,12 @@ function content_taxonomy_taxonomy($op, $type, $array = NULL) {
       foreach ($ct_type['fields'] as $field_name => $field) {
         if ($field['vid'] == $vid) {
           if ($type == 'vocabulary') {
+            /*
             module_load_include('inc', 'content', 'includes/content.crud');
             content_field_instance_delete($field_name, $field['type_name']);
             $needs_refresh = TRUE;
             watchdog('content', 'Deleted field %field_name and its data.', array('%field_name' => $field_name));
+            */
           }
           else {
             $tid = $array['tid'];
