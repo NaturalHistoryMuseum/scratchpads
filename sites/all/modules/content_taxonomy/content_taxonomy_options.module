@@ -19,6 +19,32 @@ function content_taxonomy_options_theme() {
 }
 
 /**
+ * Implementation of hook_widget_settings   
+ */   
+function content_taxonomy_options_widget_settings($op, $widget) {   
+  switch ($op) {    
+    case 'form':
+      $form = array();            
+      $options_voc = array(t('-- ANY --'));
+      foreach (taxonomy_get_vocabularies() as $voc) {
+        _content_taxonomy_localize_vocabulary($voc);
+        $options_voc[$voc->vid] = $voc->name;
+      }      
+      $form['vid'] = array(
+        '#title' => t('Vocabulary'),
+        '#type' => 'select',
+        '#default_value' => is_numeric($field['vid']) ? $field['vid'] : 0,
+        '#options' => $options_voc,
+        '#description' => t('Terms of the selected vocabulary get exposed to the field'),
+      );
+      return $form;   
+    
+    case 'save':
+      return array('vid');
+  }   
+}
+   
+/**
  * Implementation of hook_widget_info().
  */
 function content_taxonomy_options_widget_info() {
