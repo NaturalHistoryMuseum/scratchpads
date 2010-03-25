@@ -650,6 +650,7 @@ function scratchpad_profile_set_perms(){
     $contributor_perms = array_merge($contributor_perms, $authenticated_perms, array(
                               "access webform results",
                               "assign node weight",
+                              "attach images",
                               "clone own nodes",
                               "create biblio",
                               "create blog entries",
