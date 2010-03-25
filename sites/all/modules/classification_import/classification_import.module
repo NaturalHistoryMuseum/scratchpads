@@ -41,7 +41,7 @@ function classification_import_help($path, $arg){
       foreach($vocabs as $vid => $vocab){
         // FIXME - We're here, listing the vocabs for the overview page.
         // $list_items
-        $list_items[] = l(check_plain($vocab->name),'admin/content/taxonomy/import/'.$vid);
+        $list_items[] = l($vocab->name, 'admin/content/taxonomy/import/'.$vid);
       }
       return theme('item_list', $list_items, t('Click on the vocabulary into which you would like to import terms'));
     }
