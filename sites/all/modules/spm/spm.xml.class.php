@@ -4,7 +4,7 @@
  * Thanks to the code provided by massimo71 on php.net for this class
  *
  */
-class XmlConstruct extends XMLWriter{
+class EOLXML extends XMLWriter{
 
   /**
    * Constructor.
@@ -13,7 +13,7 @@ class XmlConstruct extends XMLWriter{
    * @access public
    * @param null
    */
-  public function __construct($prm_rootElementName, $prm_xsltFilePath = ''){
+  public function __construct(){
     $this->openMemory();
     $this->setIndent(true);
     $this->setIndentString(' ');
@@ -21,7 +21,16 @@ class XmlConstruct extends XMLWriter{
     if($prm_xsltFilePath){
       $this->writePi('xml-stylesheet', 'type="text/xsl" href="' . $prm_xsltFilePath . '"');
     }
-    $this->startElement($prm_rootElementName);
+    $this->startElement('response');
+    $this->writeAttribute('xmlns','http://www.eol.org/transfer/content/0.3');
+    $this->writeAttribute('xmlns:xsd','http://www.w3.org/2001/XMLSchema');
+    $this->writeAttribute('xmlns:dc','http://purl.org/dc/elements/1.1/');
+    $this->writeAttribute('xmlns:dcterms','http://purl.org/dc/terms/');
+    $this->writeAttribute('xmlns:geo','http://www.w3.org/2003/01/geo/wgs84_pos#');
+    $this->writeAttribute('xmlns:dwc','http://rs.tdwg.org/dwc/dwcore/');
+    $this->writeAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
+    $this->writeAttribute('xmlns:lds','http://lifedesk.lifedesks.org/');
+    $this->writeAttribute('xsi:schemaLocation', 'http://www.eol.org/transfer/content/0.3 http://services.eol.org/schema/content_0_3.xsd');
   }
 
   /**
@@ -32,17 +41,7 @@ class XmlConstruct extends XMLWriter{
    * @return null
    */
   public function setElement($tag, $data){
-    if(strpos($tag, ":")){ // Accept tags in the form of dc:http://dublincore.org/blah/item
-      $parts = explode(":", $tag);
-      $prefix = array_shift($parts);
-      $rest = implode(":", $parts);
-      $parts = preg_split("/[#\/]/", $rest);
-      $tag = array_pop($parts);
-      $uri = substr($rest, 0, strpos($rest, $tag));
-      $this->startElementNS($prefix, $tag, $uri);
-    } else {
-      $this->startElement($tag);
-    }
+    $this->startElement($tag);
     $this->text($data);
     $this->endElement();
   }
@@ -59,7 +58,17 @@ class XmlConstruct extends XMLWriter{
     if(is_array($prm_array)){
       foreach($prm_array as $index => $element){
         if(is_array($element)){
+          if(isset($element['element_name'])){
+            $index = $element['element_name'];
+            unset($element['element_name']);
+          }
           $this->startElement($index);
+          if(isset($element['attributes'])){
+            foreach($element['attributes'] as $key => $value){
+              $this->writeAttribute($key, $value);                            
+            }
+            unset($element['attributes']);
+          }
           $this->fromArray($element);
           $this->endElement();
         }else

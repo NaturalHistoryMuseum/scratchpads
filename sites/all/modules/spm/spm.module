@@ -56,39 +56,66 @@ function spm_menu(){
   );
 }
 
-function spm_export(){
-  $contents = array(
-    'page_title' => 'Generate a XHTML page from XML+XSLT files',
-    'welcome_msg' => 'Simple XHTML document from XML+XSLT files!',
-    'prova' => array(
-      "gino" => array(
-        "innergino" => "gino inner value"
-      ),
-      "filo" => "filodata"
-    ),
-    'prova2' => array(
-      "gino" => array(
-        "cd:http://dublincore.org/blah/something" => "gino inner value"
-      ),
-      "filo" => "filodata"
-    ),
-    'prova3' => array(
-      "gino" => array(
-        "innergino" => "gino inner value"
-      ),
-      "filo" => "filodata"
-    ),
-    'prova4' => array(
-      "gino" => array(
-        "innergino" => "gino inner value"
-      ),
-      "filo" => "filodata"
-    ),
-  );
-  module_load_include('xml.class.php','spm');
-  $XmlConstruct = new XmlConstruct('root');
-  $XmlConstruct->fromArray($contents);
-  $XmlConstruct->output();
+/**
+ * Take a list of nids, so that we can specify which nodes to export.
+ */
+function spm_export($nids = FALSE){
+  if(!$nids){
+    // We need to get all the SPM nodes, so that we can export the data.
+    $results = db_query("SELECT vid FROM {node} WHERE type = 'spm'");
+    while($vid = db_result($results)){
+      $vids[] = $vid;
+    }
+  } else {
+    // We need to convert  the array of nids to an array of vids
+    $results = db_query('SELECT vid FROM {node} WHERE nid IN (%s)', implode(",", $nids));
+    while($vid = db_result($results)){
+      $vids[] = $vid;
+    }
+  }
+  if(count($vids)){
+    drupal_set_header('Content-Type: application/xml');
+    foreach($vids as $vid){
+      $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
+      $node = node_load(array('vid' => $vid));
+      $xml_array_child = array(
+        'element_name' => 'taxon',
+        'dc:identifier' => 'scratchpad:nid:'.$node->nid,
+        'dc:source' => url('', array('absolute' => TRUE)),
+        'dwc:ScientificName' => $node->title
+      );
+      unset($spm_array['nid']);
+      unset($spm_array['vid']);
+      foreach($spm_array as $key => $value){
+        if($value != ''){
+          $xml_array_child[] = array(
+            'element_name' => 'dataObject',
+            'dataType' => 'http://purl.org/dc/dcmitype/Text',
+            'agent' => array(
+              'attributes' => array('role' => 'author'),
+              $node->uid
+            ),
+            'dcterms:created' => $node->created,
+            'dcterms:modified' => $node->changed,
+            'dc:title' => '', // FIXME
+            'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
+            'dc:source' => url('node/'.$node->nid, array('absolute' => TRUE)),
+            'subject' => 'http://rs.tdwg.org/ontology/voc/SPMInfoItems#Description', // FIXME
+            'dc:description' => array(
+              'attributes' => array('xml:lang' => 'en'),
+              htmlentities($value)
+            )
+          );
+        }
+      }      
+      $xml_array[] = $xml_array_child;
+    }
+    //print_r($xml_array);exit;
+    module_load_include('xml.class.php','spm');
+    $xml = new EOLXML();
+    $xml->fromArray($xml_array);
+    $xml->output();    
+  }
 }
 
 function spm_autocomplete($taxon_name){
