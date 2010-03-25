@@ -68,11 +68,19 @@ class EOLXML extends XMLWriter{
               $this->writeAttribute($key, $value);                            
             }
             unset($element['attributes']);
+            if(count($element) === 1 && isset($element[0])){
+              $element = $element[0];
+            }
           }
-          $this->fromArray($element);
+          if(!is_array($element)){
+            $this->text($element);
+          } else {
+            $this->fromArray($element);
+          }
           $this->endElement();
-        }else
+        }else{
           $this->setElement($index, $element);
+        }
       }
     }
   }

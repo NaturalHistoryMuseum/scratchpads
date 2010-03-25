@@ -60,6 +60,7 @@ function spm_menu(){
  * Take a list of nids, so that we can specify which nodes to export.
  */
 function spm_export($nids = FALSE){
+  print_r(variable_get('spm_fields',''));
   if(!$nids){
     // We need to get all the SPM nodes, so that we can export the data.
     $results = db_query("SELECT vid FROM {node} WHERE type = 'spm'");
@@ -74,7 +75,7 @@ function spm_export($nids = FALSE){
     }
   }
   if(count($vids)){
-    drupal_set_header('Content-Type: application/xml');
+    //drupal_set_header('Content-Type: application/xml');
     foreach($vids as $vid){
       $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
       $node = node_load(array('vid' => $vid));
@@ -97,10 +98,10 @@ function spm_export($nids = FALSE){
             ),
             'dcterms:created' => $node->created,
             'dcterms:modified' => $node->changed,
-            'dc:title' => '', // FIXME
+            'dc:title' => $node->title,
             'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
             'dc:source' => url('node/'.$node->nid, array('absolute' => TRUE)),
-            'subject' => 'http://rs.tdwg.org/ontology/voc/SPMInfoItems#Description', // FIXME
+            'subject' => 'http://rs.tdwg.org/ontology/voc/SPMInfoItems#' . $key, // FIXME
             'dc:description' => array(
               'attributes' => array('xml:lang' => 'en'),
               htmlentities($value)
