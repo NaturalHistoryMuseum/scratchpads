@@ -1,14 +1,7 @@
 <?php
-// $Id: content_taxonomy_autocomplete.module,v 1.2.2.4.2.17 2009/08/19 09:42:30 mh86 Exp $
 
 /**
- * @file
- * Defines a widget type for content_taxonomy with autocomplete
- **/
-
-
-/**
- * Implementation of hook_theme().
+ * Implementation of hook_theme
  */
 function content_taxonomy_autocomplete_theme() {
   return array(
@@ -32,7 +25,7 @@ function content_taxonomy_autocomplete_menu() {
 }
 
 /**
- * Implementation of hook_widget_info().
+ * Implementation of hook_widget_info
  */
 function content_taxonomy_autocomplete_widget_info() {
   return array(
@@ -51,72 +44,31 @@ function content_taxonomy_autocomplete_widget_info() {
 /**
  * Implementation of hook_widget_settings
  */
-function content_taxonomy_autocomplete_widget_settings($op, $widget) {
-  switch ($op) {
+function content_taxonomy_autocomplete_widget_settings($op, $widget) { 
+  switch ($op) {    
     case 'form':
-      $form['autocomplete'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Settings for Autocompletes'),
-        '#collapsible' => TRUE,
-        '#weight' => 10,
+      $form = array();
+      $options_voc = array(t('-- ANY --'));
+      foreach (taxonomy_get_vocabularies() as $voc) {
+        _content_taxonomy_localize_vocabulary($voc);
+        $options_voc[$voc->vid] = $voc->name;
+      }      
+      $form['vid'] = array(
+        '#title' => t('Vocabulary'),
+        '#type' => 'select',
+        '#default_value' => is_numeric($field['widget']['vid']) ? $field['widget']['vid'] : 0,
+        '#options' => $options_voc,
+        '#description' => t('Terms of the selected vocabulary get exposed to the field'),
       );
-      $form['autocomplete']['new_terms'] = array(
-        '#type' => 'radios',
-        '#title' => t('Freetagging settings'),
-        '#default_value' => isset($widget['new_terms']) ? $widget['new_terms'] : 'insert',
-        '#options' => array('insert' => t('Allow and insert new terms by the user into the vocabulary'),
-                            'deny' => t('Deny any new terms'),
-                            ),
-      );
-      $form['autocomplete']['extra_parent'] = array(
-        '#type' => 'select', 
-        '#title' => t('Extra Parent for new terms'), 
-        '#options' => _content_taxonomy_get_all_terms(), 
-        '#default_value' => (isset($widget['extra_parent']) && is_numeric($widget['extra_parent'])) ? $widget['extra_parent'] : 0,
-        '#description' => t('This setting is only relevant if you have selected "Allow and insert new terms by the user into the vocabulary". If you select any term here, new terms will get children of the selected one, otherwise new terms get children of the parent term (root, if no parent selected) selected in the global settings.'),
-      );
-      
-      $form['autocomplete']['maxlength'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Maximum length of autocomplete'), 
-        '#default_value' => (isset($widget['maxlength']) && is_numeric($widget['maxlength'])) ? $widget['maxlength'] : 255,
-        '#element_validate' => array('_content_taxonomy_autocomplete_widget_settings_maxlength_validate'),
-        '#required' => TRUE,
-        '#description' => t('Defines how many characters can be typed into the autocomplete field. For values higher than 255, remember that one term name can not be longer than 255 (would be cutted), nevertheless it\'s not a problem for multiple values, separated by commas.'),
-      );
-      if (module_exists('active_tags')) {
-        $form['autocomplete']['active_tags'] = array(
-          '#type' => 'checkbox', 
-          '#title' => t('Use Active Tags style widget'), 
-          '#default_value' => isset($widget['active_tags']) ? $widget['active_tags'] : 0,
-          '#description' => t('Use the Active Tags module to improve the usability of this autocomplete widget.'),
-        );
-      }
-      return $form;
-
+      return $form;   
+    
     case 'save':
-      return array('new_terms', 'extra_parent', 'maxlength', 'active_tags');
-  }
-}
-
-function _content_taxonomy_autocomplete_widget_settings_maxlength_validate($element, &$form_state) {
-  $value = $form_state['values']['maxlength'];
-  if (!is_numeric($value) || intval($value) != $value || $value <= 0) {
-    form_error($element, t('"Maximum length" must be a positive integer.'));
-  }
+      return array('vid');
+  }   
 }
 
 /**
- * Implementation of FAPI hook_elements().
- *
- * Any FAPI callbacks needed for individual widgets can be declared here,
- * and the element will be passed to those callbacks for processing.
- *
- * Drupal will automatically theme the element using a theme with
- * the same name as the hook_elements key.
- *
- * Autocomplete_path is not used by text_widget but other widgets can use it
- * (see nodereference and userreference).
+ * Implementation of hook_elements
  */
 function content_taxonomy_autocomplete_elements() {
   return array(
@@ -131,14 +83,14 @@ function content_taxonomy_autocomplete_elements() {
 }
 
 /**
- * Implementation of hook_widget().
+ * Implementation of hook_widget
  */
 function content_taxonomy_autocomplete_widget(&$form, &$form_state, $field, $items, $delta = NULL) {
   $element = array(
     '#type' => 'content_taxonomy_autocomplete',
     '#default_value' => isset($items) ? $items : NULL,
     '#value_callback' => 'content_taxonomy_autocomplete_value',
-    '#vid' => $field['vid'],
+    '#vid' => $field['widget']['vid'],
   );
   return $element;
 }
@@ -184,18 +136,13 @@ function content_taxonomy_autocomplete_process($element, $edit, $form_state, $fo
     '#field_name' => $element['#field_name'],
     '#type_name' => $element['#type_name'],
     '#delta' => $element['#delta'],
-    '#columns' => $element['#columns'],
-    '#maxlength' => !empty($field['widget']['maxlength']) ? $field['widget']['maxlength'] : 255,
+    '#columns' => $element['#columns']
   );
   
   if (empty($element[$field_key]['#element_validate'])) {
     $element[$field_key]['#element_validate'] = array();
   }
   array_unshift($element[$field_key]['#element_validate'], 'content_taxonomy_autocomplete_validate');
-  
-  if (module_exists('active_tags') && $field['widget']['active_tags']) {
-    active_tags_enable_widget('#' . $element['#id'] . '-value-wrapper');
-  }
   
   return $element;
 }
@@ -219,22 +166,19 @@ function content_taxonomy_autocomplete_validate($element, &$form_state) {
   
   $value = $element['#value'];
  
-  $extracted_ids = content_taxonomy_autocomplete_tags_get_tids($value, $field['vid'], content_taxonomy_field_get_parent($field), $field['widget']['extra_parent']);
+  $extracted_ids = content_taxonomy_autocomplete_tags_get_tids($value, $field['widget']['vid']);
 
-  if (!$field['multiple'] && count(content_taxonomy_autocomplete_split_tags($value, $field['vid'])) > 1) {
+  if (!$field['multiple'] && count(content_taxonomy_autocomplete_split_tags($value)) > 1) {
     form_set_error($field['field_name'] .'][value', t('You can provide only one value'));
     return;
   }
-  else if (($field['multiple'] >= 2) && (count(content_taxonomy_autocomplete_split_tags($value, $field['vid'])) > $field['multiple'])) {
+  else if (($field['multiple'] >= 2) && (count(content_taxonomy_autocomplete_split_tags($value)) > $field['multiple'])) {
     form_set_error($field['field_name'] .'][value', t('%name: this field cannot hold more than @count values.', array('%name' => t($field['widget']['label']), '@count' => $field['multiple'])));
   }
-  if ($field['widget']['new_terms'] == 'deny') {
-    if (is_array($extracted_ids['non_existing_terms'])) {
-      form_set_error($field['field_name'] .'][value', t('New tags are not allowed'));
-      return;
-    }
-  }
-  
+  if (is_array($extracted_ids['non_existing_terms'])) {
+    form_set_error($field['field_name'] .'][value', t('New tags are not allowed'));
+    return;
+  }  
   $values = content_taxonomy_autocomplete_form2data($extracted_ids, $field, $element);
   form_set_value($element, $values, $form_state);
 }
@@ -246,16 +190,7 @@ function content_taxonomy_autocomplete_validate($element, &$form_state) {
 function content_taxonomy_autocomplete_form2data($extracted_ids, $field, $element) {
   $existing_tids = is_array($extracted_ids['existing_tids']) ? $extracted_ids['existing_tids'] : array();
   $new_tids = array();
-  if (is_array($extracted_ids['non_existing_terms'])) {
-    if ($field['widget']['extra_parent']) {
-      $new_tids = content_taxonomy_autocomplete_insert_tags($extracted_ids['non_existing_terms'], $field['widget']['extra_parent']);
-    } 
-    else {
-      $new_tids = content_taxonomy_autocomplete_insert_tags($extracted_ids['non_existing_terms'], content_taxonomy_field_get_parent($field));          
-    }
-  }
   return content_transpose_array_rows_cols(array($element['#columns'][0] => array_merge($existing_tids, $new_tids)));
-
 }
 
 
@@ -272,10 +207,9 @@ function content_taxonomy_autocomplete_load($field_name, $string = '') {
   // This regexp allows the following types of user input:
   // this, "somecmpany, llc", "and ""this"" w,o.rks", foo bar
   $content_type_info = _content_type_info();
-  $vid = $content_type_info['fields'][$field_name]['vid'];
-  $tid = content_taxonomy_field_get_parent($content_type_info['fields'][$field_name]);
+  $vid = $content_type_info['fields'][$field_name]['widget']['vid'];
   
-  // If the menu system has splitted the search text because of slashes, glue it back.
+  // If the menu system has split the search text because of slashes, glue it back.
   if (func_num_args() > 2) {
     $args = func_get_args();
     $string .= '/'. implode('/', array_slice($args, 2));
@@ -288,20 +222,17 @@ function content_taxonomy_autocomplete_load($field_name, $string = '') {
   $last_string = trim(array_pop($array));
   $matches = array();
   if ($last_string != '') {
-    if ($tid) {
-      $result = db_query_range(db_rewrite_sql("SELECT t.name FROM {term_data} t 
-        LEFT JOIN {term_synonym} s ON t.tid = s.tid
-        INNER JOIN {term_hierarchy} h ON  t.tid = h.tid
-        WHERE h.parent = %d 
-        AND (LOWER(t.name) LIKE LOWER('%%%s%%') OR LOWER(s.name) LIKE LOWER('%%%s%%'))", 't', 'tid'),
-        $tid,$last_string,$last_string,0,10);
-    }
-    else {
+    if($vid){
       $result = db_query_range(db_rewrite_sql("SELECT t.name FROM {term_data} t 
         LEFT JOIN {term_synonym} s ON t.tid = s.tid
         WHERE t.vid = %d 
         AND (LOWER(t.name) LIKE LOWER('%%%s%%') OR LOWER(s.name) LIKE LOWER('%%%s%%'))", 't', 'tid'),
         $vid, $last_string, $last_string, 0, 10);
+    } else {
+      $result = db_query_range(db_rewrite_sql("SELECT t.name FROM {term_data} t 
+        LEFT JOIN {term_synonym} s ON t.tid = s.tid
+        WHERE (LOWER(t.name) LIKE LOWER('%%%s%%') OR LOWER(s.name) LIKE LOWER('%%%s%%'))", 't', 'tid'),
+        $last_string, $last_string, 0, 10);      
     }
     $prefix = count($array) ? '"'. implode('", "', $array) .'", ' : '';
 
@@ -324,7 +255,7 @@ function content_taxonomy_autocomplete_load($field_name, $string = '') {
  *  so we'll detect them here and process them independently.
  * @param $typed_input A string containing all comma separated tags. As the user typed it.
  */
-function content_taxonomy_autocomplete_tags_get_tids($typed_input, $vid, $parent = 0, $extra_parent = 0) {
+function content_taxonomy_autocomplete_tags_get_tids($typed_input, $vid) {
   // This regexp allows the following types of user input:
   // this, "somecmpany, llc", "and ""this"" w,o.rks", foo bar
   $typed_terms = content_taxonomy_autocomplete_split_tags($typed_input);
@@ -342,19 +273,9 @@ function content_taxonomy_autocomplete_tags_get_tids($typed_input, $vid, $parent
 
     $typed_term_tid = NULL; // tid match if any.
     foreach ($possibilities as $possibility) {
-      if ($possibility->vid == $vid) {
-        if ($parent) {
-          $parents = array();
-          $parents = taxonomy_get_parents($possibility->tid);
-          if (in_array($parent, array_keys($parents)) || in_array($extra_parent, array_keys($parents))) {
-            $result['existing_tids'][$possibility->tid] = $possibility->tid;
-            $typed_term_tid = $possibility->tid;  
-          }
-        }
-        else {
-          $result['existing_tids'][$possibility->tid] = $possibility->tid;
-          $typed_term_tid = $possibility->tid;
-        }
+      if ($possibility->vid == $vid || !$vid) {
+        $result['existing_tids'][$possibility->tid] = $possibility->tid;
+        $typed_term_tid = $possibility->tid;
       }
     }
 
@@ -365,25 +286,7 @@ function content_taxonomy_autocomplete_tags_get_tids($typed_input, $vid, $parent
       );
     }
   }
-
   return $result;
-}
-
-/**
- * Insert new tags
- *
- * @param $nid the node id
- * @param $terms an array of all <strong>nonexisting</strong> terms.
- * @return an array of newly inserted term ids
- */
-function content_taxonomy_autocomplete_insert_tags($terms, $parent = NULL) {
-  foreach ($terms as $term) {
-    $edit = array('vid' => $term['vid'], 'name' => $term['name']);
-    if ($parent) $edit['parent'] = $parent;
-    $status = taxonomy_save_term($edit);
-    $saved_terms[$edit['tid']] = $edit['tid'];
-  }
-  return $saved_terms;
 }
 
 /**
