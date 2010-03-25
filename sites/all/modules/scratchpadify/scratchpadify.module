@@ -168,6 +168,10 @@ function scratchpadify_menu_alter(&$items){
 }
 
 function scratchpadify_form_alter($form, $form_state, $form_id){
+  if(isset($form['og_nodeapi'])){
+    $form['og_nodeapi']['#type'] = 'fieldset';
+    $form['og_nodeapi']['#title'] = t('Access');
+  }
   // Prevent displaying of admin user on user list.
   if($form_id == 'block_admin_display_form'){
     unset($form['scratchpadify_4']);
