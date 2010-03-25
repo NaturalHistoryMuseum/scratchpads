@@ -384,4 +384,14 @@ function scratchpadify_update_6133(){
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+  return array('#finished' => TRUE);
+}
+
+/**
+ * Delete vertical tab thingy (nobody is using them, so we can clear them all)
+ */
+function scratchpadify_update_6134(){
+  $ret = array();
+  $ret[] = update_sql("DELETE FROM {variable} WHERE name LIKE 'vertical_tabs_fieldsets_%'");
+  return $ret;
 }
