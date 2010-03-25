@@ -76,6 +76,11 @@ function spm_export($nids = FALSE){
   }
   if(count($vids)){
     //drupal_set_header('Content-Type: application/xml');
+    $fields = variable_get('spm_fields', array());
+    $headers = variable_get('spm_headers', array());
+    print_r($headers);
+    print_r($fields);
+    exit;
     foreach($vids as $vid){
       $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
       $node = node_load(array('vid' => $vid));
@@ -89,6 +94,11 @@ function spm_export($nids = FALSE){
       unset($spm_array['vid']);
       foreach($spm_array as $key => $value){
         if($value != ''){
+          foreach($headers as $header_key => $value){
+            foreach($fields as $field_key => $value){
+              
+            }
+          }
           $xml_array_child[] = array(
             'element_name' => 'dataObject',
             'dataType' => 'http://purl.org/dc/dcmitype/Text',
