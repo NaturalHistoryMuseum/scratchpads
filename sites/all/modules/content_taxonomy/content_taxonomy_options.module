@@ -44,38 +44,6 @@ function content_taxonomy_options_widget_info() {
 }
 
 /**
- * Implementation of hook_widget_settings
- */
-function content_taxonomy_options_widget_settings($op, $widget) {
-  switch ($op) {
-    case 'form':
-      $form['settings'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Settings for Options'),
-        '#collapsible' => TRUE,
-        '#weight' => 10,
-      );
-      $form['settings']['show_depth'] = array(
-        '#type' => 'checkbox', 
-        '#title' => t('Indent child terms with \' - \' signs'),
-        '#default_value' => is_numeric($widget['show_depth']) ? $widget['show_depth'] : 1,
-        '#description' => t('If this option is checked, a hierarchy gets visualized by indenting child terms, otherwise it\'s a flat list'),
-      );
-      $form['settings']['group_parent'] = array(
-        '#title' => t('Parent term for OptGroups in select fields'),
-        '#type' => 'select',
-        '#default_value' => isset($widget['group_parent']) ? $widget['group_parent'] : 0,
-        '#options' => _content_taxonomy_get_all_terms(),
-        '#description' => t('This settings applies only for select fields. Select a parent term containg the grouping terms. Grouping terms should be parents of the selected terms (from the Global Settings).'),
-      );
-      return $form;
-      
-    case 'save':
-      return array('group_parent', 'show_depth');
-  }
-}
-
-/**
  * Implementation of hook_widget().
  */
 function content_taxonomy_options_widget(&$form, &$form_state, $field, $items, $delta = NULL) {
