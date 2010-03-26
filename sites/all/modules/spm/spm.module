@@ -39,117 +39,33 @@ function spm_perm(){
     'edit any spm content');
 }
 
+/**
+ * Implementation of hook_menu
+ */
 function spm_menu(){
   return array(
     'spm/autocomplete' => array(
       'title' => 'Autocomplete darwincore thingumy', 
-      'page callback' => 'spm_autocomplete', 
+      'page callback' => 'spm_autocomplete',
+      'file' => 'spm.autocomplete.inc',
       'access arguments' => array('create spm content'), 
       'type' => MENU_CALLBACK
     ),
     'spm/export' => array(
-      'title' => 'Test',
+      'title' => 'Live SPM Export',
       'page callback' => 'spm_export',
+      'file' => 'spm.export.inc',
       'access arguments' => array('access content'),
       'type' => MENU_CALLBACK
+    ),
+    'admin/settings/spm' => array(
+      'title' => 'Taxon Page Export',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('spm_settings'),
+      'file' => 'spm.export.inc',
+      'access arguments' => 'administer site configuration'
     )
   );
-}
-
-/**
- * Take a list of nids, so that we can specify which nodes to export.
- */
-function spm_export($nids = FALSE){
-  print_r(variable_get('spm_fields',''));
-  if(!$nids){
-    // We need to get all the SPM nodes, so that we can export the data.
-    $results = db_query("SELECT vid FROM {node} WHERE type = 'spm'");
-    while($vid = db_result($results)){
-      $vids[] = $vid;
-    }
-  } else {
-    // We need to convert  the array of nids to an array of vids
-    $results = db_query('SELECT vid FROM {node} WHERE nid IN (%s)', implode(",", $nids));
-    while($vid = db_result($results)){
-      $vids[] = $vid;
-    }
-  }
-  if(count($vids)){
-    //drupal_set_header('Content-Type: application/xml');
-    $fields = variable_get('spm_fields', array());
-    $headers = variable_get('spm_headers', array());
-    print_r($headers);
-    print_r($fields);
-    exit;
-    foreach($vids as $vid){
-      $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
-      $node = node_load(array('vid' => $vid));
-      $xml_array_child = array(
-        'element_name' => 'taxon',
-        'dc:identifier' => 'scratchpad:nid:'.$node->nid,
-        'dc:source' => url('', array('absolute' => TRUE)),
-        'dwc:ScientificName' => $node->title
-      );
-      unset($spm_array['nid']);
-      unset($spm_array['vid']);
-      foreach($spm_array as $key => $value){
-        if($value != ''){
-          foreach($headers as $header_key => $value){
-            foreach($fields as $field_key => $value){
-              
-            }
-          }
-          $xml_array_child[] = array(
-            'element_name' => 'dataObject',
-            'dataType' => 'http://purl.org/dc/dcmitype/Text',
-            'agent' => array(
-              'attributes' => array('role' => 'author'),
-              $node->uid
-            ),
-            'dcterms:created' => $node->created,
-            'dcterms:modified' => $node->changed,
-            'dc:title' => $node->title,
-            'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
-            'dc:source' => url('node/'.$node->nid, array('absolute' => TRUE)),
-            'subject' => 'http://rs.tdwg.org/ontology/voc/SPMInfoItems#' . $key, // FIXME
-            'dc:description' => array(
-              'attributes' => array('xml:lang' => 'en'),
-              htmlentities($value)
-            )
-          );
-        }
-      }      
-      $xml_array[] = $xml_array_child;
-    }
-    //print_r($xml_array);exit;
-    module_load_include('xml.class.php','spm');
-    $xml = new EOLXML();
-    $xml->fromArray($xml_array);
-    $xml->output();    
-  }
-}
-
-function spm_autocomplete($taxon_name){
-  $req = 'http://services.eol.org/lifedesk/service.php?function=search&search=' . urlencode($taxon_name);
-  $response = drupal_http_request($req);
-  $names = array();
-  if($response->code == 200){
-    $data = $response->data;
-    $xml = simplexml_load_string($data);
-    if($xml->value){
-      $options = array();
-      $child_count = array();
-      foreach($xml->value as $values){
-        $names[(string)$values->name] = (string)$values->name;
-      }
-    }
-  }
-  if(count($names)){
-    print drupal_to_js($names);
-  } else {
-    print drupal_to_js(array("UNRECOGNIZED NAME"));
-  }
-  exit;
 }
 
 function spm_theme($existing, $type, $theme, $path){
@@ -263,7 +179,7 @@ function spm_update($node){
 
 function theme_spm_view_field($value, $field){
   if(trim($value) != ''){
-    return '<h1 class="spm">' . $field['name'] . '</h1><p class="spm">' . $value . '</p>';
+    return '<h1 class="spm">' . $field['name'] . '</h1><div class="spm">' . _filter_autop(check_plain($value)) . '</div>';
   }
 }
 
