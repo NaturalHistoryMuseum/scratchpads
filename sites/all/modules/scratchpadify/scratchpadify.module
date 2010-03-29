@@ -161,7 +161,7 @@ function scratchpadify_menu_alter(&$items){
 }
 
 function scratchpadify_form_alter(&$form, &$form_state, $form_id){
-  module_load_include('hook_form_alter', 'scratchpadify');
+  module_load_include('hook_form_alter.inc', 'scratchpadify');
   _scratchpadify_form_alter($form, $form_state, $form_id);
 }
 

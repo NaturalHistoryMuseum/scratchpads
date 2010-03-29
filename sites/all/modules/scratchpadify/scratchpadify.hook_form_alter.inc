@@ -145,4 +145,63 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     );
     $form['#submit'] = array('scratchpadify_install_configure_form_submit');
   }
+  else if($form_id == 'node_type_form'){
+    // Add vocabulary options to the node type form
+    // We're going to reorder the form, and not by weight
+    foreach($form as $key => $value){
+      $new_form[$key] = $value;
+      if($key == 'identity'){
+        $vocabularies = taxonomy_get_vocabularies();
+        foreach($vocabularies as $key => $value){
+          if($value->module == 'taxonomy'){ // FIXME - may need to add others.
+            $options[$key] = $value->name;
+          }
+        }
+        // Are we editing an already created one, or creating a new one?
+        if(isset($form['identity']['type']['#value'])){
+          // Editing
+          foreach($vocabularies as $key => $value){
+            if(isset($value->nodes[$form['identity']['type']['#value']]) && $value->nodes[$form['identity']['type']['#value']]){
+              $default_value[] = $key;
+            }
+          }
+        } else {
+          // New one
+          $default_value = array();
+        }
+        $new_form['vocabulary'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Vocabularies'),
+          '#description' => t('Select the vocabularies to associate with this content type'),
+          '#collapsed' => FALSE,
+          '#collapsible' => TRUE,
+          'vocabularies' => array(
+            '#type' => 'checkboxes',
+            '#title' => t('Vocabularies'),
+            '#options' => $options,
+            '#default_value' => $default_value
+          )
+        );
+      }
+    }
+    $form = $new_form;
+    if(is_array($form['#submit'])){
+      $form['#submit'][] = 'scratchpadify_node_type_form_submit';
+    } else {
+      $form['#submit'] = array('scratchpadify_node_type_form_submit');
+    }
+  }
+}
+
+/**
+ * Submit function for above altered form
+ */
+function scratchpadify_node_type_form_submit($form, &$form_state){
+  foreach($form_state['values']['vocabularies'] as $vid => $value){
+    if($value){
+      $vocabulary = (array)taxonomy_vocabulary_load($vid);
+      $vocabulary['nodes'][$form_state['values']['type']] = $form_state['values']['type'];
+      taxonomy_save_vocabulary($vocabulary); 
+    }
+  }
 }
