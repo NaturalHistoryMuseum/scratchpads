@@ -168,6 +168,11 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         } else {
           // New one
           $default_value = array();
+          // We'll also set the redirect to take the user to the autotag page so
+          // that this new content type can have its preferences set.
+          if(module_exists('autotag')){
+            $new_form['#redirect'] = 'admin/settings/autotag';
+          }
         }
         $new_form['vocabulary'] = array(
           '#type' => 'fieldset',
