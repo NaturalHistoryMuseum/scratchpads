@@ -101,7 +101,6 @@ function term_node_form_alter(&$form, $form_state, $form_id){
         // will never happen) term associated with this term from this
         // vocabulary.
         $tid = db_result(db_query("SELECT n.tid FROM {term_node} n INNER JOIN {term_data} t ON t.tid = n.tid WHERE t.vid IN (%s) AND nid = %d", implode(",", $vids), arg(1)));
-        drupal_set_message(t('Editing nodes of this content type is restricted as it is associated with the <a href="!url">@vocabulary</a> vocabulary. You may edit the term instead.', array('!url' => url('admin/content/taxonomy/edit/vocabulary/'.$vid), '@vocabulary' => $vocabularies[$vid]->name)));
         drupal_goto('admin/content/taxonomy/edit/term/'.$tid);
       }
     }
