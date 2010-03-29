@@ -12,7 +12,8 @@ function _scratchpadify_block($op, $delta, $edit){
         array('info'=>t('Content')),
         array('info'=>t('About this site')),
         array('info'=>t('Sad trombone')),
-        array('info'=>t('Scratchpad notifications'))
+        array('info'=>t('Scratchpad notifications')),
+        array('info'=>t('Recent edits'))
       );
     case 'view':
       switch($delta){
@@ -111,6 +112,13 @@ function _scratchpadify_block($op, $delta, $edit){
             $scratchpad_notification['message'] = '<div><div class="left"><p>' . $scratchpad_notification['message'] . '</p></div><div class="right"><p>'.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/close.png"/>','hidenotification',array('query' => array('destination' => $_GET['q']), 'html' => TRUE)).'</p></div><div style="clear:both"></div></div>';
           }
           return array('subject' => '', 'content' => $scratchpad_notification['message']);
+        case 5:
+          $results = db_query_range('SELECT nid FROM {node} ORDER BY changed DESC', 0, variable_get('scratchpadify_recent_edits_count',5));
+          while($nid = db_result($results)){
+            $node = node_load(array('nid' => $nid));
+            $nodes[] = l($node->title, 'node/'.$nid);
+          }
+          return array('subject' => 'Recent edits', 'content' => theme('item_list', $nodes));
       }
       break; 
     case 'configure': // No need to add any extra configuration - Open to suggestions.
@@ -123,10 +131,22 @@ function _scratchpadify_block($op, $delta, $edit){
             '#default_value' => variable_get('scratchpadify-stats-block-text','')
           )
         );
+      } elseif($delta = 5){        
+        return array('recent_count' => array(
+            '#title' => t('Number of recent edits to show'),
+            '#type' => 'select',
+            '#weight' => -9,
+            '#options' => array(1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7,8=>8,9=>9,10=>10,15=>15,20=>20,30=>30,50=>50),
+            '#default_value' => variable_get('scratchpadify_recent_edits_count',5)
+          )
+        );
       }
     case 'save':
       if($delta == 0){
         variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
+      } elseif($delta == 5){
+        variable_set('scratchpadify_recent_edits_count', $edit['recent_count']);        
       }
+      break;
   }
 }
