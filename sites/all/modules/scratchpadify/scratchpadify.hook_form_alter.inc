@@ -182,6 +182,22 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
             '#default_value' => $default_value
           )
         );
+        $dont_autotag = variable_get('autotag_dont_autotag', array());
+        if(isset($dont_autotag[$form['#node_type']->type]) && $dont_autotag[$form['#node_type']->type]){
+          $dont_autotag_value = 1;
+        }
+        $new_form['autotag_setting'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Autotag settings'),
+          '#description' => t('Decide whether or not content of this type should be automatically tagged.'),
+          '#collapsed' => TRUE,
+          '#collapsible' => TRUE,
+          'autotag_settings' => array(
+            '#type' => 'checkbox',
+            '#title' => t("Never Autotag this content type"),
+            '#default_value' => $dont_autotag_value
+          )
+        );
       }
     }
     $form = $new_form;
@@ -204,4 +220,10 @@ function scratchpadify_node_type_form_submit($form, &$form_state){
       taxonomy_save_vocabulary($vocabulary); 
     }
   }
+  $dont_autotag = variable_get('autotag_dont_autotag', array());
+  unset($dont_autotag[$form_state['values']['type']]);
+  if($form_state['values']['autotag_settings']){
+    $dont_autotag[$form_state['values']['type']] = $form_state['values']['type'];
+  }
+  variable_set('autotag_dont_autotag' , $dont_autotag);
 }
