@@ -158,7 +158,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
           }
         }
         // Are we editing an already created one, or creating a new one?
-        if(isset($form['identity']['type']['#value'])){
+        if($form['#node_type']->type){
           // Editing
           foreach($vocabularies as $key => $value){
             if(isset($value->nodes[$form['identity']['type']['#value']]) && $value->nodes[$form['identity']['type']['#value']]){
