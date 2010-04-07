@@ -86,7 +86,7 @@ function _tinytax_configure($delta){
       '#title' => t('Hide invalid terms'),
       '#description' => t('You can choose to hide terms within your Taxonomy.  This uses the "usage" field, which should be set to either "invalid" or "not accepted" for a term to be hidden'),
       '#type' => 'radios', 
-      '#options' => array(0 => t('Show'), 1 => t('Hide')), 
+      '#options' => array(0 => t('Show'), 1 => t('Hide'), 2 => t('Highlight')), 
       '#default_value' => variable_get('tinytax_hide_invalid-'.$delta, 0)
     );
   }
@@ -133,7 +133,7 @@ function _tinytax_get_vocabulary_name($vid){
 function tinytax_taxonomy_get_children($tid, $vid = 0){
   $children = taxonomy_get_children($tid, $vid);
   module_invoke_all('taxonomy_term_load', $children);
-  if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE)){
+  if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE) == 1){
     foreach($children as $tid => $child){
       if(isset($child->usage) && (strtolower($child->usage) == 'invalid' || strtolower($child->usage) == 'not accepted')){
         unset($children[$tid]);
@@ -375,7 +375,7 @@ function _theme_tinytax_term_list_link($term, $vid){
   }
   $return_string .= ' ';
   if(substr($term->tid, 0, 3) != 'vid'){
-    if(isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
+    if(variable_get('tinytax_hide_invalid-tinytax-'.$term->vid, 0) == 2 && isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
       $link_text = '<span style="color:red;">' . $term->name . '</span>';
     }else{
       $link_text = $term->name;
