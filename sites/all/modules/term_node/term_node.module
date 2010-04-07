@@ -151,6 +151,30 @@ function term_node_form_alter(&$form, $form_state, $form_id){
       );
     }
   }
+  //$form['#ajax']['enabled'] = TRUE;
+}
+
+/**
+ * Implementation of hook_taxonomy_term_load - This is a Drupal 7 hook, which
+ * we have implemented ourselves in the TinyTax and a number of other modules.
+ * 
+ * This function takes an array of terms
+ */
+function term_node_taxonomy_term_load(&$terms){
+  $results = db_query("SELECT nid, tid  FROM {term_node} WHERE tid IN (%s)", implode("," ,array_keys($terms)));
+  while($row = db_fetch_array($results)){
+    $node = node_load(array('nid' => $row['nid']));
+    foreach($node as $key => $value){
+      if(substr($key, 0, 6) == 'field_'){
+        if(is_array($value) && count($value) == 1){
+          $terms[$row['tid']]->$key = $value[0]['value'];
+        } else {
+          $terms[$row['tid']]->$key = $value;
+        }    
+        $terms[$row['tid']]->{substr($key, 6)} = $terms[$row['tid']]->$key; 
+      }
+    }
+  }
 }
 
 /**
