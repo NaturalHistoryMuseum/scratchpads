@@ -392,10 +392,10 @@ function _theme_tinytax_term_list_link($term, $vid){
   }
   $num_children = 0;
   if(variable_get('tinytax-' . $vid . '-showchildren', 1)){
-    $num_children = count(taxonomy_get_children($term->tid, $vid));
+    $num_children = count(tinytax_taxonomy_get_children($term->tid, $vid));
   }
   if($num_children > 0){
-    $return_string .= ' <small>(' . count(taxonomy_get_children($term->tid, $vid)) . ')</small>';
+    $return_string .= ' <small>(' . count(tinytax_taxonomy_get_children($term->tid, $vid)) . ')</small>';
   }
   $return_string .= '</p>';
   return $return_string;
