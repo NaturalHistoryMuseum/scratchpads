@@ -130,7 +130,7 @@ function _tinytax_get_vocabulary_name($vid){
  * Our own simple implementation of taxonomy_get_children, to ensure that the
  * terms returned are then "extended".
  */
-function tinytax_taxonomy_get_children($tid, $vid){
+function tinytax_taxonomy_get_children($tid, $vid = 0){
   $children = taxonomy_get_children($tid, $vid);
   module_invoke_all('taxonomy_term_load', $children);
   if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE)){
@@ -186,7 +186,7 @@ function tinytax_js($tid){
       $parent->name = _tinytax_get_vocabulary_name($vid);
       $parents[] = $parent;
     }
-    $children = tinytax_taxonomy_get_children($tid);
+    $children = tinytax_taxonomy_get_children($tid, $vid);
   }
   $parents = array_reverse($parents);
   // Now we build the HTML, and output it.
@@ -261,7 +261,7 @@ function theme_tinytax_view_blocks($delta){
         $parents[] = $parent;
       }
       $parents = array_reverse($parents);
-      $children = tinytax_taxonomy_get_children($tid);
+      $children = tinytax_taxonomy_get_children($tid, $vocabulary->vid);
     }
   }
   if(count($parents) + count($children) === 0){
