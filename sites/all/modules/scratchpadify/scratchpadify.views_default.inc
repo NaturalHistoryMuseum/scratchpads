@@ -103,6 +103,78 @@ function scratchpadify_views_default_views(){
     }
     $views[$view->name] = $view;
   }
+  // ---------------------- NEXUS CHARACTER PROJECT ----------------------------
+  $view = new view;
+  $view->name = 'nexus_project';
+  $view->description = '[Full nodes view] Character Projects.';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+    $handler->override_option('sorts', array(
+      'weight' => array('order' => 'ASC', 
+        'id' => 'weight', 
+        'table' => 'node_weight', 
+        'field' => 'weight', 
+        'relationship' => 'none'),
+      'changed' => array('order' => 'DESC',
+        'id' => 'changed',
+        'table' => 'node',
+        'field' => 'changed')));
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => '',
+      'alter' => array(),
+      'link_to_node' => 1,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'nexus_project' => 'nexus_project',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+    'status' => array(
+      'operator' => '=',
+      'value' => '1',
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'status',
+      'table' => 'node',
+      'field' => 'status',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('title', 'Character projects');
+  $handler->override_option('items_per_page', 100);
+  $handler->override_option('use_pager', '1');
+  $handler->override_option('style_plugin', 'list');
+  $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('path', 'content/nexus_project');
+  $views[$view->name] = $view;
   // ---------------------- BIBLIO TABLE ---------------------------------------
   $view = new view();
   $view->name = 'biblio_table';
