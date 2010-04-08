@@ -161,7 +161,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         if($form['#node_type']->type){
           // Editing
           foreach($vocabularies as $key => $value){
-            if(isset($value->nodes[$form['identity']['type']['#value']]) && $value->nodes[$form['identity']['type']['#value']]){
+            if(isset($value->nodes[$form['#node_type']->type]) && $value->nodes[$form['#node_type']->type]){
               $default_value[] = $key;
             }
           }
@@ -214,11 +214,13 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
  */
 function scratchpadify_node_type_form_submit($form, &$form_state){
   foreach($form_state['values']['vocabularies'] as $vid => $value){
+    $vocabulary = (array)taxonomy_vocabulary_load($vid);
     if($value){
-      $vocabulary = (array)taxonomy_vocabulary_load($vid);
       $vocabulary['nodes'][$form_state['values']['type']] = $form_state['values']['type'];
-      taxonomy_save_vocabulary($vocabulary); 
+    } else {
+      unset($vocabulary['nodes'][$form_state['values']['type']]);
     }
+    taxonomy_save_vocabulary($vocabulary);
   }
   $dont_autotag = variable_get('autotag_dont_autotag', array());
   unset($dont_autotag[$form_state['values']['type']]);
