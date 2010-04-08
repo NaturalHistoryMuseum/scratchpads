@@ -120,7 +120,8 @@ function batax_form_alter(&$form, &$form_state, $form_id){
           '#title' => $vocabulary->name,
           '#default_value' => batax_text_field_from_tids($default_terms),
           '#autocomplete_path' => 'batax/autocomplete/'.$vocabulary->vid,
-          '#element_validate' => array('batax_element_validate')
+          '#element_validate' => array('batax_element_validate'),
+          '#maxlength' => 1000000
         );
       } else {
         if ($vocabulary->tags) {
@@ -145,7 +146,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
             '#default_value' => $typed_string,
             '#autocomplete_path' => 'taxonomy/autocomplete/'. $vocabulary->vid,
             '#weight' => $vocabulary->weight,
-            '#maxlength' => 1024,
+            '#maxlength' => 1000000
           );
         }
         else {
