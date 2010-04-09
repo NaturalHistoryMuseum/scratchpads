@@ -19,6 +19,19 @@ function excel_import_classification_import_form(){
         '#type' => 'file',
         '#title' => t('Upload an Excel file containing your complete classification')
       ),
+      'csv-file-type' => array(
+        '#type' => 'select',
+        '#title' => t('File type'),
+        '#default_value' => 0,
+        '#required' => TRUE,
+        '#options' => array(
+          0 => t('-- Select file type --'), 
+          //1 => t('Full hierarchy'), 
+          2 => t('Tabbed hierarchy'), 
+          3 => t('ITIS Parent/Child')
+        ),
+        '#description' => t('Please select which template was used to create your file.  The data must be contained in the FIRST sheet of the XLS file.')
+      ),
       'submit' => array(
         '#type' => 'submit',
         '#title' => t('Import from Excel file'),
@@ -30,5 +43,77 @@ function excel_import_classification_import_form(){
 }
 
 /**
- * Callback for submitting the form with an Excel file.
+ * Implementation of hook_classification_import_help
  */
+function excel_import_classification_import_help(){
+  return t('Excel File allows you to import your classification from a number of different file formats.  Templates for these file formats are provided on the help section of the Scratchpad site.');
+}
+
+/**
+ * Callback function when pressing "Import from CSV file"
+ */
+function excel_import_submit($form, $form_state){
+  // We're ready to do the import, lets create the batch!
+  // Got to save the file first (the Drupal way)
+  $file = file_save_upload('excel-file');
+  $batch = array(
+    'operations' => array(
+      array('excel_import_batch_parse_lines', array($file->filepath, $form_state['values']['csv-file-type'], arg(4))),
+      array('classification_import_load_terms', array(arg(4)))
+    ),
+    'finished' => 'classification_import_batch_import_finished',
+    'title' => t('Importing'),
+    'error_message' => t('The import has encountered an error.'),
+    'progressive' => TRUE
+  );
+  batch_set($batch);
+}
+
+/**
+ * Batch
+ */
+function excel_import_batch_parse_lines($filename, $filetype, $vid, &$context) {
+  if (!isset($context['sandbox']['progress'])) {
+    $number_of_lines = 0;
+    $file = fopen($filename, "r");
+    while(!feof($file)){
+      $char = fread($file, 1);
+      if($char == "\n"){
+        $number_of_lines ++;
+      }      
+    }
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = $number_of_lines;
+  }
+
+  // Load the library
+  drupal_get_path('module', 'excel_import').'/library'
+  require_once drupal_get_path'Excel/reader.php';
+  // ExcelFile($filename, $encoding);
+  $data = new Spreadsheet_Excel_Reader();
+  // Call the helper
+  $lines = _csv_import_batch_parse_lines_get_lines($filename, $context['sandbox']['fileposition']);
+  // Save the headers (first line)
+  if($context['sandbox']['progress'] == 0){
+    $headers = _csv_import_explode(array_shift($lines));
+    foreach($headers as $key => $value){
+      $value = trim(strtolower($value), "\t\0 []");
+      $headers[$key] = $value;
+      $headers[$value] = $key; // Buggered if we have a numeric header - perhaps should check for this.
+    }
+    $context['sandbox']['headers'] = $headers;
+    $context['sandbox']['progress'] = 1;
+  }
+  // Save the lines to the database
+  _csv_import_batch_parse_lines_save($lines, $context['sandbox']['progress'], $filetype, $context['sandbox']['headers'], $vid);
+  
+  // Set the message
+  $context['message'] = t('Imported %numnames names', array('%numnames' => $context['sandbox']['progress']));
+
+  // Inform the batch engine that we are not finished,
+  // and provide an estimation of the completion level we reached.
+  $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  if($context['finished'] > 1){
+    $context['finished'] = 1;
+  }
+}
