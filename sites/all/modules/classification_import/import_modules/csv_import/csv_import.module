@@ -31,7 +31,12 @@ function csv_import_classification_import_form(){
         '#title' => t('File type'),
         '#default_value' => 0,
         '#required' => TRUE,
-        '#options' => array(0 => t('-- Select file type --'), 1 => t('Full hierarchy'), 2 => t('Tabbed hierarchy'), 3 => t('ITIS Parent/Child')),
+        '#options' => array(
+          0 => t('-- Select file type --'), 
+          //1 => t('Full hierarchy'), 
+          2 => t('Tabbed hierarchy'), 
+          3 => t('ITIS Parent/Child')
+        ),
         '#description' => t('Please select which template was used to create your CSV file')
       ),
       'submit' => array(
@@ -120,7 +125,12 @@ function csv_import_batch_parse_lines($filename, $filetype, $vid, &$context) {
  * Split the line into its parts
  */
 function _csv_import_explode($line){
-  // This function attempts to automatically split a line up into its parts
+  // This function attempts to automatically split a line up into its parts.
+  // We check to see if a line is an array already, and if so, simply return it
+  // (this will make writing the excel_import much easier).
+  if(is_array($line)){
+    return $line;
+  }
   if(strpos($line, "\t")){
     $delimiter = "\t";
   } elseif(strpos($line, ",")){
