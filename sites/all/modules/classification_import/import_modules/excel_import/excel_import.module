@@ -87,8 +87,7 @@ function excel_import_batch_parse_lines($filename, $filetype, $vid, &$context) {
   }
 
   // Load the library
-  drupal_get_path('module', 'excel_import').'/library'
-  require_once drupal_get_path'Excel/reader.php';
+  require_once drupal_get_path('module', 'excel_import').'/library/phpexcelreader/Excel/reader.php';
   // ExcelFile($filename, $encoding);
   $data = new Spreadsheet_Excel_Reader();
   // Call the helper
