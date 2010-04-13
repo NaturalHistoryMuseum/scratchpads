@@ -272,6 +272,13 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
  * Implementation of hook_footer()
  */
 function scratchpadify_footer($main=0){
+  // Check to see if we're on a 404 page, and if so, check if arg(0) is en, if
+  // so, we remove it (due to upgrade from D5).
+  if(arg(0) == 'en' && strpos(drupal_get_headers(), '404 Not Found')){
+    header('Location: '.url(substr($_SERVER['REDIRECT_URL'], 4)));
+    exit;
+  }
+  
   // Add the following HTML to the footer of ALL pages]
   if(function_exists('mcrypt_module_open')){
     global $user;
