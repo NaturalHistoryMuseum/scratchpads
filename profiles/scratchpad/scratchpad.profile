@@ -631,6 +631,7 @@ function scratchpad_profile_set_perms(){
                               "view all user locations",
                               "view full text",
                               "view original images",
+                              "view post access counter",
                               "view search_files results",
                               "view Terms and Conditions",
                               "view uploaded files",
@@ -717,7 +718,9 @@ function scratchpad_profile_set_perms(){
                               "revert revisions",
                               "send newsletter",
                               "view sort sort"));
-    $maintainer_perms = array_merge($editor_perms, array("access administration pages",
+    $maintainer_perms = array_merge($editor_perms, array(
+                              "access administration pages",
+                              "access statistics",
                               "administer biblio",
                               "administer blocks",
                               "administer content types",
