@@ -228,7 +228,7 @@ function countriesmap_insert($node) {
   $temp = file_directory_temp();
   $file = tempnam(realpath($temp), 'file');
   $image_filename = file_save_data("DATA", file_directory_path().'/countriesmap_'.$node->nid.'_'.user_password(20).'.jpg');
-  $url = "http://edit.csic.es/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=1600&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids);
+  $url = "http://edit.africamuseum.be/edit_wp5/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=1600&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids);
   file_put_contents($file, file_get_contents($url));
   watchdog('countriesmap', 'Downloaded map image <a href="!url">!url</a>', array('!url' => $url), WATCHDOG_NOTICE);
   exec("convert $file -fuzz 30% -transparent white $file");
