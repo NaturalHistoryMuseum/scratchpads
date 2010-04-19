@@ -450,6 +450,12 @@ function scratchpad_profile_tasks_2(){
         'copy' => 1,
         'paste' => 1
       ),
+      'advimage' => array(
+        'advimage' => 1
+      ),
+      'inlinepopups' => array(
+        'inlinepopups' => 1
+      ),
       'font' => array(
         'formatselect' => 1,
       ),
