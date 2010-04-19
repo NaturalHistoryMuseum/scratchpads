@@ -150,8 +150,9 @@ function scratchpadify_update_6118(){
 }
 
 // 6119 removed as 6120 replaces it completely.
+// 6135 replaces 6120
 
-function scratchpadify_update_6120(){
+function scratchpadify_update_6135(){
   // Setup TinyMCE and WYSIWYG
   $tinymce_settings = array(
     'default' => 1,
@@ -187,6 +188,8 @@ function scratchpadify_update_6120(){
         'copy' => 1,
         'paste' => 1
       ),
+      'advimage' => array('advimage' => 1),
+      'inlinepopups' => array('inlinepopups' => 1),
       'font' => array(
         'formatselect' => 1,
       ),
