@@ -67,7 +67,7 @@ function scratchpad_profile_modules(){
     // EDIT
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
-      'node_term_edit','autotag','nbnmap','foundation',
+      'node_term_edit','autotag','nbnmap','foundation','content_taxonomy',
 //'leftandright',
       'taxtab','tinytax','morphbank',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
