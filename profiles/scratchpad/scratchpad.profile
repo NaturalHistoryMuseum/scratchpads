@@ -410,7 +410,8 @@ function scratchpad_profile_tasks_2(){
   // Image and gallery
   variable_set('image_images_per_page','25');
   variable_set('image_gallery_sort_order','3');
-    
+  variable_set('image_max_upload_size', '12000');
+  
   // Set Jquery_update to use no compressions - VERY BAD, but necessary due to
   // the fact that the module is BORKED.
   variable_set('jquery_update_compression_type','none');
