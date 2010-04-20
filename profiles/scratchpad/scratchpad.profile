@@ -499,7 +499,7 @@ function scratchpad_profile_tasks_2(){
         'filesize' => 20,
         'quota' => 200,
         'tuquota' => 0,
-        'extensions' => 'gif png jpg jpeg',
+        'extensions' => 'gif png jpg jpeg pdf doc xls txt',
         'dimensions' => '800x600',
         'filenum' => 1,
         'directories' => array(
