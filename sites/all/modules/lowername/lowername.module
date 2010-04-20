@@ -30,5 +30,6 @@ function lowername_taxonomy($op, $type, $array = NULL){
  * add terms directly to the term_data table, then it is needed.
  */
 function lowername_cron(){
-  db_query("INSERT INTO term_lowername (tid,lowername) SELECT tid, LOWER(name) FROM term_data WHERE tid NOT IN (SELECT tid FROM term_lowername)");
+  db_query("DELETE FROM {term_lowername} WHERE lowername = 'taxon'");
+  db_query("INSERT INTO {term_lowername} (tid,lowername) SELECT tid, LOWER(name) FROM term_data WHERE tid NOT IN (SELECT tid FROM term_lowername)");
 }
