@@ -38,7 +38,7 @@ function scratchpad_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone',
       'globalredirect','legal','path_redirect','pathauto','quote','statistics',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','wysiwyg','print','imce','imce_wysiwyg',
+      'jstools','wysiwyg','print','imce','imce_wysiwyg','porterstemmer',
     // Spam control
       'mollom','hashcash',
     // JQuery
