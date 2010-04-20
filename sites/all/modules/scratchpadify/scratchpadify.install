@@ -398,3 +398,11 @@ function scratchpadify_update_6134(){
   $ret[] = update_sql("DELETE FROM {variable} WHERE name LIKE 'vertical_tabs_fieldsets_%'");
   return $ret;
 }
+
+/**
+ * Increase max image size.
+ */
+function scratchpadify_update_6103(){
+  variable_set('image_max_upload_size', '12000');
+  return array('#finished' => TRUE);
+}
