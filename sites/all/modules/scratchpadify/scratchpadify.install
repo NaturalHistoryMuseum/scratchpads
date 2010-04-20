@@ -406,3 +406,41 @@ function scratchpadify_update_6136(){
   variable_set('image_max_upload_size', '12000');
   return array('#finished' => TRUE);
 }
+
+/**
+ * Allow additional file extensions in IMCE
+ */
+function scratchpadify_update_6137(){
+  variable_set('imce_profiles', array(
+      1 => array(
+        'name' => st('All users IMCE'),
+        'filesize' => 20,
+        'quota' => 200,
+        'tuquota' => 0,
+        'extensions' => 'gif png jpg jpeg pdf doc xls txt',
+        'dimensions' => '800x600',
+        'filenum' => 1,
+        'directories' => array(
+          array(
+            'name' => 'u%uid',
+            'subnav' => 1,
+            'browse' => 1,
+            'upload' => 1,
+            'thumb' => 1,
+            'delete' => 0,
+            'resize' => 0
+          )
+        ),
+        'thumbnails' => array(
+          array(
+            'name' => 'Thumb',
+            'dimensions' => '90x90',
+            'prefix' => 'thumb_',
+            'suffix' => ''
+          )
+        )
+      )
+    )
+  );
+  return array('#finished' => TRUE);
+}
