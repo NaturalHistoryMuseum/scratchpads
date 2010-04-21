@@ -28,6 +28,9 @@ function lowername_taxonomy($op, $type, $array = NULL){
  * 
  * This function shouldn't be needed, but in case other modules are naughty, and
  * add terms directly to the term_data table, then it is needed.
+ * 
+ * Also having to fix the classification module - this can be removed once we
+ * get rid of the current classification editor. FIXME
  */
 function lowername_cron(){
   db_query("DELETE FROM {term_lowername} WHERE lowername = 'taxon'");
