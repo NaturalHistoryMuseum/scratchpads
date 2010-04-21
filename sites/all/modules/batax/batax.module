@@ -103,8 +103,9 @@ function batax_form_alter(&$form, &$form_state, $form_id){
 
     $c = db_query(db_rewrite_sql("SELECT v.* FROM {vocabulary} v INNER JOIN {vocabulary_node_types} n ON v.vid = n.vid WHERE n.type = '%s' ORDER BY v.weight, v.name", 'v', 'vid'), $node->type);
 
-    while ($vocabulary = db_fetch_object($c)) {
-      if(batax_use_batax($vocabulary->vid)){
+    while ($vocabulary = db_fetch_object($c)){
+      $use_batax = batax_use_batax($vocabulary->vid, $form['type']['#value']);
+      if($use_batax){
         // We're using BATAX, lets do stuff!
         
         // Extract terms belonging to the vocabulary in question.
@@ -123,6 +124,13 @@ function batax_form_alter(&$form, &$form_state, $form_id){
           '#element_validate' => array('batax_element_validate'),
           '#maxlength' => 1000000
         );
+        if($use_batax == 'AUTOTAG'){
+          $default_value = array();
+          foreach($default_terms as $tid => $term){
+            $default_value[$tid] = $tid;
+          }
+          $form['taxonomy'][$vocabulary->vid]['#default_value'] = $default_value;
+        }
       } else {
         if ($vocabulary->tags) {
           if (isset($form_state['node_preview'])) {
@@ -267,6 +275,9 @@ function batax_admin_settings() {
  * AUTOCOMPLETE FUNCTION
  ******************************************************************************/
 function batax_autocomplete($vid, $string = '') {
+  // FUCKING Boost, stop caching text pages.
+  $GLOBALS['_boost_cache_this'] = FALSE;
+
   // The user enters a comma-separated list of tags. We only autocomplete the last tag.
   // This regexp allows the following types of user input:
   // this, "somecmpany, llc", "and ""this"" w,o.rks", foo bar
@@ -302,15 +313,25 @@ function batax_autocomplete($vid, $string = '') {
     }
   }
   print drupal_to_js($matches);
-  exit;
 }
 /*******************************************************************************
  * HELPER FUNCTIONS
  ******************************************************************************/
 /**
- * Check to see whether a vocabulary should use batax
+ * Check to see whether a vocabulary should use batax, it shouldn't if we're 
+ * using the autotag module for it
  */
-function batax_use_batax($vid){
+function batax_use_batax($vid, $type = FALSE){
+  if(module_exists('autotag') && $type){
+    module_load_include('functions.inc', 'autotag');
+    static $autotag_vids;
+    if(!isset($vids)){
+      $autotag_vids = _autotag_get_vids_for_type($type);
+    }
+    if(in_array($vid, $autotag_vids)){
+      return 'AUTOTAG';
+    }
+  }
   $vids = variable_get('batax_disable_vids', array());
   if(isset($vids[$vid]) && $vids[$vid]){
     return false;
