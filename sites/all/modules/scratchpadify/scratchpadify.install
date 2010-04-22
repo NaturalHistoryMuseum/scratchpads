@@ -444,3 +444,15 @@ function scratchpadify_update_6137(){
   );
   return array('#finished' => TRUE);
 }
+
+/**
+ * Add image.module permissions.
+ */
+function scratchpadify_update_6138(){
+  // Update permissions
+  require_once("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+  return array('#finished' => TRUE);
+}
