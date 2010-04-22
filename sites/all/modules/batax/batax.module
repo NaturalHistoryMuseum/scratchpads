@@ -124,7 +124,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
           '#element_validate' => array('batax_element_validate'),
           '#maxlength' => 1000000
         );
-        if($use_batax == 'AUTOTAG'){
+        if($use_batax === 'AUTOTAG'){
           $default_value = array();
           foreach($default_terms as $tid => $term){
             $default_value[$tid] = $tid;
