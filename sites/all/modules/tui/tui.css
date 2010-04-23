@@ -1,4 +1,8 @@
 #tui{
+ font-size:90%;
+}
+#tui-form textarea, #tui-form select{
+ font-size:90%;
 }
 #tui-tree, #tui-form{
  width:49%;
@@ -15,25 +19,29 @@
  margin:5px;
 }
 #tui-form-container{
- min-height:400px; 
+ min-height:700px; 
  margin:5px;
  padding:0;
 }
 #tui-clear{
  clear:both;
 }
-#tui-form .form-textarea, #tui-form .form-text{
- width: 90% !important;
+#tui-form .form-text, #tui-form .resizable-textarea, #tui-form select{
+ width: 95% !important;
+}
+#tui-form textarea{
+ width:100%
 }
 #tui-form .hidden{
  display:none;
 }
-#tui ul{
+#tui-tree ul, #tui-tree li{
  padding:0;
  margin:0;
 }
-#tui li{
- padding-bottom:0;
+#tui-tree li{
+ padding-left:10px;
+ background:none;
 }
 
 .ui-tabs-panel{
@@ -50,6 +58,11 @@
  background:inherit;
 }
 .ui-tabs-nav li a{
- padding: 0.5em 1.0em !important;
+ padding: 0.5em !important;
  font-size: 80% !important;
+}
+.ui-tabs-panel > fieldset, #tui-tree-container{
+ -moz-box-shadow: 3px 3px 3px #999;
+ -webkit-box-shadow: 3px 3px 3px #999;
+ box-shadow: 3px 3px 3px #999;
 }
