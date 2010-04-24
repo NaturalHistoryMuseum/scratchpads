@@ -5,38 +5,55 @@
  */
 function tui_admin_vocabulary_edit($vocabulary){
   $tree = array();
+  $all_tids = array();
   $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $vocabulary->vid);
   while($tid = db_result($results)){
     $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
+    $all_tids[$tid] = $tid;
   }
   if(arg(6)){
     // We have a tid set, we need to open out to the tid, else we'll just show 
     // the very root of the tree.
-    $tid = arg(6);
-    $parents = taxonomy_get_parents_all($tid);
-    while($parents){
-      $term = array_shift($parents);
-      $temp_branch = array($term->tid => $branch);
-      $branch = $temp_branch;
+    $tids = explode(',', arg(6));
+    $num_tids = count($tids);
+    for($i=0; $i<$num_tids; $i++){
+      $branch = false;
+      if(isset($tids[$i])){
+        $parents = taxonomy_get_parents_all($tids[$i]);
+        while($parents){
+          $term = array_shift($parents);
+          $key = array_search($term->tid, $tids);
+          if($key){
+            unset($tids[$key]);
+          }
+          if(is_array($branch)){
+            foreach($branch as $tid => $stuff){
+              $all_tids[$tid] = $tid;
+            }
+          }
+          $branch = array($term->tid => $branch);
+        }
+        $tree[$term->tid] = array_pop($branch);
+        $all_tids[$term->tid] = $term->tid;
+      }
     }
-    $tree[$term->tid] = array_pop($branch);
   }
-  return theme('tui_page', $tree, $vocabulary);
+  return theme('tui_page', $tree, $vocabulary, $all_tids);
 }
 
 /**
  * Theme for above callback.
  */
-function theme_tui_page($taxonomy_tree, $vocabulary){
+function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   drupal_add_css(drupal_get_path('module', 'tui').'/lib/bt/jquery.bt.css');
   drupal_add_css(drupal_get_path('module', 'tui').'/tui.css');
   drupal_add_js(drupal_get_path('module', 'tui').'/tui.js');
   drupal_add_js(drupal_get_path('module', 'tui').'/lib/bt/jquery.bt.js');
-  drupal_add_js(array('tui' => array('callback_url' => url('tui/getform', array('absolute' => TRUE)))),'setting');
+  drupal_add_js(array('tui' => array('opentids' => $all_tids, 'callbacks' => array('form' => url('tui/getform', array('absolute' => TRUE)), 'full_tree' => url('tui/gettree', array('absolute' => TRUE)), 'tree' => url('tui/getchildren', array('absolute' => TRUE))))),'setting');
   
   // Add the JS required.
   variable_set('jquery_update_compression_type','none');
-  jquery_ui_add('ui.tabs');
+  jquery_ui_add(array('ui.tabs', 'ui.sortable'));
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
   
   // We add the form, so that all the extras (collapse.js etc) are added.  We 

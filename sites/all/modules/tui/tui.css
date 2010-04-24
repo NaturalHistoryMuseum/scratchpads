@@ -1,5 +1,6 @@
 #tui{
  font-size:90%;
+ line-height:150%;
 }
 #tui-form textarea, #tui-form select{
  font-size:90%;
@@ -43,7 +44,6 @@
  padding-left:10px;
  background:none;
 }
-
 .ui-tabs-panel{
  padding:0 !important;
 }
@@ -65,4 +65,27 @@
  -moz-box-shadow: 3px 3px 3px #999;
  -webkit-box-shadow: 3px 3px 3px #999;
  box-shadow: 3px 3px 3px #999;
+}
+.tui-nodeleaf{
+ width:9px;
+ height:9px;
+ margin:3px 7px 3px 3px;
+ padding:0;
+ display:block;
+ float:left;
+}
+.tui-node-closed:hover, .tui-node-open:hover{
+	cursor:pointer;	
+}
+.tui-node-closed{
+ background-image: url('images/plus.gif');
+}
+.tui-leaf{
+ background-image: url('images/leaf.gif');
+}
+.tui-node-open{
+ background-image: url('images/minus.gif');
+}
+.tui-term:hover{
+ cursor:move;
 }

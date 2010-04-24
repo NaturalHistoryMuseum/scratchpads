@@ -16,15 +16,31 @@ function tui_menu(){
       'page arguments' => array(5),
       'access arguments' => array('administer taxonomy'),
       'type' => MENU_CALLBACK,
-      'file' => 'tui.admin.inc',
+      'file' => 'tui.admin.inc'
     ),
     'tui/getform/%' => array(
-      'title' => 'Edit vocabulary',
+      'title' => 'Get form',
       'page callback' => 'tui_get_term_form',
       'page arguments' => array(2),
       'access arguments' => array('administer taxonomy'),
       'type' => MENU_CALLBACK,
-      'file' => 'tui.admin.inc',    
+      'file' => 'tui.admin.inc'    
+    ),
+    'tui/getchildren/%' => array(
+      'title' => 'Get children',
+      'page callback' => 'tui_get_children',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
+    ),
+    'tui/gettree' => array(
+      'title' => 'Get tree',
+      'page callback' => 'tui_get_tree',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
     )
   );
 }
@@ -60,6 +76,16 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     $form['#pre_render'] = array(
       'tui_taxonomy_form_pre_render'
     );
+    // Hide the advanced stuff, as none of the fields are required:
+    //  weight - drag'n'drop
+    //  parents - drag'n'drop
+    //  related terms - unused
+    //  synonyms - unused
+    $form['advanced']['#type'] = 'hidden';
+    $form['advanced']['weight']['#type'] = 'hidden';
+    $form['advanced']['parent']['#type'] = 'hidden';
+    $form['advanced']['relations']['#type'] = 'hidden';
+    $form['advanced']['synonymns']['#type'] = 'hidden';
   }
 }
 
