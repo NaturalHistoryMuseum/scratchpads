@@ -2,6 +2,8 @@ Drupal.tui = new Object;
 
 Drupal.tui.init = function(context) {
   $('.tui-term', context).click(function (){
+    $('.tui-term').removeClass('active');
+    $(this).addClass('active');
     Drupal.tui.display_form($(this).attr('id'));
   });
   $("#tabs > ul", context).tabs();
