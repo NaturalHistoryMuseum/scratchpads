@@ -5,8 +5,11 @@
 #tui-form textarea, #tui-form select{
  font-size:90%;
 }
-#tui-tree, #tui-form{
- width:49%;
+#tui-tree{ 
+ width:39%;
+}
+#tui-form{
+ width:59%;
 }
 #tui-tree{	
  float:left;
@@ -14,10 +17,13 @@
 #tui-form{
  float:right;
 }
-#tui-tree-container{
+#tui-tree-container, #tui-form-noform{
  padding:5px;
  border:solid 1px #eee;
  margin:5px;
+}
+#tui-form-noform h1{
+ padding:30px;
 }
 #tui-form-container{
  min-height:700px; 
@@ -62,18 +68,20 @@
  padding: 0.5em !important;
  font-size: 80% !important;
 }
-.ui-tabs-panel > fieldset, #tui-tree-container{
- -moz-box-shadow: 3px 3px 3px #999;
- -webkit-box-shadow: 3px 3px 3px #999;
- box-shadow: 3px 3px 3px #999;
+.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform{
+ -moz-box-shadow: 2px 2px 2px #999;
+ -webkit-box-shadow: 2px 2px 2px #999;
+ box-shadow: 2px 2px 2px #999;
 }
 .tui-nodeleaf{
  width:9px;
  height:9px;
  margin:3px 7px 3px 3px;
+ line-height:100%;
  padding:0;
- display:block;
- float:left;
+ display:inline;
+ background-repeat:no-repeat;
+ background-position:50% 50%;
 }
 .tui-node-closed:hover, .tui-node-open:hover{
 	cursor:pointer;	
@@ -90,11 +98,11 @@
 .tui-term:hover{
  cursor:move;
 }
-.tui-term{
- padding-right:30px;
+.tui-term.active, .tui-added{
+ background-color:#ffffea !important;
+ border: solid 1px #999;
+ padding:0;
 }
-.tui-term.active{
- background-image:url('images/arrow.png');
- background-repeat:no-repeat;
- background-position:100% 50%;
+li.ui-draggable-dragging .tui-nodeleaf{
+ display:none;
 }

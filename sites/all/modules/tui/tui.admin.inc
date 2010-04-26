@@ -42,6 +42,15 @@ function tui_admin_vocabulary_edit($vocabulary){
 }
 
 /**
+ * hook_help
+ */
+function tui_help($path, $arg){
+  switch($path){
+    case 'admin/content/taxonomy/edit/tui':
+      return '<p>'.t('Detailed TUI help').'</t>';
+  }
+}
+/**
  * Theme for above callback.
  */
 function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
@@ -49,11 +58,22 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   drupal_add_css(drupal_get_path('module', 'tui').'/tui.css');
   drupal_add_js(drupal_get_path('module', 'tui').'/tui.js');
   drupal_add_js(drupal_get_path('module', 'tui').'/lib/bt/jquery.bt.js');
-  drupal_add_js(array('tui' => array('opentids' => $all_tids, 'callbacks' => array('form' => url('tui/getform', array('absolute' => TRUE)), 'full_tree' => url('tui/gettree', array('absolute' => TRUE)), 'tree' => url('tui/getchildren', array('absolute' => TRUE))))),'setting');
+  drupal_add_js(array(
+      'tui' => array(
+        'opentids' => $all_tids, 
+        'callbacks' => array(
+          'form' => url('tui/getform', array('absolute' => TRUE)),
+          'full_tree' => url('tui/gettree', array('absolute' => TRUE)),
+          'tree' => url('tui/getchildren', array('absolute' => TRUE)),
+          'move' => url('tui/moveterm', array('absolute' => TRUE))
+        )
+      )
+    ),'setting');
   
   // Add the JS required.
   variable_set('jquery_update_compression_type','none');
-  jquery_ui_add(array('ui.tabs', 'ui.sortable'));
+  jquery_ui_add(array('ui.tabs', 'ui.draggable'));
+  jquery_ui_add(array('ui.tabs', 'ui.droppable'));
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
   
   // We add the form, so that all the extras (collapse.js etc) are added.  We 
@@ -68,7 +88,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   </div>
   <div id="tui-form">
     <div id="tui-form-container">
-      <p>Click on a term to the left, to edit it here.</p>
+      <div id="tui-form-noform">'.tui_help('admin/content/taxonomy/edit/tui', array()).'</div>
       <div class="hidden">'.drupal_get_form('taxonomy_form_term', $vocabulary, array()).'</div>
     </div>
   </div>

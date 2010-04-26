@@ -34,6 +34,14 @@ function tui_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
+    'tui/moveterm/%/%/%' => array(
+      'title' => 'Move term',
+      'page callback' => 'tui_move_term',
+      'page arguments' => array(2, 3, 4),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
+    ),
     'tui/gettree' => array(
       'title' => 'Get tree',
       'page callback' => 'tui_get_tree',

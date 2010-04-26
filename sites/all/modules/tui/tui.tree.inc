@@ -24,7 +24,7 @@ function theme_tui_tree($taxonomy_tree){
     } else {
       $output .= 'tui-leaf';
     }
-    $output .= '">&nbsp;</span><span class="tui-term" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span>';
+    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span>';
     if(is_array($branch)){
       $output .= theme_tui_tree($branch);
     }
@@ -49,6 +49,41 @@ function tui_get_children($tid_and_vid){
 }
 
 /**
+ * Move a term in a tree
+ * 
+ * Method is one of child, or sibling, whilst from $term is the term to move,
+ * and to is the position to move to (child of, or next term after). 
+ */
+function tui_move_term($method, $term, $to){
+  $term_bits = explode("-", $term);
+  $term = taxonomy_get_term($term_bits[1]);
+  $to_bits = explode("-", $to);
+  $to = taxonomy_get_term($to_bits[1]);
+  if($to && $term){
+    switch($method){
+      case 'child':
+        // This will be the first child of the parent, so we will increase the
+        // weight of the siblings by one, and give this term the minimum weight.
+        // FIXME - This works, but it may break other drupal stuff.
+        $weight = db_result(db_query("SELECT MIN(weight) FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)", $to->tid));
+        db_query("UPDATE {term_data} SET weight = weight +1 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)", $to->tid);
+        $term->weight = $weight;
+        $term->parent = $to->tid;
+        $form_values = (array)$term;
+        taxonomy_save_term($form_values);
+        break;      
+      case 'sibling':
+        db_query("UPDATE {term_data} SET weight = weight +1 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND weight > %d", $to->parent, $to->weight);
+        $term->weight = $to->weight;
+        $term->parent = $to->parent;
+        $form_values = (array)$term;
+        taxonomy_save_term($form_values);
+        break;
+    }
+  }
+}
+
+/**
  * 
  */
 function tui_get_tree(){
@@ -58,7 +93,13 @@ function tui_get_tree(){
       $tids[] = $key;
     }
   }
+  // Following done to ensure correct ordering of terms
   $tree = array();
+  $term = taxonomy_get_term($tids[0]);
+  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $term->vid);
+  while($tid = db_result($results)){
+    $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
+  }
   // We have a tid set, we need to open out to the tid, else we'll just show 
   // the very root of the tree.
   $num_tids = count($tids);
