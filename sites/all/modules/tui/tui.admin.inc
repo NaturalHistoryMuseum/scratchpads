@@ -4,40 +4,13 @@
  * Callback for the menu item admin/content/taxonomy/edit/tui/%vid
  */
 function tui_admin_vocabulary_edit($vocabulary){
-  $tree = array();
-  $all_tids = array();
-  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $vocabulary->vid);
-  while($tid = db_result($results)){
-    $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
-    $all_tids[$tid] = $tid;
-  }
+  $tids = array();
   if(arg(6)){
-    // We have a tid set, we need to open out to the tid, else we'll just show 
-    // the very root of the tree.
     $tids = explode(',', arg(6));
-    $num_tids = count($tids);
-    for($i=0; $i<$num_tids; $i++){
-      $branch = false;
-      if(isset($tids[$i]) && is_numeric($tids[$i])){
-        $parents = taxonomy_get_parents_all($tids[$i]);
-        while($parents){
-          $term = array_shift($parents);
-          $key = array_search($term->tid, $tids);
-          if($key){
-            unset($tids[$key]);
-          }
-          if(is_array($branch)){
-            foreach($branch as $tid => $stuff){
-              $all_tids[$tid] = $tid;
-            }
-          }
-          $branch = array($term->tid => $branch);
-        }
-        $tree[$term->tid] = array_pop($branch);
-        $all_tids[$term->tid] = $term->tid;
-      }
-    }
   }
+  $all_tids = array();
+  module_load_include('tree.inc','tui');
+  $tree = tui_get_tree($vocabulary->vid, $tids, $all_tids);
   return theme('tui_page', $tree, $vocabulary, $all_tids);
 }
 
@@ -57,15 +30,21 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           'full_tree' => url('tui/gettree', array('absolute' => TRUE)),
           'tree' => url('tui/getchildren', array('absolute' => TRUE)),
           'move' => url('tui/moveterm', array('absolute' => TRUE)),
-          'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE))
+          'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE)),
+          'delete' => url('tui/deleteterm', array('absolute' => TRUE))
+        ),
+        'dialog' => array(
+          'delete' => array(
+            'title' => t('Delete?'),
+            'content' => '<p>'.t('Are you sure you want to delete').'<br/> <span id="tui-dialog-term-name"></span>?</p>'
+          )
         )
       )
     ),'setting');
   
   // Add the JS required.
   variable_set('jquery_update_compression_type','none');
-  jquery_ui_add(array('ui.tabs', 'ui.draggable'));
-  jquery_ui_add(array('ui.tabs', 'ui.droppable'));
+  jquery_ui_add(array('ui.tabs', 'ui.draggable', 'ui.dialog', 'ui.droppable'));
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
   
   // We add the form, so that all the extras (collapse.js etc) are added.  We 
@@ -79,7 +58,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
         <p>
           <img id="tui-add" src="'.base_path().drupal_get_path('module','tui').'/images/add.png" alt="'.t('Add term').'" title="'.t('Add term').'"/>
           <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
-        </p>
+        </p>       
       </div>
       <div id="tui-tree-subcontainer">
         '.theme('tui_tree', $taxonomy_tree).'

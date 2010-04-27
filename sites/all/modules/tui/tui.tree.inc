@@ -86,7 +86,62 @@ function tui_move_term($method, $term, $to){
 /**
  * 
  */
-function tui_get_tree(){
+function tui_delete_term($term_id){
+  $term_parts = explode("-", $term_id);
+  if($term_parts[0] == 'tid' && is_numeric($term_parts[1])){
+    taxonomy_del_term($term_parts[1]);
+    // We'll unset the annoying message that gets set!
+    drupal_get_messages('message');
+  }
+}
+
+function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
+  $tree = array();
+  $all_tids = array();
+  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $vid);
+  while($tid = db_result($results)){
+    $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
+    $all_tids[$tid] = $tid;
+  }
+  $num_tids = count($tids);
+  if($num_tids){
+    // We have a tid set, we need to open out to the tid, else we'll just show 
+    // the very root of the tree.
+    $num_tids = count($tids);
+    for($i=0; $i<$num_tids; $i++){
+      $branch = false;
+      if(isset($tids[$i]) && is_numeric($tids[$i])){
+        // Check it also hasn't been deleted.
+        $term = taxonomy_get_term($tids[$i]);
+        if(!$term){
+          continue;
+        }
+        $parents = taxonomy_get_parents_all($tids[$i]);
+        while($parents){
+          $term = array_shift($parents);
+          $key = array_search($term->tid, $tids);
+          if($key){
+            unset($tids[$key]);
+          }
+          if(is_array($branch)){
+            foreach($branch as $tid => $stuff){
+              $all_tids[$tid] = $tid;
+            }
+          }
+          $branch = array($term->tid => $branch);
+        }
+        $tree[$term->tid] = array_pop($branch);
+        $all_tids[$term->tid] = $term->tid;
+      }
+    }
+  }
+  return $tree;
+}
+
+/**
+ * 
+ */
+function tui_get_tree_themed(){
   $tids = array();
   foreach($_REQUEST as $key => $value){
     if(is_numeric($key) && $key == $value){
@@ -94,8 +149,8 @@ function tui_get_tree(){
     }
   }
   // Following done to ensure correct ordering of terms
-  $tree = array();
   $term = taxonomy_get_term($tids[0]);
+  /*
   $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $term->vid);
   while($tid = db_result($results)){
     $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
@@ -123,6 +178,7 @@ function tui_get_tree(){
       $tree[$term->tid] = array_pop($branch);
       $all_tids[$term->tid] = $term->tid;
     }
-  }
+  }*/
+  $tree = tui_get_tree($term->vid, $tids);
   echo theme('tui_tree', $tree);
 }

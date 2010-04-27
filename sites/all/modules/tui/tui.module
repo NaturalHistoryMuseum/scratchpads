@@ -42,9 +42,17 @@ function tui_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
+    'tui/deleteterm/%' => array(
+      'title' => 'Move term',
+      'page callback' => 'tui_delete_term',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
+    ),
     'tui/gettree' => array(
       'title' => 'Get tree',
-      'page callback' => 'tui_get_tree',
+      'page callback' => 'tui_get_tree_themed',
       'page arguments' => array(2),
       'access arguments' => array('administer taxonomy'),
       'type' => MENU_CALLBACK,

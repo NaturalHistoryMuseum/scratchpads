@@ -46,9 +46,35 @@ Drupal.tui.click_addordelete = function(img_clicked){
     
   } else if(img_clicked == 'tui-delete'){
     if($('.tui-term.active').attr('id')){
-      alert("SELECTED");
+      $('#tui-tree-links').append('<div id="dialog" title=""></div>');
+      $('#dialog').attr('title', Drupal.settings.tui.dialog.delete.title);
+      $('#dialog').html(Drupal.settings.tui.dialog.delete.content);
+      $('#tui-dialog-term-name').html($('.tui-term.active').html());
+      $('#dialog').dialog({
+        modal:true,
+        buttons:{
+          "Cancel":function(){$(this).dialog("close");},
+          "OK":function(){
+            Drupal.tui.do_delete($('.tui-term.active').attr('id'));
+            $(this).dialog("close");
+          }
+        },
+        width:'300px',
+        height:'200px'
+      });
     }
   }
+}
+
+Drupal.tui.do_delete = function(term_id){
+  var ajax_options = {
+    cache:false,
+    url:Drupal.settings.tui.callbacks.delete+"/"+term_id,
+    success:function(data){
+      Drupal.tui.reload_tree();
+    }
+  };
+  $.ajax(ajax_options);
 }
 
 Drupal.tui.resize_frame = function(){
