@@ -8,10 +8,10 @@ Drupal.tui.init = function(context) {
     Drupal.tui.display_form($(this).attr('id'));
   });
   $("#tabs > ul", context).tabs();
-  $("#tabs > ul > li", context).bt({
+  $("#tabs > ul > li, #tui-tree-links img", context).bt({
     positions: 'top',
     fill: 'rgba(0, 0, 0, .7)',
-    cssStyles: {color: 'white', 'font-size': '10px', width: 'auto'},
+    cssStyles: {color: 'white', 'font-size': '14px', width: 'auto'},
     closeWhenOthersOpen: true,
     spikeLength: 10,
     strokeWidth: 0
@@ -22,7 +22,7 @@ Drupal.tui.init = function(context) {
   $('.tui-node-open', context).mouseup(function(){
     Drupal.tui.click_open($(this).parent().attr('id'));
   });
-  $('#tui-tree-container li').draggable({
+  $('#tui-tree-subcontainer li').draggable({
     cursorAt:{left:1, top:1},
     handle:'> .tui-term',
     opacity:0.8,
@@ -35,7 +35,20 @@ Drupal.tui.init = function(context) {
   $(window).resize(function(){
     Drupal.tui.resize_frame();
   });
+  $('#tui-tree-links img', context).mouseup(function(){
+    Drupal.tui.click_addordelete($(this).attr('id'));
+  });
   Drupal.tui.resize_frame();
+}
+
+Drupal.tui.click_addordelete = function(img_clicked){
+  if(img_clicked == 'tui-add'){
+    
+  } else if(img_clicked == 'tui-delete'){
+    if($('.tui-term.active').attr('id')){
+      alert("SELECTED");
+    }
+  }
 }
 
 Drupal.tui.resize_frame = function(){
@@ -59,7 +72,7 @@ Drupal.tui.update_link = function(){
 Drupal.tui.drag_start = function(event, ui){
   $('.tui-term.active').removeClass('active');
   $(event.currentTarget).hide();
-  $('#tui-tree-container .tui-nodeleaf, #tui-tree-container .tui-term').droppable({
+  $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable({
     tolerance:'pointer',
     greedy:true,
     over:function(event, ui){
@@ -80,7 +93,7 @@ Drupal.tui.drop_deactivate = function(event, ui){
         Drupal.tui.reload_tree();
       }
     };
-    $('#tui-tree-container .tui-nodeleaf, #tui-tree-container .tui-term').droppable("destroy");
+    $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
     $.ajax(ajax_options);
   }
@@ -153,9 +166,9 @@ Drupal.tui.tree_success = function(html_object, data){
 
 Drupal.tui.full_tree_success = function(data){
   Drupal.tui.waiting_for_reply = false;
-  $('#tui-tree-container').html(data);
+  $('#tui-tree-subcontainer').html(data);
   jQuery.each(Drupal.behaviors, function() {
-    this('#tui-tree-container');
+    this('#tui-tree-subcontainer');
   });
 }
 

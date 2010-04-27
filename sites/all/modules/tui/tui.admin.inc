@@ -71,11 +71,19 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   // We add the form, so that all the extras (collapse.js etc) are added.  We 
   // then hide the form.
   module_load_include('admin.inc', 'taxonomy');
-  
+
   return '<div id="tui">
   <div id="tui-tree">
     <div id="tui-tree-container">
-      '.theme('tui_tree', $taxonomy_tree).'
+      <div id="tui-tree-links">
+        <p>
+          <img id="tui-add" src="'.base_path().drupal_get_path('module','tui').'/images/add.png" alt="'.t('Add term').'" title="'.t('Add term').'"/>
+          <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
+        </p>
+      </div>
+      <div id="tui-tree-subcontainer">
+        '.theme('tui_tree', $taxonomy_tree).'
+      </div>
     </div>
   </div>
   <div id="tui-form">

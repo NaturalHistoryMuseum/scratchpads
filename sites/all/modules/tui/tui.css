@@ -2,33 +2,11 @@
  font-size:90%;
  line-height:150%;
 }
-#tui-form textarea, #tui-form select{
- font-size:90%;
-}
-#tui-tree{ 
- width:39%;
-}
-#tui-form{
- width:59%;
-}
-#tui-tree{	
- float:left;
-}
-#tui-form{
- float:right;
-}
 #tui-tree-container, #tui-form-noform{
  padding:15px;
  border:solid 1px #eee;
  margin:5px;
  text-align:justify;
-}
-#tui-tree-container{
- padding:5px 0;
-}
-#tui-form-container{
- margin:5px;
- padding:0;
 }
 #tui-clear{
  clear:both;
@@ -38,17 +16,20 @@
 #tui-clear-container{
  padding:10px;
  border:solid 1px #eee;
-} 
-#tui-form .form-text, #tui-form .resizable-textarea, #tui-form select{
- width: 95% !important;
 }
-#tui-form textarea{
- width:100%
+
+
+/* TREE */
+#tui-tree{ 
+ width:39%;
 }
-#tui-form .hidden{
- display:none;
+#tui-tree{  
+ float:left;
 }
-#tui-tree ul, #tui-tree li{
+#tui-tree-container{
+ padding:5px 0;
+}
+#tui-tree ul, #tui-tree li, #tui-tree-links p{
  padding:0;
  margin:0;
 }
@@ -57,28 +38,6 @@
  background:none;
  list-style-type:none;
  overflow:hidden;
-}
-.ui-tabs-panel{
- padding:0 !important;
-}
-.ui-tabs-panel > fieldset > legend{
- display:none;
-}
-.ui-tabs-panel > fieldset{
- margin:0;
- border:none;
-}
-.ui-tabs-panel fieldset{
- background:inherit;
-}
-.ui-tabs-nav li a{
- padding: 0.5em !important;
- font-size: 80% !important;
-}
-.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform{
- -moz-box-shadow: 2px 2px 2px #999;
- -webkit-box-shadow: 2px 2px 2px #999;
- box-shadow: 2px 2px 2px #999;
 }
 .tui-nodeleaf{
  width:9px;
@@ -91,7 +50,7 @@
  background-position:50% 50%;
 }
 .tui-node-closed:hover, .tui-node-open:hover{
-	cursor:pointer;	
+  cursor:pointer; 
 }
 .tui-node-closed{
  background-image: url('images/plus.gif');
@@ -118,4 +77,58 @@
 }
 li.ui-draggable-dragging .tui-nodeleaf{
  display:none;
+}
+
+
+/* TREE LINKS */
+#tui-tree-links{
+ float:right;
+ padding-right:5px;
+}
+
+
+/* FORM */
+#tui-form textarea, #tui-form select{
+ font-size:90%;
+}
+#tui-form{
+ width:59%;
+}
+#tui-form{
+ float:right;
+}
+#tui-form-container{
+ margin:5px;
+ padding:0;
+}
+#tui-form .form-text, #tui-form .resizable-textarea, #tui-form select{
+ width: 95% !important;
+}
+#tui-form textarea{
+ width:100%
+}
+#tui-form .hidden{
+ display:none;
+}
+.ui-tabs-panel{
+ padding:0 !important;
+}
+.ui-tabs-panel > fieldset > legend{
+ display:none;
+}
+.ui-tabs-panel > fieldset{
+ margin:0;
+ border:none;
+}
+.ui-tabs-panel fieldset{
+ background:inherit;
+}
+.ui-tabs-nav li a{
+ padding: 0.5em !important;
+ font-size: 80% !important;
+}
+.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform{
+ -moz-box-shadow: 2px 2px 2px #999;
+ -webkit-box-shadow: 2px 2px 2px #999;
+ box-shadow: 2px 2px 2px #999;
 }
