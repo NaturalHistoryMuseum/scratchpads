@@ -55,6 +55,10 @@ function tui_get_children($tid_and_vid){
  * and to is the position to move to (child of, or next term after). 
  */
 function tui_move_term($method, $term, $to){
+  // Only continue if term != to, as JS can mess things up occasionaly
+  if($term == $to){
+    return;
+  }
   $term_bits = explode("-", $term);
   $term = taxonomy_get_term($term_bits[1]);
   $to_bits = explode("-", $to);
@@ -74,6 +78,7 @@ function tui_move_term($method, $term, $to){
         taxonomy_save_term($form_values);
         break;      
       case 'sibling':
+        // FIXME - This fails if the tree is set to alphapetical.
         db_query("UPDATE {term_data} SET weight = weight +2 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND weight > %d", $to->parent, $to->weight);
         $term->weight = $to->weight + 1;
         $term->parent = $to->parent;
@@ -105,39 +110,74 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
     $all_tids[$tid] = $tid;
   }
   $num_tids = count($tids);
-  if($num_tids){
-    // We have a tid set, we need to open out to the tid, else we'll just show 
-    // the very root of the tree.
-    $num_tids = count($tids);
-    for($i=0; $i<$num_tids; $i++){
-      $branch = false;
-      if(isset($tids[$i]) && is_numeric($tids[$i])){
-        // Check it also hasn't been deleted.
-        $term = taxonomy_get_term($tids[$i]);
-        if(!$term){
-          continue;
-        }
-        $parents = taxonomy_get_parents_all($tids[$i]);
-        while($parents){
-          $term = array_shift($parents);
-          $key = array_search($term->tid, $tids);
-          if($key){
-            unset($tids[$key]);
-          }
-          if(is_array($branch)){
-            foreach($branch as $tid => $stuff){
-              $all_tids[$tid] = $tid;
+  foreach($tids as $tid){
+    // Get the term, just to make sure it still exists
+    $term = taxonomy_get_term($tid);
+    if($term){
+      // Term exists, now we should get all its ancestors
+      $ancestors = taxonomy_get_parents_all($tid);
+      // If we have more than one ancestor, then we need to do stuff
+      if(count($ancestors)>1){
+        // For every term in the list, we need to show all the children of that
+        // term (except for the very last one).
+        array_shift($ancestors);
+        while($ancestors){
+          $term = array_shift($ancestors);
+          $result = db_query('SELECT tid FROM {term_hierarchy} WHERE parent = %d AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)', $term->tid, $vid);
+          $previous_branch = $branch;
+          $branch = array();
+          while($row = db_fetch_array($result)){
+            $all_tids[$row['tid']] = $row['tid'];
+            if($row['tid'] == $previous_tid){
+              $branch[$row['tid']] = $previous_branch;
+            } else {
+              $branch[$row['tid']] = false;
             }
           }
-          $branch = array($term->tid => $branch);
+          $previous_tid = $term->tid;
         }
-        $tree[$term->tid] = array_pop($branch);
-        $all_tids[$term->tid] = $term->tid;
+        if(is_array($tree[$term->tid])){
+          $tree[$term->tid] = array_merge_recursive_distinct($branch, $tree[$term->tid]);
+        } else {
+          $tree[$term->tid] = $branch;
+        }
       }
     }
   }
-  print_r($tree);exit;
   return $tree;
+}
+
+/**
+ * Straight from php.net.
+ * 
+ * http://www.php.net/manual/en/function.array-merge-recursive.php#96201
+ * 
+ * Thanks must go to mark dot roduner at gmail dot com
+ * RANT
+ * Why doesn't the default array_merge_recursive do this anyway.
+ * /RANT
+ */
+function array_merge_recursive_distinct(){
+  $arrays = func_get_args();
+  $base = array_shift($arrays);
+  if(!is_array($base)) $base = empty($base) ? array() : array($base);
+  foreach($arrays as $append) {
+    if(!is_array($append)) $append = array($append);
+    foreach($append as $key => $value) {
+      if(!array_key_exists($key, $base) and !is_numeric($key)) {
+        $base[$key] = $append[$key];
+        continue;
+      }
+      if(is_array($value) or is_array($base[$key])) {
+        $base[$key] = array_merge_recursive_distinct($base[$key], $append[$key]);
+      } else if(is_numeric($key)) {
+        if(!in_array($value, $base)) $base[] = $value;
+      } else {
+        $base[$key] = $value;
+      }
+    }
+  }
+  return $base;
 }
 
 /**

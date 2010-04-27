@@ -23,6 +23,7 @@ Drupal.tui.init = function(context) {
     Drupal.tui.click_open($(this).parent().attr('id'));
   });
   $('#tui-tree-subcontainer li').draggable({
+    helper:'clone',
     cursorAt:{left:1, top:1},
     handle:'> .tui-term',
     opacity:0.8,
@@ -97,7 +98,7 @@ Drupal.tui.update_link = function(){
 
 Drupal.tui.drag_start = function(event, ui){
   $('.tui-term.active').removeClass('active');
-  $(event.currentTarget).hide();
+  $(event.currentTarget).addClass("tui-added-original");
   $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable({
     tolerance:'pointer',
     greedy:true,
@@ -125,19 +126,24 @@ Drupal.tui.drop_deactivate = function(event, ui){
   }
 }
 
-Drupal.tui.drop_over = function(event, ui){
-  Drupal.tui.parent_or_sibling_id = $(ui.element).parent().attr('id');
-  Drupal.tui.this_id = $(ui.draggable).attr('id');
+Drupal.tui.drop_over_helper = function(element, draggy){
+  Drupal.tui.parent_or_sibling_id = $(element).parent().attr('id');
+  Drupal.tui.this_id = $(draggy).attr('id');
   Drupal.tui.parentorsibling = 'child';
-  if($(ui.element).attr('id') == ''){
+  if($(element).attr('id') == ''){
     Drupal.tui.parentorsibling = 'sibling';
-  }  
-  $('.tui-added').remove();
-  if($(ui.element).hasClass('tui-term')){
-    $(ui.element).append('<ul class="tui-added"><li>'+$(ui.draggable).html()+'</li></ul>');    
-  } else {
-    $(ui.element).parent().after('<li class="tui-added">'+$(ui.draggable).html()+'</li>');    
   }
+  $('.tui-added').remove();
+  $('.tui-added-original').hide();
+  if($(element).hasClass('tui-term')){
+    $(element).append('<ul class="tui-added"><li>'+$(draggy).html()+'</li></ul>');    
+  } else {
+    $(element).parent().after('<li class="tui-added">'+$(draggy).html()+'</li>');    
+  }  
+}
+
+Drupal.tui.drop_over = function(event, ui){
+  Drupal.tui.drop_over_helper(ui.element, ui.draggable);
 }
 
 Drupal.tui.click_closed = function(vid_and_tid){  
