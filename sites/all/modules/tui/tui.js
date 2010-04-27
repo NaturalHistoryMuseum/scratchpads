@@ -111,7 +111,7 @@ Drupal.tui.drag_start = function(event, ui){
 }
 
 Drupal.tui.drop_deactivate = function(event, ui){
-  if(!Drupal.tui.waiting_for_reply){    
+  if(!Drupal.tui.waiting_for_reply){
     var ajax_options = {
       cache:false,
       url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,
