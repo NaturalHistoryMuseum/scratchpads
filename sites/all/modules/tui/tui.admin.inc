@@ -18,7 +18,7 @@ function tui_admin_vocabulary_edit($vocabulary){
     $num_tids = count($tids);
     for($i=0; $i<$num_tids; $i++){
       $branch = false;
-      if(isset($tids[$i])){
+      if(isset($tids[$i]) && is_numeric($tids[$i])){
         $parents = taxonomy_get_parents_all($tids[$i]);
         while($parents){
           $term = array_shift($parents);
@@ -42,15 +42,6 @@ function tui_admin_vocabulary_edit($vocabulary){
 }
 
 /**
- * hook_help
- */
-function tui_help($path, $arg){
-  switch($path){
-    case 'admin/content/taxonomy/edit/tui':
-      return '<p>'.t('Detailed TUI help').'</t>';
-  }
-}
-/**
  * Theme for above callback.
  */
 function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
@@ -65,7 +56,8 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           'form' => url('tui/getform', array('absolute' => TRUE)),
           'full_tree' => url('tui/gettree', array('absolute' => TRUE)),
           'tree' => url('tui/getchildren', array('absolute' => TRUE)),
-          'move' => url('tui/moveterm', array('absolute' => TRUE))
+          'move' => url('tui/moveterm', array('absolute' => TRUE)),
+          'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE))
         )
       )
     ),'setting');
@@ -92,7 +84,11 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
       <div class="hidden">'.drupal_get_form('taxonomy_form_term', $vocabulary, array()).'</div>
     </div>
   </div>
-  <div id="tui-clear"></div>
+  <div id="tui-clear">
+    <div id="tui-clear-container">
+      <p>'.l('Link to this page.','admin/content/taxonomy/edit/tui/'.arg(5).'/'.arg(6), array('attributes' => array('id' => 'tui-link-back'))).'</p>
+    </div>
+  </div>
 </div>';
 }
 

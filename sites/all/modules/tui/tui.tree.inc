@@ -73,8 +73,8 @@ function tui_move_term($method, $term, $to){
         taxonomy_save_term($form_values);
         break;      
       case 'sibling':
-        db_query("UPDATE {term_data} SET weight = weight +1 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND weight > %d", $to->parent, $to->weight);
-        $term->weight = $to->weight;
+        db_query("UPDATE {term_data} SET weight = weight +2 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND weight > %d", $to->parent, $to->weight);
+        $term->weight = $to->weight + 1;
         $term->parent = $to->parent;
         $form_values = (array)$term;
         taxonomy_save_term($form_values);

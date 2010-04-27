@@ -18,21 +18,27 @@
  float:right;
 }
 #tui-tree-container, #tui-form-noform{
- padding:5px;
+ padding:15px;
  border:solid 1px #eee;
  margin:5px;
+ text-align:justify;
 }
-#tui-form-noform h1{
- padding:30px;
+#tui-tree-container{
+ padding:5px 0;
 }
 #tui-form-container{
- min-height:700px; 
  margin:5px;
  padding:0;
 }
 #tui-clear{
  clear:both;
+ margin:0 10px 0 5px;
+ padding:60px 10px;
 }
+#tui-clear-container{
+ padding:10px;
+ border:solid 1px #eee;
+} 
 #tui-form .form-text, #tui-form .resizable-textarea, #tui-form select{
  width: 95% !important;
 }
@@ -50,6 +56,7 @@
  padding-left:10px;
  background:none;
  list-style-type:none;
+ overflow:hidden;
 }
 .ui-tabs-panel{
  padding:0 !important;
@@ -97,6 +104,12 @@
 }
 .tui-term:hover{
  cursor:move;
+}
+.tui-term.active.loading{
+ padding-right:30px;
+ background-image:url('images/loader.gif');
+ background-repeat:no-repeat;
+ background-position: 100% 50%;
 }
 .tui-term.active, .tui-added{
  background-color:#ffffea !important;
