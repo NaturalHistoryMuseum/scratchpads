@@ -11,6 +11,7 @@ Drupal.Ajax.plugins.tui_ajax_plugin = function(hook, args) {
       setTimeout("$('.messages').slideUp(200, Drupal.tui.display_form(false))", 2000);
       Drupal.tui.reload_tree();
     }
+    return false;
   }
 }
 Drupal.Ajax.plugins.disable_redirect = function(hook, args) {
