@@ -277,14 +277,13 @@ function array_merge_recursive_distinct(){
 /**
  * 
  */
-function tui_get_tree_themed(){
+function tui_get_tree_themed($vid){
   $tids = array();
   foreach($_REQUEST as $key => $value){
     if(is_numeric($key) && $key == $value){
       $tids[] = $key;
     }
   }
-  $term = taxonomy_get_term($tids[0]);
-  $tree = tui_get_tree($term->vid, $tids);
+  $tree = tui_get_tree($vid, $tids);
   echo theme('tui_tree', $tree);
 }
