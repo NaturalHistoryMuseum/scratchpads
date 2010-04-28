@@ -53,6 +53,8 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   // then hide the form.
   module_load_include('admin.inc', 'taxonomy');
 
+  drupal_set_title(t('Editing %vocabulary', array('%vocabulary' => $vocabulary->name)));
+
   return '<div id="tui">
   <div id="tui-tree">
     <div id="tui-tree-container">
