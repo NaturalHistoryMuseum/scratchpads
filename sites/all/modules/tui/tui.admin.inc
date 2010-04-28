@@ -140,10 +140,19 @@ function tui_taxonomy_form_pre_render($form){
     }
   }     
   $tab_html .= '</ul>';
-  $form['tabs'] = array(
-    '#weight' => -1000,
-    '#value' => $tab_html
+  // No fucking clue why the following is required.  Why is the weight of the
+  // tabs markup element being ignored.  OH WELL!!! FIXME
+  $temp_form = array(
+    'tabs' => array(
+      '#weight' => -1000,
+      '#value' => $tab_html
+    )
   );
+  // Uuuugh, horrible. silly Drupal.
+  foreach($form as $key => $value){
+    $temp_form[$key] = $value;
+  }
+  $form = $temp_form;
   // Just tweak the buttons, as they can sometimes split the tabs and the 
   // content of the tab.
   $form['submit']['#weight'] = 1000;
