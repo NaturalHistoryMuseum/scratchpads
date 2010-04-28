@@ -28,6 +28,7 @@
 }
 #tui-tree-container{
  padding:5px 0;
+ position:relative;
 }
 #tui-tree ul, #tui-tree li, #tui-tree-links p{
  padding:0;
@@ -84,10 +85,13 @@
 }
 
 
+
 /* TREE LINKS */
 #tui-tree-links{
- float:right;
- padding-right:5px;
+ position:absolute;
+ top:3px;
+ right:16px;
+ text-align:right;
 }
 #tui-tree-links #dialog{
  display:none;
