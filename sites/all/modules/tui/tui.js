@@ -7,9 +7,9 @@ Drupal.tui.init = function(context) {
   $('.tui-node-closed', context).mouseup(function(){Drupal.tui.click_closed($(this).parent().attr('id'));});
   $('.tui-node-open', context).mouseup(function(){Drupal.tui.click_open($(this).parent().attr('id'));});
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
-  $(window).resize(function(){Drupal.tui.resize_frame();});
+  $(window).resize(function(){Drupal.tui.resize_frame("window_resize");});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
-  Drupal.tui.resize_frame();
+  Drupal.tui.resize_frame("init");
 }
 
 Drupal.tui.click_buttonclick = function(img_clicked){
@@ -38,8 +38,9 @@ Drupal.tui.do_delete = function(term_id){
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.delete+"/"+term_id,success:function(data){Drupal.tui.reload_tree();}});
 }
 
-Drupal.tui.resize_frame = function(){
-  if($('#tui-tree-container').height() > ($(window).height()-50)){
+Drupal.tui.resize_frame = function(calling_method){
+  console.log($(window).height());
+  if($('#tui-tree-subcontainer').height() > ($(window).height()-50)){
     $('#tui-tree-container').css('height', ($(window).height()-50)+'px');
     $('#tui-tree-container').css('overflow-y', 'scroll');
   } else {
@@ -114,7 +115,6 @@ Drupal.tui.click_open = function(vid_and_tid){
   $('#'+vid_and_tid+' > span.tui-nodeleaf').addClass('tui-node-closed');
   Drupal.tui.remove_tid(vid_and_tid);
   $('#'+vid_and_tid).children('ul').remove();
-  Drupal.tui.resize_frame();
   jQuery.each(Drupal.behaviors, function() {
     this($('#'+vid_and_tid));
   });
@@ -125,7 +125,6 @@ Drupal.tui.tree_success = function(html_object, data){
   jQuery.each(Drupal.behaviors, function() {
     this(html_object);
   });
-  Drupal.tui.resize_frame();
   Drupal.tui.add_tid($(html_object).attr('id'));
 }
 
