@@ -135,7 +135,7 @@ function tui_get_children($tid_and_vid){
   $parts = explode("-", $tid_and_vid);
   
   $tree = array();
-  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)', 't', 'tid'), $parts[1]);
+  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) ORDER BY weight, name', 't', 'tid'), $parts[1]);
   while($tid = db_result($results)){
     $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
   }
@@ -198,7 +198,7 @@ function tui_delete_term($term_id){
 function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
   $tree = array();
   $all_tids = array();
-  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d', 't', 'tid'), $vid);
+  $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d ORDER BY weight, name', 't', 'tid'), $vid);
   while($tid = db_result($results)){
     $tree[$tid] = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $tid));
     $all_tids[$tid] = $tid;
@@ -217,7 +217,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
         array_shift($ancestors);
         while($ancestors){
           $term = array_shift($ancestors);
-          $result = db_query('SELECT tid FROM {term_hierarchy} WHERE parent = %d AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)', $term->tid, $vid);
+          $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE parent = %d AND vid = %d AND t.tid = h.tid ORDER BY weight, name', $term->tid, $vid);
           $previous_branch = $branch;
           $branch = array();
           while($row = db_fetch_array($result)){
