@@ -39,7 +39,7 @@ Drupal.tui.do_delete = function(term_id){
 }
 
 Drupal.tui.resize_frame = function(calling_method){
-  if($('#tui-tree-subcontainer').height() > ($(window).height()-50)){
+  if($('#tui-tree-subcontainer ul').height() > ($(window).height()-50)){
     $('#tui-tree-subcontainer').css('height', ($(window).height()-50)+'px');
     $('#tui-tree-subcontainer').css('overflow-y', 'scroll');
   } else {
