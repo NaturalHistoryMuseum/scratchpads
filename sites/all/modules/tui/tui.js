@@ -22,8 +22,8 @@ Drupal.tui.click_buttonclick = function(img_clicked){
     case 'tui-delete':
       if(Drupal.tui.term_id){
         $('#tui-tree-links').append('<div id="dialog" title=""></div>');
-        $('#dialog').attr('title', Drupal.settings.tui.dialog.delete.title);
-        $('#dialog').html(Drupal.settings.tui.dialog.delete.content);
+        $('#dialog').attr('title', Drupal.settings.tui.dialog.dlete.title);
+        $('#dialog').html(Drupal.settings.tui.dialog.dlete.content);
         $('#tui-dialog-term-name').html($('.tui-term.active').html());
         $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$(this).dialog("close");}},width:'300px',height:'200px'});
       }
@@ -35,7 +35,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
 }
 
 Drupal.tui.do_delete = function(term_id){
-  $.ajax({cache:false,url:Drupal.settings.tui.callbacks.delete+"/"+term_id,success:function(data){Drupal.tui.reload_tree();}});
+  $.ajax({cache:false,url:Drupal.settings.tui.callbacks.dlete+"/"+term_id,success:function(data){Drupal.tui.reload_tree();}});
 }
 
 Drupal.tui.resize_frame = function(calling_method){

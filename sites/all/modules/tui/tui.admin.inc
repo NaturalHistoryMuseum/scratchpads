@@ -32,11 +32,11 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           'tree' => url('tui/getchildren', array('absolute' => TRUE)),
           'move' => url('tui/moveterm', array('absolute' => TRUE)),
           'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE)),
-          'delete' => url('tui/deleteterm', array('absolute' => TRUE)),
+          'dlete' => url('tui/deleteterm', array('absolute' => TRUE)),
           'nextorprevious' => url('tui/nextorprevious', array('absolute' => TRUE))
         ),
         'dialog' => array(
-          'delete' => array(
+          'dlete' => array(
             'title' => t('Delete?'),
             'content' => '<p>'.t('Are you sure you want to delete').'<br/> <span id="tui-dialog-term-name"></span>?</p>'
           )
