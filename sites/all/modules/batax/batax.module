@@ -328,7 +328,7 @@ function batax_use_batax($vid, $type = FALSE){
     if(!isset($vids)){
       $autotag_vids = _autotag_get_vids_for_type($type);
     }
-    if(in_array($vid, $autotag_vids)){
+    if(in_array($vid, $autotag_vids) && !in_array($type, variable_get('autotag_totally_borked', array())) && !in_array($type, variable_get('autotag_broken_node_types', array()))){
       return 'AUTOTAG';
     }
   }
