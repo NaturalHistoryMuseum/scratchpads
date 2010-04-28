@@ -50,6 +50,14 @@ function tui_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
+    'tui/nextorprevious/%/%/%' => array(
+      'title' => 'Move term',
+      'page callback' => 'tui_nextorprevious_tid',
+      'page arguments' => array(2,3,4),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
+    ),
     'tui/gettree' => array(
       'title' => 'Get tree',
       'page callback' => 'tui_get_tree_themed',
@@ -116,6 +124,14 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     $form['advanced']['parent']['#type'] = 'hidden';
     $form['advanced']['relations']['#type'] = 'hidden';
     $form['advanced']['synonymns']['#type'] = 'hidden';
+    // We need to set the parent if we're adding a new term (and the parent is
+    // set).
+    if(substr(arg(2), 0, 3) == 'new'){
+      $tid_parts = explode('-', arg(2));
+      if(isset($tid_parts[3]) && $tid_parts[3]!='' && $tid_parts[3] != 'undefined'){
+        $form['advanced']['parent']['#default_value'][] = $tid_parts[3];
+      }
+    }
   }
 }
 

@@ -24,14 +24,16 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   drupal_add_js(drupal_get_path('module', 'tui').'/lib/bt/jquery.bt.js');
   drupal_add_js(array(
       'tui' => array(
-        'opentids' => $all_tids, 
+        'opentids' => $all_tids,
+        'vocabulary' => arg(5),
         'callbacks' => array(
           'form' => url('tui/getform', array('absolute' => TRUE)),
           'full_tree' => url('tui/gettree', array('absolute' => TRUE)),
           'tree' => url('tui/getchildren', array('absolute' => TRUE)),
           'move' => url('tui/moveterm', array('absolute' => TRUE)),
           'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE)),
-          'delete' => url('tui/deleteterm', array('absolute' => TRUE))
+          'delete' => url('tui/deleteterm', array('absolute' => TRUE)),
+          'nextorprevious' => url('tui/nextorprevious', array('absolute' => TRUE))
         ),
         'dialog' => array(
           'delete' => array(
@@ -56,8 +58,10 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
     <div id="tui-tree-container">
       <div id="tui-tree-links">
         <p>
+          <img id="tui-previous" src="'.base_path().drupal_get_path('module','tui').'/images/previous.png" alt="'.t('Previous').'" title="'.t('Previous').'"/>
           <img id="tui-add" src="'.base_path().drupal_get_path('module','tui').'/images/add.png" alt="'.t('Add term').'" title="'.t('Add term').'"/>
           <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
+          <img id="tui-next" src="'.base_path().drupal_get_path('module','tui').'/images/next.png" alt="'.t('Next').'" title="'.t('Next').'"/>
         </p>       
       </div>
       <div id="tui-tree-subcontainer">
@@ -83,10 +87,15 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
  * Return the form to ajax
  */
 function tui_get_term_form($tid){
-  $tid = substr($tid, 4);
+  $tid_parts = explode('-', $tid);
+  if($tid_parts[0] == 'new'){
+    $vocabulary = taxonomy_vocabulary_load($tid_parts[1]);
+    $term = array();
+  } else {
+    $term = (array)taxonomy_get_term($tid_parts[1]);
+    $vocabulary = taxonomy_vocabulary_load($term['vid']);
+  }
   module_load_include('admin.inc', 'taxonomy');
-  $term = (array)taxonomy_get_term($tid);
-  $vocabulary = taxonomy_vocabulary_load($term['vid']);
   echo drupal_get_form('taxonomy_form_term', $vocabulary, $term);
 }
 

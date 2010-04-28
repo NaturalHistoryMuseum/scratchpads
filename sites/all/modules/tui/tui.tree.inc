@@ -11,12 +11,12 @@ function theme_tui_tree($taxonomy_tree){
   foreach($taxonomy_tree as $tid => $branch){
     $term = taxonomy_get_term($tid);
     $term_has_children = FALSE;
-    if(!is_array($branch)){
+    if(!is_array($branch) || !count($branch)){
       // Does this term have children
       $term_has_children = db_result(db_query('SELECT COUNT(*) FROM {term_hierarchy} WHERE parent = %d', $term->tid));
     }
     $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><span class="tui-nodeleaf ';
-    if(is_array($branch)){
+    if(is_array($branch) && count($branch)){
       $output .= 'tui-node-open';
     }
     else if($term_has_children){
@@ -31,6 +31,100 @@ function theme_tui_tree($taxonomy_tree){
     $output .= '</li>';
   }
   return $output . '</ul>';
+}
+
+/**
+ * Return the tid of the next or previous term to the one highlighted
+ */
+function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
+  if(strpos($tid, '-')){
+    // We have a tid, we need to get the results relative to this one - easiest
+    // way is to move back up the tree.
+    // Next will move down into a tree, whilst previous will move
+    $tid = array_pop(explode('-', $tid));
+    if($nextorprevious == 'tui-next'){
+      // NEXT
+      $children = taxonomy_get_children($tid, $vid);
+      if(count($children)){
+        $next_child = array_shift($children);
+        echo $next_child->tid;
+      } else {
+        // We have no children, we need the following siblings.
+        $ancestors = taxonomy_get_parents_all($tid);
+        foreach($ancestors as $ancestor){
+          $next_tid = _tui_get_next_sibling($vid, $ancestor->tid);
+          if($next_tid){
+            echo $next_tid;
+            exit;
+          }
+        }
+        echo $tid;
+      }
+    } else {
+      // PREVIOUS
+      // Get the parent of the current term, then get all children, and return
+      // the previous term.  If we're already at the root, and previous is
+      // pressed, then return the last child of the previous term
+      $parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $tid));
+      $siblings = taxonomy_get_children($parent, $vid);
+      $previous_found = FALSE;
+      while($siblings){
+        $sibling = array_pop($siblings);
+        if($sibling->tid == $tid && count($siblings)){
+          $previous_term = array_pop($siblings);
+          echo _tui_get_last_child($vid, $previous_term->tid);
+          exit;
+        }
+      }
+      // No previous siblings - lets return the parent if we're not at the root.
+      // If we are at the root, and there are no previous siblings, then this 
+      // must be the first term, so there isn't a previous one!
+      if($parent){
+        echo $parent;
+      } else {
+        echo $tid;
+      }
+    }
+  } else {
+    // We need either the first, or the last term - taxonomy_get_tree would be 
+    // the lazy man's choice here!
+    if($nextorprevious == 'tui-next'){
+      // NEXT - get the first
+      $first_child = array_shift(taxonomy_get_children(0, $vid));
+      echo $first_child->tid;
+    } else {
+      $tid = 0;
+      echo _tui_get_last_child($vid, $tid);
+    }
+  }
+}
+
+function _tui_get_next_sibling($vid, $tid){
+  $parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $tid));
+  $siblings = taxonomy_get_children($parent, $vid);
+  $next_found = FALSE;
+  while($siblings){
+    $sibling = array_shift($siblings);
+    if($sibling->tid == $tid && count($siblings)){
+      $next_term = array_shift($siblings);
+      return $next_term->tid;
+    }
+  }
+}
+
+function _tui_get_last_child($vid, $tid){
+  // PREVIOUS - get the last (trickier)
+  $has_children = TRUE;
+  while($has_children){
+    $children = taxonomy_get_children($tid, $vid);
+    if(count($children)){
+      $last_child = array_pop($children);
+      $tid = $last_child->tid;
+    } else {
+      $has_children = FALSE;
+    }
+  }
+  return $tid;  
 }
 
 /**
@@ -131,7 +225,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
             if($row['tid'] == $previous_tid){
               $branch[$row['tid']] = $previous_branch;
             } else {
-              $branch[$row['tid']] = false;
+              $branch[$row['tid']] = array();
             }
           }
           $previous_tid = $term->tid;

@@ -2,10 +2,8 @@ Drupal.tui = new Object;
 
 Drupal.tui.init = function(context) {
   $('.tui-term', context).click(function (){
-    $('.tui-term').removeClass('active');
-    $(this).addClass('active');
-    $(this).addClass('loading');
-    Drupal.tui.display_form($(this).attr('id'));
+    $('.tui-added-original').removeClass('tui-added-original');
+    Drupal.tui.display_form(this);
   });
   $("#tabs > ul", context).tabs();
   $("#tabs > ul > li, #tui-tree-links img", context).bt({
@@ -37,33 +35,60 @@ Drupal.tui.init = function(context) {
     Drupal.tui.resize_frame();
   });
   $('#tui-tree-links img', context).mouseup(function(){
-    Drupal.tui.click_addordelete($(this).attr('id'));
+    Drupal.tui.click_buttonclick($(this).attr('id'));
   });
   Drupal.tui.resize_frame();
 }
 
-Drupal.tui.click_addordelete = function(img_clicked){
-  if(img_clicked == 'tui-add'){
-    
-  } else if(img_clicked == 'tui-delete'){
-    if($('.tui-term.active').attr('id')){
-      $('#tui-tree-links').append('<div id="dialog" title=""></div>');
-      $('#dialog').attr('title', Drupal.settings.tui.dialog.delete.title);
-      $('#dialog').html(Drupal.settings.tui.dialog.delete.content);
-      $('#tui-dialog-term-name').html($('.tui-term.active').html());
-      $('#dialog').dialog({
-        modal:true,
-        buttons:{
-          "Cancel":function(){$(this).dialog("close");},
-          "OK":function(){
-            Drupal.tui.do_delete($('.tui-term.active').attr('id'));
-            $(this).dialog("close");
+Drupal.tui.click_buttonclick = function(img_clicked){
+  switch(img_clicked){
+    case 'tui-add':
+      $('#'+Drupal.tui.term_id).addClass('tui-added-original');
+      Drupal.tui.term_id = 'new-'+Drupal.settings.tui.vocabulary+"-"+Drupal.tui.term_id;
+      Drupal.tui.display_form(false);
+      break;
+    case 'tui-delete':
+      if(Drupal.tui.term_id){
+        $('#tui-tree-links').append('<div id="dialog" title=""></div>');
+        $('#dialog').attr('title', Drupal.settings.tui.dialog.delete.title);
+        $('#dialog').html(Drupal.settings.tui.dialog.delete.content);
+        $('#tui-dialog-term-name').html($('.tui-term.active').html());
+        $('#dialog').dialog({
+          modal:true,
+          buttons:{
+            "Cancel":function(){$(this).dialog("close");},
+            "OK":function(){
+              Drupal.tui.do_delete(Drupal.tui.term_id);
+              $(this).dialog("close");
+            }
+          },
+          width:'300px',
+          height:'200px'
+        });
+      }
+      break;
+    case 'tui-next':
+    case 'tui-previous':
+      // Do the processing server side - much easier.
+      var ajax_options = {
+        cache:false,
+        url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,
+        success:function(data){
+          Drupal.tui.term_id = "tid-"+data;
+          // Check to see the tid is visible, if not, add it and reload the
+          // tree.  Then we select the tid and display the form
+          if(!Drupal.settings.tui.opentids[data]){
+            Drupal.settings.tui.opentids[data] = data;
+            Drupal.tui.update_link();
+            Drupal.tui.reload_tree();
+            Drupal.tui.show_form_after_tree_rebuild = true;
+          } else {
+            Drupal.tui.display_form($('#' + Drupal.tui.term_id));
           }
-        },
-        width:'300px',
-        height:'200px'
-      });
-    }
+        }
+      };
+      $.ajax(ajax_options);
+      break;
   }
 }
 
@@ -98,6 +123,7 @@ Drupal.tui.update_link = function(){
 
 Drupal.tui.drag_start = function(event, ui){
   $('.tui-term.active').removeClass('active');
+  delete Drupal.tui.term_id;
   $(event.currentTarget).addClass("tui-added-original");
   $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable({
     tolerance:'pointer',
@@ -199,6 +225,10 @@ Drupal.tui.full_tree_success = function(data){
   jQuery.each(Drupal.behaviors, function() {
     this('#tui-tree-subcontainer');
   });
+  if(Drupal.tui.show_form_after_tree_rebuild){
+    Drupal.tui.show_form_after_tree_rebuild = false;
+    Drupal.tui.display_form($('#'+Drupal.tui.term_id));
+  }
 }
 
 Drupal.tui.form_success = function(data){
@@ -209,9 +239,14 @@ Drupal.tui.form_success = function(data){
   $('.loading').removeClass('loading');
 }
 
-Drupal.tui.display_form = function(term_id){
-  if(term_id){
-    Drupal.tui.term_id = term_id;
+Drupal.tui.display_form = function(element){
+  $('.tui-term').removeClass('active');
+  if(element){
+    $(element).addClass('active');
+    $(element).addClass('loading');
+    if($(element).attr('id')){
+      Drupal.tui.term_id = $(element).attr('id');
+    }
   }
   var ajax_options = {
     cache:false,
@@ -224,15 +259,7 @@ Drupal.tui.display_form = function(term_id){
 }
 
 Drupal.tui.reload_tree = function(){
-  var ajax_options = {
-    type:'POST',
-    cache:false,
-    url:Drupal.settings.tui.callbacks.full_tree,
-    success:function(data){
-      Drupal.tui.full_tree_success(data);
-    },
-    data: Drupal.settings.tui.opentids
-  };
+  var ajax_options = {type:'POST',cache:false,url:Drupal.settings.tui.callbacks.full_tree,success:function(data){Drupal.tui.full_tree_success(data);},data:Drupal.settings.tui.opentids};
   $.ajax(ajax_options);
 }
 
