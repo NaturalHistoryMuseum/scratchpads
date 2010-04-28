@@ -10,6 +10,9 @@ function theme_tui_tree($taxonomy_tree){
   $output = '<ul>';
   foreach($taxonomy_tree as $tid => $branch){
     $term = taxonomy_get_term($tid);
+    $terms = array($term->tid => $term);
+    module_invoke_all('taxonomy_term_load', $terms);
+    $term = array_pop($terms);
     $term_has_children = FALSE;
     if(!is_array($branch) || !count($branch)){
       // Does this term have children
@@ -24,7 +27,11 @@ function theme_tui_tree($taxonomy_tree){
     } else {
       $output .= 'tui-leaf';
     }
-    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span>';
+    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term';
+    if(isset($term->usage) && ($term->usage == 'invalid' || $term->usage == 'not accepted')){
+      $output .= ' usage-invalid';
+    }
+    $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span>';
     if(is_array($branch)){
       $output .= theme_tui_tree($branch);
     }
