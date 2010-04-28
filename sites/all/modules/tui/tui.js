@@ -126,25 +126,22 @@ Drupal.tui.drop_deactivate = function(event, ui){
   }
 }
 
-Drupal.tui.drop_over_helper = function(element, draggy){
-  Drupal.tui.parent_or_sibling_id = $(element).parent().attr('id');
-  Drupal.tui.this_id = $(draggy).attr('id');
-  Drupal.tui.parentorsibling = 'child';
-  if($(element).attr('id') == ''){
-    Drupal.tui.parentorsibling = 'sibling';
-  }
-  $('.tui-added').remove();
-  $('.tui-added-original').hide();
-  if($(element).hasClass('tui-term')){
-    $(element).append('<ul class="tui-added"><li>'+$(draggy).html()+'</li></ul>');    
-  } else {
-    $(element).parent().after('<li class="tui-added">'+$(draggy).html()+'</li>');    
-  }  
-}
 
 Drupal.tui.drop_over = function(event, ui){
-  Drupal.tui.drop_over_helper(ui.element, ui.draggable);
+  Drupal.tui.parent_or_sibling_id = $(ui.element).parent().attr('id');
+  Drupal.tui.this_id = $(ui.draggable).attr('id');
+  Drupal.tui.parentorsibling = 'child';
+  if($(ui.element).attr('id') == ''){
+    Drupal.tui.parentorsibling = 'sibling';
+  }  
+  $('.tui-added').remove();
+  if($(ui.element).hasClass('tui-term')){
+    $(ui.element).append('<ul class="tui-added"><li>'+$(ui.draggable).html()+'</li></ul>');    
+  } else {
+    $(ui.element).parent().after('<li class="tui-added">'+$(ui.draggable).html()+'</li>');    
+  }
 }
+
 
 Drupal.tui.click_closed = function(vid_and_tid){  
   $('#'+vid_and_tid+' > span.tui-nodeleaf').removeClass('tui-node-closed');
