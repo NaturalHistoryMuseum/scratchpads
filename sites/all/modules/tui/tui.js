@@ -39,13 +39,12 @@ Drupal.tui.do_delete = function(term_id){
 }
 
 Drupal.tui.resize_frame = function(calling_method){
-  console.log($(window).height());
   if($('#tui-tree-subcontainer').height() > ($(window).height()-50)){
-    $('#tui-tree-container').css('height', ($(window).height()-50)+'px');
-    $('#tui-tree-container').css('overflow-y', 'scroll');
+    $('#tui-tree-subcontainer').css('height', ($(window).height()-50)+'px');
+    $('#tui-tree-subcontainer').css('overflow-y', 'scroll');
   } else {
-    $('#tui-tree-container').css('height', 'auto');
-    $('#tui-tree-container').css('overflow-y', 'visible');
+    $('#tui-tree-subcontainer').css('height', 'auto');
+    $('#tui-tree-subcontainer').css('overflow-y', 'visible');
   }
 }
 
