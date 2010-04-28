@@ -1,4 +1,5 @@
 #tui{
+ position:relative;
  font-size:90%;
  line-height:150%;
 }
@@ -8,20 +9,20 @@
  margin:5px;
  text-align:justify;
 }
-#tui-clear{
- clear:both;
- margin:0 10px 0 5px;
- padding:60px 10px;
+#tui-top-links{
+ position:absolute;
+ top:-30px;
+ right:10px;
 }
-#tui-clear-container{
- padding:10px;
- border:solid 1px #eee;
-}
-
 
 /* TREE */
+#tui-tree-resize{
+ position:absolute;
+ top:0;
+ right:0;
+}
 #tui-tree{ 
- width:39%;
+ width:40%;
 }
 #tui-tree{  
  float:left;
@@ -119,7 +120,7 @@
  font-size:90%;
 }
 #tui-form{
- width:59%;
+ width:60%;
 }
 #tui-form{
  float:right;

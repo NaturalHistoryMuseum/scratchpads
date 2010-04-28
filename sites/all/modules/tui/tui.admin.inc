@@ -46,7 +46,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   
   // Add the JS required.
   variable_set('jquery_update_compression_type','none');
-  jquery_ui_add(array('ui.tabs', 'ui.draggable', 'ui.dialog', 'ui.droppable'));
+  jquery_ui_add(array('ui.tabs', 'ui.draggable', 'ui.dialog', 'ui.droppable', 'ui.resizable'));
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
   
   // We add the form, so that all the extras (collapse.js etc) are added.  We 
@@ -56,6 +56,9 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   drupal_set_title(t('Editing %vocabulary', array('%vocabulary' => $vocabulary->name)));
 
   return '<div id="tui">
+  <div id="tui-top-links">
+    <p>'.l('Link to this page.','admin/content/taxonomy/edit/tui/'.arg(5).'/'.arg(6), array('attributes' => array('id' => 'tui-link-back'))).'</p>
+  </div>
   <div id="tui-tree">
     <div id="tui-tree-container">
       <div id="tui-tree-links">
@@ -75,11 +78,6 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
     <div id="tui-form-container">
       <div id="tui-form-noform">'.tui_help('admin/content/taxonomy/edit/tui', array()).'</div>
       <div class="hidden">'.drupal_get_form('taxonomy_form_term', $vocabulary, array()).'</div>
-    </div>
-  </div>
-  <div id="tui-clear">
-    <div id="tui-clear-container">
-      <p>'.l('Link to this page.','admin/content/taxonomy/edit/tui/'.arg(5).'/'.arg(6), array('attributes' => array('id' => 'tui-link-back'))).'</p>
     </div>
   </div>
 </div>';

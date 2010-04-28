@@ -9,6 +9,7 @@ Drupal.tui.init = function(context) {
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
   $(window).resize(function(){Drupal.tui.resize_frame("window_resize");});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
+  $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());}});
   Drupal.tui.resize_frame("init");
 }
 
