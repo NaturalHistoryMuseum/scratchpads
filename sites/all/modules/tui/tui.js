@@ -16,7 +16,8 @@ Drupal.tui.init = function(context) {
 Drupal.tui.search_return_press = function(event){
   var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
   if (keyCode == 13) {
-    return false;
+    $('#edit-tui-search-input').val($('#autocomplete .selected div').html());
+    return Drupal.tui.search_submit();
   }  
   else{
     return true;
@@ -32,7 +33,7 @@ Drupal.tui.search_submit_success = function(data){
   $.each(data, function(index, value){
     Drupal.settings.tui.opentids[value] = value;
   });
-  $('#tui-search-form-container').fadeOut();
+  Drupal.tui.click_buttonclick('tui-search');
   Drupal.tui.searchtids = data;
   Drupal.tui.reload_tree();
 }
@@ -42,10 +43,12 @@ Drupal.tui.click_buttonclick = function(img_clicked){
     case 'tui-search':
       if(Drupal.tui.search_is_displayed){
         Drupal.tui.search_is_displayed = false;
-        $('#tui-search-form-container').fadeOut();
+        $('#tui-search-form-container').fadeOut(1000);
       } else {
         Drupal.tui.search_is_displayed = true;
+        $('.bt-wrapper').hide();
         $('#tui-search-form-container').fadeIn();
+        $('#edit-tui-search-input').focus();
       }
       break;
     case 'tui-add':
