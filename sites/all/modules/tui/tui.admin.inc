@@ -33,7 +33,8 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           'move' => url('tui/moveterm', array('absolute' => TRUE)),
           'page' => url('admin/content/taxonomy/edit/tui/'.arg(5), array('absolute' => TRUE)),
           'dlete' => url('tui/deleteterm', array('absolute' => TRUE)),
-          'nextorprevious' => url('tui/nextorprevious', array('absolute' => TRUE))
+          'nextorprevious' => url('tui/nextorprevious', array('absolute' => TRUE)),
+          'search' => url('tui/search', array('absolute' => TRUE))
         ),
         'dialog' => array(
           'dlete' => array(
@@ -46,7 +47,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   
   // Add the JS required.
   variable_set('jquery_update_compression_type','none');
-  jquery_ui_add(array('ui.tabs', 'ui.draggable', 'ui.dialog', 'ui.droppable', 'ui.resizable'));
+  jquery_ui_add(array('ui.tabs', 'ui.draggable', 'ui.dialog', 'ui.droppable', 'ui.resizable', 'effects.highlight'));
   drupal_add_css(drupal_get_path('module', 'jquery_ui') . '/jquery.ui/themes/smoothness/ui.all.css');
   
   // We add the form, so that all the extras (collapse.js etc) are added.  We 
@@ -66,8 +67,12 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           <img id="tui-previous" src="'.base_path().drupal_get_path('module','tui').'/images/previous.png" alt="'.t('Previous').'" title="'.t('Previous').'"/>
           <img id="tui-add" src="'.base_path().drupal_get_path('module','tui').'/images/add.png" alt="'.t('Add term').'" title="'.t('Add term').'"/>
           <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
+          <img id="tui-search" src="'.base_path().drupal_get_path('module','tui').'/images/search.png" alt="'.t('Search').'" title="'.t('Search').'"/>
           <img id="tui-next" src="'.base_path().drupal_get_path('module','tui').'/images/next.png" alt="'.t('Next').'" title="'.t('Next').'"/>
-        </p>       
+        </p>
+        <div id="tui-search-form-container">
+          '.drupal_get_form('tui_search_form', arg(5)).'
+        </div>
       </div>
       <div id="tui-tree-subcontainer">
         '.theme('tui_tree', $taxonomy_tree).'
@@ -82,6 +87,67 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   </div>
 </div>';
 }
+
+/**
+ * TUI autocomplete search form
+ */
+function tui_search_form(&$form_statge, $vid){
+  return array(
+    'tui-search-input' => array(
+      '#autocomplete_path' => 'tui/autocomplete/'.$vid,
+      '#size' => FALSE,
+      '#type' => 'textfield',
+      '#title' => '',
+      '#attributes' => array(
+        'onkeypress' => 'return Drupal.tui.search_return_press(event)'
+      )
+    ),
+    'tui-search-input-button' => array(
+      '#type' => 'button',
+      '#value' => '',
+      '#attributes' => array(
+        'onclick' => 'return Drupal.tui.search_submit()'
+      )
+    )
+  );
+}
+
+/**
+ * Autocomplete for above form
+ */
+function tui_autocomplete($vid, $search){
+  $matches = array();
+  if ($search != '') {
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $search, 0, 10);
+    $prefix = count($array) ? implode(', ', $array) .', ' : '';
+    while ($tag = db_fetch_object($result)) {
+      $n = $tag->name;
+      // Commas and quotes in terms are special cases, so encode 'em.
+      if (strpos($tag->name, ',') !== FALSE || strpos($tag->name, '"') !== FALSE) {
+        $n = '"'. str_replace('"', '""', $tag->name) .'"';
+      }
+      $matches[$prefix . $n] = check_plain($tag->name);
+    }
+  }
+  drupal_json($matches);
+}
+
+/**
+ * TUI Search
+ */
+function tui_search($vid, $search){
+  // Very similar to the above autocomplete function, but this time we're 
+  // returning an array of tids, to allow the tree to be expanded!
+  $matches = array();
+  if ($search != '') {
+    $result = db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) = LOWER('%s')", 't', 'tid'), $vid, $search);
+    while($row = db_fetch_array($result)){
+      $matches[] = $row['tid'];
+    }
+  }
+  drupal_json($matches);
+}
+
 
 /**
  * Return the form to ajax

@@ -65,6 +65,22 @@ function tui_menu(){
       'access arguments' => array('administer taxonomy'),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
+    ),
+    'tui/autocomplete/%' => array(
+      'title' => 'Search autocomplete',
+      'page callback' => 'tui_autocomplete',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.admin.inc'    
+    ),
+    'tui/search/%' => array(
+      'title' => 'Search',
+      'page callback' => 'tui_search',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.admin.inc'    
     )
   );
 }

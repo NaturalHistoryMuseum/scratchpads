@@ -102,6 +102,35 @@
 }
 
 
+/* SEARCH */
+#tui-search-form-container{
+ border:solid 1px #999;
+ padding:3px;
+ margin:0;
+ background-color:white;
+ color:black;
+ display:none;
+}
+#edit-tui-search-input-wrapper{
+ display:inline;
+}
+#edit-tui-search-input-button{
+ border:none;
+ background-repeat:no-repeat;
+ backgrond-position:50% 50%;
+ background-image:url('images/search.png');
+ width:20px !important;
+} 
+#tui-search-form, #tui-search-form .form-item, #tui-search-form .form-submit{
+ padding:0 !important;
+ margin:0 !important;
+}
+#tui-search-form-container #autocomplete{
+ background-color:white;
+ color:black;
+}
+
+
 /* DIALOG */
 #dialog p{
  font-size:150%;
@@ -158,7 +187,7 @@
  padding: 0.5em !important;
  font-size: 80% !important;
 }
-.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform{
+.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform, #tui-search-form-container{
  -moz-box-shadow: 2px 2px 2px #999;
  -webkit-box-shadow: 2px 2px 2px #999;
  box-shadow: 2px 2px 2px #999;

@@ -9,12 +9,45 @@ Drupal.tui.init = function(context) {
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
   $(window).resize(function(){Drupal.tui.resize_frame("window_resize");});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
-  $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());}});
+  $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());},minWidth:250});
   Drupal.tui.resize_frame("init");
+}
+
+Drupal.tui.search_return_press = function(event){
+  var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+  if (keyCode == 13) {
+    return false;
+  }  
+  else{
+    return true;
+  }
+}
+
+Drupal.tui.search_submit = function(){
+  $.getJSON(Drupal.settings.tui.callbacks.search+"/"+Drupal.settings.tui.vocabulary+"/"+escape($('#edit-tui-search-input').val()),undefined, function(data){Drupal.tui.search_submit_success(data);});
+  return false;
+}
+
+Drupal.tui.search_submit_success = function(data){
+  $.each(data, function(index, value){
+    Drupal.settings.tui.opentids[value] = value;
+  });
+  $('#tui-search-form-container').fadeOut();
+  Drupal.tui.searchtids = data;
+  Drupal.tui.reload_tree();
 }
 
 Drupal.tui.click_buttonclick = function(img_clicked){
   switch(img_clicked){
+    case 'tui-search':
+      if(Drupal.tui.search_is_displayed){
+        Drupal.tui.search_is_displayed = false;
+        $('#tui-search-form-container').fadeOut();
+      } else {
+        Drupal.tui.search_is_displayed = true;
+        $('#tui-search-form-container').fadeIn();
+      }
+      break;
     case 'tui-add':
       $('#'+Drupal.tui.term_id).addClass('tui-added-original');
       Drupal.tui.term_id = 'new-'+Drupal.settings.tui.vocabulary+'-'+Drupal.tui.term_id;
@@ -129,7 +162,6 @@ Drupal.tui.tree_success = function(html_object, data){
 }
 
 Drupal.tui.full_tree_success = function(data){
-  //alert(data);
   Drupal.tui.waiting_for_reply = false;
   $('#tui-tree-subcontainer').html(data);
   jQuery.each(Drupal.behaviors, function() {
@@ -138,6 +170,12 @@ Drupal.tui.full_tree_success = function(data){
   if(Drupal.tui.show_form_after_tree_rebuild){
     Drupal.tui.show_form_after_tree_rebuild = false;
     Drupal.tui.display_form($('#'+Drupal.tui.term_id));
+  }
+  if(Drupal.tui.searchtids){
+    $.each(Drupal.tui.searchtids, function(index, value){
+      $('#tid-'+value).effect("highlight", {}, 5000);
+    });
+    Drupal.tui.searchtids = false;
   }
 }
 
