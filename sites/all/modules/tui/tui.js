@@ -179,6 +179,7 @@ Drupal.tui.full_tree_success = function(data){
     $('html,body').animate({scrollTop:position.top-30}, 1000);
     position = $('#tid-'+Drupal.tui.searchtids[0]).position();
     $('#tui-tree-subcontainer').animate({scrollTop:position.top}, 1000);
+    //Drupal.tui.display_form($('#tid-'+Drupal.tui.searchtids[0]));
     $.each(Drupal.tui.searchtids, function(index, value){
       $('#tid-'+value).effect("highlight", {}, 8000);
     });    
