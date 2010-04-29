@@ -85,6 +85,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
       <div class="hidden">'.drupal_get_form('taxonomy_form_term', $vocabulary, array()).'</div>
     </div>
   </div>
+  <div style="clear:both"/></div>
 </div>';
 }
 
