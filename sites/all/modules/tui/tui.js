@@ -61,42 +61,15 @@ Drupal.tui.drag_start = function(event, ui){
   $('.tui-term.active').removeClass('active');
   delete Drupal.tui.term_id;
   $(event.currentTarget).addClass("tui-added-original");
-  $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable({
-    tolerance:'pointer',
-    greedy:true,
-    over:function(event, ui){
-      Drupal.tui.drop_over(event, ui);
-    },
-    deactivate:function(event, ui){
-      Drupal.tui.drop_deactivate(event, ui);
-    }
-  });
-  $('#tui-tree-subcontainer .tui-term').parent().droppable({
-    greedy:false,
-    tolerance:'pointer',
-    over:function(event, ui){
-      Drupal.tui.drop_over_li(event, ui);
-    },
-    deactivate:function(event, ui){
-      Drupal.tui.drop_deactivate(event, ui);
-    }
-  });
+  $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable({tolerance:'pointer',greedy:true,over:function(event, ui){Drupal.tui.drop_over(event, ui);},deactivate:function(event, ui){Drupal.tui.drop_deactivate(event, ui);}});
 }
 
 Drupal.tui.drop_deactivate = function(event, ui){
   if(!Drupal.tui.waiting_for_reply){
-    $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable('destroy');
-    $('#tui-tree-subcontainer .tui-term').parent().droppable('destroy');
+    $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
     $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
   }
-}
-
-Drupal.tui.drop_over_li = function(event, ui){
-  Drupal.tui.parentorsibling = 'child';
-  Drupal.tui.parent_or_sibling_id = $(ui.element).attr('id');
-  $('.tui-added').remove();
-  $(ui.element).children('.tui-term').after('<ul class="tui-added"><li>'+$(ui.draggable).html()+'</li></ul>');  
 }
 
 Drupal.tui.drop_over = function(event, ui){
