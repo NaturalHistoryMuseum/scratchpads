@@ -175,9 +175,13 @@ Drupal.tui.full_tree_success = function(data){
     Drupal.tui.display_form($('#'+Drupal.tui.term_id));
   }
   if(Drupal.tui.searchtids){
+    position = $('#tui').offset();
+    $('html,body').animate({scrollTop:position.top-30}, 1000);
+    position = $('#tid-'+Drupal.tui.searchtids[0]).position();
+    $('#tui-tree-subcontainer').animate({scrollTop:position.top}, 1000);
     $.each(Drupal.tui.searchtids, function(index, value){
-      $('#tid-'+value).effect("highlight", {}, 5000);
-    });
+      $('#tid-'+value).effect("highlight", {}, 8000);
+    });    
     Drupal.tui.searchtids = false;
   }
 }
