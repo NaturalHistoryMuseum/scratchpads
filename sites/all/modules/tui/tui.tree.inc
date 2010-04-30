@@ -18,7 +18,7 @@ function theme_tui_tree($taxonomy_tree){
       // Does this term have children
       $term_has_children = db_result(db_query('SELECT COUNT(*) FROM {term_hierarchy} WHERE parent = %d', $term->tid));
     }
-    $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><span class="tui-nodeleaf ';
+    $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><p><span class="tui-nodeleaf ';
     if(is_array($branch) && count($branch)){
       $output .= 'tui-node-open';
     }
@@ -31,7 +31,7 @@ function theme_tui_tree($taxonomy_tree){
     if(isset($term->usage) && ($term->usage == 'invalid' || $term->usage == 'not accepted')){
       $output .= ' usage-invalid';
     }
-    $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span>';
+    $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span></p>';
     if(is_array($branch)){
       $output .= theme_tui_tree($branch);
     }
