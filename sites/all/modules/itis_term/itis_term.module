@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * hook_info
+ */
+function itis_term_node_info(){
+  return array(
+    'itis_term' => array(
+      'name' => 'ITIS Name',
+      'module' => 'itis_term',
+      'description' => 'Content type designed for extending the terms of a biological taxonomy.',
+      'has_title' => TRUE,
+      'title_label' => 'Taxon',
+      'has_body' => FALSE,
+      'locked' => TRUE
+    )
+  );
+}
+
+/**
+ * hook_access
+ * 
+ * This will rely on the taxonomy module's access control!
+ */
+function itis_term_access($op, $node, $account){
+  return user_access('administer taxonomy');
+}
+
+/**
+ * hook_form
+ */
+function itis_term_form(&$node, $form_state){
+  $type = node_get_types('type', $node);
+  $form['title'] = array(
+    '#type'=> 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+  );
+  return $form;
+}

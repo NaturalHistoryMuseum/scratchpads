@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * Install file.
+ * 
+ * Simply creates the content type, and adds the fields.
+ */
+function itis_term_install(){
+  $groups = array(
+    array(
+      'label' => 'Something',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_something'
+    )
+  );
+  foreach($groups as $group){
+    $group['settings'] = field_group_default_settings($group['group_type']);
+    fieldgroup_save_group('itis_term', $group);
+  }
+  /*
+  module_load_include('inc', 'content', 'includes/content.crud');
+  foreach($fields as $field){
+    // Add the field
+    content_field_instance_create($field);
+  }
+*/
+}
