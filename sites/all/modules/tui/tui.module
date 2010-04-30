@@ -145,7 +145,12 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     if(substr(arg(2), 0, 3) == 'new'){
       $tid_parts = explode('-', arg(2));
       if(isset($tid_parts[3]) && $tid_parts[3]!='' && $tid_parts[3] != 'undefined'){
-        $form['advanced']['parent']['#default_value'][] = $tid_parts[3];
+        $form['advanced']['parent']['#default_value'] = $tid_parts[3];
+        $parent = taxonomy_get_term($tid_parts[3]);
+        $form['identification']['parent_message'] = array(
+          '#weight' => -1000,
+          '#value' => '<div class="tui-parent-message messages"><p>'.t('This term will be added as a child of %term', array('%term' => $parent->name)).'</p></div>' 
+        );
       }
     }
   }
