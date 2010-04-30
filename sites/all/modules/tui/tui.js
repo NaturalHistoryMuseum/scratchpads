@@ -4,8 +4,8 @@ Drupal.tui.init = function(context) {
   $('.tui-term', context).click(function (){$('.tui-added-original').removeClass('tui-added-original');Drupal.tui.display_form(this);});
   $('#tabs > ul', context).tabs();
   $('#tabs > ul > li, #tui-tree-links img', context).bt({positions: 'top',fill: 'rgba(0, 0, 0, .7)',cssStyles: {color: 'white', 'font-size': '14px', width: 'auto'},closeWhenOthersOpen: true,spikeLength: 10,strokeWidth: 0});
-  $('.tui-node-closed', context).mouseup(function(){Drupal.tui.click_closed($(this).parent().attr('id'));});
-  $('.tui-node-open', context).mouseup(function(){Drupal.tui.click_open($(this).parent().attr('id'));});
+  $('.tui-node-closed', context).mouseup(function(){Drupal.tui.click_closed($(this).parent().parent().attr('id'));});
+  $('.tui-node-open', context).mouseup(function(){Drupal.tui.click_open($(this).parent().parent().attr('id'));});
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> p > .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
   $(window).resize(function(){Drupal.tui.resize_frame("window_resize");});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
@@ -77,19 +77,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       break;
     case 'tui-next':
     case 'tui-previous': 
-      $.ajax({
-        cache:false,
-        url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,
-        success:function(data){
-          Drupal.tui.term_id = "tid-"+data;
-          if(!Drupal.settings.tui.opentids[data]){
-            Drupal.settings.tui.opentids[data] = data;
-            Drupal.tui.update_link();
-            Drupal.tui.show_form_after_tree_rebuild = true;
-            Drupal.tui.reload_tree();
-          }else{
-            Drupal.tui.display_form($('#' + Drupal.tui.term_id));
-            Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
+      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!Drupal.settings.tui.opentids[data]){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.show_form_after_tree_rebuild = true;Drupal.tui.reload_tree();}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
   }
 }
 
@@ -124,8 +112,10 @@ Drupal.tui.drag_start = function(event, ui){
 
 Drupal.tui.drop_deactivate = function(event, ui){
   if(!Drupal.tui.waiting_for_reply){
-    $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer .tui-term').droppable("destroy");
+    $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer p').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
+    tid_to_add = $('#'+Drupal.tui.this_id+' .tui-term').attr('id').substring(4);
+    Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
     $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
   }
 }
@@ -148,9 +138,9 @@ Drupal.tui.drop_over = function(event, ui){
 }
 
 Drupal.tui.click_closed = function(vid_and_tid){  
-  $('#'+vid_and_tid+' > span.tui-nodeleaf').removeClass('tui-node-closed');
-  $('#'+vid_and_tid+' > span.tui-nodeleaf').addClass('tui-node-open');
-  $('#'+vid_and_tid+' > span.tui-nodeleaf').unbind('mouseup');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').removeClass('tui-node-closed');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').addClass('tui-node-open');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').unbind('mouseup');
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.tree+"/"+vid_and_tid,success:function(data){Drupal.tui.tree_success($('#'+vid_and_tid), data);}});
 }
 
@@ -171,8 +161,8 @@ Drupal.tui.add_tid = function(vid_and_tid){
 }
 
 Drupal.tui.click_open = function(vid_and_tid){
-  $('#'+vid_and_tid+' > span.tui-nodeleaf').removeClass('tui-node-open');
-  $('#'+vid_and_tid+' > span.tui-nodeleaf').addClass('tui-node-closed');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').removeClass('tui-node-open');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').addClass('tui-node-closed');
   Drupal.tui.remove_tid(vid_and_tid);
   $('#'+vid_and_tid).children('ul').remove();
   jQuery.each(Drupal.behaviors, function() {
