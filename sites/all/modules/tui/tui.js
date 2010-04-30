@@ -16,8 +16,13 @@ Drupal.tui.init = function(context) {
 Drupal.tui.search_return_press = function(event){
   var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
   if (keyCode == 13) {
-    $('#edit-tui-search-input').val($('#autocomplete .selected div').html());
-    return Drupal.tui.search_submit();
+    if($('#autocomplete .selected')[0].autocompleteValue != $('#autocomplete .selected div').html() && $('#autocomplete .selected')[0].autocompleteValue.indexOf(':')){
+      Drupal.tui.search_submit_success([$('#autocomplete .selected')[0].autocompleteValue.substring(0, $('#autocomplete .selected')[0].autocompleteValue.indexOf(':'))]);
+      return false;
+    } else {
+      $('#edit-tui-search-input').val($('#autocomplete .selected div').html());
+      return Drupal.tui.search_submit();
+    }
   }  
   else{
     return true;
@@ -33,9 +38,13 @@ Drupal.tui.search_submit_success = function(data){
   $.each(data, function(index, value){
     Drupal.settings.tui.opentids[value] = value;
   });
-  Drupal.tui.click_buttonclick('tui-search');
-  Drupal.tui.searchtids = data;
-  Drupal.tui.reload_tree();
+  if(data.length){
+    Drupal.tui.click_buttonclick('tui-search');
+    Drupal.tui.searchtids = data;
+    Drupal.tui.reload_tree();
+  } else {
+    $('#edit-tui-search-input').effect("highlight", {color:'#ff0000'}, 3000);
+  }
 }
 
 Drupal.tui.click_buttonclick = function(img_clicked){
@@ -47,6 +56,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       } else {
         Drupal.tui.search_is_displayed = true;
         $('.bt-wrapper').hide();
+        $('#edit-tui-search-input').val('');
         $('#tui-search-form-container').fadeIn();
         $('#edit-tui-search-input').focus();
       }
@@ -67,7 +77,19 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       break;
     case 'tui-next':
     case 'tui-previous': 
-      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!Drupal.settings.tui.opentids[data]){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.reload_tree();Drupal.tui.show_form_after_tree_rebuild = true;}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));}}});
+      $.ajax({
+        cache:false,
+        url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,
+        success:function(data){
+          Drupal.tui.term_id = "tid-"+data;
+          if(!Drupal.settings.tui.opentids[data]){
+            Drupal.settings.tui.opentids[data] = data;
+            Drupal.tui.update_link();
+            Drupal.tui.show_form_after_tree_rebuild = true;
+            Drupal.tui.reload_tree();
+          }else{
+            Drupal.tui.display_form($('#' + Drupal.tui.term_id));
+            Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
   }
 }
 
@@ -173,18 +195,30 @@ Drupal.tui.full_tree_success = function(data){
   if(Drupal.tui.show_form_after_tree_rebuild){
     Drupal.tui.show_form_after_tree_rebuild = false;
     Drupal.tui.display_form($('#'+Drupal.tui.term_id));
+    Drupal.tui.scrollto($('#'+Drupal.tui.term_id));
   }
   if(Drupal.tui.searchtids){
     position = $('#tui').offset();
     $('html,body').animate({scrollTop:position.top-30}, 1000);
-    position = $('#tid-'+Drupal.tui.searchtids[0]).position();
-    $('#tui-tree-subcontainer').animate({scrollTop:position.top}, 1000);
     //Drupal.tui.display_form($('#tid-'+Drupal.tui.searchtids[0]));
+    var highest_position = 10000000;
+    var highest_element = false;
     $.each(Drupal.tui.searchtids, function(index, value){
       $('#tid-'+value).effect("highlight", {}, 8000);
-    });    
+      if($('#tid-'+value).position().top < highest_position){
+        highest_position = $('#tid-'+value).position().top;
+        highest_element = $('#tid-'+value);
+      }
+    });
+    if(highest_element){
+      Drupal.tui.scrollto(highest_element);
+    }
     Drupal.tui.searchtids = false;
   }
+}
+
+Drupal.tui.scrollto = function(element){
+  $('#tui-tree-subcontainer').animate({scrollTop:$(element).position().top+$('#tui-tree-subcontainer').scrollTop()-10}, 500);
 }
 
 Drupal.tui.form_success = function(data){

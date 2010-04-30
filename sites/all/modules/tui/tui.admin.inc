@@ -22,6 +22,8 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   drupal_add_css(drupal_get_path('module', 'tui').'/tui.css');
   drupal_add_js(drupal_get_path('module', 'tui').'/tui.js');
   drupal_add_js(drupal_get_path('module', 'tui').'/lib/bt/jquery.bt.js');
+  drupal_set_html_head('<!--[if IE]><script type="text/javascript" src="'.base_path().drupal_get_path('module', 'tui').'/lib/explorercanvas/excanvas.js"></script><![endif]-->');
+  drupal_add_js(drupal_get_path('module', 'tui').'/lib/explorercanvas/excanvas.js');
   drupal_add_js(array(
       'tui' => array(
         'opentids' => $all_tids,
@@ -120,14 +122,27 @@ function tui_autocomplete($vid, $search){
   $matches = array();
   if ($search != '') {
     $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $search, 0, 10);
-    $prefix = count($array) ? implode(', ', $array) .', ' : '';
-    while ($tag = db_fetch_object($result)) {
-      $n = $tag->name;
+    while ($term = db_fetch_object($result)){
+      $n = $term->name;
       // Commas and quotes in terms are special cases, so encode 'em.
-      if (strpos($tag->name, ',') !== FALSE || strpos($tag->name, '"') !== FALSE) {
-        $n = '"'. str_replace('"', '""', $tag->name) .'"';
+      if (strpos($term->name, ',') !== FALSE || strpos($term->name, '"') !== FALSE) {
+        $n = '"'. str_replace('"', '""', $term->name) .'"';
       }
-      $matches[$prefix . $n] = check_plain($tag->name);
+      // Get parents for a name, to append to the drop down
+      $parents = taxonomy_get_parents_all($term->tid);
+      if(count($parents)>1){
+        array_shift($parents);
+        $parent_string = ' [';     
+        while($parents){
+          $parent = array_shift($parents);
+          $parent_string .= check_plain($parent->name);
+          if($parents){
+            $parent_string .= ' &raquo; ';
+          }
+        }
+        $parent_string .= ']';
+      }
+      $matches[$term->tid.":".$n] = "<b>".check_plain($term->name) ."</b>". $parent_string;
     }
   }
   drupal_json($matches);
@@ -137,16 +152,38 @@ function tui_autocomplete($vid, $search){
  * TUI Search
  */
 function tui_search($vid, $search){
+  // MESSY, please tidy (I'm too lazy to tidy this, in fact, I think I may go 
+  // to the park and play on the swings and slide)!
   // Very similar to the above autocomplete function, but this time we're 
   // returning an array of tids, to allow the tree to be expanded!
-  $matches = array();
-  if ($search != '') {
-    $result = db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) = LOWER('%s')", 't', 'tid'), $vid, $search);
-    while($row = db_fetch_array($result)){
-      $matches[] = $row['tid'];
+  // First we check to see if the entered string is numeric, or if it has been
+  // sent in the form "tid:name".
+  if(is_numeric($search)){
+    $term = taxonomy_get_term($search);
+    if($term && $term->vid == $vid){
+      drupal_json(array($term->tid));
+      $returned_results = TRUE;
+    }
+  } elseif(strpos($search,":")){
+    $before_colon = substr($search, 0, strpos($search, ':'));
+    if(is_numeric($before_colon)){
+      $term = taxonomy_get_term($search);
+      if($term && $term->vid == $vid){
+        drupal_json(array($term->tid));
+        $returned_results = TRUE;
+      }      
     }
   }
-  drupal_json($matches);
+  if(!$returned_results){
+    $matches = array();
+    if ($search != '') {
+      $result = db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) = LOWER('%s')", 't', 'tid'), $vid, $search);
+      while($row = db_fetch_array($result)){
+        $matches[] = $row['tid'];
+      }
+    }
+    drupal_json($matches);
+  }
 }
 
 
