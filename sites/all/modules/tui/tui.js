@@ -211,7 +211,7 @@ Drupal.tui.full_tree_success = function(data){
 }
 
 Drupal.tui.scrollto = function(element){
-  $('#tui-tree-subcontainer').animate({scrollTop:$(element).position().top+$('#tui-tree-subcontainer').scrollTop()-10}, 500);
+  $('#tui-tree-subcontainer').animate({scrollTop:$(element).position().top+$('#tui-tree-subcontainer').scrollTop()-35}, 500);
 }
 
 Drupal.tui.form_success = function(data){
