@@ -33,7 +33,7 @@
  float:left;
 }
 #tui-tree-container{
- padding:5px 0;
+ padding:5px 0 0 0;
  position:relative;
 }
 #tui-tree ul, #tui-tree li, #tui-tree-links p, #tui-tree li p{
@@ -94,10 +94,8 @@
 
 /* TREE LINKS */
 #tui-tree-links{
- position:absolute;
- top:3px;
- right:16px;
  text-align:right;
+ border-bottom:solid 1px #eee;
 }
 #tui-tree-links #dialog{
  display:none;
