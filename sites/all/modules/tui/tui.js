@@ -114,7 +114,8 @@ Drupal.tui.drop_deactivate = function(event, ui){
   if(!Drupal.tui.waiting_for_reply){
     $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer p').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
-    tid_to_add = $('#'+Drupal.tui.this_id+' .tui-term').attr('id').substring(4);
+    var tid_array = Drupal.tui.this_id.split('-');
+    tid_to_add = 'tid-'+tid_array[1];
     Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
     $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
   }
