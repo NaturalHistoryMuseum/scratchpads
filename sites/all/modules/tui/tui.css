@@ -33,7 +33,7 @@
  float:left;
 }
 #tui-tree-container{
- padding:3px 0 0 0;
+ padding:0;
  position:relative;
 }
 #tui-tree ul, #tui-tree li, #tui-tree-links p, #tui-tree li p{
@@ -96,6 +96,7 @@
 #tui-tree-links{
  text-align:right;
  border-bottom:solid 1px #eee;
+ padding-top:3px;
 }
 #tui-tree-links #dialog{
  display:none;
@@ -110,6 +111,9 @@
  background-color:white;
  color:black;
  display:none;
+ position:absolute;
+ top:20px;
+ right:20px;
 }
 #edit-tui-search-input-wrapper{
  display:inline;
@@ -207,4 +211,6 @@
  -moz-box-shadow: 2px 2px 2px #999;
  -webkit-box-shadow: 2px 2px 2px #999;
  box-shadow: 2px 2px 2px #999;
+}
+#999;
 }
