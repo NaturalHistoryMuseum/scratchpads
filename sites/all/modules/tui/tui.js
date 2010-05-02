@@ -7,10 +7,10 @@ Drupal.tui.init = function(context) {
   $('.tui-node-closed', context).mouseup(function(){Drupal.tui.click_closed($(this).parent().parent().attr('id'));});
   $('.tui-node-open', context).mouseup(function(){Drupal.tui.click_open($(this).parent().parent().attr('id'));});
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> p > .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
-  $(window).resize(function(){Drupal.tui.resize_frame("window_resize");});
+  $(window).resize(function(){Drupal.tui.resize_frame();$('#tui-form').width($('#tui').width()-$('#tui-tree').width());});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
   $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());},minWidth:250});
-  Drupal.tui.resize_frame("init");
+  Drupal.tui.resize_frame();
 }
 
 Drupal.tui.search_return_press = function(event){
@@ -85,7 +85,7 @@ Drupal.tui.do_delete = function(term_id){
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.dlete+"/"+term_id,success:function(data){Drupal.tui.reload_tree();}});
 }
 
-Drupal.tui.resize_frame = function(calling_method){
+Drupal.tui.resize_frame = function(){
   if($('#tui-tree-subcontainer ul').height() > ($(window).height()-70)){
     $('#tui-tree-subcontainer').css('height', ($(window).height()-70)+'px');
     $('#tui-tree-subcontainer').css('overflow-y', 'scroll');
