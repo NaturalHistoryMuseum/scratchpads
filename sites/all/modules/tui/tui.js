@@ -72,7 +72,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
         $('#dialog').attr('title', Drupal.settings.tui.dialog.dlete.title);
         $('#dialog').html(Drupal.settings.tui.dialog.dlete.content);
         $('#tui-dialog-term-name').html($('.tui-term.active').html());
-        $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$(this).dialog("close");}},width:'300px',height:'200px'});
+        $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$(this).dialog("close");}},width:'450px',height:'150px'});
       }
       break;
     case 'tui-next':
