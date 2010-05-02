@@ -183,14 +183,11 @@ function tui_move_term($method, $term, $to){
     }
     $term->parent = $to->parent;    
   }
+  $term = (array)$term;
   taxonomy_save_term($term);
   $weight = 1;
   foreach($siblings as $sibling){
-    // FIXME - Following is odd - taxonomy_save_term fails.  WHY???
-    //$term = taxonomy_get_term($sibling);
-    //$term->weight = $weight;
-    //taxonomy_save_term($term);
-    db_query("UPDATE {term_data} SET weight = %d WHERE tid = %d", $weight, $sibling);
+    db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
     $weight++;
   }
 }
