@@ -172,6 +172,7 @@ function tui_move_term($method, $term, $to){
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
     }
+    $term->parent = $to->tid;
   } else {
     $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->parent, $term->tid);
     while($row = db_fetch_array($results)){
@@ -180,7 +181,9 @@ function tui_move_term($method, $term, $to){
         $siblings[] = $term->tid;
       }
     }
+    $term->parent = $to->parent;    
   }
+  taxonomy_save_term($term);
   $weight = 1;
   foreach($siblings as $sibling){
     // FIXME - Following is odd - taxonomy_save_term fails.  WHY???
