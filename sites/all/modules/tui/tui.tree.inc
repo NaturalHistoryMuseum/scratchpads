@@ -165,28 +165,30 @@ function tui_move_term($method, $term, $to){
   $to_bits = explode("-", $to);
   $to = taxonomy_get_term($to_bits[1]);
   $to->parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $to->tid));
-  if($to && $term){
-    switch($method){
-      case 'child':
-        // This will be the first child of the parent, so we will increase the
-        // weight of the siblings by one, and give this term the minimum weight.
-        // FIXME - This works, but it may break other drupal stuff.
-        $weight = db_result(db_query("SELECT MIN(weight) FROM {term_data} WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)", $to->tid));
-        db_query("UPDATE {term_data} SET weight = weight +1 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)", $to->tid);
-        $term->weight = $weight;
-        $term->parent = $to->tid;
-        $form_values = (array)$term;
-        taxonomy_save_term($form_values);
-        break;      
-      case 'sibling':
-        // FIXME - This fails if the tree is set to alphapetical.
-        db_query("UPDATE {term_data} SET weight = weight +2 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) AND weight > %d", $to->parent, $to->weight);
-        $term->weight = $to->weight + 1;
-        $term->parent = $to->parent;
-        $form_values = (array)$term;
-        taxonomy_save_term($form_values);
-        break;
+
+  if($method=='child'){
+    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->tid, $term->tid);
+    $siblings = array($term->tid);
+    while($row = db_fetch_array($results)){
+      $siblings[] = $row['tid'];
     }
+  } else {
+    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->parent, $term->tid);
+    while($row = db_fetch_array($results)){
+      $siblings[] = $row['tid'];
+      if($row['tid'] == $to->tid){
+        $siblings[] = $term->tid;
+      }
+    }
+  }
+  $weight = 1;
+  foreach($siblings as $sibling){
+    // FIXME - Following is odd - taxonomy_save_term fails.  WHY???
+    //$term = taxonomy_get_term($sibling);
+    //$term->weight = $weight;
+    //taxonomy_save_term($term);
+    db_query("UPDATE {term_data} SET weight = %d WHERE tid = %d", $weight, $sibling);
+    $weight++;
   }
 }
 
