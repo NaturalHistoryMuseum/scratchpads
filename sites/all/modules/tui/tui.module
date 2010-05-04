@@ -58,6 +58,14 @@ function tui_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
+    'tui/undo/%' => array(
+      'title' => 'Undo move term',
+      'page callback' => 'tui_undo_move',
+      'page arguments' => array(2),
+      'access arguments' => array('administer taxonomy'),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.tree.inc'
+    ),
     'tui/gettree' => array(
       'title' => 'Get tree',
       'page callback' => 'tui_get_tree_themed',

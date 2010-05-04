@@ -162,9 +162,11 @@ function tui_move_term($method, $term, $to){
   }
   $term_bits = explode("-", $term);
   $term = taxonomy_get_term($term_bits[1]);
+  $term->parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $term->tid));
   $to_bits = explode("-", $to);
   $to = taxonomy_get_term($to_bits[1]);
   $to->parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $to->tid));
+  $current_term = (array)$term;
 
   if($method=='child'){
     $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->tid, $term->tid);
@@ -189,6 +191,23 @@ function tui_move_term($method, $term, $to){
   foreach($siblings as $sibling){
     db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
     $weight++;
+  }
+  if($term['parent'] != $current_term['parent']){
+    $_SESSION['tui_moved_terms'][$term['vid']] = $current_term;
+  }
+}
+
+/**
+ * Undo move based on sessino
+ */
+function tui_undo_move($vid){
+  if(isset($_SESSION['tui_moved_terms'][$vid]) && count($_SESSION['tui_moved_terms'][$vid])){
+    $old_term = array_pop($_SESSION['tui_moved_terms']);
+    $current_term = (array)taxonomy_get_term($old_term['tid']);
+    $current_term['parent'] = $old_term['parent'];
+    $current_term['weight'] = $old_term['weight'];
+    taxonomy_save_term($current_term);
+    echo $current_term['tid'];
   }
 }
 

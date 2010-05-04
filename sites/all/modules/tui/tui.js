@@ -4,8 +4,8 @@ Drupal.tui.init = function(context) {
   $('.tui-term', context).click(function (){$('.tui-added-original').removeClass('tui-added-original');Drupal.tui.display_form(this);});
   $('#tabs > ul', context).tabs();
   $('#tabs > ul > li, #tui-tree-links img', context).bt({positions: 'top',fill: 'rgba(0, 0, 0, .7)',cssStyles: {color: 'white', 'font-size': '14px', width: 'auto'},closeWhenOthersOpen: true,spikeLength: 10,strokeWidth: 0});
-  $('.tui-node-closed', context).mouseup(function(){Drupal.tui.click_closed($(this).parent().parent().attr('id'));});
-  $('.tui-node-open', context).mouseup(function(){Drupal.tui.click_open($(this).parent().parent().attr('id'));});
+  $('.tui-node-closed', context).click(function(){Drupal.tui.click_closed($(this).parent().parent().attr('id'));});
+  $('.tui-node-open', context).click(function(){Drupal.tui.click_open($(this).parent().parent().attr('id'));});
   $('#tui-tree-subcontainer li').draggable({helper:'clone',cursorAt:{left:1, top:1},handle:'> p > .tui-term',opacity:0.8,delay:200,distance:10,start:function(event, ui){Drupal.tui.drag_start(event, ui);}});
   $(window).resize(function(){Drupal.tui.resize_frame();$('#tui-form').width($('#tui').width()-$('#tui-tree').width());});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
@@ -51,7 +51,6 @@ Drupal.tui.click_buttonclick = function(img_clicked){
   switch(img_clicked){
     case 'tui-search':
       if(!Drupal.tui.search_is_transitioning){
-        console.log(Drupal.tui.search_is_transitioning);
         if(Drupal.tui.search_is_displayed){
           Drupal.tui.search_is_displayed = false;
           Drupal.tui.search_is_transitioning = true;
@@ -89,8 +88,13 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       }
       break;
     case 'tui-next':
-    case 'tui-previous': 
+    case 'tui-previous':
+      Drupal.tui.selected_tab = $('.ui-tabs-selected > a').attr('href');
       $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!Drupal.settings.tui.opentids[data]){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.show_form_after_tree_rebuild = true;Drupal.tui.reload_tree();}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
+      break;
+    case 'tui-undo':
+      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.undo+"/"+Drupal.settings.tui.vocabulary,success:function(data){if(data){Drupal.tui.term_id = "tid-"+data;Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.reload_tree();}}});
+      break;
   }
 }
 
@@ -118,6 +122,8 @@ Drupal.tui.update_link = function(){
 
 Drupal.tui.drag_start = function(event, ui){
   $('.tui-term.active').removeClass('active');
+  $('#tui-tree-subcontainer').css('height', 'auto');
+  $('#tui-tree-subcontainer').css('overflow-y', 'visible');
   delete Drupal.tui.term_id;
   $(event.currentTarget).addClass("tui-added-original");
   $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer p').droppable({tolerance:'pointer',greedy:true,over:function(event, ui){Drupal.tui.drop_over(event, ui);},deactivate:function(event, ui){Drupal.tui.drop_deactivate(event, ui);}});
@@ -130,6 +136,7 @@ Drupal.tui.drop_deactivate = function(event, ui){
     var tid_array = Drupal.tui.this_id.split('-');
     tid_to_add = 'tid-'+tid_array[1];
     Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
+    Drupal.tui.searchtids = [tid_array[1]];
     $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
   }
 }
@@ -154,8 +161,18 @@ Drupal.tui.drop_over = function(event, ui){
 Drupal.tui.click_closed = function(vid_and_tid){  
   $('#'+vid_and_tid+' > p > span.tui-nodeleaf').removeClass('tui-node-closed');
   $('#'+vid_and_tid+' > p > span.tui-nodeleaf').addClass('tui-node-open');
-  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').unbind('mouseup');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').unbind('click');
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.tree+"/"+vid_and_tid,success:function(data){Drupal.tui.tree_success($('#'+vid_and_tid), data);}});
+}
+
+Drupal.tui.click_open = function(vid_and_tid){
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').removeClass('tui-node-open');
+  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').addClass('tui-node-closed');
+  Drupal.tui.remove_tid(vid_and_tid);
+  $('#'+vid_and_tid).children('ul').remove();
+  jQuery.each(Drupal.behaviors, function() {
+    this($('#'+vid_and_tid));
+  });
 }
 
 Drupal.tui.remove_tid = function(vid_and_tid){
@@ -172,16 +189,6 @@ Drupal.tui.add_tid = function(vid_and_tid){
     Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
   });
   Drupal.tui.update_link();
-}
-
-Drupal.tui.click_open = function(vid_and_tid){
-  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').removeClass('tui-node-open');
-  $('#'+vid_and_tid+' > p > span.tui-nodeleaf').addClass('tui-node-closed');
-  Drupal.tui.remove_tid(vid_and_tid);
-  $('#'+vid_and_tid).children('ul').remove();
-  jQuery.each(Drupal.behaviors, function() {
-    this($('#'+vid_and_tid));
-  });
 }
 
 Drupal.tui.tree_success = function(html_object, data){
@@ -211,6 +218,9 @@ Drupal.tui.full_tree_success = function(data){
     var highest_element = false;
     $.each(Drupal.tui.searchtids, function(index, value){
       $('#tid-'+value).effect("highlight", {}, 8000);
+      console.log(index);
+      console.log(value);
+      console.log(Drupal.tui.searchtids);
       if($('#tid-'+value).position().top < highest_position){
         highest_position = $('#tid-'+value).position().top;
         highest_element = $('#tid-'+value);
@@ -232,6 +242,9 @@ Drupal.tui.form_success = function(data){
   jQuery.each(Drupal.behaviors, function() {
     this($('#tui-form-container'));
   });
+  if(Drupal.tui.selected_tab){
+    $('#tabs > ul').tabs('select', Drupal.tui.selected_tab);
+  }
   $('.loading').removeClass('loading');
 }
 
