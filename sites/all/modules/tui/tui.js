@@ -50,15 +50,28 @@ Drupal.tui.search_submit_success = function(data){
 Drupal.tui.click_buttonclick = function(img_clicked){
   switch(img_clicked){
     case 'tui-search':
-      if(Drupal.tui.search_is_displayed){
-        Drupal.tui.search_is_displayed = false;
-        $('#tui-search-form-container').fadeOut(1000);
-      } else {
-        Drupal.tui.search_is_displayed = true;
-        $('.bt-wrapper').hide();
-        $('#edit-tui-search-input').val('');
-        $('#tui-search-form-container').fadeIn();
-        $('#edit-tui-search-input').focus();
+      if(!Drupal.tui.search_is_transitioning){
+        console.log(Drupal.tui.search_is_transitioning);
+        if(Drupal.tui.search_is_displayed){
+          Drupal.tui.search_is_displayed = false;
+          Drupal.tui.search_is_transitioning = true;
+          $('#edit-tui-search-input').unbind('blur');
+          $('#tui-search-form-container').fadeOut(500, function(){
+            Drupal.tui.search_is_transitioning = false;
+          });
+        } else {
+          Drupal.tui.search_is_displayed = true;
+          Drupal.tui.search_is_transitioning = true;
+          $('.bt-wrapper').hide();
+          $('#edit-tui-search-input').val('');
+          $('#tui-search-form-container').fadeIn(500, function(){
+            Drupal.tui.search_is_transitioning = false;
+          });
+          $('#edit-tui-search-input').focus();
+          $('#edit-tui-search-input').blur(function(){
+            Drupal.tui.click_buttonclick('tui-search');
+          });
+        }
       }
       break;
     case 'tui-add':
