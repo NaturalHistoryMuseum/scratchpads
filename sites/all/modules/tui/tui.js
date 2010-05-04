@@ -93,7 +93,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!Drupal.settings.tui.opentids[data]){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.show_form_after_tree_rebuild = true;Drupal.tui.reload_tree();}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
       break;
     case 'tui-undo':
-      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.undo+"/"+Drupal.settings.tui.vocabulary,success:function(data){if(data){Drupal.tui.term_id = "tid-"+data;Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.reload_tree();}}});
+      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.undo+"/"+Drupal.settings.tui.vocabulary,success:function(data){if(data){Drupal.tui.searchtids=[data];Drupal.tui.term_id = "tid-"+data;Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.reload_tree();}}});
       break;
   }
 }
@@ -137,7 +137,7 @@ Drupal.tui.drop_deactivate = function(event, ui){
     tid_to_add = 'tid-'+tid_array[1];
     Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
     Drupal.tui.searchtids = [tid_array[1]];
-    $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
+    $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
   }
 }
 
@@ -218,9 +218,6 @@ Drupal.tui.full_tree_success = function(data){
     var highest_element = false;
     $.each(Drupal.tui.searchtids, function(index, value){
       $('#tid-'+value).effect("highlight", {}, 8000);
-      console.log(index);
-      console.log(value);
-      console.log(Drupal.tui.searchtids);
       if($('#tid-'+value).position().top < highest_position){
         highest_position = $('#tid-'+value).position().top;
         highest_element = $('#tid-'+value);

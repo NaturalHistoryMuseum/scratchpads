@@ -155,7 +155,7 @@ function tui_get_children($tid_and_vid){
  * Method is one of child, or sibling, whilst from $term is the term to move,
  * and to is the position to move to (child of, or next term after). 
  */
-function tui_move_term($method, $term, $to){
+function tui_move_term($method, $vid, $term, $to){
   // Only continue if term != to, as JS can mess things up occasionaly
   if($term == $to){
     return;
@@ -193,7 +193,7 @@ function tui_move_term($method, $term, $to){
     $weight++;
   }
   if($term['parent'] != $current_term['parent']){
-    $_SESSION['tui_moved_terms'][$term['vid']] = $current_term;
+    $_SESSION['tui_moved_terms'][$vid][] = $current_term;
   }
 }
 
@@ -201,8 +201,9 @@ function tui_move_term($method, $term, $to){
  * Undo move based on sessino
  */
 function tui_undo_move($vid){
+  //unset($_SESSION['tui_moved_terms']);
   if(isset($_SESSION['tui_moved_terms'][$vid]) && count($_SESSION['tui_moved_terms'][$vid])){
-    $old_term = array_pop($_SESSION['tui_moved_terms']);
+    $old_term = array_pop($_SESSION['tui_moved_terms'][$vid]);
     $current_term = (array)taxonomy_get_term($old_term['tid']);
     $current_term['parent'] = $old_term['parent'];
     $current_term['weight'] = $old_term['weight'];
