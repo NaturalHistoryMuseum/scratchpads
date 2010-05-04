@@ -6,23 +6,361 @@
  * Simply creates the content type, and adds the fields.
  */
 function itis_term_install(){
-  $groups = array(
-    array(
-      'label' => 'Something',
-      'weight' => 10,
-      'group_type' => 'standard',
-      'group_name' => 'group_something'
-    )
-  );
+  $groups = _itis_term_get_groups();
+  $settings = field_group_default_settings($group['group_type']);
   foreach($groups as $group){
-    $group['settings'] = field_group_default_settings($group['group_type']);
+    $group['group_type'] = 'standard';
+    $group['settings'] = $settings;
     fieldgroup_save_group('itis_term', $group);
   }
-  /*
+  
+  $fields = _itis_term_get_fields();  
   module_load_include('inc', 'content', 'includes/content.crud');
+  $weight = 0;
   foreach($fields as $field){
     // Add the field
+    $field['type_name'] = 'itis_term';
+    $field['locked'] = TRUE;
+    $field['weight'] = $weight++;
     content_field_instance_create($field);
+    fieldgroup_update_fields(array('field_name' => $field['field_name'], 'group' => $field['group'], 'type_name' => 'itis_term'));
   }
-*/
+}
+
+function itis_term_uninstall(){
+  $fields = _itis_term_get_fields();  
+  module_load_include('inc', 'content', 'includes/content.crud');
+  foreach($fields as $field){
+    content_field_instance_delete($field['field_name'], 'itis_term', FALSE);
+  }
+  $groups = _itis_term_get_groups();
+  foreach($groups as $group){
+    fieldgroup_delete('itis_term', $group['group_name']);    
+  }
+  content_clear_type_cache(TRUE);
+  menu_rebuild();
+}
+
+/**
+ * Fields
+ */
+function _itis_term_get_fields(){  
+  return array(
+    array (
+      'label' => 'Unit Name 1',
+      'field_name' => 'field_unit_name1',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'required' => 1,
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Name 2',
+      'field_name' => 'field_unit_name2',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Name 3',
+      'field_name' => 'field_unit_name3',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Name 4',
+      'field_name' => 'field_unit_name4',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Indicator 1',
+      'field_name' => 'field_unit_ind1',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'required' => 1,
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Indicator 2',
+      'field_name' => 'field_unit_ind2',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Indicator 3',
+      'field_name' => 'field_unit_ind3',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Unit Indicator 4',
+      'field_name' => 'field_unit_ind4',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Rank',
+      'field_name' => 'field_rank_name',
+      'type' => 'text',
+      'widget_type' => 'optionwidgets_select',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text',
+      'required' => 1,
+      'allowed_values_php' => "
+return array(
+  'Plant/Fungi' => array(
+    'Kingdom',
+    'Subkingdom',
+    'Division',
+    'Subdivision',
+    'Class',
+    'Subclass',
+    'Order',
+    'Suborder',
+    'Family',
+    'Subfamily',
+    'Tribe',
+    'Subtribe',
+    'Genus',
+    'Subgenus',
+    'Section',
+    'Subsection',
+    'Species',
+    'Subspecies',
+    'Variety',
+    'Subvariety',
+    'Form',
+    'Subform'
+  ),
+  'Animal' => array(
+    'Kingdom',
+    'Subkingdom',
+    'Phylum',
+    'Subphylum',
+    'Superclass',
+    'Class',
+    'Subclass',
+    'Infraclass',
+    'Superorder',
+    'Order',
+    'Suborder',
+    'Infraorder',
+    'Superfamily',
+    'Family',
+    'Subfamily',
+    'Tribe',
+    'Subtribe',
+    'Genus',
+    'Subgenus',
+    'Species',
+    'Subspecies'
+  ),
+  'Moneran' => array(
+    'Kingdom',
+    'Subkingdom',
+    'Phylum',
+    'Subphylum',
+    'Superclass',
+    'Class',
+    'Subclass',
+    'Infraclass',
+    'Superorder',
+    'Order',
+    'Suborder',
+    'Infraorder',
+    'Superfamily',
+    'Family',
+    'Subfamily',
+    'Tribe',
+    'Subtribe',
+    'Genus',
+    'Subgenus',
+    'Species',
+    'Subspecies'
+  )
+);"
+    ),
+    array (
+      'label' => 'Usage',
+      'field_name' => 'field_usage',
+      'type' => 'text',
+      'widget_type' => 'optionwidgets_select',
+      'description' => '',
+      'group' => 'group_usage',
+      'module' => 'text',
+      'widget_module' => 'text',
+      'required' => 1,
+      'allowed_values_php' => "
+return array(
+  'Plants and Fungi' => array(
+    'accepted',
+    'not accepted'
+  ),
+  'Animals and Monerans' => array(
+    'valid',
+    'invalid'
+  )
+);"
+    ),
+    array (
+      'label' => 'Associated Accepted Name',
+      'field_name' => 'field_accepted_name',
+      'type' => 'content_taxonomy',
+      'widget_type' => 'content_taxonomy_autocomplete',
+      'description' => '',
+      'vid' => 0,
+      'group' => 'group_usage',
+      'module' => 'content_taxonomy',
+      'widget_module' => 'content_taxonomy_autocomplete'
+    ),
+    array (
+      'label' => 'Unacceptability Reason',
+      'field_name' => 'field_unacceptability_reason',
+      'type' => 'text',
+      'widget_type' => 'optionwidgets_select',
+      'description' => '',
+      'group' => 'group_usage',
+      'module' => 'text',
+      'widget_module' => 'text',
+      'allowed_values_php' => "
+return array(
+  'Animalia & Monera' => array(
+    'junior synonym',
+    'original name/combination',
+    'subsequent name/combination',
+    'junior homonym',
+    'homonym & junior synonym',
+    'unavailable, database artifact',
+    'unavailable, literature misspelling',
+    'unavailable, incorrect original spelling',
+    'unavailable, suppressed by ruling',
+    'unavailable, nomen nudum',
+    'unavailable, other',
+    'unjustified emendation',
+    'unnecessary replacement',
+    'nomen oblitum',
+    'misapplied',
+    'pro parte',
+    'other',
+    'nomen dubium'
+  ),
+  'Plantae & Fungi' => array(
+    'synonym',
+    'homonym (illegitimate)',
+    'superfluous renaming (illegitimate)',
+    'rejected name',
+    'invalidly published, nomen nudum',
+    'invalidly published, other',
+    'misapplied',
+    'pro parte',
+    'horticultural',
+    'database artifact',
+    'orthographic variant (misspelling)',
+    'other'
+  )
+);"
+    ),
+    array (
+      'label' => 'Authors',
+      'field_name' => 'field_taxon_author',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_reference',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Reference',
+      'field_name' => 'field_reference',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_reference',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference'
+    ),
+    array (
+      'label' => 'Page number',
+      'field_name' => 'field_page_number',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_reference',
+      'module' => 'text',
+      'widget_module' => 'text'
+    ),
+    array (
+      'label' => 'Vernacular Names',
+      'field_name' => 'field_vernacular_name',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => '',
+      'group' => 'group_vernacularnames',
+      'module' => 'text',
+      'widget_module' => 'text',
+      'multiple' => 1
+    ),
+  );  
+}
+
+/**
+ * Groups
+ */
+function _itis_term_get_groups(){
+  return array(
+    array(
+      'label' => 'Scientific Name',
+      'weight' => 50,
+      'group_name' => 'group_scientificname'
+    ),
+    array(
+      'label' => 'Usage',
+      'weight' => 60,
+      'group_name' => 'group_usage'
+    ),
+    array(
+      'label' => 'Reference',
+      'weight' => 70,
+      'group_name' => 'group_reference'
+    ),
+    array(
+      'label' => 'Vernacular Names',
+      'weight' => 80,
+      'group_name' => 'group_vernacularnames'
+    )
+  );
 }
