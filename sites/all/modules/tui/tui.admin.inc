@@ -151,7 +151,7 @@ function tui_autocomplete($vid, $search){
 /**
  * TUI Search
  */
-function tui_search($vid, $search){
+function tui_search($vid, $search=FALSE){
   // MESSY, please tidy (I'm too lazy to tidy this, in fact, I think I may go 
   // to the park and play on the swings and slide)!
   // Very similar to the above autocomplete function, but this time we're 
