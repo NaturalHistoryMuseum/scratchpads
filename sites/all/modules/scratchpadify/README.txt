@@ -1,1 +1,0 @@
-This Module Adds a few small customisations to a Drupal site to Scratchpadify them
