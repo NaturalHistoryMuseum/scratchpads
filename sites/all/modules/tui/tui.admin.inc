@@ -218,6 +218,9 @@ function tui_taxonomy_form_pre_render($form){
         unset($form['term_node']['node_form'][$key]);
       }
     }
+    if(count($form['term_node']['node_form']) == count(element_properties($form['term_node']['node_form']))){
+      unset($form['term_node']);
+    }
   }
   $num_tabs = 0;
   foreach($form as $key => $value){
@@ -225,7 +228,7 @@ function tui_taxonomy_form_pre_render($form){
       $num_tabs ++;
     }
   }
-  if($num_tabs>4){
+  if($num_tabs>6){
     $class = ' class="tui-squeeze-tabs"';
   }
   foreach($form as $key => $value){
