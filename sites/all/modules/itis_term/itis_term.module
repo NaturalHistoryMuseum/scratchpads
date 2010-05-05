@@ -18,6 +18,17 @@ function itis_term_node_info(){
 }
 
 /**
+ * hook_theme
+ */
+function itis_term_theme(){
+  return array(
+    'itis_term_node_form' => array(
+      'arguments' => array('form' => NULL)
+    )
+  );
+}
+
+/**
  * hook_access
  * 
  * This will rely on the taxonomy module's access control!
@@ -38,4 +49,62 @@ function itis_term_form(&$node, $form_state){
     '#default_value' => $node->title,
   );
   return $form;
+}
+
+/**
+ * form_alter
+ */
+function itis_term_form_alter(&$form, &$form_state, $form_id){
+  if($form_id == 'taxonomy_form_term'){
+    $form['identification']['name']['#prefix'] = '<div id="itis_term_name">';
+    $form['identification']['name']['#suffix'] = '</div>';
+    array_unshift($form['#submit'], 'itis_term_form_term_submit');
+    array_unshift($form['#validate'], 'itis_term_validate');
+  } elseif($form_id == 'itis_term_node_form'){
+    $form['group_scientificname']['field_unit_name1']['#prefix'] = '<div id="itis_term_unit_name1" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_name1']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_name2']['#prefix'] = '<div id="itis_term_unit_name2" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_name2']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_name3']['#prefix'] = '<div id="itis_term_unit_name3" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_name3']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_name4']['#prefix'] = '<div id="itis_term_unit_name4" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_name4']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_ind1']['#prefix'] = '<div id="itis_term_unit_ind1" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_ind1']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_ind2']['#prefix'] = '<div id="itis_term_unit_ind2" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_ind2']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_ind3']['#prefix'] = '<div id="itis_term_unit_ind3" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_ind3']['#suffix'] = '</div>';
+    $form['group_scientificname']['field_unit_ind4']['#prefix'] = '<div id="itis_term_unit_ind4" class="itis_term_unit">';
+    $form['group_scientificname']['field_unit_ind4']['#suffix'] = '</div>';
+  }
+}
+
+function itis_term_validate($form, &$form_state){
+  if(isset($form_state['values']['field_usage'][0]['value'])){
+    if(!$form_state['values']['field_usage'][0]['value']){
+      form_set_error('field_usage', t('Please select a "Name usage".'));
+    }
+  }
+  if(isset($form_state['values']['field_rank_name'][0]['value'])){
+    if(!$form_state['values']['field_rank_name'][0]['value']){
+      form_set_error('field_rank_name', t('Please select a rank.'));
+    }
+  }
+}
+
+function itis_term_form_term_submit($form, &$form_state){
+  if(isset($form_state['values']['field_unit_name1'][0]['value']) && $form_state['values']['field_unit_name1'][0]['value'] != ''){
+    $form_state['values']['name'] = $form_state['values']['field_unit_name1'][0]['value'] ." ". $form_state['values']['field_unit_name2'][0]['value']." ".
+                                    $form_state['values']['field_unit_name3'][0]['value'] ." ". $form_state['values']['field_unit_name4'][0]['value'];
+  }
+}
+
+/**
+ * Theme the form just to add js file.
+ */
+function theme_itis_term_node_form($form){
+  drupal_add_js(drupal_get_path('module', 'itis_term').'/itis_term.js');
+  drupal_add_css(drupal_get_path('module', 'itis_term').'/itis_term.css');
+  return theme('node_form', $form);
 }

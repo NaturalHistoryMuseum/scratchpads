@@ -25,6 +25,9 @@ function itis_term_install(){
     content_field_instance_create($field);
     fieldgroup_update_fields(array('field_name' => $field['field_name'], 'group' => $field['group'], 'type_name' => 'itis_term'));
   }
+  // Heavier than term_node!
+  $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='term_node'", $taxonomy_or_cck_weight+12);
 }
 
 function itis_term_uninstall(){
@@ -46,6 +49,91 @@ function itis_term_uninstall(){
  */
 function _itis_term_get_fields(){  
   return array(
+    array (
+      'label' => 'Rank',
+      'field_name' => 'field_rank_name',
+      'type' => 'text',
+      'widget_type' => 'optionwidgets_select',
+      'description' => '',
+      'group' => 'group_scientificname',
+      'module' => 'text',
+      'widget_module' => 'text',
+      'required' => 1,
+      'allowed_values_php' => "
+return array(
+  '- Select one -',
+  'Plant/Fungi' => array(
+    'Plant/Fungi Kingdom' => 'Kingdom',
+    'Plant/Fungi Subkingdom' => 'Subkingdom',
+    'Plant/Fungi Division' => 'Division',
+    'Plant/Fungi Subdivision' => 'Subdivision',
+    'Plant/Fungi Class' => 'Class',
+    'Plant/Fungi Subclass' => 'Subclass',
+    'Plant/Fungi Order' => 'Order',
+    'Plant/Fungi Suborder' => 'Suborder',
+    'Plant/Fungi Family' => 'Family',
+    'Plant/Fungi Subfamily' => 'Subfamily',
+    'Plant/Fungi Tribe' => 'Tribe',
+    'Plant/Fungi Subtribe' => 'Subtribe',
+    'Plant/Fungi Genus' => 'Genus',
+    'Plant/Fungi Subgenus' => 'Subgenus',
+    'Plant/Fungi Section' => 'Section',
+    'Plant/Fungi Subsection' => 'Subsection',
+    'Plant/Fungi Species' => 'Species',
+    'Plant/Fungi Subspecies' => 'Subspecies',
+    'Plant/Fungi Variety' => 'Variety',
+    'Plant/Fungi Subvariety' => 'Subvariety',
+    'Plant/Fungi Form' => 'Form',
+    'Plant/Fungi Subform' => 'Subform'
+  ),
+  'Animal' => array(
+    'Animal Kingdom' => 'Kingdom',
+    'Animal Subkingdom' => 'Subkingdom',
+    'Animal Phylum' => 'Phylum',
+    'Animal Subphylum' => 'Subphylum',
+    'Animal Superclass' => 'Superclass',
+    'Animal Class' => 'Class',
+    'Animal Subclass' => 'Subclass',
+    'Animal Infraclass' => 'Infraclass',
+    'Animal Superorder' => 'Superorder',
+    'Animal Order' => 'Order',
+    'Animal Suborder' => 'Suborder',
+    'Animal Infraorder' => 'Infraorder',
+    'Animal Superfamily' => 'Superfamily',
+    'Animal Family' => 'Family',
+    'Animal Subfamily' => 'Subfamily',
+    'Animal Tribe' => 'Tribe',
+    'Animal Subtribe' => 'Subtribe',
+    'Animal Genus' => 'Genus',
+    'Animal Subgenus' => 'Subgenus',
+    'Animal Species' => 'Species',
+    'Animal Subspecies' => 'Subspecies'  
+  ),
+  'Moneran' => array(
+    'Moneran Kingdom' => 'Kingdom',
+    'Moneran Subkingdom' => 'Subkingdom',
+    'Moneran Phylum' => 'Phylum',
+    'Moneran Subphylum' => 'Subphylum',
+    'Moneran Superclass' => 'Superclass',
+    'Moneran Class' => 'Class',
+    'Moneran Subclass' => 'Subclass',
+    'Moneran Infraclass' => 'Infraclass',
+    'Moneran Superorder' => 'Superorder',
+    'Moneran Order' => 'Order',
+    'Moneran Suborder' => 'Suborder',
+    'Moneran Infraorder' => 'Infraorder',
+    'Moneran Superfamily' => 'Superfamily',
+    'Moneran Family' => 'Family',
+    'Moneran Subfamily' => 'Subfamily',
+    'Moneran Tribe' => 'Tribe',
+    'Moneran Subtribe' => 'Subtribe',
+    'Moneran Genus' => 'Genus',
+    'Moneran Subgenus' => 'Subgenus',
+    'Moneran Species' => 'Species',
+    'Moneran Subspecies' => 'Subspecies'
+  )
+);"
+    ),
     array (
       'label' => 'Unit Name 1',
       'field_name' => 'field_unit_name1',
@@ -94,7 +182,6 @@ function _itis_term_get_fields(){
       'widget_type' => 'text_textfield',
       'description' => '',
       'group' => 'group_scientificname',
-      'required' => 1,
       'module' => 'text',
       'widget_module' => 'text'
     ),
@@ -129,90 +216,6 @@ function _itis_term_get_fields(){
       'widget_module' => 'text'
     ),
     array (
-      'label' => 'Rank',
-      'field_name' => 'field_rank_name',
-      'type' => 'text',
-      'widget_type' => 'optionwidgets_select',
-      'description' => '',
-      'group' => 'group_scientificname',
-      'module' => 'text',
-      'widget_module' => 'text',
-      'required' => 1,
-      'allowed_values_php' => "
-return array(
-  'Plant/Fungi' => array(
-    'Kingdom',
-    'Subkingdom',
-    'Division',
-    'Subdivision',
-    'Class',
-    'Subclass',
-    'Order',
-    'Suborder',
-    'Family',
-    'Subfamily',
-    'Tribe',
-    'Subtribe',
-    'Genus',
-    'Subgenus',
-    'Section',
-    'Subsection',
-    'Species',
-    'Subspecies',
-    'Variety',
-    'Subvariety',
-    'Form',
-    'Subform'
-  ),
-  'Animal' => array(
-    'Kingdom',
-    'Subkingdom',
-    'Phylum',
-    'Subphylum',
-    'Superclass',
-    'Class',
-    'Subclass',
-    'Infraclass',
-    'Superorder',
-    'Order',
-    'Suborder',
-    'Infraorder',
-    'Superfamily',
-    'Family',
-    'Subfamily',
-    'Tribe',
-    'Subtribe',
-    'Genus',
-    'Subgenus',
-    'Species',
-    'Subspecies'
-  ),
-  'Moneran' => array(
-    'Kingdom',
-    'Subkingdom',
-    'Phylum',
-    'Subphylum',
-    'Superclass',
-    'Class',
-    'Subclass',
-    'Infraclass',
-    'Superorder',
-    'Order',
-    'Suborder',
-    'Infraorder',
-    'Superfamily',
-    'Family',
-    'Subfamily',
-    'Tribe',
-    'Subtribe',
-    'Genus',
-    'Subgenus',
-    'Species',
-    'Subspecies'
-  )
-);"
-    ),
-    array (
       'label' => 'Usage',
       'field_name' => 'field_usage',
       'type' => 'text',
@@ -224,13 +227,14 @@ return array(
       'required' => 1,
       'allowed_values_php' => "
 return array(
+  '- Select one -',
   'Plants and Fungi' => array(
-    'accepted',
-    'not accepted'
+    'accepted' => 'accepted',
+    'not accepted' => 'not accepted'
   ),
   'Animals and Monerans' => array(
-    'valid',
-    'invalid'
+    'valid' => 'valid',
+    'invalid' => 'invalid'
   )
 );"
     ),
