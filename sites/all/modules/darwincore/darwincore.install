@@ -1,0 +1,313 @@
+<?php
+
+/**
+ * This file installs the DwC specimen module.
+ */
+/**
+ * Implementation of hook_install
+ */
+function darwincore_install(){
+  
+  // Install the taxonomies:
+  $vocabularies = array(
+    array(
+      array('name' => 'Basis of record','description' => 'A descriptive term indicating whether the record represents an object or observation.','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Preserved Specimen','description' => 'A physical object representing one or more organisms, part of organism, or artifact of an organism. synonyms: voucher, collection, lot.'),
+        array('name' => 'Fossil Specimen','description' => 'A physical object representing one or more fossil organisms, part of fossil organism, or artifact of a fossil organism.'),
+        array('name' => 'Living Specimen','description' => 'An organism removed from its natural occurrence and now living in captivity or cultivation.'),
+        array('name' => 'Human Observation','description' => 'A report by a known observer that an organism was present at the place and time.'),
+        array('name' => 'Machine Observation','description' => 'A report by a monitoring device that an organism was present at the place and time.'),
+        array('name' => 'Still Image','description' => 'An photograph, drawing, painting.'),
+        array('name' => 'Moving Image','description' => 'A sequence of still images taken at regular intervals and intended to be played back as a moving image; may include sound.'),
+        array('name' => 'Sound Recording','description' => 'An audio recording.'),
+        array('name' => 'Other Specimen','description' => 'Any type of specimen not covered by any of the categories above.')
+      )
+    ),
+    array(
+      array('name' => 'Sex','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Male'),
+        array('name' => 'Female'),
+        array('name' => 'Hermaphrodite'),
+        array('name' => 'Unknown'),
+        array('name' => 'Indeterminate'),
+        array('name' => 'Transitional'),
+        array('name' => 'Undetermined'),
+        array('name' => 'Multiple')
+      )
+    ),
+    array(
+      array('name' => 'Type Status','hierarchy' => 1,'module' => 'darwincore', 'nodes'=> array('darwincore'=>1)),
+      array(
+        array('name' => 'Holotype'),
+        array('name' => 'Isotype'),
+        array('name' => 'Lectotype'),
+        array('name' => 'Neotype'),
+        array('name' => 'Nontype'),
+        array('name' => 'Not Provided'),
+        array('name' => 'Paralectotype'),
+        array('name' => 'Paratype'),
+        array('name' => 'Syntype')
+      )
+    ),
+    array(
+      array('name' => 'Continent/BodyOfWater','description' => 'The full, unabbreviated name of the continent or body of water from which the organism was collected or observed.','hierarchy' => 1,'module' => 'darwincorelocation', 'nodes'=> array('darwincorelocation'=>1)),
+      array(
+        array('name' => 'Continent','description' => 'The full, unabbreviated name of the continent from which the organism was collected or observed.', 'children' => array(
+            array('name' => 'Africa'),
+            array('name' => 'Asia-Temperate'),
+            array('name' => 'Asia-Tropical'),
+            array('name' => 'Australasia'),
+            array('name' => 'Pacific'),
+            array('name' => 'Northern America'),
+            array('name' => 'Southern America'),
+            array('name' => 'Antarctic'),
+            array('name' => 'Europe')
+          )
+        ),
+        array('name' => 'BodyOfWater','description' => 'The full, unabbreviated name of the body of water from which the organism was collected or observed.', 'children' => array(
+            array('name' => 'Atlantic Ocean'),
+            array('name' => 'Indian Ocean'),
+            array('name' => 'Southwestern Pacific'),
+            array('name' => 'South-Central Pacific'),
+            array('name' => 'Northwestern Pacific'),
+            array('name' => 'North-Central Pacific')
+          )
+        )
+      )
+    )    
+  );
+  foreach ($vocabularies as $vocabulary){
+    taxonomy_save_vocabulary($vocabulary[0]);
+    $vid = $vocabulary[0]['vid'];
+    foreach($vocabulary[1] as $term){
+      $term['vid'] = $vid;
+      $children = $term['children'];
+      taxonomy_save_term($term);
+      $parent=array($term['tid']);
+      if (isset($children)){
+        foreach($children as $term){
+          $term['parent'] = $parent;
+          $term['vid'] = $vid;
+          taxonomy_save_term($term);
+        }
+      }
+    }
+  }
+  // Create the database for specimen data
+  // Create tables.
+  drupal_install_schema('darwincore');
+  // Increase the module's weight so that it is executed after location and after taxonomy (Don't fuck up).
+  db_query("UPDATE {system} SET weight = 11 WHERE name = 'darwincore'");
+  
+  // Add the Tapirlink files.  This is VERY VERY VERY Quartz specific, so we'll
+  // check that we're on Quartz, and not some other Scratchpad server.
+  if($_SERVER['SERVER_ADDR'] == '157.140.2.32' || $_SERVER['USER'] == 'simor'){
+    darwincore_update_6106();
+  }
+}
+
+function darwincore_schema(){
+  $schema['darwincore'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'vid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'sex' => array('type' => 'int', 'length' => 10),
+      'basisofrecord' => array('type' => 'int', 'length' => 10),
+      'typestatus' => array('type' => 'int', 'length' => 10),
+      'taxonomicname' => array('type' => 'int', 'length' => 10),
+      'institutioncode' => array('type' => 'varchar', 'length' => 255),
+      'collectioncode' => array('type' => 'varchar', 'length' => 255),
+      'cataloguenumbertext' => array('type' => 'text'),
+      'identificationqualifier' => array('type' => 'text'),
+      'identifiedby' => array('type' => 'varchar', 'length' => 255),
+      'dateidentifiedyear' => array('type' => 'int', 'length' => 4),
+      'dateidentifiedmonth' => array('type' => 'int', 'length' => 2),
+      'dateidentifiedday' => array('type' => 'int', 'length' => 2),
+      'collectornumber' => array('type' => 'varchar', 'length' => 255),
+      'fieldnumber' => array('type' => 'varchar', 'length' => 255),
+      'collector' => array('type' => 'varchar', 'length' => 255),
+      'earliestdatecollected' => array('type' => 'datetime'),
+      'latestdatecollected' => array('type' => 'datetime'),
+      'fieldnotes' => array('type' => 'text', 'size' => 'big'),
+      'othercataloguenum' => array('type' => 'text', 'size' => 'big'),
+      'lifestage' => array('type' => 'varchar', 'length' => 255),
+      'count' => array('type' => 'int', 'length' => 5),
+      'genbanknum' => array('type' => 'varchar', 'length' => 255),
+      'remarks' => array('type' => 'text', 'size' => 'big'),
+      'locationnode' => array('type' => 'int', 'length' => 10)
+    ),
+    'primary key' => array('vid')
+  );
+  $schema['darwincorelocation'] = array(
+    'fields' => array(
+      'nid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'vid' => array('type' => 'int', 'length' => 10, 'not null' => true),
+      'continentocean' => array('type' => 'int', 'length' => 10),
+      'islandgroup' => array('type' => 'varchar', 'length' => 255),
+      'island' => array('type' => 'varchar', 'length' => 255),
+      'stateprovince' => array('type' => 'varchar', 'length' => 255),
+      'county' => array('type' => 'varchar', 'length' => 255),
+      'locality' => array('type' => 'varchar', 'length' => 255),
+      'geodeticdatum' => array('type' => 'varchar', 'length' => 255),
+      'verbatimcoordinatesystem' => array('type' => 'varchar', 'length' => 255),
+      'georeferenceprotocol' => array('type' => 'varchar', 'length' => 255),
+      'coordinateuncertainty' => array('type' => 'varchar', 'length' => 255),
+      'georeferenceremarks' => array('type' => 'varchar', 'length' => 255),
+      'minelevation' => array('type' => 'int', 'length' => 5),
+      'maxelevation' => array('type' => 'int', 'length' => 5),
+      'mindepth' => array('type' => 'int', 'length' => 5),
+      'maxdepth' => array('type' => 'int', 'length' => 5)
+    ),
+    'primary key' => array('vid')
+  );
+  variable_set('location_settings_node_darwincorelocation', array(
+      'multiple' => array('min'=>0,'max'=>1,'add'=>1),
+      'form' => array(
+        'weight' => 0,
+        'collapsible' => 1,
+        'collapsed' => 0,
+        'fields' => array(
+          'name' => array('collect'=>1,'weight'=>2),
+          'street' => array('collect'=>1,'weight'=>4),
+          'additional' => array('collect'=>1, 'weight'=>6),
+          'country' => array('collect'=>1,'weight'=>8)
+        ),
+        'register' => 1
+      ),
+      'display' => array(
+        'weight' => 0
+      )
+    )
+  );
+  variable_set('location_maxnum_darwincorelocation',1);
+  variable_set('location_defaultnum_darwincorelocation',1);
+  return $schema;
+}
+
+function darwincore_uninstall(){
+  // Remove tables.
+  drupal_uninstall_schema('darwincore');
+
+  // Remove the tables and various settings.
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach($vocabularies as $vocabulary){
+    if ($vocabulary->module == 'darwincore' || $vocabulary->module == 'darwincorelocation'){
+      $terms = taxonomy_get_tree($vocabulary->vid);
+      foreach ($terms as $term){
+        taxonomy_del_term($term->tid);      
+      }
+      taxonomy_del_vocabulary($vocabulary->vid);
+    }
+  }
+  node_type_delete('darwincore');
+}
+
+function darwincore_update_6102(){
+  // Try and load the file
+  require_once("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+  return array('#finished' => TRUE);
+}
+
+
+function darwincore_update_6103(){
+  variable_set('location_settings_node_darwincorelocation', array(
+      'multiple' => array('min'=>0,'max'=>1,'add'=>1),
+      'form' => array(
+        'weight' => 0,
+        'collapsible' => 1,
+        'collapsed' => 0,
+        'fields' => array(
+          'name' => array('collect'=>0,'weight'=>2),
+          'street' => array('collect'=>0,'weight'=>4),
+          'additional' => array('collect'=>0, 'weight'=>6),
+          'country' => array('collect'=>1,'weight'=>8)
+        ),
+        'register' => 1
+      ),
+      'display' => array(
+        'weight' => 0
+      )
+    )
+  );
+}
+
+function darwincore_update_6104(){
+  // This update should have been update 6100, but given that we have already
+  // run the above two updates, it'll need to be here.
+  // If the column "location" exists in the darwincore table, then rename it to
+  // "locationnode".
+  db_query("ALTER TABLE {darwincore} CHANGE location locationnode INT(10)");
+  // This is either going to fail and we can ignore it, or work, so always
+  // return success.
+  return array('#finished' => TRUE);
+}
+
+function darwincore_update_6106(){
+  // Only add the files if we're on Quartz
+  if($_SERVER['SERVER_ADDR'] == '157.140.2.32' || $_SERVER['USER'] == 'simor'){
+    // Magic for adding the files.
+    //$database_name = 
+    global $db_url;
+    $url = parse_url($db_url);
+    $url['path'] = substr($url['path'],1);
+
+    // Write capabilities
+    $default_capabilites = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_capabilities.xml');
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_capabilities.xml', $default_capabilites);
+    
+    // Write config
+    $default_config = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_config.xml');
+    $default_config = str_replace('DATABASEUSERNAME', $url['user'], $default_config);
+    $default_config = str_replace('DATABASEPASSWORD', $url['pass'], $default_config);
+    $default_config = str_replace('DATABASEDATABASE', $url['path'], $default_config);
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_config.xml', $default_config);
+    
+    // Write metadata
+    $default_metadata = file_get_contents(drupal_get_path('module','darwincore').'/tapir/default_metadata.xml');
+    $default_metadata = str_replace('SITETITLE', variable_get('site_name','Drupal'), $default_metadata);
+    $default_metadata = str_replace('SITEDOMAIN', $_SERVER['HTTP_HOST'], $default_metadata);
+    $result = db_query('SELECT name, mail FROM {users} u, {users_roles} r WHERE u.uid = r.uid AND rid = 5 ORDER BY u.uid DESC LIMIT 1;');
+    if($result){
+      $user = db_fetch_array($result);
+    } else {
+      $user = array(
+        'name' => 'Scratchpad User',
+        'mail' => 'scratchpad@nhm.ac.uk'
+      );
+    }
+    $default_metadata = str_replace('MAINTAINERUSERNAME', $user['name'], $default_metadata);
+    $default_metadata = str_replace('MAINTAINEREMAIL', $user['mail'], $default_metadata);
+    file_put_contents('/var/www/html/tapirlink/config/'.$url['path'].'_metadata.xml', $default_metadata);
+    
+    // Alter resouces file
+    $string_to_add = '<resource code="'.$url['path'].'" status="active" accesspoint="http://quartz.nhm.ac.uk/tapir/tapir.php/'.$url['path'].'" metadataFile="'.$url['path'].'_metadata.xml" configFile="'.$url['path'].'_config.xml" capabilitiesFile="'.$url['path'].'_capabilities.xml"/>';
+    $resources = file_get_contents('/var/www/html/tapirlink/config/resources.xml');
+    $resources = str_replace('</resources>', "\t$string_to_add\n</resources>", $resources);
+    file_put_contents('/var/www/html/tapirlink/config/resources.xml', $resources);
+  }
+  return array('#finished' => TRUE);
+}
+
+/**
+ * Update the dateidentified field to be dateidentifiedyear,month,day!
+ */
+function darwincore_update_6107(){
+  $ret = array();
+  db_add_field($ret, 'darwincore', 'dateidentifiedyear', array('type' => 'int', 'length' => 4));
+  db_add_field($ret, 'darwincore', 'dateidentifiedmonth', array('type' => 'int', 'length' => 2));
+  db_add_field($ret, 'darwincore', 'dateidentifiedday', array('type' => 'int', 'length' => 2));
+  // Copy the data over
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%Y\') AS year, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifiedyeartemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedyear = (SELECT year FROM dateidentifiedyeartemp WHERE d.nid = nid)');
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%m\') AS month, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifiedmonthtemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedmonth = (SELECT month FROM dateidentifiedmonthtemp WHERE d.nid = nid)');
+  db_query_temporary('SELECT DATE_FORMAT(dateidentified, \'%%d\') AS day, nid FROM {darwincore} WHERE DATE_FORMAT(dateidentified, \'%Y\') > 0', 'dateidentifieddaytemp');
+  db_query('UPDATE {darwincore} d SET dateidentifiedday = (SELECT day FROM dateidentifieddaytemp WHERE d.nid = nid)');
+  db_drop_field($ret, 'darwincore', 'dateidentified');
+  return $ret;
+}

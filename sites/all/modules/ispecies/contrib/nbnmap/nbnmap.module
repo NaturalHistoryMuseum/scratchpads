@@ -1,0 +1,46 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function nbnmap_ispecies(){
+  return array (
+    'nbnmap' => array (
+      'title' => t ( 'National Biodiversity Network' ), 
+      'description' => t ( 'Some info about NBN' ),
+      'single' => TRUE,
+      'callback' => 'nbnmap_ajax_callback' ) );
+}
+
+function nbnmap_ajax_callback($term_name, $limit = 20, $urls = array()){
+  try{
+    $items = array ();  
+    $sc = new SoapClient('http://www.nbnws.net/ws/taxonomy/WSDL');
+    $result = $sc->GetTaxonomySearch(array("SpeciesName"=>$term_name));
+    if(is_array($result->Taxon)){
+      $taxon = $result->Taxon[0]; 
+    } else {
+      $taxon = $result->Taxon;
+    }
+    if(is_object($taxon)){
+      $sc = new SoapClient("http://www.nbnws.net/ws_3_3/ws/WSDL");
+      $result = $sc->GetGridMap(array("TaxonVersionKey"=>$taxon->taxonVersionKey));
+    
+      if ($result->Map->Url) {
+        if(strtolower($taxon->TaxonName->_) != strtolower($term_name)){
+          $additional_detail = '<p>'.t('Results for @term_name', array('@term_name' => $taxon->TaxonName->_)).'</p>';
+        }
+        $item = array(
+          'body' => $additional_detail.'<p style="text-align:center"><img id="nbn-map" src="'.$result->Map->Url.'" alt="'.$term_name.'" /></p>',
+          'page_url' => 'http://data.nbn.org.uk/searchengine/search.jsp?tab=1&pg=1&searchTerm='.$term_name
+        );    
+        $items[] = $item;
+        $urls = array('name' => 'NBN', 'url' => 'http://www.nbn.org.uk/', 'urls'=> array($item['page_url']));
+        $items['urls'] = $urls;
+        $items['citation'] = theme('citation_url', $urls);
+      }
+    }
+    return $items;
+  } catch(Exception $e){
+    watchdog('ispecies','NBNMap soap fault with $term_name = '.$term_name);
+  }
+}

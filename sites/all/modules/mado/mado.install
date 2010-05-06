@@ -1,0 +1,57 @@
+<?php
+
+function mado_install(){
+  
+  // We'll increase the weight so that it is executed _AFTER_ the taxonomy
+  // module.  
+  $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='mado'", $taxonomy_weight+10);
+  
+  // Install the mado schema so that we can save page layouts
+  drupal_install_schema('mado');
+}
+
+function mado_uninstall(){
+  drupal_uninstall_schema('mado');
+}
+
+function mado_schema(){
+  $tables['mado'] = array(
+    'fields' => array(
+      'identifier' => array('type' => 'varchar', 'length' => '256', 'not null' => true),
+      'blocks' => array('type' => 'text', 'not null' => true)),
+    'primary key' => array('identifier'));
+  return $tables;
+}
+
+/**
+ * Hmmm, messed up the table definition a little - fix it dude!
+ */
+function mado_update_6101(){
+  // We need to remove the mid column from the table, and update the primary key
+  // so that it is the identifier.  Before this though, we need to remove the 
+  // extra rows that are not needed.
+  $ret = array();
+  db_query_temporary('SELECT MAX(mid) mid FROM {mado} GROUP BY identifier', 'mado_dont_delete');
+  $ret[] = update_sql("DELETE FROM {mado} WHERE mid NOT IN (SELECT mid FROM mado_dont_delete)");
+  db_drop_field($ret, 'mado', 'mid');
+  db_add_primary_key($ret, 'mado', array('identifier'));
+  return $ret;
+}
+
+/**
+ * Hmmm, the Phasmid-study-group.org website has unfortunately got the matrix
+ * views saved in the mado table.  We need to get rid of them
+ */
+function mado_update_6102(){
+  // Can't really do an update_sql call here. Ho hum!
+  $results = db_query("SELECT * FROM {mado}");
+  while($row = db_fetch_array($results)){
+    $row['blocks'] = unserialize($row['blocks']);
+    unset($row['blocks']['view-matrix_images']);
+    unset($row['blocks']['view-matrix_editor_specimens']);
+    unset($row['blocks']['view-matrix_page']);
+    db_query("UPDATE {mado} SET blocks = '%s' WHERE identifier = '%s'", serialize($row['blocks']), $row['identifier']);
+  }
+  return array('#finished' => TRUE);
+}

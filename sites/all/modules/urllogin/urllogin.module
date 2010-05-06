@@ -1,0 +1,47 @@
+<?php
+
+// Will login a user from a URL.
+function urllogin_menu(){
+  return array(
+    'urllogin' => array(  
+      'title' => 'URL Login',
+      'page callback' => 'urllogin_login',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK      
+    ),
+    'viewurllogin' => array(  
+      'title' => "User's URL Login'",
+      'page callback' => 'urllogin_list',
+      'access arguments' => array('view urls'),
+      'type' => MENU_CALLBACK    
+    )
+  );
+}
+
+function urllogin_perm(){
+  return array('view urls');
+}
+
+function urllogin_login($md5){
+  global $user;
+  $account = db_fetch_object(db_query("SELECT * FROM {users} WHERE MD5(CONCAT(uid, name, mail)) = '%s' AND uid != 1", $md5));
+  $user = $account;
+  drupal_goto();
+}
+
+function urllogin_mail_alter($message){
+  $message['body'][0] = str_replace("!loginurl", url('urllogin/'.md5($message['params']['account']->uid.$message['params']['account']->name.$message['params']['account']->mail), array('absolute' => TRUE)), $message['body'][0]);
+}
+
+function urllogin_list(){
+  $results = db_query('SELECT name, MD5(CONCAT(uid,name,mail)) mdfive FROM {users} WHERE uid > 1 ORDER BY name');
+  $header = array('Name','URL');
+  $rows = array();
+  while($row = db_fetch_array($results)){
+    $rows[] = array(
+      $row['name'],
+      url('urllogin/'.$row['mdfive'], array('absolute' => TRUE))
+    );
+  }
+  return theme('table', $header, $rows);
+}

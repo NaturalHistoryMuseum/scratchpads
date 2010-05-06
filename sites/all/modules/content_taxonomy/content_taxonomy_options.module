@@ -1,0 +1,98 @@
+<?php
+
+// $Id: content_taxonomy_options.module,v 1.1.4.7.2.4 2008/12/27 11:25:27 mh86 Exp $
+
+/**
+ * @file
+ * Defines a widget type for content_taxonomy for options
+ **/
+
+/**
+ * Implementation of hook_theme().
+ */
+function content_taxonomy_options_theme() {
+  return array(
+    'content_taxonomy_options_widgets_none' => array(
+      'arguments' => array('field' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_widget_settings   
+ */   
+function content_taxonomy_options_widget_settings($op, $widget) {   
+  switch ($op) {    
+    case 'form':
+      $form = array();
+      $options_voc = array(t('-- SELECT --'));
+      foreach (taxonomy_get_vocabularies() as $voc) {
+        _content_taxonomy_localize_vocabulary($voc);
+        $options_voc[$voc->vid] = $voc->name;
+      }      
+      $form['vid'] = array(
+        '#title' => t('Vocabulary'),
+        '#type' => 'select',
+        '#default_value' => is_numeric($field['widget']['vid']) ? $field['widget']['vid'] : '',
+        '#options' => $options_voc,
+        '#description' => t('Terms of the selected vocabulary get exposed to the field'),
+      );
+      return $form;
+    case 'validate':
+      if(!$widget['vid']){
+        form_set_error('vid', t('Please select a vocabulary'));
+      }
+    case 'save':
+      return array('vid');
+  }   
+}
+   
+/**
+ * Implementation of hook_widget_info().
+ */
+function content_taxonomy_options_widget_info() {
+  return array(
+    'content_taxonomy_options' => array(
+      'label' => t('Checkboxes/Radios'),
+      'field types' => array('content_taxonomy'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+    'content_taxonomy_select' => array(
+      'label' => t('Select List'),
+      'field types' => array('content_taxonomy'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_widget().
+ */
+function content_taxonomy_options_widget(&$form, &$form_state, $field, $items, $delta = NULL) {
+  $element = array(
+    '#type' => ($field['widget']['type'] == 'content_taxonomy_select') ? 'optionwidgets_select' : 'optionwidgets_buttons', 
+    '#default_value' => !empty($items) ? $items : array(),
+  );
+  return $element;
+}
+
+/**
+ *  Theme the label for the empty value for options (for optional radios and single selects).
+ */
+function theme_content_taxonomy_options_widgets_none($field) {
+  switch ($field['widget']['type']) {
+    case 'content_taxonomy_options':
+      return t('N/A');
+    case 'content_taxonomy_select':
+      return t('- None -');
+    default :
+      return '';
+  }
+}

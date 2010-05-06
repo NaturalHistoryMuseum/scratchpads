@@ -1,0 +1,40 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function googlescholar_ispecies(){
+  return array (
+    'googlescholar' => array (
+      'title' => t ( 'Google Scholar' ), 
+      'description' => t ( 'Some info about Google Scholar' ), 
+      'callback' => 'googlescholar_ajax_callback' ,
+      'type' => 'list'));
+}
+
+function googlescholar_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'googlescholar' ) . '/googlescholar.css' );
+}
+
+function googlescholar_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
+  $items = array ();
+  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ('http://googlescholarapi.scratchpads.eu/' . urlencode($term_name));
+  $results = json_decode(file_get_contents($request));
+  $counter = 0;
+  $urls = array();
+  foreach($results as $result){      
+    $counter ++;      
+    $item = array(
+      'body' => '<li><a target="_blank" href="'.$result->link.'">'.$result->title.'</a></li>',
+      'page_url' => $result->link
+    );
+    $urls[] = $item['page_url'];
+    $items[] = $item;
+    if ($counter >= $limit) {
+      break;
+    }  
+  }
+  $urls = array('name'=> 'Google Scholar', 'url' => 'http://scholar.google.co.uk/scholar?q=' . $term_name, 'urls' => $urls);
+  $items['urls'] = $urls;
+  $items['citation'] = theme('citation_url', $urls);
+  return $items;
+}

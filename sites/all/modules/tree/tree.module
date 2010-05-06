@@ -1,0 +1,203 @@
+<?php
+// $Id$
+
+/* TODO hook_submit() has been removed
+   In Drupal 5.x, hook_submit() allowed node modules to alter the node before
+   saving it to the database (it was run between hook_validate() and
+   hook_insert()/hook_update()). In Drupal 6.x this hook has been removed.
+   Instead, you should attach a submit handler to the form created in hook_form(),
+   and then alter the $form_state['values'] array as needed.
+   A submit handler would look like:
+   $form['#submit'] = array('mymodule_node_form_submit_handler'); */
+
+/* TODO Automatically add Drupal.settings.basePath
+   In Drupal 5, you would have to add the base path to Drupal.settings yourself
+   if you needed it (it's needed for just about every AHAH/AJAX enabled module
+   if you did it right). Now in Drupal 6, it's added automatically. You can always
+   find it at Drupal.settings.basePath (actually, as soon as drupal_add_js() is
+   called at least once, so this is similar to the way we automatically add
+   drupal.js and jquery.js. */
+
+/* TODO FormAPI image buttons are now supported.
+   FormAPI now offers the 'image_button' element type, allowing developers to
+   use icons or other custom images in place of traditional HTML submit buttons.
+
+$form['my_image_button'] = array(
+  '#type'         => 'image_button',
+  '#title'        => t('My button'),
+  '#return_value' => 'my_data',
+  '#src'          => 'my/image/path.jpg',
+); */
+
+/* TODO Node previews and adding form fields to the node form.
+   There is a subtle but important difference in the way node previews (and other
+   such operations) are carried out when adding or editing a node. With the new
+   Forms API, the node form is handled as a multi-step form. When the node form
+   is previewed, all the form values are submitted, and the form is rebuilt with
+   those form values put into $form['#node']. Thus, form elements that are added
+   to the node form will lose any user input unless they set their '#default_value'
+   elements using this embedded node object. */
+
+/* TODO New user_mail_tokens() method may be useful.
+   user.module now provides a user_mail_tokens() function to return an array
+   of the tokens available for the email notification messages it sends when
+   accounts are created, activated, blocked, etc. Contributed modules that
+   wish to make use of the same tokens for their own needs are encouraged
+   to use this function. */
+
+/* TODO
+   There is a new hook_watchdog in core. This means that contributed modules
+   can implement hook_watchdog to log Drupal events to custom destinations.
+   Two core modules are included, dblog.module (formerly known as watchdog.module),
+   and syslog.module. Other modules in contrib include an emaillog.module,
+   included in the logging_alerts module. See syslog or emaillog for an
+   example on how to implement hook_watchdog.
+function example_watchdog($log = array()) {
+  if ($log['severity'] == WATCHDOG_ALERT) {
+    mysms_send($log['user']->uid,
+      $log['type'],
+      $log['message'],
+      $log['variables'],
+      $log['severity'],
+      $log['referer'],
+      $log['ip'],
+      format_date($log['timestamp']));
+  }
+} */
+
+/* TODO Implement the hook_theme registry. Combine all theme registry entries
+   into one hook_theme function in each corresponding module file.
+function tree_theme() {
+  return array(
+  );
+} */
+
+/***********************************************************************************
+ * HOOKS
+ ***********************************************************************************/
+function tree_node_info() {
+  return array(
+    'tree' => array(
+      'name' => t('Phylogenetic tree'),
+      'module' => 'tree',
+      'description' => t("Draws phylogenetic trees"),
+    )
+  );
+}
+function tree_access($op, $node, $account) {
+
+
+  if ($op == 'create') {
+    // Only users with permission to do so may create this node type.
+    return user_access('create node', $account);
+  }
+
+  // Users who create a node may edit or delete it later, assuming they have the
+  // necessary permissions.
+  if ($op == 'update' || $op == 'delete') {
+    if (user_access('edit own nodes', $account) && ($account->uid == $node->uid)) {
+      return TRUE;
+    }
+  }
+}
+function tree_form(&$node) {
+  $type = node_get_types('type', $node);
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => check_plain($type->title_label),
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5
+  );
+  $form['tree'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Nexus or Newick data'),
+    '#default_value' => $node->tree,
+    '#required' => TRUE
+  );
+  $form['body_filter']['body'] = array(
+    '#type' => 'textarea',
+    '#title' => check_plain($type->body_label),
+    '#default_value' => $node->body,
+    '#required' => FALSE
+  );
+  $form['body_filter']['filter'] = filter_form($node->format);
+  $options = array();
+  $results = db_query("SELECT SUBSTR(r.title,1,100) AS title, r.nid FROM {node_revisions} r,{node} n WHERE r.vid = n.vid AND type = 'biblio'");
+  while($row = db_fetch_array($results)){
+    if(strlen($row['title'])==100){
+      $row['title'] = $row['title'].'...';
+    }
+    $options[$row['nid']] = $row['title'];
+  }
+  $form['publication'] = array(
+    '#type' => 'select',
+    '#default_value' => $node->publication,
+    '#size' => 10,
+    '#description' => t('A publication associated with this tree'),
+    '#options' => $options
+  );
+  return $form;
+}
+function tree_update($node) {
+  // Executes the "tvwidget" program on a temp file which will give us the output shit!
+  $filepath = file_create_filename('tree', file_directory_temp());
+  file_save_data($node->tree, $filepath, FILE_EXISTS_REPLACE);
+  // Execute the magic tvwidget and save the shit
+  $path = $_SERVER['DOCUMENT_ROOT'].'/'.file_directory_path().'/tree-'.$node->nid;
+  file_check_directory($path, true);
+  $exec_string = 'cd '.$_SERVER['DOCUMENT_ROOT'].'/'.drupal_get_path('module','tree').' && tvwidget -s 3 -o '.$path.' -b '.base_path().file_directory_path().'/tree-'.$node->nid.' -r '.base_path().file_directory_path().'/tree-'.$node->nid.' '.$filepath;
+  drupal_set_message($exec_string);
+  //echo $exec_string;exit;
+  exec($exec_string);
+  /* Small bug here given that we need to link to the images directory */
+  symlink($_SERVER['DOCUMENT_ROOT'].base_path().drupal_get_path('module','tree').'/images',$_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid.'/images');
+  file_delete($filepath);
+  db_query("DELETE FROM {tree} WHERE vid = %d", $node->vid);
+  db_query("INSERT INTO {tree} (vid,tree,publication) VALUES (%d, '%s', %d)", $node->vid, $node->tree, $node->publication);
+}
+function tree_load($node){
+  $additions = db_fetch_object(db_query('SELECT tree, publication FROM {tree} WHERE vid = %d', $node->vid));
+  return $additions;  
+}
+function tree_insert($node) {
+  tree_update($node);
+}
+function tree_nodeapi(&$node, $op, $three, $four){
+  if($op =='delete' && $node->type == 'tree'){
+    // Get a list of the files in the directory, delete them, then delete the directory
+    $dir = $_SERVER['DOCUMENT_ROOT'].base_path().file_directory_path().'/tree-'.$node->nid;
+    $files = scandir($dir);
+    foreach($files as $filename){
+      if($filename =='.' || $filename =='..'){
+        continue;
+      }
+      unlink($dir.'/'.$filename);
+    }
+    rmdir($dir);
+  }
+  if($op =='delete revision' && $node->type =='tree'){
+    db_query("DELETE FROM {node_revisions} WHERE vid=%d",$node->vid);
+  }
+}
+function tree_view($node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+  drupal_add_css(drupal_get_path('module','tree').'/tree.css','module','screen');
+  drupal_add_js(drupal_get_path('module','tree').'/tree.js');
+  $node->content['tree']['#value'] = '<div class="tree-tree"><div style="position:relative;height:425px;width:425px;">
+        <!-- enclose the widget -->
+        <script type="text/javascript" src="'.base_path().file_directory_path().'/tree-'.$node->nid.'/tree.widget.js"></script>
+		<script type="text/javascript">
+		  taxtabprocess = "'.url('taxtab/process').'";
+			tvwAdjustViewer();
+		</script>
+    </div></div>';
+  if($node->publication){
+    $publication = node_load($node->publication);
+    $node->content['publication'] = array(
+      '#value' => '<div class="tree-publication">'.node_view($publication, TRUE, FALSE, FALSE).'</div>',
+      '#weight' => 10
+    );
+  }
+  return $node;
+}

@@ -1,0 +1,2 @@
+#!/bin/bash
+php $1 | mysql -h$2 -u$3 -p$4 $5

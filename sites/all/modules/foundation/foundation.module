@@ -1,0 +1,52 @@
+<?php
+
+function foundation_theme_registry_alter(&$theme_registry){  
+  unset($theme_registry['forum_topic_list']['template']);
+  $theme_registry['forum_topic_list']['theme path'] = drupal_get_path('module','foundation');
+  $theme_registry['forum_topic_list']['theme paths'] = array($theme_registry['forum_topic_list']['theme path']);
+  $theme_registry['forum_topic_list']['file'] = $theme_registry['forum_topic_list']['theme path'].'/forum_topic_list.inc';
+  $theme_registry['forum_topic_list']['function'] = 'foundation_forum_topic_list';
+  
+  unset($theme_registry['forum_list']['template']);
+  $theme_registry['forum_list']['theme path'] = drupal_get_path('module','foundation');
+  $theme_registry['forum_list']['theme paths'] = array($theme_registry['forum_list']['theme path']);
+  $theme_registry['forum_list']['file'] = $theme_registry['forum_list']['theme path'].'/forum_list.inc';
+  $theme_registry['forum_list']['function'] = 'foundation_forum_list';
+  
+  unset($theme_registry['forum_icon']['template']);
+  $theme_registry['forum_icon']['theme path'] = drupal_get_path('module','foundation');
+  $theme_registry['forum_icon']['theme paths'] = array($theme_registry['forum_icon']['theme path']);
+  $theme_registry['forum_icon']['file'] = $theme_registry['forum_icon']['theme path'].'/forum_icon.inc';
+  $theme_registry['forum_icon']['function'] = 'foundation_forum_icon';
+  
+  unset($theme_registry['forum_topic_navigation']); // May restore this later.
+  
+  if(is_array($theme_registry['node']['theme paths'])){
+    $theme_registry['node']['theme paths'] = array_merge(array(drupal_get_path('module','foundation')), $theme_registry['node']['theme paths']);
+  } else {
+    $theme_registry['node']['theme paths'] = array(drupal_get_path('module','foundation'));
+  }
+  
+  if(is_array($theme_registry['comment']['theme paths'])){
+    $theme_registry['comment']['theme paths'] = array_merge(array(drupal_get_path('module','foundation')), $theme_registry['comment']['theme paths']);
+  } else {
+    $theme_registry['comment']['theme paths'] = array(drupal_get_path('module','foundation'));
+  }
+}
+
+function foundation_nodeapi($node, $op, $a3 = NULL, $a4 = NULL){
+  if($op == 'view' && $node->type == 'forum'){
+    drupal_add_css(drupal_get_path('module','foundation').'/foundation.css');
+    drupal_set_title('');
+  }
+}
+
+// No longer in D6, so here instead!
+function _forum_format($topic) {
+  if ($topic && $topic->timestamp) {
+    return t('@time ago<br />by !author', array('@time' => format_interval(time() - $topic->timestamp), '!author' => theme('username', $topic)));
+  }
+  else {
+    return t('n/a');
+  }
+}

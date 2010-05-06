@@ -1,0 +1,402 @@
+<?php
+
+/* $Id$ */
+/** 
+ * @file tinytax.module
+ * Provides a block for displaying a taxonomy allowing users to easily browse by their classifications
+ */
+/**
+ * Implementation of hook_theme
+ */
+function tinytax_theme(){
+  return array(    
+    'tinytax_term_list' => array(      
+      'arguments' => array(
+        'parents', 'children', 'vid'
+      )
+    ), 
+    'tinytax_view_blocks' => array(
+      'arguments' => array(
+        'delta'
+      )
+    )
+  );
+}
+
+/**
+ * Implementation of hook_block.
+ */
+function tinytax_block($op = 'list', $delta = 0, $edit = array()){
+  switch($op){
+    case 'list' :
+      return _tinytax_list_blocks();
+    case 'configure' : // No need to add any extra configuration - Open to suggestions.
+      return _tinytax_configure($delta);
+    case 'view' :
+      return theme('tinytax_view_blocks', $delta);
+    case 'save' :
+      _tinytax_save($delta, $edit);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function tinytax_menu(){
+  return array(
+    'tinytax/get' => array(
+      'title' => 'tinytax', 
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+      'page callback' => 'tinytax_js'
+    ),
+    'tinytax/autocomplete' => array(
+      'access arguments' => array('access content'),
+      'title' => 'Tinytax callback',
+      'page callback' => 'tinytax_autocomplete',
+      'type' => MENU_CALLBACK
+    )
+  );
+}
+
+/**
+ * Helper function to add an option to the configure form
+ */
+function _tinytax_configure($delta){
+  $form = array(
+    'open_to_tid' => array(      
+      '#description' => t('Enter the term (e.g. Taxon Name) to which the taxonomy will be exposed to by default.  THIS FIELD WILL AUTOCOMPLETE'), 
+      '#title' => t('Term'), 
+      '#autocomplete_path' => 'tinytax/autocomplete', 
+      '#type' => 'textfield',
+      '#weight' => -9, 
+      '#default_value' => variable_get($delta, '')
+    ),
+    'show_child_numbers' => array(
+      '#description' => t('Show the number of child terms for each term in the Tinytax block'), 
+      '#title' => t('Show Child Number'),
+      '#type' => 'radios', 
+      '#options' => array(0 => t('No'), 1 => t('Yes')), 
+      '#default_value' => variable_get($delta . '-showchildren', 1)
+    )
+  );
+  if(module_exists('term_node')){
+    $form['hide_invalid'] = array(
+      '#title' => t('Hide invalid terms'),
+      '#description' => t('You can choose to hide terms within your Taxonomy.  This uses the "usage" field, which should be set to either "invalid" or "not accepted" for a term to be hidden'),
+      '#type' => 'radios', 
+      '#options' => array(0 => t('Show'), 1 => t('Hide'), 2 => t('Highlight')), 
+      '#default_value' => variable_get('tinytax_hide_invalid-'.$delta, 0)
+    );
+  }
+  return $form;
+}
+
+/**
+ * Helper function to save the tinytax-delta variable
+ */
+function _tinytax_save($delta, $edit){
+  variable_set($delta, $edit['open_to_tid']);
+  variable_set($delta . '-showchildren', $edit['show_child_numbers']);
+  variable_set('tinytax_hide_invalid-'.$delta, $edit['hide_invalid']);
+}
+
+/**
+ * Autocomplete function for the configure form
+ */
+function tinytax_autocomplete($string = ''){
+  $matches = array();
+  if($string){
+    $result = db_query_range("SELECT parent, name FROM {term_data},{term_hierarchy} WHERE {term_hierarchy}.tid = {term_data}.tid AND LOWER(name) LIKE LOWER('%s%%')", $string, 0, 20);
+    while($term = db_fetch_object($result)){
+      $matches[$term->parent] = check_plain($term->name);
+    }
+  }
+  print drupal_to_js($matches);
+  exit();
+}
+
+/**
+ * Get root name 
+ */
+function _tinytax_get_vocabulary_name($vid){
+  // Add in a function here to set the name as a variable
+  $vocab = taxonomy_vocabulary_load($vid);
+  return check_plain($vocab->name);
+}
+
+/**
+ * Our own simple implementation of taxonomy_get_children, to ensure that the
+ * terms returned are then "extended".
+ */
+function tinytax_taxonomy_get_children($tid, $vid = 0){
+  $children = taxonomy_get_children($tid, $vid);
+  module_invoke_all('taxonomy_term_load', $children);
+  if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE) == 1){
+    foreach($children as $tid => $child){
+      if(isset($child->usage) && (strtolower($child->usage) == 'invalid' || strtolower($child->usage) == 'not accepted')){
+        unset($children[$tid]);
+      }
+    }
+  }
+  return $children;
+}
+
+/**
+ * Similar to the above.
+ */
+function tinytax_taxonomy_get_parents_all($tid){
+  $parents = taxonomy_get_parents_all($tid);
+  module_invoke_all('taxonomy_term_load', $parents);
+  return $parents;
+}
+
+/**
+ * And again, but for get term
+ */
+function tinytax_taxonomy_get_term($tid){
+  $terms = array($tid => taxonomy_get_term($tid));
+  module_invoke_all('taxonomy_term_load', $terms);
+  return array_pop($terms);
+}
+
+/**
+ * Menu callback. Return the HTML for a div.
+ */
+function tinytax_js($tid){
+  // This function handles the URLs "tinytax/get/1 ..."
+  // We need the parents and the children of the TID.
+  $parents = array();
+  if(substr($tid, 0, 3) == 'vid'){
+    $vid = substr($tid, 3);
+    $parent->tid = $tid;
+    $parent->name = _tinytax_get_vocabulary_name($vid);
+    $parent->vid = $vid;
+    $parents[] = $parent;
+    $children = tinytax_taxonomy_get_children(0, $vid);
+  }else{
+    $parents = tinytax_taxonomy_get_parents_all($tid);
+    $term = tinytax_taxonomy_get_term($tid);
+    $vid = $term->vid;
+    $children = tinytax_taxonomy_get_children(0, $vid);
+    if(count($children) > 1){
+      $parent->tid = 'vid' . $vid;
+      $parent->vid = $vid;
+      $parent->name = _tinytax_get_vocabulary_name($vid);
+      $parents[] = $parent;
+    }
+    $children = tinytax_taxonomy_get_children($tid, $vid);
+  }
+  $parents = array_reverse($parents);
+  // Now we build the HTML, and output it.
+  print drupal_to_js(array(
+    
+    'html' => theme('tinytax_term_list', $parents, $children, $vid), 
+    'vid' => $vid
+  ));
+  exit();
+}
+
+/**
+ * Helper function for displaying a list of blocks available from this module.
+ */
+function _tinytax_list_blocks(){
+  // Return a block for each of the Vocabularies on the site.
+  // Start by getting the Vocabs!
+  $vocabularies = array_values(taxonomy_get_vocabularies()); // Paranoia setting in (no need for array_values).
+  $blocks = array();
+  foreach($vocabularies as $vocabulary){
+    if($vocabulary->module == 'taxonomy'){
+      $blocks['tinytax-' . $vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array(
+        
+        '@vocabulary' => check_plain($vocabulary->name)
+      ));
+    }
+  }
+  return $blocks;
+}
+
+/**
+ * Implementation of hook_taxonomy
+ * 
+ * Following is required simply to delete a block if the taxonomy that it
+ * was using is deleted.
+ */
+function tinytax_taxonomy($op, $type, $vocabulary){
+  if($type == 'vocabulary'){
+    if($op == 'delete'){
+      db_query("DELETE FROM {blocks} WHERE module='tinytax' AND delta='%s'", "tinytax-" . $vocabulary['vid']);
+    }else if($op == 'insert' && $type == 'vocabulary'){
+      if(isset($vocabulary['vocab']) && $vocabulary['vocab']){
+        module_load_include('admin.inc', 'block');
+        block_admin_display();
+        $region = system_default_region(variable_get('theme_default', 'garland'));
+        db_query("UPDATE {blocks} SET status = 1, region = '%s', weight = -100 WHERE delta = '%s'", $region, 'tinytax-' . $vocabulary['vid']);
+      }
+    }
+  }
+}
+
+/**
+ * Helper function for displaying a single block. 
+ */
+function theme_tinytax_view_blocks($delta){
+  $delta = substr($delta, 8);
+  $vocabulary = taxonomy_vocabulary_load($delta);
+  $block['subject'] = check_plain($vocabulary->name);
+  // Lets try and create some list!
+  $children = array();
+  $parents = array();
+  if(arg(0) == "taxonomy" && arg(1) == "term" && arg(2) !== 0){
+    $tid = arg(2);
+    $term = tinytax_taxonomy_get_term($tid);
+    if($term->vid == $delta){
+      $parents = tinytax_taxonomy_get_parents_all($tid);
+      $children = tinytax_taxonomy_get_children(0, $vocabulary->vid);
+      if(count($children) > 1){
+        $parent->tid = 'vid' . $vocabulary->vid;
+        $parent->vid = $vocabulary->vid;
+        $parent->name = _tinytax_get_vocabulary_name($vocabulary->vid);
+        $parents[] = $parent;
+      }
+      $parents = array_reverse($parents);
+      $children = tinytax_taxonomy_get_children($tid, $vocabulary->vid);
+    }
+  }
+  if(count($parents) + count($children) === 0){
+    $tid = variable_get('tinytax-' . $delta, FALSE);
+    if(!$tid){
+      $tid = _tinytax_first_term_with_many_children($delta);
+    }else{
+      // Make sure this term exists, else we delete the variable
+      $term = tinytax_taxonomy_get_term($tid);
+      if(!$term){
+        variable_del('tinytax-' . $delta);
+        $tid = _tinytax_first_term_with_many_children($delta);
+      }
+    }
+    // Check to see if the taxonomy has multiple roots
+    $parents = tinytax_taxonomy_get_parents_all($tid);
+    $children = tinytax_taxonomy_get_children(0, $delta);
+    if(count($children) > 1){
+      $parent->tid = 'vid' . $vocabulary->vid;
+      $parent->vid = $vocabulary->vid;
+      $parent->name = _tinytax_get_vocabulary_name($vocabulary->vid);
+      $parents[] = $parent;
+    }
+    $parents = array_reverse($parents);
+    $children = tinytax_taxonomy_get_children($tid, $delta);
+  }
+  $block['content'] = theme('tinytax_term_list', $parents, $children, $delta);
+  // Load the Javascript and CSS
+  drupal_add_js(drupal_get_path('module', 'tinytax') . '/tinytax.js');
+  drupal_add_css(drupal_get_path('module', 'tinytax') . '/tinytax.css', 'module', 'screen', FALSE);
+  return $block;
+}
+
+function _tinytax_first_term_with_many_children($vid){
+  $tid = 0;
+  while(array_pop(db_fetch_array(db_query("SELECT COUNT(t.tid) FROM term_data t, term_hierarchy h WHERE vid = %d AND t.tid = h.tid AND parent = %d;", $vid, $tid))) === "1"){
+    $tid = array_pop(db_fetch_array(db_query("SELECT t.tid FROM term_data t, term_hierarchy h WHERE vid = %d AND t.tid = h.tid AND parent = %d;", $vid, $tid)));
+  }
+  return $tid;
+}
+
+/**
+ * Theme taxonomy_block_item_list
+ */
+function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
+  $num_parents = count($parents);
+  $num_children = count($children);
+  $return_string = '';
+  // We're not at the root, so display parents
+  $parent_keys = array_keys($parents);
+  for($i = 0; $i < $num_parents; $i++){
+    $parent = $parents[$parent_keys[$i]];
+    if($i === 0){
+      $return_string .= '<div id="tinytaxroot-' . $vid . '" class="tinytax tinytaxroot"><p class="tinytax tinytaxroot';
+    }else{
+      $return_string .= '<div class="tinytax tinytaxnode"><p class="tinytax';
+      if($i != $num_parents - 1 || $num_children){
+        $return_string .= ' tinytaxinternal';
+      }else{
+        $return_string .= ' tinytaxlast';
+      }
+    }
+    $return_string .= '">' . _theme_tinytax_term_list_link($parent, $vid);
+  }
+  if($num_children){
+    $return_string .= '<div class="tinytaxlast tinytax tinytaxnode">';
+    $children_keys = array_keys($children);
+    for($i = 0; $i < $num_children; $i++){
+      $child = $children[$children_keys[$i]];
+      $return_string .= '<p class="tinytax';
+      if($num_parents && $i != ($num_children - 1)){
+        $return_string .= ' tinytaxlist';
+      }elseif($num_parents){
+        $return_string .= ' tinytaxlast';
+      }
+      $return_string .= '">' . _theme_tinytax_term_list_link($child, $vid);
+    }
+    $return_string .= '</div>';
+  }
+  foreach($parents as $parent){
+    $return_string .= '</div>';
+  }
+  return $return_string;
+}
+
+function _theme_tinytax_term_list_link($term, $vid){
+  // if this term has a child which is used!
+  if(function_exists('leftandright_descendant_used')){
+    if(leftandright_descendant_used($term->tid)){
+      $class = 'tinytaxused';
+    }
+  }
+  if(substr($term->tid, 0, 3) != 'vid'){
+    $return_string .= l('<img src="' . base_path() . drupal_get_path('module', 'tinytax') . '/images/plus.gif" alt="Expand"/>', 'taxonomy/term/' . $term->tid, array(
+      
+      'attributes' => array(
+        
+        'title' => t('Click to see the descendants of this name'), 
+        'onclick' => "tinytaxalterroot('" . url('tinytax/get/' . $term->tid) . "');return false;"
+      ), 'html' => true
+    ));
+  }else{
+    $return_string .= l('<img src="' . base_path() . drupal_get_path('module', 'tinytax') . '/images/plus.gif" alt="Expand"/>', '', array(
+      
+      'attributes' => array(
+        
+        'title' => t('Click to see the descendants of this name'), 
+        'onclick' => "tinytaxalterroot('" . url('tinytax/get/' . $term->tid) . "');return false;"
+      ), 'html' => true
+    ));
+  }
+  $return_string .= ' ';
+  if(substr($term->tid, 0, 3) != 'vid'){
+    if(variable_get('tinytax_hide_invalid-tinytax-'.$term->vid, 0) == 2 && isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
+      $link_text = '<span style="color:red;">' . $term->name . '</span>';
+    }else{
+      $link_text = $term->name;
+    }
+    $return_string .= l($link_text, 'taxonomy/term/' . $term->tid, array(
+      'html' => TRUE, 
+      'attributes' => array(
+        'class' => $class, 
+        'title' => t('Click to see all content tagged with this name')
+      )
+    ));
+  }else{
+    $return_string .= $term->name;
+  }
+  $num_children = 0;
+  if(variable_get('tinytax-' . $vid . '-showchildren', 1)){
+    $num_children = count(tinytax_taxonomy_get_children($term->tid, $vid));
+  }
+  if($num_children > 0){
+    $return_string .= ' <small>(' . count(tinytax_taxonomy_get_children($term->tid, $vid)) . ')</small>';
+  }
+  $return_string .= '</p>';
+  return $return_string;
+}

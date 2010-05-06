@@ -1,0 +1,47 @@
+<?php
+// $Id: hashcash.install,v 1.3 2009/02/04 12:41:02 sdrycroft Exp $
+
+/**
+ * Installing of the hashcash module
+ */
+function hashcash_install() {
+  // Create the database to link images with users.  
+  // Create tables.
+  drupal_install_schema('hashcash');
+}
+
+function hashcash_schema(){
+  $schema['hashcash'] = array(
+    'fields' => array(
+      'hashcash' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE),
+      'hcdate' => array(
+        'type' => 'varchar',
+        'length' => 6,
+        'not null' => TRUE)
+      ),
+    'indexes' => array(
+      'hashcash_date_index' => array('hcdate')
+    ),
+    'primary key' => array('hashcash')
+  );
+  return $schema;
+}
+/**
+ * Kick that loser to touch.
+ */
+function hashcash_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('hashcash');
+
+  variable_del('hashcash_expire');
+  variable_del('hashcash_form_ids');
+  variable_del('hashcash_addorignore');
+}
+
+function hashcash_update_6101(){
+  // Update the menu stuff
+  return array('#finished' => TRUE);
+}

@@ -1,0 +1,9 @@
+<?php
+
+function node_term_edit_install(){
+  
+  // We'll descrease the weight so that it is executed _BEFORE_ the taxonomy
+  // module.  
+  $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='node_term_edit'", $taxonomy_weight-10);
+}

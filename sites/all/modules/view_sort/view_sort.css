@@ -1,0 +1,83 @@
+#view-sort-pin:hover,#view-sort-hide:hover{
+ cursor:pointer;
+}
+.class-flickr .submitted, .class-flickr h2, .class-flickr .links{
+ display:none;
+}
+.class-flickr .sort-div div{
+ margin:0 !important;
+ padding: 0 !important;
+}
+.divider {
+ background-image: url('view_sort_background.jpg');
+ background-position: 50% 50%;
+ background-repeat:no-repeat;
+ height: 96px;
+ width: 96px;
+ padding: 0 !important;
+}
+.view-sort-toggle{
+ display: none;
+ position: absolute;
+ top: 0px;
+ right: 0px;
+}
+#view-sort-select-number{
+ font-size:160%;
+ padding:10px;
+ margin:10px 0;
+ border: solid 1px #ccc;
+ background-color:#ffffee;
+}
+#view-sort-select-number select{
+ font-size: 100%;
+}
+.view-sort-clear{
+ float:none !important;
+ display:block;
+ clear:both;
+ border:none !important;
+ padding:0 !important;
+ margin:0 !important;
+ backgroud-color:inherit !important;
+}
+.view-sort-top,.view-sort-bottom{
+ border: solid 1px #ccc;
+ margin: 5px 0;
+ min-height:20px;
+}
+.view-sort-top,.view-sort-bottom{
+ overflow:hidden;
+}
+.sortable:hover, .sortable *:hover{
+ cursor:move;
+}
+.view-sort-top > *,.view-sort-bottom > *{
+ border:solid 1px black;
+ overflow:hidden;
+ background-color:white;
+ margin:3px;
+ padding:3px;
+}
+.sort-div .node{
+ border:none !important;
+ padding:0 !important;
+ margin:0 !important;
+ line-height:1em !important;
+}
+.sort-div .links{
+ display:none;
+}
+.view-sort-top{
+ background-color:#eeffee;
+}
+.view-sort-bottom{
+ background-color:#ffeeee;
+}
+#view-sort-error{
+ color:red;
+}
+.notsortable:hover{
+ cursor:pointer !important;
+}
+ 
