@@ -77,6 +77,12 @@ function itis_term_form_alter(&$form, &$form_state, $form_id){
     $form['group_scientificname']['field_unit_ind3']['#suffix'] = '</div>';
     $form['group_scientificname']['field_unit_ind4']['#prefix'] = '<div id="itis_term_unit_ind4" class="itis_term_unit">';
     $form['group_scientificname']['field_unit_ind4']['#suffix'] = '</div>';
+    $form['group_usage']['field_usage']['#prefix'] = '<div id="itis_term_usage">';
+    $form['group_usage']['field_usage']['#suffix'] = '</div>';
+    $form['group_usage']['field_accepted_name']['#prefix'] = '<div id="itis_term_accepted_name">';
+    $form['group_usage']['field_accepted_name']['#suffix'] = '</div>';
+    $form['group_usage']['field_unacceptability_reason']['#prefix'] = '<div id="itis_term_unacceptability_reason">';
+    $form['group_usage']['field_unacceptability_reason']['#suffix'] = '</div>';    
   }
 }
 
@@ -88,7 +94,7 @@ function itis_term_validate($form, &$form_state){
   }
   if(isset($form_state['values']['field_rank_name'][0]['value'])){
     if(!$form_state['values']['field_rank_name'][0]['value']){
-      form_set_error('field_rank_name', t('Please select a rank.'));
+      form_set_error('field_rank_name', t('Please select a "Rank".'));
     }
   }
 }
