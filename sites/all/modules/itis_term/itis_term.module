@@ -82,7 +82,7 @@ function itis_term_form_alter(&$form, &$form_state, $form_id){
     $form['group_usage']['field_accepted_name']['#prefix'] = '<div id="itis_term_accepted_name">';
     $form['group_usage']['field_accepted_name']['#suffix'] = '</div>';
     $form['group_usage']['field_unacceptability_reason']['#prefix'] = '<div id="itis_term_unacceptability_reason">';
-    $form['group_usage']['field_unacceptability_reason']['#suffix'] = '</div>';    
+    $form['group_usage']['field_unacceptability_reason']['#suffix'] = '</div>';
   }
 }
 
