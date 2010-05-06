@@ -176,11 +176,11 @@ function tui_move_term($method, $vid, $term, $to){
     }
     $term->parent = $to->tid;
   } else {
-    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->parent, $term->tid);
+    $results = db_query("SELECT t.tid, weight FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->parent, $term->tid);
     while($row = db_fetch_array($results)){
-      $siblings[] = $row['tid'];
+      $siblings[] = $row;
       if($row['tid'] == $to->tid){
-        $siblings[] = $term->tid;
+        $siblings[] = array('tid' => $term->tid, 'weight' => $term->weight);
       }
     }
     $term->parent = $to->parent;    
@@ -189,25 +189,25 @@ function tui_move_term($method, $vid, $term, $to){
   taxonomy_save_term($term);
   $weight = 1;
   foreach($siblings as $sibling){
-    db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
+    db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling['tid']);
     $weight++;
   }
-  if($term['parent'] != $current_term['parent']){
-    $_SESSION['tui_moved_terms'][$vid][] = $current_term;
-  }
+  $_SESSION['tui_moved_terms'][$vid][] = array('term' => $current_term, 'siblings' => $siblings);
 }
 
 /**
  * Undo move based on sessino
  */
 function tui_undo_move($vid){
-  //unset($_SESSION['tui_moved_terms']);
   if(isset($_SESSION['tui_moved_terms'][$vid]) && count($_SESSION['tui_moved_terms'][$vid])){
-    $old_term = array_pop($_SESSION['tui_moved_terms'][$vid]);
-    $current_term = (array)taxonomy_get_term($old_term['tid']);
-    $current_term['parent'] = $old_term['parent'];
-    $current_term['weight'] = $old_term['weight'];
+    $old_settings = array_pop($_SESSION['tui_moved_terms'][$vid]);
+    $current_term = (array)taxonomy_get_term($old_settings['term']['tid']);
+    $current_term['parent'] = $old_settings['term']['parent'];
+    $current_term['weight'] = $old_settings['term']['weight'];
     taxonomy_save_term($current_term);
+    foreach($old_settings['siblings'] as $sibling){
+      db_query("UPDATE {term_data} SET weight = %d WHERE tid = %d", $sibling['weight'], $sibling['tid']);
+    }
     echo $current_term['tid'];
   }
 }
