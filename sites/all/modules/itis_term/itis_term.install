@@ -27,7 +27,7 @@ function itis_term_install(){
   }
   // Heavier than term_node!
   $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
-  db_query("UPDATE {system} SET weight=%d WHERE name='term_node'", $taxonomy_or_cck_weight+12);
+  db_query("UPDATE {system} SET weight=%d WHERE name='itis_term'", $taxonomy_or_cck_weight+12);
 }
 
 function itis_term_uninstall(){
@@ -42,6 +42,32 @@ function itis_term_uninstall(){
   }
   content_clear_type_cache(TRUE);
   menu_rebuild();
+}
+
+/**
+ * Hook_requirement, as Drupal is fucking stupied, and incapable of installing
+ * modules in the correct order
+ */
+function itis_term_requirements($phase){
+  if($phase == 'install'){
+    $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__,".")).'.info');
+    $module_not_found = FALSE;
+    foreach($info_file['dependencies'] as $required_module){
+      if(!module_exists($required_module)){
+        $module_not_found = TRUE;
+      }
+    }
+    if($module_not_found){
+      $t = get_t();
+      drupal_set_message($t('The module %module has not been installed because a dependency needed installing first, please try again', array('%module' => $info_file['name'])), 'error');
+      return array(
+        basename(__FILE__) => array(
+          'title' => 'Failed module requiredment in '.basename(__FILE__),
+          'severity' => REQUIREMENT_ERROR          
+        )
+      );
+    }
+  }
 }
 
 /**
