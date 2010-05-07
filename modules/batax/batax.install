@@ -1,0 +1,21 @@
+<?php
+function batax_install(){
+  // Set the mythical 'taxonomy_override_selector'
+  variable_set('taxonomy_override_selector', TRUE);
+}
+// Reverse the install
+function batax_disable(){
+  variable_set('taxonomy_override_selector', FALSE);
+}
+function batax_enable(){
+  variable_set('taxonomy_override_selector', TRUE);
+}
+
+/**
+ * It looks like a number of sites may well have the taxonomy_override_selector
+ * set to FALSE.  This should correct them (http://www.youtube.com/watch?v=VjdgXqKjHvY)
+ */
+function batax_update_6101(){
+  batax_enable();
+  return array('#finished' => TRUE); 
+}

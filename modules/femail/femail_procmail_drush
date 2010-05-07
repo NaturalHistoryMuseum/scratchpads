@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Inorder for the script to work properly, the "drush" script MUST be in the
+# path, and drushrc.php MUST be set up with the root directory of the Drupal
+# install.
+
+# Set the Internal Field Separator to prevent stripping of leading spaces
+IFS=""
+while read line
+do
+	if [ -z "$MESSAGE" ]
+	then
+		MESSAGE=$line
+	else
+		MESSAGE=${MESSAGE}"\n"$line
+	fi
+done
+DOMAIN=`echo -e $MESSAGE | grep ^To | head -n1 | sed -r "s/.*@//;s/([a-zA-Z0-9\-\.]*).*/\1/"`
+echo -e $MESSAGE | drush -l http://$DOMAIN femail

@@ -1,0 +1,340 @@
+<?php
+
+/**
+ * @file
+ * 
+ * The main module file for the countriesmap module.
+ * 
+ * This module creates a new content type "Countries map", which enables a user
+ * to select a list of countries to highlight on a map of the world.
+ */
+
+/**
+ * TODO
+ * 
+ * - Settings page for setting the width of images
+ * - Dynamic image width - could be done with JavaScript
+ * - Setting to define the WMS in use, it shouldn't be hard coded to the EDIT
+ *   WMS server
+ * - TESTING
+ */
+
+/**
+ * Implementation of hook_node_info
+ */
+function countriesmap_node_info() {
+  return array(
+    'countriesmap' => array(
+      'name' => t('Countries map'),
+      'module' => 'countriesmap',
+      'description' => t("A node type for displaying maps of the world with selectable countries highlighted"),
+      'has_title' => TRUE,
+      'title_label' => t('Title')
+    )
+  );
+}
+
+/**
+ * Implementation of hook_access
+ */
+function countriesmap_access($op, $node, $account) {
+  if ($op == 'create') {
+    return user_access('create countriesmap content', $account);
+  }
+  if ($op == 'update') {
+    if (user_access('edit any countriesmap content', $account) || (user_access('edit own countriesmap content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+  if ($op == 'delete') {
+    if (user_access('delete any countriesmap content', $account) || (user_access('delete own countriesmap content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_perm
+ */
+function countriesmap_perm() {
+  return array(
+    'create countriesmap content',
+    'delete own countriesmap content',
+    'delete any countriesmap content',
+    'edit own countriesmap content',
+    'edit any countriesmap content',
+  );
+}
+
+/**
+ * Implementation of hook_form
+ */
+function countriesmap_form(&$node) {
+  drupal_add_js(drupal_get_path('module','countriesmap').'/countriesmap.js');
+  drupal_add_css(drupal_get_path('module','countriesmap').'/countriesmap.css');
+  $type = node_get_types('type', $node);
+  if ($type->has_title) {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => check_plain($type->title_label),
+      '#required' => TRUE,
+      '#default_value' => $node->title,
+      '#weight' => -20
+    );
+  }
+  if ($type->has_body) {
+    $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
+  }
+  $form['cm'] = array(
+    '#prefix' => '<div class="countriesmap" style="border: solid 1px #999;padding: 10px;"><p style="font-size: 140%;">Check the checkboxes of the countries below that you would like to mark on the map.</p>',
+    '#suffix' => '</div>'
+  );
+  // Now we define the form elements specific to our node type.
+  // Lets get the continents from the continents table - these will be used for
+  // grouping the countries
+  $result = db_query("SELECT * FROM {countriesmap_continents} ORDER BY continent");
+  while($row = db_fetch_array($result)){
+    // Create a group in the form for this continent
+    $form['cm']['continent_'.$row['conid']] = array(
+      '#type' => 'fieldset',
+      '#title' => $row['continent'],
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['cm']['continent_'.$row['conid']]['selectall'] = array(
+      '#type' => 'markup',
+      '#value' => '<form><label><input id="continent_'.$row['conid'].'" class="countriesmapcheckbox" type="checkbox"/> '.t('Select all for').' '.$row['continent'].'</label></form>'
+    );
+    // Get all the Country groups for this continent
+    $result2 = db_query("SELECT * FROM {countriesmap_countrygroups} WHERE cgid IN (SELECT cgid FROM {countriesmap_tdwg WHERE conid = %d) ORDER BY countrygroup", $row['conid']);
+    while($row2 = db_fetch_array($result2)){
+      // Create a group in the form for this country group
+      $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']] = array(
+        '#type' => 'fieldset',
+        '#title' => $row2['countrygroup'],
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']]['selectall'] = array(
+        '#type' => 'markup',
+        '#value' => '<form><label><input id="country_group_'.$row2['cgid'].'" class="countriesmapcheckbox" type="checkbox"/> '.t('Select all for').' '.$row2['countrygroup'].'</label></form>'
+      );
+      // Fetch the countries for this country group
+      $result3 = db_query("SELECT cmid, ct.name as regionname, ci.name as countryname FROM {countriesmap_tdwg} ct,{countriesmap_iso3166} ci WHERE isocode=code AND cgid = %d ORDER BY ci.name,ct.name", $row2['cgid']);
+      $result3 = db_query("SELECT 
+        cmid,
+        ct.name as regionname,
+        COALESCE(ci.name,'UNKNOWN') as countryname
+      FROM {countriesmap_tdwg} ct
+      LEFT JOIN
+        {countriesmap_iso3166} ci
+      ON 
+        isocode=code 
+      WHERE 
+        cgid = %d
+      ORDER BY
+        ci.name,ct.name", $row2['cgid']);
+      while($row3 = db_fetch_array($result3)){
+        $default_value = 0;
+        $fieldname = 'countriesmap_'.$row3['cmid'];
+        if(isset($node->$fieldname) && $node->$fieldname){
+          $default_value = 1;
+          $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']]['#collapsed'] = FALSE;
+          $form['cm']['continent_'.$row['conid']]['#collapsed'] = FALSE;
+        }
+        // Create a form element for each country
+        $form['cm']['continent_'.$row['conid']]['countrygroup_'.$row2['cgid']][$fieldname] = array(
+          '#type' => 'checkbox',
+          '#title' => $row3['countryname']." | ".$row3['regionname'],
+          '#default_value' => $default_value,
+          '#attributes' => array('class' => 'continent_'.$row['conid'] . ' ' . 'country_group_'.$row2['cgid'])
+        );
+      }      
+    }
+  }
+  $form['body_field']['#type'] = 'fieldset';
+  $form['body_field']['#title'] = t('Description');
+  $form['body_field']['#collapsed'] = 1;
+  $form['body_field']['#collapsible'] = 1;
+  return $form;
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function countriesmap_form_alter(&$form, $form_state, $form_id){
+  if($form_id == 'countriesmap_node_form'){
+    // We only need to do this if the form has been submitted and there is an
+    // error on the page.
+    if($form_state['submitted']){
+      foreach($form_state['values'] as $form_state_key=>$value){
+        if(substr($form_state_key,0,13) == 'countriesmap_' && $value == 1){
+          foreach($form['cm'] as $continent_key => $continent){
+            if(is_array($continent)){
+              foreach($continent as $country_group_key => $country_group){
+                if(is_array($country_group)){
+                  foreach($country_group as $country_key => $country){
+                    if($country_key == $form_state_key){
+                      $form['cm'][$continent_key]['#collapsed'] = FALSE;
+                      $form['cm'][$continent_key][$country_group_key]['#collapsed'] = FALSE;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_validate
+ */
+function countriesmap_validate(&$node) {
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      return;
+    }
+  }
+  // No country has been selected, return a form error (set sadly to title,
+  // as I don't know how to just set an error) FIXME
+  form_set_error('title', t('You must select a country'));
+}
+
+/**
+ * Implementation of hook_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function countriesmap_insert($node) {
+  db_query("DELETE FROM {countriesmap_nodes} WHERE vid = %d", $node->vid);
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      // I'm afraid we're doing this the slow way!
+      db_query("INSERT INTO {countriesmap_nodes} (vid, nid, cmid) VALUES (%d, %d, %d)", $node->vid, $node->nid, substr($key, 13));
+    }
+  }
+  // Create the image
+  $level4ids = array();
+  foreach($node as $key => $value){
+    if(substr($key, 0, 13) == 'countriesmap_' && $value){
+      // Again, we're doing this the slow way FIXME
+      $level4ids[] = array_pop(db_fetch_array(db_query("SELECT level4code FROM countriesmap_tdwg WHERE cmid = %d", substr($key, 13))));
+    }
+  }
+  $temp = file_directory_temp();
+  $file = tempnam(realpath($temp), 'file');
+  $image_filename = file_save_data("DATA", file_directory_path().'/countriesmap_'.$node->nid.'_'.user_password(20).'.jpg');
+  $url = "http://edit.africamuseum.be/edit_wp5/v1/areas.php?ls=map:000000&as=a:333333,000000,2&ms=1600&bbox=-180,-90,180,90&ad=tdwg4:a:".implode(",",$level4ids);
+  file_put_contents($file, file_get_contents($url));
+  watchdog('countriesmap', 'Downloaded map image <a href="!url">!url</a>', array('!url' => $url), WATCHDOG_NOTICE);
+  exec("convert $file -fuzz 30% -transparent white $file");
+  exec("convert $file -channel A -evaluate divide 2 +channel -resize 800x $file");
+  $map_path = drupal_get_path('module','countriesmap').'/map.jpg';
+  exec("composite $file $map_path $image_filename");
+  
+  // Now delete the previous file.
+  unlink(array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid))));
+  db_query('DELETE FROM {countriesmap_image} WHERE vid = %d', $node->vid);
+    
+  db_query("INSERT INTO {countriesmap_image} (nid, vid, filename) VALUES (%d, %d, '%s')", $node->nid, $node->vid, $image_filename);
+  unlink($file);
+}
+
+/**
+ * Implementation of hook_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ */
+function countriesmap_update($node) {
+  countriesmap_insert($node);
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function countriesmap_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'delete revision':
+      // Notice that we're matching a single revision based on the node's vid.
+      unlink(array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid))));
+      db_query('DELETE FROM {countriesmap_image} WHERE vid = %d', $node->vid);
+      db_query('DELETE FROM {countriesmap_nodes} WHERE vid = %d', $node->vid);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_delete
+ */
+function countriesmap_delete($node) {
+  // Notice that we're matching all revision, by using the node's nid.
+  db_query('DELETE FROM {countriesmap_nodes} WHERE nid = %d', $node->nid);
+  $result = db_query('SELECT filename FROM {countriesmap_image} WHERE nid = %d', $node->nid);
+  while($row = db_fetch_array($result)){
+    unlink($row['filename']);
+  }
+  db_query('DELETE FROM {countriesmap_image} WHERE nid = %d', $node->nid);
+}
+
+/**
+ * Implementation of hook_load
+ */
+function countriesmap_load($node) {
+  $result = db_query('SELECT cmid FROM {countriesmap_nodes} WHERE vid = %d', $node->vid);
+  $object = new stdClass();
+  while($row = db_fetch_array($result)){
+    $fieldname = 'countriesmap_'.$row['cmid'];
+    $object->$fieldname = 1;
+  }
+  return $object;
+}
+
+/**
+ * Implementation of hook_view().
+ *
+ * This is a typical implementation that simply runs the node text through
+ * the output filters.
+ */
+function countriesmap_view($node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+  $node->content['map'] = array(
+    '#value' => theme('countriesmap_display_map', $node),
+    '#weight' => 1,
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_theme().
+ *
+ * This lets us tell Drupal about our theme functions and their arguments.
+ */
+function countriesmap_theme() {
+  return array(
+    'countriesmap_display_map' => array(
+      'arguments' => array('node'),
+    ),
+  );
+}
+
+/**
+ * A custom theme function.
+ *
+ * By using this function to format our node-specific information, themes
+ * can override this presentation if they wish. We also wrap the default
+ * presentation in a CSS class that is prefixed by the module name. This
+ * way, style sheets can modify the output without requiring theme code.
+ */
+function theme_countriesmap_display_map($node) {
+  $output = '<div class="countriesmap_map">';
+  $filename = array_pop(db_fetch_array(db_query('SELECT filename FROM {countriesmap_image} WHERE vid = %d', $node->vid)));
+  $output .= '<img src="'.base_path().$filename.'"/>';
+  $output .= '</div>';
+  return $output;
+}

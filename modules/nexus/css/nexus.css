@@ -1,0 +1,620 @@
+#nexus{
+  position: relative;
+  min-width: 850px; 
+}
+
+
+
+
+
+
+
+
+
+/* Character groups */
+
+#character-groups{
+  overflow: hidden;
+  height: 25px;
+  padding-left: 1px;
+}
+
+#character-groups div.scroll{
+  width: 10000px;
+}
+
+#character-groups div.scroll div{
+  float: left;
+  background-color: #d4dde5;
+  overflow: hidden;
+  text-align: center;
+  font-size: 10px;
+  line-height: 22px;
+  height: 22px;
+  border: 1px solid #999;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #e5ebf0 #969ca2 #969ca2 #e5ebf0;
+}
+
+#character-groups div.scroll div:hover, #character-groups div.scroll div.selected{
+  background-color: #a2aec2;
+  border-color: #e5ebf0 #727b89 #727b89 #e5ebf0;
+}
+
+
+
+/* Add character */
+
+#add-character{
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 5000;
+  height: 26px;
+  line-height: 23px;
+  width: 85px;
+  text-align: left;
+  padding-left: 32px;
+  background: url('../images/add_character.gif') no-repeat;
+  border-right: 1px solid #c0c0c0;
+  font-size: 0.9em;
+  
+}
+
+
+
+
+
+
+/* controls */
+
+#matrix-editor-controls{
+  background: url('../images/control_background.gif') repeat-x;
+  height: 30px;
+  border-color: #c0c0c0;
+  border-width: 1px; 
+  border-style: solid;
+}
+
+#matrix-editor-controls #search{
+  float: left;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+#matrix-editor-controls #search input{
+  height: 15px;
+  font-size: 11px;
+  line-height: 15px;
+  margin: 0 10px;
+  width: 150px;
+  border: 1px solid #999;
+}
+
+#matrix-editor-controls .item-list ul{
+  margin: 0;
+  height: 30px;
+}
+
+#matrix-editor-controls .item-list ul li, #matrix-editor-controls .item-list ul li.first, #matrix-editor-controls .item-list ul li.last{
+  float: right;
+  list-style: none;
+  background: url('../images/tab_off.gif') no-repeat;
+  text-align: center;
+  padding: 0 20px;  
+  line-height: 26px; 
+  border-left: 1px solid #c8c8c8; 
+  height: 30px;
+  margin: 0;
+}
+
+#matrix-editor-controls .item-list ul li.active{
+  background: #d4dde5;
+  border-top: 1px solid #d4dde5;
+}
+
+#matrix-editor-controls ul li img{
+  cursor: pointer;
+}
+
+#matrix-editor-controls .item-list ul li a, #add-character a{
+    color: #5a5a5a;
+    outline: none;
+}
+
+
+/* matrix editor panels */
+
+#matrix-editor-panels{
+  clear: both;
+  background-color: #d4dde5;
+  min-height: 350px;
+  border-color: #8995ab;
+  border-width: 1px; 
+  border-style: none solid solid solid;
+  color: #252b36;
+  position: relative;
+  height: 350px;
+  overflow: hidden;
+
+}
+
+
+#matrix-editor-panels .inner{
+  padding: 20px;
+}
+
+#matrix-editor-panels div.tab{
+visibility: hidden;
+}
+
+#matrix-editor-panels #cell-data{
+  display: none;
+}
+
+
+/* forms */
+
+#matrix-editor-panels form{
+  margin: 0!important;
+}
+
+#matrix-editor-panels #node-form{
+  width: 100%; 
+}
+
+#matrix-editor-panels span.form-required{
+  color: #ffaa06;
+}
+
+#matrix-editor-panels div.columns{
+  width: 48%;
+}
+
+#matrix-editor-panels div#left{
+  float: left;
+  margin-right: 3%;
+  margin-left: 0.5%;
+}
+
+#matrix-editor-panels div#right{
+  min-height: 270px;
+}
+
+#matrix-editor-panels div#right{
+  float:left;
+}
+
+#matrix-editor-panels div.columns .inner{
+  padding: 0;
+  min-height: 260px;
+}
+
+#matrix-editor-panels form input.form-text, 
+#matrix-editor-panels form textarea, 
+#edit-taxa ul.treeview, 
+#text-state-dynamic-entry{
+  border: 1px solid #8995ab;
+  width: 100%;
+}
+
+#matrix-editor-panels form input.form-text{
+  height: 1.6em;
+}
+
+#matrix-editor-panels .resizable-textarea{
+  width: 100%;
+}
+
+#matrix-editor-panels textarea{
+  height: 70px;
+}
+
+#matrix-editor-panels .resizable-textarea .grippie{
+  background-color: #A2AEC2;
+}
+
+
+
+#matrix-editor-panels .form-button, 
+#matrix-editor-panels .form-submit {
+ margin: 0 20px 0 0; 
+}
+
+
+/* delete form */
+
+#confirm-delete{
+  display: none;
+  margin: 50px auto;
+  width: 500px;
+  text-align: center;
+}
+
+#confirm-delete p{
+  font-size: 1.4em;
+  margin-bottom: 30px;
+}
+
+#confirm-delete p.description{
+  font-size: 1em;
+  margin-top: -20px;
+  color: #E41212;
+}
+
+
+/* edit taxa */
+
+#edit-taxa div.taxonomy-tree ul.treeview{
+  height: 250px;
+  overflow-y: scroll;
+  background-color: #fff;
+  padding-top: 5px;
+}
+
+.treeview label:hover, .treeview span.hover label{
+  color: #000!important;
+}
+
+#edit-taxa #right input, #edit-taxa .ahah-progress{
+  margin-top: 265px;
+}
+
+
+
+/* character form */
+
+#nexus-character-form #edit-character-group-wrapper label, #edit-new-group-wrapper label{
+  width: 15em;
+  float: left;
+}
+
+#nexus-character-form #edit-new-group-wrapper #edit-new-group, #nexus-character-form #edit-character-group{
+  width: 200px;
+}
+
+#nexus-character-form #edit-new-group-wrapper{
+  display: none;
+}
+
+#nexus-character-form .form-radios .form-item{
+  float: left;
+}
+
+#character-info ul li{
+  margin: 5px 0;
+  list-style: none;
+  background: none;  
+}
+
+#character-info ul li strong{
+  padding-right: 5px;
+  font-size: 1.4em;
+  position: relative;
+  top: 2px;
+}
+
+#matrix-editor-panels .note-form textarea{
+  height: 200px;
+}
+
+
+/* state form */
+
+/* Hide the states by default - will be displayed with js */
+
+#nexus-character-form #character-type .form-item, #nexus-character-form #character-type .form-radios{
+  margin: 0!important;
+  padding: 0;
+}
+
+#nexus-character-form #character-type .form-radios .form-item{
+  padding: 4px 15px;
+}
+
+#nexus-character-form #character-type .form-radios input{
+  position: relative;
+  cursor: pointer;
+  margin-left: 0;
+}
+
+#edit-save-character{
+  margin-top: 20px;
+}
+
+#nexus-character-form #character-type .form-radios label{
+   cursor: pointer; 
+}
+
+#character-type .selected, 
+#nexus-character-form #nexus-state-wrapper,
+#character-type .description p{
+  background: #dfe8f0;
+  border-width: 1px;
+  border-color: #8995AB;
+}
+
+#character-type .selected{
+  border-style: solid solid none solid;
+}
+
+#character-type .selected{
+  position: relative;
+  top: 1px;
+}
+
+#character-type .description{
+  clear: left;
+  font-size: 1em;
+  margin: 0;
+}
+
+#character-type .description p{
+  display: none;
+  margin: 0;
+  color: #252B36;
+  padding: 15px 7px;
+  border-style: solid;
+}
+
+#character-type .description p.controlled{
+  border-bottom-style: none;
+}
+
+
+#nexus-character-form #nexus-state-wrapper{
+  border-style: none solid solid solid;
+  margin-bottom: 10px;
+}
+
+#nexus-state-wrapper{
+  display:none;
+  clear: both;
+  padding: 10px 0 0 0;
+}
+
+
+#nexus-states div.state-form{
+  position: relative;
+  z-index: 5000;
+  margin: 0 5px 5px 5px;
+  padding: 5px;
+  border: 1px solid #8995AB;
+  background: #d4dde5;
+  text-align: left;
+}
+
+#edit-add-state, #edit-add-state:active{
+
+  cursor: pointer;
+  color: #fff;
+  padding: 0 10px 4px 18px!important;
+  background: #8995AB url('../images/add_state.gif') no-repeat 6px center;
+  margin: 10px 0 0 0!important;
+  height: 24px;
+  border: 0px;
+  
+}
+
+#edit-add-state:hover{
+  text-decoration: underline;
+}
+
+#nexus-states span.handle{
+  width: 9px;
+  background: url('../images/state_handle.gif') no-repeat;
+  height: 9px;
+  display: block;
+  cursor: move;
+  position: absolute;
+  top: 12px;
+  left: 5px;
+}
+
+#nexus-states div.state .form-item{
+  margin: 0;
+  margin-left: 20px;
+}
+
+#nexus-states .form-item label{
+  width: 120px;
+  float: left;
+}
+
+#nexus-states .resizable-textarea{
+  margin: 10px 2px 0 120px;
+  width: auto;
+}
+
+#nexus-states .resizable-textarea textarea{
+  width: 100%;
+  height: 50px;
+}
+
+#nexus-states .resizable-textarea .grippie{
+  width: 100%;
+}
+
+#nexus-states div.state .form-item input{
+  width: 50%;
+}
+
+#nexus-states div.state.delete-state{
+  margin: 0;
+}
+
+#nexus-states div.controls{
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  
+}
+
+#nexus-states div.controls input{
+  margin: 0;
+  padding: 5px;
+  border: 1px solid #8995AB;
+}
+
+#nexus-states .state-description{
+  display: none;
+}
+
+
+
+/* Project settings */
+
+#matrix-editor-panels .vertical-tabs, 
+#matrix-editor-panels .vertical-tabs-div,
+#matrix-editor-panels .vertical-tabs-pane,
+#matrix-editor-panels .vertical-tabs-panes
+{
+  min-height: 290px;
+}
+
+.vertical-tabs .vertical-tabs-div,
+.vertical-tabs vertical-tabs-panes
+{
+padding: 12px;
+}
+
+
+
+
+#matrix-editor-panels .vertical-tabs-div{
+ border: 1px solid #8995AB; 
+}
+
+#matrix-editor-panels .vertical-tabs li a{
+  padding: 0;
+  color: #fff;
+  line-height: 1.7em;
+}
+
+#matrix-editor-panels .vertical-tabs ul{
+  border: none;
+  border-bottom: 1px solid #8995AB;
+}
+
+#matrix-editor-panels .vertical-tabs li{
+    border-width: 1px;
+    border-style: solid none none solid;
+    border-color: #8995AB;
+    padding:0 0 0.2em 1.5em;
+}
+
+#matrix-editor-panels .vertical-tabs li .description,
+#matrix-editor-panels .vertical-tabs li .summary{
+   color: #424e61;
+}
+
+#matrix-editor-panels .vertical-tabs li, #matrix-editor-panels .vertical-tabs{
+  background: #a2aec2;
+}
+
+
+
+#matrix-editor-panels .vertical-tabs .vertical-tabs-fieldsets, 
+#matrix-editor-panels .vertical-tabs .vertical-tabs-panes,
+#matrix-editor-panels .vertical-tabs .vertical-tabs-pane,
+ #matrix-editor-panels .vertical-tabs li.selected{
+  background:#e0e9f1;  
+}
+
+#matrix-editor-panels .vertical-tabs li.selected{
+  padding-right: 1px;
+  position: relative;
+  left: 1px;
+  border-left: 1px solid #D4DDE5;
+}
+
+#matrix-editor-panels .vertical-tabs li.selected a{
+  color: #252B36;
+}
+
+
+#settings .form-submit{
+  margin-left: 48%;
+}
+
+/* Project ADD form - dynamic options */
+
+.nexus-dynamic-options{
+  display: none;
+}
+
+
+
+
+
+
+
+
+/* Dialog */
+
+#dialog{
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  margin-left: -140px;
+  z-index: 5000;
+  display: none;
+  cursor: pointer;
+}
+
+#dialog div.messages{
+  width: 287px;
+  color: #fff;
+  border: none;
+  text-align: center;
+  font-size: 1.1em;
+  margin: 0;
+  padding: 20px 10px;
+  border-style: ridge;
+  border-width: 3px;
+}
+
+#dialog div.messages ul{
+  text-align: left;
+}
+
+#dialog div.status{
+  background: #96da0b;
+  border-color: #96da0b;
+}
+
+#dialog div.error, #dialog div.warning{
+  background: #ea1717;
+  border-color: #cd0202;
+}
+
+
+
+/* clearfix */
+
+.clearfix:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
+}
+ 
+.clearfix {
+	display: inline-block;
+}
+ 
+html[xmlns] .clearfix {
+	display: block;
+}
+ 
+* html .clearfix {
+	height: 1%;
+}
+
+
+
+
+

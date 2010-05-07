@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * Implementation of hook_install
+ */
+function classification_import_install() {
+  drupal_install_schema('classification_import');
+}
+
+/**
+ * Implementation of hook_uninstall
+ *
+ */
+function classification_import_uninstall() {
+  drupal_uninstall_schema('classification_import');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function classification_import_schema() {
+  return array(
+    'classification_import_temp' => array(
+      'fields' => array(
+        'id' => array('type' => 'serial','unsigned' => TRUE,'not null' => TRUE),
+        'name' => array('type' => 'varchar', 'length' => 255),  
+        'vid' => array('type' => 'int','unsigned' => TRUE,'not null' => TRUE),
+        'parent' => array('type' => 'varchar', 'length' => 255),
+        'data' => array('type' => 'text')
+      ),
+      'primary key' => array('id'),
+      'indexes' => array(
+        'classification_import_temp_parent_index' => array('parent'),
+        'classification_import_temp_vid_index' => array('vid'),
+        'classification_import_temp_name_index' => array('name')
+      )
+    )
+  );
+}

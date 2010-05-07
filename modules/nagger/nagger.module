@@ -1,0 +1,129 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_node_grants
+ */
+function nagger_node_grants($account, $op){
+  $grants['nagger'] = array_keys($account->roles);
+  $grants['nagger_author'] = array($account->uid);
+  return $grants;  
+}
+
+/**
+ * Implementation of hook_node_access_records
+ */
+function nagger_node_access_records($node) {
+  $set_access = false;
+  if(isset($node->nagger) && is_array($node->nagger)){
+    foreach($node->nagger as $nag){
+      if(in_array(1,$nag)){
+        $set_access = true;
+      }
+    }
+    if ($set_access){
+      $role_ids = array_keys(user_roles());
+      $grants = array();
+      foreach($role_ids as $role_id){
+        $grants[] = array(
+          'realm' => 'nagger', 
+          'gid' => $role_id,
+          'grant_view' => $node->nagger[$role_id]['view'],
+          'grant_update' => $node->nagger[$role_id]['update'], 
+          'grant_delete' => $node->nagger[$role_id]['delete'],
+          'priority' => 0,
+        );
+      }
+      $grants[] = array(
+        'realm' => 'nagger_author',
+        'gid' => $node->uid,
+        'grant_view' => true,
+        'grant_update' => true,
+        'grant_delete' => true,
+        'priority' => 0
+      );
+      return $grants;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_form_alter
+ */
+function nagger_form_alter(&$form, &$form_state, $form_id) {  
+  if ($form['#id'] == 'node-form') {
+    drupal_add_css(drupal_get_path('module','nagger').'/nagger.css');
+    $roles = user_roles();
+    $roles_ids = array_keys($roles);
+    $form['og_nodeapi']['visible']['nagger'] = array(
+      '#weight'=>100,
+      '#tree' => 1,
+      '#type' => 'fieldset',
+      '#collapsible' => 1,
+      '#collapsed' => 1,
+      '#title'=>t('Access by role'),
+      '#description'=>t('Edit below, only if this node hasn\'t been added to a group. Leave the boxes unchecked to use the default access permissions')
+    );
+    $form['og_nodeapi']['visible']['nagger']['beforetable'] = array(
+      '#value' => '<table class="nagger"><thead><tr><th>'.t('Role').'</th><th>'.t('View').'</th><th>'.t('Edit').'</th><th>'.t('Delete').'</th></tr></thead><tbody>'
+    );
+    // For each role, add three checkboxes
+    foreach($roles_ids as $role_id){
+      $form['og_nodeapi']['visible']['nagger'][$role_id]['view'] = array(
+        '#type' => 'checkbox',
+        '#default_value'=>isset($form['#node']->nagger[$role_id]['view'])?$form['#node']->nagger[$role_id]['view']:0,
+        '#prefix' => '<tr><td>'.$roles[$role_id].'</td><td>',
+        '#suffix' => '</td>'          
+      );
+      $form['og_nodeapi']['visible']['nagger'][$role_id]['update'] = array(
+        '#type' => 'checkbox',
+        '#default_value'=> isset($form['#node']->nagger[$role_id]['update'])?$form['#node']->nagger[$role_id]['update']:0,
+        '#prefix' => '<td>',
+        '#suffix' => '</td>'
+      );
+      $form['og_nodeapi']['visible']['nagger'][$role_id]['delete'] = array(
+        '#type' => 'checkbox',
+        '#default_value'=>isset($form['#node']->nagger[$role_id]['delete'])?$form['#node']->nagger[$role_id]['delete']:0,
+        '#prefix' => '<td>',
+        '#suffix' => '</td></tr>'
+      );
+    }
+    $form['og_nodeapi']['visible']['nagger']['aftertable'] = array(
+      '#value' => '</tbody></table>'
+    );
+    // Add validation so that a user CAN NOT add a node to a group, and restrict
+    // its access - this is what this module does that content_access doesn't
+    $form['#validate'][] = 'nagger_node_validate';    
+  }
+}
+
+function nagger_node_validate($form, &$form_state){
+  // If we've selected a group, check it for stuff.
+  if (count($form_state['og_groups'])>0) {
+    foreach($form_state['nagger']['table'] as $role=>$value){
+      if(in_array(1,$value)){
+        form_set_error('og_groups', t('You\'ve selected a group, whilst also trying to restrict content access.  Either deselect the group, or uncheck all the access restriction boxes'));
+        return;        
+      }
+    }
+  }
+}
+/**
+ * Implementation of hook_nodeapi
+ */
+function nagger_nodeapi(&$node, $op, $arg = 0) {
+  switch ($op) {
+    case 'load':
+      $result = db_fetch_object(db_query('SELECT * FROM {nagger} WHERE nid = %d', $node->nid));
+      $node->nagger = unserialize($result->settings);
+      break;
+    case 'delete':
+      db_query('DELETE FROM {nagger} WHERE nid = %d', $node->nid);
+      break;
+    case 'update':
+      db_query('DELETE FROM {nagger} WHERE nid = %d', $node->nid);      
+    case 'insert':
+      db_query("INSERT INTO {nagger} (nid, settings) VALUES (%d, '%s')", $node->nid, serialize($node->nagger));
+      break;
+  }
+}

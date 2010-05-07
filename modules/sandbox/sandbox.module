@@ -1,0 +1,42 @@
+<?php
+function sandbox_block($op = 'list', $delta = 0, $edit = array()){
+  switch ($op){
+    case 'list':
+      return array(array('info' => t('Sandbox timer')));
+    case 'view':
+      $update_time = variable_get('sandbox_site_created',time());
+      $current_time = time();
+      $time_passed = $current_time - $update_time;
+      $time_left = floor((7200 - $time_passed)/60);
+      $time_passed = ceil($time_passed/60);
+      return array('subject' => '', 'content' => "<p>The Sandbox was last updated $time_passed minutes ago. You have approximately $time_left minutes before the site is wiped.</p>");
+  }
+}
+
+/**
+ * Implementation of hook_form_alter
+ * 
+ * Following alters the install form, skipping it alltogether so that the sites
+ * are installed automatically, with no user input.
+ */
+function sandbox_form_alter(&$form, $form_state, $form_id){
+  if($form_id == 'install_configure_form'){
+    $form_state = array (
+      'storage' => NULL, 
+      'submitted' => TRUE, 
+      'values' => array (
+        'site_name' => 'Scratchpad Sandbox', 
+        'site_mail' => 'scratchpad@nhm.ac.uk', 
+        'account' => array(
+          'name' => 'test',
+          'mail' => 'scratchpad@nhm.ac.uk', 
+          'pass' => 'pass'), 
+        'date_default_timezone' => '3600', 
+        'clean_url' => '1',
+        'update_status_module' => array (1 => 0), 
+        'op' => 'Save and continue', 
+        'submit' => 'Save and continue', 
+        'form_id' => 'install_configure_form'));
+    scratchpadify_install_configure_form_submit($form, $form_state);
+  }
+}

@@ -1,0 +1,205 @@
+<?php
+// $Id$
+// $HeadURL$
+
+/** 
+ * @file autotag.module
+ * 
+ * Automatically tags nodes with terms depending on the content of textfields.
+ * Textfields to ignore can be set on the modules settings page, along with the 
+ * number of nodes to search on cron.  Once all nodes have been search by cron,
+ * this module shouldn't do anything on a cron run.
+ */
+
+/**
+ * Implementation of hook_node_operations
+ */
+function autotag_node_operations(){
+  return array(
+    'autotag' => array(
+      'label' => t('Automatically tag'),
+      'callback' => 'autotag_mass_update'
+    )
+  );
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function autotag_theme() {
+  return array(
+    'autotag_admin_settings' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'autotag.settings.inc',
+    )
+  );
+}
+
+/**
+ * Callback for node_operation to re-autotag nodes.
+ */
+function autotag_mass_update($nodes){
+  // Following ripped off from nodes module.
+  // We use batch processing to prevent timeout when updating a large number
+  // of nodes.
+  if (count($nodes) > 10) {
+    $batch = array(
+      'operations' => array(
+        array('_autotag_mass_update_batch_process', array($nodes))
+      ),
+      'finished' => '_autotag_mass_update_batch_finished',
+      'title' => t('Processing'),
+      // We use a single multi-pass operation, so the default
+      // 'Remaining x of y operations' message will be confusing here.
+      'progress_message' => '',
+      'error_message' => t('The update has encountered an error.')
+    );
+    batch_set($batch);
+  }
+  else {
+    foreach($nodes as $nid){
+      _autotag_mass_update_helper($nid);
+    }
+    drupal_set_message(t('The update has been performed.'));
+  }
+}
+
+/**
+ * Node Mass Update Batch operation
+ */
+function _autotag_mass_update_batch_process($nodes, &$context) {
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = count($nodes);
+    $context['sandbox']['nodes'] = $nodes;
+  }
+
+  // Process nodes by groups of 5.
+  $count = min(5, count($context['sandbox']['nodes']));
+  for ($i = 1; $i <= $count; $i++) {
+    // For each nid, load the node, reset the values, and save it.
+    $nid = array_shift($context['sandbox']['nodes']);
+    _autotag_mass_update_helper($nid);
+    
+    // Update our progress information.
+    $context['sandbox']['progress']++;
+  }
+
+  // Inform the batch engine that we are not finished,
+  // and provide an estimation of the completion level we reached.
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
+
+/**
+ * Node Mass Update Batch 'finished' callback.
+ */
+function _autotag_mass_update_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('The update has been performed.'));
+  }
+  else {
+    drupal_set_message(t('An error occurred and processing did not complete.'), 'error');
+  }
+}
+
+/**
+ * Helper function for above.
+ */
+function _autotag_mass_update_helper($nid){
+  $node = node_load(array('nid' => $nid));
+  node_save($node);
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  module_load_include('functions.inc','autotag');
+  _autotag_nodeapi($node, $op, $a3, $a4);
+}
+
+/**
+ * Implementation of hook_menu
+ * 
+ * Needed only for the module's settings page, and the autocomplete function
+ */
+function autotag_menu(){
+  return array(
+    'autotag/autocomplete' => array(
+      'title' => 'Autocomplete autotag thingumy',
+      'page callback' => 'autotag_autocomplete',
+      'access arguments' => array('access content'),// Hmmm, not ideal!
+      'type' => MENU_CALLBACK,
+      'file' => 'autotag.autocomplete.inc'
+    ),
+    'admin/settings/autotag' => array(
+      'title' => 'Autotag settings',
+      'description' => 'Change the default autotag settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('autotag_admin_settings'),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'autotag.settings.inc'
+    )
+  );
+}
+
+/**
+ * Simply save what was entered in the checkbox
+ */
+function autotag_submit_vocabulary_form($form, $form_values){
+  // Merge the array with what is already there.
+  $disable_vids = variable_get('autotag_disable_vids', array());
+  $disable_vids[$form_values['vid']] = $form_values['values']['disableautotag'];
+  variable_set('autotag_disable_vids', $disable_vids);
+}
+
+/**
+ * Receive the form after the first page, nothing is done after the second.
+ */
+function autotag_form_submit($form, &$form_state){
+  if(isset($form_state['storage']['formbuttons'])){
+    // After first page we store the form so that it can be restored on the second
+    // page
+    $form_state['storage']['formsubmitted'] = $form;
+  } else {
+    if(isset($form_state['clicked_button']['#post']['files'])){
+      foreach($form_state['clicked_button']['#post']['files'] as $key => $value){
+        // If we have a node, then the files may already be associated.
+        $fids_to_ignore = array();
+        if(isset($form['#node']->nid)){
+          // Lets get a list of the FIDs that are already in the upload table
+          $results = db_query("SELECT DISTINCT fid FROM upload WHERE nid = %d", $form['#node']->nid);
+          while($row = db_fetch_array($results)){
+            $fids_to_ignore[$row['fid']] = $row['fid'];
+          }
+        }
+        if(!isset($fids_to_ignore[$key])){
+          $form_state['values']['files'][$key] = db_fetch_array(db_query("SELECT * FROM files WHERE fid = %d", $key));
+          $form_state['values']['files'][$key]['new'] = 1;
+          $form_state['values']['files'][$key]['list'] = 1;
+        }
+      }
+    }
+    
+    // Restore the hidden form fields from the old form for taxonomy
+    module_load_include('functions.inc','autotag');
+    $hide_vids = _autotag_get_vids_for_type($form['type']['#value']);
+    foreach($form['taxonomy'] as $key=>$value){
+      if(in_array($key,$hide_vids)){
+        $form_state['values']['taxonomy'][$key] = $form_state['storage']['oldtaxonomy'][$key]['#default_value'];
+      }
+    }
+    // Unset storage to ensure the form isn't presented to the user again.
+    unset($form_state['storage']['oldtaxonomy']);
+  }
+}
+/**
+ * Implementation of hook_form_alter
+ */
+function autotag_form_alter(&$form, &$form_state, $form_id){
+  module_load_include('form_alter.inc','autotag');
+  module_load_include('functions.inc','autotag');
+  _autotag_form_alter($form, $form_state, $form_id);
+}

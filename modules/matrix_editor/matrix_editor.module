@@ -1,0 +1,370 @@
+<?php
+
+/**
+ * Display a view as a table style.
+ */
+function matrix_editor_preprocess_views_view_matrix(&$vars){
+  $view = $vars['view'];
+  $path = drupal_get_path('module', 'matrix_editor');
+  drupal_add_js(array(
+    
+    'matrixEditorCallbackPath' => url('matrix_editor/callback/' . $view->name)
+  ), 'setting');
+  drupal_add_js(array(
+    'matrixEditorPath' => $path
+  ), 'setting');
+  drupal_add_js(array(
+    'matrixEditorViewName' => $view->name
+  ), 'setting');
+  $result = $vars['rows'];
+  $options = $view->style_plugin->options;
+  $options['enableCellNavigation'] = $options['editable'];
+  $handler = $view->style_plugin;
+  $handlers = $view->style_plugin->display->handler->get_handlers('field');
+  $fields = &$view->field;
+  if($options['fixedFirstColumn']){
+    $first_field = key($handlers);
+  }
+  $options['enableAddRow'] = false;
+  foreach($handlers as $field => $handler){
+    if(!$name = $handler->label()){
+      $name = $handler->ui_name();
+    }
+    ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
+    $column = array(
+      'id' => $field, 'name' => $name, 
+      'field' => $field, 
+      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 100), 
+      'cssClass' => 'cell-title', 
+      'resizable' => ($options['enableColumnResize'] ? 1 : 0), 
+      'formatter' => 'selectorCellFormatter', 
+      'editor' => 'MatrixCellEditor', 'args' => ''
+    );
+    if((isset($first_field) && $first_field == $field)){
+      unset($first_field);
+    }elseif($field != 'nid'){
+      // Is this a CCK field?
+      if($handler->content_field['widget']['type']){
+        $column['id'] = $handler->content_field['field_name'];
+      }elseif(count($handler->options['vids'])){
+        foreach($handler->options['vids'] as $vid){
+          if($vid){
+            $column['args'] .= 'vids[]=' . $vid . '&';
+          }
+        }
+      }
+    }
+    $columns[] = $column;
+  }
+  $renders = array();
+  $keys = array_keys($view->field);
+  $node_types = array();
+  $data = array();
+  module_load_include('inc', 'node', 'node.pages');
+  foreach($result as $count => $row){
+    foreach($keys as $id){
+      $data[$count][$id] = $view->field[$id]->theme($row);
+    }
+    if(!$node_types[$row->node_type]){
+      matrix_editor_add_node_form_js($row->node_type, $row->nid);
+      $node_types[$row->node_type] = $row->nid;
+    }
+    $data[$count]['id'] = $row->nid;
+  }
+  $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
+  $path = drupal_get_path('module', 'matrix_editor');
+  $form['save_changes'] = array(
+    '#type' => 'image_button', 
+    '#src' => $path . '/images/save_changes.gif', 
+    '#value' => t('Save note')
+  );
+  $vars['matrix'] .= '<div id="matrix-editor-panel"><form>';
+  $vars['matrix'] .= '<div id="matrix-editor-field"></div>';
+  $vars['matrix'] .= '<div id="save-field"> ' . drupal_render($form) . '</div>';
+  $vars['matrix'] .= '</form></div>';
+  $vars['matrix'] .= '<div id="matrix-editor-result"></div>';
+}
+
+/**
+ * Load and pseudo-render the form - ensures all js & css files are available
+ */
+function matrix_editor_add_node_form_js($node_type, $nid){
+  $form_state = array();
+  $node = node_load($nid);
+  $form_id = $node_type . '_node_form';
+  $form = drupal_retrieve_form($form_id, $form_state, $node);
+  drupal_prepare_form($form_id, $form, $form_state);
+  drupal_alter('form', $form, array(), $form_id);
+  drupal_process_form($form_id, $form, $form_state);
+  drupal_render_form($form_id, $form);
+}
+
+function theme_matrix_editor($options, $columns, $data, $filter = null){
+  _matrix_editor_add_files();
+  drupal_add_js('var options = ' . drupal_to_js($options), 'inline');
+  drupal_add_js('var data = []; data = ' . drupal_to_js($data), 'inline');
+  if($filter){
+    drupal_add_js('var filter = ' . $filter, 'inline');
+  }
+  drupal_add_js('var columns = ' . matrix_editor_to_js($columns) . ';', 'inline');
+  $output = '<div id="resizableWrapper">
+  <div id="myGrid" style="width:100%;height:' . $options['viewportHeight'] . 'px;" class="hideCols hideRows ' . ($options['editable'] ? 'editable' : '') . '">
+  </div></div>';
+  drupal_add_js("$(function(){\rinitMatrixEditor();\n});", 'inline');
+  return $output;
+}
+
+/**
+ * Theme the form for the matrix style plugin
+ */
+function theme_matrix_editor_views_plugin_table($form){
+  $output = drupal_render($form['description_markup']);
+  $header = array(
+    t('Field'), t('Width')
+  );
+  $rows = array();
+  foreach(element_children($form['columns']) as $id){
+    $row = array();
+    $row[] = drupal_render($form['columns'][$id]['name']);
+    $row[] = drupal_render($form['columns'][$id]['width']);
+    $rows[] = $row;
+  }
+  $output .= theme('table', $header, $rows);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/** 
+ * Filter the view to just return one nid 
+ */
+function matrix_editor_views_query_alter(&$view, &$query){
+  if($view->matrix_editor_nid){
+    $query->add_where(0, 'node.nid = %d', $view->matrix_editor_nid);
+  }
+}
+
+/** 
+ * Implementation of hook_menu(). 
+ */
+function matrix_editor_menu(){
+  // Menu callbacks
+  $items['matrix_editor/callback/%/%'] = array(
+    'access callback' => 'matrix_editor_access', 
+    'access arguments' => array(
+      2
+    ), 'page callback' => 'matrix_editor_callback', 
+    'page arguments' => array(
+      3
+    ), 'type' => MENU_CALLBACK, 
+    'file' => 'matrix_editor.callbacks.inc'
+  );
+  return $items;
+}
+
+/** 
+ * Implementation of hook_init(). 
+ */
+function matrix_editor_init(){
+  $path = drupal_get_path('module', 'matrix_editor');
+  // Add special style sheet for the views preview
+  drupal_add_css($path . '/css/matrix_editor.views.css');
+}
+
+/** 
+ * Check user has access to the view
+ */
+function matrix_editor_access($view_name){
+  $view = views_get_view($view_name);
+  $view->build();
+  return $view->display['default']->handler->access();
+}
+
+/**
+ * Implementation of hook_views_api
+ */
+function matrix_editor_views_api(){
+  return array(
+    'api' => 2
+  );
+}
+
+function matrix_editor_alternate_js($set = false){
+  static $use_alternate_js;
+  if(!$use_alternate_js && $set){
+    $jquery_version = jquery_update_get_version();
+    if(!preg_match('/1.3.*/', $jquery_version)){
+      $use_alternate_js = true;
+    }
+  }
+  return $use_alternate_js;
+}
+
+/** 
+ * Implementation of hook_theme(). 
+ */
+function matrix_editor_theme(){
+  return array(
+    
+    // Display the matrix editor
+    'matrix_editor' => array(
+      'arguments' => array()
+    ), 
+    'matrix_editor_views_plugin_table' => array(
+      'arguments' => array()
+    )
+  );
+}
+
+/**
+ * Array of jQuery files to replace if jQuery is loaded.
+ */
+function matrix_editor_get_jquery_replacements(){
+  $path = drupal_get_path('module', 'matrix_editor') . '/js/lib';
+  $replacements = array(
+    
+    'module' => array(
+      
+      'misc/farbtastic/farbtastic.js' => $path . '/jquery/farbtastic.js', 
+      'misc/teaser.js' => $path . '/jquery/teaser.js', 
+      'misc/ahah.js' => $path . '/jquery/ahah.js', 
+      'misc/jquery.form.js' => $path . '/jquery/jquery.form.js'
+    ), 
+    'core' => array(
+      
+      'misc/tabledrag.js' => $path . '/jquery/tabledrag.js'
+    )
+  );
+  // Replace jquery
+  if(jquery_ui_get_version() != '1.7'){
+    $jquery_ui = array(
+      'ui.core.js', 'ui.resizable.js', 
+      'ui.draggable.js', 'ui.droppable.js', 
+      'ui.sortable.js', 'ui.slider.js', 
+      'ui.datepicker.js', 'ui.tabs.js', 
+      'effects.core.js', 'effects.highlight.js'
+    );
+    foreach($jquery_ui as $ui){
+      $replacements['module'][JQUERY_UI_PATH . '/ui/' . $ui] = $path . '/ui/' . $ui;
+    }
+  }
+  return $replacements;
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ */
+function matrix_editor_theme_registry_alter(&$theme_registry){
+  if(isset($theme_registry['page'])){
+    // If jquery_update's preprocess function is there already, remove it.
+    if($key = array_search('matrix_editor_preprocess_page', $theme_registry['page']['preprocess functions'])){
+      unset($theme_registry['page']['preprocess functions'][$key]);
+    }
+    // Now tack it on at the end so it runs after everything else.
+    $theme_registry['page']['preprocess functions'][] = 'matrix_editor_preprocess_page';
+  }
+}
+
+/**
+ * Implementation of moduleName_preprocess_hook().
+ *
+ * Replace Drupal core's jquery.js with the new one from jQuery Update module.
+ */
+function matrix_editor_preprocess_page(&$variables){
+  // Only do this for pages that have JavaScript on them.
+  if(matrix_editor_alternate_js() && !empty($variables['scripts'])){
+    $path = drupal_get_path('module', 'matrix_editor') . '/js/lib/jquery';
+    // Get an array of all the JavaScript files loaded by Drupal on this page.
+    $scripts = drupal_add_js();
+    // Replace jquery.js first.
+    $new_jquery = array(
+      
+      $path . '/jquery.js' => $scripts['core']['misc/jquery.js']
+    );
+    $scripts['core'] = array_merge($new_jquery, $scripts['core']);
+    unset($scripts['core']['misc/jquery.js']);
+    // Get rid of the lightbox js
+    $lightbox_path = drupal_get_path('module', 'lightbox2');
+    unset($scripts['module'][$lightbox_path . '/js/lightbox.js']);
+    unset($scripts['module'][$lightbox_path . '/js/auto_image_handling.js']);
+    // Loop through each of the required replacements.
+    foreach(matrix_editor_get_jquery_replacements() as $type => $replacements){
+      foreach($replacements as $find => $replace){
+        // If the file to replace is loaded on this page...
+        if(isset($scripts[$type][$find])){
+          // Create a new entry for the replacement file, and unset the original one.
+          $scripts[$type][$replace] = $scripts[$type][$find];
+          unset($scripts[$type][$find]);
+        }
+      }
+    }
+    $variables['scripts'] = drupal_get_js('header', $scripts);
+  }
+}
+
+function _matrix_editor_add_files(){
+  $path = drupal_get_path('module', 'matrix_editor');
+  matrix_editor_alternate_js(true);
+  jquery_ui_add(array(
+    'ui.resizable', 'ui.draggable', 'ui.droppable', 
+    'ui.sortable', 'ui.slider', 'ui.datepicker', 
+    'effects.highlight'
+  ), 'none');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.grid.new.js');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.globaleditorlock.js');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.model.js');
+  drupal_add_css($path . '/js/lib/ui/css/smoothness/jquery-ui-1.7.2.custom.css');
+  // Add the slickgrid files
+  drupal_add_css($path . '/js/lib/slickgrid/slick.grid.css');
+  drupal_add_css($path . '/js/lib/slickgrid/slick.grid.css');
+  drupal_add_css($path . '/js/lib/slickgrid/slick.grid.css');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.editors.js');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.grid.js');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.globaleditorlock.js');
+  drupal_add_js($path . '/js/lib/slickgrid/slick.model.js');
+  // Add slickgrid dependencies
+  drupal_add_js($path . '/js/lib/slickgrid/lib/firebugx.js');
+  drupal_add_js($path . '/js/lib/slickgrid/lib/jquery.getScrollbarWidth.js');
+  drupal_add_js($path . '/js/lib/slickgrid/lib/jquery.rule-1.0.1-min.js');
+  // Slickgrid needs to have style in the head to work
+  drupal_set_html_head('<style></style>');
+  // Add matrix editor files
+  drupal_add_css($path . '/css/matrix_editor.css');
+  drupal_add_js($path . '/js/matrix_editor.js');
+}
+
+/** 
+ * Convert a php array into a js string, allowing for function names (not wrapped in "")
+ */
+function matrix_editor_to_js($elements, $additional_function_names = array()){
+  $function_names = array(
+    'formatter', 'validator', 'editor', 'setValueHandler', 
+    'resizable'
+  );
+  if(count($additional_function_names)){
+    $function_names += $additional_function_names;
+  }
+  if(count($elements)){
+    $js_string = '[';
+    foreach($elements as $element){
+      $js_string .= $outer_conjunction . '{';
+      foreach($element as $element_name => $element_value){
+        $js_string .= $inner_conjunction;
+        if(in_array($element_name, $function_names) || is_numeric($element_value) || is_bool($element_value)){
+          $js_string .= $element_name . ': ' . $element_value;
+        }elseif(is_array($element_value)){
+          $js_string .= $element_name . ': ' . drupal_to_js($element_value);
+        }else{
+          $js_string .= $element_name . ': "' . $element_value . '"';
+        }
+        $inner_conjunction = ', ';
+      } // End of foreach($element)
+      $js_string .= '}';
+      $inner_conjunction = ' ';
+      $outer_conjunction = ', ';
+    }
+    $js_string .= ']';
+    return $js_string;
+  }
+}
+
+

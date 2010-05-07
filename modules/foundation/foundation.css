@@ -1,0 +1,100 @@
+td.container{
+	border-top:none !important;
+  background-color: #444;
+  color: white;
+  padding: 5px;
+}
+td.container a{
+  color: black;  
+}
+.forum table, #forum table {
+  border: solid 1px #ccc;
+}
+.forum th, #forum th {
+  background-image: url('images/header-background.gif');
+  background-color: black;
+  height: 32px;
+  padding-left: 10px;
+  color: white;
+  border: 0;
+}
+.forum th a, #forum th a{
+  color: white;
+}
+.forum tr {
+  background-color: #fff;
+  margin:0 !important;
+}
+.forum table, #forum table{
+ border-collapse: separate !important;
+}
+.forum, #forum{
+ line-height:100%;
+}
+.node, .comment{
+ border:none !important;
+}
+.forum-container{
+ padding:0 !important;
+ margin:0 -20px;
+}
+.comment{
+ padding: 0 25px 20px 25px !important;
+}
+.subboxcontent .links li span{
+	display: none !important;
+}
+.boxtitle .submitted{
+ float: right;
+ padding: 6px 20px;
+ line-height:100% !important;
+}
+
+/***************************************************************
+ * CURVY BOX
+ ***************************************************************/
+.bc  {position: relative;width: 8px;height: 8px;font-size: 1px;background-repeat: no-repeat;margin-bottom: -1px;z-index: 2;line-height: 0px;}
+.ctr {float: right;background-image: url(images/ctr.gif);margin-right: -1px;margin-top: -1px;line-height: 0px;}
+.ctl {float: left;background-image: url(images/ctl.gif);margin-left: -1px;margin-top: -1px;line-height: 0px;}
+.cbr {float: right;background-image: url(images/cbr.gif);margin-right: -1px;margin-top: 1px;line-height: 0px;}
+.cbl {float: left;background-image: url(images/cbl.gif);margin-left: -1px;margin-top: 1px;line-height: 0px;}
+.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;z-index:100;}
+.subboxcontent{
+ margin:0;
+ padding: 0 10px;
+}
+.subboxcontent .links {
+  font-size: 90%;
+}
+.boxtitle, .boxtitle-sticky{
+  position: relative;
+  top: -9px;
+  height: auto;
+  overflow: hidden;
+  margin: 0px 0px 0 0px;
+}
+.boxtitle {
+  background-image: url('images/main_header_back.gif');
+}
+.boxtitle-sticky{
+  background-image: url('images/main_header_back_sticky.gif');
+}
+.boxtitle-none{
+  background-image: none;
+  border-bottom: 1px #ccc solid;
+}
+.boxtitle h1,.boxtitle-sticky h1{
+  font-size: 100%;
+  padding: 6px 20px;
+  margin: 0;
+  line-height: 100%;
+  float:left;
+}
+.boxtitle-sticky h1 a{
+  color: white;
+}
+.cornerbox {
+  margin:0px 0px 15px;
+}

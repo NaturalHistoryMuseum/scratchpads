@@ -1,0 +1,286 @@
+<?php
+
+/**
+ * Scratchpad stripped version of content_taxonomy module.
+ */
+/**
+ * Implementation of hook_theme().
+ */
+function content_taxonomy_theme(){
+  return array(
+    
+    'content_taxonomy_formatter_default' => array(
+      'arguments' => array(
+      'element' => NULL
+    )
+    ), 
+    'content_taxonomy_formatter_link' => array(
+      'arguments' => array(
+      'element' => NULL
+    )
+    )
+  );
+}
+
+/**
+ * Implementation of hook_field_info().
+ */
+function content_taxonomy_field_info(){
+  return array(
+    
+    'content_taxonomy' => array(
+      'label' => t('Content Taxonomy Fields'), 
+      'description' => t('Stores terms for nodes in the database.'), 
+      'callbacks' => array(
+        
+        'tables' => CONTENT_CALLBACK_DEFAULT, 
+        'arguments' => CONTENT_CALLBACK_DEFAULT
+      )
+    )
+  );
+}
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function content_taxonomy_field_settings($op, $field){
+  switch($op){
+    case 'database columns' :
+      return array(
+        
+        'value' => array(
+          'type' => 'int', 
+          'not null' => FALSE, 
+          'sortable' => FALSE
+        )
+      );
+    case 'views data' :
+      $data = content_views_field_views_data($field);
+      $table_alias = content_views_tablename($field);
+      // Add a relation to the taxonomy term table.
+      $data[$table_alias][$field['field_name'] . '_value']['relationship'] = array(
+        
+        'handler' => 'views_handler_relationship', 
+        'base' => 'term_data', 'field' => 'tid', 
+        'label' => t('@field-title term', array(
+          
+          '@field-title' => check_plain(t($field['widget']['label']))
+        ))
+      );
+      // Swap the filter handler to the 'in' operator.
+      $data[$table_alias][$field['field_name'] . '_value']['filter']['handler'] = 'content_taxonomy_handler_filter_many_to_one';
+      return $data;
+  }
+}
+
+/**
+ * Implementation of hook_field().
+ */
+function content_taxonomy_field($op, &$node, $field, &$items, $teaser, $page){
+  switch($op){
+    case 'presave' :
+      if($field['save_term_node']){
+        foreach($items as $key => $entry){
+          if($entry['value']){
+            if(is_object($node->taxonomy[$entry['value']]) || (is_array($node->taxonomy) && in_array($entry['value'], $node->taxonomy)) || (isset($entry['_remove']) && $entry['_remove'] == 1)){
+              continue;
+            }elseif(is_array($node->taxonomy[$field['widget']['vid']])){
+              if(!in_array($entry['value'], $node->taxonomy[$field['widget']['vid']])){
+                $node->taxonomy[$field['widget']['vid']][] = $entry['value'];
+              }
+            }// when saving an existing node without presenting a form to the user,
+            // the terms are objects keyed by tid. there's no need to re-set these
+            // terms, and to do so causes php warnings because the database rejects
+            // the row insert because of primary key constraints.
+            else{
+              $node->taxonomy[$field['widget']['vid']] = array(
+                
+                $entry['value']
+              );
+            }
+          }
+        }
+        // the $node->taxonomy array should never be empty, because in this case the 
+        // taxonomy nodeapi doesn't call taxonomy_node_save which handles removing
+        // and inserting of terms
+        if(empty($node->taxonomy)){
+          $node->taxonomy[$field['widget']['vid']] = NULL;
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function content_taxonomy_field_formatter_info(){
+  return array(
+    
+    'default' => array(
+      'label' => t('As Text'), 
+      'field types' => array(
+        'content_taxonomy'
+      ), 'multiple values' => CONTENT_HANDLE_CORE
+    ), 
+    'link' => array(
+      'label' => t('As Link'), 
+      'field types' => array(
+        'content_taxonomy'
+      ), 'multiple values' => CONTENT_HANDLE_CORE
+    )
+  );
+}
+
+/**
+ * Theme function for 'default' text field formatter.
+ */
+function theme_content_taxonomy_formatter_default($element){
+  if(!empty($element['#item']['value'])){
+    $term = taxonomy_get_term($element['#item']['value']);
+    return check_plain($term->name);
+  }
+}
+
+/**
+ * Theme function for 'link' text field formatter.
+ */
+function theme_content_taxonomy_formatter_link($element){
+  if(!empty($element['#item']['value'])){
+    $term = taxonomy_get_term($element['#item']['value']);
+    return l($term->name, taxonomy_term_path($term), array(
+      
+      'attributes' => array(
+        'rel' => 'tag', 
+        'title' => $term->description
+      )
+    ));
+  }
+}
+
+/**
+ * Implementation of hook_content_is_empty().
+ */
+function content_taxonomy_content_is_empty($item, $field){
+  if(empty($item['value']) || $item['value'] == 0){
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Called by content_allowed_values to create the $options array for the content_taxonomy_options
+ * 
+ * FIXME - Get rid of this shitty function.
+ */
+function content_taxonomy_allowed_values($field){
+  if(isset($field['widget']['vid'])){
+    // Aaaargh, this horrible function.  Hmmm, we could add a check for the size
+    // of the vocabulary.
+    $tree = taxonomy_get_tree($field['widget']['vid']);
+    foreach($tree as $term){
+      $options[$term->tid] = check_plain($term->name);
+    }
+    return $options;
+  } else {
+    return array();
+  }
+}
+
+/**
+ * Implementation of hook_taxonomy().
+ */
+function content_taxonomy_taxonomy($op, $type, $array = NULL){
+  // Delete terms from a field, when the term is deleted.
+  if($op == 'delete' && $type == 'term'){
+    foreach(content_taxonomy_fields() as $type_name => $ct_type){
+      foreach($ct_type['fields'] as $field_name => $field){
+        $tid = $array['tid'];
+        if($tid){
+          $db_info = content_database_info($field);
+          if($field['multiple']){
+            db_query('DELETE FROM {' . $db_info['table'] . '} WHERE ' . $db_info['columns']['value']['column'] . ' = %d', $tid);
+          }else{
+            db_query('UPDATE {' . $db_info['table'] . '} SET ' . $db_info['columns']['value']['column'] . '= NULL  WHERE ' . $db_info['columns']['value']['column'] . ' = %d', $tid);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function content_taxonomy_views_api(){
+  return array(
+    'api' => 2, 
+    'path' => drupal_get_path('module', 'content_taxonomy') . '/includes/views'
+  );
+}
+
+/**
+ * Helper function that returns all content taxonomy fields, nested in their content types
+ */
+function content_taxonomy_fields(){
+  static $ct_fields;
+  if(!is_array($ct_fields)){
+    $ct_fields = array();
+    foreach(content_types() as $type_name => $type){
+      foreach($type['fields'] as $field_name => $field){
+        if($field['type'] == 'content_taxonomy'){
+          $ct_fields[$type_name]['fields'][$field_name] = $field;
+        }
+      }
+    }
+  }
+  return $ct_fields;
+}
+
+/**
+ * Localize a vocabulary by replacing its name attribute with its localized
+ * version for the current language.
+ *
+ * @param $vocabulary
+ *   The vocabulary to localize.
+ */
+function _content_taxonomy_localize_vocabulary(&$vocabulary){
+  // If this vocabulary supports localization.
+  if(module_exists('i18ntaxonomy') && i18ntaxonomy_vocabulary($vocabulary->vid) == I18N_TAXONOMY_LOCALIZE){
+    $vocabulary->name = tt("taxonomy:vocabulary:$vocabulary->vid:name", $vocabulary->name);
+  }
+}
+
+/**
+ * Implementation of hook_content_multigroup_allowed_widgets().
+ */
+function content_taxonomy_content_multigroup_allowed_widgets(){
+  return array(
+    'content_taxonomy_autocomplete', 
+    'content_taxonomy_options', 'content_taxonomy_select'
+  );
+}
+
+/**
+ * Implementation of hook_content_multigroup_no_remove_widgets().
+ */
+function content_taxonomy_content_multigroup_no_remove_widgets(){
+  return array(
+    'content_taxonomy_autocomplete', 
+    'content_taxonomy_options', 'content_taxonomy_select'
+  );
+}
+
+/**
+ * Implementation of hook_content_diff_values
+ */
+function content_taxonomy_content_diff_values($node, $field, $items){
+  $return = array();
+  foreach($items as $item){
+    if(isset($item['value']) && is_numeric($item['value'])){
+      $term = taxonomy_get_term($item['value']);
+      $return[] = $term->name;
+    }
+  }
+  return $return;
+}

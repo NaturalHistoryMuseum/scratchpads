@@ -1,0 +1,44 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function flickr_ispecies(){
+  return array (
+    'flickr' => array (
+      'title' => t ( 'Flickr Images' ), 
+      'description' => t ( 'Flickr, the trendy web 2 image site' ), 
+      'callback' => 'flickr_ajax_callback' ) );
+}
+
+function flickr_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'flickr' ) . '/flickr.css' );
+}
+
+function flickr_ajax_callback($term_name, $limit = 50, $offset = 0, $cached_urls = array()){
+  //print_r($cached_urls);
+  $items = array ();
+  $urls = array();
+  $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&safe_search=2&text=' . $term_name );
+  $results = unserialize ( file_get_contents ( $url ) );
+  if ($results ['photos'] ['total'] > 0) {
+    $photos = $results ['photos'] ['photo'];
+    foreach ( $photos as $photo ) {
+      $item = new stdClass ( );
+      $photo_url = 'http://fencedine.myspecies.info/?url=' . urlencode ('http://static.flickr.com/' . $photo ['server'] . '/' . $photo ['id'] . '_' . $photo ['secret']);
+      if(in_array('http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id'], $cached_urls)){
+        continue;
+      }
+      $item = array(
+        'body' => '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>',
+        'page_url' => 'http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']
+      );
+      $items ['http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']] = $item;
+      $urls[] = $item['page_url'];
+    }
+  }
+  $urls = array('name'=> 'Flickr', 'url' => 'http://www.flickr.com', 'urls' => $urls);
+  $items['urls'] = $urls;
+  $items['citation'] = theme('citation_url', $urls);
+  //print_r($items);exit;
+  return $items;
+}

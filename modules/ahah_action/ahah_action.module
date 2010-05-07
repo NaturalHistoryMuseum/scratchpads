@@ -1,0 +1,7 @@
+<?php
+
+function ahah_action_init(){
+  
+  drupal_add_js(drupal_get_path('module', 'ahah_action') . '/ahah_action.js');
+  
+}

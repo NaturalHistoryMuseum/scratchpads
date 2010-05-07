@@ -1,0 +1,277 @@
+<?php
+DEFINE('FIELD_NAME', 'field_biblio_citation_original');
+
+/**
+ * Implementation of hook_help
+ */
+function classification_biblio_help($path, $arg){
+  switch($path){
+    case 'help#biblio' :
+      $output = t('Integrate the biblio & classifcation modules.');
+      return $output;
+  }
+}
+
+/**
+ * Implementation of hook_menu
+ */
+function classification_biblio_menu(){
+  $items['classification_biblio/callback/get_citation'] = array(
+    'title' => t('Classification citation'), 
+    'page callback' => 'classification_biblio_callback_get_citation', 
+    'access arguments' => array('edit classification'), 
+    'type' => MENU_CALLBACK);
+  $items['classification_biblio/callback/autocomplete'] = array(
+    'title' => t('Classification Biblio autocomplete'), 
+    'page callback' => 'classification_biblio_callback_autocomplete', 
+    'access arguments' => array('edit classification'), 
+    'type' => MENU_CALLBACK);
+  $items['classification_biblio/callback/update_citation'] = array(
+    'title' => t('Classification Biblio'), 
+    'page callback' => 'classification_biblio_callback_update_citation', 
+    'access arguments' => array('edit classification'), 
+    'type' => MENU_CALLBACK);
+  return $items;
+}
+
+function classification_biblio_callback_update_citation(){
+  $tid = $_REQUEST['tid'];
+  if(strlen($_REQUEST['citation'])){
+    $citation = classification_biblio_parse_citation_string($_REQUEST['citation']);
+    $result = db_query("SELECT n.nid 
+                        FROM {node} n
+                        LEFT JOIN {biblio_contributor} bc ON bc.nid = n.nid 
+                        LEFT JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
+                        LEFT JOIN {biblio} b ON b.nid = n.nid  
+                        WHERE bcd.name = '%s' AND b.biblio_year = '%s' AND n.title = '%s'
+                        LIMIT 1", $citation);
+    $nid = db_result($result);
+    classification_biblio_add_node_reference($nid, $tid);
+  }else{ // Citation is empty and term is saved so remove reference
+    classification_biblio_delete_node_reference(array(
+      'tid' => $tid));
+  }
+}
+
+/**
+ * Break the citation string into its composite parts
+ * Messy, but prevents us having to show NID on user input form
+ */
+function classification_biblio_parse_citation_string($citation){
+  $parsed_citation = array();
+  $exploded_citation = explode('(', $citation);
+  $parsed_citation['name'] = rtrim($exploded_citation[0]);
+  $exploded_citation = explode(')', $exploded_citation[1]);
+  $parsed_citation['year'] = $exploded_citation[0];
+  $parsed_citation['title'] = ltrim($exploded_citation[1]);
+  return $parsed_citation;
+}
+
+function classification_biblio_callback_autocomplete($string = ''){
+  $matches = array();
+  if($string){
+    $sql = "SELECT n.title, b.biblio_year AS year, bcd.name 
+            FROM {node} n
+            INNER JOIN {biblio} b ON b.nid = n.nid
+            LEFT JOIN {biblio_contributor} bc ON bc.nid = n.nid 
+            LEFT JOIN {biblio_contributor_data} bcd ON bcd.cid = bc.cid
+            WHERE ";
+    if(is_numeric($string)){
+      $sql .= "LOWER(b.biblio_year) LIKE LOWER('%s%%')";
+      $args = $string;
+    }else{
+      $sql .= "LOWER(lastname) LIKE LOWER('%s%%') OR LOWER(firstname) LIKE LOWER('%s%%') OR LOWER(title) LIKE LOWER('%%%s%%')";
+      $args = array($string, $string, $string);
+    }
+    $result = db_query_range($sql, $args, 0, 10);
+    while($data = db_fetch_object($result)){
+      $citation = theme('classification_biblio_citation', check_plain($data->name), check_plain($data->year), check_plain($data->title));
+      $matches[$citation] = $citation;
+    }
+  }
+  drupal_json($matches);
+}
+
+/**
+ * menu callback; get the citation data
+ */
+function classification_biblio_callback_get_citation(){
+  $tid = $_REQUEST['tid'];
+  $nid = classification_biblio_get_node_reference($tid);
+  $node = node_load($nid);
+  $json = array('nid' => $nid, 
+    'citation' => theme('classification_biblio_citation', $node->biblio_contributors[0]['name'], $node->biblio_year, $node->title));
+  drupal_json($json);
+  exit();
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function classification_biblio_theme(){
+  return array(
+    'classification_biblio_citation' => array(
+      'arguments' => array('node')));
+}
+
+/**
+ * Theme the nodereference autocomplete field
+ */
+function theme_classification_biblio_citation($name, $year, $title){
+  $output = '';
+  ;
+  if($title){
+    $output .= $name . ' (' . $year . ') ' . $title;
+  }
+  return $output;
+}
+
+/**
+ * Implementation of hook_form_alter
+ * Adds the biblio lookup fields
+ */
+function classification_biblio_form_alter(&$form, $form_state, $form_id){
+  module_load_include('class', 'classification', '/includes/classification_functions');
+  global $names;
+  if(!class_exists('Names')){
+    watchdog('error',t('Failed to create a "Names" object'));
+    return;
+  }
+  $names = new Names();
+  switch($form_id){
+    case 'classification_edit_multiple_form' :
+    case 'classification_edit_form' :
+      if($form['message']){
+        return;
+      }
+      if($_REQUEST['tid']){
+        $tid = $_REQUEST['tid'];
+      }else{
+        $tid = classification_get_vid('Taxa');
+      }
+      $path = drupal_get_path('module', 'classification_biblio') . '/';
+      drupal_add_css($path . 'css/classification_biblio.css');
+      drupal_add_js($path . 'js/classification_biblio.js');
+      drupal_add_js(array(
+        'classification_biblio_callback_base_url' => base_path() . 'classification_biblio/callback'), 'setting');
+      drupal_add_js(array(
+        'classification_biblio_edit_link' => array(
+          'href' => url('node/--NID--/edit/classification',array('absolute' => TRUE, 'query'=>array('tid' => '--TID--'))), 
+          'text' => t('Edit Citation'))), 'setting');
+      drupal_add_js(array(
+        'classification_biblio_add_link' => array(
+          'href' => url('node/add/biblio/classification',array('absolute' => TRUE, 'query'=>array('tid' => '--TID--'))), 
+          'text' => t('Add Citation'))), 'setting');
+      $form['name_metadata']['bibliographic_citation'] = array(
+        '#type' => 'textfield', 
+        '#title' => t('Original Published Description'), 
+        '#maxlength' => 60, 
+        '#autocomplete_path' => 'classification_biblio/callback/autocomplete', 
+        '#weight' => 8);
+      $form['name_metadata']['bibliographic_citation']['#suffix'] = '<div id="citation-link"></div>';
+      // Ensure lookup is at the bottom
+      $form['name_metadata']['description']['#weight'] = 9;
+      $form['name_metadata']['button']['#weight'] = 10;
+      break;
+    case 'biblio_node_form' :
+      if(arg(3) == 'classification'){
+        // If user is coming from the classification editor, hide the taxa look up otherwise it'll be confusing  
+        unset($form['classification']);
+        unset($form['classification_tree']);
+        $term = taxonomy_get_term($_GET['tid']);
+        $taxon = $names->italicized_form($term->name);
+        $form['name'] = array(
+          '#type' => 'markup', 
+          '#value' => '<h3>' . t('Original Description for: ') . $taxon . '</h3>', 
+          '#weight' => -20);
+        $form['is_classification'] = array(
+          '#type' => 'hidden', 
+          '#value' => TRUE);
+        $form['tid'] = array('#type' => 'hidden', 
+          '#value' => $_GET['tid']);
+        $form['destination'] = array(
+          '#type' => 'hidden', 
+          '#value' => 'classification/edit');
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi
+ */
+function classification_biblio_nodeapi(&$node, $op, $teaser, $page){
+  if($node->type == 'biblio'){
+    switch($op){
+      case 'insert' :
+        // A new biblio record is being created which needs to be associated with a term
+        if($node->is_classification){
+          classification_biblio_add_node_reference($node->nid, $node->tid);
+        }
+        break;
+      case 'delete' :
+        // A new biblio record is being created which needs to be associated with a term
+        classification_biblio_delete_node_reference(array(
+          'nid' => $node->nid));
+        break;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_taxonomy
+ */
+function classification_biblio_taxonomy($op, $type, $args){
+  switch($op){
+    case 'delete' :
+      switch($type){
+        case 'term' :
+          classification_biblio_delete_node_reference(array(
+            'tid' => $args['tid']));
+          break;
+      }
+      break;
+  }
+}
+
+function classification_biblio_add_node_reference($nid, $tid){
+  $table = 'taxonomy_enhancer_value_nodereference';
+  $record = new stdClass();
+  $record->tid = $tid;
+  $record->fid = FIELD_NAME;
+  $record->nid = $nid;
+  drupal_write_record($table, $record);
+}
+
+/**
+ * Delete the node reference
+ */
+function classification_biblio_delete_node_reference($arg){
+  $field = key($arg);
+  db_query('DELETE FROM {taxonomy_enhancer_value_nodereference} WHERE %s = %d', $field, $arg[$field]);
+}
+
+function classification_biblio_get_node_reference($tid){
+  $result = db_query('SELECT nid FROM {taxonomy_enhancer_value_nodereference} WHERE tid=%d 
+  AND fid = "%s" LIMIT 1', $tid, FIELD_NAME);
+  $nid = db_result($result);
+  return $nid;
+}
+
+function classification_biblio_get_classifcation_vids(){
+  $vids = array();
+  $sql = "SELECT DISTINCT vid * FROM {taxonomy_enhancer_fields}";
+  $result = db_query(db_rewrite_sql($sql));
+  while($data = db_fetch_object($result)){
+    $vids[] = $data->vid;
+  }
+  return $vids;
+}
+
+
+
+
+
+
+
+

@@ -1,0 +1,327 @@
+<?php 
+
+/**
+ * Implementation of hook_classification_import_form
+ */
+function tcs_import_classification_import_form(){
+  return array(
+    'tcs' => array(
+      '#type' => 'fieldset',
+      '#title' => 'TCS Import',
+      '#description' => 'Import a TCS file either uploaded, or supplied by a webservice', // FIXME - Add link to template files.
+      '#collapsed' => TRUE,
+      '#collapsible' => TRUE,
+      'tcs-file' => array(
+        '#type' => 'file',
+        '#title' => t('Upload a TCS file containing your complete classification')
+      ),
+      'webservice' => array(
+        '#type' => 'textfield',
+        '#title' => t('Webservice URL'),
+        '#description' => t('This is for advanced users only.  The URL should point to a TCS/XML document which describes the root taxon of your classification')
+      ),
+      'submit' => array(
+        '#type' => 'submit',
+        '#title' => t('Import from TCS'),
+        '#value' => t('Import from TCS'),
+        '#submit' => array('tcs_import_submit'),
+        '#validate' => array('tcs_import_validate')
+      )
+    )
+  );
+}
+
+/**
+ * Implementation of hook_classification_import_help
+ */
+function tcs_import_classification_import_help(){
+  return t('TCS Import allows you to import a classification from a single large TCS file, or a TCS webservice.');
+}
+
+/**
+ * Callback to validate the form
+ */
+function tcs_import_validate($form, &$form_state){
+  // Lets just ensure a file has been uploaded, or that a webservice URL was 
+  // entered.
+  if($form_state['values']['webservice'] == '' && $_FILES['files']['name']['tcs-file'] == ''){
+    form_set_error('webservice', t('You must provide either a TCS file, or a webservice URL'));
+  }  
+}
+
+/**
+ * Callback function when pressing "Import from EOL"
+ */
+function tcs_import_submit($form, $form_state){
+  // Got to save the file first (the Drupal way)
+  $file = file_save_upload('tcs-file');
+  $batch = array(
+    'operations' => array(
+      array('tcs_import_batch_download_data', array(array($file->filepath))),
+      array('classification_import_load_terms', array(arg(4)))
+    ),
+    'finished' => 'classification_import_batch_import_finished',
+    'title' => t('Importing'),
+    // We use a single multi-pass operation, so the default
+    // 'Remaining x of y operations' message will be confusing here.
+    'error_message' => t('The import has encountered an error.')
+  );
+  batch_set($batch);
+}
+
+/**
+ * 
+ */
+function tcs_import_batch_download_data($urls, &$context) {
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = 1000000; // FIXME - Aaargh, we need to be able to get the total count
+    $context['sandbox']['originalurl'] = $urls[0];
+    $context['sandbox']['urls'] = $urls;
+  }
+  
+  // Set the original URL so that it can be used in case we're importing a file
+  _tcs_import_set_and_get_variable('originalurl',$context['sandbox']['originalurl']);
+  // Set the URLs so that we can add to the list whilst parsing the XML from one
+  // URL (this is likely to just be array(), but just in case the batch was 
+  // called with an array with more than one URL, we'll be good and set it).
+  _tcs_import_set_and_get_variable('urls', $context['sandbox']['urls']);
+  _tcs_import_batch_import_process_helper($context['sandbox']['urls'][0]);
+  // Get all the URLs including the one we've just been parsing, and the ones
+  // that have been added.
+  $context['sandbox']['urls'] = _tcs_import_set_and_get_variable('urls');
+  // Remove the first URL from the list, as we've just handled it!
+  $url_or_file = array_shift($context['sandbox']['urls']);
+  // As this could be a local file uploaded by a user, we'll try to delete it as
+  // it is no longer needed (it was copied).
+  @unlink($url_or_file);
+    
+  // Update our progress information.
+  $context['sandbox']['progress'] = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp}"));
+  
+  // Set the message
+  $context['message'] = t('Imported %numnames names', array('%numnames' => $context['sandbox']['progress']));
+
+  // Inform the batch engine that we are not finished,
+  // and provide an estimation of the completion level we reached.
+  if (count($context['sandbox']['urls'])){
+    $context['finished'] = 0.1;
+  } else {
+    $context['finished'] = 1;
+  }
+}
+
+function _tcs_import_batch_import_process_helper($url){
+  // Save the XML to a file
+  $xml_filename = tempnam(file_directory_temp(),'eol_import_');
+  file_put_contents($xml_filename,file_get_contents($url));
+  tcs_import_parse_xml($xml_filename);
+}
+
+/**
+ * Public function called with a filename to start the process of parsing a TCS
+ * file
+ */
+function tcs_import_parse_xml($filename){  
+  // Lets create a parser and set the handlers
+  $xmlp = xml_parser_create();
+  xml_set_element_handler($xmlp, '_tcs_import__taxonconcept_element_handler_start', '_tcs_import__taxonconcept_element_handler_end');
+  get_xml_from_file(FALSE, FALSE, $filename);
+  xml_parse($xmlp, file_get_contents($filename));
+  xml_parser_free($xmlp);
+  unlink($filename);
+}
+
+/**
+ * Following function sets and returns a number of variables which are used 
+ * across different functions within this module.  It would perhaps be better
+ * to use a PHP class fot this, but for now, this is simple.
+ */
+function _tcs_import_set_and_get_variable($variable, $value = FALSE){
+  static $data = array();
+  if($value !== FALSE){
+    $data[$variable] = $value;
+  }
+  return $data[$variable];
+}
+
+/**
+ * Following handles a single Taxon Concept, importing the data, and also adding
+ * any child terms to the mix for download/import if externally referenced (if
+ * internally referenced, we already have the file, and they'll be handled
+ * shortly).
+ */
+function _tcs_import_import_concept_xml($xml){
+  $xml = new SimpleXMLElement($xml);
+  // Lets parse through the XML doc, and set some values accordingly.
+  $data = array();
+  _tcs_import_walk_xml($xml, $data);
+  $urls = _tcs_import_set_and_get_variable('urls');
+  $data = _tcs_import_clean_xml($data);
+  if(isset($data['taxonrelationships']['taxonrelationship']['type'])){
+    // We only have one relationship (leaf or root), so we need to tweak this
+    // array
+    $data['taxonrelationships']['taxonrelationship'] = array($data['taxonrelationships']['taxonrelationship']);
+  }
+  foreach($data['taxonrelationships']['taxonrelationship'] as $relationship){
+    if(strtolower($relationship['type']) == 'is child taxon of'){
+      if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+        // We've already got the parent in the database (WE SHOULD)!  Lets get 
+        // its ID and replace the $parent
+        $new_parent_id = db_result(db_query("SELECT id FROM {classification_import_temp} WHERE ref = '%s'", $relationship['totaxonconcept']['ref']));
+        if($new_parent_id){
+          $relationship['totaxonconcept']['ref'] = $new_parent_id;
+        } else {
+          // We may be importing from a file.  If so, then the id we want is the
+          // one whose ref is "filename"
+          $new_parent_id = db_result(db_query("SELECT id FROM {classification_import_temp} WHERE ref = '%s'", _tcs_import_set_and_get_variable('originalurl')));
+          if($new_parent_id){
+            $relationship['totaxonconcept']['ref'] = $new_parent_id;
+          }
+        }
+      }
+      db_query("INSERT INTO {classification_import_temp} (id, parent, ref, data) VALUES ('%s','%s','%s','%s')", $data['id'], $relationship['totaxonconcept']['ref'], $urls[0], serialize($data));
+      // Also update any terms whose parent is set as
+    } elseif(strtolower($relationship['type']) == 'is parent taxon of'){
+      if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+        // We've got an extra URL to download, add it to the list.
+        $urls[] = $relationship['totaxonconcept']['ref'];
+        _tcs_import_set_and_get_variable('urls', $urls);
+      }
+    } elseif(strtolower($relationship['type']) == 'has vernacular'){
+      // Handling vernaculars is a little tricky if the link is internal.  If 
+      // the link ex external, then we can just grab the file here, and be
+      // be done with it
+    } elseif(strtolower($relationship['type']) == 'has synonym'){
+      if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+        // We've got an extra URL to download, add it to the list.
+        $urls[] = $relationship['totaxonconcept']['ref'];
+        _tcs_import_set_and_get_variable('urls', $urls);
+      }
+    }
+  }
+}
+
+/**
+ * Takes a data array from a TaxonConcept object, and cleans it up nice like
+ */
+function _tcs_import_clean_xml($data){
+  // Firstly we'll check to see if name is set and if it references another
+  // (LOCAL ONLY) XML element.
+  if(isset($data['name']['ref'])){
+    // We are set, lets get the name element from the XML, and replace this
+    // element with it
+    // First lets set the variables required.
+    _tcs_import_set_and_get_variable('taxonnamestart', 0);
+    _tcs_import_set_and_get_variable('taxonnameend', 0);
+    _tcs_import_set_and_get_variable('taxonnameid', $data['name']['ref']);
+    // Lets create a parser and set the handlers
+    $xmlp = xml_parser_create();
+    xml_set_element_handler($xmlp, '_tcs_import__taxonname_element_handler_start', '_tcs_import__taxonname_element_handler_end');
+    xml_parse($xmlp, file_get_contents(_tcs_import_set_and_get_variable('filename')));
+    xml_parser_free($xmlp);
+    // Get the name XML from the file
+    $startbyte = _tcs_import_set_and_get_variable('taxonnamestart');
+    $endbyte = _tcs_import_set_and_get_variable('taxonnameend');
+    if($startbyte && $endbyte && $endbyte > $startbyte){
+      // FIXME - Wrap this in a try and catch!
+      $xml = new SimpleXMLElement(get_xml_from_file($startbyte, $endbyte-$startbyte));
+      $name_data = array();
+      _tcs_import_walk_xml($xml, $name_data);
+      foreach($name_data as $key => $value){
+        switch($key){
+          case 'id':
+            // Do nothing, we're ignore the name's id
+            break;
+          case 'simple':
+            $data['name'] = $value[0];
+            break;
+          case 'canonicalname':
+            $data['synonyms'] = $value['simple'][0];
+            $data['canonicalname'] = $value['simple'][0];// Just in case we create a field for it.
+            break;
+          default:
+            if(is_array($value) && isset($value[0])){
+              $data[$key] = $value[0];
+            } elseif(is_string($value)){
+              $data[$key] = $value;
+            }
+            break;
+        }
+      }
+    }
+  }  
+  return $data;
+}
+
+function _tcs_import_walk_xml($xml, &$data){
+  foreach($xml->attributes() as $key => $value){
+    $data[strtolower($key)] = (string)$value;
+  }
+  foreach($xml as $key => $value){
+    // Lets count the number of elements with this name, if we've got more than
+    // one, then we'll create an array, else we'll just have one.
+    $num_elements = count($xml->xpath($key));
+    if($num_elements == 1){
+      if(trim((string)$value)!=''){
+        $data[strtolower($key)][] = trim((string)$value);
+      }
+      _tcs_import_walk_xml($value, $data[strtolower($key)]);
+    } elseif($num_elements > 1){
+      if(trim((string)$value)!=''){
+        $data[strtolower($key)][] = trim((string)$value);
+      }
+      _tcs_import_walk_xml($value, $data[strtolower($key)][]);
+    }
+  }
+}
+
+/**
+ * Following four functions are parse_xml related functions for parsing through
+ * an XML document SAX style.
+ */
+function get_xml_from_file($startbyte, $length, $fn = FALSE){
+  $filename = _tcs_import_set_and_get_variable('filename', $fn);  
+  if($length){
+    // Startbyte gives the end of the opening tag, so we need to find the real
+    // start position, and increase the length accordingly.
+    $new_startbyte = strrpos(file_get_contents($filename, NULL, NULL, 0, $startbyte), "<");
+    $length = $length + ($startbyte - $new_startbyte);
+    return file_get_contents($filename, NULL, NULL, $new_startbyte, $length);
+  }
+}
+
+function _tcs_import__taxonconcept_element_handler_start($resource, $data, $attributes){
+  if($data == 'TAXONCONCEPT'){
+    // Lets save the start byte
+    _tcs_import_set_and_get_variable('taxonconcept', xml_get_current_byte_index($resource));
+  }
+}
+function _tcs_import__taxonconcept_element_handler_end($resource, $data){
+  if($data == 'TAXONCONCEPT'){
+    // Lets save the start line and column
+    $endbyte = xml_get_current_byte_index($resource);
+    $startbyte = _tcs_import_set_and_get_variable('taxonconcept');
+    $first_taxon_concept = get_xml_from_file($startbyte, $endbyte-$startbyte);
+    _tcs_import_import_concept_xml($first_taxon_concept);
+  }
+}
+
+function _tcs_import__taxonname_default_handler($resource, $data){
+  drupal_set_message(print_r($data,1));
+}
+function _tcs_import__taxonname_element_handler_start($resource, $data, $attributes){
+  if($data == 'TAXONNAME'){
+    // Lets get the id we're looking for, and check this is the correct one
+    if(isset($attributes['ID']) && $attributes['ID'] == _tcs_import_set_and_get_variable('taxonnameid')){
+      _tcs_import_set_and_get_variable('taxonnamestart', xml_get_current_byte_index($resource));
+    }
+  }
+}
+function _tcs_import__taxonname_element_handler_end($resource, $data){
+  if($data == 'TAXONNAME'){
+    if(_tcs_import_set_and_get_variable('taxonnamestart')){
+      _tcs_import_set_and_get_variable('taxonnameend', xml_get_current_byte_index($resource));
+    }    
+  }
+}

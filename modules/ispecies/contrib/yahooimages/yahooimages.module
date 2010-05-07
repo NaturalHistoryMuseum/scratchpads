@@ -1,0 +1,61 @@
+<?php
+/**
+ * implementation of hook_ispecies
+ */
+function yahooimages_ispecies(){
+  return array (
+    'yahooimages' => array ( 
+      'title' => t ( 'Yahoo! Images' ), 
+      'description' => t ( 'Yahoo! search api images' ), 
+      'callback' => 'yahooimages_ajax_callback' ) );
+}
+
+function yahooimages_init(){
+  drupal_add_css ( drupal_get_path ( 'module', 'yahooimages' ) . '/yahooimages.css' );
+}
+
+function yahooimages_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
+  $items = array ();  
+  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://search.yahooapis.com/ImageSearchService/V1/imageSearch?appid=oKvSo97V34Fj_xvmgvJCiVFF6sRd60NyUSxNJ5jijiuSKaAV3Hf_IoFiouBDm_c&query=' . $term_name . '&results=' . $limit . '&output=php' );
+  $response = file_get_contents ( $request );  
+  $images = unserialize ( $response );
+  $count = 0;  
+  $urls = array();
+  if (is_array ( $images )) {    
+    $output .= '<div class="yahoo-images clearfix">';    
+    foreach ( $images ['ResultSet'] ['Result'] as $image ) {      
+      $count ++;      
+      $x = $image ['Thumbnail'] ['Width'];
+      $y = $image ['Thumbnail'] ['Height'];      
+      // use width for scaling
+      if ($x > 95) {        
+        $oversize = $x - 95;        
+        // find proportion of orginal size
+        $m = $oversize / $x;
+        // make y propportional
+        $y = round ( $y - ($y * $m) );        
+        // set x side to max
+        $x = 95;      
+      }      
+      if ($y > 95) {        
+        $oversize = $y - 95;        
+        // find proportion of orginal size
+        $m = $oversize / $y;
+        // make y propportional
+        $x = round ( $x - ($x * $m) );        
+        // set x side to max
+        $y = 95;      
+      }      
+      $item = array(
+        'body' => sprintf ( '<div class="panel-grid-image"><a class="lightbox" rel="lightbox[yahoo]" href="%s"><img src="%s" width="%s" height="%s" alt="%s" title="%s" /></a></div>', $image ['ClickUrl'], $image ['Thumbnail'] ['Url'], $x, $y, $image ['Title'], $image ['Title'] ),
+        'page_url' => $image ['RefererUrl']
+      );      
+      $items [$image ['ClickUrl']] = $item;    
+      $urls[] = $item['page_url'];
+    }
+  }
+  $urls = array('name'=> 'Yahoo! Images', 'url' => 'http://images.search.yahoo.com/', 'urls' => $urls);
+  $items['citation'] = theme('citation_url', $urls);
+  $items['urls'] = $urls;
+  return $items;
+}

@@ -1,0 +1,7 @@
+<?php
+function sandbox_install(){
+  foreach (list_themes() as $theme) {
+    db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('sandbox',0,'%s','header',1)", $theme->name);
+  }
+  variable_set('sandbox_site_created',time());
+}

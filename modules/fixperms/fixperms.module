@@ -1,0 +1,48 @@
+<?php
+/**
+ * Implementation of hook_perm
+ */
+function fixperms_perm(){
+  return array('create type content','edit own type content','delete own type content','edit any type content','delete any type content');
+}
+/**
+ * Implementation of hook_form_alter
+ */
+function fixperms_form_alter(&$form, $form_state, $form_id){
+  if($form_id == 'user_admin_perm' || $form_id == 'node_type_form'){
+    $form['#submit'][] = 'fixperms_submit';
+  }
+}
+/**
+ * Implementation of hook_menu
+ */
+function fixperms_menu(){
+  return array(
+    'admin/settings/fixperms' => array(
+      'title' => 'Content Type Editing Permissions',
+      'description' => 'Change the default Fixperms settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('fixperms_admin_settings'),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'fixperms.admin.inc'
+    )
+  );
+}
+/**
+ * Keep the .module file as small as possible. 
+ */
+function fixperms_submit($form, $form_state){
+  module_load_include('admin.inc','fixperms');
+  _fixperms_submit($form, $form_state);
+}
+/**
+ * Implementation of hook_theme
+ */
+function fixperms_theme(){
+  return array(
+    'fixperms_admin_settings' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'fixperms.admin.inc'
+    )
+  );
+}
