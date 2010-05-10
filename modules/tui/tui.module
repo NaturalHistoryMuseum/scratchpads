@@ -165,6 +165,16 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
 }
 
 /**
+ * Add links to the editor from the taxonomy overview page.
+ */
+function tui_form_taxonomy_overview_vocabularies_alter(&$form, &$form_state){
+  $vocabularies = taxonomy_get_vocabularies();
+  foreach ($vocabularies as $vocabulary) {
+    $form[$vocabulary->vid]['edit']['#value'] = '<b>'.l(t('Editor'), "admin/content/taxonomy/edit/tui/$vocabulary->vid").'</b><br/>'.$form[$vocabulary->vid]['edit']['#value'];
+  }
+}
+
+/**
  * Implementation of hook_preprocess_hook
  */
 function tui_preprocess_page(&$variables) {
