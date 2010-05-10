@@ -231,6 +231,9 @@ Drupal.tui.full_tree_success = function(data){
     }
     Drupal.tui.searchtids = false;
   }
+  if(Drupal.tui.form_being_displayed){
+    $('#'+Drupal.tui.form_being_displayed).addClass('active');
+  }
 }
 
 Drupal.tui.scrollto = function(element){
@@ -249,6 +252,7 @@ Drupal.tui.form_success = function(data){
 }
 
 Drupal.tui.display_form = function(element){
+  Drupal.tui.form_being_displayed = $(element).attr('id');
   $('.tui-term').removeClass('active');
   if(element){
     $(element).addClass('active');
