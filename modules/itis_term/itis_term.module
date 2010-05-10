@@ -28,6 +28,14 @@ function itis_term_theme(){
   );
 }
 
+/** 
+ *Implementation of hook_menu_alter 
+ */
+function itis_term_menu_alter(&$items){
+  $items['node/add/itis-term']['hidden'] = 1;
+  return $items;
+}
+
 /**
  * hook_access
  * 
