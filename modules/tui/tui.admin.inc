@@ -71,6 +71,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           <img id="tui-add" src="'.base_path().drupal_get_path('module','tui').'/images/add.png" alt="'.t('Add term').'" title="'.t('Add term').'"/>
           <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
           <img id="tui-undo" src="'.base_path().drupal_get_path('module','tui').'/images/undo.png" alt="'.t('Undo move').'" title="'.t('Undo move').'"/>
+          <img id="tui-import" src="'.base_path().drupal_get_path('module','tui').'/images/import.png" alt="'.t('Import').'" title="'.t('Import').'"/>
           <img id="tui-search" src="'.base_path().drupal_get_path('module','tui').'/images/search.png" alt="'.t('Search').'" title="'.t('Search').'"/>
           <img id="tui-next" src="'.base_path().drupal_get_path('module','tui').'/images/next.png" alt="'.t('Next').'" title="'.t('Next').'"/>
         </p>
@@ -80,6 +81,12 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
       </div>
       <div id="tui-tree-subcontainer">
         '.theme('tui_tree', $taxonomy_tree).'
+      </div>
+    </div>
+    <div id="tui-tree-container">
+      <div id="tui-tree-links">
+      </div>
+      <div id="tui-tree-subcontainer">
       </div>
     </div>
   </div>

@@ -87,6 +87,9 @@ Drupal.tui.click_buttonclick = function(img_clicked){
         $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$(this).dialog("close");}},width:'450px',height:'150px'});
       }
       break;
+    case 'tui-import':
+      alert('Import is coming soon!');
+      break;
     case 'tui-next':
     case 'tui-previous':
       Drupal.tui.selected_tab = $('.ui-tabs-selected > a').attr('href');
