@@ -109,15 +109,18 @@
 
 /* SEARCH */
 #tui-search-form-container{
+ display:none;
+}
+.tui-form{
  border:solid 1px #999;
  padding:3px;
  margin:0;
  background-color:white;
  color:black;
- display:none;
  position:absolute;
  top:20px;
  right:20px;
+ z-index:1000;
 }
 #edit-tui-search-input-wrapper{
  display:inline;
@@ -137,12 +140,25 @@
  padding:0 !important;
  margin:0 !important;
 }
-#tui-search-form-container #autocomplete{
+.tui-form #autocomplete{
  font-size:90%;
  width:500px !important;
  text-align:left;
  background-color:white;
  color:black;
+ z-index:1000;
+}
+.tui-modal{
+ z-index:100;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ padding:0;
+ margin:0;
+ bottom:0;
+ right:0;
+ position:fixed;
 }
 
 
@@ -159,6 +175,10 @@
 #tui-dialog-term-name{
  padding-left:20px;
  font-weight:700;
+}
+.ui-dialog-overlay{
+ background-color: black; 
+ opacity: 0.2;
 }
 
 
@@ -211,7 +231,7 @@
  padding: 0.5em !important;
  font-size: 80% !important;
 }
-.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform, #tui-search-form-container{
+.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform, .tui-form{
  -moz-box-shadow: 2px 2px 2px #999;
  -webkit-box-shadow: 2px 2px 2px #999;
  box-shadow: 2px 2px 2px #999;

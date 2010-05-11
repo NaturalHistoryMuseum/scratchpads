@@ -67,7 +67,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
             Drupal.tui.search_is_transitioning = false;
           });
           $('#edit-tui-search-input').focus();
-          $('#edit-tui-search-input').blur(function(){
+          $('.tui-modal').click(function(){
             Drupal.tui.click_buttonclick('tui-search');
           });
         }

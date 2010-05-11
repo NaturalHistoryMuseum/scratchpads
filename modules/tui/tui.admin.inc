@@ -76,7 +76,8 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           <img id="tui-next" src="'.base_path().drupal_get_path('module','tui').'/images/next.png" alt="'.t('Next').'" title="'.t('Next').'"/>
         </p>
         <div id="tui-search-form-container">
-          '.drupal_get_form('tui_search_form', arg(5)).'
+          <div class="tui-modal"></div>
+          <div class="tui-form">'.drupal_get_form('tui_search_form', arg(5)).'</div>
         </div>
       </div>
       <div id="tui-tree-subcontainer">

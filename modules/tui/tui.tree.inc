@@ -169,14 +169,14 @@ function tui_move_term($method, $vid, $term, $to){
   $current_term = (array)$term;
 
   if($method=='child'){
-    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->tid, $term->tid);
+    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->tid, $term->tid, $vid);
     $siblings = array($term->tid);
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
     }
     $term->parent = $to->tid;
   } else {
-    $results = db_query("SELECT t.tid, weight FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d ORDER BY weight, name", $to->parent, $term->tid);
+    $results = db_query("SELECT t.tid, weight FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->parent, $term->tid, $vid);
     while($row = db_fetch_array($results)){
       $siblings[] = $row;
       if($row['tid'] == $to->tid){
