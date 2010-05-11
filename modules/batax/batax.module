@@ -322,6 +322,10 @@ function batax_autocomplete($vid, $string = '') {
  * using the autotag module for it
  */
 function batax_use_batax($vid, $type = FALSE){
+  $vocabulary = taxonomy_vocabulary_load($vid);
+  if($vocabulary->tags){
+    return false;
+  }
   if(module_exists('autotag') && $type){
     module_load_include('functions.inc', 'autotag');
     static $autotag_vids;
