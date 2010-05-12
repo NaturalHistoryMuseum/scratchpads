@@ -38,7 +38,7 @@ function scratchpad_profile_modules(){
       'advanced_help','auto_nodetitle','checkbox_validate','clone',
       'globalredirect','legal','path_redirect','pathauto','quote','statistics',
       'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','wysiwyg','print','imce','imce_wysiwyg','porterstemmer',
+      'jstools','wysiwyg','print','imce','imce_wysiwyg','porterstemmer','ajax',
     // Spam control
       'mollom','hashcash',
     // JQuery
@@ -60,20 +60,19 @@ function scratchpad_profile_modules(){
       'views','views_ui','views_xml',
     // Content profile
       'content_profile','content_profile_registration',
-    // LifeDesk
-      'classification',
     // Webforms
       'webform',
     // EDIT
       'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
       'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
       'node_term_edit','autotag','nbnmap','foundation','content_taxonomy',
+      'content_taxonomy_autocomplete',
 //'leftandright',
       'taxtab','tinytax','morphbank',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
-      'classification_biblio','classification_scratchpads','nagger','bio_image',
+      'nagger','bio_image','itis_term','term_node',
       'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail',
-      'term_node','scratchpad'
+      'term_node','scratchpad','tui','classification_import'
   );
 }
 
