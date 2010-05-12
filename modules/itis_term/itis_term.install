@@ -49,7 +49,7 @@ function itis_term_uninstall(){
  * modules in the correct order
  */
 function itis_term_requirements($phase){
-  if($phase == 'install'){
+  if($phase == 'install' && substr($_SERVER['SCRIPT_NAME'], -11) != 'install.php'){    
     $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__,".")).'.info');
     $module_not_found = FALSE;
     foreach($info_file['dependencies'] as $required_module){
