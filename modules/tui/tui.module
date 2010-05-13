@@ -134,6 +134,10 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
       'disable_redirect' => TRUE,
       'tui_ajax_plugin' => TRUE
     );
+    // These should get added by the Ajax module FIXME
+    $form['#submit'][] = 'ajax_submitter';
+    $form['#attributes']['class'] = 'ajax-form';
+
     // Tabify the form
     $form['#pre_render'] = array(
       'tui_taxonomy_form_pre_render'
