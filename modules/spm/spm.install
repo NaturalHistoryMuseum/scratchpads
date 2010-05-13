@@ -7,6 +7,8 @@
 function spm_install(){  
   // Create the tables for SPM data
   drupal_install_schema('spm');
+  
+  variable_set('og_content_type_usage_spm', 'group_post_standard');
 }
 
 function spm_uninstall(){  
@@ -50,4 +52,12 @@ function spm_schema(){
   variable_set('spm_headers', $spm_groups);
   variable_set('spm_fields', $spm_fields);
   return $schema;  
+}
+
+/**
+ * Ensure that SPM content type is allowed to be posted to groups.
+ */
+function spm_update_6101(){  
+  variable_set('og_content_type_usage_spm', 'group_post_standard');
+  return array('#finished' => TRUE);  
 }
