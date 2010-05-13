@@ -255,6 +255,12 @@ function tui_taxonomy_form_pre_render($form){
     }
   }     
   $tab_html .= '</ul>';
+  
+  if(isset($form['group_scientificname']) && isset($form['identification']['parent_message'])){
+    $form['group_scientificname']['parent_message'] = $form['identification']['parent_message'];
+    unset($form['identification']['parent_message']);
+  }
+        
   // No fucking clue why the following is required.  Why is the weight of the
   // tabs markup element being ignored.  OH WELL!!! FIXME
   $temp_form = array(
