@@ -124,7 +124,7 @@ function term_node_form_alter(&$form, $form_state, $form_id){
         'changed','title','body_field','vertical_tabs','og_nodeapi','author',
         'buttons','revision_information','options','form_token','form_id',
         'path','form_build_id','comment_settings','taxonomy','attachments',
-        'print','weight_form','autotag','notifications'
+        'print','weight_form','autotag','notifications','og_initial_groups'
       );
       foreach($unsetters as $unset){
         unset($node_form[$unset]);
