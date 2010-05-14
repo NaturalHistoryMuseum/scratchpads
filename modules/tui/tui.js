@@ -141,6 +141,7 @@ Drupal.tui.drop_deactivate = function(event, ui){
     Drupal.settings.tui.opentids[tid_to_add] = tid_to_add;
     Drupal.tui.searchtids = [tid_array[1]];
     $.ajax({cache:false,url:Drupal.settings.tui.callbacks.move+"/"+Drupal.tui.parentorsibling+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.this_id+"/"+Drupal.tui.parent_or_sibling_id,success:function(data){Drupal.tui.reload_tree();}});
+    Drupal.tui.display_form($('#'+Drupal.tui.this_id));
   }
 }
 
