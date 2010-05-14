@@ -176,11 +176,11 @@ function tui_move_term($method, $vid, $term, $to){
     }
     $term->parent = $to->tid;
   } else {
-    $results = db_query("SELECT t.tid, weight FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->parent, $term->tid, $vid);
+    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->parent, $term->tid, $vid);
     while($row = db_fetch_array($results)){
-      $siblings[] = $row;
+      $siblings[] = $row['tid'];
       if($row['tid'] == $to->tid){
-        $siblings[] = array('tid' => $term->tid, 'weight' => $term->weight);
+        $siblings[] = $term->tid;
       }
     }
     $term->parent = $to->parent;    
@@ -189,7 +189,7 @@ function tui_move_term($method, $vid, $term, $to){
   taxonomy_save_term($term);
   $weight = 1;
   foreach($siblings as $sibling){
-    db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling['tid']);
+    db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
     $weight++;
   }
   $_SESSION['tui_moved_terms'][$vid][] = array('term' => $current_term, 'siblings' => $siblings);
