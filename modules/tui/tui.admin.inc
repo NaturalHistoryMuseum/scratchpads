@@ -84,12 +84,12 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
         '.theme('tui_tree', $taxonomy_tree).'
       </div>
     </div>
-    <div id="tui-tree-container">
+    <!-- <div id="tui-tree-container">
       <div id="tui-tree-links">
       </div>
       <div id="tui-tree-subcontainer">
       </div>
-    </div>
+    </div> -->
   </div>
   <div id="tui-form">
     <div id="tui-form-container">
