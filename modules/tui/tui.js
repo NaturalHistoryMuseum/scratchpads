@@ -213,7 +213,10 @@ Drupal.tui.full_tree_success = function(data){
     Drupal.tui.display_form($('#'+Drupal.tui.term_id));
     Drupal.tui.scrollto($('#'+Drupal.tui.term_id));
   }
-  if(Drupal.tui.searchtids){
+  else if(Drupal.tui.form_being_displayed){
+    $('#'+Drupal.tui.form_being_displayed).addClass('active');
+  }
+  else if(Drupal.tui.searchtids){
     position = $('#tui').offset();
     $('html,body').animate({scrollTop:position.top-30}, 1000);
     //Drupal.tui.display_form($('#tid-'+Drupal.tui.searchtids[0]));
@@ -230,9 +233,6 @@ Drupal.tui.full_tree_success = function(data){
       Drupal.tui.scrollto(highest_element);
     }
     Drupal.tui.searchtids = false;
-  }
-  if(Drupal.tui.form_being_displayed){
-    $('#'+Drupal.tui.form_being_displayed).addClass('active');
   }
 }
 
@@ -252,9 +252,9 @@ Drupal.tui.form_success = function(data){
 }
 
 Drupal.tui.display_form = function(element){
-  Drupal.tui.form_being_displayed = $(element).attr('id');
-  $('.tui-term').removeClass('active');
   if(element){
+    $('.tui-term').removeClass('active');
+    Drupal.tui.form_being_displayed = $(element).attr('id');
     $(element).addClass('active');
     $(element).addClass('loading');
     if($(element).attr('id')){
