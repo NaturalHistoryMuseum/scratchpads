@@ -169,7 +169,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   $term = array_pop($section_node->taxonomy);
   $term->name = $section_node->title;
   if($section_node->body){
-    $section_node->body = '<p>'.$section_node->body.'</p>';    
+    $section_node->body = '<p>'.htmlentities($section_node->body).'</p>';    
   }
   $treatment_xml .= '
     <taxon-treatment>
