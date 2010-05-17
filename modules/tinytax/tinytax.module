@@ -228,12 +228,10 @@ function tinytax_taxonomy($op, $type, $vocabulary){
     if($op == 'delete'){
       db_query("DELETE FROM {blocks} WHERE module='tinytax' AND delta='%s'", "tinytax-" . $vocabulary['vid']);
     }else if($op == 'insert' && $type == 'vocabulary'){
-      if(isset($vocabulary['vocab']) && $vocabulary['vocab']){
-        module_load_include('admin.inc', 'block');
-        block_admin_display();
-        $region = system_default_region(variable_get('theme_default', 'garland'));
-        db_query("UPDATE {blocks} SET status = 1, region = '%s', weight = -100 WHERE delta = '%s'", $region, 'tinytax-' . $vocabulary['vid']);
-      }
+      module_load_include('admin.inc', 'block');
+      block_admin_display();
+      $region = system_default_region(variable_get('theme_default', 'garland'));
+      db_query("UPDATE {blocks} SET status = 1, region = '%s', weight = -100 WHERE delta = '%s'", $region, 'tinytax-' . $vocabulary['vid']);
     }
   }
 }
