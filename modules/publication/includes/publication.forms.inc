@@ -246,6 +246,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
             
             if($field['group']){
               
+              $form[$field['group']]['#attributes']['class'] .= ' publication-noderef';
               publication_field_publication_nodereference_alter($form[$field['group']][$field['field_name']], $field, $node->nid);
               
             }else{
@@ -540,7 +541,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
 function publication_field_publication_nodereference_alter(&$element, $field, $nid){
   
   $nids = array();
-  
+
   // Get all the NIDs for this element
   foreach(element_children($element) as $key){
     if($element[$key]['#default_value']['nid']){

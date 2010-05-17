@@ -42,6 +42,27 @@ publication.nodeDeleted = function(type, nid){
   
 }
 
+/**
+ * Add an asterisk or other marker to the changed row.
+ */
+publication.markChanged = function($element) {
+  var marker = Drupal.theme('tableDragChangedMarker');
+  if ($('span.tabledrag-changed', $element).length == 0) {
+    $element.append(marker);
+  }
+};
+
+publication.insertChangedWarning = function($element) {
+
+  $(Drupal.theme('publicationChangedWarning')).insertAfter($element).hide().fadeIn('slow');
+  
+}
+
+Drupal.theme.prototype.publicationChangedWarning = function () {
+  
+  return '<div class="warning">' + Drupal.theme('tableDragChangedMarker') + ' ' + Drupal.t("Changes made will not be saved until the publication form is submitted.") + '</div>';
+
+}
 
 $(document).ready(function(){
   
@@ -67,7 +88,18 @@ Drupal.behaviors.publications = function(context) {
     $('#classification-names').html('');
   });
   
+  var $fieldset = $(context).parents('fieldset.publication-noderef:not(.changed)');
+  
+  if($fieldset.length){
+    publication.markChanged($fieldset.find('legend'));
+    $fieldset.addClass('changed');
+    publication.insertChangedWarning($fieldset);
+  }
+  
 }
+
+
+
 
 
 

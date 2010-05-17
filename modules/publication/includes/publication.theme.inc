@@ -215,7 +215,7 @@ function theme_publication_field_publication_biblio($nids = array(), $publicatio
   
   $nids = implode('+', array_filter($nids));
   
-  $output = publication_get_view_output('publication_display', array($nids), 'page_1');
+  $output .= publication_get_view_output('publication_display', array($nids), 'page_1');
   
   $output .= '</div>';
 
@@ -229,7 +229,7 @@ function theme_publication_field_publication_authors($nids = array(), $publicati
   
   $nids = implode('+', array_filter($nids));
   
-  $output = publication_get_view_output('publication_display', array($nids), 'page_2');
+  $output .= publication_get_view_output('publication_display', array($nids), 'page_2');
   
   $output .= '</div>';
 

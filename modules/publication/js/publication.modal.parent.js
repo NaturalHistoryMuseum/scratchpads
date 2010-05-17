@@ -30,6 +30,8 @@ Drupal.behaviors.modalNodeForm = function(context) {
            // Tidy up orphaned elements
            $('#draggable-section input[value='+args.nid+'].parent-group').val(0).parents('tr').find('div.indentation').remove();
            
+           publication.insertChangedWarning($('#publication-draggable-section'));
+           
           }else if(args.op == 'Updated' || args.op == 'Reset'){   
            
              $titleSpan = $('tr.draggable-section-'+args.nid+' span.title');
@@ -55,7 +57,10 @@ Drupal.behaviors.modalNodeForm = function(context) {
             Drupal.tableDrag['publication-draggable-section'].makeDraggable(tr.get(0));        
             tr.appendTo('#publication-draggable-section');
             Drupal.attachBehaviors(tr);
-          
+            Drupal.tableDrag['publication-draggable-section'].changed = true;
+            publication.markChanged(tr.find('span.title'));
+            publication.insertChangedWarning($('#publication-draggable-section'));
+
           } 
           
          break;

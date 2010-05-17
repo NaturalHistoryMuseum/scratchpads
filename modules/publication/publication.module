@@ -1020,7 +1020,7 @@ function publication_views_query_alter(&$view, &$query) {
     
   }elseif($view->name == _publication_get_nodereference_view_name()){
 
-    // Set by group by NID & aggregate all fields
+    // Set by group by NID & aggregate all fields so views uses just the group_by field
     $query->add_groupby('nid');
     
     foreach($query->fields as $field_id => $field){
