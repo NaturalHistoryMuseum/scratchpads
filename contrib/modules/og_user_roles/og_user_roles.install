@@ -1,0 +1,151 @@
+<?php
+// $Id: og_user_roles.install,v 1.1.2.5.2.1 2008/10/20 18:34:58 somebodysysop Exp $
+
+function og_user_roles_install() {
+
+  drupal_install_schema('og_user_roles');
+
+  drupal_set_message(t('OG User Roles module enabled. Please see the included README file for further installation instructions.'));
+
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function og_user_roles_uninstall() {
+
+  drupal_uninstall_schema('og_user_roles');
+
+  // Delete variables
+  db_query("DELETE FROM {variable} WHERE name LIKE 'og_user_roles_%%'");
+
+  drupal_set_message(t('OG User Roles module successfully uninstalled'));
+}
+
+function og_user_roles_schema() {
+
+  $schema = array();
+
+  $schema['og_users_roles'] = array(
+    'fields' => array(
+      'ogr_id'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'uid'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'rid'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'gid'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+    ),
+    'primary key' => array('uid','rid','gid'),
+  );
+
+  $schema['multinode_access'] = array(
+    'description' => t('Table to record multinode access configurations for modules.'),
+    'fields' => array(
+      'realm' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'description' => t('Realm.'),
+      ),
+      'groupname' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'description' => t('Group tag.'),
+      ),
+      'logic' => array(
+        'type' => 'varchar',
+        'length' => 5,
+        'description' => t('Logic to use.'),
+      ),
+      'weight' => array(
+        'type' => 'varchar',
+        'length' => 5,
+        'description' => t('Order in which this module is to be processed.'),
+      ),
+      
+      'checkstatus' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'description' => t('Name of module.'),
+      ),
+    ),
+  );
+
+  $schema['og_user_test'] = array(
+    'description' => t('Test table to record group context when user object is loaded.'),
+    'fields' => array(
+      'testDate' => array(
+        'type' => 'varchar',
+        'length' => 25,
+        'description' => t('Date recorded.'),
+      ),
+      'testUser' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'description' => t('UID of the user making the entry.'),
+      ),
+      'testUserName' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'description' => t('Name of the user making the entry.'),
+      ),
+      'testGroup' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'description' => t('GID of the group OG User Roles has calculated this page belongs to.'),
+      ),
+      'testFunction' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'description' => t('The function these values are reported from.'),
+      ),
+      'testSubFunction' => array(
+        'type' => 'varchar',
+        'length' => 80,
+        'description' => t('Location (if any) within code that returns the the GID.'),
+      ),
+      'testString' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'description' => t('This is the GID as returned by the group context: og_get_group_context().'),
+      ),
+      'testStatus' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'description' => t('Returning nothing right now.'),
+      ),
+      'testURI' => array(
+        'type' => 'varchar',
+        'length' => 200,
+        'description' => t('The value returned by: $uri_request_id = request_uri() as well as referring url in parenthesis.'),
+      ),
+      'testAArg0' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'description' => t('arg(0).'),
+      ),
+      'testAArg1' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'description' => t('arg(1).'),
+      ),
+      'testAArg2' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'description' => t('arg(2).'),
+      ),
+      'testAArg3' => array(
+        'type' => 'varchar',
+        'length' => 40,
+        'description' => t('arg(3).'),
+      ),
+      'testPerm' => array(
+        'type' => 'text',
+        'description' => t('The roles returned by OG User Roles.'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+?>

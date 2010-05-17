@@ -1,0 +1,17 @@
+diff -urp --strip-trailing-cr ../pathauto/pathauto.inc ./pathauto.inc
+--- ../pathauto/pathauto.inc	2009-12-03 17:13:01.000000000 +0100
++++ ./pathauto.inc	2009-12-20 00:14:17.000000000 +0100
+@@ -65,7 +65,12 @@ define('PREG_CLASS_ALNUM',
+  *   TRUE if an alias exists, FALSE if not.
+  */
+ function _pathauto_alias_exists($alias, $src, $language = '') {
+-  $alias_pid = db_result(db_query_range("SELECT pid FROM {url_alias} WHERE dst = '%s' AND src <> '%s' AND language = '%s'", array($alias, $src, $language), 0, 1));
++  if ($language) {
++    $alias_pid = db_result(db_query_range("SELECT pid FROM {url_alias} WHERE dst = '%s' AND src <> '%s' AND (language = '%s' OR language = '')", array($alias, $src, $language), 0, 1));
++  }
++  else {
++    $alias_pid = db_result(db_query_range("SELECT pid FROM {url_alias} WHERE dst = '%s' AND src <> '%s'",  array($alias, $src), 0, 1));
++  }
+   if (function_exists('path_redirect_delete_multiple')) {
+     // Delete from path_redirect the exact same alias to the same node.
+     path_redirect_delete_multiple(NULL, array('source' => $alias, 'redirect' => $src));

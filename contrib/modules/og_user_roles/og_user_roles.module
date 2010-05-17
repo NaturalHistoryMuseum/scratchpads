@@ -1,0 +1,4218 @@
+<?php
+// $Id: og_user_roles.module,v 1.1.2.15.2.31 2009/04/02 18:32:32 somebodysysop Exp $
+
+/**
+ * @file
+ * Allows group administrators to add members into Drupal system roles limited by group.
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function og_user_roles_help($path, $arg) {
+  switch ($path) {
+    case 'admin/og/og_user_roles':
+      return '<p>'. t('Allows group administrators to add members into Drupal system roles which are restricted to the group.') .'</p>';
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ * 
+ * Modification as per: http://drupal.org/node/192747
+ * Added 'administer og_user_roles'
+ *
+ */
+function og_user_roles_perm() {
+  return array('administer og_user_roles', 'configure member roles', 'create og_subgroups', 'manage registration codes', 'use registration codes', 'no oguseredit', 'configure restricted member roles', 'ogur perm 01', 'ogur perm 02', 'ogur perm 03', 'ogur perm 04', 'ogur perm 05', 'ogur perm 06', 'ogur perm 07', 'ogur perm 08', 'ogur perm 09', 'ogur perm 10', 'auto assign group roles');
+}
+
+/**
+ * Implementation of hook_access().
+ */
+function og_user_roles_access($op, $node, $account) {
+  global $user;
+
+  if ($op == 'create') {
+    return user_access('create og_subgroups');
+  }
+
+}
+
+/**
+ * Implementation of hook_settings().
+ */
+function og_user_roles_admin_settings() {
+
+  $types = array();
+
+  // Get list of all og-enabled node types
+  $group_types = og_get_types('group');
+  foreach ($group_types as $type) {
+    $types[$type] = node_get_types('name', $type);
+  }
+  
+  // Get list of roles, not counting authenticated and anonymous user
+  $all_roles = user_roles();
+  foreach ($all_roles as $rid => $role) {
+    if ($rid > 2) {
+      $roles[$rid] = $role;
+    }
+  }
+
+  // If no assignable roles, advise user to add some.
+  // Modification as per: http://drupal.org/node/167373 
+  if (!count($roles)) {
+    $form['og_user_roles'] = array(					  
+      '#value' => '<p>'. t('No assignable roles were found. Please create at least one role under !roles.', array('!roles' => l(t('Administer >> User management >> Roles'), 'admin/user/roles'))) .'</p>',
+    );
+    return $form;
+  }
+
+  // Create a fieldset for each group type containing role selections
+  foreach ($types as $type => $name) {
+    $form["og_user_roles_$type"] = array(
+      '#type' => 'fieldset',
+      '#title' => t('%type_name role options', array('%type_name' => $name)),
+    );
+    $form["og_user_roles_$type"]["og_user_roles_roles_$type"] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Assignable roles'),
+      '#options' => $roles,
+      '#default_value' => variable_get("og_user_roles_roles_$type", array()),
+    );
+    $form["og_user_roles_$type"]['og_user_roles_default_role'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Default group role for users who join groups of this type: <strong>%type_name</strong>.', array('%type_name' => $name)),
+      '#description' => t('Allows you to select a group role to automatically assign to users who join any group of type <b>%type_name</b> on your site.', array('%type_name' => $name)),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form["og_user_roles_$type"]['og_user_roles_default_role']["ogur_assign_typegrouprole_$type"] = array(
+      '#type' => 'checkbox',
+      '#title' => t('<strong>Set default basic group (group limited) role for users who join groups of this type: %type_name?</strong>', array('%type_name' => $name)),
+      '#default_value' => variable_get("ogur_assign_typegrouprole_$type", 0),
+      '#description' => t('Do you wish to automatically assign a specific "basic group role" to <strong>every new group subscriber</strong> at the time he subscribes to a group of this type: %type_name? The role is limited to the group that he is subscribed to. This role assignment can be removed by the groups\' admins', array('%type_name' => $name)),
+    );
+    $form["og_user_roles_$type"]['og_user_roles_default_role']["ogur_typegrouprole_value_$type"] = array(
+      '#type' => 'select',
+      '#title' => t('Role to use as a group type %type_name role', array('%type_name' => $name)),
+      '#options' => $roles,
+      '#default_value' => variable_get("ogur_typegrouprole_value_$type", 0),
+      '#description' => t('Select the role you wish to use as the "group role" for every new groupmember to groups of this type: %type_name.', array('%type_name' => $name)),
+    );
+
+    $form["og_user_roles_$type"]['og_user_roles_founder'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Default Founder Role for users who create groups of type: <strong>%type_name</strong>.', array('%type_name' => $name)),
+      '#description' => t('Allows you to select a group role to automatically assign to users who create groups of type <b>%type_name</b> on your site. The role is specific to the group(s) this user creates.  That is, the user will only have the privileges of the role in the group that he creates.', array('%type_name' => $name)),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form["og_user_roles_$type"]['og_user_roles_founder']["ogur_assign_founder_$type"] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Set default group founder (group limited) role for users who create groups of type: <b>%type_name</b>?', array('%type_name' => $name)),
+      '#default_value' => variable_get("ogur_assign_founder_$type", 0),
+      '#description' => t('Do you wish to automatically assign a user (e.g. "founder") who creates a group of type <b>%type_name</b> to a group specific role that is limited to the group that he creates?', array('%type_name' => $name)),
+    );
+    $form["og_user_roles_$type"]['og_user_roles_founder']["ogur_founder_value_$type"] = array(
+      '#type' => 'select',
+      '#title' => t('Role to use as founder role for group type <b>%type_name</b>: ', array('%type_name' => $name)),
+      '#options' => $roles,
+      '#default_value' => variable_get("ogur_founder_value_$type", 0),
+      '#description' => t('Select the role you wish to use as the "founder" role for group type <b>%type_name</b>.', array('%type_name' => $name)),
+    );
+
+  }
+
+  $form['og_user_roles_role_perm'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Permissions table for users with \'configure restricted member roles\' permission.'),
+    '#description' => t('Users with the <strong>configure member roles</strong> permission may assign any group role to any user within the group in which the user has this permission.  Users with the <strong>configure restricted member roles</strong> permission may only assign roles that they have permission to assign. You must define here for these users what permission allows a user to assign what role. If the user has a role which contains the permission, he can assign the applicable role.  If not, then he cannot.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_role_perm']['og_user_roles_permissions'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Enter here a table consisting of each permission that allows a user with the \'configure restricted member roles\' permission to assign a specific role to users in a group'),
+    '#default_value' => variable_get('og_user_roles_permissions', ''),
+    '#cols' => 30,
+    '#rows' => 4,
+    '#description' => t('Users with the <strong>configure restricted member roles</strong> permission must have a role which contains the permissions required to assign specific roles. There should be a permission for each role that can be assigned by this user. You must define that relationship here. Every permission goes on a separate line.  Each line consists of the permission itself and the role to which the permission grants the user the right to assign to another user. Each permission / role combination is separated by the <b>|</b> character.  <p>Structure your entries like this:
+        <p>
+        <strong>
+          permission|role<br />
+        </strong>
+        <p>For example:
+		<p>
+        <strong>
+          assign GroupMember role|GroupMember<br />
+          assign GroupAdmin role|GroupAdmin<br />
+        </strong>
+        </p>
+        <p>Each record is on a separate line. Each line contains the permission required to be able to assign a role, and the assignable role that permission allows. Each permission and role on a line is separated by a | .'),
+    );
+
+  $form['og_user_roles_regcode_gid_default'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Allow Group Admins to define Registration Codes for new group subscribers to moderated groups.'),
+    '#description' => t('Allows you to allow Group Administrators to define Registration Codes to allow users to subscribe to moderated groups without administrator approval.  Your Group Admins must have the <strong>manage registration codes</strong> permission to use this setting.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_regcode_gid_default']['og_user_roles_assign_regcode_gid'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Group Admins to set Registration Codes for users to join their moderated groups without admin approval?'),
+    '#default_value' => variable_get('og_user_roles_assign_regcode_gid', 0),
+    '#description' => t('Do you wish to allow Group Admins to define "Registration Codes" to allow users to subscribe to their groups without admin approval? The Group Admin will be able to define the Registration Codes on <strong>edit</strong> (not creation) of the group node.  Group Admin must have <strong>manage registration codes</strong> permission.'),
+  );
+  $form['og_user_roles_regcode_gid_default']['og_user_roles_assign_regcode_gid_required'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Require users enter a Registration Code on site signup (user registration)?'),
+    '#default_value' => variable_get('og_user_roles_assign_regcode_gid_required', 0),
+    '#description' => t('If you have checked the box above to allow Group Admins to define "Registration Codes", do you also wish to make entry of Registration Codes mandatory on the "User Register" screen?  If you check this box, then no one will be able to sign up to your site unless they have entered a valid Registration Code.  You should only check this box if you are <strong>sure</strong> that every user who signs up to your site will have access to the correct Registration Code to be able to automatically join the correct group.  If you are unsure about any of this, <strong>do not</strong> check this box.'),
+  );
+  $form['og_user_roles_regcode_gid_default']['og_user_roles_assign_regcode_gid_text'] = array(
+    '#type' => 'radios',
+    '#title' => t('Textfield or Textarea?'),
+    
+    '#options' => array(
+    'textfield' => t('textfield'),
+    'textarea' => t('textarea'),
+    ),
+
+    '#default_value' => variable_get('og_user_roles_assign_regcode_gid_text', 'textarea'),
+    '#description' => t('When a group admin edits a group node, should the field in which the registration codes are to be entered be a <strong>textarea</strong> or a <strong>textfield</strong>?'),
+  );
+
+  $form['og_user_roles_approval'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Allow group admins to approve new signups.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('<strong>If user registration to your site requires administrator approval</strong> and you allow users to subscribe to groups at registration, then you can optionally allow the administrator(s) of the group(s) to which the user is subscribing to approve the signup request.  This will require that the administrator of each group that you wish to give this privilege have a role which includes the <strong>administer users</strong> permission. (Note that this feature requires ' . l("mimemail.module", "http://www.drupal.org/project/mimemail") . ' to be installed)' ),
+  );
+  $form['og_user_roles_approval']['og_user_roles_approval_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow group admins to approve new signups?'),
+    '#default_value' => variable_get('og_user_roles_approval_default', 0),
+    '#description' => t('<strong>If your site requires administrator approval for signups</strong>: When a user registers and elects to subscribe to a group (group is on registration form), then the admin of the group will receive an email notification of the pending signup and be allowed to approve it.  Note that this requires that the group admin have a group role which includes the <strong>administer users</strong> permission.'),
+  );
+
+  $form['og_user_roles_default'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default Non-Group Role for new users.'),
+    '#description' => t('Allows you to select a role to automatically assign to all new signups to your site.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_default']['og_user_roles_assign_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Set default global (site-wide) role for new signups?'),
+    '#default_value' => variable_get('og_user_roles_assign_default', 0),
+    '#description' => t('Do you wish to automatically assign all new signups to your web site to a specific role (that is NOT group specific) upon registration?'),
+  );
+  $form['og_user_roles_default']['og_user_roles_default_value'] = array(
+    '#type' => 'select',
+    '#title' => t('Selectable roles'),
+    '#options' => $roles,
+    '#default_value' => variable_get('og_user_roles_default_value', 0),
+  );
+
+  $form['og_user_roles_basicgrouprole'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default Basic Group Role for new group subscribers.'),
+    '#description' => t('Allows you to select a group role to automatically assign to users who join a group on your site. The role is specific to the group(s) to which the user is subscribing.  That is, the user will only have the privileges of the role in the group he is subscribed to.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_basicgrouprole']['og_user_roles_assign_basicgrouprole'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Set default basic group (group limited) role for users who join groups?'),
+    '#default_value' => variable_get('og_user_roles_assign_basicgrouprole', 0),
+    '#description' => t('Do you wish to automatically assign a specific "basic group role" to <strong>every new group subscriber</strong> at the time he subscribes to the group? The role is limited to the group that he is subscribed to. This role assignment can be removed by the groups\' admins'),
+  );
+  $form['og_user_roles_basicgrouprole']['og_user_roles_basicgrouprole_value'] = array(
+    '#type' => 'select',
+    '#title' => t('Role to use as a basic group role'),
+    '#options' => $roles,
+    '#default_value' => variable_get('og_user_roles_basicgrouprole_value', 0),
+    '#description' => t('Select the role you wish to use as the "basic group role" for every new groupmember.'),
+  );
+
+  $form['og_user_roles_basicgrouprole_gid_default'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Allow Group Admins to define Default Basic Group Role for new group subscribers.'),
+    '#description' => t('Allows you to allow Group Administrators to define a default group role to automatically assign to users who join their groups. The role is specific to the group to which the user is subscribing.  That is, the user will only have the privileges of the role in the group he is subscribed to.  Your Group Admins must have the <strong>configure member roles</strong> permission to use this setting.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_basicgrouprole_gid_default']['og_user_roles_assign_basicgrouprole_gid'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Group Admins to set default basic group (group limited) role for users who join their groups?'),
+    '#default_value' => variable_get('og_user_roles_assign_basicgrouprole_gid', 0),
+    '#description' => t('Do you wish to allow Group Admins to define a specific "basic group role" for <strong>every new subscriber to their group</strong> at the time he subscribes to the group? The role is limited to the group that he is subscribed to. This role assignment can be be removed by the groups\' admin(s).  The Group Admin will be able to define the default group role on <strong>edit</strong> (not creation) of the group node.  Group Admin must have <strong>configure member roles</strong> permission.'),
+  );
+
+  $form['og_user_roles_admingrouprole'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default Group Role for new group administrator.'),
+    '#description' => t('Allows you to select a group role to automatically assign to users who are elevated to group administrator. The role is specific to the group(s) in which the user is a group administrator.  That is, the user will only have the privileges of the role in the group he is the administrator for.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_admingrouprole']['og_user_roles_assign_admingrouprole'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Set default group (group limited) administrator role for users who are elevated to group administrator?'),
+    '#default_value' => variable_get('og_user_roles_assign_admingrouprole', 0),
+    '#description' => t('Do you wish to automatically assign a specific "administrator group role" to <strong>every new group administrator</strong> at the time he is elevated to group administrator status? The role is limited to the group that he is the administrator for. This role assignment can only be removed by removing the user as a group administrator.'),
+  );
+  $form['og_user_roles_admingrouprole']['og_user_roles_admingrouprole_value'] = array(
+    '#type' => 'select',
+    '#title' => t('Role to use as group administrator role'),
+    '#options' => $roles,
+    '#default_value' => variable_get('og_user_roles_admingrouprole_value', 0),
+    '#description' => t('Select the role you wish to use as the "group administrator role" for every new group administrator.'),
+  );
+
+  $form['og_user_roles_notify'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default Group Admin Notification for new subscribers.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_notify']['og_user_roles_notify_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send email notification to group admin when new subscriber is added to group?'),
+    '#default_value' => variable_get('og_user_roles_notify_default', 0),
+    '#description' => t('Do you wish to automatically send an email notification to the group administrator when a new subscriber is added to a group? (Note that this feature requires ' . l("mimemail.module", "http://www.drupal.org/project/mimemail") . ' to be installed)'),
+  );
+
+  $form['og_user_roles_all_groups'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Nodes to automatically place into all available groups.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_all_groups']['og_user_roles_all_groups_nodes'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Nodes to automatically place into all available groups'),
+    '#default_value' => variable_get('og_user_roles_all_groups_nodes', ''),
+    '#cols' => 50,
+    '#rows' => 2,
+    '#description' => t('Specify here the node IDs of nodes which you want placed into all groups, each separated by a comma. Structure your entries like this:
+        <p><strong>63,20<br /></strong></p>
+        <p>Each node ID separated by a comma. Note that this process is completed at the next scheduled cron run.  New and existing groups are only updated when cron is run.  A log of updated groups is also written.  Also removing the node from here does NOT remove it from the group.  If you wish to remove nodes that have been placed into groups here, you must do that manually.'),
+    );
+
+  $form['og_user_roles_tac_og_default'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('TAC / OG Access Control Integration.'),
+  );
+
+  // Check to see if taxonomy_access is installed. 
+  $taxonomy_access = "not installed";
+  $disabled = 1;
+  if (module_exists("taxonomy_access")) {
+    $disabled = 0;
+	$taxonomy_access = 'installed';
+  }
+
+  $form['og_user_roles_tac_og_default']['og_user_roles_tac_og_value'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Integrate TAC and OG Access Control?'),
+    '#default_value' => variable_get('og_user_roles_tac_og_value', 0),
+    '#description' => t('Do you have Taxonomy Access installed and do you wish to make its access control work with Organic Groups?  Note that this feature requires that you install the ' . l("Taxonomy Access Control Module", "http://www.drupal.org/project/taxonomy_access") . '.  The <strong>taxonomy_access.module</strong> is currently <strong>' . $taxonomy_access . '</strong>.  Details here: ' . l("How to Make OG and TAC Work Together: Step 2", "http://groups.drupal.org/node/3700")),
+    '#disabled' => $disabled,
+  );
+
+  if (module_exists('og_subgroups')) {
+    $form['og_user_roles_subgroup'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Create Subgroups.'),
+      '#description' => t('Allows you to select a group type to use for displaying a "Create Subgroup" link on your group menus. Users will need to have the "create og_subgroups" permission in order to access this link on their group menus. Note that this functionality requires the og_subgroups.module'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['og_user_roles_subgroup']['og_user_roles_create_subgroup'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Create link to "Create Subgroup" in group menu?'),
+      '#default_value' => variable_get('og_user_roles_create_subgroup', 0),
+      '#description' => t('Do you wish to have a "Create Subgroup" link appear on the group menu (if the user has the appropriate permissions)?'),
+    );
+    $form['og_user_roles_subgroup']['og_user_roles_create_subgroup_value'] = array(
+      '#type' => 'select',
+      '#title' => t('Group type to use for subgroup creation'),
+      '#options' => $types,
+      '#default_value' => variable_get('og_user_roles_create_subgroup_value', ''),
+      '#description' => t('Select the group type you wish to use for subgroup creation.'),
+    );
+  }
+
+  $form['og_user_roles_clear_cache'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Clear the cache?'),
+    '#description' => t('We found that there are some modules which will return "Access denied" message even when OG User Roles returns permissions which allow the user access.  This is due to cached permissions being used instead of the group permissions. This settiing allows you to reset these permissions for a user on an ongoing basis if you are having this problem.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $description = 'Do you wish to automatically clear the cache_menu item and reset the user_access() cached permissions for this user?  See ' . l("OG User Roles and File Upload", "http://drupal.org/node/166566") . ' and ' . l("OG User Roles: Clearing the Cache", "http://drupal.org/node/177948") . ' for details.  Please note that this setting creates a heavy overload as permissions must be re-created on each page load.  Use this setting only if absolutely necessary.';
+  $form['og_user_roles_clear_cache']['og_user_roles_clear_cache_value'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Clear the user_access() and cache_menu caches for user?'),
+    '#default_value' => variable_get('og_user_roles_clear_cache_value', 0),
+    '#description' => t($description),
+  );						 
+
+  $form['og_user_roles_test'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Test/Debug.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['og_user_roles_test']['og_user_roles_test_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Output debug data to og_user_test table?'),
+    '#default_value' => variable_get('og_user_roles_test_default', 0),
+    '#description' => t('Every time user_access() is called, it will call og_user_all_roles() which adds group roles to $user->roles.  Do you wish to see the output from this function? (Note that this feature is for testing/debug purposes, and could create a very large output file.  This feature also requires that the table og_user_test already exist. Details here: ' . l("OG User Roles: Test", "http://drupal.org/node/164038")),
+  );
+
+  $form['og_user_roles_menu_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Group Menu Options.'),
+    '#description' => t('Give group admins control of the display of OGUR and default OG create links in the groups menu.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+   );
+  $form['og_user_roles_menu_options']['og_user_roles_menu_options_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable menu control?'),
+    '#default_value' => variable_get('og_user_roles_menu_options_enabled', 1),
+    '#description' => t("This will add two form elements, inside a field set, to the OG node's edit page, enabling this feature."),
+   );
+
+  $form['og_user_roles_logo'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Group Logo Attributes.'),
+    '#description' => t('Group admins can upload a logo for their group. Here you enter the maximum width and height attributes for Group Logos.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    );
+  $form['og_user_roles_logo']['og_user_roles_logo_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable group logo?'),
+    '#default_value' => variable_get('og_user_roles_logo_enabled', 1),
+    '#description' => t("This will add a text box onto the OG node's edit page, enabling this feature."),
+   );
+  $form['og_user_roles_logo']['og_user_roles_logo_width'] = array(
+    '#type' => 'textfield',
+    '#size' => 10,
+    '#title' => t('Maximum width for display of group logo?'),
+    '#default_value' => variable_get('og_user_roles_logo_width', '135'),
+    '#description' => t('Enter the maximum pixel (px) width at which group logos will be displayed'),
+    );
+  $form['og_user_roles_logo']['og_user_roles_logo_height'] = array(
+    '#type' => 'textfield',
+    '#size' => 10,
+    '#title' => t('Maximum height for display of group logo?'),
+    '#default_value' => variable_get('og_user_roles_logo_height', '113'),
+    '#description' => t('Enter the maximum pixel (px) height at which group logos will be displayed'),
+    );
+
+  $form['og_user_roles_counter'] = array(
+    '#type' => 'textfield',
+    '#size' => 10,
+    '#title' => t('Counter for <strong>og_users_roles</strong> table'),
+    '#default_value' => variable_get('og_user_roles_counter', 0),
+    '#description' => t('This is the counter for the <strong>og_users_roles</strong> table. You do not need to set this.  It will update itself.  It should NOT be set lower than the number of records currently in the table.'),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function og_user_roles_theme() {
+  return array(
+    'og_user_roles_multinode' => array(
+      'arguments' => array('form' => array()),
+    ),
+  );
+}
+
+/**
+ * Generate multinode access UI form.
+ */
+function og_user_roles_multinode() {
+  global $user;
+  if (isset($uid)) {
+    $account = user_load(array('uid' => $uid));
+  } else {
+    $account = $user;
+    $uid = $user->uid; 
+  }
+     
+  // Get whatever is stored in multinode table.
+  $existing = array();
+  $result = db_query("SELECT * FROM {multinode_access}");
+  while ($row = db_fetch_object($result)) {
+    $existing[$row->realm] = $row;
+  }
+
+  // Get all rule realms from node_access table.
+  $result = db_query("SELECT DISTINCT realm FROM {node_access}");
+   while ($row = db_fetch_object($result)) {
+    $rules[] = $row->realm;
+   }    
+
+  // Get all rule realms from modules.  User doing this should have grants in all modules affected.
+  $op = 'view';
+  $mrules = node_access_grants($op, $account);
+  foreach ($mrules as $realm => $grants) {
+    $rules[] = $realm;
+  }
+  
+  // Get only unique values
+  $rules = array_unique($rules);
+    
+  // Sort the rule realms
+  asort($rules);
+
+  $form = array('#tree' => TRUE);
+  foreach ($rules as $realm) {
+    $form[$realm]['checkbox'] = array('#type' => 'checkbox', '#default_value' => (isset($existing[$realm]->realm) ? 1 : 0)); 
+    $form[$realm]['realm'] = array('#type' => 'textfield', '#size' => 25, '#disabled' => TRUE, '#value' => check_plain($realm), '#default_value' => $realm); 
+    $form[$realm]['group'] = array('#type' => 'textfield', '#size' => 5, '#default_value' => (isset($existing[$realm]->groupname) ? $existing[$realm]->groupname : '') ); 
+    $form[$realm]['logic'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->logic) ? $existing[$realm]->logic : 'AND'), '#options' => array('AND' => 'AND', 'OR' => 'OR') ); 
+    $form[$realm]['weight'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->weight) ? $existing[$realm]->weight : '0'), '#options' => array('0' => '0', '1' => '1', '2' => '2', '3' => '3', '4' => '4', '5' => '5', '6' => '6', '7' => '7', '8' => '8', '9' => '9') ); 
+    $form[$realm]['check'] = array('#type' => 'select', '#default_value' => (isset($existing[$realm]->checkstatus) ? $existing[$realm]->checkstatus : '0'), '#options' => array('0' => '0', '1' => '1') ); 
+  }
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save changes'));
+
+  $form['#theme'] = 'og_user_roles_multinode';
+
+  return $form;
+
+}
+
+/**
+ * Theme function to render the table for the og_user_roles_multinode 
+ * Multinode access UI
+ */
+function theme_og_user_roles_multinode($form) {
+  $output .= "\n<div id=\"og-roles-multinode-form\">\n";
+  $output .= '<div id="desc">'. t('Here you can configure multinode access.  You can only modify values here if TAC/OG Integration is ON. If you turn TAC/OG Integration ON, then later wish to turn it off, you must first UNCHECK all items here (otherwise, multinode access will continue).') ."</div>\n";
+  $header = array(t(''), t('Realm'), t('Group'), t('Logic'), t('Weight'), t('Check'));
+  $rows = array();
+
+  foreach (element_children($form) as $i) {
+    $block = &$form[$i];
+    $rows[] = array(drupal_render($block['checkbox']), drupal_render($block['realm']),
+        drupal_render($block['group']), drupal_render($block['logic']),
+        drupal_render($block['weight']), drupal_render($block['check']),
+      );
+  }
+
+  $output .= theme('table', $header, $rows, array('id' => 'og-roles-multinode-table'));
+
+  // This is an OGUR restriction: Do not show "submit" button if 
+  // TAC/OG Integration not turned on.
+  if (variable_get('og_user_roles_tac_og_value', 0) == 1) {
+    $output .= drupal_render($form['submit']);
+  } else {
+    $output .= '<div id="comments">'. t('<strong>TAC/OG Integration is OFF</strong>.') ."</div>\n";
+  }
+
+  $output .= "</div>\n";
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/**
+ * Process multinode form submission.
+ */
+function og_user_roles_multinode_submit($form, &$form_state) {
+  // Erase all existing settings
+  db_query ("DELETE FROM {multinode_access}");
+
+  // Insert new settings
+  foreach ($form_state['values'] as $block) {
+    if ($block['checkbox'] == 1) {
+      db_query("INSERT INTO {multinode_access} (realm, groupname, logic, weight, checkstatus) VALUES ('%s','%s','%s','%s',%d)", $block['realm'], $block['group'], $block['logic'], $block['weight'], $block['check']);
+	}
+  }
+  drupal_set_message(t('The multinode access settings have been updated.'));
+  cache_clear_all();
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function og_user_roles_menu() {
+  global $user;
+    
+  $items = array();
+
+    $items['admin/og/og_user_roles'] = array(
+      'title' => 'Organic groups user roles',
+      'description' => 'Allows group administrators to add members into group roles.   Also edit multinode access configuration.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_user_roles_admin_settings'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer og_user_roles'),
+    );
+    $items['admin/og/og_user_roles/settings'] = array(
+      'title' => t('General'),
+      'description' => t('Allows group administrators to add members into group roles.'),
+      'type' => MENU_DEFAULT_LOCAL_TASK, 'weight' => -10
+    );
+    $items['admin/og/og_user_roles/multinode'] = array(
+      'title' => t('Configure multinode UI'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_user_roles_multinode'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer site configuration'),
+      'weight' => 10,
+      'type' => MENU_LOCAL_TASK,
+     );  
+    $items['node/ognodeadd'] = array(
+      'title' => 'Create content',
+      'page callback' => 'og_user_roles_ognodeadd',
+      'access callback' => 'user_is_logged_in',
+      'type' => MENU_CALLBACK
+    );
+    $items['node/ogtermedit'] = array(
+      'title' => 'Edit term',
+      'page callback' => 'og_user_roles_ogtermedit',
+      'access callback' => 'user_is_logged_in',
+      'type' => MENU_CALLBACK
+    );
+    $items['node/ogmodr8'] = array(
+      'title' => 'View modr8 log',
+      'page callback' => 'og_user_roles_ogmodr8',
+      'access callback' => 'user_is_logged_in',
+      'type' => MENU_CALLBACK
+    );
+    $items['oguseredit/%'] = array(
+      'title' => 'Edit user',
+      'page callback' => 'og_user_roles_oguseredit',
+      'page arguments' => array(1),
+      'access callback' => 'user_is_logged_in',
+      'type' => MENU_CALLBACK
+    );
+    $items['ogusermanage/%'] = array(
+      'title' => 'Manage users',
+	  'page callback' => 'og_user_roles_user_manage',
+      'page arguments' => array(1),
+      'access callback' => 'user_is_logged_in',
+      'type' => MENU_CALLBACK
+    );
+    $items['og/regcode'] = array(
+      'title' => 'Enter registration code',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_user_roles_register'),
+      'access callback' => 'user_access',
+      'access arguments' => array('use registration codes'),
+      'weight' => 10,
+      'type' => MENU_LOCAL_TASK,
+     );  
+    $items['og/regcode/confirm/%'] = array(
+      'title' => 'Confirm registration code',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_user_roles_register_confirm'),
+      'access callback' => 'user_access',
+      'access arguments' => array('use registration codes'),
+      'weight' => 10,
+      'type' => MENU_LOCAL_TASK,
+     );  
+    //
+	// Not sure if putting $user->uid in array will work here
+	//
+    $items['oglogo'] = array(
+      'title' => 'Group Logo',
+      'page callback' => 'og_user_roles_oglogo',
+      'callback arguments' => array($user->uid),
+      'access callback' => 'user_access',
+      'access arguments' => array('access print'),
+      'type' => MENU_CALLBACK
+    );
+
+    // modr8 modification - using my own access callback
+    if (module_exists('modr8')) {
+      $items['node/%/ogmodr8'] = array(
+        'title' => 'Moderate',
+        'page callback' => 'og_user_roles_modr8_page',
+        'page arguments' => array(1),
+        'access callback' => 'og_user_roles_modr8_access',
+        'access arguments' => array(1, 'moderate content'),
+        'weight' => 5,
+        'type' => MENU_LOCAL_TASK);
+    }
+
+    // Add another tab to the group subscribers page for admins to
+    // configure member roles
+	// Modified og_user_roles_allowed to apply user_access('configure member roles')
+    $items['og/users/%/roles'] = array(
+      'title' => 'Configure member roles',
+      'page callback' => 'og_user_roles_page',
+      'page arguments' => array(2),
+      'access callback' => 'og_user_roles_is_allowed',
+      'access arguments' => array(2),
+      'weight' => 5,
+      'type' => MENU_LOCAL_TASK
+    );
+
+    // Add another tab to the group subscribers page for admins to
+    // configure restricted member roles
+	// Modified og_user_roles_allowed to apply user_access('configure restricted member roles')
+    $items['og/users/%/restricted_roles'] = array(
+      'title' => 'Configure restricted member roles',
+      'page callback' => 'og_user_roles_restricted_page',
+      'page arguments' => array(2),
+      'access callback' => 'og_user_roles_restricted_is_allowed',
+      'access arguments' => array(2),
+      'weight' => 5,
+      'type' => MENU_LOCAL_TASK
+    );
+
+    // Add another tab to the group subscribers page for admins to
+    // manage users
+    $items['og/users/%/manage'] = array(
+      'title' => 'Manage users',
+      'page callback' => 'og_user_roles_user_manage',
+      'page arguments' => array(2),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer users'),
+      'weight' => 6,
+      'type' => MENU_LOCAL_TASK
+    );
+
+  return $items;
+}
+
+/**
+ * Menu callback; displays members and role selection
+ */
+function og_user_roles_page($gid) {
+
+  $output = '';
+  $node = node_load($gid);
+  // Get roles associated with this group. We rebuild the associative
+  // array because the settings form only passes RID and we need the name.
+  $role_ids = variable_get("og_user_roles_roles_{$node->type}", array());
+  $all_roles = user_roles();
+  foreach ($role_ids as $rid => $checked) {
+    if ($checked != 0) {
+      $roles[$rid] = $all_roles[$rid];
+    }
+  }
+
+  if (is_array($roles)) {
+    // Retrieve list of all group users
+    $sql = og_list_users_sql(0, 0, 'ou.is_admin DESC, ou.is_active ASC, u.name ASC');
+    $result = pager_query($sql, 100, 0, NULL, $gid);
+    $output .= theme('pager', NULL, 100);
+    $output .= drupal_get_form('og_user_roles_page_form', $gid, $roles, $result);
+  }
+  else {
+    drupal_set_message(t('No roles have been assigned as group roles yet.'));
+  }
+
+  drupal_set_title(t('Subscribers') .': '. l($node->title, "node/$node->nid"));
+  
+  return $output;
+}
+/**
+ * Menu callback; displays members and role selection
+ */
+function og_user_roles_restricted_page($gid) {
+  $output = '';
+  $node = node_load($gid);
+  // Get roles associated with this group. We rebuild the associative
+  // array because the settings form only passes RID and we need the name.
+  $role_ids = variable_get("og_user_roles_roles_{$node->type}", array());
+  $all_roles = og_user_roles_get_roles();
+  foreach ($role_ids as $rid => $checked) {
+    if ($checked != 0 && $all_roles[$rid]) {
+      $roles[$rid] = $all_roles[$rid];
+    }
+  }
+
+  if (is_array($roles)) {
+    // Retrieve list of all group users
+    $sql = og_list_users_sql(0, 0, 'ou.is_admin DESC, ou.is_active ASC, u.name ASC');
+    $result = pager_query($sql, 100, 0, NULL, $gid);
+    $output .= theme('pager', NULL, 100);
+    $output .= drupal_get_form('og_user_roles_page_form', $gid, $roles, $result);
+  }
+  else {
+    drupal_set_message(t('Either no roles have been set up as group roles yet or you do not have access to assign any of the available roles.'));
+  }
+
+  drupal_set_title(t('Subscribers') .': '. l($node->title, "node/$node->nid"));
+
+  return $output;
+}
+
+
+/**
+ * Menu callback; displays the modr8 content moderation form for a single node.
+ */
+function og_user_roles_modr8_page($nid) {
+  require_once drupal_get_path('module', 'modr8'). '/modr8_admin.inc';
+  
+//  $count_sql = db_rewrite_sql('SELECT COUNT(*) FROM {node} n WHERE n.status = 1 AND n.moderate = 1 AND n.nid = '.$nid);
+//  $page_sql = db_rewrite_sql('SELECT n.nid FROM {node} n WHERE n.status = 1 AND n.moderate = 1 AND n.nid = '.$nid.' ORDER BY n.changed DESC');
+  $is_published = '';
+  if (!user_access('administer nodes')) {
+    // Users who don't have the 'administer nodes' permission can only see published nodes.
+    $is_published = 'n.status = 1 AND ';
+  }
+
+  $count_sql = db_rewrite_sql('SELECT COUNT(*) FROM {node} n WHERE '. $is_published .' n.moderate = 1 AND n.nid = '.$nid);
+  $page_sql = db_rewrite_sql('SELECT n.nid FROM {node} n WHERE '. $is_published .' n.moderate = 1 AND n.nid = '.$nid.' ORDER BY n.changed DESC');
+  $result = pager_query($page_sql, variable_get('modr8_nodes_per_page', 10), 0, $count_sql);
+  $result_count = pager_query($page_sql, 10, 0, $count_sql);
+  
+  $output = '';
+  if (db_fetch_object($result_count)) {
+    $output .= drupal_get_form('modr8_form', $result);
+    $output .= theme('pager');
+  }
+  else {
+    $output .= '<p>'. t('@items in moderation', array('@items' => format_plural(0, '1 post', '@count posts'))). '</p>';
+  }
+  return $output;
+}
+
+/**
+ * Form for user roles page.
+ */
+function og_user_roles_page_form($form_values, $gid, $roles, $result) {
+  $form['user_roles'] = array('#tree' => TRUE); // Make sure form array isn't flattened
+  while ($account = db_fetch_object($result)) {
+
+    $form['user_roles']['users'][$account->uid] = array(
+      '#type' => 'value',
+      '#value' => $account->uid
+    );
+
+    $title = theme('username', $account) .' ('. l(t('unsubscribe'), "og/unsubscribe/$gid/$account->uid", array('query' => "destination=og/users/$gid")) .')';
+
+    $form['user_roles']['roles'][$account->uid] = array(
+//      '#type' => 'checkbox_columns',
+      '#type' => 'checkboxes',
+      '#title' => $title,
+      '#default_value' => _og_user_roles_get_roles($account->uid, $roles),
+      '#columns' => 4,
+      '#options' => $roles,
+      '#suffix' => '<br style="clear: both;" />',
+    );
+  }
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save changes'));
+
+  return $form;
+}
+
+/**
+ * Process the form submission.
+ */
+function og_user_roles_page_form_submit($form, &$form_state) {
+
+  // Added this to get gid
+  if (is_numeric(arg(2))) {
+    $gid = (int)arg(2);
+  }
+
+  foreach ($form_state['values']['user_roles']['roles'] as $uid => $roles) {
+    foreach ($roles as $rid => $checked) {
+      $exists = db_result(db_query("SELECT * FROM {og_users_roles} WHERE uid = %d AND rid = %d AND gid = %d", $uid, $rid, $gid));
+      if ($checked && !$exists) {
+	    $ogr_id = variable_get('og_user_roles_counter', 0) + 1;
+        variable_set('og_user_roles_counter', $ogr_id);
+        db_query("INSERT INTO {og_users_roles} (uid, rid, gid, ogr_id) VALUES (%d, %d, %d, %d)", $uid, $rid, $gid, $ogr_id);
+        $args['rid'] = $rid;
+        $args['ogr_id'] = $ogr_id;
+        module_invoke_all('og', 'user update', $gid, $uid, $args);
+      }
+      elseif (!$checked && $exists) {
+        db_query("DELETE FROM {og_users_roles} WHERE uid = %d AND rid = %d AND gid = %d", $uid, $rid, $gid);
+      }
+    }
+  }
+
+  // Have to rebuild the menu here, in case new menu items were added
+  menu_rebuild();
+
+  drupal_set_message(t('Your changes have been saved'));
+}
+
+/**
+ * Return an array of just the roles assignable by this user
+ *
+ * @return
+ *  Array containing roles that this user may assign according to variable_get('og_user_roles_permissions', '').
+ */
+function og_user_roles_get_roles() {
+  global $user;
+  $output = array();
+
+  // If this user has 'configure member roles' permission, then he has
+  // global role access for this group.
+  if (user_access('configure member roles')) return user_roles();
+
+  // If user does not have 'configure member roles' permission,
+  // then get roles he has access to assign, if applicable
+  $roleperms = og_user_roles_get_role_permissions(variable_get('og_user_roles_permissions', ''));
+  if ($roleperms) {
+    foreach ($roleperms as $perm => $roles) {
+      // If the user has this permission, then put the roles up on the form
+      if (user_access($perm)) {
+	    foreach ($roles as $role) {
+          $rid = db_result(db_query("SELECT rid FROM {role} WHERE name = '%s'", $role));  
+          $output[$rid] = $role;
+		}
+      }
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Return an array of permissions and roles assignable by the permissions
+ *
+ * @param $table
+ *  Plain text table from variable_get('og_user_roles_permissions', '')
+ * @return
+ *  Array containing permissions and roles assignable by those permissions.
+ */
+function og_user_roles_get_role_permissions($table) {
+  $output = array();
+
+  if (!empty($table)) {
+    $table_array = explode("\n", $table);
+    foreach ($table_array as $table_item) {
+      if (!empty($table_item)) {
+        $table_line = explode('|', $table_item);
+        if (!empty($table_line[0])) {
+          $output[$table_line[0]][] = trim($table_line[1]);
+	    }
+	  }
+    } // end foreach
+  } // end $table if
+
+  return $output;
+}
+
+/**
+ * This checks to see what roles a current user has against a given set of roles.
+ */
+function _og_user_roles_get_roles($uid, $roles = array()) {
+
+  // Added this to get gid
+  if (is_numeric(arg(2))) {
+    $gid = (int)arg(2);
+  }
+
+  $roles_output = array();
+  if (is_array($roles)) {
+    foreach ($roles as $rid => $role) {
+      $result = db_result(db_query("SELECT * FROM {og_users_roles} WHERE uid = %d AND rid = %d AND gid = %d", $uid, $rid, $gid));
+      if ($result) {
+        $roles_output[$rid] = $rid;
+      }
+    }
+  }
+
+  return $roles_output;
+}
+
+/**
+ * Theme function to render the table for the og_user_roles form.
+ */
+function theme_og_user_roles_page_form($form) {
+  $output .= "\n<div id=\"og-roles-form\">\n";
+  $output .= '<div id="desc">'. t('Here you can assign group roles to members. This will give that member the permissions of that role in this group. It will apply to all posts within this group and will only apply to posts within this group.') ."</div>\n";
+  $header[] = array('data' => t('Roles'), 'colspan' => 2);
+  $rows = array();
+
+  $i = 0;
+  foreach ($form['user_roles']['users'] as $user_form) {
+    $uid = $user_form['#value'];
+
+    if ($uid) {
+      $rows[$i][] = drupal_render($form['user_roles']['roles'][$uid]);
+      $i++;
+    }
+  }
+
+  $output .= theme('table', $header, $rows, array('id' => 'og-roles-table'));
+  $output .= drupal_render($form['submit']);
+  $output .= "</div>\n";
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/**
+ * Determine if a group is allowed to configure member roles.
+ *
+ * @param $nid
+ *   A node ID
+ * @return boolean
+ *   TRUE if this group type allows roles to be assigned, otherwise FALSE
+ */
+function og_user_roles_is_allowed($nid) {
+  $node = node_load($nid);
+  if (in_array($node->type, og_get_types('group')) && variable_get("og_user_roles_roles_$node->type", NULL) && user_access('configure member roles')) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Determine if a group is allowed to configure member roles (configure restricted member roles).
+ *
+ * @param $nid
+ *   A node ID
+ * @return boolean
+ *   TRUE if this group type allows roles to be assigned, otherwise FALSE
+ */
+function og_user_roles_restricted_is_allowed($nid) {
+  $node = node_load($nid);
+  if (in_array($node->type, og_get_types('group')) && variable_get("og_user_roles_roles_$node->type", NULL) && user_access('configure restricted member roles')) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Add role to og_users_roles table.
+ *
+ * @param $uid the user ID
+ * @param $rid the role ID
+ * @param $gid node ID of the group for the user in this role
+ *
+ * There is no return parameter, but "hook_og()" is invoked with args:
+ * 'rid' (role ID) and 'ogr_id' (og_users_roles table ID for the newly created record).
+ */
+function og_user_roles_role_join($uid, $rid, $gid) {
+  // Modification.  http://drupal.org/node/174773
+  // Check to see if this user doesn't already have this role in this group;
+  // If not, then assign it.
+  $sql = "SELECT COUNT(*) FROM {og_users_roles} WHERE uid = %d AND rid = %d and gid = %d";
+  $result = db_query($sql, $uid, $rid, $gid);
+  $output = (db_result($result));
+
+  if ($output == 0) {
+    $ogr_id = variable_get('og_user_roles_counter', 0) + 1;
+    variable_set('og_user_roles_counter', $ogr_id);
+    db_query("INSERT INTO {og_users_roles} (uid, rid, gid, ogr_id) VALUES (%d, %d, %d, %d)", $uid, $rid, $gid, $ogr_id);
+    $args['rid'] = $rid;
+    $args['ogr_id'] = $ogr_id;
+    module_invoke_all('og', 'user update', $gid, $uid, $args);
+  }
+}
+
+/**
+ * Remove all roles for a user in a group table.
+ */
+function og_user_roles_role_leave($uid, $gid) {
+  db_query("DELETE FROM {og_users_roles} WHERE uid = %d AND gid = %d", $uid, $gid);
+}
+
+/**
+ * Remove all roles for a group node that has been deleted.
+ */
+function og_user_roles_role_remove($gid) {
+  db_query("DELETE FROM {og_users_roles} WHERE gid = %d", $gid);
+}
+
+/**
+ * Remove this role from this user in this group.
+ */
+function og_user_roles_role_delete($uid, $rid, $gid) {
+  db_query("DELETE FROM {og_users_roles} WHERE uid = %d AND gid = %d AND rid = %d", $uid, $gid, $rid);
+}
+
+/**
+ * Remove og_user_roles variables for a group node that has been deleted.
+ */
+function og_user_roles_variable_remove($gid) {
+  if (variable_get('og_user_roles_basicgrouprole_value_' . $gid, 0)) variable_del('og_user_roles_basicgrouprole_value_' . $gid);  
+  if (variable_get('og_user_roles_assign_basicgrouprole_' . $gid, 0)) variable_del('og_user_roles_assign_basicgrouprole_' . $gid);  
+}
+
+/**
+ * Added the following functions from this snippet: http://drupal.org/node/41936
+ * Creates multiple checkbox columns
+ */
+function expand_checkbox_columns($element) {
+  $value = is_array($element['#value']) ? $element['#value'] : array();
+  $element['#type'] = 'checkboxes';
+  $element['#tree'] = TRUE;
+
+  if (count($element['#options']) > 0) {
+    if (!isset($element['#default_value']) || $element['#default_value'] == 0) {
+      $element['#default_value'] = array();
+    }
+
+    foreach ($element['#options'] as $key => $choice) {
+      $class = ($column % $element['#columns']) && $column ? 'checkbox-columns' : 'checkbox-columns-clear';
+      if (!isset($element[$key])) {
+        $element[$key] = array(
+          '#type' => 'checkbox',
+          '#processed' => TRUE,
+          '#title' => $choice,
+          '#default_value' => in_array($key, $value),
+          '#attributes' => $element['#attributes'],
+          '#prefix' => '<div class="'. $class .'">',
+          '#suffix' => '</div>',
+          '#return_value' => $choice
+        );
+      }
+      $column++;
+    }
+  }
+
+  return $element;
+
+}
+
+/**
+ * Added the following functions from this snippet: http://drupal.org/node/41936
+ * To let Drupal know about the new "expand_checkbox_columns".
+ */
+function og_user_roles_elements() {
+  $type['checkbox_columns'] = array(
+    '#input' => TRUE,
+    '#process' => array('expand_checkbox_columns' => array()),
+    '#tree' => TRUE
+  );
+
+  return $type;
+}
+
+// --------- Table og_users_roles
+
+function og_user_roles_views_data() {
+  $data['og_users_roles']['table']['group']  = t('OGUR Groups');
+  $data['og_users_roles']['table']['join'] = array(
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'gid',
+    ),
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+    ),
+    'role' => array(
+      'left_field' => 'rid',
+      'field' => 'rid',
+    ),
+  );
+  $data['og_users_roles']['gid'] = array(
+    'title' => t('OGUR group'),
+    'help' => t('OGUR group that a member belongs to.'),
+    'relationship' => array(
+      'title' => t('OGUR group node (member)'),
+      'help' => t("Bring in information about the OGUR group node based on a user's membership."),
+      'base' => 'node',
+      'field' => 'nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Group node (member)'),
+    ),
+    'argument' => array(
+      'title' => t('Group node'),
+//      'handler' => 'og_views_handler_argument_og_group_nid',
+      'handler' => 'ogur_handler_argument_og_users_roles_gid',
+      'help' => t('<strong>Members</strong> are filtered for a specific group.'),
+    ),
+  ); 
+  $data['og_users_roles']['uid'] = array(
+    'title' => t('OGUR group member'),
+    // 'help' => t('foo')
+    'filter' => array(
+      'handler' => 'views_handler_filter_user_current',
+      'help' => t("OGUR: Group in user's groups"),
+    ),
+  );
+  $data['og_users_roles']['rid'] = array(
+    'title' => t('OGUR Roles'),
+    'help' => t('OGUR roles that a user belongs to.'),
+    'field' => array(
+      'handler' => 'ogur_handler_field_og_users_roles',
+    ),
+    'filter' => array(
+      'handler' => 'ogur_handler_filter_og_users_roles',
+      'numeric' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'ogur_handler_argument_og_users_roles_rid',
+      'name table' => 'role',
+      'name field' => 'name',
+      'empty field name' => t('No role'),
+      'numeric' => TRUE,
+    ),
+  );
+  $data['og_users_roles']['picg'] = array(
+    'title' => t('OGUR: Roles in current group'),
+    'help' => t('Roles in current group. This will make sure that roles returned are for current group only.'),
+    'filter' => array(
+      'handler' => 'ogur_handler_filter_og_users_roles_picg',
+    ),
+  );
+    
+  return $data;
+}
+
+/**
+ * Implementation of hook_views_handlers() to register all of the basic handlers
+ * views uses.
+ */
+function og_user_roles_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'og_user_roles') . '/views/handlers',
+    ),
+    'handlers' => array(
+      'ogur_handler_field_og_users_roles' => array(
+        'parent' => 'views_handler_field_prerender_list',
+      ),
+      'ogur_handler_filter_og_users_roles' => array(
+        'parent' => 'views_handler_filter_many_to_one',
+      ),
+      'ogur_handler_filter_og_users_roles_picg' => array(
+        'parent' => 'views_handler_filter',
+      ),
+      'ogur_handler_argument_og_users_roles_rid' => array(
+        'parent' => 'views_handler_argument_many_to_one',
+      ),
+      'ogur_handler_argument_og_users_roles_gid' => array(
+        'parent' => 'views_handler_argument_numeric',
+      ),
+    ),
+  );
+}
+
+
+/*
+ * Create a list of group names and IDs.
+ */
+function views_handler_filter_group() {
+  $list = array();
+  $list = og_get_types('group');
+
+// Modification as per: http://drupal.org/node/184357
+  $group_types = implode("','", $list);
+  $vids = array();
+  $result = db_query("SELECT n.nid, n.title FROM {node} n WHERE n.type IN ('".$group_types."') ORDER BY n.title");
+  while ($obj = db_fetch_object($result)) {
+    $vids[$obj->nid] = $obj->title;
+  }
+
+  return $vids;
+}
+
+/**
+ * Based on og_handler_filter_picg
+ * Should restrict queries that use og_users_roles table to the current group. 
+ *
+ * @return void
+ **/
+function og_user_roles_handler_filter($op, $filter, $filterinfo, &$query) {
+  $query->ensure_table('og_users_roles');
+  $query->add_where("og_users_roles.gid = ***CURRENT_GID***");
+}
+
+/**
+ * views_handler
+ * Create list of roles for this group type
+*/
+function og_user_roles_filter_role() {
+  $node = og_get_group_context();
+  $roles = array();
+  if ($node->type) {
+    $group = $node->type;
+  } else {
+    $group = 'group';
+  }
+  // Get roles associated with this group. We rebuild the associative
+  // array because the settings form only passes RID and we need the name.
+  $role_ids = variable_get("og_user_roles_roles_{$group}", array());
+  $all_roles = user_roles();
+  foreach ($role_ids as $rid => $checked) {
+    if ($checked != 0) {
+      $roles[$rid] = $all_roles[$rid];
+    }
+  }
+  return $roles;
+} 
+
+/**
+ * Created to check a view before I execute it.  Needed for OG Home Pages with multiple
+ * embedded views because if one has no ndoes, then the entire page won't print.
+ * Don't want that, so created this utility to check before the view is rendered.
+ */
+function og_user_roles_checkview($viewname, $args) {
+  $view = views_get_view($viewname);
+  $items = views_build_view('items', $view, $args, 4, 5);
+  if ($items['items']) {
+    $result = 1;
+  } else {
+    $result = 0;
+  }
+  return $result;
+}
+
+/*
+ * Implementation of hook_boot() (was hook_init()).
+ *
+ * Got the idea of re-directing if this is a add group node request
+ * from here: http://drupal.org/project/globalredirect
+ */
+function og_user_roles_boot() {
+  global $user;
+
+  // Let's try getting og roles here, just to see what happens
+  // Added here as per hook_init() suggestion: http://api.drupal.org/api/function/hook_init/5
+  // Don't call og_user_roles_all_roles unless this user is logged in
+  if ($user->uid > 0) {
+    $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+    $user->roles = $roles;
+    if (variable_get('og_user_roles_clear_cache_value', 0) == 1) {
+	  cache_clear_all($user->uid, 'cache_menu', TRUE);
+	  // Clear the user_access $perm cache
+	  user_access('', NULL, TRUE);
+	}
+  }
+
+  // Looking for this format: http://www.scbbs.com/node/add/link?gids[]=29
+  // We only need to process this if the user is logged in
+  if ($user->uid > 0) {
+    // Bootstrap if arg() doesn't exist
+    if ((!function_exists('arg') || !function_exists('node_load')) && $user->uid > 0) {
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);  // http://drupal.org/node/273068
+    }
+    // Modification as per: http://drupal.org/node/183860
+	// Further modification: changed og_user_roles_theme() to og_user_roles_determine_context()
+    og_user_roles_determine_context();
+
+    /** 
+     * Modules exempted from ognodeadd:
+	 * Originally for ad module: http://drupal.org/node/183081
+	 * Added minutes module: http://drupal.org/node/184102
+	 */
+    $exempted = array('ad','minutes');
+
+    $orig_query = $_SERVER['QUERY_STRING'];
+
+	// Get rid of Create Content 'node/add?gids[]'
+      $pattern = '/q\=.*node\/add\&gids\[\]\=(\d+)/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of Create Content 'node/ognodeadd&gids[]'
+      $pattern = '/q\=.*node\/ognodeadd\&gids\[\]\=(\d+)/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of Create Content 'node/ognodeadd&type='
+      $pattern = '/q\=.*node\/ognodeadd\&type\=(\w+)/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of 'node/add followed by &'
+      $pattern = '/q\=.*node\/add\/[^\&]+\&/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of 'node/add followed which ends the line'
+      $pattern = '/q\=.*node\/add\/[^\&]+$/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of 'gids[]='
+    // Modified to include original query: http://drupal.org/node/381570
+//      $pattern = '/.*gids\[\]\=(\d+)[\&]?/i';
+      $pattern = '/[\?|\&]gids\[\]\=(\d+)[\&]?/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of 'node/ognodeadd'
+      $pattern = '/q\=.*node\/ognodeadd/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+	// Get rid of '&' if it starts a line
+      $pattern = '/^\&/i';
+      $orig_query = preg_replace($pattern, "", $orig_query);
+
+    // If this is a group node/add, re-direct to ognodeadd
+    if (arg(0) == 'node' && arg(1) == 'add' && isset($_REQUEST['gids']) && (!in_array(arg(2), $exempted)) ) {
+      
+      $gids = $_GET['gids'];
+      $gid = intval(current($_REQUEST['gids']));
+      $type = arg(2);
+      $path = 'node/ognodeadd';
+
+      if ($type == 'og_user_roles_subgroup') {
+        $type = variable_get('og_user_roles_create_subgroup_value', ''); // change OG Subgroups type to 'group'
+      }
+
+      $query = 'type='. $type .'&gids[]='. $gid;
+
+      // Modification as per: http://drupal.org/node/156568
+      if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'forum' && is_numeric(arg(3))) {
+        $query = 'type='. $type .'&gids[]='. $gid .'&tid='. intval(arg(3));
+      }
+
+      // Modification to make it work with module "Relativity"
+      // http://drupal.org/node/166253
+      if (module_exists('relativity')) {
+      if (arg(3) == 'parent' && is_numeric(arg(4))) {
+          $query .= '&parent_node='.arg(4);
+        }
+        elseif (!empty($_GET['parent_node'])) {
+        $query .= '&parent_node='.$_GET['parent_node'];
+        }
+      }
+
+      // Modification for book module - http://drupal.org/node/180243
+	  // this: http://www.scbbs.com/node/add/book/parent/225&gids[]=29
+	  // becomes this: http://www.scbbs.com/node/ognodeadd/0/parent/225?type=book&gids[]=29
+      if (module_exists('book') && $type == 'book' && arg(3) == 'parent' && is_numeric(arg(4))) {
+        $path .= '/book/parent/'. arg(4);
+      }
+
+//      if ($orig_query) $query = $query . '&' . $orig_query;
+      if ($orig_query) {
+        // If the original query and the new query both contain gids[], then 
+		// eliminate the one in the new query.
+	    if (preg_match('/gids\[\]/', $query) && preg_match('/gids\[\]/', $orig_query)) {
+          $pattern = '/\&gids\[\]\=(\d+)/i';
+          $query = preg_replace($pattern, "", $query);
+       	}
+        $query = $query . '&' . $orig_query;
+	  }
+      drupal_goto($path, $query);
+    }
+
+    // Modification as per: http://drupal.org/node/156568
+    // If this is a group node/add/forum with no gids, re-direct to ognodeadd and include gids
+    if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'forum' && is_numeric(arg(3)) && (!isset($_REQUEST['gids']))) {
+      $type = arg(2);
+      $tid = intval(arg(3));
+      $gid = og_user_roles_gid_from_tid($tid);
+      // Hijack only if there is a gid value;
+      // Modificaton as per http://drupal.org/node/194214
+      if (!empty($gid) && $gid != 0) { 
+        $path = 'node/ognodeadd';
+        $query = 'type='. $type .'&gids[]='. $gid .'&tid='. $tid;
+//        if ($orig_query) $query = $query . '&' . $orig_query;
+        if ($orig_query) {
+          // If the original query and the new query both contain gids[], then 
+		  // eliminate the one in the new query.
+	      if (preg_match('/gids\[\]/', $query) && preg_match('/gids\[\]/', $orig_query)) {
+            $pattern = '/\&gids\[\]\=(\d+)/i';
+            $query = preg_replace($pattern, "", $query);
+       	  }
+          $query = $query . '&' . $orig_query;
+        }
+        drupal_goto($path, $query);
+      }
+    }
+
+    // Modification as per: http://drupal.org/node/174959
+    // If this is a non-group node/add, but og_last session cookie is set
+    // then re-direct to ognodeadd
+	// But, make sure you don't redirect for omitted nodes.
+    if (arg(0) == 'node' && arg(1) == 'add' && isset($_SESSION['og_last']) && (!is_null(arg(2)))  && (!in_array(arg(2), $exempted)) ) {
+
+      $gid = $_SESSION['og_last'];
+
+      $type = arg(2);
+      $path = 'node/ognodeadd';
+
+      // Modification as per: http://drupal.org/node/178610
+	  // Need to make sure this node $type supports adding a group item
+      $og_audience_required = variable_get('og_audience_required', FALSE);
+      $og_omitted = variable_get('og_omitted', array());
+	  // Added re: http://drupal.org/node/178610#comment-1158470
+	  // Also: http://drupal.org/node/333860#comment-1119905
+	  $og_permitted = og_is_group_post_type($type);
+      if ($og_permitted && $og_audience_required && (!in_array($type, $og_omitted)) ) {
+        if ($type == 'og_user_roles_subgroup') {
+          $type = variable_get('og_user_roles_create_subgroup_value', ''); // change OG Subgroups type to 'group'
+        }
+
+        $query = 'type='. $type .'&gids[]='. $gid;
+
+        // Modification to make it work with module "Relativity"
+        // http://drupal.org/node/166253
+        if (module_exists('relativity')) {
+          if (arg(3) == 'parent' && is_numeric(arg(4))) {
+            $query .= '&parent_node='.arg(4);
+          }
+          elseif (!empty($_GET['parent_node'])) {
+          $query .= '&parent_node='.$_GET['parent_node'];
+          }
+        }
+
+        // Modification for book module - http://drupal.org/node/180243
+  	    // this: http://www.scbbs.com/node/add/book/parent/225&gids[]=29
+	    // becomes this: http://www.scbbs.com/node/ognodeadd/0/parent/225?type=book&gids[]=29
+        if (module_exists('book') && $type == 'book' && arg(3) == 'parent' && is_numeric(arg(4))) {
+          $path .= '/book/parent/'. arg(4);
+        }
+
+//        if ($orig_query) $query = $query . '&' . $orig_query;
+        if ($orig_query) {
+          // If the original query and the new query both contain gids[], then 
+	      // eliminate the one in the new query.
+	      if (preg_match('/gids\[\]/', $query) && preg_match('/gids\[\]/', $orig_query)) {
+            $pattern = '/\&gids\[\]\=(\d+)/i';
+            $query = preg_replace($pattern, "", $query);
+       	  }
+          $query = $query . '&' . $orig_query;
+	    }
+        drupal_goto($path, $query);
+      }
+    }
+
+    // Modification for og_vocab: http://drupal.org/node/162649
+    // This allows a group role with "administer taxonomy" permission to edit
+    // og_vocab terms.  If this is an og_vocab term edit:
+    //   a. Get the group and tid
+    //   b. re-direct to destination
+	//   c. from destination, redirect to ogtermedit
+    if (module_exists('og_vocab')) {
+	  if (arg(0) == 'admin' && arg(1) == 'content' && arg(2) == 'taxonomy' && arg(3) == 'edit' && arg(4) == 'term' && is_numeric(arg(5)) && isset($_REQUEST['destination'])) {
+        $destination = $_GET['destination'];
+        $tid = arg(5);
+        $gid = og_user_roles_gid_from_og_vocab_tid($tid);
+
+        $query = '&gids[]='. $gid .'&tid='. $tid . '&newdestination=' . $destination;
+
+        // Re-direct to destination if $gid > 0
+        if ($gid > 0) {
+          drupal_goto($destination, $query);
+		}
+      }
+      // This is the destination path for og_vocab term edit redirection above
+	  if (arg(0) == 'node'  && is_numeric(arg(1)) && arg(2) == 'og' && arg(3) == 'vocab' && arg(4) == 'terms' && is_numeric(arg(5)) && isset($_REQUEST['gids'])  && isset($_REQUEST['tid']) ) {
+        $destination = $_GET['newdestination'];       
+        $tid = $_GET['tid'];
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+        $path = 'node/ogtermedit';
+
+        $query = 'gids[]='. $gid .'&tid='. $tid . '&destination=' . $destination;
+
+        // Re-direct to ogtermedit
+        drupal_goto($path, $query);
+      }
+    }
+    // Modification for modr8: http://drupal.org/node/162649
+    // This allows a group role with "moderate content" permission to view
+	// the modr8_log for events related to nodes he has access to.
+    if (module_exists('modr8')) {
+	  if (arg(0) == 'admin' && arg(1) == 'logs' && arg(2) == 'modr8' && arg(3) == 'event' && is_numeric(arg(4)) ) {
+        $event = arg(4);
+        $gid = og_user_roles_gid_from_modr8_event($event);
+        $path = 'node/ogmodr8';
+        $query = 'gids[]='. $gid .'&event='. $event;
+        // Re-direct to destination if $gid > 0
+        if ($gid > 0) {
+          drupal_goto($path, $query);
+		}
+      }
+	}
+    // Modification for ad module: http://drupal.org/node/183081
+    // Add groupID if we are in group context.
+    if (module_exists('ad')) {
+	  if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'ad' && (arg(3) == 'image' || arg(3) == 'text') && isset($_SESSION['og_last']) && (!isset($_REQUEST['gids'])) ) {
+//        $gid = $_SESSION['og_last'];
+//        $uri_request_id = request_uri();
+//        $this_url = parse_url($uri_request_id);
+//        $this_path = $this_url[path];
+//        $this_path = ltrim($this_path, "\/");
+//        $path = $this_path;
+
+        $gid = $_SESSION['og_last'];
+        $uri_request_id = request_uri();
+        $this_url = parse_url($uri_request_id);
+        $this_path = $this_url[path];
+        $base_path_len = strlen(base_path());
+        $this_path2 = substr($this_path, $base_path_len);
+        $path = $this_path2;
+
+        $query = 'gids[]='. $gid;
+        // Only add if $gid > 0
+        if ($gid > 0) {
+          drupal_goto($path, $query);
+		}
+      }
+	}
+    // Modification for minutes module: http://drupal.org/node/184102
+    // Add groupID if we are in group context.
+    if (module_exists('minutes')) {
+	  if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'minutes' && is_numeric(arg(3)) && isset($_SESSION['og_last']) && (!isset($_REQUEST['gids'])) ) {
+//        $gid = $_SESSION['og_last'];
+//        $uri_request_id = request_uri();
+//        $this_url = parse_url($uri_request_id);
+//        $this_path = $this_url[path];
+//        $this_path = ltrim($this_path, "\/");
+//        $path = $this_path;
+
+        $gid = $_SESSION['og_last'];
+        $uri_request_id = request_uri();
+        $this_url = parse_url($uri_request_id);
+        $this_path = $this_url[path];
+        $base_path_len = strlen(base_path());
+        $this_path2 = substr($this_path, $base_path_len);
+        $path = $this_path2;
+
+        $query = 'gids[]='. $gid;
+        // Only add if $gid > 0
+        if ($gid > 0) {
+          drupal_goto($path, $query);
+		}
+      }
+	}
+    // Modification user edit
+    // If this is going to http://clients.brixrealtyinc.com/user/76
+    // But the referrer is http://clients.brixrealtyinc.com/oguseredit/76/edit?gids[]=47
+    // Then redirect back to referrer.
+	// As a result of http://drupal.org/node/176662 this can only be done if the
+	// "Allow group admins to approve users" setting is checked on.
+    if (variable_get('og_user_roles_approval_default', 0) === 1 && ((!user_access('access administration pages')) && (arg(0) == 'user' && is_numeric(arg(1)) && arg(1) != 1) || (arg(0) == 'admin' && arg(1) == 'user' && arg(2) == 'user'))) {
+      $ref = $_SERVER["HTTP_REFERER"];
+      $ref_url = parse_url($ref);
+      $ref_path = $ref_url[path];
+      $ref_query = $ref_url[query];
+      $ref_arg = explode('/', $ref_path);
+
+//      drupal_set_message('ref_query = ' . $ref_query);
+
+      // Hijack only if the referrer contains oguseredit;
+      if ($ref_arg[1] == 'oguseredit' && arg(2) != 'user') {
+        // If user clicks delete from user edit screen. Gets you to the
+		// "delete" confirmation.
+        if (arg(2) == 'delete') {
+          $temp = substr($ref_path, 1);
+          $path = str_replace("/edit", "/delete", $temp);
+          $query = $ref_query;
+          drupal_goto($path, $query);
+		}
+        // If user clicks "submit" from user edit screen - just takes you back
+		// to the same edit screen.
+        if ($ref_arg[3] == 'edit') {
+          $path = substr($ref_path, 1);
+          $query = $ref_query;
+          drupal_goto($path, $query);
+		}
+        // If user clicks "delete" or "cancel" from delete confirmation screen.
+		// Takes you to group home page.
+        if ($ref_arg[3] == 'delete') {
+          parse_str($ref_query);
+          $gid = $gids[0];
+          $path = 'node/' . $gid;
+          drupal_goto($path);
+		}
+      }
+    }
+    // If this is a group relativity or book module node/add, re-direct to ognodeadd
+    if (arg(0) == 'node' && arg(1) == 'add'  && is_numeric(arg(4)) && (!in_array(arg(2), $exempted)) ) {
+      
+      $type = arg(2);
+      $path = 'node/ognodeadd';
+
+      // Get the gid for this parent
+      $nid = (int)arg(4);
+      $gid = og_user_roles_getgid($nid, $user->uid);
+
+      $query = 'type='. $type .'&gids[]='. $gid;
+
+      // Modification to make it work with module "Relativity"
+      // http://drupal.org/node/166253
+      // http://drupal.org/node/227978
+      if (module_exists('relativity')) {
+        if (arg(3) == 'parent') {
+          $query .= '&parent_node='.arg(4);
+        }
+        elseif (!empty($_GET['parent_node'])) {
+          $query .= '&parent_node='.$_GET['parent_node'];
+        }
+      }
+      // Book module as per: http://drupal.org/node/228386
+      if (module_exists('book') && $type == 'book' && arg(3) == 'parent' && is_numeric(arg(4))) {
+        $path .= '/book/parent/'. arg(4);
+      }
+       $query = 'type='. $type .'&gids[]='. $gid .'&tid='. $tid;
+       drupal_goto($path, $query);
+    }
+  }
+}
+
+/*
+ * Implementation of hook_user().
+ * Put new users in default role if applicable.
+ *
+ * Got this code from here: http://drupal.org/node/28379#comment-132430
+ */
+function og_user_roles_user($op, &$edit, &$user, $category = NULL) {
+
+  if ($op == 'insert') {
+    // Registration Code 
+    if (isset($edit['og_user_roles_regcode']) && variable_get('og_user_roles_assign_regcode_gid', 0) == 1) { //only present during registration
+      $gid = og_user_roles_gid_from_regcode($edit['og_user_roles_regcode']);
+      if ($gid > 0) {
+        $node = node_load($gid);
+        $title = $node->title;
+        $return = og_save_subscription($gid, $user->uid, array('is_active' => 1)); // as per http://drupal.org/node/156224
+        drupal_set_message(t('Subscription request to ' . l($title, 'node/'. $gid) . ' approved.'));	
+        // Delete this registration code if 'delete_regcode' is set
+        if (variable_get('og_user_roles_delete_regcode_' . $gid, 0) == 1) og_user_roles_delete_regcode($gid, $edit['og_user_roles_regcode']);
+        // Places all new registration code group subscribers into default regcode role.
+        if (variable_get('og_user_roles_assign_regcoderole_' . $gid, 0)) { // check to see if this variable exists
+          if (variable_get('og_user_roles_assign_regcode_gid', 0) == 1 && variable_get('og_user_roles_assign_regcoderole_' . $gid, 0) == 1 ) {
+            $rid = variable_get('og_user_roles_regcoderole_value_' . $gid, 0);
+            og_user_roles_role_join($user->uid, $rid, $gid); // assign user to group role in that group
+          }
+        }
+      }
+    }
+
+    // If site requires admin approval and group admins are allowed to approve users
+	// Variable "user_register" values: 0 = Admin Only, 1 = No Admin Approval, 2 = Admin Approval
+    if (variable_get('og_user_roles_approval_default', 0) == 1 && (variable_get('user_register', 1) == 2 || ($user->status == 0))) {
+       watchdog('new_user: status', 'user->status = ' . $user->status, WATCHDOG_NOTICE);
+      if (is_array($edit['og_register'])) {
+        $sender = variable_get('site_mail', '');
+        $edit_test1 = $edit['og_register'];
+        foreach (array_keys(array_filter($edit['og_register'])) as $gid) {
+          watchdog('new_user: gid', 'gid = ' . $gid, WATCHDOG_NOTICE);
+          $node = node_load($gid);
+          $group = check_plain($node->title);
+          $subject = t('User @user pending account approval. Subscription request to : @group', array('@user' => $user->name, '@group' => $group));
+		  if (variable_get('og_user_roles_approval_default', 0) == 1) {
+            $view_user = "oguseredit/$user->uid";
+		  }else{
+            $view_user = "user/$user->uid";
+		  }
+          $message = "The registration application for user " . l($user->name, $view_user, array('query' => "gids[]=$gid", 'absolute' => TRUE)) . " is pending approval.  You are the administrator for at least one of the groups to which this user has also applied to subscribe : " . l($group, "node/$gid", array('absolute' => TRUE)) . ".<p>You can click " . l("here", "$view_user/edit", array('query' => "gids[]=$gid", 'absolute' => TRUE)) . " to Activate, Block or Delete the user. (Don't forget to first log into group for which you are admin.)";
+          $result = db_query("SELECT uid FROM {og_uid} WHERE is_admin = 1 AND nid = %d", $gid);
+
+          while ($obj = db_fetch_object($result)) {
+            $recipient_uid = $obj->uid;
+            $recipient_user = user_load(array('uid' => $recipient_uid));
+            $recipient = $recipient_user->mail;
+            if (module_exists('mimemail')) mimemail($sender, $recipient, $subject, $message);
+          } // end while
+        }
+	  }
+	}
+
+    // If site admin opted to create a default role
+    if (variable_get('og_user_roles_assign_default', 0) == 1) {
+      // Check to see if this user doesn't already have this role;
+      // If not, then assign it.
+      $rid = variable_get('og_user_roles_default_value', 0);
+      $sql = "SELECT COUNT(*) FROM {users_roles} WHERE uid = %d AND rid = %d";
+      $result = db_query($sql, $user->uid, $rid);
+      $output = (db_result($result));
+
+      if ($output == 0) {
+          // Modified as per: http://drupal.org/node/372700
+          $edit['roles'][$rid] = $rid;
+//        db_query('INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)', $user->uid, $rid);
+      }
+    }
+  }
+
+  if ($op == 'validate') {
+    // Registration Code
+    if (isset($edit['og_user_roles_regcode'])) { //only present during registration
+      if (variable_get('og_user_roles_assign_regcode_gid', 0) == 1 && $edit['og_user_roles_regcode'] != '') {
+        $gid = og_user_roles_gid_from_regcode($edit['og_user_roles_regcode']);
+        if ($gid == 0) {
+          if (variable_get('og_user_roles_assign_regcode_gid_required', 0) == 1) {
+	        $explanation = 'Not a valid group registration code.  If you do not have a registration code, please contact the site administrator.  You can not register on this site without a valid registration code.';
+	      } else {
+            $explanation = 'Not a valid group registration code.  If you do not have a registration code, please make sure the Group registration code box is empty.';
+	      }
+
+          form_set_error('og_user_roles_regcode', $explanation);
+        }
+      }
+    }
+  }
+
+  // Add the group roles to $user->roles if this is a group
+  // This should only be effective until the next global $user call
+  if ($op == 'load') {
+    $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+    $user->roles = $roles;
+  } // end $op load
+
+  // Remove user info from og_users_roles table
+  if ($op == 'delete') {
+    db_query("DELETE FROM {og_users_roles} WHERE uid = %d", $user->uid);  // delete all records for this user
+  } // end $op delete
+}
+
+/**
+ * implementation of hook_og();
+ *
+ * @param $op string, 'user insert', 'user update', 'user delete'
+ * @param $nid node ID of the group
+ * @param $uid the user ID
+ * @param $args associative array containing details about the subscription
+ */
+function og_user_roles_og($op, $nid, $uid, $args = array()) {
+
+  switch ($op) {
+    case 'user insert':
+      global $base_url;
+
+      // --- Modification - 2007-06-18 - as per: http://drupal.org/node/152442
+      // Adding every user to a basic group restricted role, that all users in the group should have.
+      // I don't know a better way, so I'll do it like this. This is based on the creating of a founder role,
+      // just that every user in the group should automagically get this role.
+      // -Bibo
+      if (variable_get('og_user_roles_assign_basicgrouprole', 0) == 1) {
+        $rid = variable_get('og_user_roles_basicgrouprole_value', 0);
+        og_user_roles_role_join($uid, $rid, $nid); // assign user to group role in that group
+      }
+
+      // --- Modification - 2007-09-20 - as per: http://drupal.org/node/177016
+      // Places all new group subscribers into default role.
+      // Same as above, except these settings are set by Group Admin in the
+      // group node.  So, the variables are set by group.
+	  if (variable_get('og_user_roles_assign_basicgrouprole_' . $nid, 0)) { // check to see if this variable exists
+        if (variable_get('og_user_roles_assign_basicgrouprole_gid', 0) == 1 && variable_get('og_user_roles_assign_basicgrouprole_' . $nid, 0) == 1 ) {
+          $rid = variable_get('og_user_roles_basicgrouprole_value_' . $nid, 0);
+          og_user_roles_role_join($uid, $rid, $nid); // assign user to group role in that group
+        }
+      }
+
+      // --- Modification - 2008-01-10 - as per: http://drupal.org/node/197489
+      // Places all new group administrators into default group administrator role.
+      $admin = $args['is_admin'];
+      if (variable_get('og_user_roles_assign_admingrouprole', 0) == 1 && $admin == 1) {
+        $rid = variable_get('og_user_roles_admingrouprole_value', 0);
+        og_user_roles_role_join($uid, $rid, $nid); // assign user to group role in that group
+      }
+
+      $user = user_load(array('uid' => $uid));
+//      $node = node_load($nid);
+      // --- Modification - 2008-05-20 - as per: http://drupal.org/node/259956
+      $node = db_fetch_object(db_query("SELECT type, title FROM {node} WHERE nid=%d", $nid));
+
+      // --- Modification - 2008-03-10 - as per: http://drupal.org/node/229715
+      // Places all new group subscribers into default role per group type.
+      $type = $node->type;
+	  if (variable_get('ogur_assign_typegrouprole_' . $type, 0)) {
+	    if (variable_get('ogur_assign_typegrouprole_' . $type, 0) == 1) {
+          $rid = variable_get('ogur_typegrouprole_value_' . $type, 0);
+          og_user_roles_role_join($uid, $rid, $nid); // assign user to group role in that group
+        }
+      }
+
+      // Send notification of new og subscription to administrators of group;
+      if (variable_get('og_user_roles_notify_default', 0) == 1 && module_exists('mimemail')) {
+        $group = check_plain($node->title);
+        $sender = variable_get('site_mail', '');
+        $subject = t('User @user added to group: @group', array('@user' => $user->name, '@group' => $group));
+        if (variable_get('og_user_roles_approval_default', 0) == 1) {
+          $view_user = "oguseredit/$user->uid";
+		}else{
+          $view_user = "user/$user->uid";
+		}
+        // http://www.scbbs.com/node/135/219#comment-219
+        $message = "User " . l($user->name, $view_user, array('query' => "gids[]=$nid", 'absolute' => TRUE)) . " added to group: " . l($group, "node/$nid", array('absolute' => TRUE));
+        $result = db_query("SELECT uid FROM {og_uid} WHERE is_admin = 1 AND nid = %d", $nid);
+
+        while ($obj = db_fetch_object($result)) {
+          $recipient_uid = $obj->uid;
+          $recipient_user = user_load(array('uid' => $recipient_uid));
+          $recipient = $recipient_user->mail;
+          mimemail($sender, $recipient, $subject, $message);
+          // drupal_mail('og_user_roles_new_subscription', $recipient, $subject, $message, $sender);
+        } // end while
+      } // end if
+      break;
+
+    case 'user update':
+      // --- Modification - 2008-01-10 - as per: http://drupal.org/node/197489
+      // Places all new group administrators into default group administrator role.
+      $admin = $args['is_admin'];
+      if (variable_get('og_user_roles_assign_admingrouprole', 0) == 1 && $admin === 0) {
+        $rid = variable_get('og_user_roles_admingrouprole_value', 0);
+        og_user_roles_role_delete($uid, $rid, $nid); // delete this admin role for this user in this group (if it exists)
+      }
+      if (variable_get('og_user_roles_assign_admingrouprole', 0) == 1 && $admin === 1) {
+        $rid = variable_get('og_user_roles_admingrouprole_value', 0);
+        og_user_roles_role_join($uid, $rid, $nid); // assign user to group role in that group
+      }
+      break;
+
+    case 'user delete':
+      // Remove all roles for this user in this group if he is being unsubscribed;
+      og_user_roles_role_leave($uid, $nid);
+      break;
+  } // end switch
+}
+
+/**
+ * Implementation of hook_node_info().
+ */
+function og_user_roles_node_info() {
+  // If og_subgroups is installed AND og_user_roles_create_subgroup checkbox is checked;
+  if (module_exists('og_subgroups') && variable_get('og_user_roles_create_subgroup', 0) == 1) {
+
+    return array(
+      'og_user_roles_subgroup' => array(
+        'name'        => t('Subgroup'),
+        'module'      => 'og_user_roles',
+        'description' => t('Create a basic subgroup.'),
+        'help'        => t('Create a basic subgroup.'),
+        'body_label'  => t('Description'),
+      ),
+    );
+  } // end if
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function og_user_roles_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+  global $user;
+
+  switch ($op) {
+    case 'access':
+      break;
+
+//    case 'submit':
+    case 'presave':
+      break;
+
+    case 'insert':
+
+      // If this is a group node, put the group creator into a group role upon creation;
+      if (og_is_group_type($node->type)) {
+	    $type = $node->type;
+        if (variable_get("ogur_assign_founder_$type", 0) == 1) {
+          // Get the requisite data
+          $uid = $node->uid; // user ID
+          $rid = variable_get("ogur_founder_value_$type", 0);
+          $gid = $node->nid; // group ID
+          og_user_roles_role_join($uid, $rid, $gid); // assign user to group role in that group
+        }
+      }
+      // Create a subgroup record for this group
+      // 'ognodeadd' is my node add callback, so I know if this node is a group and
+      // here, then we need to process it node as a subgroup
+      if ($node->type == variable_get('og_user_roles_create_subgroup_value', '') && arg(1) == 'ognodeadd') {
+        $gids = $_GET['gids'];
+        $gid = $gids[0];
+        $subgroup = $node->nid;
+        $sql = 'INSERT INTO {og_ancestry} (nid,group_nid,is_public) VALUES (%d,%d,0)';
+        db_query($sql, $subgroup, $gid);
+        // This table no longer supported in og_subgroups 6.x.
+        // if (module_exists('og_subgroups')) db_query('INSERT INTO {og_subgroups} (gid, parent) VALUES (%d, %d)', $subgroup, $gid);
+      }
+
+      break;
+
+    case 'update':
+
+      // Modification. 2007-09-24 as per: http://drupal.org/node/178257
+      // If this is a group node, put the group creator into a group role upon creation
+	  // OR when the group node is updated.  If user already is in that role in the group,
+	  // the og_user_roles_role_join command will ignore the request.
+      if (og_is_group_type($node->type)) {
+	    $type = $node->type;
+        if (variable_get("ogur_assign_founder_$type", 0) == 1) {
+        // If this is a group node
+          // Get the requisite data
+          $uid = $node->uid; // user ID
+          $rid = variable_get("ogur_founder_value_$type", 0);
+          $gid = $node->nid; // group ID
+          og_user_roles_role_join($uid, $rid, $gid); // assign user to group role in that group
+        }
+      }
+
+      break;
+
+    case 'validate':
+      // Check to see if this user can post into other groups
+      $uid = $user->uid;
+      if ($node->type) {
+        $type = $node->type;
+      } elseif (arg(1) == 'add') {
+        $type = arg(2);
+      } elseif (arg(1) == 'ognodeadd') {
+        $type = $_GET['type'];
+      }
+      // Check to see if this is a group post;
+      // Do we have group context?
+      if ($group_node = og_get_group_context()) {
+        // If this is a node that can be posted into groups
+        if (og_is_group_post_type($type)) {
+	      // Does this node have groups?
+          if ($node->og_groups) {
+		    foreach ($node->og_groups as $gid) {
+              if ((arg(1) == 'add' || arg(1) == 'ognodeadd') && $gid > 0) {
+			    $access = FALSE;
+                // Get the module
+                $module = node_get_types('module', $type);
+				// Get all permissions for this module
+                $perms = module_invoke($module, 'perm');
+				// Look for the 'create' permission
+				foreach ($perms as $string) {
+				  // If this is a create permission
+				  if (preg_match('/create/', $string) || preg_match('/edit own blog/', $string)) {
+				    // See if the user has this permission in this group
+                    if (og_user_roles_user_access($string, $gid, $uid) === TRUE) {
+		              $access = TRUE;
+                    }
+				  }
+				}
+                if ($access === FALSE) {
+                  $temp_node = node_load($gid);
+				  $group_name = $temp_node->title;
+                  form_set_error('og_groups', t('You do not have permission to post this content type (' . $type . ') into Group: <strong>' . $group_name . '</strong> (' . $gid . ')'));
+                }
+              }
+              if ((arg(2) == 'edit' || arg(2) == 'delete') && $gid > 0) {
+			    $access = FALSE;
+                $module = node_get_types('module', $type);
+				
+                $perms = module_invoke($module, 'perm');
+				foreach ($perms as $string) {
+				  // If this is an edit string
+				  if (preg_match('/edit/', $string) || preg_match('/manage/', $string)) {
+                    if (og_user_roles_user_access($string, $gid, $uid) === TRUE) {
+		              $access = TRUE;
+                    }
+				  }
+				}
+                if ($access === FALSE) {
+                  $temp_node = node_load($gid);
+				  $group_name = $temp_node->title;
+                  form_set_error('og_groups', t('You do not have permission to edit or delete this content type (' . $type . ') in Group: <strong>' . $group_name . '</strong> (' . $gid . ')'));
+                }
+              }
+            }
+          }
+        }
+      }
+      // Check to see if this is a group post, and if so, if public posts are allowed;
+      // Do we have group context?
+	  if ($group_node = og_get_group_context()) {
+	   // Get the group node id
+	   $gid = $group_node->nid;
+
+	   // If this is a group node
+	   if (in_array($node->type, og_get_types('group'))) {
+	   }
+
+	   // Check the nopublic variable for this group
+        if (variable_get('og_user_roles_assign_nopublic_' . $gid, 0) == 1) { 
+	      // Check public status of this post
+	      if ($node->og_public) { 
+	        form_set_error('og_public', t('No public posts allowed in this group.  You may NOT check the <strong>Public</strong> box on this post.'));
+	      }
+		  // Check forum status of this post
+		  if (module_exists('og_forum')) {
+		    if ($node->type == 'forum') {
+              // Get the forum vocabulary ID
+              $vid = og_forum_get_vid(); // http://drupal.org/node/346717
+              $ok = FALSE;
+   			  // Get all forums for this group
+     		  $sql = "SELECT tid FROM {og_term} WHERE nid = %d";
+              $forums = array();
+              $result = db_query($sql, $gid);
+              while ($nid = db_fetch_array($result)){
+                $forums[] = $nid['tid'];
+              }
+              // Get the forum containers only for this group
+		   	  $containers = variable_get('forum_containers', array());
+			  $my_containers = array_intersect($containers, $forums);
+			  // Get the list of names for forum containers for this group
+			  $names = "";
+              foreach ($my_containers as $item) {
+                $temp = taxonomy_get_term($item);
+                $names .= $temp->name . "  ";
+              }
+              // Get the vocabulary terms for this node
+              foreach ($node->taxonomy as $term) {
+                // Check to make sure this term is in the forum vocabulary
+                if (db_result(db_query('SELECT COUNT(*) FROM {term_data} WHERE tid = %d AND vid = %d', $term, $vid))) {
+                  // Make sure this term is in the same group
+                  if ($gid == og_user_roles_gid_from_tid($term)) {
+                    $tid = $term;
+        		    $ok = TRUE;
+                  }
+                }
+              }
+			  // Check the gid of this tid against this gid
+			  if (!$ok) {
+                form_set_error('tid', t('You have selected the wrong <strong>Forum</strong> for this post.  You may only select a forum from the <strong>Forums</strong> pull-down menu that is in the same group as this post.  Please try again. Group ('.$gid.') Term ('.$term.') Suggested container(s): %names', array('%names' => $names)));
+			  }
+		    }
+		  }
+		}
+	  }
+      break;
+
+    case 'delete':
+      // Remove og_users_roles and variables related to group node if it is deleted;
+        // If this is a group node
+        if (og_is_group_type($node->type)) {
+           og_user_roles_role_remove($node->nid);
+           og_user_roles_variable_remove($node->nid);
+           // This table no longer supported in og_subgroups 6.x.
+		   // if (module_exists('og_subgroups')) db_query('DELETE FROM {og_subgroups} WHERE gid = %d', $node->nid);
+        }
+      break;
+
+  } // end switch
+} // end og_user_roles_nodeapi function
+
+/**
+ * Use this function to determine whether a user has a given privilege
+ * in a particular group.
+ *
+ * @param $string
+ *   The permission, such as "administer nodes", being checked for.
+ * @param $gid
+ *   The group id of the OG group.
+ * @param $uid
+ *   The uid of the user.
+ *
+ * @return
+ *   boolean TRUE if the current user has the requested permission.
+ */
+function og_user_roles_user_access($string, $gid, $uid) {
+  $roles = array();
+  $perms = "";
+
+  // User #1 has all privileges:
+  if ($uid == 1) {
+    return TRUE;
+  }
+
+  if ($uid) {
+    $roles[DRUPAL_AUTHENTICATED_RID] = 'authenticated user';
+  }
+  else {
+    $roles[DRUPAL_ANONYMOUS_RID] = 'anonymous user';
+  }
+  // Get the normal roles
+  $result = db_query('SELECT r.rid, r.name FROM {role} r INNER JOIN {users_roles} ur ON ur.rid = r.rid WHERE ur.uid = %d', $uid);
+  while ($role = db_fetch_object($result)) {
+    $roles[$role->rid] = $role->name;
+  }
+  // Get the group roles
+  $result = db_query('SELECT r.rid, r.name FROM {role} r INNER JOIN {og_users_roles} ogr ON r.rid = ogr.rid INNER JOIN {og_uid} ogu ON ogu.uid = ogr.uid AND ogu.nid = ogr.gid WHERE ogr.uid = %d AND ogr.gid = %d AND ogu.is_active = 1', $uid, $gid);
+  while ($role = db_fetch_object($result)) {
+    $roles[$role->rid] = $role->name;
+  }
+  $rids = array_keys($roles);
+  $placeholders = implode(',', array_fill(0, count($rids), '%d'));
+  $result = db_query("SELECT DISTINCT(p.perm) FROM {role} r INNER JOIN {permission} p ON p.rid = r.rid WHERE r.rid IN ($placeholders)", $rids);
+  while ($row = db_fetch_object($result)) {
+    $perms .= "$row->perm, ";
+  }
+  return strpos($perms, "$string, ") !== FALSE;
+}
+
+/**
+ * Returns all groups so long as this is not a group itself.
+ */
+function og_user_roles_get_groups($node) {
+  $groups = array();
+  if (!og_is_group_type($node->type)) {
+    $result = og_user_roles_get_groups_result();
+    while ($row = db_fetch_object($result)) {
+      $groups[$row->group_nid] = $row->title;
+    }
+
+    return $groups;
+  }
+}
+
+/**
+ * Just the query for the get_node_groups function.
+ */
+function og_user_roles_get_groups_result() {
+  $sql = "SELECT oga.group_nid, n.title FROM {og_ancestry} oga INNER JOIN {node} n ON oga.group_nid = n.nid";
+  $result = db_query(db_rewrite_sql($sql, 'oga', 'group_nid'), '');
+
+  return $result;
+}
+
+/**
+ * This function takes the global $user (or $account) value and returns a list
+ * of group and non-group roles for this user.
+ */
+function og_user_roles_all_roles($user) {
+
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL); // added as per this issue: http://drupal.org/node/149469
+//  drupal_bootstrap(DRUPAL_BOOTSTRAP_PATH); // added as per this issue: http://drupal.org/node/149469
+
+  // This will be the process to get BOTH the group and non-group roles for a user
+  $uid = $user->uid;
+  $gid = 0;
+  $gids = array();
+  $nid = 0;
+  $location = 0;
+  $uri_request_id = request_uri();
+  $arg = explode('/', $uri_request_id);
+  $ogroles = array();
+  $x1 = 0;
+  // Need to use the referrer to get OG group in some cases;
+  $ref = $_SERVER['HTTP_REFERER'];
+  $ref_url = parse_url($ref);
+  $ref_path = $ref_url['path'];
+  $ref_query = $ref_url['query'];
+  $ref_arg = explode('/', $ref_path);
+
+  //
+  // This will by default add the anonymous user role (no need since we merge user->roles)
+  //
+  // We get the groupID
+  //
+
+  drupal_load('module', 'og');
+//  require_once("modules/og/og.module");
+
+  $group_node = og_get_group_context();
+  $gid02 = $group_node->nid;
+  $gid = $gid02;
+  if ($gid02 === NULL) {
+    $gid = 0;
+  }else{
+    if (isset($_SESSION['og_last'])) $_SESSION['og_last'] = $group_node->nid;
+    $_SESSION['og_user_role'] = $gid;
+  }
+
+  //
+  // If the above doesn't get the groupID, then we start trying stuff
+  //
+  if ($gid == 0) {
+    // http://doadance.scbbs.com/drupal03/node/79
+    if (arg(0) == 'node' && is_numeric(arg(1)) && is_null(arg(2))) {
+      $location = 1;
+      $nid = (int)arg(1);
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // Translate pages using i18n translation module as per: http://drupal.org/node/203395
+	if (arg(0) == 'node' && arg(1) == 'add' && isset($_REQUEST['translation']))	{
+	  $nid = intval($_REQUEST['translation']);
+	  $gid = og_user_roles_getgid($nid, $uid);
+	  if ($gid) {
+	    // Troubleshooting
+	    // drupal_set_message('recognized translation node add, gid = '.$gid);	  
+	    $_GET['gids'] = array($gid); // inject gid
+	  }
+	}
+	
+	// http://doadance.scbbs.com/node/79/edit
+	// http://doadance.scbbs.com/node/79/outline
+	// http://doadance.scbbs.com/node/79/track
+	// http://doadance.scbbs.com/node/79/modr8
+	// http://doadance.scbbs.com/node/79/ogmodr8
+
+    // Modified 2007-07-05 for webform "results";
+    // Modified 2007-07-23 for content_access "access";
+    // Modified 2007-08-06 for modr8 "modr8" and "ogmodr8" (our own callback);
+    // Modified 2007-09-13 for "galleries";
+    // Modified 2007-09-14 for "email";
+    // Modified 2007-12-20 for "revisions": http://drupal.org/node/202196
+    // Modified 2008-01-10 for "workflow": http://drupal.org/node/208363
+    // Modified 2008-03-21 for "feedapi": http://drupal.org/node/237258
+	// Modified 2008-12-24: How about just looking for nid in /node/<nid> instead of trying to
+	//                      anticipate each and every module.
+    // if (arg(0) == 'node' && is_numeric(arg(1)) && (arg(2) == 'edit' || arg(2) == 'outline' || arg(2) == 'track' || arg(2) == 'results' || arg(2) == 'access' || arg(2) == 'modr8' || arg(2) == 'ogmodr8' || arg(2) == 'delete' || arg(2) == 'galleries' || arg(2) == 'email' || arg(2) == 'revisions' || arg(2) == 'signups' || arg(2) == 'agenda' || arg(2) == 'workflow' || arg(2) == 'votes' || arg(2) == 'refresh' || arg(2) == 'purge')) {
+    if (arg(0) == 'node' && is_numeric(arg(1))) {
+      $location = 2;
+      $nid = (int)arg(1);	
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // poll.module
+    if (arg(0) == 'poll' && is_numeric(arg(2)) && (arg(1) == 'cancel')) {
+      $location = 20;
+      $nid = (int)arg(2);	
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // Edit users (og_user_roles_approval)
+	//
+	// This will get a group context if the current user and the
+	// user he is trying to access both belong to at least the same
+	// group that is also the last group set by OG in "og_last" session
+	// (which logically should be the current group);
+    //
+    // http://doadance.scbbs.com/oguseredit/72?gids[]=47
+    // http://doadance.scbbs.com/oguseredit/72/delete?gids[]=47
+    // http://doadance.scbbs.com/oguseredit/72/edit?gids[]=47
+    if (arg(0) == 'oguseredit' && is_numeric(arg(1)) && (is_null(arg(2)) || arg(2) == 'edit' || arg(2) == 'delete') ) {
+      if (isset($_REQUEST['gids'])) {
+        $location = 200;
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+      }
+    }
+
+    // print.module (printer friendly)
+    //
+    // http://www.mysite.com/print/14
+    if (arg(0) == 'print' && is_numeric(arg(1))) {
+      header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+      header('Cache-Control: no-store, no-cache, must-revalidate');
+      header('Cache-Control: post-check=0, pre-check=0', FALSE);
+      header('Pragma: no-cache'); 
+
+      cache_clear_all();
+
+      $location = 201;
+      $nid = (int)arg(1);
+      $gid = og_user_roles_getgid($nid, $uid);
+      // Set group context.
+      $group_node = node_load($gid);
+      og_set_group_context($group_node);
+    }
+
+    // oglogo (printer friendly)
+    //
+    // http://www.mysite.com/oglogo
+    if (arg(0) == 'oglogo') {
+      if (isset($_SESSION['og_last'])) {
+        $location = 202;
+        $gid = $_SESSION['og_last'];
+        // Set group context.
+        $group_node = node_load($gid);
+        og_set_group_context($group_node);
+	  }
+    }
+
+    // Manage users (og_user_roles_approval)
+	//
+	// This will get a group context from og_last session
+	// and list all users in the group if the user listing
+	// is admin for the group and has the 'administer users' permission.
+    //
+    // http://doadance.scbbs.com/ogusermanage/47
+    if (arg(0) == 'ogusermanage' AND is_numeric(arg(1))) {
+      $gid = (int)arg(1);
+    }
+
+    //                           0    1    2
+    // http://www.mysite.com/comment/edit/14
+    if (arg(0) == 'comment' && is_numeric(arg(2)) && arg(1) == 'edit') {
+      $location = 3;
+      $comment = _comment_load(arg(2));
+      $nid = $comment->nid;
+      $gid = og_user_roles_getgid($nid, $uid);
+      // Set group context.
+      $group_node = node_load($gid);
+      og_set_group_context($group_node);
+    }
+
+    //                           0    1    2
+    // http://www.mysite.com/comment/delete/14
+    if (arg(0) == 'comment' && is_numeric(arg(2)) && arg(1) == 'delete') {
+      $location = 31;
+      $comment = _comment_load(arg(2));
+      $nid = $comment->nid;
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    //                           0      1    2
+    // http://www.mysite.com/comment/reply/128#comment_form
+    if (arg(0) == 'comment' && arg(1) == 'reply') {
+      $location = 4;
+      $subsections = explode('#', arg(2));
+      $nid = (int)$subsections[0];
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // og_term access
+    //                        0    1    2    3
+    // http://www.mysite.com/node/add/forum/121
+    if (arg(0) == 'node' && is_numeric(arg(3)) && arg(1) == 'add') {
+      $location = 5;
+      $nid = (int)arg(3);
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // Here we get the gid directly
+    //
+    // http://doadance.scbbs.com/node/79/view/tree
+    // http://doadance.scbbs.com/node/79/view/members
+    // http://doadance.scbbs.com/node/79/view
+    if (arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'view') {
+      $location = 21;
+      $gid = (int)arg(1);
+    }
+
+    // Here we get the gid directly
+    //
+    // http://doadance.scbbs.com/og/users/72
+    // http://doadance.scbbs.com/og/manage/72
+    if (arg(0) == 'og' && is_numeric(arg(2)) && is_null(arg(3))) {
+      $location = 6;
+      $gid = (int)arg(2);
+    }
+
+    // og_theme_settings
+    //
+    // http://doadance.scbbs.com/admin/og/themes/edit/72
+    if (arg(1) == 'og' && is_numeric(arg(4)) && arg(2) == 'themes') {
+      $location = 60;
+      $gid = (int)arg(4);
+      // Set group context.
+      $group_node = node_load($gid);
+      og_set_group_context($group_node);
+    }
+
+    // og_vocab
+    //
+    // http://doadance.scbbs.com/node/29/og/vocab
+    if (arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'og') {
+      $location = 61;
+      $gid = (int)arg(1);
+    }
+
+    // og_vocab 
+    //   
+    // http://clients.brixrealtyinc.com/node/ogtermedit?destination=node%2F29%2Fog%2Fvocab%2Fterms%2F26&gids[]=29&tid=116
+    //
+    // Modification as per: http://drupal.org/node/162649
+    //
+    if (arg(0) == 'node' && arg(1) == 'ogtermedit') {
+      // Modification -- Get the gid from the variable instead of trying to calculate it.
+      if (isset($_REQUEST['gids'])) {
+        $location = 62;
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+      }
+    }
+
+    // og_user_roles
+    //
+    // http://doadance.scbbs.com/og/users/72/roles
+    // http://doadance.scbbs.com/og/users/72/add
+    if (arg(0) == 'og' && arg(1) == 'users' && is_numeric(arg(2)) && is_null(arg(4))) {
+      $location = 63;
+      $gid = (int)arg(2);
+    }
+
+    // og unsubscribe
+    // og_user_roles
+    //
+    // This is sort of a catch all for "og" and gid in this order
+    // og/<whatever>/<gid>
+    //
+    // http://doadance.scbbs.com/og/unsubscribe/72
+    // http://doadance.scbbs.com/og/users/72/add
+    if (arg(0) == 'og' && is_numeric(arg(2))) {
+      $location = 64;
+      $gid = (int)arg(2);
+    }
+
+    // og_forum
+    //
+    // http://doadance.scbbs.com/og_forum/manage/72
+    if (arg(0) == 'og_forum' && arg(1) == 'manage' && is_numeric(arg(2)) && is_null(arg(3))) {
+      $location = 65;
+      $gid = (int)arg(2);
+    }
+
+    // http://doadance.scbbs.com/og_forum/manage/edit/72
+    // http://doadance.scbbs.com/og_forum/manage/add/72
+    if (arg(0) == 'og_forum' && arg(1) == 'manage' && is_numeric(arg(3))) {
+      $location = 66;
+      $gid = (int)arg(3);
+    }
+
+    // og_calendar
+    //
+    // http://www.centralavedance.com/og_calendar/2973/2007/07/01
+    if (arg(0) == 'og_calendar' && is_numeric(arg(1))) {
+      $location = 67;
+      $gid = (int)arg(1);
+    }
+
+    // og_forum
+    //         0           1    2       3
+    // http://www.mysite.com/og_forum/39/72?edit[og_groups][]=72
+    // http://www.mysite.com/og_forum/37/71?sort=asc&order=Replies&edit[og_groups][0]=71
+    // Modification as per: http://drupal.org/node/155882 - replaced $uri_request_id
+    // with arg() values.
+
+     if (arg(0) == 'og_forum' && is_numeric(arg(2)) && isset($_REQUEST['edit'])) {
+       $location = 68;
+       $edit = $_GET['edit'];
+       if ($edit[og_groups][0] > 0) {
+         $gid = arg(2);
+       }
+     }
+
+    // http://www.mysite.com/forum/39
+    // Modification - 2007-07-04.  In the case where this is a forum
+    if (arg(0) == 'forum' && is_numeric(arg(1)) && is_null(arg(2))) {
+      $location = 681;
+      $tid = (int)arg(1);
+      $gid = og_user_roles_gid_from_tid($tid);
+      // If no gid returned, then set $gid = 0
+      if (empty($gid)) {
+        $gid = 0;
+      }
+    }
+
+    // og create nodes (version 5.1)
+    //          0     1   2           3
+    // http://sbn.scbbs.com/node/add/forum?gids[]=72
+    // http://sbn.scbbs.com/node/add/simplenews?gids[]=72
+    // http://sbn.scbbs.com/node/add/webform?gids[]=72
+    // http://sbn.scbbs.com/node/add/video?gids[]=72
+    // http://sbn.scbbs.com/node/add/page?gids[]=72
+    // http://sbn.scbbs.com/node/add/blog?gids[]=72
+    // http://sbn.scbbs.com/node/add/event?gids[]=72
+    // http://sbn.scbbs.com/node/add/poll?gids[]=72
+    // http://sbn.scbbs.com/node/add/flexinode-3?gids[]=72
+    // Modification as per: http://drupal.org/node/155882 - replaced $uri_request_id
+    // with arg() values.
+    if (arg(0) == 'node' && arg(1) == 'add' && isset($_REQUEST['gids'])) {
+      $location = 10;
+      $gids = $_GET['gids'];
+      $gid = intval(current($_REQUEST['gids']));
+    }
+
+    // modr8 view modr8_log
+    //          
+    // http://clients.brixrealtyinc.com/node/ogmodr8?gids[]=12&event=2
+    //
+    // Modification as per: http://drupal.org/node/164092
+    //
+    if (arg(0) == 'node' && arg(1) == 'ogmodr8') {
+      // Modification -- Get the gid from the variable instead of trying to calculate it.
+      if (isset($_REQUEST['gids'])) {
+        $location = 131;
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+      }
+    }
+
+    // og create nodes (custom node/20 aliased to node/ognodeadd)
+    //          0     1   2           3
+    // http://clients.brixrealtyinc.com/node/ognodeadd?type=document&gids[]=12
+    //
+    // Modification as per: http://drupal.org/node/155882
+    // We use arg() instead of $arg[] ($uri_request_id)
+    //
+    if (arg(0) == 'node' && arg(1) == 'ognodeadd') {
+      // Modification -- Get the gid from the variable instead of trying to calculate it.
+      //        -- In case we need to add "tid=" to url as per:
+      //        -- http://drupal.org/node/156568
+      if (isset($_REQUEST['gids'])) {
+        $location = 132;
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+      }
+    }
+    
+	// File upload: http://www.scbbs.com/node/135/225#comment-225
+	if ((arg(0) == 'upload' && arg(1) == 'js') || (arg(0) == 'filemanager' && arg(1) == 'active')) {
+      $location = 14;
+      // First, try and get gid from the session cookie
+      if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+	  // If gid is still = 0, then try getting it from referrer 
+	  if ($gid == 0 || is_null($gid)) {
+		if ($ref_arg[1] == 'node' && is_numeric($ref_arg[2]) && $ref_arg[3] == 'edit') {
+          $nid = (int)$ref_arg[2];
+          $gid = og_user_roles_getgid($nid, $uid);
+		  // Set group context.
+          $group_node = node_load($gid);
+          og_set_group_context($group_node);
+   		}
+		if ($ref_arg[1] == 'node' && $ref_arg[2] == 'ognodeadd') {
+          parse_str($ref_query);
+          $gid = $gids[0];
+          // Set group context.
+          $group_node = node_load($gid);
+          og_set_group_context($group_node);
+   		}		
+	  }
+	}
+	// File upload: comment_upload
+	// http://drupal.org/node/331838
+	if (arg(0) == 'comment-upload' && arg(1) == 'js') {
+      $location = 145;
+      // First, try and get gid from the session cookie
+      if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+	  // If gid is still = 0, then try getting it from referrer 
+	  if ($gid == 0 || is_null($gid)) {
+		if ($ref_arg[1] == 'node' && is_numeric($ref_arg[3]) && $ref_arg[2] == 'reply') {
+          $nid = (int)$ref_arg[3];
+          $gid = og_user_roles_getgid($nid, $uid);
+		  // Set group context.
+          $group_node = node_load($gid);
+          og_set_group_context($group_node);
+   		}
+	  }
+	}
+	// File upload: Using wysiwygpro editor
+	if (arg(0) == 'modules' && arg(1) == 'wysiwygPro') {
+      $location = 140;
+      // First, try and get gid from the session cookie
+      if ($_SESSION['og_user_role']) {
+          $gid = $_SESSION['og_user_role'];
+		  // Set group context.
+          $group_node = node_load($gid);
+          og_set_group_context($group_node);
+      }
+	}
+    // File download
+	if (arg(0) == 'system' && arg(1) == 'files') {
+      $location = 15;
+      if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+	}
+    // File download using FileManger and Attachment modules
+	if (arg(0) == 'filemanager' && arg(1) == 'active') {
+      $location = 16;
+      if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+	}
+
+    // IMCE 
+	if (arg(0) == 'imce' && (arg(1) == 'browse' || arg(1) == 'upload')) {
+      $location = 160;
+      if (isset($_SESSION['og_last'])) {
+        $gid = $_SESSION['og_last'];
+        // Set group context.
+        $group_node = node_load($gid);
+        og_set_group_context($group_node);
+	  }
+	}
+
+    // Listing by taxonomy terms
+	if (arg(0) == 'taxonomy' && arg(1) == 'term') {
+      $location = 161;
+      if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+	}
+
+    // Files
+	if (arg(0) == 'files' || arg(1) == 'files') {
+      $location = 162;
+      // Modification -- Get the gid from the variable instead of trying to calculate it.
+      if (isset($_REQUEST['gids'])) {
+        $location = 1621;
+        $gids = $_GET['gids'];
+        $gid = intval(current($_REQUEST['gids']));
+        $group_node = node_load($gid);
+        og_set_group_context($group_node);
+      } elseif (isset($_SESSION['og_last'])) {
+        $location = 1622;
+        $gid = $_SESSION['og_last'];
+        $group_node = node_load($gid);
+        og_set_group_context($group_node);
+	  } else {
+	    // Need to get the file name;
+        $location = 1623;
+        $path = $_SERVER['REQUEST_URI'];
+        $basename = basename($path);        
+		$basename = urldecode($basename);
+        $basename = preg_replace("/\+/", " ", $basename);
+		// Now, get the node associated with this file;
+		// 6.x has different file structure
+//        $file = db_fetch_object(db_query("SELECT u.nid FROM {files} f INNER JOIN {upload} u ON f.fid = u.fid where f.filepath like '%s'", '%' . $basename));
+        $file = db_fetch_object(db_query("SELECT u.nid FROM {files} f INNER JOIN {upload} u ON f.fid = u.fid where f.filepath like '%s'", '%' . '/' . $basename));
+		$nid = $file->nid;
+        $gid = og_user_roles_getgid($nid, $uid);
+        $group_node = node_load($gid);
+        og_set_group_context($group_node);
+	  }
+	}
+
+    // Agenda module
+    // http://doadance.scbbs.com/node/agenda/list/279
+    if (arg(0) == 'node' && arg(1) == 'agenda' && arg(2) == 'list' && is_numeric(arg(3)) ) {
+      $location = 17;
+      $nid = (int)arg(3);
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+    // Modification as per: http://drupal.org/node/204080
+    // Galleries (view part: The view urls can have 'subdirs' so we may need to check until the nth arg)
+    if (module_exists("og_galleries")) {
+      $og_gal_parts=split('/',og_galleries_get_url());
+      if (!empty($og_gal_parts)) {
+        $is_og_gal_url=TRUE;
+        $arg_num=0;
+        foreach ($og_gal_parts as $value) {
+          if ($value != arg($arg_num++)) {
+            $is_og_gal_url=FALSE;
+          }
+        }
+        if ($is_og_gal_url && is_numeric(arg($arg_num))) {
+         $location = 18;
+         $gid = (int)arg($arg_num);
+        }
+      }
+    } 
+
+    // Book module
+	// As per: http://drupal.org/node/228386
+    // http://doadance.scbbs.com/book/export/html/279
+    if (arg(0) == 'book' && arg(1) == 'export' && arg(2) == 'html' && is_numeric(arg(3)) ) {
+      $location = 19;
+      $nid = (int)arg(3);
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+
+   // Modification. As per: http://drupal.org/node/176390
+   // Present a hook for other modules: hook_og_user_roles_gid()  
+   if ($results = module_invoke_all('og_user_roles_gid')) {
+     foreach ($results as $result) {
+       if ($result) $gid = $result;
+     }
+   }
+
+  } // end $gid if
+
+  //
+  // Now, using $uid and $gid we find out what roles this user has in this group;
+  //
+  if (empty($gid)) {
+    $gid = 0; // This prevents us from getting error on non-group node/add
+  }else{
+    if (isset($_SESSION['og_last'])) $_SESSION['og_last'] = $gid;
+    $_SESSION['og_user_role'] = $gid;
+  }
+
+/*
+ * Modification as per http://drupal.org/node/189227
+ * Makes sure use is "active" (not in moderation) before any of these group roles are added.
+ * Was: $query = 'SELECT r.rid, r.name FROM {role} r INNER JOIN {og_users_roles} ogr ON r.rid = ogr.rid WHERE ogr.uid = %d AND ogr.gid = %d';
+ */
+
+  $query = 'SELECT r.rid, r.name FROM {role} r INNER JOIN {og_users_roles} ogr ON r.rid = ogr.rid INNER JOIN {og_uid} ogu ON ogu.uid = ogr.uid AND ogu.nid = ogr.gid WHERE ogr.uid = %d AND ogr.gid = %d AND ogu.is_active = 1';
+  $results = db_query($query, $uid, $gid);
+
+  //
+  // Create an array of these roles;
+  //
+
+  while ($row = db_fetch_array($results)) {
+    $x1 = $row['rid'];
+    $ogroles[$x1] = $row['name'];
+  }
+
+  //
+  // First, we need to create an array of $user->roles
+  //
+  $c = $user->roles;
+
+  //
+  // Next, we add the $user->roles array to the $ogroles array, if there is an ogroles array;
+  //
+  if ($x1 > 0) {
+    $d = array();
+    $d = $c + $ogroles;
+    $d = array_unique($d);
+  }
+  else {
+    $d = $c;
+  }
+
+  // Write the test data: http://drupal.org/node/164038
+  if (variable_get('og_user_roles_test_default', 0) == 1) {
+    if (is_array($d)) {
+      $d1 = 'Roles Returned: ('. implode(',', $d) .')';
+	} else {
+	  $d1 = '';
+	}
+    og_user_roles_write_test($user, $location, $gid02, $gid, $uri_request_id, $d1, $ref);
+  }
+
+  // $d is either the merged results, or just $user->roles;
+
+  return $d;
+} // end og_user_roles_all_roles()
+
+/**
+ * This will return a $gid based upon the $nid and $uid supplied
+ */
+function og_user_roles_getgid($nid, $uid) {
+  $gid = 0;
+
+  // If $gid still equals 0 then try searching og table
+  // See if this is a group itself
+  if ($gid == 0) {
+    $result = db_query("SELECT og.nid from {og} og WHERE og.nid = %d", $nid);
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->nid;
+    }
+  }
+
+  // See if our user is a member of this node's group.
+  //
+  if ($gid == 0) {
+    $result = db_query("SELECT oga.group_nid from {og_ancestry} oga INNER JOIN {og_uid} ogu ON ogu.nid = oga.group_nid WHERE oga.nid = %d AND ogu.uid = %d", $nid, $uid);
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->group_nid;
+    }
+  }
+
+  // If this user is not a member of this group (fails test above), and this is a public node, 
+  // then we just need to find the first group it belongs to.
+  //
+  // select og_ancestry.group_nid FROM og_ancestry WHERE og_ancestry.nid = 130 AND og_ancestry.is_public = 1
+  //
+  if ($gid == 0) {
+    $result = db_query("SELECT oga.group_nid FROM {og_ancestry} oga WHERE oga.nid = %d AND oga.is_public = 1", $nid);
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->group_nid;
+    }
+  }
+
+/** 
+ * If $gid still equals 0 then try searching node_access table
+ * Modified as per: http://drupal.org/node/347277
+ */
+  if ($gid == 0) {
+    $result = db_query("SELECT na.gid from {node_access} na INNER JOIN {og_uid} ogu ON na.gid = ogu.nid WHERE na.realm = 'og_subscriber' AND ogu.uid = %d AND (na.nid = %d)", $uid, $nid, $nid); // modified to check for either the node ID in node_access
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->gid;
+    }
+  } 
+
+  if ($gid == 0) {
+    $result = db_query("SELECT na.gid from {node_access} na INNER JOIN {og_uid} ogu ON na.gid = ogu.nid WHERE na.realm = 'og_subscriber' AND ogu.uid = %d AND (na.gid = %d)", $uid, $nid, $nid); // modified to check for group ID in node_access
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->gid;
+    }
+  } 
+
+/** 
+ * Old code. Query too slow:
+ * SELECT node_access.gid from node_access INNER JOIN og_uid ON node_access.gid = og_uid.nid WHERE node_access.realm = 'og_subscriber' AND og_uid.uid = 2 AND (node_access.nid = 194 OR node_access.gid = 194)
+ * 
+ */
+//  if ($gid == 0) {
+//    $result = db_query("SELECT na.gid from {node_access} na INNER JOIN {og_uid} ogu ON na.gid = ogu.nid WHERE na.realm = 'og_subscriber' AND ogu.uid = %d AND (na.nid = %d OR na.gid = %d)", $uid, $nid, $nid); // modified to check for either the node or group ID in node_access
+//    while ($t = db_fetch_object($result)) {
+//      $gid = $t->gid;
+//    }
+//  }  
+
+  // If $gid still equals 0 then try searching og_term table (if it exists)
+  // og forums will typically be listed here
+  if ($gid == 0 && module_exists('og_forum')) {
+    $result = db_query("SELECT ogt.nid from {og_term} ogt INNER JOIN {og_uid} ogu ON ogt.nid = ogu.nid WHERE ogt.tid = %d AND ogu.uid = %d", $nid, $uid);
+    while ($t = db_fetch_object($result)) {
+      $gid = $t->nid;
+    }
+  }
+
+  // As per: http://drupal.org/node/167180
+  // If gid still not found
+  if ($gid == 0) {
+    $node = db_fetch_object(db_query('SELECT nid, type FROM {node} WHERE nid = %d', $nid));
+    if (og_is_group_type($node->type)) {
+      $gid = $node->nid;
+    } elseif (is_array($groups = og_get_node_groups($node))) {
+      $last_id = 0;
+      foreach ($groups as $id => $group) {
+        if ($group) {
+          // Need some way to determine the group to select in case of
+		  // multiple groups.  Going to try using og_last session cookie.
+		  // Just not sure if session will be set for current group by now.
+		  if ($id == $_SESSION['og_last']) $gid = $id;
+		  $last_id = $id;
+		}
+      }
+	  // If there was no session with og_last session cookie, then set gid to last
+	  // id located in groups.  Roll of the dice until we can find something more
+	  // certain.
+	  if ($gid == 0) $gid = $last_id;
+    }
+  }
+  
+  return $gid;
+
+} // end getgid()
+
+/**
+ * Check if table exist.
+ */
+function og_user_roles_table_exists($table) {
+  //  return db_num_rows(db_query("SHOW TABLES LIKE '{". db_escape_table($table) ."}'"));
+  // http://drupal.org/node/114774#db-num-rows (db_num_rows removed)
+  return db_result(db_query("SHOW TABLES LIKE '{". db_escape_table($table) ."}'"));
+}
+
+/**
+ * See what is found in user_all_roles.
+ */
+function og_user_roles_write_test($user, $location, $gid02, $gid, $uri_request_id, $d, $ref, $test_function = 'og_user_roles_all_roles') {
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);  // http://drupal.org/node/273068
+  $test_status = '';
+  $test_date = format_date(time(), 'custom', 'Y-m-d h:i:s a');
+  $test_user = $user->uid;
+  $test_subfunction = $location;
+  $test_string = 'group context: '. $gid02;
+  $test_username = $user->name;
+  $test_group = $gid;
+  $test_uri = $uri_request_id . " (" . $ref . ")";
+  $test_aarg0 = arg(0);
+  $test_aarg1 = arg(1);
+  $test_aarg2 = arg(2);
+  $test_aarg3 = arg(3);
+  $test_perm = $d;
+
+  if (og_user_roles_table_exists('{og_user_test}')) {
+    $test_query = "INSERT INTO og_user_test (testStatus, testDate, testUser, testUserName, testGroup, testFunction, testSubFunction, testString, testURI, testAArg0, testAArg1, testAArg2, testAArg3, testPerm) values ('". $test_status ."','". $test_date ."','". $test_user ."','". $test_username ."','". $test_group ."','". $test_function ."','". $test_subfunction ."','". $test_string ."','". $test_uri ."','". $test_aarg0 ."','". $test_aarg1 ."','". $test_aarg2 ."','". $test_aarg3 ."','". $test_perm ."')";
+    db_query($test_query);
+  } else {
+    drupal_install_schema('og_user_test');
+  }
+}
+
+
+/**
+ * Create content
+ * Format: http://www.scbbs.com/node/ognodeadd?type=link&gids[]=29
+ */
+function og_user_roles_ognodeadd() {
+  global $user;
+
+  require('modules/node/node.pages.inc'); 
+
+  $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+
+  $user->roles = $roles;
+  $gids = $_GET['gids'];
+  if ($gids) {
+     $group_node = node_load($gids[0]);
+     og_set_group_context($group_node);
+  }
+
+  $type = $_GET['type'];
+  // Convert the dashes in the URL back to underscores. http://drupal.org/node/349648
+  $type = str_replace('-', '_' , $type);
+
+  if ($type) {
+    // Got this from node.module (node_access)
+    // No matter the type, this should return us the create permission.
+    $module = node_get_types('module', $type);
+
+    if ($module == 'node') {
+      $module = 'node_content'; // Avoid function name collisions.
+    }
+
+    $access = module_invoke($module, 'access', 'create', $type, $user);
+
+    if ($access === TRUE) {
+      
+      $content_type = node_get_types('type', $type);
+      $output = '<p>'. filter_xss_admin($content_type->help) .'</p>';
+      $output .= node_add($type);
+    }
+
+    else {
+
+      $output = 'Access denied.';
+	  
+	  // Old = type, message, severity, link
+	  // New = type, message, variables, severity, link
+
+      watchdog('access denied', 'User can not create this node type:<strong> '.$type.'</strong>', $variables = array() , WATCHDOG_WARNING, 'node/ognodeadd?type='. $type .'&gids[]='. $gids[0]);
+    }
+
+  }else{
+
+    /**
+     * Modification: Creates an overview page with the allowed node types for this user and group
+     * when there is no type in the url query. This page is similar to generic node/add page
+     * Taken and modified from node_add() function in node core module and og_og_create_links() in og module
+     * If no (valid) node type has been provided, display a node type overview.
+	 * http://drupal.org/node/203875
+	 */
+    $exempt = array_merge(og_get_types('group'), variable_get('og_omitted', array()));
+    foreach (node_get_types() as $type) {
+      // we used to check for node_access(create) but then node admins would get a false positive and see node types that they could not create
+      if (!in_array($type->type, $exempt) && module_invoke(node_get_types('module', $type), 'access', 'create', $type, $user)) {
+        // Why is this needed?
+        // $type_url_str = str_replace('_', '-', $type->type);
+        $type_url_str = $type->type;
+        $title = t('Add a new @s.', array('@s' => $type->name));
+        $out = '<dt>'. l(drupal_ucfirst($type->name), "node/add/$type_url_str", array('attributes' => array('title' => $title), 'query' => 'gids[]='. $gids[0])) .'</dt>';
+        $out .= '<dd>'. filter_xss_admin($type->description) .'</dd>';
+        $item[$type->type] = $out;
+      }
+    }
+
+    if (isset($item)) {
+      uksort($item, 'strnatcasecmp');
+      $output = t('Choose the appropriate item from the list:') .'<dl>'. implode('', $item) .'</dl>';
+    }
+    else {
+      $output = t('No content types available.');
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Edit og_vocab term
+ * Format: http://www.scbbs.com/node/ogtermedit?destination=node%2F29%2Fog%2Fvocab%2Fterms%2F26&gids[]=29&tid=116
+ */
+function og_user_roles_ogtermedit() {
+  require_once drupal_get_path('module', 'taxonomy'). '/taxonomy.admin.inc';
+
+  global $user;
+
+  $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+
+  $user->roles = $roles;
+  $gids = $_GET['gids'];
+  if ($gids) {
+     $group_node = node_load($gids[0]);
+     og_set_group_context($group_node);
+  }
+
+  $tid = $_GET['tid'];
+
+  $access = user_access('administer taxonomy');
+
+  if ($access === TRUE) {
+    $output = taxonomy_admin_term_edit($tid);
+  } else {
+    $output = 'Access denied.';
+    watchdog('access denied', 'node/ogtermedit?tid='. $tid .'&gids[]='. $gids[0], WATCHDOG_WARNING);
+  }
+
+  return $output;
+}
+
+/**
+ * View the modr8 log
+ * Format: http://www.scbbs.com/node/ogmodr8?gids[]=29&event=2
+ */
+function og_user_roles_ogmodr8() {
+  global $user;
+  // Need this in order to not get "undefined function" on "modr8_log_event" call below
+  require_once drupal_get_path('module', 'modr8'). '/modr8_admin.inc';
+
+  $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+
+  $user->roles = $roles;
+  $gids = $_GET['gids'];
+  if ($gids) {
+     $group_node = node_load($gids[0]);
+     og_set_group_context($group_node);
+  }
+
+  $event = $_GET['event'];
+
+  $access = user_access('moderate content');
+
+  if ($access === TRUE) {
+    $output = modr8_log_event($event);
+  } else {
+    $output = 'Access denied.';
+    watchdog('access denied', 'node/ogmodr8?event='. $event .'&gids[]='. $gids[0], WATCHDOG_WARNING);
+  }
+
+  return $output;
+}
+
+/**
+ * Edit user
+ * Format: http://www.scbbs.com/oguseredit/76?gids[]=47
+ * Format: http://www.scbbs.com/oguseredit/76/edit?gids[]=47
+ */
+function og_user_roles_oguseredit($uid = 0) {
+
+  require_once drupal_get_path('module', 'user'). '/user.pages.inc';
+
+  global $user;
+
+  $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+
+  $user->roles = $roles;
+  $gids = $_GET['gids'];
+  if ($gids) {
+     $group_node = node_load($gids[0]);
+	 $gid = $gids[0];
+     og_set_group_context($group_node);
+  }
+
+  $account = user_load(array('uid' => $uid));
+  $in_this_group = 'no';
+  $oguseredit = 'yes';
+
+  if (user_access('no oguseredit', $account)) $oguseredit = 'no';
+
+ /**
+  * This checks all groups the user is a member of to see if any one has given the
+  * 'no oguseredit' permission.	 If one group has given him a role with this
+  * permission, then his profile cannot be edited using oguseredit.
+  */
+  $user_gids = array_keys($account->og_groups);
+  if ($user_gids) {
+    foreach ($user_gids as $user_gid) {
+      if (og_user_roles_user_access('no oguseredit', $user_gid, $uid) === TRUE) $oguseredit = 'no'; 
+    }
+  }
+
+  if (array_keys($account->og_groups)) {
+    if (array_key_exists($gid, $account->og_groups)) $in_this_group = 'yes';
+  }
+
+  $access = user_access('administer users');
+
+  if ($access === TRUE && $uid != 1 && $in_this_group == 'yes' && $oguseredit == 'yes') {
+    
+    if (arg(2) == 'edit') $output = drupal_get_form('user_profile_form', $account);
+    if (arg(2) == 'delete') $output = drupal_get_form('user_confirm_delete', $account);
+    if (is_null(arg(2))) $output = user_view($account);
+  } else {
+    if ($oguseredit == 'no') drupal_set_message('This user account may not be edited using oguseredit.');
+    if ($in_this_group == 'no') drupal_set_message('This user is not a member of the current group.');
+    $output = 'Access denied.';
+    watchdog('access denied', 'oguseredit/'. $uid, WATCHDOG_WARNING);
+  }
+
+  return $output;
+}
+
+/**
+ * Manage users from OG User Roles
+ * ogusermanage
+ */
+function og_user_roles_user_manage($gid) {
+  global $user;
+  $roles = og_user_roles_all_roles($user); // This returns normal $user->roles and includes OG roles if any
+
+  $user->roles = $roles;
+  $gids = array_keys($user->og_groups);
+
+  $this_gid = $gid;
+  if ($this_gid) {
+    $group_node = node_load($this_gid);
+    og_set_group_context($group_node);
+  }
+
+  // Get the admin status for this user in this group;
+  $is_admin = 0;
+  if ($subscriptions = og_get_subscriptions($user->uid)) {
+    foreach ($subscriptions as $key => $val) {
+      // Debug
+      // print "key = " . $key . " is_admin = " . $val['is_admin'];
+      if ($key == $this_gid) {
+        $is_admin = $val['is_admin'];
+      }
+    }
+  }
+
+  $items = db_query("SELECT uid FROM {users} ORDER BY name");
+  $output = "";
+
+  while ($item = db_fetch_object($items)) {
+	$uid = $item->uid;
+    $account = user_load(array('uid' => $uid));
+    $account_gids = array_keys($account->og_groups);
+	$common_gids = array_intersect($gids, $account_gids);
+    if ($common_gids) {
+      foreach ($common_gids as $common) {
+        if ($common == $this_gid && $is_admin == 1 && user_access('administer users') && $uid != 1) {
+ 	        $output .= "<li>" . l($account->name, 'oguseredit/' . $uid, array('attributes' => $attributes = array(), 'query' => 'gids[]=' . $this_gid)) . " | " . l('(edit)', 'oguseredit/' . $uid . '/edit', array('attributes' => $attributes = array(), 'query' => 'gids[]=' . $this_gid . '&destination=og/users/'.$this_gid.'/manage')) . " | " . l('(delete)', 'oguseredit/' . $uid . '/delete', array('attributes' => $attributes = array(), 'query' => 'gids[]=' . $this_gid . '&destination=og/users/'.$this_gid.'/manage')) . "</li>";
+         }
+      }
+    }
+  } // end while
+
+  if ($output == "") $output = "<strong>No users have been located for this group or you are not an admin user for this group!</strong>";
+
+  return $output;
+}
+
+/**
+ * Return group logo
+ * oglogo
+ */
+function og_user_roles_oglogo($uid) {
+
+  header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+  header('Cache-Control: no-store, no-cache, must-revalidate');
+  header('Cache-Control: post-check=0, pre-check=0', FALSE);
+  header('Pragma: no-cache'); 
+ 
+  cache_clear_all();
+
+  if (empty($uid)) {
+    global $user;
+  } else {
+    $user = user_load(array('uid' => $uid));
+  }
+
+  $location = "5";
+  $test_function = 'og_user_roles_oglogo';
+
+  $addr = $_SERVER['REMOTE_ADDR'];
+
+  $ref = $_SERVER["HTTP_REFERER"];
+  $ref_url = parse_url($ref);
+  $ref_path = $ref_url[path];
+  $ref_query = $ref_url[query];
+  $ref_arg = explode('/', $ref_path);
+
+  $group_node = og_get_group_context();
+  $gid02 = $group_node->nid;
+  $gid = $gid02;
+
+  $uri_request_id = request_uri();
+  $arg = explode('/', $uri_request_id);
+
+  if ($group_node = og_get_group_context()) {
+    $location .= "A";
+    $gid = $group_node->nid;
+    $logo = variable_get('og_user_roles_logo_' . $gid, '');
+    $_SESSION['oglogo'] = $logo;
+    variable_set('oglogo_' . $addr, $logo);
+  }
+
+  if ($ref_arg[1] == 'print' && is_numeric($ref_arg[2])) {
+    $location .= "B";
+    $nid = (int)$ref_arg[2];
+    $gid = og_user_roles_getgid($nid, $uid);
+    $logo = variable_get('og_user_roles_logo_' . $gid, '');
+    $_SESSION['oglogo'] = $logo;
+    variable_set('oglogo_' . $addr, $logo);
+  }
+
+  if (arg(0) == 'print' && arg(2) == 'og' && is_numeric(arg(3))) {
+    $location .= "C";
+    $nid = (int)arg(3);
+    $gid = og_user_roles_getgid($nid, $uid);
+    $logo = variable_get('og_user_roles_logo_' . $gid, '');
+    $_SESSION['oglogo'] = $logo;
+    variable_set('oglogo_' . $addr, $logo);
+  }
+
+  if ($ref_arg[1] == 'print' && is_numeric($ref_arg[4])) {
+    $location .= "D";
+    $nid = (int)$ref_arg[4];
+    $gid = og_user_roles_getgid($nid, $uid);
+    $logo = variable_get('og_user_roles_logo_' . $gid, '');
+    $_SESSION['oglogo'] = $logo;
+    variable_set('oglogo_' . $addr, $logo);
+  }
+
+
+//  if (empty($logo) && $_SESSION['oglogo']) {
+//    $location .= "E";
+//    $logo = $_SESSION['oglogo'];
+//  }
+
+//  if (empty($logo) && isset($_SESSION['og_last'])) {
+//    $location .= "F";
+//    $nid = $_SESSION['og_last'];
+//    $gid = og_user_roles_getgid($nid, $uid);
+//    $logo = variable_get('og_user_roles_logo_' . $gid, '');
+//  }
+
+// IE Print Problem: If we found $logo above, use this to locate it.
+// Problem is:  How do we not use this if logo is legitimately not found for group
+// after this user has found one that does exist?
+//
+  if (empty($logo) && empty($ref) && empty($gid) && $user->uid == 0) {
+    $location .= "G";
+    $logo = variable_get('oglogo_' . $addr, '');
+  }
+
+  $d = 'Session variables: (';
+  $d .= 'oglogo = ' . $_SESSION['oglogo'];
+  $d .= ' | og_last = ' . $_SESSION['og_last'];
+  $d .= ' | og_user_role = ' . $_SESSION['og_user_role'];
+  $d .= ' | gid = ' . $gid;
+  $d .= ' | remote_addr = ' . $addr;
+  $d .= ' | logo = ' . $logo;
+  $d .= ')';
+
+  if (empty($logo))  {
+    $location .= "H";
+    $logo = theme_get_setting('logo_path');
+  }
+
+  // Write the test data: http://drupal.org/node/164038
+  if (variable_get('og_user_roles_test_default', 0) == 1) {
+    og_user_roles_write_test($user, $location, $gid02, $gid, $uri_request_id, $d, $ref, $test_function);
+  }
+
+  if (empty($logo)) $logo = theme_get_setting('logo_path');
+
+  // Return image information
+  $info = image_get_info($logo);
+
+  // If file is not an image file (or is unsupported) then return an error
+  if (!$info['mime_type']) {
+    $text = "Unsupported Filetype: (" . $location . ")";
+    og_user_roles_oglogo_display_error($text);
+    return;
+  }
+
+  // Display headers so browser knows we're outputting an image
+  $headers = array('Content-Type: '.$info['mime_type']);
+  foreach ($headers as $header) {
+    header($header);
+  }
+
+  // Output image
+  $im = @readfile($logo);
+
+  // If there's been a problem, report it
+  if (!$im) og_user_roles_oglogo_display_error();
+
+}
+
+/**
+ * Return group logo path from group gid
+ */
+function og_user_roles_oglogo_gid($gid) {
+
+  $logo = variable_get('og_user_roles_logo_' . $gid, '');
+
+  return $logo;
+}
+
+function og_user_roles_oglogo_display_error($text = "Error Creating Logo") {
+  $im = imagecreate(181, 20);
+  $bg = imagecolorallocate($im, 255, 255, 255);
+  $textcolor = imagecolorallocate($im, 255, 0, 0);
+  imagestring($im, 5, 2, 1, $text, $textcolor);
+  header("Content-type: image/png");
+  imagepng($im);
+  imagedestroy($im);
+} // og_user_roles_oglogo_display_error
+
+/**
+ * using the og_forum tid, get the group id
+ * stolen from og_forum (had to in the case where og_user_roles user doesn't have latest
+ * version of og_forum module which includes this)
+ */
+function og_user_roles_gid_from_tid($tid = 0) {
+  // Modification as per: http://drupal.org/node/172923
+  if (module_exists('og_forum')) {
+    $sql = "SELECT nid FROM {og_term} WHERE tid = %d";
+    $gid = db_result(db_query($sql, $tid));
+  }
+  return empty($gid) ? 0 : $gid; // As per http://drupal.org/node/194214
+}
+
+/**
+ * using the og_vocab tid, get the group id
+ */
+function og_user_roles_gid_from_og_vocab_tid($tid = 0) {
+  $gid = 0;
+  $result = db_query("SELECT ogv.nid FROM {og_vocab} ogv INNER JOIN {vocabulary} v ON v.vid = ogv.vid INNER JOIN {term_data} td ON td.vid = v.vid WHERE td.tid = %d", $tid); // Get the group node of this term, if it is a group term
+  while ($t = db_fetch_object($result)) {
+    $gid = $t->nid;
+  }
+  return $gid;
+}
+
+/**
+ * using the modr8 event log, get the group id
+ */
+function og_user_roles_gid_from_modr8_event($event = 0) {
+  $gid = 0;
+  $result = db_query("SELECT o.group_nid FROM {modr8_log} m INNER JOIN {og_ancestry} o ON o.nid = m.nid WHERE m.modid = %d", $event); // Get the group this node belongs to.
+  while ($t = db_fetch_object($result)) {
+    $gid = $t->group_nid;
+  }
+  return $gid;
+}
+
+/**
+ * Get gid from session og_last or referrer
+ */
+function og_user_roles_gid_from_referrer() {
+
+  $gid = 0;
+
+  // Need to use the referrer to get OG group in some cases;
+  $ref = $_SERVER["HTTP_REFERER"];
+  $ref_url = parse_url($ref);
+  $ref_path = $ref_url[path];
+  $ref_query = $ref_url[query];
+  $ref_arg = explode('/', $ref_path);
+
+  // First, try and get gid from the session cookie
+  if (isset($_SESSION['og_last'])) $gid = $_SESSION['og_last'];
+  // If gid is still = 0, then try getting it from referrer 
+  if ($gid == 0 || is_null($gid)) {
+    if ($ref_arg[1] == 'node' && is_numeric($ref_arg[2]) && $ref_arg[3] == 'edit') {
+      $nid = (int)$ref_arg[2];
+      $gid = og_user_roles_getgid($nid, $uid);
+    }
+	if ($ref_arg[1] == 'node' && $ref_arg[2] == 'ognodeadd') {
+      parse_str($ref_query);
+      $gid = $gids[0];
+    }		
+  }
+
+  return $gid;
+}
+
+/**
+ * Get gid from registration code
+ */
+function og_user_roles_gid_from_regcode($regcode) {
+  $gid = 0;
+  // Get the list of OG groups
+  $groups = og_all_groups_options();
+  foreach ($groups as $group => $title) {
+    // Only process groups that are allowed to have registration codes
+    if (variable_get('og_user_roles_assign_regcode_' . $group, 0) == 1) {
+      // Get the array of codes for this group.
+      $group_array = explode(',', variable_get('og_user_roles_regcode_value_' . $group, ''));
+      if (in_array($regcode, $group_array)) {
+        $gid = $group;
+      }
+    }
+  }
+  return $gid;
+}
+
+
+/**
+ * Implementation of hook_form_alter
+ * Adds ability to set default group role for new members for an individual
+ * group.
+ */
+function og_user_roles_form_alter(&$form, $form_state, $form_id) {
+  // If this is a registration form, put the Group Register box on it if appropriate.
+  // Anonymous users need 'use registration codes' permission
+  // 'Allow Registration Codes' in OGUR settings must be checked on.
+  if ($form_id == 'user_register' && user_access('use registration codes')) {
+    if (!isset($form['og_register'])) {
+      $form['og_register'] = array('#type' => 'fieldset', '#title' => t('Groups'));
+    }
+	if (variable_get('og_user_roles_assign_regcode_gid_required', 0) == 1) {
+	  $boolean = 1;
+	} else {
+      $boolean = 0;
+	}
+    $form['og_register']['og_user_roles_regcode'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Group registration code'),
+      '#access' => user_access('use registration codes'),
+      '#description' => t('If you received a group registration code, enter it here.'),
+	  '#required' => $boolean,
+    );
+  }
+  $roles = array();
+  // If this is a group node edit (use og_last to determine if this is a group node) and
+  // the user has the 'auto assign group roles' permission, and we allow group admins
+  // to set default group roles, then print the 'basicgrouprole' form on the
+  // group edit form.
+  if (arg(0) == 'node' && ($_SESSION['og_last'] == arg(1)) && arg(2) == 'edit' && user_access('auto assign group roles') && variable_get('og_user_roles_assign_basicgrouprole_gid', 0) == 1) {
+    $gid = arg(1);
+
+    // First, we need to get a list of all og-enabled node types
+    $group_types = og_get_types('group');
+    foreach ($group_types as $type) {
+      // Get list of assignable group roles for this group type
+      $role_ids = variable_get("og_user_roles_roles_{$type}", array());
+//      $all_roles = user_roles();
+      $all_roles = og_user_roles_get_roles();
+      foreach ($role_ids as $rid => $checked) {
+        if (!empty($all_roles[$rid]) && $checked != 0) {
+          $roles[$rid] = $all_roles[$rid];
+        }
+      }
+      // If the form loaded is this type then we can move on
+      if ($type != '' && $form_id == $type . "_node_form")  {
+        $form['og_user_roles_basicgrouprole_gid'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Default Basic Group Role for new subscribers to this group.'),
+          '#description' => t('Allows you to select a group role to automatically assign to users who join this group. The role is specific to this group. That is, the user will only have the privileges of the role while he is visiting this group.  You must have the <strong>auto assign group roles</strong> permission to use this setting.'),
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          );
+        $form['og_user_roles_basicgrouprole_gid']['og_user_roles_assign_basicgrouprole_' . $gid] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Set default basic group (group limited) role for users who join this group?'),
+          '#default_value' => variable_get('og_user_roles_assign_basicgrouprole_' . $gid, 0),
+          '#description' => t('Do you wish to automatically assign a specific "basic group role" to <strong>every new subscriber to this group</strong> at the time he subscribes to this group? The role is limited to this group. This role assignment can be be removed by the groups\' admin(s)'),
+          );
+        $form['og_user_roles_basicgrouprole_gid']['og_user_roles_basicgrouprole_value_' . $gid] = array(
+          '#type' => 'select',
+          '#title' => t('Role to use as a basic group role'),
+          '#options' => $roles,
+          '#default_value' => variable_get('og_user_roles_basicgrouprole_value_' . $gid, 0),
+          '#description' => t('Select the role you wish to use as the "basic group role" for every new subscriber to this group.'),
+          );      
+         $form['#submit'][] = 'og_user_roles_basicgrouprole_form_submit';          
+      }
+    }
+  }
+
+  // If this is a group node edit (use og_last to determine if this is a group node) 
+  if (arg(0) == 'node' && ($_SESSION['og_last'] == arg(1)) && arg(2) == 'edit' ) {
+    $gid = arg(1);
+
+    // First, we need to get a list of all og-enabled node types
+    $group_types = og_get_types('group');
+    foreach ($group_types as $type) {
+      // Get list of assignable group roles for this group type
+      $role_ids = variable_get("og_user_roles_roles_{$type}", array());
+//      $all_roles = user_roles();
+      $all_roles = og_user_roles_get_roles();
+      foreach ($role_ids as $rid => $checked) {
+        if (!empty($all_roles[$rid]) && $checked != 0) {
+          $roles[$rid] = $all_roles[$rid];
+        }
+      }
+      
+      // If the form loaded is this type then we can move on
+      if ($type != '' && $form_id == $type . "_node_form")  {
+
+        // Group Logo Location
+
+        if(variable_get('og_user_roles_logo_enabled', '1') ) {
+          $form['og_user_roles_logo'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Group Logo location.'),
+            '#description' => t('Allows you to supply location of logo to be used with this group. You can provide either the URL to the file if it is available on a remote website, or the relative file path if it is available locally (i.e., on this server). You can use <strong>File attachments</strong> to upload the file to this server.'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            );
+          $form['og_user_roles_logo']['og_user_roles_logo_' . $gid] = array(
+            '#type' => 'textfield',
+            '#title' => t('Location of group logo?'),
+            '#default_value' => variable_get('og_user_roles_logo_' . $gid, ''),
+            '#description' => t('Enter either the local file path or the remote URL for the image to be used as the logo for this group. Enter one of the following formats: <strong>http://www.yoursite.com/yourlogo.gif</strong> (for remote file) or <strong>files/yourlogo.gif</strong> (for local file). You can attach the file you wish to use to this group using <strong>File attachments</strong> section below, then supply local path here once the file is uploaded (attached).  Your logo image must not exceed these size dimensions: Width (in pixels): <strong>' . variable_get('og_user_roles_logo_width', '135') . 'px</strong> Height (in pixels): <strong>' . variable_get('og_user_roles_logo_height', '113') . 'px</strong>'),
+            );
+          $form['#validate'][] = 'og_user_roles_logo_form_validate';          
+          $form['#submit'][] = 'og_user_roles_logo_form_submit';          
+		}
+
+        // Add the code to display 'Create content' link and/or remove 'create_' links.
+
+        if (variable_get('og_user_roles_menu_options_enabled', 1)) {
+          $form['og_user_roles_links_gid'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Control group menu content links.'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            );
+          $form['og_user_roles_links_gid']['og_user_roles_links_content_' . $gid] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Display the <strong>Create content</strong> link?'),
+            '#default_value' => variable_get('og_user_roles_links_content_' . $gid, 0),
+            '#description' => t('Do you wish to display the OGUR <strong>Create content</strong> link on this group\'s menu?'),
+            );
+          $form['og_user_roles_links_gid']['og_user_roles_links_remove_' . $gid] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Remove the default <strong>Create</strong> links?'),
+            '#default_value' => variable_get('og_user_roles_links_remove_' . $gid, 0),
+            '#description' => t('Do you wish to remove the default OG <strong>Create</strong> content links on this group\'s menu?'),
+            );
+          $form['#submit'][] = 'og_user_roles_links_form_submit';          
+		}
+
+        // Add the code to disallow public posts to the
+        // group edit form.
+
+          $form['og_user_roles_nopublic_gid'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Disallow public posts in this group.'),
+            '#description' => t('Allows you to prevent any <strong>Public</strong> posts from this group.  That is, no post made in this group may have the <strong>Public</strong> box checked.  In addition, if OG Forums is installed and this is a group <strong>Forum topic</strong> post, then the forum group selected in the <strong>Forums</strong> pull-down menu on the edit form must match this group, or the post will be rejected.'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            );
+          $form['og_user_roles_nopublic_gid']['og_user_roles_assign_nopublic_' . $gid] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Do not allow public posts in this group?'),
+            '#default_value' => variable_get('og_user_roles_assign_nopublic_' . $gid, 0),
+            '#description' => t('Do you wish to disallow public postings from this group?'),
+            );
+          $form['#submit'][] = 'og_user_roles_nopublic_form_submit';          
+
+        // If the user has the 'manage registration codes' permission, and we allow group admins
+        // to set registration codes, then print the 'regcode' form on the
+        // group edit form.
+        if (user_access('manage registration codes') && variable_get('og_user_roles_assign_regcode_gid', 0) == 1) {
+
+          $form['og_user_roles_regcode_gid'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Registration code for new subscribers to this group.'),
+            '#description' => t('Allows you to enter registration codes that can be used for new users to automatically subscribe to this group and bypass moderation. This will only work if this group is in <strong>moderation</strong> status.  You must have the <strong>manage registration codes</strong> permission to use this setting.'),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            );
+          $form['og_user_roles_regcode_gid']['og_user_roles_assign_regcode_' . $gid] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Set registration codes to allow users to join this group?'),
+            '#default_value' => variable_get('og_user_roles_assign_regcode_' . $gid, 0),
+            '#description' => t('Do you wish to enter registration codes that will allow new subscribers to bypass admin approval and join this group?'),
+            );
+          $form['og_user_roles_regcode_gid']['og_user_roles_delete_regcode_' . $gid] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Delete registration code after it is used?'),
+            '#default_value' => variable_get('og_user_roles_delete_regcode_' . $gid, 0),
+            '#description' => t('Do you want to delete each individual registration code after it is used to successfully subscribe a user to the group?'),
+            );
+          $form['og_user_roles_regcode_gid']['og_user_roles_regcode_value_' . $gid] = array(
+            '#type' => variable_get('og_user_roles_assign_regcode_gid_text', 'textarea'),
+            '#title' => t('Registration codes for allowing users to subscribe to this group without admin approval'),
+            '#default_value' => variable_get('og_user_roles_regcode_value_' . $gid, ''),
+            '#description' => t('Specify here the registration codes which will allow users who enter them to subscribe to this moderated group without being manually approved by the group administrator. Structure your entries like this:
+              <p><strong>Code1,Code2,Code3<br /></strong></p>
+              <p>Each registration code separated by a comma. No spaces.'),
+            );
+      	  // They only see this if they can configure user roles
+          if (user_access('auto assign group roles')) {
+            $form['og_user_roles_regcode_gid']['og_user_roles_assign_regcoderole_' . $gid] = array(
+              '#type' => 'checkbox',
+              '#title' => t('Set default basic group (group limited) role for users who join this group using this registration code?'),
+              '#default_value' => variable_get('og_user_roles_assign_regcoderole_' . $gid, 0),
+              '#description' => t('Do you wish to automatically assign a specific "registration code group role" to new subscribers to this group <strong>who use this registration code to subscribe</strong> to this group? The role is limited to this group. This role assignment can be be removed by the groups\' admin(s)'),
+              );
+            $form['og_user_roles_regcode_gid']['og_user_roles_regcoderole_value_' . $gid] = array(
+              '#type' => 'select',
+              '#title' => t('Role to assign'),
+              '#options' => $roles,
+              '#default_value' => variable_get('og_user_roles_regcoderole_value_' . $gid, 0),
+              '#description' => t('Select the role you wish to use as the "registration code group role" for every new subscriber who subscribes to this group using one of the registration codes above.'),
+              );      
+          }
+          $form['#validate'][] = 'og_user_roles_regcode_form_validate';          
+          $form['#submit'][] = 'og_user_roles_regcode_form_submit';          
+        }
+	  }
+    }
+  }
+
+  // If this is a role deletion function
+  if (arg(0) == 'admin' && arg(1) == 'user' && arg(2) == 'roles' && arg(3) == 'edit' && is_numeric(arg(4))) {
+    $rid = arg(4);
+    // If the form loaded is this type then we want to run it by our submit function
+	// which will test to see if it is a delete operation
+    if ($form_id == "user_admin_role")  {
+      $form['#submit'][] = 'og_user_roles_role_submit';          
+    }
+  }
+
+}
+
+function og_user_roles_basicgrouprole_form_submit($form, &$form_state) {
+  $gid = arg(1);
+  variable_set('og_user_roles_assign_basicgrouprole_' . $gid, $form_state['values']['og_user_roles_assign_basicgrouprole_' . $gid]);
+  variable_set('og_user_roles_basicgrouprole_value_' . $gid, $form_state['values']['og_user_roles_basicgrouprole_value_' . $gid]);
+}
+function og_user_roles_logo_form_submit($form, &$form_state) {
+  $gid = arg(1);
+  variable_set('og_user_roles_logo_' . $gid, $form_state['values']['og_user_roles_logo_' . $gid]);
+}
+/*
+ * Here we want to make sure that the submitted logo does not exceed size restrictions.
+ */
+function og_user_roles_logo_form_validate($form, &$form_state) {
+  $gid = arg(1);
+  if ($form_state['values']['og_user_roles_logo_' . $gid]) {
+    $width = variable_get('og_user_roles_logo_width', '135');
+    $height = variable_get('og_user_roles_logo_height', '113');
+    $image = image_get_info($form_state['values']['og_user_roles_logo_' . $gid]);
+	$img_width = $image['width'];
+	$img_height = $image['height'];
+	if ($img_width > $width || $img_height > $height) {
+       form_set_error('og_user_roles_logo_' . $gid, "Your submitted group logo image exceeds maximim image dimension limits.");
+	}
+  }
+}
+function og_user_roles_links_form_submit($form, &$form_state) {
+  $gid = arg(1);
+  variable_set('og_user_roles_links_content_' . $gid, $form_state['values']['og_user_roles_links_content_' . $gid]);
+  variable_set('og_user_roles_links_remove_' . $gid, $form_state['values']['og_user_roles_links_remove_' . $gid]);
+}
+function og_user_roles_nopublic_form_submit($form, &$form_state) {
+  $gid = arg(1);
+  variable_set('og_user_roles_assign_nopublic_' . $gid, $form_state['values']['og_user_roles_assign_nopublic_' . $gid]);
+}
+function og_user_roles_regcode_form_submit($form, &$form_state) {
+  $gid = arg(1);
+  variable_set('og_user_roles_assign_regcode_' . $gid, $form_state['values']['og_user_roles_assign_regcode_' . $gid]);
+  variable_set('og_user_roles_delete_regcode_' . $gid, $form_state['values']['og_user_roles_delete_regcode_' . $gid]);
+  variable_set('og_user_roles_regcode_value_' . $gid, $form_state['values']['og_user_roles_regcode_value_' . $gid]);
+  variable_set('og_user_roles_assign_regcoderole_' . $gid, $form_state['values']['og_user_roles_assign_regcoderole_' . $gid]);
+  variable_set('og_user_roles_regcoderole_value_' . $gid, $form_state['values']['og_user_roles_regcoderole_value_' . $gid]);
+}
+/*
+ * Here we want to make sure that the submitted regcode value is not duplicated in another group.
+ */
+function og_user_roles_regcode_form_validate($form, &$form_state) {
+  $gid = arg(1);
+  // No need to go through any of this if the 'Allow Group Admins to set Registration Codes' is not set
+  if (variable_get('og_user_roles_assign_regcode_gid', 0) == 1) {
+    // If this group allows for registration codes to be set
+    if ($form_state['values']['og_user_roles_assign_regcode_' . $gid] == 1) {
+      // If this value is blank, return error
+      $regcode_array = explode(',', $form_state['values']['og_user_roles_regcode_value_' . $gid]);
+      if (empty($regcode_array[0])) {
+        form_set_error('og_user_roles_regcode_value_' . $gid, "No valid registration code entered.");
+      }
+      // Get the list of OG groups
+      $groups = og_all_groups_options();
+      foreach ($groups as $group => $title) {
+	    // Get all groups except current one.
+        if ($group != $gid) {
+          // Only process groups that are allowed to have registration codes
+          if (variable_get('og_user_roles_assign_regcode_' . $group, 0) == 1) {
+	   	    // Get the array of codes for this group.
+            $group_array = explode(',', variable_get('og_user_roles_regcode_value_' . $group, ''));
+            // Check to see this array as any elements which are duplicated
+            if ($duplicated = array_intersect($regcode_array, $group_array)) {
+              // If there are duplicates, then display the group in which they are duplicated ONLY if this is a site admin
+              if (user_access('administer nodes')) {
+                form_set_error('og_user_roles_regcode_value_' . $gid, "Registration codes <strong>" . implode(', ', $duplicated) . "</strong> duplicated in group " . l($title, 'node/' . $group));
+			  } else {
+                form_set_error('og_user_roles_regcode_value_' . $gid, "Registration codes <strong>" . implode(', ', $duplicated) . "</strong> duplicated.");
+			  }
+            }
+    	  }
+	    }
+      }
+    }
+  }
+}
+function og_user_roles_role_submit($form, &$form_state) {
+  // If this is a delete role operation (Admin->User Management->Roles->Edit Role)
+  $op = $form_state['clicked_button']['#value'];
+  if ($op == t('Delete role')) {
+    // Remove from og_users_roles table all rows with this rid:
+    db_query('DELETE FROM {og_users_roles} WHERE rid = %d', $form_state['values']['rid']);
+  }
+}
+
+/**
+ * This is what is in OG.  og_user_roles_theme() was returning error, so decided to 
+ * try this.
+ */
+function og_user_roles_determine_context() {
+  global $custom_theme;
+  $group_node = NULL; // a node object containing the 'active' group for this request
+
+  $type = $_GET['type'];
+
+  if (arg(0) == 'og' && is_numeric(arg(2))) {
+    $group_node = og_set_theme(arg(2));
+  }
+  elseif (arg(0) == 'node' && is_numeric(arg(1))) {
+    $group_node = og_set_theme(arg(1));
+  }
+  elseif (arg(0) == 'node' && (arg(1) == 'add' || arg(1) == 'ognodeadd') && (arg(2) == 'book' || $type == 'book') && arg(3) == 'parent') {
+    $group_node = og_set_theme(arg(4));
+    $_REQUEST['edit']['og_groups'][] = $group_node->nid; // checks the right box on node form
+  }
+  elseif (arg(0) == 'node' && (arg(1) == 'add' || arg(1) == 'ognodeadd') && isset($_REQUEST['gids'])) {
+    $gid = intval(current($_REQUEST['gids']));
+    $group_node = node_load($gid);
+    $custom_theme = $group_node->og_theme;
+  }
+  // As per: http://drupal.org/node/194214
+  elseif (arg(0) == 'forum' && is_numeric(arg(1))) {
+    $tid = intval(arg(1));
+    $gid = og_user_roles_gid_from_tid($tid);
+    if (!empty($gid)) {
+      $group_node = node_load($gid);
+      $custom_theme = $group_node->og_theme;
+    }
+  }
+  elseif (arg(0) == 'og_calendar' && is_numeric(arg(1))) {
+    $gid = intval(arg(1));
+    $group_node = node_load($gid);
+    $custom_theme = $group_node->og_theme;
+  }
+  elseif (arg(0) == 'comment' && is_numeric(arg(2))) {
+    if (arg(1) == 'edit') {
+      $comment = _comment_load(arg(2));
+      $nid = $comment->nid;
+      $gid = og_user_roles_getgid($nid, $uid);
+      $group_node = og_set_theme($gid);
+    } else {
+      $group_node = og_set_theme(arg(2));
+    }
+  }
+  elseif (arg(0) == 'user' && arg(1) == 'register' && isset($_REQUEST['gids'])) {
+    $gid = intval(current($_REQUEST['gids']));
+    $group_node = node_load($gid);
+    $custom_theme = $group_node->og_theme;
+  }
+
+  og_set_group_context($group_node);
+}
+
+/**
+ * Implementation of hook_link_alter
+ */
+function og_user_roles_link_alter(&$links, $node) {
+  $node = og_get_group_context();
+  if ($node->nid) {
+    $gid = $node->nid;
+    foreach ($links as $type => $link) {
+      if ($type == 'book_add_child') $links['book_add_child']['query'] .= '&gids[]='.$gid;
+    }
+  }
+}
+
+/**
+ * hook_og_create_links
+ *
+ * Modification as per: http://drupal.org/node/203875
+ * $group is an object containing the group node
+ */
+function og_user_roles_og_create_links($group) {
+  if (variable_get('og_user_roles_links_content_' . $group->nid, 0) == 1) {
+    $links[] = l(t('Create content'), "node/ognodeadd", array('title' => t('Add new content in this group.'), 'query' => 'gids[]=' . $group->nid));
+    return $links;
+  }
+}
+
+/**
+ * hook_og_link_alter
+ *
+ * Modification as per: http://drupal.org/node/2517905
+ * Optionally remove create_ links.
+ */
+function og_user_roles_og_links_alter(&$links, $group_node) {
+
+  // Convert the dashes in the URL back to underscores.
+  foreach($links as $key => $value) {
+    if(substr($key,0,7) == 'create_') {
+      $links[$key] = str_replace('-', '_' , $value);
+	}
+  }
+
+  if (variable_get('og_user_roles_links_remove_' . $group_node->nid, 0) == 1) {
+    foreach($links as $key => $value) {
+      if(substr($key,0,7) == 'create_') {
+        unset($links["$key"]);
+      }
+    }
+  }
+}
+
+
+/**
+ * hook_block
+ *
+ */
+function og_user_roles_block($op = 'list', $delta = 0, $edit = array()) {
+  global $user;
+
+  if ($op == 'list') {
+    $blocks[0] = array('info' => t('Register Codes'),
+      'weight' => 0, 'enabled' => 1, 'region' => 'left');
+    $blocks[1] = array('info' => t('Group Logo'),
+      'weight' => 0, 'enabled' => 0);
+    return $blocks;
+  }
+  else if ($op == 'view') {
+    switch($delta) {
+      case 0:
+        if ($node = og_get_group_context()) {
+          $subscription = og_user_roles_og_status($node);
+          if ($subscription == 'none') {
+            if ($user->uid) {
+              if (variable_get('og_user_roles_assign_regcode_gid', 0) == 1 && variable_get('og_user_roles_assign_regcode_' . $node->nid, 0) == 1 ) {
+                $block = array('subject' => t('Register Codes'), 'content' => l('Enter your registration code', 'og/regcode'));
+              }
+            }
+		  }
+		}
+        break;
+      case 1:
+        if ($node = og_get_group_context()) {
+          if ($logo = variable_get('og_user_roles_logo_' . $node->nid, '')) {
+//		    $width = variable_get('og_user_roles_logo_width', '135');
+//		    $height = variable_get('og_user_roles_logo_height', '113');
+//		    $attributes = array('width' => $width, 'height' => $height);
+		    $attributes = array();
+            $imglink = theme_image($logo, $alt = $node->title, $title = $node->title, $attributes, $getsize = FALSE);
+// Modification as per: http://drupal.org/node/287571
+//            $output = "<a href='" . base_path() . "node/" . $node->nid . "'>" . $imglink . "</a>";
+            $output = "<a href='" . url('node/'.$node->nid) . "'>" . $imglink . "</a>";
+            $block = array('content' => $output);
+		  }
+		}
+        break;
+    }
+    return $block;
+  }
+}
+
+/**
+ * hook_og_block_details
+ * 
+ * Trying to get this to work to put "Enter registration code" link in group menu
+ * if in moderation.
+ */
+function og_user_roles_og_block_details($group) {
+  if ($group->og_selective == OG_MODERATED && variable_get('og_user_roles_assign_regcode_gid', 0) == 1 && variable_get('og_user_roles_assign_regcode_' . $group->nid, '') == 1) {
+    $links[] = l(t('Enter registration code'), "og/regcode", array('attributes' => array('title' => t('Subscribe to this group using a registration code.'))));
+  }  
+  $oldblock = og_og_block_details($group);
+  $block['content'] = $oldblock['content'] . theme('item_list', $links);
+  $block['subject'] = $oldblock['subject'];
+  return $block;
+}
+
+/**
+ *  Implementation of hook_forms()
+ */
+function og_user_roles_forms() {
+  $forms['og_user_roles_register_confirm'] = array(
+    'callback' => 'og_user_roles_register_confirm',
+  );
+  return $forms;
+}
+
+/**
+ *  Menu callback function to register with a code.
+ *
+ */
+function og_user_roles_register() {
+  global $user;
+
+  if ($user->uid) {
+    drupal_set_message(t('If you have received a registration code for access to a group, process it here.'));
+  } else {
+    drupal_set_message(l('You must register/login use registration codes.', 'user/login'));
+  }
+
+  $form['og_user_roles_regcode'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Group registration code'),
+    '#required' => TRUE,
+    '#size' => 25,
+	'#access' => $user->uid,
+  );
+   
+  if ($user->uid > 0) {
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Submit code') );
+  }
+  return $form;
+}
+
+function og_user_roles_register_validate($form, &$form_state) {
+  global $user;
+  $gid = og_user_roles_gid_from_regcode($form_state['values']['og_user_roles_regcode']);
+  if ($gid == 0) {
+    form_set_error('og_user_roles_regcode', "Not a valid group registration code.");
+  }
+  if (!user_access('use registration codes')) {
+    form_set_error('og_user_roles_regcode', "You do not have permission to use registration codes!");
+  }
+  if (!$user->uid) {
+    form_set_error('og_user_roles_regcode', "You must be logged in to use registration codes!");
+  }
+}
+
+function og_user_roles_register_submit($form, &$form_state) {
+  global $user;
+  
+  if ($user->uid) {
+    $regcode = $form_state['values']['og_user_roles_regcode'];
+    $gid = og_user_roles_gid_from_regcode($regcode);
+	if ($gid > 0) {
+      drupal_goto('og/regcode/confirm/'.$regcode);
+	}
+  } else {
+    drupal_access_denied();
+  }
+}
+
+/**
+ * Form builder; Builds the confirmation form for adding user to group using regcode.
+ *
+ * @ingroup forms
+ * @see og_user_roles_register_confirm_submit()
+ */
+function og_user_roles_register_confirm() {
+  $form = array();
+  $regcode = arg(3);
+  $form['#regcode'] = $regcode;
+
+  $gid = og_user_roles_gid_from_regcode($regcode);
+
+  if ($gid > 0) {
+    $node = node_load($gid);
+    $form['#node'] = $node;
+    $question = t('Are you sure you want to join this group: %title?', array('%title' => $node->title));
+    $path = 'og/regcode';
+    $description = t('Are you sure you want to join this group: %title?', array('%title' => $node->title));
+    $yes = t('Join');
+    $no = t('Cancel');
+    $name = 'og_user_roles_register_confirm';
+    return confirm_form($form, $question, $path, $description, $yes, $no, $name);
+  } else {
+    form_set_error('regcode', "Not a valid group registration code.");
+  }
+}
+
+function og_user_roles_register_confirm_validate($form, &$form_state) {
+  global $user;
+  $regcode = $form['#regcode'];
+  $gid = og_user_roles_gid_from_regcode($regcode);
+  if ($gid == 0) {
+    form_set_error('regcode', "Not a valid group registration code.");
+  }
+  if (!user_access('use registration codes')) {
+    form_set_error('regcode', "You do not have permission to use registration codes!");
+  }
+  if (!$user->uid) {
+    form_set_error('regcode', "You must be logged in to use registration codes!");
+  }
+}
+
+function og_user_roles_register_confirm_submit($form, &$form_state) {
+  global $user;
+  $node = $form['#node'];
+  $regcode = $form['#regcode'];
+  $title = $node->title;
+  $gid = $node->nid;
+  $return = og_save_subscription($gid, $user->uid, array('is_active' => 1)); // as per http://drupal.org/node/156224
+  drupal_set_message(t('Subscription request to ' . l($title, 'node/'. $gid) . ' approved.  You are now a member.'));	
+  // Delete this registration code if 'delete_regcode' is set
+  if (variable_get('og_user_roles_delete_regcode_' . $gid, 0) == 1) og_user_roles_delete_regcode($gid, $regcode);
+  // Places all new registration code group subscribers into default regcode role.
+  if (variable_get('og_user_roles_assign_regcoderole_' . $gid, 0)) { // check to see if this variable exists
+    if (variable_get('og_user_roles_assign_regcode_gid', 0) == 1 && variable_get('og_user_roles_assign_regcoderole_' . $gid, 0) == 1 ) {
+      $rid = variable_get('og_user_roles_regcoderole_value_' . $gid, 0);
+      og_user_roles_role_join($user->uid, $rid, $gid); // assign user to group role in that group
+    }
+  }
+  drupal_goto('node/'.$gid);
+}
+
+function og_user_roles_delete_regcode($gid, $regcode) {
+  // Get the array of registration codes for this $gid
+  $group_array = explode(',', variable_get('og_user_roles_regcode_value_' . $gid, ''));
+  // Create new array that contains all codes for this one.
+  foreach ($group_array as $item) {
+    if ($item != $regcode) {
+      $new_array[] = $item;    
+    }
+  }
+  // Implode the new array
+  $new = implode(",", $new_array);
+  // Write the new value.
+  variable_set('og_user_roles_regcode_value_' . $gid, $new);  
+}
+
+/**
+ * Determine the subscription status of this user in this group
+ *
+ * @param
+ *   Group node
+ * @return status
+ *   The status of subscriber containing 'active' or 'requested' or 'none'
+ */
+ function og_user_roles_og_status($node) {
+  global $user;
+  $subscription = 'none';
+  $result = db_query('select * from {og_uid} where nid = %d', $node->nid);
+  while ($row = db_fetch_object($result)) {
+    if ($row->uid == $user->uid) {
+      if ($row->is_active) {
+        $subscription = 'active';
+      } else {
+        $subscription = 'requested';
+      }
+    }
+  }
+  return $subscription;
+}
+
+/**
+ * Access callback
+ * Determine access to modr8 page
+ * Coded as per "Create your own access": http://drupal.org/node/109157
+ *
+ * @param
+ *   node id
+ *   user access
+ * @return status
+ *   Boolean true or false
+ */
+ function og_user_roles_modr8_access($nid, $access) {
+
+// ToDo: Use og_user_roles_access to determine access.
+//  og_user_roles_user_access($access, $gid, $uid)
+
+// This code doesn't work because it gives "access denied" once node is approved:
+//  $node = node_load($nid);
+//  return $node->moderate && user_access($access);
+
+  return user_access($access);
+
+ }
+
+/*
+ * Implementation of hook_node_grants
+ */
+function og_user_roles_node_grants($account, $op) {
+  $array = array('ogr_access' => array());
+  $result = db_query("SELECT ogr_id FROM {og_users_roles} WHERE uid = %d", $account->uid);
+  while ($row = db_fetch_object($result)) {
+    $array['ogr_access'][] = $row->ogr_id;
+  }
+  return !empty($array['ogr_access']) ? $array : NULL;
+}
+
+/*
+ * Implementation of hook_node_access_records
+ */
+function og_user_roles_node_access_records($node) {
+
+  $grants = array();
+
+  if (variable_get('og_user_roles_tac_og_value', 0) == 1) {
+
+    // we need to explicitly label public nodes it seems. OG doesn't label nodes
+    // of types it doesn't apply to, or the "implicitly public" nodes created by
+    // leaving all the audience checkboxes blank.
+    // From: http://drupal.org/node/234087#comment-788876
+
+    if (og_is_omitted_type($node->type) || (is_array($node->og_groups) && count($node->og_groups) === 0) || (!is_array($node->og_groups) && !og_is_group_type($node->type))) {
+      $grants[] = array (
+        'realm' => 'og_public',
+        'gid' => 0,
+        'grant_view' => 1,
+        'grant_update' => 0,
+        'grant_delete' => 0 );
+    }
+    
+	// This creates all ogr grants
+    
+    $where = "WHERE ta.rid = ogr.rid AND n.nid = ".$node->nid;
+    $result = db_query("SELECT n.nid, ta.rid, ogr.ogr_id, BIT_OR(ta.grant_view) AS grant_view, BIT_OR(ta.grant_update) AS grant_update, BIT_OR(ta.grant_delete) AS grant_delete FROM {term_node} n INNER JOIN {term_access} ta ON n.tid = ta.tid INNER JOIN {og_ancestry} oa ON n.nid = oa.nid INNER JOIN {og_users_roles} ogr ON oa.group_nid = ogr.gid $where GROUP BY n.nid, ta.rid");
+    
+    while($row = db_fetch_object($result)) {
+      if ($row) {
+        $grant_view = ($row->grant_view == 1) ? 1 : 0;
+        $grant_update = ($row->grant_update == 1) ? 1 : 0;
+        $grant_delete = ($row->grant_delete == 1) ? 1 : 0;
+
+        $grants[] = array(
+          'realm' => 'ogr_access',
+           'gid' => $row->ogr_id,
+           'grant_view' => $grant_view,
+           'grant_update' => $grant_update,
+           'grant_delete' => $grant_delete,
+          'priority' => 0,
+        );
+      }
+    }
+
+    return $grants;
+  }
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function og_user_roles_cron() {
+
+  // Insert nodes into all groups.
+  $nodelist = variable_get('og_user_roles_all_groups_nodes', '');
+
+  if (!empty($nodelist)) {
+    $nodelist_array = explode(',', $nodelist);
+    $result = db_query("SELECT nid FROM {og}");
+ 
+    while ($row = db_fetch_object($result)) {
+      foreach ($nodelist_array as $nodelist_item) {
+        print "<br>nodelist_item : " . $nodelist_item; 
+        $count = db_result(db_query("SELECT COUNT(nid) FROM {og_ancestry} WHERE nid = %d AND group_nid = %d", $nodelist_item, $row->nid));
+        // Insert if it doesn't already belong.
+        if ($count == 0) {
+          db_query('INSERT INTO {og_ancestry} (nid,group_nid,is_public) VALUES (%d,%d,0)', $nodelist_item, $row->nid);
+          watchdog('og_user_roles', t('Inserted nid: %nid into group: %gid.', array('%nid' => $nodelist_item, '%gid' => $row->nid)));
+	    }
+      } // end foreach
+    }
+  }
+
+}
+
+/**
+ * Get the OG roles a user has in a group
+ *
+ * @param
+ *   User ID
+ * @param
+ *   Group ID
+ * @return array
+ *   An array containing the [roleID => roleName] that the user has in this group
+ */
+ function og_user_roles_get_og_roles($uid, $gid) {
+
+  $roles = array();
+  // Get the group roles
+  $result = db_query('SELECT r.rid, r.name FROM {role} r INNER JOIN {og_users_roles} ogr ON r.rid = ogr.rid INNER JOIN {og_uid} ogu ON ogu.uid = ogr.uid AND ogu.nid = ogr.gid WHERE ogr.uid = %d AND ogr.gid = %d AND ogu.is_active = 1', $uid, $gid);
+  while ($role = db_fetch_object($result)) {
+    $roles[$role->rid] = $role->name;
+  }
+  return $roles;
+}   
+
+/**
+ * Implementation of hook_mail_alter().
+ */
+function og_user_roles_mail_alter(&$message) {
+
+  $mailkey = $message['mail_id'];
+  $to = $message['to'];
+  $subject = $message['subject'];
+  $body = $message['body'];
+  $from = $message['from'];
+  $headers = $message['headers'];
+
+  if ($mailkey == 'og_mail') {
+    // Get unsubscribe url
+      $unsubscribe_url = $headers['List-Unsubscribe'];
+    // Take out the "<" and ">" characters	
+      $url = preg_replace('/[\<|\>]/', '', $unsubscribe_url);
+	// Get the group number (i.e., http://www.less-paper.org/og/manage/16 will yield "16")
+      $gid = basename($url);
+    // Get the logo path 
+      $logo = og_user_roles_oglogo_gid($gid);
+	// Construct the url to the logo
+      $parsed_url = parse_url($url);
+      $logo_url = $parsed_url['scheme'] . '://' . $parsed_url['host'] . '/' . $logo;
+
+    $body = preg_replace('/\!group_logo_url/', '<img src=' . $logo_url . ' />', $body);
+  }
+
+}
+
+function og_user_roles_readme() {
+  global $base_path;
+  // this link has to work when clean urls are disabled and drupal in subdir.
+  $href = drupal_get_path('module', 'og_user_roles'). '/README.txt';
+  $link = "<a href=\"$base_path$href\">". t('README file'). '</a>';
+  return $link;
+}
+
+function og_user_roles_list_users_sql($min_is_active = 1, $min_is_admin = 0, $orderby='u.name ASC') {
+  return "SELECT u.uid, u.name, u.mail, u.picture, ou.* FROM {og_uid} ou INNER JOIN {users} u ON ou.uid = u.uid WHERE ou.nid = %d AND u.status > 0 AND ou.is_active >= $min_is_active AND ou.is_admin >= $min_is_admin ORDER BY $orderby";
+}
+
+?>
