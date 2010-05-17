@@ -1,0 +1,307 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function publication_install() {
+  
+  // Create tables.
+  drupal_install_schema('publication');
+
+  // Initialise publication module & load includes
+  drupal_load('module', 'publication');
+  module_load_include('inc', 'publication', 'includes/publication.node');
+  
+  // Create the content groups
+  publication_install_groups();
+  
+  // Create the content fields
+  publication_install_fields();
+  
+  publication_install_settings();
+  
+  
+  $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
+  db_query("UPDATE {system} SET weight=%d WHERE name='publication'", $taxonomy_or_cck_weight+12);  
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function publication_enable(){
+  
+  // Make sure the publication node can be tagged with taxon names
+  
+}
+
+/**
+ * Copied from the itis_term module.  Ensure noderelationships module IS 
+ * INSTALLED before attempting to install this one.
+ */
+function publication_requirements($phase){
+  if($phase == 'install'){
+    $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__,".")).'.info');
+    $module_not_found = FALSE;
+    foreach($info_file['dependencies'] as $required_module){
+      if(!module_exists($required_module)){
+        $module_not_found = TRUE;
+      }
+    }
+    if($module_not_found){
+      $t = get_t();
+      drupal_set_message($t('The module %module has not been installed because a dependency needed installing first, please try again', array('%module' => $info_file['name'])), 'error');
+      return array(
+        basename(__FILE__) => array(
+          'title' => 'Failed module requiredment in '.basename(__FILE__),
+          'severity' => REQUIREMENT_ERROR          
+        )
+      );
+    }
+  }
+}
+
+
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function publication_uninstall() {
+  
+  module_load_include('inc', 'publication', 'includes/publication.node');
+    
+  drupal_uninstall_schema('publication');
+  
+  publication_uninstall_fields();
+  
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function publication_schema() {
+    
+  $schema['publication_node'] = array(
+    'description' => 'Stores publication field settings.',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {node}.nid of the node.',
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Primary Key: The {node}.vid of the node.',
+      ),
+      'vocabulary' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The vocabulary vid used by the node.',
+      ),
+      'nomenclature_fields' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of name value pairs that denote which fields to display.',
+      ),
+      'term_field_defaults' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of term field names.',
+      ),
+    ),
+    'indexes' => array(
+      'vid' => array('vid'),
+    ),
+    'primary key' => array('nid', 'vid'),
+  );
+  
+  /*
+    TODO Rename to publication_section_node
+  */
+  $schema['publication_term_fields'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Primary Key: The {node}.vid of the node.',
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {node}.nid of the node.',
+      ),
+      'fields' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of term field (SPM) names.',    
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'name' => array('tid')
+    ),
+    'primary key' => array('vid')
+  );
+  
+  
+  return $schema;
+
+}
+
+/**
+ * Create CCK groups for publication content types
+ *
+ * @return void
+ * @author Ben Scott
+ */
+function publication_install_groups(){
+  
+  $groups = publication_group_info();
+  
+  foreach($groups as $group){
+    
+    $group['settings'] = field_group_default_settings($group['group_type']);
+
+    fieldgroup_save_group($group['type_name'], $group);
+    
+  }
+  
+}
+
+/**
+ * Delete CCK groups for publication content types
+ *
+ * @return void
+ * @author Ben Scott
+ */
+function publication_uninstall_groups(){
+  
+  $groups = publication_group_info();
+  
+  foreach($groups as $group){
+
+    fieldgroup_delete($group['type_name'], $group);
+    
+  }
+  
+}
+
+/**
+ * Create CCK fields for publication content types
+ *
+ * @return void
+ * @author Ben Scott
+ */
+function publication_install_fields(){
+  
+  module_load_include('inc', 'content', 'includes/content.crud');
+  
+  $fields = publication_field_info();
+  
+  foreach($fields as $field){
+    
+    content_field_instance_create($field);
+    
+    if(isset($field['group'])){
+     
+     fieldgroup_update_fields(
+         array(
+          'field_name' => $field['field_name'], 
+          'group' => $field['group'], 
+          'type_name' => $field['type_name']
+        )
+      );
+      
+    }
+
+  }
+  
+}
+
+/**
+ * Create CCK fields for publication content types
+  *
+  * @return void
+  * @author Ben Scott
+  */
+ function publication_uninstall_fields(){
+
+   module_load_include('inc', 'content', 'includes/content.crud');
+
+   $fields = publication_field_info();
+
+   foreach($fields as $field){
+
+     content_field_instance_delete($field['field_name'], $field['type_name']);
+
+   }
+
+ }
+
+/**
+ * Set any variable & external module settings
+ *
+ * @return void
+ * @author Ben Scott
+ */
+function publication_install_settings(){
+
+  module_load_include('inc', 'noderelationships');
+  
+  $node_term_weight_node_types = variable_get('node_term_weight_node_types', array());
+  $node_term_weight_node_types['publication'] = 'publication';
+  variable_set('node_term_weight_node_types', $node_term_weight_node_types);
+
+  $node_relationships_settings = array(
+    'noderef' => array(
+      'search_and_reference_view' => array(
+        // 'field_publication_images' => 'noderelationships_noderef:page_grid'
+         'field_publication_images' => 'publication_noderefences:page_table',
+         'field_publication_biblio' => 'publication_noderefences:page_grid',
+         'field_publication_authors' => 'publication_noderefences:page_1'
+      ),
+      'create_and_reference' => array(),
+      'translate_and_reference' => array(),
+    ),
+    'backref' => array(
+      'regions' => array()
+    )
+  );
+  
+  noderelationships_settings_save('publication', $node_relationships_settings);
+  
+  // Make all nodes automatically create a revision  
+  $nodes = publication_node_info();
+  
+  $current_borked_types = variable_get('autotag_totally_borked', array());
+  $autotag_broken_node_types = variable_get('autotag_broken_node_types', array());
+
+  foreach($nodes as $type => $node){    
+    variable_set('node_options_'.$type, array('status', 'revision'));
+    if($type != 'publication'){
+      variable_set('og_content_type_usage_'.$type, 'group_post_standard');
+    } else {
+      variable_set('og_content_type_usage_'.$type, 'group');          
+    }
+    // Disable autotag for all content types - it's broken!
+    $current_borked_types[] = $type;
+    $autotag_broken_node_types[] = $type;
+  }
+  
+  variable_set('autotag_totally_borked', $current_borked_types);
+  variable_set('autotag_broken_node_types', $autotag_broken_node_types);    
+  
+}
