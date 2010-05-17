@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function node_term_weight_install() {
+  
+  // Create tables.
+  drupal_install_schema('node_term_weight');
+  
+  // Set the weight to 1
+  db_query("UPDATE {system} SET weight = 1 WHERE name = 'node_term_weight'");
+  
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function node_term_weight_uninstall() {
+
+  drupal_uninstall_schema('node_term_weight');
+  
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function node_term_weight_schema() {
+
+$schema['node_term_weight'] = array(
+  'description' => 'Stores node term weights.',
+  'fields' => array(
+    'nid' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'The {node}.nid of the node.',
+    ),
+    'vid' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'The {node}.vid of the node.',
+    ),
+    'tids' => array(
+      'type' => 'text',
+      'not null' => FALSE,
+      'size' => 'big',
+      'description' => 'A serialized array of ordered tids.',
+    ),
+  ),
+  'indexes' => array(
+    'vid' => array('vid'),
+  ),
+  'primary key' => array('nid', 'vid'),
+);
+
+return $schema;
+
+}

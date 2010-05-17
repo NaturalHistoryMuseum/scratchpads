@@ -1,0 +1,282 @@
+<?php
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function node_term_weight_menu() {
+  
+  $items = array();
+
+  // administrative settings
+  $items['admin/settings/node_term_weight'] = array(
+    'title' => 'Node Term Weight',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('node_term_weight_admin_settings'),
+    'file' => 'node_term_weight.admin.inc',
+    'access arguments' => array('administer node term weight'),
+  );
+
+  return $items;
+  
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function node_term_weight_perm() {
+  return array('administer node term weight');
+}
+
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function node_term_weight_nodeapi(&$node, $op, $arg = 0) {
+  
+  switch ($op) {
+  
+    case 'load':
+    case 'prepare':
+      
+      if(!isset($node->taxonomy)){      
+        $node->taxonomy = taxonomy_node_get_terms($node);
+      }
+      
+      $node->taxonomy = node_term_weight_get_terms($node);
+      
+      $output['taxonomy'] = $node->taxonomy;
+      return $output;
+    
+    break;
+    
+    case 'insert':
+    case 'update':
+
+      if(!isset($node->old_vid)){
+        
+        node_term_weight_delete_ordered_tids(array('vid' => $node->vid));
+        
+      }
+      
+      node_term_weight_set_ordered_tids($node->nid, $node->vid, $node->node_term_weight);
+
+    break;
+    
+    case 'delete':
+    
+      node_term_weight_delete_ordered_tids(array('nid' => $node->nid));
+    
+    break;
+    
+    case 'delete revision':
+    
+      node_term_weight_delete_ordered_tids(array('vid' => $node->vid));
+    
+    break;
+    
+  }
+  
+}
+
+function node_term_weight_get_terms($node){
+  
+  $ordered_taxonomy = array();
+  
+  $ordered_tids = node_term_weight_get_ordered_tids(array('nid' => $node->nid, 'vid' => $node->vid));
+
+  foreach($ordered_tids[$node->vid] as $tid){
+    
+    // Is it still attached to the node?
+    if($node->taxonomy[$tid]){
+      
+      $ordered_taxonomy[$tid] = $node->taxonomy[$tid];
+      unset($node->taxonomy[$tid]);
+      
+    }
+    
+  }
+  
+  // If there's any extra unsorted elements, add them to the end
+  if(count($node->taxonomy)){
+    
+    $ordered_taxonomy += $node->taxonomy;
+    
+  }
+  
+  return $ordered_taxonomy;
+  
+}
+
+
+function node_term_weight_form_alter(&$form, $form_state, $form_id) {
+ 
+  if (isset($form['#node']) && $form_id == $form['#node']->type .'_node_form') {
+    
+    $node_term_weight_node_types = variable_get('node_term_weight_node_types', array());
+    
+    if($node_term_weight_node_types[$form['#node']->type]){
+
+      $node = $form['#node'];
+
+      foreach($node->taxonomy as $tid => $term){
+
+        $form['node_term_weight'][$tid] = array(
+          '#type' => 'hidden', 
+          '#value' => $tid,
+          '#suffix' => $term->name,
+          '#name' => 'node_term_weight['.$tid.']',
+          '#parents' => array('node_term_weight', $tid)
+        ); 
+
+      }
+
+      $form['node_term_weight']['#title'] = t('Node term weight');
+      $form['node_term_weight']['#theme'] = array('node_term_weight');
+
+      $form['#submit'][] = 'node_term_weight_submit';
+      
+    }
+    
+  }  
+  
+}
+
+function node_term_weight_submit(&$form, &$form_state){
+  
+  $form_state['values']['node_term_weight'] = $form['#post']['node_term_weight'];
+  
+}
+
+
+
+/*********************************************
+ *                    DAO                     
+ *********************************************/
+
+
+function node_term_weight_set_ordered_tids($nid, $vid, $tids){
+  
+  $table = 'node_term_weight';
+  
+  $data = new stdClass;
+  $data->nid = $nid;
+  $data->vid = $vid;
+  $data->tids = serialize($tids);
+
+  drupal_write_record($table, $data);
+  
+}
+
+
+function node_term_weight_get_ordered_tids($args){
+
+  $tids = array();
+  
+  $result = node_term_weight_db_query('SELECT vid, tids FROM {node_term_weight}', $args);
+  
+  while ($row = db_fetch_object($result)) {
+    
+    $tids[$row->vid] = unserialize($row->tids);
+    
+  }
+  
+  return $tids;
+
+}
+
+
+function node_term_weight_delete_ordered_tids($args){
+  
+  node_term_weight_db_query("DELETE FROM {node_term_weight}", $args);
+  
+}
+
+
+function node_term_weight_db_query($sql, $args, $limit = NULL){
+
+  $sql_params = array();
+    
+  if(is_array($args)){
+
+    $sql .= ' WHERE';
+
+    foreach($args as $field => $value){
+
+      $sql .= $conj.' %s = %d';
+      $sql_params[] = $field;
+      $sql_params[] = $value;
+      $conj = " AND";
+
+    }
+    
+  }
+
+  return db_query($sql, $sql_params);
+  
+}
+
+
+
+/*********************************************
+ *                    THEMING                     
+ *********************************************/
+
+
+/**
+ * Implementation of hook_theme
+ */
+function node_term_weight_theme($existing, $type, $theme, $path){
+  
+  return array(
+    'node_term_weight' => array(
+      'arguments' => array('element'),
+    ),
+  );
+  
+}
+
+
+function theme_node_term_weight($element){
+  
+  jquery_ui_add('ui.sortable'); 
+  
+  $path = drupal_get_path('module', 'node_term_weight');
+  drupal_add_css($path .'/css/node_term_weight.css');
+  
+  
+  
+  
+  $js = '$(function() {
+    $("#node-term-weight ul").sortable(
+      {
+        containment: "parent",
+        axis: "y"
+      }
+      );
+  });';
+  
+  drupal_add_js($js, 'inline');
+  
+  $items = array();
+  
+  $output .= '<div ';
+  $output .= 'id="node-term-weight" ';
+  $output .= drupal_attributes($element['#attributes']) .' />';
+  
+    foreach(element_children($element) as $key){
+
+      $items[] = drupal_render($element[$key]);
+    
+    }
+  
+  $output .= theme('item_list', $items);
+
+  $output .= '</div>';
+  
+  return theme('form_element', $element, $output);
+  
+}
+    
+    
+?>
