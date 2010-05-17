@@ -1,0 +1,27 @@
+*** tabledrag.js	2010-05-17 10:53:38.000000000 +0100
+--- tabledrag.js~	2010-05-17 10:49:09.000000000 +0100
+***************
+*** 655,665 ****
+      // a parent, meaning this item has been placed at the root level.
+      else {
+        // Use the first row in the table as source, because it's garanteed to
+        // be at the root level. Find the first item, then compare this row
+        // against it as a sibling.            
+!       sourceRow = $(changedRow).siblings('tr.draggable:first').get(0);
+        if (sourceRow == this.rowObject.element) {
+          sourceRow = $(this.rowObject.group[this.rowObject.group.length - 1]).next('tr.draggable').get(0);
+        }
+        var useSibling = true;
+      }
+--- 655,665 ----
+      // a parent, meaning this item has been placed at the root level.
+      else {
+        // Use the first row in the table as source, because it's garanteed to
+        // be at the root level. Find the first item, then compare this row
+        // against it as a sibling.
+!       sourceRow = $('tr.draggable:first').get(0);
+        if (sourceRow == this.rowObject.element) {
+          sourceRow = $(this.rowObject.group[this.rowObject.group.length - 1]).next('tr.draggable').get(0);
+        }
+        var useSibling = true;
+      }
