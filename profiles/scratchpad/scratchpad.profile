@@ -46,6 +46,7 @@ function scratchpad_profile_modules(){
     // CCK
       'content','number','optionwidgets','text','date_api','date','date_popup',
       'nodereference','date_timezone','fieldgroup','date_php4','nodereferrer',
+      'noderelationships',
     // Image
       'image','fotonotes','image_gallery','image_im_advanced','imagex',
       'image_attach','lightbox2',
@@ -70,9 +71,10 @@ function scratchpad_profile_modules(){
 //'leftandright',
       'taxtab','tinytax','morphbank',
       'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
-      'nagger','bio_image','itis_term','term_node',
+      'nagger','bio_image','itis_term','term_node', 'spm',
       'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail',
-      'term_node','scratchpad','tui','classification_import'
+      'term_node','scratchpad','tui','classification_import', 'csv_import',
+      'publication'
   );
 }
 
@@ -723,20 +725,16 @@ function scratchpad_profile_set_perms(){
                               "delete any forum topic",
                               "delete any images",
                               "delete any nexus projects",
-                              "delete classification",
                               "delete darwincore content",
                               "edit all biblio entries",
                               "edit any blog entry",
                               "edit any forum topic",
                               "edit any images",
                               "edit any nexus projects",
-                              "edit classification",
                               "edit darwincore content",
                               "edit images",
                               "edit webforms",
-                              "export classification",
                               "fotonotes edit all notes",
-                              "import classification",
                               "import from file",
                               "inspect all votes",
                               "mado sort",
