@@ -37,7 +37,7 @@ function batax_form_taxonomy_form_term_alter(&$form, &$form_state){
       '#default_value' => batax_text_field_from_tids($form['#term']['relations']),
       '#autocomplete_path' => 'batax/autocomplete/'.$form['#vocabulary']['vid'],
       '#element_validate' => array('batax_element_validate')  
-    );    
+    );
   } else {
     // Following code is ripped from the taxonomy.admin.inc file, with a few 
     // tweaks to enable us to get the values of tid and vid.
