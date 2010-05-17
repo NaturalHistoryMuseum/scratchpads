@@ -54,12 +54,15 @@ function classification_import_help($path, $arg){
 function classification_import_form_taxonomy_form_term_alter(&$form, &$form_state){
   // If we're using BATAX we need to mark the parent form element (and the 
   // related terms) as validated, as validation messes things up for us.
-  //if(isset($form['advanced']['parent']['#type']) && $form['advanced']['parent']['#type'] == 'textfield'){
-    $form['advanced']['parent']['#element_validate'] = array('classification_import_element_validate');
-  //}
-  //if(isset($form['advanced']['relations']['#type']) && $form['advanced']['relations']['#type'] == 'textfield'){
-    $form['advanced']['relations']['#element_validate'] = array('classification_import_element_validate');
-  //}
+  // FIXME - Not sure if this is working with Batax - this needs checking.
+  if(arg(0) == 'batch'){
+    if(isset($form['advanced']['parent']['#type']) && $form['advanced']['parent']['#type'] == 'textfield'){
+      $form['advanced']['parent']['#element_validate'] = array('classification_import_element_validate');
+    }
+    if(isset($form['advanced']['relations']['#type']) && $form['advanced']['relations']['#type'] == 'textfield'){
+      $form['advanced']['relations']['#element_validate'] = array('classification_import_element_validate');
+    }
+  }
 }
 
 /**
