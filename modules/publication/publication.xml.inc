@@ -168,6 +168,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   module_invoke_all('taxonomy_term_load', $section_node->taxonomy);
   $term = array_pop($section_node->taxonomy);
   $term->name = $section_node->title;
+  $section_node->body = '<p>'.$section_node->body.'</p>';
   $treatment_xml .= '
     <taxon-treatment>
       <nomenclature>
@@ -177,6 +178,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
         </taxon-author>
         <taxon-status>'.$term->usage.'</taxon-status>
       </nomenclature>
+      '.$section_node->body.'
       '._publication_get_treatment_sections($node, $vid, $term->tid).
       _publication_get_sections_xml($node, $vid, $section_node).'
     </taxon-treatment>';
