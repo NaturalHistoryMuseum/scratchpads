@@ -168,7 +168,9 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   module_invoke_all('taxonomy_term_load', $section_node->taxonomy);
   $term = array_pop($section_node->taxonomy);
   $term->name = $section_node->title;
-  $section_node->body = '<p>'.$section_node->body.'</p>';
+  if($section_node->body){
+    $section_node->body = '<p>'.$section_node->body.'</p>';    
+  }
   $treatment_xml .= '
     <taxon-treatment>
       <nomenclature>
