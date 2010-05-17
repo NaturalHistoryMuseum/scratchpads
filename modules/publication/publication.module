@@ -1012,6 +1012,17 @@ function publication_views_query_alter(&$view, &$query) {
    
     $query->orderby = array('FIELD(nid, '. implode(',', $view->argument['nid']->value) .')');
     
+  }elseif($view->name == _publication_get_nodereference_view_name()){
+
+    // Set by group by NID & aggregate all fields
+    $query->add_groupby('nid');
+    
+    foreach($query->fields as $field_id => $field){
+      
+      $query->fields[$field_id]['aggregate'] = TRUE;
+      
+    }
+
   }
   
 }
