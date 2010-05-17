@@ -566,12 +566,23 @@ function scratchpad_profile_tasks_3(){
   $name = $maintainer->name;
   $mail = $maintainer->mail;
   $site = url("",array('absolute'=>TRUE));
+  $paragraphs = array(
+    'Dear '.$maintainer->name,
+    'Your new Scratchpad has been created for you.  Your login details are provided below.  Please login as soon as possible, and change your password.',
+    "username: '$name'\npassword: $password",
+    'For further help, simply reply to this message, and one of the us will get back to you.',
+    'The Scratchpad Team',
+    "--\nhttp://scratchpads.eu/\nscratchpad@nhm.ac.uk"
+  );
   $message = array(
     'id' => 'site_created',
     'to' => "$name <$mail>",
+    'from' => 'scratchpad@nhm.ac.uk',
     'subject' => st('Your new Scratchpad'),
-    'body' => drupal_wrap_mail("$name!\n\n\tYour new Scratchpad has been created for you. You can login to it using the details below:\n\nusername: \"$name\"\npassword: $password\n$site\n\nSimon Rycroft, on behalf of the Scratchpad team."),
-    'headers' => array()
+    'body' => drupal_wrap_mail(implode("\n\n", $paragraphs)),
+    'headers' => array(
+      'From' => 'scratchpad@nhm.ac.uk'
+    )
   );
   drupal_mail_send($message);
 }
