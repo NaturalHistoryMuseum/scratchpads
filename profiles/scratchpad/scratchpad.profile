@@ -574,14 +574,15 @@ function scratchpad_profile_tasks_3(){
     'The Scratchpad Team',
     "--\nhttp://scratchpads.eu/\nscratchpad@nhm.ac.uk"
   );
+  $from = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
   $message = array(
     'id' => 'site_created',
     'to' => "$name <$mail>",
-    'from' => 'scratchpad@nhm.ac.uk',
+    'from' => $from,
     'subject' => st('Your new Scratchpad'),
     'body' => drupal_wrap_mail(implode("\n\n", $paragraphs)),
     'headers' => array(
-      'From' => 'scratchpad@nhm.ac.uk'
+      'From' => $from
     )
   );
   drupal_mail_send($message);
