@@ -279,6 +279,10 @@ function scratchpadify_footer($main=0){
     exit;
   }
   
+  if(function_exists('_publication_node_form_is_modal') && _publication_node_form_is_modal()){
+    return;
+  }
+  
   // Add the following HTML to the footer of ALL pages]
   if(function_exists('mcrypt_module_open')){
     global $user;
