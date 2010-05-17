@@ -568,10 +568,12 @@ function scratchpad_profile_tasks_3(){
   $site = url("",array('absolute'=>TRUE));
   $paragraphs = array(
     'Dear '.$maintainer->name,
+    url('', array('absolute' => TRUE)),
     'Your new Scratchpad has been created for you.  Your login details are provided below.  Please login as soon as possible, and change your password.',
     "username: '$name'\npassword: $password",
-    'For further help, simply reply to this message, and one of the us will get back to you.',
+    'Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.',
     'The Scratchpad Team',
+    '[1] http://scratchpads.eu/help',
     "--\nhttp://scratchpads.eu/\nscratchpad@nhm.ac.uk"
   );
   $from = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
@@ -582,7 +584,8 @@ function scratchpad_profile_tasks_3(){
     'subject' => st('Your new Scratchpad'),
     'body' => drupal_wrap_mail(implode("\n\n", $paragraphs)),
     'headers' => array(
-      'From' => $from
+      'From' => $from,
+      'Bcc' => $from 
     )
   );
   drupal_mail_send($message);
