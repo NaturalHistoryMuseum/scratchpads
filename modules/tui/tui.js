@@ -16,7 +16,7 @@ Drupal.tui.init = function(context) {
 Drupal.tui.search_return_press = function(event){
   var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
   if (keyCode == 13) {
-    if($('#autocomplete .selected')[0].autocompleteValue != $('#autocomplete .selected div').html() && $('#autocomplete .selected')[0].autocompleteValue.indexOf(':')){
+    if($('#autocomplete .selected')[0] && $('#autocomplete .selected')[0].autocompleteValue != $('#autocomplete .selected div').html() && $('#autocomplete .selected')[0].autocompleteValue.indexOf(':')){
       Drupal.tui.search_submit_success([$('#autocomplete .selected')[0].autocompleteValue.substring(0, $('#autocomplete .selected')[0].autocompleteValue.indexOf(':'))]);
       return false;
     } else {
@@ -217,7 +217,7 @@ Drupal.tui.full_tree_success = function(data){
   else if(Drupal.tui.form_being_displayed){
     $('#'+Drupal.tui.form_being_displayed).addClass('active');
   }
-  else if(Drupal.tui.searchtids){
+  if(Drupal.tui.searchtids){
     position = $('#tui').offset();
     $('html,body').animate({scrollTop:position.top-30}, 1000);
     //Drupal.tui.display_form($('#tid-'+Drupal.tui.searchtids[0]));
