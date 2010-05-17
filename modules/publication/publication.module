@@ -546,10 +546,16 @@ function publication_menu_alter(&$items){
 
 function publication_view($node){
   if(!$teaser && $node && $node->type == 'publication'){
+    // Is this the latest vid?
+    $current_vid = db_result(db_query("SELECT vid FROM {node} WHERE nid = %d", $node->nid));
     drupal_add_css(drupal_get_path('module','publication').'/css/publication.css');
     module_load_include('xml.inc', 'publication');
-    $node = node_prepare($node, FALSE);
-    $xml = publication_get_xml($node->nid, $node->vid);
+    if($current_vid == $node->vid){
+      $vid_to_load = FALSE;
+    } else {
+      $vid_to_load = $node->vid;
+    }
+    $xml = publication_get_xml($node->nid, $vid_to_load);
     # LOAD XML FILE
     $xml_doc = new DOMDocument();
     $xml_doc->loadXML($xml);

@@ -1,8 +1,8 @@
 <?php 
 
-function publication_display_xml($node){
+function publication_display_xml($node, $vid = FALSE){
   drupal_set_header('Content-Type: application/xml');
-  echo publication_get_xml($node->nid, $node->vid);
+  echo publication_get_xml($node->nid, $vid);
 }
 /**
  * Generate an XML document according to the PubTax schema.
