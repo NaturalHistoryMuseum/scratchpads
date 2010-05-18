@@ -521,6 +521,10 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
 function publication_init(){
   module_load_include('inc', 'publication', 'includes/publication.forms');
   module_load_include('inc', 'publication', 'includes/publication.modal');
+  
+  $path = drupal_get_path('module', 'publication');
+  drupal_add_css($path . '/css/publication.css');
+  
 }
 
 /**
@@ -1009,6 +1013,9 @@ function publication_views_pre_view(&$view, $display_id){
     }else{
       $view->set_item($display_id, 'filter', 'tid', NULL);
     }
+  
+
+  
   }
 }
 
@@ -1112,14 +1119,17 @@ function publication_theme($existing, $type, $theme, $path){
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_message' => array(
-      
+    'publication_message' => array(    
       'arguments' => array(
         'message' => NULL, 
         'type' => 'status'
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
-    )
+    ),
+    'views_view_grid__publication_nodereferences' => array(
+       'template' => 'views_view_grid--publication-nodereferences',
+       'path'  => drupal_get_path('module', 'publication'),
+     ),
   );
   $fields = publication_field_info();
   foreach($fields as $field){
@@ -1256,5 +1266,14 @@ function _publication_section_node_get_tid($node){
   }
   
 }
+
+// function publication_preprocess_views_view_grid__publication_nodereferences($variables){
+//   
+//   dd('prep');
+//   
+// }
+
+
+
 
 

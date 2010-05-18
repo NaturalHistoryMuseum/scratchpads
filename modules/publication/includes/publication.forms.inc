@@ -643,7 +643,7 @@ function publication_field_nodereference_after_build($element){
   
   $element[$field_name.'_add_more']['#value'] = t('Edit publication @label', array('@label' => strtolower($element['#title'])));
   
-  $element[$field_name.'_add_more']['#prefix'] .= l(t('Create @label', array('@label' => strtolower($element['#title']))), 'node/add/'.$element['#referenceable_types'], array('query' => array('gids[]' => $element['#publication_nid']), 'attributes' => array('target' => '_blank')));
+  $element[$field_name.'_add_more']['#prefix'] .= l(t('Create @label', array('@label' => strtolower($element['#title']))), 'node/add/'.$element['#referenceable_types'], array('query' => array('gids[]' => $element['#publication_nid']), 'attributes' => array('target' => '_blank', 'class' => 'create-'.$field_name)));
   
   return $element;
   

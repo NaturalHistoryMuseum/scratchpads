@@ -102,11 +102,60 @@ input.noderelationships-nodereference-add-more{
   text-decoration: none;
 }
 
-/* Selection modal window */
-.view-publication-noderefences table.views-view-grid td{
-  width: 200px!important;
+.content-add-more a{
+   display:block;
+   float:right;
+   margin:0 7px 0 0;
+   background-color:#f5f5f5;
+   border:1px solid #dedede;
+   border-top:1px solid #eee;
+   border-left:1px solid #eee;
+   font-family:"Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
+   font-size:100%;
+   line-height:130%;
+   text-decoration:none;
+   font-weight:bold;
+   color:#565656;
+   cursor:pointer;
+   padding:5px 10px 6px 30px!important; /* Links */
+   color: #333;
+   text-decoration: none;
+   height: auto;
+   font-weight: normal;
+   background-repeat: no-repeat;
+   background-position: 5px 5px;
 }
 
+.content-add-more a.create-field_publication_authors{
+  background-image: url('../img/user_add.png'); 
+}
+
+#field-publication-authors-items a.noderelationships-nodereference-multi-button{
+  background-image:url('../img/user_edit.png')!important;
+}
+
+.content-add-more a.create-field_publication_images{
+  background-image: url('../img/image_add.png'); 
+}
+
+#field-publication-images-items a.noderelationships-nodereference-multi-button{
+  background-image:url('../img/image_edit.png')!important;
+}
+
+.content-add-more a.create-field_publication_biblio{
+  background-image: url('../img/book_add.png'); 
+}
+
+#field-publication-biblio-items a.noderelationships-nodereference-multi-button{
+  background-image:url('../img/book_edit.png')!important;
+}
+
+.content-add-more a:hover{
+  background-color:#dff4ff!important;
+  border:1px solid #c2e1ef;
+  color:#336699;
+  text-decoration: none;
+}
 
 
 /* Exposed filters */
