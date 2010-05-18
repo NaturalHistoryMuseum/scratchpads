@@ -223,24 +223,6 @@ function publication_install_groups(){
 }
 
 /**
- * Delete CCK groups for publication content types
- *
- * @return void
- * @author Ben Scott
- */
-function publication_uninstall_groups(){
-  
-  $groups = publication_group_info();
-  
-  foreach($groups as $group){
-
-    fieldgroup_delete($group['type_name'], $group);
-    
-  }
-  
-}
-
-/**
  * Create CCK fields for publication content types
  *
  * @return void
