@@ -12,7 +12,7 @@ echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;"
 
 Xvfb :3 -screen 0 800x600x16 -fbdir /tmp -nolisten inet6 &>/dev/null &
 DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox &>/dev/null &
-sleep 60
+sleep 100
 killall -9 firefox firefox-bin Xvfb &>/dev/null
 
 # Hide sandbox.html
