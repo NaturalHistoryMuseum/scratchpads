@@ -269,7 +269,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
           
           $form['field_publication_section'] = array(
             '#value' => theme('publication_message', t('Please select at least one taxon name.'))
-            );
+          );
           
         }else{
 
@@ -549,7 +549,7 @@ function publication_field_publication_nodereference_alter(&$element, $field, $n
     }
   }
 
-  $element['#suffix'] = theme('publication_'.$field['field_name'], $nids, $nid);
+  $element['#suffix'] .= theme('publication_'.$field['field_name'], $nids, $nid);
   
   // Set up some vauales to pass to after_build function
   $element['#publication_nid'] = $nid;

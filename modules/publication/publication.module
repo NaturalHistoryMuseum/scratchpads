@@ -1126,10 +1126,6 @@ function publication_theme($existing, $type, $theme, $path){
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ),
-    'views_view_grid__publication_nodereferences' => array(
-       'template' => 'views_view_grid--publication-nodereferences',
-       'path'  => drupal_get_path('module', 'publication'),
-     ),
   );
   $fields = publication_field_info();
   foreach($fields as $field){
@@ -1267,13 +1263,89 @@ function _publication_section_node_get_tid($node){
   
 }
 
-// function publication_preprocess_views_view_grid__publication_nodereferences($variables){
-//   
-//   dd('prep');
-//   
-// }
+/**
+ * Preprocess views grid
+ * If it's a node reference view, ensure there's empty TDs to help with layout
+ *
+ * @param string $vars 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_preprocess_views_view_grid($vars){
+  
+  $view = $vars['view'];
+  
+  if($view->name == _publication_get_nodereference_view_name()){
+    
+    $number_of_columns = $vars['options']['columns'];
+
+    $first_row_columns = count($vars['rows'][0]);
+
+    if($first_row_columns < $number_of_columns){
+
+      for($x = $first_row_columns; $x < $number_of_columns; $x++){
+
+        $vars['rows'][0][$x] = '&nbsp;';  
+      }
+
+    }
+
+    return $vars;
+    
+  }
+  
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ *
+ * Make jQuery Update's page preprocess function run *after* everything else's,
+ * so that a theme can't call drupal_get_js() and mess everything up.
+ */
+function publication_theme_registry_alter(&$theme_registry) {
+  
+  $theme_registry['views_view_grid']['preprocess functions'][] = 'publication_preprocess_views_view_grid';
+
+}
 
 
 
+/**
+ * Render the multi selection panel for search and reference views.
+ */
+function phptemplate_noderelationships_noderef_multiselect($referrer_field) {
+  $multiselect = '<div class="noderelationships-noderef-multiselect-items clearfix">';
+  $multiselect .=   '<div class="clear-block">';
+  $multiselect .= '<div class="noderelationships-noderef-multiselect-items-list"><ul></ul></div>';
+  $multiselect .= '<div class="noderelationships-noderef-multiselect-actions">';
+  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-desc" title="'. check_plain(t('Sort descending')) .'">'. check_plain(t('Desc.')) .'</a>';
+  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-asc" title="'. check_plain(t('Sort ascending')) .'">'. check_plain(t('Asc.')) .'</a>';
+  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-reset" title="'. check_plain(t('Reset selection')) .'">'. check_plain(t('Reset')) .'</a><br />';
+  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-save" title="'. check_plain(t('Close dialog and save changes')) .'">'. check_plain(t('Save')) .'</a>';
+  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-cancel" title="'. check_plain(t('Close dialog and discard changes')) .'">'. check_plain(t('Cancel')) .'</a>';
+  $multiselect .= '</div>';
+  $multiselect .=   '</div>';
+  $multiselect .= '</div>';
+
+  $output .= '<div class="noderelationships-noderef-multiselect clear-block">';
+
+  $output .= theme('fieldset', array(
+    '#collapsible' => TRUE,
+    '#title' => t('Selected @label', array('@label' => strtolower($referrer_field['widget']['label']))),
+    '#value' => $multiselect,
+  ));
+  
+  $output .= '</div>'."\n";
+
+  return $output;
+  
+}
+
+/**
+ * Render search/create content prefix.
+ */
+function phptemplate_noderelationships_noderef_page_prefix() {
+  return '<div class="noderelationships-noderef-page-content clearfix">';
+}
 
 

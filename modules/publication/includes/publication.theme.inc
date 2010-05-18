@@ -111,11 +111,6 @@ function theme_publication_node_edit_form($form){
   $output .= theme('item_list', $tab_items, null, 'ul', array('class' => 'ui-tabs-nav'));
   $output .= $tab_content;
   
-  $output .= drupal_render($form['group_publication_metadata']['field_publication_authors']);
-  
-  
-  $output .= drupal_render($form['field_publication_section']);
-  
   $output .= theme('publication_node_form_base_elements', $form);
   
   $output .= '</div>';
