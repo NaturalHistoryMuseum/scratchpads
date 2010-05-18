@@ -322,9 +322,13 @@ function scratchpad_profile_tasks_2(){
   db_query("DELETE FROM {blocks} WHERE module = 'search' AND delta = 0");
   db_query("DELETE FROM {blocks} WHERE module = 'system' AND delta = 0");
   foreach (list_themes() as $theme) {
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 1", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('scratchpadify',1,'%s','left',1)", $theme->name);
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 4", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('scratchpadify',4,'%s','header',1)", $theme->name);
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 2", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('scratchpadify',2,'%s','left',1,20)", $theme->name);
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'search' AND delta = 0", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight, title) VALUES ('search',0,'%s','left',1,-200,'<none>')", $theme->name);
   }
   // Hide the theme search form
