@@ -12,11 +12,8 @@ function publication_install() {
   drupal_load('module', 'publication');
   module_load_include('inc', 'publication', 'includes/publication.node');
   
-  // Create the content groups
-  publication_install_groups();
-  
   // Create the content fields
-  publication_install_fields();  
+  publication_install_create_fields();  
   
   $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
   db_query("UPDATE {system} SET weight=%d WHERE name='publication'", $taxonomy_or_cck_weight+12);  
@@ -73,6 +70,8 @@ function publication_enable(){
   variable_set('autotag_totally_borked', $current_borked_types);
   variable_set('autotag_broken_node_types', $autotag_broken_node_types);
   
+  publication_install_create_groups();
+  publication_install_add_fields_to_groups();
 }
 
 /**
@@ -208,7 +207,7 @@ function publication_schema() {
  * @return void
  * @author Ben Scott
  */
-function publication_install_groups(){
+function publication_install_create_groups(){
   
   $groups = publication_group_info();
   
@@ -228,30 +227,28 @@ function publication_install_groups(){
  * @return void
  * @author Ben Scott
  */
-function publication_install_fields(){
-  
+function publication_install_create_fields(){
   module_load_include('inc', 'content', 'includes/content.crud');
-  
   $fields = publication_field_info();
-  
   foreach($fields as $field){
-    
     content_field_instance_create($field);
-    
-    if(isset($field['group'])){
-     
-     fieldgroup_update_fields(
-         array(
-          'field_name' => $field['field_name'], 
-          'group' => $field['group'], 
-          'type_name' => $field['type_name']
-        )
-      );
-      
-    }
-
   }
-  
+}
+
+/**
+ * Add CCK fields to groups.
+ */
+function publication_install_add_fields_to_groups(){
+  $fields = publication_field_info();
+  foreach($fields as $field){
+    if(isset($field['group'])){
+      fieldgroup_update_fields(array(        
+        'field_name' => $field['field_name'], 
+        'group' => $field['group'], 
+        'type_name' => $field['type_name']
+      ));
+    }
+  }  
 }
 
 /**
