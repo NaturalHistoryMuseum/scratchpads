@@ -498,8 +498,6 @@ function publication_form_alter(&$form, $form_state, $form_id) {
 
       if($view->name == _publication_get_nodereference_view_name()){
         
-        $form['tid']['#theme'][] = 'publication_view_filter_select';
-        
         // Ensure these values are available when user submits filter form
         $form['vocabulary'] = array('#type' => 'hidden', '#value' => $_GET['vocabulary']);
         $form['vid'] = array('#type' => 'hidden', '#value' => $_GET['vid']);
@@ -509,18 +507,45 @@ function publication_form_alter(&$form, $form_state, $form_id) {
           '#type' => 'hidden', 
           '#value' => $_GET['nid'], 
         );
+        
+        if(array_key_exists('filter_by_group', $form)){
+         
+          $form['group_nid'] = array(
+            '#type' => 'hidden', 
+            '#value' => ($_GET['filter_by_group'] ? $_GET['nid'] : 'All'), 
+          );
 
-        $form['group_nid'] = array(
-          '#type' => 'hidden', 
-          '#value' => ($_GET['filter_by_group'] ? $_GET['nid'] : 'All'), 
-        );
+          $form['filter_by_group'] = array(
+            '#type' => 'checkbox', 
+            '#title' => $form['#info']['filter-group_nid']['label'],
+          );
 
-        $form['filter_by_group'] = array(
-          '#type' => 'checkbox', 
-          '#title' => $form['#info']['filter-group_nid']['label'],
-        );
-
-        unset($form['#info']['filter-group_nid']);
+          unset($form['#info']['filter-group_nid']);
+          
+        }
+        
+        if(array_key_exists('tid', $form)){
+          
+          $form['tid']['#theme'][] = 'publication_view_filter_select';
+          
+        }
+        
+        if(array_key_exists('node_author_in_group', $form)){
+          
+          $form['node_author_in_group'] = array(
+            '#type' => 'hidden', 
+            '#value' => ($_GET['filter_by_author'] ? $_GET['nid'] : NULL),
+          );
+          
+          $form['filter_by_author'] = array(
+            '#type' => 'checkbox', 
+            '#title' => $form['#info']['filter-node_author_in_group']['label'],
+          );
+          
+        }
+        
+        $form['submit']['#value']= t('Apply filters');
+        $form['submit']['#weight'] = 10;
         
       }
     
@@ -549,12 +574,11 @@ function publication_field_publication_nodereference_alter(&$element, $field, $n
     }
   }
 
-  $element['#suffix'] .= theme('publication_'.$field['field_name'], $nids, $nid);
+  $element['#suffix'] = theme('publication_'.$field['field_name'], $nids, $nid).'</div>';
   
   // Set up some vauales to pass to after_build function
   $element['#publication_nid'] = $nid;
   $element['#referenceable_types'] = current($field['referenceable_types']);
-  
   $element['#after_build'] = array('publication_field_nodereference_after_build'); 
   
 }
