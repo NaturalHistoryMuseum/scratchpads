@@ -992,7 +992,7 @@ function darwincore_submit($form, &$form_state){
 /**
  * Implementation of hook_form_alter()
  */
-function darwincore_form_alter($form, $form_state, &$form_id){
+function darwincore_form_alter(&$form, &$form_state, $form_id){
   // Change the locations form element as created by this form and the location module.
   if($form_id == 'darwincore_node_form' || $form_id == 'darwincorelocation_node_form'){
     foreach(_darwincore_get_vids() as $vid){

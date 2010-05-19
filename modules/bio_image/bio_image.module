@@ -16,7 +16,7 @@ function bio_image_views_api(){
 /**
  * Implementation of hook_form_alter()
  */
-function bio_image_form_alter($form, $form_state, &$form_id){
+function bio_image_form_alter(&$form, &$form_state, $form_id){
   if($form_id == 'image_node_form'){    
     $form['taxonomy']['#title'] = t('Annotations');
     $form['body_field']['body']['#title'] = t('Notes');
