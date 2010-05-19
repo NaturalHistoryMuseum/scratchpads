@@ -32,7 +32,7 @@ if(
       $_SERVER['REMOTE_ADDR'] == '157.140.2.32' ||
       $_SERVER['REMOTE_ADDR'] == '127.0.0.1'
     ) &&
-    $_SERVER['SCRIPT_URL'] != '/install.php'
+    $_SERVER['SCRIPT_NAME'] != '/install.php'
   ){
   ini_set('display_errors',1);
   // Change following to allow access from above IPs to update.php
@@ -42,6 +42,8 @@ if(
   $update_free_access =0;
 }
 
+ini_set('pcre.backtrack_limit',     10000000);
+ini_set('pcre.recursion_limit',     10000000);
 ini_set('arg_separator.output',     '&amp;');
 ini_set('magic_quotes_runtime',     0);
 ini_set('magic_quotes_sybase',      0);
