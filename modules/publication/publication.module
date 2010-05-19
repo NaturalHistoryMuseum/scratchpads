@@ -521,10 +521,6 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
 function publication_init(){
   module_load_include('inc', 'publication', 'includes/publication.forms');
   module_load_include('inc', 'publication', 'includes/publication.modal');
-  
-  $path = drupal_get_path('module', 'publication');
-  drupal_add_css($path . '/css/publication.css');
-  
 }
 
 /**
