@@ -458,3 +458,99 @@ function scratchpadify_update_6138(){
   }
   return array('#finished' => TRUE);
 }
+
+/**
+ * Fix an issue with path_redirect module.
+ *
+ */
+function scratchpadify_update_6139(){
+  return array(update_sql('ALTER TABLE path_redirect MODIFY rid INT(10) NOT NULL AUTO_INCREMENT'));
+}
+/**
+ * Upgrade classification module storage to term_node storage.
+ */
+function scratchpadify_update_6140(){
+  // We need to ensure that the itis_term and term_node modules are installed, 
+  // if they are, we can proceed.
+  if(!function_exists('itis_term_node_info') || !function_exists('term_node_form_alter')){
+    return array('#abort' => array('success' => FALSE, 'query' => 'ITIS Term and Term Node modules must be installed first'));
+  }
+  $ret = array();
+  $vocabularies = taxonomy_get_vocabularies();
+  $term_node = variable_get('term_node_vocabularies-contenttypes', array());
+  $classification_vocabularies = variable_get('classification_scratchpads',array());
+  foreach($vocabularies as $vocabulary){
+    if(isset($classification_vocabularies[$vocabulary->vid]) && $classification_vocabularies[$vocabulary->vid]){
+      // Firstly, we'll associate this vocabulary with the ITIS term content
+      // type.  It SHOULD NOT already be associated with a content type.
+      if(isset($term_node[$vocabulary->vid]) && $term_node[$vocabulary->vid]){
+        // Already set, we need to set an error message to explain that this
+        // vocabulary has not been upgraded.
+        $ret[] = array('success' => FALSE, 'query' => t('"%vocabulary" is already associated with a content type, it can no be converted', array('%vocabulary' => $vocabulary->name)));
+        // Skip the rest of the upgrade for this vocabulary.
+        continue;
+      }
+      // We need to actually set the variable, so that the term_node module can 
+      // it use
+      $term_node[$vocabulary->vid] = 'itis_term';
+      variable_set('term_node_vocabularies-contenttypes', $term_node);
+      $ret[] = array('success' => TRUE, 'query' => t('"%vocabulary" is now associated with ITIS Name', array('%vocabulary' => $vocabulary->name)));
+      // We need to delete all the terms marked as being "vernacular names", and 
+      // add them as metadata to their related term.  The Lifedesk code has made
+      // this a little easier to do, as the term_relation table always has the 
+      // vernacular name in tid1 and the scientific name in tid2.
+      // NOTE, any metadata associated with a Vernacular name will be lost!
+      $results = db_query('SELECT * FROM {term_relation} WHERE trid IN (SELECT trid FROM {term_relation_has_type} WHERE rtid = 9)');
+      while($row = db_fetch_array($results)){
+        $vernacular_name = taxonomy_get_term($row['tid1']);
+        $scientific_name = taxonomy_get_term($row['tid2']);
+        if($scientific_name->field_vernacular_name){
+          // We need to add this on the end!
+          if(!is_array($scientific_name->field_vernacular_name)){
+            $scientific_name->field_vernacular_name = array(array('value' => $scientific_name->field_vernacular_name));
+          }
+          $scientific_name->field_vernacular_name[] = array('value' => $vernacular_name->name);
+        } else {
+          // No other vernaculars set, lets set one
+          $scientific_name->field_vernacular_name = array(array('value' => $vernacular_name->name));
+        }
+        // SET THE F*****G parent!
+        $tid1->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $tid1->tid));
+        // Save the scientific name, and delete the vernacular
+        $scientific_name = (array)$scientific_name;
+        $saved = taxonomy_save_term($scientific_name);
+        $ret[] = array('success' => $saved, 'query' => t('Added vernacular name "%vernacular" to %term', array('%term' => $scientific_name['name'], '%vernacular' => $vernacular_name->name)));
+        taxonomy_del_term($vernacular_name->tid);
+      }
+      // Now to handle the various types of synonym (we'll handle all at once)
+      $results = db_query('SELECT trht.rtid, tid1, tid2 FROM {term_relation} tr, {term_relation_has_type} trht WHERE tr.trid = trht.trid');
+      while($row = db_fetch_array($results)){
+        // tid1 has the relation to tid2, so we must update tid1, and point it
+        // at tid2
+        $tid1 = taxonomy_get_term($row['tid1']);
+        switch($row['rtid']){
+          case 1: // synonym
+          case 3: // synonym (subjective = heterotypic)
+            // Becomes "junior synonym" ID: 1
+            $tid1->field_unacceptability_reason[0]['value'] = 1;
+            break;
+          case 2: // synonym (objective = homotypic)
+            // Becomes "subsequent name/combination" ID: 3
+            $tid1->field_unacceptability_reason[0]['value'] = 3;
+            break;
+          case 8: // incorrect authority information 
+            // Becomes "junior homonym" ID: 4
+            $tid1->field_unacceptability_reason[0]['value'] = 4;
+            break;
+        }
+        $tid1->field_usage[0]['value'] = 4;
+        $tid1->field_accepted_name[0]['value'] = $row['tid2'];
+        $tid1->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $tid1->tid));
+        $tid1 = (array)$tid1;
+        $saved = taxonomy_save_term($tid1);
+        $ret[] = array('success' => $saved, 'query' => t('Saving %term', array('%term' => $tid1['name'])));
+      }
+    }
+  }
+  return $ret;
+}
