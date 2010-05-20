@@ -12,6 +12,7 @@ function mado_get_blocks($all_views = FALSE){
         'darwincore',
         'darwincorelocation',
         'group',
+        'image_gallery',
         'nexus_controlled_state',
         'nexus_free_state',
         'nexus_note',
