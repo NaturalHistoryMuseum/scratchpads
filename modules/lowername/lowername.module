@@ -12,7 +12,7 @@ function lowername_taxonomy($op, $type, $array = NULL){
         db_query("UPDATE {term_lowername} SET lowername = LOWER('%s') WHERE tid = %d", $array['name'], $array['tid']);
         if(!db_affected_rows()){ 
           // Just in case there wasn't already an entry in the database
-          db_query("INSERT INTO {term_lowername} (tid, lowername) VALUES (%d, LOWER('%s'))", $array['tid'], $array['name']);        
+          @db_query("INSERT INTO {term_lowername} (tid, lowername) VALUES (%d, LOWER('%s'))", $array['tid'], $array['name']);        
         }
         break;
       case 'delete':
