@@ -59,7 +59,7 @@ Drupal.itis_term.showorhide_unit_fields = function(context){
 }
 
 Drupal.itis_term.showorhide_usage_fields = function(context){
-  if($('#itis_term_usage select', context).val()==='invalid' || $('#itis_term_usage select').val()==='not accepted'){
+  if($('#itis_term_usage select', context).val()==='2' || $('#itis_term_usage select').val()==='4'){
     $('#itis_term_accepted_name', context).fadeIn(500);
     $('#itis_term_unacceptability_reason', context).fadeIn(500);
   } else {
