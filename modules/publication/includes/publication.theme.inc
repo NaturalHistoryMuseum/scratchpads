@@ -20,8 +20,6 @@ function theme_publication_node_edit_form($form){
   
   publication_add_files();
   
-  // return drupal_render($form);
-  
   // Add the taxonomy tree callback path
   
   if(!$form['#node']->vocabulary){
@@ -37,7 +35,7 @@ function theme_publication_node_edit_form($form){
      
      if(array_key_exists($group_name, $form)){
    
-       $id = form_clean_id(strtolower($group['label']));
+       $id = form_clean_id(drupal_strtolower($group['label']));
        $tab_items[] = '<a href="#'.$id.'"><span>'.$group['label'].'</span></a>';
    
        $tab_content .= '<div id="'.$id.'">';
@@ -119,7 +117,7 @@ function theme_publication_node_edit_form($form){
 
 }
 
-function theme_publication_modal_image_caption_node_form($form){
+function theme_publication_image_caption_node_form($form){
   
   publication_add_modal_child_files();
   
@@ -132,7 +130,7 @@ function theme_publication_modal_image_caption_node_form($form){
 }
 
 
-function theme_publication_modal_section_node_form($form){
+function theme_publication_section_node_form($form){
   
   publication_add_modal_child_files();
   
@@ -147,11 +145,12 @@ function theme_publication_modal_section_node_form($form){
   
 }
 
-function theme_publication_modal_term_fields_form($form){
+function theme_publication_taxon_treatment_node_form($form){
   
   publication_add_modal_child_files();
-  
-  $output = drupal_render($form);
+
+  $output = drupal_render($form['term_fields']);
+  $output .= theme('publication_node_form_base_elements', $form);
   
   return $output;
   
@@ -261,7 +260,7 @@ function theme_publication_field_publication_section($element){
 
       $row[] = drupal_render($element[$key]['ops']);
 
-      $rows[$nid] = array('data' => $row, 'class' => 'draggable draggable-section-'.$nid);
+      $rows[$nid] = array('data' => $row, 'class' => $element[$key]['#attributes']['class']);
 
     }
 

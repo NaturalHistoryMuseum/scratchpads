@@ -26,10 +26,6 @@ function publication_install() {
 function publication_enable(){
   
   module_load_include('inc', 'noderelationships');
-  
-  $node_term_weight_node_types = variable_get('node_term_weight_node_types', array());
-  $node_term_weight_node_types['publication'] = 'publication';
-  variable_set('node_term_weight_node_types', $node_term_weight_node_types);
 
   $node_relationships_settings = array(
     'noderef' => array(
@@ -162,11 +158,8 @@ function publication_schema() {
     ),
     'primary key' => array('nid', 'vid'),
   );
-  
-  /*
-    TODO Rename to publication_section_node
-  */
-  $schema['publication_term_fields'] = array(
+
+  $schema['publication_taxon_treatment_node'] = array(
     'fields' => array(
       'vid' => array(
         'type' => 'int',
@@ -182,7 +175,7 @@ function publication_schema() {
         'default' => 0,
         'description' => 'The {node}.nid of the node.',
       ),
-      'fields' => array(
+      'term_fields' => array(
         'type' => 'text',
         'not null' => FALSE,
         'size' => 'big',
@@ -190,10 +183,9 @@ function publication_schema() {
       ),
     ),
     'indexes' => array(
-      'nid' => array('nid'),
-      'name' => array('tid')
+      'vid' => array('vid'),
     ),
-    'primary key' => array('vid')
+    'primary key' => array('nid', 'vid')
   );
   
   

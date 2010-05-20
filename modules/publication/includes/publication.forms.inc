@@ -20,12 +20,15 @@ function publication_form(&$node, $form_state) {
       '#default_value' => $node->body,
       '#required' => ($type->body_required ? TRUE : FALSE)
     );
-
+    
   }
   
-  if($node->type == 'publication'){
-
-    publication_publication_form($form, $node);
+  
+  $func = '_'.$node->type.'_node_form';
+  
+  if(function_exists($func)){
+    
+    $func($form, $node);
     
   }
   
@@ -37,7 +40,7 @@ function publication_form(&$node, $form_state) {
 
 
 
-function publication_publication_form(&$form, &$node) {
+function _publication_node_form(&$form, &$node) {
 
   $form['vocabulary'] = array(
     '#weight' => -1,
@@ -102,20 +105,6 @@ function publication_publication_form(&$form, &$node) {
   
   $form['term_field_defaults'] = publication_node_form_term_fields_element($node->term_field_defaults);
   
-  $form['term_field_updates']['<div>'] = array(
-    '#value' => '<div id="publication-term-field-updates">'
-  );  
-  
-  foreach($node->term_fields as $tid => $term_field){ 
-
-    $form['term_field_updates'][$tid] = array('#type' => 'hidden', '#value' => serialize($term_field), '#name' => 'term_field_updates['.$tid.']');
-
-  }
-  
-  $form['term_field_updates']['</div>'] = array(
-    '#value' => '</div>'
-  );
-
 }
 
 
@@ -150,13 +139,46 @@ function publication_node_form_term_fields_element($default_values){
   
 }
 
-
-
-function _publication_node_map_fields($field){
+function _publication_taxon_treatment_node_form(&$form, &$node) {
+ 
+  $publication_nid = $_GET['publication_nid'];
+  $publication_vid = $_GET['publication_vid'];
   
-  if($field) return $field;
+  $publication_node = node_load($publication_nid, $publication_vid);
+  
+  $form['term_field_defaults'] = array(
+    '#type' => 'value',
+    '#value' => $publication_node->term_field_defaults
+  );
+  
+  if($node->term_fields){
+  
+    $term_field_defaults = $node->term_fields;
+  
+  }else{
+    
+    $term_field_defaults = $publication_node->term_field_defaults;            
+  
+  }
+  
+  $form['term_fields'] = publication_node_form_term_fields_element($term_field_defaults);
+  $form['term_fields']['#allow_reset'] = is_array($node->term_fields);
+   
+  return $form;
   
 }
+
+function publication_taxon_treatment_node_form_reset($form, &$form_state){
+  
+  publication_db_query('UPDATE publication_taxon_treatment_node SET term_fields = NULL', array('vid' => $form_state['values']['vid']));
+
+  $form_state['rebuild'] = true;
+  
+  modalframe_close_dialog($args);
+  
+}
+
+
 
 
 /**
@@ -350,147 +372,134 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     break;
     
     case 'publication_image_caption_node_form':
+
+      $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
+      $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
+
+      $publication_nid = $_GET['publication_nid'];
+
+      $image_node = node_load(arg(2));
+              
+      $publication_node = node_load($publication_nid);
+      
+      $title = t('@op caption for image @image', array(
+        '@op' => (empty($form['#node']->nid) ? 'Add' : 'Edit'),
+        '@image' => $image_node->title
+      ));
+
+      drupal_set_title($title);
+      
+      // Set default values - they won't be rendered so don't need to hide them
+      $form['title']['#value'] = 'Publication image caption : '.$publication_node->title.' : '.$image_node->title;        
+      
+      $form['field_publication_caption_parent']['#default_value'][0]['nid'] = $publication_node->nid;
+      $form['field_publication_caption_image']['#default_value'][0]['nid'] = $image_node->nid;
+      
+      // Store the image node title to use in messages cos the generated node title is rubbish
+      $form['#image_node_title'] = $image_node->title;
+
+      unset($form['buttons']['preview']);
+      
+      $form['buttons']['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 10);
+      
+      $form['buttons']['delete']['#submit'] = array('publication_node_delete_submit'); 
+      
+      $form['buttons']['submit']['#submit'][] = 'publication_modal_image_caption_node_form_submit'; 
     
-      if(_publication_node_form_is_modal()){
-
-        $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
-        $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
-
-        $publication_nid = $_GET['publication_nid'];
-
-        $image_node = node_load(arg(2));
-                
-        $publication_node = node_load($publication_nid);
-        
-        $title = t('@op caption for image @image', array(
-          '@op' => (empty($form['#node']->nid) ? 'Add' : 'Edit'),
-          '@image' => $image_node->title
-        ));
-
-        drupal_set_title($title);
-        
-        // Set default values - they won't be rendered so don't need to hide them
-        $form['title']['#value'] = 'Publication image caption : '.$publication_node->title.' : '.$image_node->title;        
-        
-        $form['field_publication_caption_parent']['#default_value'][0]['nid'] = $publication_node->nid;
-        $form['field_publication_caption_image']['#default_value'][0]['nid'] = $image_node->nid;
-        
-        // Store the image node title to use in messages cos the generated node title is rubbish
-        $form['#image_node_title'] = $image_node->title;
-        
-        // Change buttons
-        $form['#theme'] = 'publication_modal_image_caption_node_form';
-
-        unset($form['buttons']['preview']);
-        
-        $form['buttons']['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 10);
-        
-        $form['buttons']['delete']['#submit'] = array('publication_node_delete_submit'); 
-        
-        $form['buttons']['submit']['#submit'][] = 'publication_modal_image_caption_node_form_submit'; 
-      
-        _publication_node_form_author_alter($form);
-      
-      } 
-      
-     
+      _publication_node_form_author_alter($form);
 
     break;
     
     case 'publication_section_node_form':
 
-      if(_publication_node_form_is_modal()){
+      if(!_publication_node_form_is_modal()){
+        form_set_error('Only within a publication');
+      }  
 
-        $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
-        $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
+      $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
+      $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
 
-        $node = $form['#node'];
+      $node = $form['#node'];
 
-        unset($form['buttons']['preview']);
-        
-        $form['revision_information']['revision'] = array(
-          '#type' => 'value',
-          '#value' => $form['revision_information']['revision']['#default_value']
-        );
-        
-       
-        
-        $form['publication_form_build_id'] = array(
-          '#type' => 'value',
-          '#value' => $_GET['publication_form_build_id']
-          );
-        
-        if($tid = _publication_section_node_get_tid($node)){ // Is this a taxonomy treatment section?
-          
-          $term = taxonomy_get_term($tid);
-
-          $form['title']['#title'] = t('Manuscript name');
-          $form['title']['#description'] = t('Enter an alternative name to use for this publication.');
-
-          $form['taxonomy'][$term->vid] = array(
-          '#type' => 'value',
-          '#value' => $tid
-          );
-
-          $form['term'] = array(
-            '#type' => 'value',
-            '#value' => $term
-            );
-
-          if($term->name != $node->title){
-
-            $form['reset_manuscript_name'] = array(
-              '#type' => 'checkbox', 
-              '#title' => t('Reset manuscript name to %name', array('%name' => $term->name)), 
-            );
-
-          }
-        
-          $publication_nid = $_GET['publication_nid'];
-          $publication_vid = $_GET['publication_vid'];
-
-          $publication_node = node_load($publication_nid, $publication_vid);
-          
-          $form['term_field_defaults'] = array(
-            '#type' => 'value',
-            '#value' => $publication_node->term_field_defaults
-          );
-          
-          if($node->term_fields){
-
-            $term_field_defaults = $node->term_fields;
-
-            $form['reset_term_fields'] = array(
-              '#type' => 'checkbox', 
-              '#title' => t('Reset term fields to publication defaults'), 
-            );
- 
-          }else{
-            
-            $term_field_defaults = $publication_node->term_field_defaults;            
-
-          }
-          
-        $form['term_fields'] = publication_node_form_term_fields_element($term_field_defaults);  
-          
-        unset($form['buttons']['delete']);
-          
-        }
-        
-      $form['buttons']['delete']['#submit'] = array('publication_node_delete_submit');
+      unset($form['buttons']['preview']);
       
-      $form['buttons']['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 10); 
+      $form['field_publication_section']['#type'] = 'value';
+      
+      $form['revision_information']['revision'] = array(
+        '#type' => 'value',
+        '#value' => $form['revision_information']['revision']['#default_value']
+      );
 
-      $form['buttons']['submit']['#submit'] = array('publication_modal_section_node_form_submit');      
+      $form['publication_form_build_id'] = array(
+        '#type' => 'value',
+        '#value' => $_GET['publication_form_build_id']
+      );
+        
+      if(_publication_section_node_is_taxon($node)){ // Is this a taxonomy treatment section?
+        
+        $term = array_shift($node->taxonomy);
 
-      $form['#theme'] = 'publication_modal_section_node_form';
+        $form['title']['#title'] = t('Manuscript name');
+        $form['title']['#description'] = t('Enter an alternative name to use for this publication.');
 
-      _publication_node_form_author_alter($form);
+        $form['taxonomy'][$term->vid] = array(
+        '#type' => 'value',
+        '#value' => $term->tid
+        );
 
+        $form['term'] = array(
+          '#type' => 'value',
+          '#value' => $term
+        );
+
+        if(isset($term->name) && $term->name != $node->title){
+
+          $form['reset_manuscript_name'] = array(
+            '#type' => 'checkbox', 
+            '#title' => t('Reset manuscript name to %name', array('%name' => $term->name)), 
+          );
+
+        }
+
+      unset($form['buttons']['delete']);
+        
       }
+      
+    $form['buttons']['delete']['#submit'] = array('publication_node_delete_submit');
+    
+    $form['buttons']['submit']['#submit'] = array('publication_section_modal_node_form_submit');
+    
+    $form['buttons']['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 10); 
+
+    _publication_node_form_author_alter($form);
       
     break;
     
+    case 'publication_taxon_treatment_node_form':
+    
+    $form['title']['#type'] = 'value';
+    $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
+    $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
+    
+    $form['buttons']['submit']['#submit'][] = 'publication_taxon_treatment_modal_node_form_submit';
+    
+    if($form['term_fields']['#allow_reset']){
+     
+      $form['buttons']['reset'] = array(
+        '#type' => 'submit', 
+        '#submit' => array('publication_taxon_treatment_node_form_reset'),
+        '#value' => t('Reset to publication defaults') 
+      );
+      
+    }
+    
+    unset($form['buttons']['delete']);
+    unset($form['buttons']['preview']);
+    $form['buttons']['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 10); 
+    
+    _publication_node_form_author_alter($form);
+    
+    break;
     
     case 'views_exposed_form':
 
@@ -595,29 +604,54 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
 
     if(!array_key_exists($nid, $element) && $child_node = node_load($nid)){ // prevent killing the site if user has selected parent as child
 
-      if(!$tid = _publication_section_node_is_taxon_treatment($child_node)){ // Is this as
-
-        $op = l('Edit section', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal section'))) .
-              l('Remove', 'publication/'.$nid.'/delete', array('attributes' => array('class' => 'modal section'))); 
+      switch($child_node->type){
         
-      }else{
-
-        $term = array_shift($child_node->taxonomy);
-        $manuscript_name = ($term->name != $child_node->title);
+        case 'publication_section';
         
-        $op = l('Edit manuscript name', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal section')));
+          if(_publication_section_node_is_taxon($child_node)){
+            
+            $term = array_shift($child_node->taxonomy);
+
+            if($term->name != $child_node->title){
+
+              $title = '<span class="title manuscript-name" title="'.$term->name.'">'.$child_node->title.'</span>';
+
+            }else{
+
+              $title = '<span class="title">'.$child_node->title.'</span>';   
+
+            }
+
+            $op = l('Edit manuscript name', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal')));
+            
+            $class = 'taxon-section';
+            
+          }else{
+            
+            $title = '<span class="title">'.$child_node->title.'</span>';
+
+            $op = l('Edit section', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal'))) .
+                  l('Remove', 'publication/'.$nid.'/delete', array('attributes' => array('class' => 'modal')));
+                  
+            $class = 'section';
+            
+          }
+
+        break;
+        
+        case 'publication_taxon_treatment':
+        
+          $title = '<span class="title">'.$child_node->title.'</span>';
+          
+          $op = l('Edit taxon treatment', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal')));
+          
+          $class = 'taxon-treatment tabledrag-leaf';
+          
+        break;
         
       }
-
-      if($manuscript_name){
-        
-        $title = '<span class="title manuscript-name" title="'.$term->name.'">'.$child_node->title.'</span>';
-        
-      }else{ // Manuscript name
-        
-        $title = '<span class="title">'.$child_node->title.'</span>';        
-        
-      }
+      
+      $class .= ' draggable draggable-section-'.$nid;
 
       $element[$nid] = array(
         'title'  => array('#value' => $title),
@@ -639,7 +673,8 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
           ),
           'ops' => array(
             '#value' => $op
-            )
+            ),
+          '#attributes' => array('class' => $class)
       );
 
       if(isset($child_node->field_publication_section[0]['nid'])){
@@ -665,9 +700,9 @@ function publication_field_nodereference_after_build($element){
   
   }
   
-  $element[$field_name.'_add_more']['#value'] = t('Edit publication @label', array('@label' => strtolower($element['#title'])));
+  $element[$field_name.'_add_more']['#value'] = t('Edit publication @label', array('@label' => drupal_strtolower($element['#title'])));
   
-  $element[$field_name.'_add_more']['#prefix'] .= l(t('Create @label', array('@label' => strtolower($element['#title']))), 'node/add/'.$element['#referenceable_types'], array('query' => array('gids[]' => $element['#publication_nid']), 'attributes' => array('target' => '_blank', 'class' => 'create-'.$field_name)));
+  $element[$field_name.'_add_more']['#prefix'] .= l(t('Create @label', array('@label' => drupal_strtolower($element['#title']))), 'node/add/'.$element['#referenceable_types'], array('query' => array('gids[]' => $element['#publication_nid']), 'attributes' => array('target' => '_blank', 'class' => 'create-'.$field_name)));
   
   return $element;
   
@@ -687,7 +722,8 @@ function _publication_node_form_author_alter(&$form){
 }
 
 /**
- * Submit function for add publication form; set og description
+ * Additional submit function for vocabulary form
+ * Ensure publication_section node has the same vocabularies as publications
  *
  * @param string $form 
  * @param string $form_state 
@@ -760,8 +796,6 @@ function publication_field_nodereference_element_validate(&$element, &$form_stat
 function publication_node_edit_form_submit($form, &$form_state){
 
   $node = $form['#node'];
-
-  $form_state['values']['term_field_updates'] = $form['#post']['term_field_updates'];
 
   $vid = $form_state['values']['vocabulary'];
 
@@ -836,7 +870,7 @@ function publication_node_edit_form_submit($form, &$form_state){
     foreach($new_tids as $tid){
 
      $nids[] = array(
-       'nid' => publication_add_taxon_treatment_publication_section_node($node->vocabulary, $tid)
+       'nid' => publication_create_taxon_section_node($node->vocabulary, $tid)
      );
 
     }

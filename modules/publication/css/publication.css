@@ -84,8 +84,8 @@
   font-weight: normal;
 }
 
-table.content-multiple-table,
-input.noderelationships-nodereference-add-more{
+.publication-noderef table.content-multiple-table,
+.publication-noderef input.noderelationships-nodereference-add-more{
   display: none!important;
 }
 
@@ -277,4 +277,6 @@ html[xmlns] .clearfix {
 	height: 1%;
 }
 
-
+tr.taxon-treatment a.tabledrag-handle{
+  display: none;
+}

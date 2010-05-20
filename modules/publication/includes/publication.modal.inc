@@ -253,29 +253,18 @@ function publication_modal_image_caption_node_form_submit(&$form, &$form_state){
 }
 
 
+function publication_section_modal_node_form_submit(&$form, &$form_state){
 
-function publication_modal_section_node_form_submit(&$form, &$form_state){
-
-   
-  if(!$form_state['values']['reset_term_fields']){
+  if($form_state['values']['reset_manuscript_name']){
+  
+    $form_state['values']['title'] = $form_state['values']['term']->name;
     
-    foreach(element_children($form['term_fields']) as $key){
+  }
 
-      if(array_diff($form_state['values']['term_fields'][$key], $form_state['values']['term_field_defaults'][$key])){
-        
-        $form_state['values']['term_fields_updated'] = TRUE;
-        break;
-
-      }
-
-    }
-    
-  } 
-
-  node_form_submit($form, $form_state);
+  node_form_submit($form, &$form_state);
 
   $nid = $form_state['nid'];
-
+  
   $args = array(
     'type' => $form['#node']->type,
     'nid' => $nid,
@@ -287,13 +276,13 @@ function publication_modal_section_node_form_submit(&$form, &$form_state){
     
     // Build a new row to go in the sections table
     $form_build_id = $form_state['values']['publication_form_build_id'];
-
+  
     $publication_form_state = array('storage' => NULL, 'submitted' => FALSE, 'rebuild' => TRUE);
-
+  
     $publication_form = form_get_cache($form_build_id, $publication_form_state);
-
+  
     $nids = array(array('nid' => $nid));
-
+  
     function array_filter_helper($property){
        
      return !is_array($property);
@@ -301,18 +290,18 @@ function publication_modal_section_node_form_submit(&$form, &$form_state){
     }
     
     $publication_form['field_publication_section'] = array_filter($publication_form['field_publication_section'], 'array_filter_helper');
-
+  
     publication_field_publication_section_alter($publication_form['field_publication_section'], $nids);
-
+  
     drupal_process_form('publication_node_form', $publication_form, $publication_form_state);
-
+  
     $args['output'] = drupal_render($publication_form['field_publication_section']);    
    
   }elseif($form_state['values']['reset_manuscript_name']){ 
     
     $args['op'] = 'Reset';
     $args['title'] = $form_state['values']['term']->name;
-
+  
   }elseif($form_state['node']['title'] != $form_state['values']['term']->name){ // Node has been updated
     
     $args['op'] = 'Updated';
@@ -320,7 +309,14 @@ function publication_modal_section_node_form_submit(&$form, &$form_state){
     $args['original_title'] = $form_state['values']['term']->name;
     
   }
+  
+  $form_state['rebuild'] = true;
+  modalframe_close_dialog($args);
+  
+}
 
+function publication_taxon_treatment_modal_node_form_submit(&$form, &$form_state){
+  
   $form_state['rebuild'] = true;
   modalframe_close_dialog($args);
   

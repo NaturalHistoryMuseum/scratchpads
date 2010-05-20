@@ -4,8 +4,7 @@
  * Implementation of hook_node_info().
  */
 function publication_node_info(){
-  return array(
-    
+  return array(   
     'publication' => array(
       'name' => t('Publication'), 
       'module' => 'publication', 
@@ -27,6 +26,13 @@ function publication_node_info(){
       'title_label' => t('Title'), 
       'body_label' => t('Enter data'), 
       'body_required' => FALSE
+    ),
+    'publication_taxon_treatment' => array(
+      'name' => t('Taxon treatment term fields'), 
+      'module' => 'publication', 
+      'description' => t('Taxon treatment term fields for a publication document.'), 
+      'title_label' => t('Title'), 
+      'has_body' => FALSE
     )
   );
 }
@@ -80,12 +86,6 @@ function publication_group_info(){
       'group_name' => 'group_publication_privacy', 
       'type_name' => 'publication'
     ),
-    // array(
-    //   'label' => 'Nomenclature', 'weight' => 5, 
-    //   'group_type' => 'standard', 
-    //   'group_name' => 'group_publication_nomenclature', 
-    //   'type_name' => 'publication'
-    // ),
   );
 }
 
@@ -198,8 +198,8 @@ function publication_field_info(){
         )
       ), 
       'referenceable_types' => array(
-        
-        'publication_section' => 'publication_section'
+        'publication_section' => 'publication_section',
+        'publication_taxon_treatment' => 'publication_taxon_treatment'
       ), 
       'widget' => array(
         
@@ -209,7 +209,7 @@ function publication_field_info(){
             'nid' => ''
           )
         ), 'default_value_php' => NULL, 
-        'label' => 'Extra info children', 
+        'label' => 'Section children', 
         'description' => '', 
         'type' => 'nodereference_select', 
         'module' => 'nodereference'
@@ -314,11 +314,11 @@ function publication_field_info(){
         'module' => 'nodereference'
       )
     ),
-    /* EXTRA INFO */
+    /* SECTIONS */
     array(
       'field_name' => 'field_publication_section', 
       'type_name' => 'publication_section'
-    )
+    ),
   );
 }
 
@@ -326,99 +326,64 @@ function publication_field_info(){
  * Implementation of hook_insert().
  */
 function publication_insert($node){
-  if($node->type == 'publication'){
-    db_query("INSERT INTO {publication_node} (vid, nid, vocabulary, nomenclature_fields, term_field_defaults) VALUES (%d, %d, %d, '%s', '%s')", $node->vid, $node->nid, $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults));
-    publication_node_save($node); 
-  }
-}
-
-/**
- * Create a taxon treatment node
- *
- * @return void
- * @author Ben Scott
- */
-function publication_add_taxon_treatment_publication_section_node($vid, $tid){
-  global $user;
-  
-  $term = taxonomy_get_term($tid);
-  
-  $node = new stdClass();  
-  $node->uid = $user->uid;
-  $node->author = $user->name;
-  $node->type = 'publication_section';
-  $node->status = 1;
-  $node->title = $term->name;
-  $node->taxonomy[$vid] = array($tid => $tid);
-  node_save($node);
-  
-  return $node->nid;
-
-}
-
-/**
- * Implementation of hook_update().
- */
-function publication_update($node){
   
   switch($node->type){
     
     case 'publication':
     
-      // If no taxonomy is selected, reset the nomenclature node field
-      if(!$node->taxonomy){
-        $node->nomenclature_fields = NULL;
-      }
-
-      // if this is a new node or we're adding a new revision,
-      if($node->revision){
-        publication_insert($node);
-      }else{
-        db_query("UPDATE {publication_node} SET vocabulary = %d, nomenclature_fields = '%s', term_field_defaults = '%s' WHERE vid = %d", $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults), $node->vid);
-      }
+      db_query("INSERT INTO {publication_node} (vid, nid, vocabulary, nomenclature_fields, term_field_defaults) VALUES (%d, %d, %d, '%s', '%s')", $node->vid, $node->nid, $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults));
       
-      publication_node_save($node); 
+      // On creation of a node, redirect to the edit page
+      $_REQUEST['destination'] = 'node/' . $node->nid . '/edit' . $node->current_tab;
     
     break;
     
-    case 'publication_section':
+    case 'publication_taxon_treatment':
 
-      publication_section_node_save($node); 
-    
+      db_query("INSERT INTO {publication_taxon_treatment_node} (vid, nid, term_fields) VALUES (%d, %d, '%s')", $node->vid, $node->nid, serialize($node->term_fields));
+        
     break;
     
   }
   
-
-  
 }
 
 
-function publication_node_save($node){
+
+/**
+ * Implementation of hook_update().
+ */
+function publication_update($node){
+
+  // if this is a new node or we're adding a new revision,
+  if($node->revision){
   
-  // On creation of a node, redirect to the edit page
-  $_REQUEST['destination'] = 'node/' . $node->nid . '/edit' . $node->current_tab;
+    publication_insert($node);
   
-}
-
-
-function publication_section_node_save($node){
-
-  // Store term fields 
-  if(!($node->is_new || $node->revision)){
-    // Delete all in table
-    publication_delete_term_fields(array(
-      'nid' => $node->nid, 'vid' => $node->vid
-    ));
-  }
+  }else{
   
-  if($node->term_fields_updated &! $node->reset_term_fields){
-
-    publication_insert_term_fields($node->nid, $node->vid, serialize($node->term_fields));
+    switch($node->type){
     
+      case 'publication':
+    
+        db_query("UPDATE {publication_node} SET vocabulary = %d, nomenclature_fields = '%s', term_field_defaults = '%s' WHERE vid = %d", $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults), $node->vid);
+      
+      break;
+    
+      case 'publication_taxon_treatment':
+
+        db_query("UPDATE {publication_taxon_treatment_node} SET term_fields = '%s' WHERE vid = %d", serialize($node->term_fields), $node->vid);
+
+      break;
+    
+    }
+  
   }
   
 }
+
+
+
 
 
 /**
@@ -427,7 +392,6 @@ function publication_section_node_save($node){
 function publication_delete($node){
 
 // Get all linked nodes and delete them too
-
 
 }
 
@@ -467,9 +431,9 @@ function publication_load($node){
     
     break;
     
-    case 'publication_section':
+    case 'publication_taxon_treatment':
     
-      $additions = db_fetch_object(db_query("SELECT fields AS term_fields FROM {publication_term_fields} WHERE vid = %d", $node->vid));
+      $additions = db_fetch_object(db_query("SELECT term_fields FROM {publication_taxon_treatment_node} WHERE vid = %d", $node->vid));
       $additions->term_fields = unserialize($additions->term_fields);
     
     break;
@@ -498,16 +462,6 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
         return $output;
     
       }
-  
-     case 'presave':
-
-      if($node->type == 'publication' && $node->reset_manuscript_name){
-
-        $node->title = $node->term->name;
-
-      }
-
-     break;
 
   }    
 
@@ -540,8 +494,50 @@ function publication_menu_alter(&$items){
   
   $items['node/add/publication-image-caption']['hidden'] = 1;
   $items['node/add/publication-section']['hidden'] = 1;
-  
   return $items;
+  
+}
+
+
+function publication_create_taxon_section_node($vid, $tid){
+  
+  global $user;
+
+  $term = taxonomy_get_term($tid);  
+  $node = new stdClass();  
+  $node->uid = $user->uid;
+  $node->author = $user->name;
+  $node->type = 'publication_section';
+  $node->status = 1;
+  $node->title = $term->name;
+  $node->taxonomy[$vid] = array($tid => $tid);
+  // Create taxon treatment node
+  $node->field_publication_section = array(
+    array(
+      'nid' => publication_create_taxon_treatment_node($term)
+    )
+  );
+  
+  node_save($node);
+  
+  return $node->nid;
+  
+}
+
+function publication_create_taxon_treatment_node($term){
+  
+  global $user;
+  
+  $node = new stdClass();  
+  $node->uid = $user->uid;
+  $node->author = $user->name;
+  $node->title = t('@name taxon treatment', array('@name' => $term->name));
+  $node->type = 'publication_taxon_treatment';
+  $node->status = 1;
+  node_save($node);
+  
+  return $node->nid;
+  
 }
 
 function publication_view($node){
@@ -763,6 +759,7 @@ function publication_ahah_form($reset_messages = true){
  * @author Ben Scott
  */
 function publication_add_files(){
+
   //Add jquery.ui tabs files
   jquery_ui_add('ui.tabs');
   drupal_add_css(JQUERY_UI_PATH . '/themes/smoothness/ui.all.css');
@@ -810,30 +807,7 @@ function _publication_node_get_image($nid, $publication_nid){
   return $output;
 }
 
-/**
- * Get the node referencing a particular nid
- *
- * @param string $nid 
- * @return void
- * @author Ben Scott
- */
-function publication_get_parent_node($nid, $field){
-  
-  // $sql = 'SELECT n.nid
-  //         FROM {node} n 
-  //         INNER JOIN {content_field_publication_section} cf ON cf.vid = n.vid
-  //         WHERE cf.field_publication_section_nid = %d';
-  // $sql = db_rewrite_sql($sql);
-  // $result = db_query($sql, $nid);
-  // 
-  // if($nid = db_result($result)){
-  //   
-  //   return node_load($nid);
-  //   
-  // }
-  
-  
-}
+
 
 
 function publication_nodes_get_terms($nids){
@@ -851,20 +825,7 @@ function publication_nodes_get_terms($nids){
   return $terms;
 }
 
-function publication_insert_term_fields($nid, $vid, $serialized_fields){
-  $table = 'publication_term_fields';
-  $data = new stdClass();
-  $data->nid = $nid;
-  $data->vid = $vid;
-  $data->fields = $serialized_fields;
-  drupal_write_record($table, $data);
-}
-
-function publication_delete_term_fields($args){
-  publication_db_query("DELETE FROM {publication_term_fields}", $args);
-}
-
-function publication_db_query($sql, $args, $limit = NULL){
+function publication_db_query($sql, $args){
   $sql_params = array();
   if(is_array($args)){
     $sql .= ' WHERE';
@@ -875,11 +836,9 @@ function publication_db_query($sql, $args, $limit = NULL){
       $conj = " AND";
     }
   }
-  if($limit){
-    $sql .= ' %s';
-    $sql_params[] = $limit;
-  }
+  
   return db_query($sql, $sql_params);
+  
 }
 
 /**
@@ -1066,36 +1025,31 @@ function publication_theme($existing, $type, $theme, $path){
   $path = drupal_get_path('module', 'publication') . '/includes/';
   $themes = array(
     
-    'publication_node_add_form' => array(
-      
+    'publication_node_add_form' => array(    
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_node_edit_form' => array(
-      
+    'publication_node_edit_form' => array(      
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_modal_term_fields_form' => array(
-      
+    'publication_taxon_treatment_node_form' => array(      
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_modal_image_caption_node_form' => array(
-      
+    'publication_image_caption_node_form' => array(
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_modal_section_node_form' => array(
-      
+    'publication_section_node_form' => array(
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
@@ -1227,7 +1181,7 @@ function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $n
 
       $section_node = node_load($section['nid']);
 
-      if(_publication_section_node_is_taxon_treatment($section_node)){
+      if(_publication_section_node_is_taxon($section_node)){
       
         $taxon_treatment_sections[$section_node->nid] = $section_node;
         
@@ -1241,23 +1195,12 @@ function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $n
    
 }
 
-function _publication_section_node_is_taxon_treatment($node){
+function _publication_section_node_is_taxon($node){
   
   return count($node->taxonomy);
   
 }
 
-function _publication_section_node_get_tid($node){
-  
-  if(count($node->taxonomy)){
-    
-    $term = array_shift($node->taxonomy);
-    
-    return $term->tid;
-    
-  }
-  
-}
 
 /**
  * Preprocess views grid
@@ -1327,7 +1270,7 @@ function phptemplate_noderelationships_noderef_multiselect($referrer_field) {
 
   $output .= theme('fieldset', array(
     '#collapsible' => TRUE,
-    '#title' => t('Selected @label', array('@label' => strtolower($referrer_field['widget']['label']))),
+    '#title' => t('Selected @label', array('@label' => drupal_strtolower($referrer_field['widget']['label']))),
     '#value' => $multiselect,
   ));
   
@@ -1341,7 +1284,9 @@ function phptemplate_noderelationships_noderef_multiselect($referrer_field) {
  * Render search/create content prefix.
  */
 function phptemplate_noderelationships_noderef_page_prefix() {
+  
   return '<div class="noderelationships-noderef-page-content clearfix">';
+  
 }
 
 
