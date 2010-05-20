@@ -247,11 +247,18 @@ div#publication-images div.has-caption span{
   margin-right: 7px;
 }
 
-#sections #publication-draggable-section span.manuscript-name{
+#sections #publication-draggable-section span.manuscript-name,
+#sections #publication-draggable-section span.term-field-override{
   border-bottom: 1px dashed #999;
 }
 
+tr.taxon-treatment a.tabledrag-handle{
+  display: none;
+}
 
+tr.taxon-treatment td.section-title .indentation{
+  padding-left: 1.7em;
+}
 
 
 /* CLEARFIX */
@@ -277,6 +284,4 @@ html[xmlns] .clearfix {
 	height: 1%;
 }
 
-tr.taxon-treatment a.tabledrag-handle{
-  display: none;
-}
+

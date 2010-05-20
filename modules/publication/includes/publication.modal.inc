@@ -317,6 +317,12 @@ function publication_section_modal_node_form_submit(&$form, &$form_state){
 
 function publication_taxon_treatment_modal_node_form_submit(&$form, &$form_state){
   
+  $args = array(
+    'type' => $form['#node']->type,
+    'nid' => $form_state['nid'],
+    'op' => 'Updated',
+  );
+  
   $form_state['rebuild'] = true;
   modalframe_close_dialog($args);
   

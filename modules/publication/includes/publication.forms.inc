@@ -172,6 +172,11 @@ function publication_taxon_treatment_node_form_reset($form, &$form_state){
   
   publication_db_query('UPDATE publication_taxon_treatment_node SET term_fields = NULL', array('vid' => $form_state['values']['vid']));
 
+  $args = array(
+    'type' => $form['#node']->type,
+    'op' => 'Reset',
+  );
+
   $form_state['rebuild'] = true;
   
   modalframe_close_dialog($args);
@@ -517,18 +522,18 @@ function publication_form_alter(&$form, $form_state, $form_id) {
           '#value' => $_GET['nid'], 
         );
         
-        if(array_key_exists('filter_by_group', $form)){
-         
+        if(array_key_exists('group_nid', $form)){
+        
           $form['group_nid'] = array(
             '#type' => 'hidden', 
             '#value' => ($_GET['filter_by_group'] ? $_GET['nid'] : 'All'), 
           );
-
+        
           $form['filter_by_group'] = array(
             '#type' => 'checkbox', 
             '#title' => $form['#info']['filter-group_nid']['label'],
           );
-
+        
           unset($form['#info']['filter-group_nid']);
           
         }
@@ -555,6 +560,16 @@ function publication_form_alter(&$form, $form_state, $form_id) {
         
         $form['submit']['#value']= t('Apply filters');
         $form['submit']['#weight'] = 10;
+
+        $class = 'collapsible';
+
+        if(!$_GET['view_name']){
+          $class .= ' collapsed';
+        }
+        
+        $form['#prefix'] = '<fieldset class="'.$class.'"><legend>'.t('Filter items').'</legend>';
+        $form['#suffix'] = '</fieldset>';
+        
         
       }
     
@@ -571,6 +586,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
   }
   
 }
+
 
 function publication_field_publication_nodereference_alter(&$element, $field, $nid){
   
@@ -641,7 +657,7 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
         
         case 'publication_taxon_treatment':
         
-          $title = '<span class="title">'.$child_node->title.'</span>';
+          $title = '<span class="title'.(is_array($child_node->term_fields) ? ' term-field-override' : '').'">'.$child_node->title.'</span>';
           
           $op = l('Edit taxon treatment', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal')));
           
@@ -825,7 +841,7 @@ function publication_node_edit_form_submit($form, &$form_state){
     if(!in_array($nid, $nids['deselected_nids'])){
 
      if($parent_id = $form['#post']['field_publication_section'][$nid]['section_parent']){
-       
+
        publication_orphan_section($nid, $parent_id);
        
        $parent_nodes[$parent_id][] = array('nid' => $nid);
@@ -841,14 +857,17 @@ function publication_node_edit_form_submit($form, &$form_state){
     }
       
   }
-  
+
   // Add any orphaned nids to the publication parent
   if($orphaned_nids = array_diff($nids['orphaned_nids'], $nids['deselected_nids'])){
     
     foreach($orphaned_nids as $orphaned_nid){
       
+      if($orphaned_nid != $node->nid){
+        
       $nids[] = array('nid' => $orphaned_nid);
       
+      }
     }
     
   }
@@ -876,7 +895,7 @@ function publication_node_edit_form_submit($form, &$form_state){
     }
     
   }
-  
+
   $form_state['values']['field_publication_section'] = $nids;
 
   if($form['#post']['deleted_node']){
@@ -928,7 +947,7 @@ function publication_orphan_section($nid, $new_parent_id){
 
   $existing_parent_node = publication_content_node_load(NULL, $cck_params);
 
-  if($existing_parent_node->nid != $new_parent_id){
+  if(is_object($existing_parent_node) && $existing_parent_node->nid != $new_parent_id){
   
     foreach($existing_parent_node->field_publication_section as $key => $field_value){
   

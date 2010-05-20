@@ -249,14 +249,20 @@ function theme_publication_field_publication_section($element){
 
       $row = array();
 
-      $row[] = theme('indentation', $element[$key]['#depth']) . drupal_render($element[$key]['title']);
+      $row[] = array(
+        'data' => theme('indentation', $element[$key]['#depth']) . drupal_render($element[$key]['title']),
+        'class' => 'section-title'
+      );
 
       $nid = $element[$key]['nid']['#value'];
 
-      $row[] = drupal_render($element[$key]['section_id']) .
-               drupal_render($element[$key]['nid']) .
-               drupal_render($element[$key]['depth']) .
-               drupal_render($element[$key]['section_parent']) ;
+      $row[] = array(
+        'data' => drupal_render($element[$key]['section_id']) .
+                  drupal_render($element[$key]['nid']) .
+                  drupal_render($element[$key]['depth']) .
+                  drupal_render($element[$key]['section_parent']),
+        'class' => 'section-data'
+      );    
 
       $row[] = drupal_render($element[$key]['ops']);
 
@@ -305,6 +311,23 @@ function theme_publication_view_filter_select($element) {
   _form_set_class($element, array('form-select'));
   $multiple = $element['#multiple'];
   return theme('form_element', $element, '<select name="'. $element['#name'] .''. ($multiple ? '[]' : '') .'"'. ($multiple ? ' multiple="multiple" ' : '') . drupal_attributes($element['#attributes']) .' id="'. $element['#id'] .'" '. $size .'>'. publication_view_filter_select_options($element, $node_terms) .'</select>');
+  
+}
+
+function theme_publication_views_exposed_form($form){
+
+  drupal_add_js('misc/collapse.js');
+  $class = 'collapsible';
+  
+  if(!$_GET['view_name']){
+    $class .= ' collapsed';
+  }
+
+  $output = '<fieldset class="'.$class.'"><legend>'.t('Filter items').'</legend>';
+  $output .= drupal_render($form);
+  $output .= '</fieldset>';
+  
+  return $output;
   
 }
 

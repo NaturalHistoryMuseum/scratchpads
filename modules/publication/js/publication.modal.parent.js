@@ -79,6 +79,22 @@ Drupal.behaviors.modalNodeForm = function(context) {
        
            }
          
+         break;
+         
+         case 'publication_taxon_treatment':
+
+          $titleSpan = $('tr.draggable-section-'+args.nid+' span.title');
+
+           if(args.op == 'Reset'){
+       
+             $titleSpan.removeClass('term-field-override');
+       
+           }else{
+             
+              $titleSpan.addClass('term-field-override');
+             
+           }
+         
          break;                  
           
         }

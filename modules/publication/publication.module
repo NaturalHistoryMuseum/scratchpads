@@ -816,7 +816,18 @@ function publication_nodes_get_terms($nids){
           FROM {term_node} t 
           INNER JOIN {term_data} td ON td.tid = t.tid
           INNER JOIN {node} n ON t.vid = n.vid 
-          WHERE n.nid IN (' . db_placeholders($nids, 'int') . ')';
+          WHERE n.nid';
+  
+  if(is_array($nids)){
+    
+    $sql .= 'IN (' . db_placeholders($nids, 'int') . ')';
+    
+  }else{
+    
+    $sql .= '=%d';
+    
+  }               
+           
   $sql = db_rewrite_sql($sql);
   $result = db_query($sql, $nids);
   while($row = db_fetch_object($result)){
@@ -967,10 +978,7 @@ function publication_views_pre_view(&$view, $display_id){
       $view->set_item_option($display_id, 'filter', 'tid', 'vid', $_GET['vocabulary']);
     }else{
       $view->set_item($display_id, 'filter', 'tid', NULL);
-    }
-  
-
-  
+    }  
   }
 }
 
@@ -1056,7 +1064,6 @@ function publication_theme($existing, $type, $theme, $path){
       'path' => $path
     ), 
     'publication_view_filter_select' => array(
-      
       'arguments' => array(
         'element' => array()
       ), 'file' => 'publication.theme.inc', 
@@ -1179,11 +1186,9 @@ function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $n
     
     if($section['nid']){
 
-      $section_node = node_load($section['nid']);
-
-      if(_publication_section_node_is_taxon($section_node)){
+      if($tid = @array_shift(publication_nodes_get_terms($section['nid']))){
       
-        $taxon_treatment_sections[$section_node->nid] = $section_node;
+        $taxon_treatment_sections[$section_node->nid] = $tid;
         
       }
       
@@ -1288,5 +1293,4 @@ function phptemplate_noderelationships_noderef_page_prefix() {
   return '<div class="noderelationships-noderef-page-content clearfix">';
   
 }
-
 
