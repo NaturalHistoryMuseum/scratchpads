@@ -47,3 +47,108 @@
 .scratchpadify-show-advanced{
  text-align:right !important;
 }
+
+/* Node relationship modal popup*/
+
+/* Layout */
+div.noderelationships-noderef-multiselect{
+  width: 400px;
+  float:left;
+}
+
+div.noderelationships-noderef-multiselect-actions{
+  float: none;
+  margin-top: 30px;
+}
+
+.noderelationships-noderef-multiselect-items-list ul{
+  width: 360px!important;
+  height: 200px!important;
+}
+
+
+div.view-publication-noderefences{
+  float: left;
+  width: 600px;
+  margin-left: 30px;
+}
+
+div.view-publication-noderefences .view-empty{
+  color:#A30000;
+  background-color:#FFCCCC;
+  border:1px solid #A30000;
+  padding: 10px;
+}
+
+div.view-publication-noderefences .view-empty p{
+  margin: 0;
+}
+
+div.view-publication-noderefences div.views-admin-links{
+  width: 200px;
+}
+
+div.view-publication-noderefences table{
+  width: 600px;
+}
+
+div.view-publication-noderefences table td{
+  width: 150px;
+}
+
+#modalframe-container{
+  width: 800px;
+}
+
+.view-publication-noderefences table.views-view-grid td{
+  border: none;
+  background-color: #fff!important;
+}
+
+.view-publication-noderefences table.views-view-grid td.noderelationships-noderef-selectable{
+  border: 1px solid #ccc;
+  padding-left: 30px;
+  background-repeat: no-repeat;
+  background-position: 5px;
+  background-image:url('images/cross.png');
+}
+
+.view-publication-noderefences table.views-view-grid td.noderelationships-noderef-hover{
+border:1px solid #c2e1ef;
+color:#336699;
+}
+
+.view-publication-noderefences table.views-view-grid td.noderelationships-noderef-selected{
+  background-image:url('images/tick.png');
+}
+
+/* Modal frame styling*/
+
+.modalframe .ui-dialog-titlebar{
+  border-width: 1px!important;
+  border-color: #aaa!important;
+  border-style: none none solid none!important;
+}
+
+.modalframe .ui-dialog-titlebar span{
+  position: relative!important;
+}
+
+/* Overwrite some of the modal frame crap */
+.modalframe .ui-dialog-titlebar a.ui-dialog-titlebar-close {
+  top: 0.7em!important;
+  background: url("images/888888_11x11_icon_close.gif") no-repeat scroll 0 0 transparent;
+}
+
+.modalframe .ui-dialog-titlebar a.ui-dialog-titlebar-close-hover, 
+.modalframe .ui-dialog-titlebar a.ui-dialog-titlebar-close:hover {
+background:url("images/454545_11x11_icon_close.gif") no-repeat scroll 0 0 transparent;
+}
+
+.ui-dialog-titlebar-close:active {
+background:url("images/454545_11x11_icon_close.gif") no-repeat scroll 0 0 transparent;
+}
+
+
+
+
