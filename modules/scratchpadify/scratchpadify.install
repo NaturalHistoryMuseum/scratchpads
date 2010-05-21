@@ -591,7 +591,7 @@ function scratchpadify_update_6140(){
       $results = db_query("SELECT tid, nid FROM {taxonomy_enhancer_value_nodereference} WHERE nid > 0 AND fid = 'field_biblio_citation_original' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
       while($row = db_fetch_array($results)){
         $term = taxonomy_get_term($row['tid']);
-        $term->field_reference = array(array('value' => $row['nid']));
+        $term->field_reference = array(array('nid' => $row['nid']));
         $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
         $term = (array)$term;
         $saved = taxonomy_save_term($term);
