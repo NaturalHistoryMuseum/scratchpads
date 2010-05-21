@@ -542,7 +542,7 @@ function scratchpad_profile_tasks_2(){
   $node_types = array_keys(array_map('check_plain', node_get_types('names')));
   foreach($node_types as $node_type){
     $usage = 'group_post_standard';
-    if($node_type == 'group'){
+    if($node_type == 'group'  || $node_type == 'publication'){
       $usage = 'group';
     }
     variable_set('og_content_type_usage_'.$node_type, $usage);
