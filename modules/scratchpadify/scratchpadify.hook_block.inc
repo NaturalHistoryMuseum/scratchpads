@@ -34,10 +34,12 @@ function _scratchpadify_block($op, $delta, $edit){
               'import' => array(
                 array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'imagex/imagex', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
               )
-            ), 
+            ),
+            'publication' => array('import' => FALSE),
+            'nexus_project' => array('import' => FALSE),
             'forum' => array('view' => 'forum'),
             'blog' => array('view' => 'blog'),
-            'group' => array('view' => 'og')
+            'group' => array('view' => 'og', 'import' => FALSE)
           );
           $query = array();
           if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
