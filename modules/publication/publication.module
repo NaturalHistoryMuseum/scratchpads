@@ -462,10 +462,17 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
         return $output;
     
       }
-
-  }    
-
-  
+      break;
+    case 'view':
+      if($node->type == 'publication'){
+        foreach($node->content as $key => $value){
+          if($key != 'view' && $key != 'formatted-document'){
+            unset($node->content[$key]);
+          }
+        }
+        $node->content['view']['#value'] = '<p id="publication-display-og-ron"><a>'.t('Display content associated with publication').'</a></p>'.$node->content['view']['#value'];
+      }
+  }  
 }
 
 // FIXME - FIXME - FIXME!
@@ -569,6 +576,7 @@ function publication_view($node){
       ) 
     );
   }
+  drupal_add_js(drupal_get_path('module','publication').'/js/publication.hide_og.js');
   return $node;
 }
 
