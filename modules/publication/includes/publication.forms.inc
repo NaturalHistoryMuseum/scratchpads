@@ -135,6 +135,8 @@ function publication_node_form_term_fields_element($default_values){
      
   };
   
+  $element['#theme'] = 'publication_term_fields_element';
+  
   return $element;
   
 }
@@ -174,6 +176,7 @@ function publication_taxon_treatment_node_form_reset($form, &$form_state){
 
   $args = array(
     'type' => $form['#node']->type,
+    'nid' => $form_state['values']['nid'],
     'op' => 'Reset',
   );
 
@@ -378,6 +381,11 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     
     case 'publication_image_caption_node_form':
 
+      if(!_publication_node_form_is_modal()){
+        drupal_set_message('Sorry, image captions can only be added / edited from within a publication.', 'error');
+        drupal_goto();
+      }
+
       $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
       $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
 
@@ -418,7 +426,8 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     case 'publication_section_node_form':
 
       if(!_publication_node_form_is_modal()){
-        form_set_error('Only within a publication');
+        drupal_set_message('Sorry, section nodes can only be added / edited from within a publication.', 'error');
+        drupal_goto();
       }  
 
       $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
@@ -482,6 +491,11 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     
     case 'publication_taxon_treatment_node_form':
     
+    if(!_publication_node_form_is_modal()){
+      drupal_set_message('Sorry, taxon treatments can only be added / edited from within a publication.', 'error');
+      drupal_goto();
+    }
+    
     $form['title']['#type'] = 'value';
     $form['revision'] = array('#type' => 'value', '#value' => $form['revision_information']['revision']['#default_value']);
     $form['status'] = array('#type' => 'value', '#value' => $form['options']['status']['#default_value']);
@@ -492,6 +506,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
      
       $form['buttons']['reset'] = array(
         '#type' => 'submit', 
+        '#weight' => 5,
         '#submit' => array('publication_taxon_treatment_node_form_reset'),
         '#value' => t('Reset to publication defaults') 
       );
@@ -558,7 +573,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
           
         }
         
-        $form['submit']['#value']= t('Apply filters');
+        $form['submit']['#value']= t('Apply filter');
         $form['submit']['#weight'] = 10;
 
         $class = 'collapsible';
@@ -927,7 +942,22 @@ function publication_node_edit_form_submit($form, &$form_state){
     }
     
   }
- 
+  
+  // Add all contributors to the group   
+ foreach($form_state['values']['field_publication_authors'] as $field){
+   
+   if($field['nid']){
+   
+      $profile_node = node_load($field['nid']);
+
+      $account = user_load($profile_node->uid);
+     
+      og_subscribe_user($node->nid, $account);
+     
+   }
+   
+   
+ }
 
 }
 

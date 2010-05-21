@@ -113,8 +113,6 @@
    font-family:"Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
    font-size:100%;
    line-height:130%;
-   text-decoration:none;
-   font-weight:bold;
    color:#565656;
    cursor:pointer;
    padding:5px 10px 6px 30px!important; /* Links */
@@ -211,7 +209,16 @@
 
 /* BIBLIO */
 
+/* TERM FIELDS */
 
+.term-fields{
+  width: 520px;
+}
+
+.term-fields div.column{
+  width: 250px;
+  float: left;
+}
 
 /* IMAGES */
 
@@ -255,6 +262,20 @@ div#publication-images div.has-caption span{
 tr.taxon-treatment a.tabledrag-handle{
   display: none;
 }
+
+#sections #publication-draggable-section tr.taxon-treatment,
+#sections #publication-draggable-section tr.taxon-section{
+  background-color:#dff4ff!important;
+  border:1px solid #c2e1ef;
+  color:#336699;
+}
+
+#sections #publication-draggable-section tr.section{
+  background-color: #EDF5FA!important;
+  border:1px solid #D3E7F4;
+}
+
+
 
 tr.taxon-treatment td.section-title .indentation{
   padding-left: 1.7em;

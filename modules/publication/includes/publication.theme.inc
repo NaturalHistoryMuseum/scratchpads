@@ -314,22 +314,29 @@ function theme_publication_view_filter_select($element) {
   
 }
 
-function theme_publication_views_exposed_form($form){
-
-  drupal_add_js('misc/collapse.js');
-  $class = 'collapsible';
+function theme_publication_term_fields_element($element){
   
-  if(!$_GET['view_name']){
-    $class .= ' collapsed';
-  }
+  $count = count(element_children($element)) / 2;
+  $counter = 0;
+  $output = '<div class="clearfix term-fields"><div class="column">';
+  
+  foreach(element_children($element) as $key){
 
-  $output = '<fieldset class="'.$class.'"><legend>'.t('Filter items').'</legend>';
-  $output .= drupal_render($form);
-  $output .= '</fieldset>';
+    if($count == $counter){
+      $output .= '</div><div class="column">';
+    }
+    
+   $output .= drupal_render($element[$key]);
+   $counter++;
+
+  }
+  
+  $output .= '</div></div>';
   
   return $output;
   
 }
+
 
 
 

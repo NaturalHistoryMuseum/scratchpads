@@ -13,6 +13,7 @@ function publication_add_modal_child_files(){
 
   modalframe_child_js();
   drupal_add_js($path . '/js/publication.modal.child.js');
+  drupal_add_css($path . '/css/publication.css');
   
 }
 
@@ -31,104 +32,6 @@ function publication_modal_image_caption_node_form($image_nid){
   return $output;
   
 }
-
-// function publication_modal_term_fields_form($form_state, $tid){
-// 
-//   $publication_nid = $_GET['publication_nid'];
-//   $publication_vid = $_GET['publication_vid'];
-//   $publication_form_build_id = $_GET['publication_form_build_id'];
-// 
-//   $form = array();
-// 
-//   $node = node_load($publication_nid, $publication_vid);
-//   
-//   $session_key = $publication_form_build_id .':'. $tid;
-//   
-//   $session = publication_session($session_key);
-// 
-//   if($session = publication_session($session_key)){
-//     
-//     if($session != 'RESET'){
-//       
-//       $default_values = $session;
-//       
-//     }
-//     
-//   }elseif(isset($node->term_fields[$tid])){
-// 
-//     $default_values = $node->term_fields[$tid];
-// 
-//   }
-//   
-//   if(isset($default_values)){
-//     
-//     $form['reset'] = array('#type' => 'submit', '#value' => t('Reset to publication defaults'), '#weight' => 4);
-//     
-//   }else{
-// 
-//     $default_values = $node->term_field_defaults;
-// 
-//   }
-// 
-//   $form['term_fields'] = publication_node_form_term_fields_element($default_values);
-// 
-//   $form['publication_vid'] = array('#type' => 'value', '#value' => $publication_vid);
-//   $form['publication_nid'] = array('#type' => 'value', '#value' => $publication_nid);
-//   $form['tid'] = array('#type' => 'value', '#value' => $tid);
-//   $form['publication_form_build_id'] = array('#type' => 'value', '#value' => $publication_form_build_id);
-//     
-//   $form['submit'] = array('#type' => 'submit', '#value' => t('Save'), '#weight' => 3);
-//   $form['cancel'] = array('#type' => 'submit', '#value' => t('Cancel'), '#weight' => 5);
-//   
-//   return $form;
-//   
-// }
-// 
-// function publication_modal_term_fields_form_submit($form, &$form_state){
-// 
-//   global $user;
-// 
-//   $args = array(
-//     'tid' => $form_state['values']['tid'],
-//     'type' => 'term_field'
-//   );
-//    
-//   $session_key = $form_state['values']['publication_form_build_id'] .':'. $form_state['values']['tid'];
-//    
-//   $term = taxonomy_get_term($form_state['values']['tid']); 
-//    
-//   switch ($form_state['values']['op']){
-//     
-//     case t('Save'):
-//     
-//       // Store the term field values in a sesion so if user re-edits the form, we can use them as defaults
-//       publication_session($session_key, $form_state['values']['term_fields']);
-//       
-//       $args['op'] = 'update';
-//       $args['data'] = serialize($form_state['values']['term_fields']);
-//       
-//       drupal_set_message(t('Term fields for @name have been updated.', array('@name' => $term->name)));
-//     
-//     break;
-//     
-//     case t('Reset to publication defaults'):
-//     
-//       drupal_set_message(t('Term fields for @name have been reset to the publication default.', array('@name' => $term->name)));
-//     
-//       $args['op'] = 'reset';
-//       publication_session($session_key, 'RESET');
-//     
-//     break;
-//     
-//   }
-//   
-//   $form_state['rebuild'] = true;
-//   
-//   modalframe_close_dialog($args);
-// 
-// }
-
-
 
 
 /**

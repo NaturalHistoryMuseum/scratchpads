@@ -91,7 +91,7 @@ Drupal.behaviors.modalNodeForm = function(context) {
        
            }else{
              
-              $titleSpan.addClass('term-field-override');
+            $titleSpan.addClass('term-field-override');
              
            }
          

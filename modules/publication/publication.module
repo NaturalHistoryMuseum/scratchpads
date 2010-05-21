@@ -1069,6 +1069,12 @@ function publication_theme($existing, $type, $theme, $path){
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
+    'publication_term_fields_element' => array(
+      'arguments' => array(
+        'element' => array()
+      ), 'file' => 'publication.theme.inc', 
+      'path' => $path
+    ),
     'publication_node_form_base_elements' => array(
       
       'arguments' => array(
