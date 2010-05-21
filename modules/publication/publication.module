@@ -497,12 +497,11 @@ function publication_views_api(){
 /** 
  *Implementation of hook_menu_alter 
  */
-function publication_menu_alter(&$items){
-  
+function publication_menu_alter(&$items){  
   $items['node/add/publication-image-caption']['hidden'] = 1;
   $items['node/add/publication-section']['hidden'] = 1;
-  return $items;
-  
+  $items['node/add/publication-taxon-treatment']['hidden'] = 1;
+  return $items;  
 }
 
 
