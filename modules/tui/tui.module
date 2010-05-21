@@ -18,6 +18,14 @@ function tui_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'tui.admin.inc'
     ),
+    'admin/settings/tui' => array(
+      'title' => 'TUI settings',
+      'description' => 'Change the default TUI settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('tui_admin_settings'),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'tui.admin.inc'
+    ),
     'tui/getform/%' => array(
       'title' => 'Get form',
       'page callback' => 'tui_get_term_form',

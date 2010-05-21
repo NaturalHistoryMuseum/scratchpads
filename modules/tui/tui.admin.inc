@@ -11,7 +11,20 @@ function tui_admin_vocabulary_edit($vocabulary){
   $all_tids = array();
   module_load_include('tree.inc','tui');
   $tree = tui_get_tree($vocabulary->vid, $tids, $all_tids);
-  return theme('tui_page', $tree, $vocabulary, $all_tids);
+  echo theme('page', theme('tui_page', $tree, $vocabulary, $all_tids), variable_get('tui_show_side_bars', TRUE));
+}
+
+/**
+ * TUI settings page
+ */
+function tui_admin_settings() {
+  $form['tui_show_side_bars'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Show sidebars',
+    '#default_value' => variable_get('tui_show_side_bars', TRUE),
+    '#description' => 'Uncheck this box to hide the sidebars on the taxonomy editor page, providing more room for the editor interface.'
+  );
+  return system_settings_form($form);
 }
 
 /**
