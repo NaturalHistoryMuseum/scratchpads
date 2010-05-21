@@ -27,10 +27,17 @@ function publication_node_info(){
       'body_label' => t('Enter data'), 
       'body_required' => FALSE
     ),
-    'publication_taxon_treatment' => array(
-      'name' => t('Taxon treatment term fields'), 
+    'publication_taxon_section' => array(
+      'name' => t('Publication taxon section'), 
       'module' => 'publication', 
-      'description' => t('Taxon treatment term fields for a publication document.'), 
+      'description' => t('A taxon section for a publication document.'), 
+      'title_label' => t('Final name'), 
+      'has_body' => FALSE
+    ),
+    'publication_taxon_description' => array(
+      'name' => t('Publication taxon description'), 
+      'module' => 'publication', 
+      'description' => t('Taxon description for a publication document.'), 
       'title_label' => t('Title'), 
       'has_body' => FALSE
     )
@@ -53,7 +60,7 @@ function publication_group_info(){
       'type_name' => 'publication'
     ), 
     array(
-      'label' => 'Term fields', 
+      'label' => 'Default fields', 
       'weight' => 3, 
       'group_type' => 'standard', 
       'group_name' => 'group_publication_term_fields', 
@@ -86,6 +93,13 @@ function publication_group_info(){
       'group_name' => 'group_publication_privacy', 
       'type_name' => 'publication'
     ),
+    array(
+      'label' => 'Supplementary materials', 
+      'weight' => 7, 
+      'group_type' => 'standard', 
+      'group_name' => 'group_publication_supplementary', 
+      'type_name' => 'publication'
+    ),
   );
 }
 
@@ -93,7 +107,7 @@ function publication_field_info(){
   return array(
     
     array(
-      'label' => 'Title', 
+      'label' => 'Publication title', 
       'field_name' => 'field_publication_title', 
       'type_name' => 'publication', 
       'group' => 'group_publication_metadata', 
@@ -105,7 +119,7 @@ function publication_field_info(){
       'description' => t('Please enter a title for the publication.')
     ),
     array(
-      'label' => 'Keywords', 
+      'label' => 'Keywords (one per line)', 
       'field_name' => 'field_publication_keywords', 
       'type_name' => 'publication', 
       'group' => 'group_publication_metadata', 
@@ -115,6 +129,18 @@ function publication_field_info(){
       'required' => 0, 
       'locked' => 0,
       'description' => t('Please enter a list of publication keywords, one keyword per line.')
+    ),
+    array(
+      'label' => 'Supplementary materials', 
+      'field_name' => 'field_publication_supplementary', 
+      'type_name' => 'publication', 
+      'group' => 'group_publication_supplementary', 
+      'type' => 'text', 
+      'widget_type' => 'text_textarea', 
+      'weight' => 0, 
+      'required' => 0, 
+      'locked' => 0,
+      'description' => t('Please enter a list of supplementary files.')
     ), 
     array(
       'field_name' => 'field_publication_images', 
@@ -125,7 +151,6 @@ function publication_field_info(){
       'db_storage' => '1', 'module' => 'nodereference', 
       'active' => '1', 'locked' => 0, 
       'columns' => array(
-        
         'nid' => array(
           'type' => 'int', 
           'unsigned' => true, 
@@ -199,7 +224,8 @@ function publication_field_info(){
       ), 
       'referenceable_types' => array(
         'publication_section' => 'publication_section',
-        'publication_taxon_treatment' => 'publication_taxon_treatment'
+        'publication_taxon_section' => 'publication_taxon_section',
+        'publication_taxon_description' => 'publication_taxon_description'
       ), 
       'widget' => array(
         
@@ -319,6 +345,32 @@ function publication_field_info(){
       'field_name' => 'field_publication_section', 
       'type_name' => 'publication_section'
     ),
+    array(
+      'field_name' => 'field_publication_section', 
+      'type_name' => 'publication_taxon_section'
+    ),
+    array(
+      'label' => 'Citations', 
+      'field_name' => 'field_publication_taxon_citation', 
+      'type_name' => 'publication_taxon_section', 
+      'type' => 'text', 
+      'widget_type' => 'text_textarea', 
+      'weight' => 0, 
+      'required' => 0, 
+      'locked' => 0,
+      'description' => t('Citations for this taxon.')
+    ),
+    array(
+      'label' => 'Type material', 
+      'field_name' => 'field_publication_taxon_material', 
+      'type_name' => 'publication_taxon_section', 
+      'type' => 'text', 
+      'widget_type' => 'text_textarea', 
+      'weight' => 0, 
+      'required' => 0, 
+      'locked' => 0,
+      'description' => t('Type material for this taxon.')
+    ),
   );
 }
 
@@ -338,9 +390,9 @@ function publication_insert($node){
     
     break;
     
-    case 'publication_taxon_treatment':
+    case 'publication_taxon_description':
 
-      db_query("INSERT INTO {publication_taxon_treatment_node} (vid, nid, term_fields) VALUES (%d, %d, '%s')", $node->vid, $node->nid, serialize($node->term_fields));
+      db_query("INSERT INTO {publication_taxon_description_node} (vid, nid, term_fields) VALUES (%d, %d, '%s')", $node->vid, $node->nid, serialize($node->term_fields));
         
     break;
     
@@ -370,9 +422,9 @@ function publication_update($node){
       
       break;
     
-      case 'publication_taxon_treatment':
+      case 'publication_taxon_description':
 
-        db_query("UPDATE {publication_taxon_treatment_node} SET term_fields = '%s' WHERE vid = %d", serialize($node->term_fields), $node->vid);
+        db_query("UPDATE {publication_taxon_description_node} SET term_fields = '%s' WHERE vid = %d", serialize($node->term_fields), $node->vid);
 
       break;
     
@@ -431,9 +483,9 @@ function publication_load($node){
     
     break;
     
-    case 'publication_taxon_treatment':
+    case 'publication_taxon_description':
     
-      $additions = db_fetch_object(db_query("SELECT term_fields FROM {publication_taxon_treatment_node} WHERE vid = %d", $node->vid));
+      $additions = db_fetch_object(db_query("SELECT term_fields FROM {publication_taxon_description_node} WHERE vid = %d", $node->vid));
       $additions->term_fields = unserialize($additions->term_fields);
     
     break;
@@ -453,7 +505,7 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
 
     case 'load':
 
-      if($node->type == 'publication' || $node->type == 'publication_section'){
+      if($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section'){
     
         $output = array();
 
@@ -504,7 +556,6 @@ function publication_menu_alter(&$items){
   return $items;  
 }
 
-
 function publication_create_taxon_section_node($vid, $tid){
   
   global $user;
@@ -513,14 +564,14 @@ function publication_create_taxon_section_node($vid, $tid){
   $node = new stdClass();  
   $node->uid = $user->uid;
   $node->author = $user->name;
-  $node->type = 'publication_section';
+  $node->type = 'publication_taxon_section';
   $node->status = 1;
   $node->title = $term->name;
   $node->taxonomy[$vid] = array($tid => $tid);
   // Create taxon treatment node
   $node->field_publication_section = array(
     array(
-      'nid' => publication_create_taxon_treatment_node($term)
+      'nid' => publication_create_taxon_description_node($term)
     )
   );
   
@@ -530,15 +581,15 @@ function publication_create_taxon_section_node($vid, $tid){
   
 }
 
-function publication_create_taxon_treatment_node($term){
+function publication_create_taxon_description_node($term){
   
   global $user;
   
   $node = new stdClass();  
   $node->uid = $user->uid;
   $node->author = $user->name;
-  $node->title = t('@name taxon treatment', array('@name' => $term->name));
-  $node->type = 'publication_taxon_treatment';
+  $node->title = t('@name taxon description', array('@name' => $term->name));
+  $node->type = 'publication_taxon_description';
   $node->status = 1;
   node_save($node);
   
@@ -1052,7 +1103,7 @@ function publication_theme($existing, $type, $theme, $path){
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
-    'publication_taxon_treatment_node_form' => array(      
+    'publication_taxon_description_node_form' => array(      
       'arguments' => array(
         'form' => array()
       ), 'file' => 'publication.theme.inc', 
@@ -1070,6 +1121,12 @@ function publication_theme($existing, $type, $theme, $path){
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ), 
+  'publication_taxon_section_node_form' => array(
+    'arguments' => array(
+      'form' => array()
+    ), 'file' => 'publication.theme.inc', 
+    'path' => $path
+  ),    
     'publication_view_filter_select' => array(
       'arguments' => array(
         'element' => array()
@@ -1201,7 +1258,7 @@ function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $n
 
       if($tid = @array_shift(publication_nodes_get_terms($section['nid']))){
       
-        $taxon_treatment_sections[$section_node->nid] = $tid;
+        $taxon_treatment_sections[$section['nid']] = $tid;
         
       }
       

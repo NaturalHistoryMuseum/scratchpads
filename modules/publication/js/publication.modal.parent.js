@@ -81,7 +81,7 @@ Drupal.behaviors.modalNodeForm = function(context) {
          
          break;
          
-         case 'publication_taxon_treatment':
+         case 'publication_taxon_description':
 
           $titleSpan = $('tr.draggable-section-'+args.nid+' span.title');
 

@@ -74,16 +74,10 @@ function theme_publication_node_edit_form($form){
          $tab_content .= '</div>';
             
          break;
-   
-         // Nomenclature is not currently in use...
-         // case 'group_publication_nomenclature':
-         // 
-         //   $tab_content .= drupal_render($form['nomenclature_fields']);
-         // 
-         // break;
          
          case 'group_publication_term_fields':
          
+           $tab_content .= '<p>'.t('Please enter the default term fields to use for taxon names in this publication. These term fields can then be changed for individual taxa under <a class="tab-link" href="#sections">sections</a>.').'</p>';
            $tab_content .= drupal_render($form['term_field_defaults']);
            $tab_content .= drupal_render($form['term_field_updates']);
          
@@ -145,7 +139,21 @@ function theme_publication_section_node_form($form){
   
 }
 
-function theme_publication_taxon_treatment_node_form($form){
+function theme_publication_taxon_section_node_form($form){
+  
+  publication_add_modal_child_files();
+  
+  $output = drupal_render($form['title']); 
+  $output .= drupal_render($form['reset_manuscript_name']);  
+  $output .= drupal_render($form['field_publication_taxon_citation']); 
+  $output .= drupal_render($form['field_publication_taxon_material']);
+  $output .= theme('publication_node_form_base_elements', $form);
+  
+  return $output;
+  
+}
+
+function theme_publication_taxon_description_node_form($form){
   
   publication_add_modal_child_files();
 
@@ -274,8 +282,11 @@ function theme_publication_field_publication_section($element){
 
     $output .= '<p>';
     $output .= l('Add section', 'node/add/publication-section', array('attributes' => array('class' => 'modal')));
+    $output .= '</p>';
+    $output .= '<p class="description">';
+    $output .= t('Add custom section to the publication or to an individual taxon description');
     $output .= '</p>';   
-    
+        
   }
   
   $output .= '</div>';

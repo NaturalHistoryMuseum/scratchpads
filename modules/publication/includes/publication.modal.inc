@@ -158,12 +158,6 @@ function publication_modal_image_caption_node_form_submit(&$form, &$form_state){
 
 function publication_section_modal_node_form_submit(&$form, &$form_state){
 
-  if($form_state['values']['reset_manuscript_name']){
-  
-    $form_state['values']['title'] = $form_state['values']['term']->name;
-    
-  }
-
   node_form_submit($form, &$form_state);
 
   $nid = $form_state['nid'];
@@ -200,16 +194,9 @@ function publication_section_modal_node_form_submit(&$form, &$form_state){
   
     $args['output'] = drupal_render($publication_form['field_publication_section']);    
    
-  }elseif($form_state['values']['reset_manuscript_name']){ 
-    
-    $args['op'] = 'Reset';
-    $args['title'] = $form_state['values']['term']->name;
-  
-  }elseif($form_state['node']['title'] != $form_state['values']['term']->name){ // Node has been updated
+  }else{ // Node has been updated
     
     $args['op'] = 'Updated';
-    $args['title'] = $form_state['node']['title'];
-    $args['original_title'] = $form_state['values']['term']->name;
     
   }
   
@@ -218,7 +205,37 @@ function publication_section_modal_node_form_submit(&$form, &$form_state){
   
 }
 
-function publication_taxon_treatment_modal_node_form_submit(&$form, &$form_state){
+function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
+  
+  $args = array(
+    'type' => $form['#node']->type,
+    'nid' => $nid,
+  );
+  
+  if($form_state['values']['reset_manuscript_name']){
+  
+    $form_state['values']['title'] = $form_state['values']['term']->name;
+    $args['op'] = 'Reset';
+    $args['title'] = $form_state['values']['term']->name;
+    
+  }else{
+    
+    $args['op'] = 'Update';
+    $args['title'] = $form_state['node']['title'];
+    
+  }
+
+  node_form_submit($form, &$form_state);
+
+  $nid = $form_state['nid'];
+  
+  $form_state['rebuild'] = true;
+  modalframe_close_dialog($args);
+  
+}
+
+
+function publication_taxon_description_modal_node_form_submit(&$form, &$form_state){
   
   $args = array(
     'type' => $form['#node']->type,

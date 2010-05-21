@@ -96,6 +96,13 @@ Drupal.behaviors.publications = function(context) {
     publication.insertChangedWarning($fieldset);
   }
   
+  $('a.tab-link').click(function(){
+
+    $('#publication-tabs li a[href='+$(this).attr('href')+']').trigger('click');
+    return false;
+    
+  });
+  
 }
 
 
