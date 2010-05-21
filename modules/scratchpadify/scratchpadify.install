@@ -515,7 +515,7 @@ function scratchpadify_update_6140(){
           $scientific_name->field_vernacular_name = array(array('value' => $vernacular_name->name));
         }
         // SET THE F*****G parent!
-        $tid1->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $tid1->tid));
+        $scientific_name->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $scientific_name->tid));
         // Save the scientific name, and delete the vernacular
         $scientific_name = (array)$scientific_name;
         $saved = taxonomy_save_term($scientific_name);
@@ -549,6 +549,43 @@ function scratchpadify_update_6140(){
         $tid1 = (array)$tid1;
         $saved = taxonomy_save_term($tid1);
         $ret[] = array('success' => $saved, 'query' => t('Saving %term', array('%term' => $tid1['name'])));
+      }
+      // Save the ranks from the taxonomy enhancer table
+      // We'll use the ranks from the animal kingdom, as we have far more animal
+      // Scratchpads than botanical ones.
+      $ranks = array(    
+        'kingdom' => 23,
+        'subkingdom' => 24,
+        'phylum' => 25,
+        'subphylum' => 26,
+        'superclass' => 27,
+        'class' => 28,
+        'subclass' => 29,
+        'infraclass' => 30,
+        'superorder' => 31,
+        'order' => 32,
+        'suborder' => 33,
+        'infraorder' => 34,
+        'superfamily' => 35,
+        'family' => 36,
+        'subfamily' => 37,
+        'tribe' => 38,
+        'subtribe' => 39,
+        'genus' => 40,
+        'subgenus' => 41,
+        'species' => 42,
+        'subspecies' => 43
+      );
+      $results = db_query("SELECT tid, value FROM {taxonomy_enhancer_value_text} WHERE fid = 'field_rank' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
+      while($row = db_fetch_array($results)){
+        if(isset($ranks[strtolower($row['value'])])){
+          $term = taxonomy_get_term($row['tid']);
+          $term->field_rank_name = $ranks[strtolower($row['value'])];
+          $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
+          $term = (array)$term;
+          $saved = taxonomy_save_term($term);
+          $ret[] = array('success' => $saved, 'query' => t('Saving rank "%rank" for %term', array('%term' => $term['name'], '%rank' => $row['value'])));
+        }
       }
     }
   }
