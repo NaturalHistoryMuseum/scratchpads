@@ -19,9 +19,6 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
       $term_has_children = db_result(db_query('SELECT COUNT(*) FROM {term_hierarchy} WHERE parent = %d', $term->tid));
     }
     $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><p><span class="tui-nodeleaf ';
-    if($active == $term->tid){
-      $output .= ' -------------------------- active ';
-    }
     if(is_array($branch) && count($branch)){
       $output .= 'tui-node-open';
     }
@@ -30,13 +27,16 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     } else {
       $output .= 'tui-leaf';
     }
-    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term';
+    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term';  
+    if($active == $term->tid){
+      $output .= ' active';
+    }
     if(isset($term->usage) && ($term->usage == 'invalid' || $term->usage == 'not accepted')){
       $output .= ' usage-invalid';
     }
     $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span></p>';
     if(is_array($branch)){
-      $output .= theme_tui_tree($branch);
+      $output .= theme_tui_tree($branch, $active);
     }
     $output .= '</li>';
   }
