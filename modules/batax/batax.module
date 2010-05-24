@@ -83,10 +83,6 @@ function batax_form_alter(&$form, &$form_state, $form_id){
     if((isset($form_state['post']['op']) && $form_state['post']['op'] == t('Delete')) || $form_state['confirm_delete']) {
       return;
     }
-    // Disable on publication content type
-    if($form_id == 'publication_node_form'){
-      return;
-    }
     /**
      * Most of the code below has been taken from the taxonomy.module file, as
      * we've set the taxonomy_override_selector, we need to replace what the
@@ -329,6 +325,9 @@ function batax_use_batax($vid, $type = FALSE){
   $vocabulary = taxonomy_vocabulary_load($vid);
   if($vocabulary->tags){
     return false;
+  }
+  if($type == 'publication'){
+    return FALSE;
   }
   if(module_exists('autotag') && $type){
     module_load_include('functions.inc', 'autotag');
