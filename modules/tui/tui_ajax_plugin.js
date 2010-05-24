@@ -14,8 +14,11 @@ $(document).ready(function(){
     if(hook == 'scrollFind' && Drupal.tui.completed){
       Drupal.tui.completed = false;
       Drupal.tui.submitted = false;
+      if(Drupal.tui.term_id.substring(0,3) == 'new'){
+        Drupal.tui.display_new_term = true;
+      }
       setTimeout("$('.messages').slideUp(200, Drupal.tui.display_form(false))", 2000);
-      Drupal.tui.reload_tree();
+      Drupal.tui.reload_tree(true);
       return false;
     }
   }

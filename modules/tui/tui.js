@@ -217,6 +217,11 @@ Drupal.tui.full_tree_success = function(data){
   else if(Drupal.tui.form_being_displayed){
     $('#'+Drupal.tui.form_being_displayed).addClass('active');
   }
+  else if(Drupal.tui.display_new_term){
+    Drupal.tui.display_new_term = false;
+    Drupal.tui.display_form($('.active'));
+    Drupal.tui.scrollto($('.active'));
+  }
   if(Drupal.tui.searchtids){
     position = $('#tui').offset();
     $('html,body').animate({scrollTop:position.top-30}, 1000);
@@ -265,8 +270,12 @@ Drupal.tui.display_form = function(element){
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.form+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.form_success(data);}}); 
 }
 
-Drupal.tui.reload_tree = function(){
-  $.ajax({type:'POST',cache:false,url:Drupal.settings.tui.callbacks.full_tree+"/"+Drupal.settings.tui.vocabulary,success:function(data){Drupal.tui.full_tree_success(data);},data:Drupal.settings.tui.opentids});
+Drupal.tui.reload_tree = function(display_added){
+  var callback_url = Drupal.settings.tui.callbacks.full_tree+"/"+Drupal.settings.tui.vocabulary;
+  if(display_added){
+    callback_url += "/added";
+  }
+  $.ajax({type:'POST',cache:false,url:callback_url,success:function(data){Drupal.tui.full_tree_success(data);},data:Drupal.settings.tui.opentids});
 }
 
 Drupal.behaviors.tui = function(context){
