@@ -63,11 +63,14 @@ function itis_term_form(&$node, $form_state){
  * form_alter
  */
 function itis_term_form_alter(&$form, &$form_state, $form_id){
-  if($form_id == 'taxonomy_form_term'){
+  if($form_id == 'taxonomy_form_term' && _term_node_get_content_type_for_vid($form['#vocabulary']['vid']) == 'itis_term'){
     $form['identification']['name']['#prefix'] = '<div id="itis_term_name">';
     $form['identification']['name']['#suffix'] = '</div>';
     array_unshift($form['#submit'], 'itis_term_form_term_submit');
     array_unshift($form['#validate'], 'itis_term_validate');
+    if($form['identification']['description']['#default_value'] == ''){
+      $form['identification']['description']['#type'] = 'hidden';
+    }
   } elseif($form_id == 'itis_term_node_form'){
     $form['group_scientificname']['field_unit_name1']['#prefix'] = '<div id="itis_term_unit_name1" class="itis_term_unit">';
     $form['group_scientificname']['field_unit_name1']['#suffix'] = '</div>';
