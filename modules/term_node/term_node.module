@@ -22,7 +22,7 @@ function term_node_form_alter(&$form, $form_state, $form_id){
   // Add option to select content type when editing a vocabulary
   if($form_id == 'taxonomy_form_vocabulary'){
     $node_types = node_get_types();
-    $node_type_names = array(0 => t('< None >'));
+    $node_type_names = array(0 => t('- None -'));
     // We only add the node type to the list if there are no nodes associated
     // with it.
     $vocabs_and_contenttypes = variable_get('term_node_vocabularies-contenttypes', array());
