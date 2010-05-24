@@ -780,6 +780,8 @@ function publication_access_callback($operation, $node = NULL){
 
 function publication_access_node($node){
   
+  global $user;
+  
   if($node->type == 'publication'){
     global $user;
     if(user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid)){
@@ -1075,6 +1077,12 @@ function publication_views_pre_view(&$view, $display_id){
       $view->set_item($display_id, 'filter', 'tid', NULL);
     }  
   }
+}
+
+function publication_get_referenced_nodes(){
+  
+  
+  
 }
 
 function publication_views_query_alter(&$view, &$query) {
