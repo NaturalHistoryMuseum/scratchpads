@@ -89,6 +89,12 @@ function theme_publication_node_edit_form($form){
          
          break;
          
+         case 'group_publication_supplementary':
+         
+           unset($form['group_publication_supplementary']['#type']);
+         
+         break;
+         
        }
    
        $tab_content .= drupal_render($form[$group_name]);
@@ -280,12 +286,12 @@ function theme_publication_field_publication_section($element){
 
     $output .= theme('table', $header, $rows, array('id' => 'publication-draggable-section'));
 
-    $output .= '<p>';
+    $output .= '<div id="add-section"><p>';
     $output .= l('Add section', 'node/add/publication-section', array('attributes' => array('class' => 'modal')));
     $output .= '</p>';
     $output .= '<p class="description">';
     $output .= t('Add custom section to the publication or to an individual taxon description');
-    $output .= '</p>';   
+    $output .= '</p></div>';   
         
   }
   
@@ -344,6 +350,29 @@ function theme_publication_term_fields_element($element){
   
   $output .= '</div></div>';
   
+  return $output;
+  
+}
+
+
+function theme_term_fields_list($fields){
+  
+  $spm_fields = variable_get('spm_fields', array());
+  
+  foreach($fields as $group_name => $group_fields){
+    
+    foreach(array_filter($group_fields) as $selected_field){     
+      
+      $term_field_items[] = $spm_fields[$group_name][$selected_field]['name'];
+      
+    }
+
+  }
+  
+  $output = '<div class="term-fields-list">';
+  $output .= theme('item_list', $term_field_items);
+  $output .= '</div>';
+
   return $output;
   
 }

@@ -448,28 +448,30 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     
     case 'publication_taxon_section_node_form':
     
-        $term = array_shift($node->taxonomy);
+      $node = $form['#node'];
+    
+      $term = array_shift($node->taxonomy);
 
-        $form['title']['#description'] = t('Enter the final published name for this taxon.');
+      $form['title']['#description'] = t('Enter the final published name for this taxon.');
 
-        $form['taxonomy'][$term->vid] = array(
+      $form['taxonomy'][$term->vid] = array(
+      '#type' => 'value',
+      '#value' => $term->tid
+      );
+
+      $form['term'] = array(
         '#type' => 'value',
-        '#value' => $term->tid
+        '#value' => $term
+      );
+
+      if(isset($term->name) && $term->name != $node->title){
+
+        $form['reset_manuscript_name'] = array(
+          '#type' => 'checkbox', 
+          '#title' => t('Reset manuscript name to %name', array('%name' => $term->name)), 
         );
 
-        $form['term'] = array(
-          '#type' => 'value',
-          '#value' => $term
-        );
-
-        if(isset($term->name) && $term->name != $node->title){
-
-          $form['reset_manuscript_name'] = array(
-            '#type' => 'checkbox', 
-            '#title' => t('Reset manuscript name to %name', array('%name' => $term->name)), 
-          );
-
-        }
+      }
 
       unset($form['buttons']['delete']);
       unset($form['buttons']['preview']);
@@ -486,7 +488,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
     case 'publication_taxon_description_node_form':
     
     if(!_publication_node_form_is_modal()){
-      drupal_set_message('Sorry, taxon treatments can only be added / edited from within a publication.', 'error');
+      drupal_set_message('Sorry, taxon descriptions can only be added / edited from within a publication.', 'error');
       drupal_goto();
     }
     
@@ -572,7 +574,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
         if(!$_GET['view_name']){
           $class .= ' collapsed';
         }
-        
+                
         $form['#prefix'] = '<fieldset class="'.$class.'"><legend>'.t('Filter items').'</legend>';
         $form['#suffix'] = '</fieldset>';
         
@@ -684,11 +686,17 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
 
         case 'publication_taxon_description':
         
-          $title = '<span class="title'.(is_array($child_node->term_fields) ? ' term-field-override' : '').'">'.$child_node->title.'</span>';
+          $title = '<span class="title">'.$child_node->title.'</span>';
+        
+          if(is_array($child_node->term_fields)){
+
+            $title .= '<br />' . theme('term_fields_list', $child_node->term_fields);
+
+          }
+
+          $op = l('Edit term fields', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal')));
           
-          $op = l('Edit', 'node/'.$nid.'/edit', array('attributes' => array('class' => 'modal')));
-          
-          $class = 'taxon-treatment tabledrag-leaf';
+          $class = 'taxon-description tabledrag-leaf';
         
         break;
         

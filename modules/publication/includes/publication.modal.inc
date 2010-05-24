@@ -209,7 +209,6 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
   
   $args = array(
     'type' => $form['#node']->type,
-    'nid' => $nid,
   );
   
   if($form_state['values']['reset_manuscript_name']){
@@ -221,13 +220,14 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
   }else{
     
     $args['op'] = 'Update';
-    $args['title'] = $form_state['node']['title'];
+    $args['title'] = $form_state['values']['title'];
     
   }
 
   node_form_submit($form, &$form_state);
 
-  $nid = $form_state['nid'];
+  $args['nid'] = $form_state['nid'];
+  $args['term_name'] = $form_state['values']['term']->name;
   
   $form_state['rebuild'] = true;
   modalframe_close_dialog($args);
@@ -236,11 +236,12 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
 
 
 function publication_taxon_description_modal_node_form_submit(&$form, &$form_state){
-  
+
   $args = array(
     'type' => $form['#node']->type,
     'nid' => $form_state['nid'],
     'op' => 'Updated',
+    'output' => theme('term_fields_list', $form_state['values']['term_fields'])
   );
   
   $form_state['rebuild'] = true;

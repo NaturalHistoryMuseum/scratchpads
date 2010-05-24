@@ -553,7 +553,42 @@ function publication_menu_alter(&$items){
   $items['node/add/publication-image-caption']['hidden'] = 1;
   $items['node/add/publication-section']['hidden'] = 1;
   $items['node/add/publication-taxon-treatment']['hidden'] = 1;
+  
+  $items['node/%node/og/forum']['access callback'] = 'publication_tab_access';
+  $items['node/%node/og/forum']['access arguments'] = array(1);
+
+  $items['node/%node/track']['access callback'] = 'publication_tab_access';
+  $items['node/%node/track']['access arguments'] = array(1, 'access statistics');
+    
+  $items['node/%node/clone']['access callback'] = 'publication_tab_access';
+  $items['node/%node/clone']['access arguments'] = array(1, 1, 'clone_access');  
+
+  $items['node/%node/broadcast']['access callback'] = 'publication_tab_access';
+  $items['node/%node/broadcast']['access arguments'] = array(1, 1, 'og_broadcast_access');    
+    
   return $items;  
+  
+}
+
+/**
+ * Hide some tabs by checking node type before passing to default access check 
+ *
+ * @param string $node 
+ * @param string $access_arguments 
+ * @param string $access_callback 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_tab_access($node, $access_arguments = 'access content', $access_callback = 'user_access'){
+
+  if($node->type != 'publication'){
+
+    return $access_callback($access_arguments);
+    
+  }
+  
+  return false;
+  
 }
 
 function publication_create_taxon_section_node($vid, $tid){
@@ -568,7 +603,7 @@ function publication_create_taxon_section_node($vid, $tid){
   $node->status = 1;
   $node->title = $term->name;
   $node->taxonomy[$vid] = array($tid => $tid);
-  // Create taxon treatment node
+  // Create taxon description node
   $node->field_publication_section = array(
     array(
       'nid' => publication_create_taxon_description_node($term)
@@ -669,7 +704,7 @@ function publication_menu(){
       'access callback' => 'publication_access_callback', 
       'access arguments' => array('xml', 1),
       'type' => MENU_LOCAL_TASK,
-      'weight' => 0, 
+      'weight' => 3, 
       'file' => 'publication.xml.inc',      
     ),    
     'publication/js/%node' => array(
@@ -697,7 +732,8 @@ function publication_menu(){
       'access callback' => 'publication_access_callback', 
       'access arguments' => array('export', 1),
       'type' => MENU_LOCAL_TASK, 'weight' => 0, 
-      'file' => 'publication.export.inc'
+      'file' => 'publication.export.inc',
+      'weight' => 2
     ), 
     'publication/export/js/%node' => array(
       'page callback' => 'publication_export_js', 
@@ -1029,6 +1065,7 @@ function publication_content_node_load($param = NULL, $cck_param = array(), $rev
  * @author Ben Scott
  */
 function publication_views_pre_view(&$view, $display_id){
+  
   // Set the taxonomy term filter to use the selected vocabulary vid
   if($view->name == _publication_get_nodereference_view_name()){
     $display_id = $view->current_display;
@@ -1044,7 +1081,7 @@ function publication_views_query_alter(&$view, &$query) {
   
   if($view->name == 'publication_display' && count($view->argument['nid']->value)){
    
-    $query->orderby = array('FIELD(nid, '. implode(',', $view->argument['nid']->value) .')');
+    $query->orderby = array('FIELD(node.nid, '. implode(',', $view->argument['nid']->value) .')');
     
   }elseif($view->name == _publication_get_nodereference_view_name()){
 
@@ -1136,6 +1173,12 @@ function publication_theme($existing, $type, $theme, $path){
     'publication_term_fields_element' => array(
       'arguments' => array(
         'element' => array()
+      ), 'file' => 'publication.theme.inc', 
+      'path' => $path
+    ),
+    'term_fields_list' => array(
+      'arguments' => array(
+        'fields' => array()
       ), 'file' => 'publication.theme.inc', 
       'path' => $path
     ),
@@ -1270,12 +1313,6 @@ function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $n
    
 }
 
-function _publication_section_node_is_taxon($node){
-  
-  return count($node->taxonomy);
-  
-}
-
 
 /**
  * Preprocess views grid
@@ -1310,6 +1347,16 @@ function publication_preprocess_views_view_grid($vars){
   
 }
 
+function publication_preprocess_views_view($vars){
+  
+  if($vars['view']->name == 'publication_display'){
+    
+    unset($vars['admin_links']);
+    
+  } 
+  
+}
+
 /**
  * Implementation of hook_theme_registry_alter().
  *
@@ -1319,6 +1366,7 @@ function publication_preprocess_views_view_grid($vars){
 function publication_theme_registry_alter(&$theme_registry) {
   
   $theme_registry['views_view_grid']['preprocess functions'][] = 'publication_preprocess_views_view_grid';
+  $theme_registry['views_view']['preprocess functions'][] = 'publication_preprocess_views_view';
 
 }
 

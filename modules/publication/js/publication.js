@@ -58,9 +58,27 @@ publication.insertChangedWarning = function($element) {
   
 }
 
+publication.insertTabWarning = function($element) {
+
+  var $tab = $('.ui-tabs-panel:visible');
+  
+  if(!$('div.warning', $tab).length){
+   
+     $tab.prepend($(Drupal.theme('publicationTabWarning')).hide().fadeIn('slow'));
+    
+  }
+  
+}
+
 Drupal.theme.prototype.publicationChangedWarning = function () {
   
   return '<div class="warning">' + Drupal.theme('tableDragChangedMarker') + ' ' + Drupal.t("Changes made will not be saved until the publication form is submitted.") + '</div>';
+
+}
+
+Drupal.theme.prototype.publicationTabWarning = function () {
+  
+  return '<div class="warning">' + Drupal.t("This information is used elsewhere in this publication. It is recommended you now save your changes before proceeding.") + '</div>';
 
 }
 
@@ -102,6 +120,18 @@ Drupal.behaviors.publications = function(context) {
     return false;
     
   });
+  
+  $('#term-fields input, #edit-vocabulary, input.taxonomy-tree-checkbox').change(function(){
+    
+    publication.insertTabWarning();
+    
+  })
+  
+  if($(context).eq(0).hasClass('treeview-item')){
+    
+    publication.insertTabWarning();
+    
+  }
   
 }
 

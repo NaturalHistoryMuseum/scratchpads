@@ -95,6 +95,16 @@
   display: none!important;
 }
 
+.content-add-more{
+  width: 530px;
+  float: right;
+}
+
+div.view-publication-display ul li{
+  padding-left: 0; 
+  background: none;
+  margin: 3px 0 3px 6px;
+}
 
 
 /* Node references add more buttons */
@@ -162,11 +172,6 @@
 }
 
 
-/* Exposed filters */
-.not-in-node{
-  color: orange!important;
-}
-
 
 
 /* BUTTONS */
@@ -215,14 +220,19 @@
 
 /* BIBLIO */
 
+div.view-display-id-page_1 ul li div{
+  float: left;
+  padding-right: 5px;
+}
+
 /* TERM FIELDS */
 
 .term-fields{
-  width: 520px;
+  width: 450px;
 }
 
 .term-fields div.column{
-  width: 250px;
+  width: 225px;
   float: left;
 }
 
@@ -256,24 +266,37 @@ div#publication-images div.has-caption span{
 
 
 /* SECTIONS */
-#sections #publication-draggable-section a{
+#sections #publication-draggable-section a.modal{
   margin-right: 7px;
 }
 
-#sections #publication-draggable-section span.manuscript-name,
-#sections #publication-draggable-section span.term-field-override{
+#sections #publication-draggable-section span.manuscript-name{
   border-bottom: 1px dashed #999;
 }
 
-tr.taxon-treatment a.tabledrag-handle{
+tr.taxon-description a.tabledrag-handle{
   display: none;
 }
 
-#sections #publication-draggable-section tr.taxon-treatment,
+#sections #publication-draggable-section tr.taxon-description,
 #sections #publication-draggable-section tr.taxon-section{
   background-color:#dff4ff!important;
   border:1px solid #c2e1ef;
   color:#336699;
+}
+
+#sections #publication-draggable-section tr.taxon-description ul{
+  margin-left: 0;
+}
+
+#sections #publication-draggable-section tr.taxon-description ul li{
+  list-style: none;
+  background: none;
+  float: left;
+  padding: 0 7px 0 0;
+  margin: 0;
+  font-size:0.85em;
+  color:#898989;
 }
 
 #sections #publication-draggable-section tr.section{
@@ -283,8 +306,21 @@ tr.taxon-treatment a.tabledrag-handle{
 
 
 
-tr.taxon-treatment td.section-title .indentation{
-  padding-left: 1.7em;
+tr.taxon-description td.section-title span.title,
+tr.taxon-description td.section-title div.term-fields-list{
+  padding-left: 1.5em;
+  margin-left: 13px;
+  float: left;
+  width: 500px;
+}
+
+#add-section{
+  margin: 15px 0;
+}
+
+#add-section p{
+  margin: 4px 70px 4px 0;
+  text-align: center;
 }
 
 

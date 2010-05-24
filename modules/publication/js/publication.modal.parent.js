@@ -83,17 +83,33 @@ Drupal.behaviors.modalNodeForm = function(context) {
          
          case 'publication_taxon_description':
 
-          $titleSpan = $('tr.draggable-section-'+args.nid+' span.title');
+            $('tr.draggable-section-'+args.nid+' div.term-fields-list').remove();
 
-           if(args.op == 'Reset'){
-       
-             $titleSpan.removeClass('term-field-override');
-       
-           }else{
+           if(args.op == 'Updated'){
              
-            $titleSpan.addClass('term-field-override');
+            $('tr.draggable-section-'+args.nid+' span.title').after(args.output); 
              
            }
+         
+         break;
+         
+         case 'publication_taxon_section':
+
+         $titleSpan = $('tr.draggable-section-'+args.nid+' span.title');
+
+         $titleSpan.text(args.title);
+
+         if(args.op == 'Reset'){
+           
+            $titleSpan.removeClass('manuscript-name');
+            $titleSpan.removeAttr('title');
+            
+          }else{
+            
+            $titleSpan.addClass('manuscript-name');
+            $titleSpan.attr('title', args.term_name);
+            
+          }
          
          break;                  
           
