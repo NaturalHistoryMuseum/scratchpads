@@ -3,7 +3,7 @@
 /**
  * Theme the tree
  */
-function theme_tui_tree($taxonomy_tree){
+function theme_tui_tree($taxonomy_tree, $active = FALSE){
   // We need to employ a recursive element here, and it may as well be this 
   // function that does it.  We'll recurse into the tree, magicing things to 
   // where they should be.
@@ -19,6 +19,9 @@ function theme_tui_tree($taxonomy_tree){
       $term_has_children = db_result(db_query('SELECT COUNT(*) FROM {term_hierarchy} WHERE parent = %d', $term->tid));
     }
     $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><p><span class="tui-nodeleaf ';
+    if($active == $term->tid){
+      $output .= ' -------------------------- active ';
+    }
     if(is_array($branch) && count($branch)){
       $output .= 'tui-node-open';
     }
@@ -313,6 +316,13 @@ function tui_get_tree_themed($vid){
       $tids[] = $key;
     }
   }
+  // Check to see if we want to display the most recently added.
+  if(arg(3) == 'added'){
+    $active = db_result(db_query('SELECT tid FROM {term_data} WHERE vid = %d ORDER BY tid DESC LIMIT 1', $vid));
+    $tids[] = $active;
+  } else {
+    $active = FALSE;
+  }
   $tree = tui_get_tree($vid, $tids);
-  echo theme('tui_tree', $tree);
+  echo theme('tui_tree', $tree, $active);
 }
