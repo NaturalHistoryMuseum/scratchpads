@@ -214,6 +214,10 @@ function tui_search($vid, $search=FALSE){
  * Return the form to ajax
  */
 function tui_get_term_form($tid){
+  // Saving session when getting the form was preventing the Undo button from
+  // working.  There shouldn't be any need to save the session when getting the
+  // form anyway, so nae bother.
+  session_save_session(FALSE);
   $tid_parts = explode('-', $tid);
   if($tid_parts[0] == 'new'){
     $vocabulary = taxonomy_vocabulary_load($tid_parts[1]);
