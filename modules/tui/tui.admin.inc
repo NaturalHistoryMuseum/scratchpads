@@ -247,6 +247,9 @@ function tui_taxonomy_form_pre_render($form){
       unset($form['term_node']);
     }
   }
+  if(isset($form['group_scientificname']) && isset($form['identification']['parent_message'])){
+    $form['group_scientificname']['parent_message'] = $form['identification']['parent_message'];
+  }
   if($form['identification']['description']['#type'] == 'hidden'){
     $form['description'] = $form['identification']['description'];
     $form['name'] = $form['identification']['name'];
