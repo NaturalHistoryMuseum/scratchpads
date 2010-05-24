@@ -144,7 +144,7 @@ function tui_search_form(&$form_statge, $vid){
 function tui_autocomplete($vid, $search){
   $matches = array();
   if ($search != '') {
-    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s%%')", 't', 'tid'), $vid, $search, 0, 10);
+    $result = db_query_range(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.vid = %d AND (LOWER(t.name) LIKE LOWER('%s%%') OR LOWER(t.name) LIKE LOWER('%% %s%%'))", 't', 'tid'), $vid, $search, $search, 0, 10);
     while ($term = db_fetch_object($result)){
       $n = $term->name;
       // Commas and quotes in terms are special cases, so encode 'em.
@@ -243,6 +243,11 @@ function tui_taxonomy_form_pre_render($form){
       unset($form['term_node']);
     }
   }
+  if($form['identification']['description']['#type'] == 'hidden'){
+    $form['description'] = $form['identification']['description'];
+    $form['name'] = $form['identification']['name'];
+    unset($form['identification']);
+  }
   $num_tabs = 0;
   foreach($form as $key => $value){
     if(isset($value['#type']) && $value['#type'] == 'fieldset'){
@@ -251,6 +256,8 @@ function tui_taxonomy_form_pre_render($form){
   }
   if($num_tabs>5){
     $class = ' class="tui-squeeze-tabs"';
+  } else if($num_tabs == 1){
+    $class = ' class="tui-hide-tabs"';
   }
   foreach($form as $key => $value){
     if(isset($value['#type']) && $value['#type'] == 'fieldset'){
