@@ -125,7 +125,7 @@ function tui_theme(){
       'file' => 'tui.admin.inc'
     ),
     'tui_tree' => array(
-      'arguments' => array('taxonomy_tree' => NULL),
+      'arguments' => array('taxonomy_tree' => NULL, 'active' => NULL),
       'file' => 'tui.tree.inc'
     )
   );
