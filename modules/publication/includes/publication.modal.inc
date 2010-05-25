@@ -180,19 +180,20 @@ function publication_section_modal_node_form_submit(&$form, &$form_state){
   
     $nids = array(array('nid' => $nid));
   
-    function array_filter_helper($property){
+      function array_filter_helper($property){
        
-     return !is_array($property);
+       return !is_array($property);
      
-    }
+      }
     
     $publication_form['field_publication_section'] = array_filter($publication_form['field_publication_section'], 'array_filter_helper');
   
+    drupal_process_form('publication_node_form', $publication_form, $publication_form_state);
+    
     publication_field_publication_section_alter($publication_form['field_publication_section'], $nids);
   
-    drupal_process_form('publication_node_form', $publication_form, $publication_form_state);
-  
-    $args['output'] = drupal_render($publication_form['field_publication_section']);    
+    $args['output'] = theme('publication_field_publication_section', $publication_form['field_publication_section']);    
+
    
   }else{ // Node has been updated
     

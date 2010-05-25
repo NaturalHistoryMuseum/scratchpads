@@ -410,7 +410,13 @@ function publication_update($node){
   // if this is a new node or we're adding a new revision,
   if($node->revision){
   
-    publication_insert($node);
+   publication_insert($node);
+  
+    if(($node->vid - $node->old_vid) > 1){
+      
+      publication_revert($node);
+      
+    }
   
   }else{
   
@@ -442,15 +448,162 @@ function publication_update($node){
  * Implementation of hook_delete().
  */
 function publication_delete($node){
+  
+  _publication_delete($node->type, array('nid' => $node->nid));
+  
+  if($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section'){
 
-// Get all linked nodes and delete them too
+    foreach($node->field_publication_section as $child_node){
+
+      if(is_numeric($child_node['nid'])){
+
+        node_delete($child_node['nid']);
+
+      }
+
+    }
+    
+  }
+  
+  // Delete image captions
+  if($node->type == 'publication'){
+    
+    foreach($node->field_publication_images as $image){
+      
+      $cck_params = array(
+        'publication_caption_image' => $image['nid'], 
+        'publication_caption_parent' => $node->nid
+      );
+
+      if($caption_node = publication_content_node_load(NULL, $cck_params)){
+       
+        node_delete($caption_node->nid);
+        
+      }
+      
+    }
+
+    
+  }
 
 }
+
+/**
+ * Helper function to delete DB records on node delete / delete revision
+ *
+ * @param string $type 
+ * @param string $args 
+ * @return void
+ * @author Ben Scott
+ */
+function _publication_delete($type, $args){
+  
+  switch($type){
+    
+    case 'publication':
+    
+      $sql = 'DELETE FROM publication_node';
+    
+    break;
+    
+    case 'publication_taxon_description':
+  
+      $sql = 'DELETE FROM publication_taxon_description_node';
+  
+    break; 
+    
+  }
+  
+  publication_db_query($sql, $args);
+  
+}
+
+/**
+ * Node is being reverted
+ *
+ * @param string $node 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_revert($node){
+  
+  // Revert publication sections
+  if(property_exists($node, 'field_publication_section')){
+    
+    foreach($node->field_publication_section as $child_node){
+
+      if(is_numeric($child_node['nid'])){
+        
+        publication_revert_node($child_node['nid'], $node);
+
+      }
+      
+    }
+    
+  }
+  
+  if($node->type == 'publication'){
+    
+    foreach($node->field_publication_images as $image){
+      
+      $cck_params = array(
+        'publication_caption_image' => $image['nid'], 
+        'publication_caption_parent' => $node->nid
+      );
+
+      if($caption_node = publication_content_node_load(NULL, $cck_params)){
+      
+        publication_revert_node($caption_node->nid, $node);
+
+      }
+      
+    }
+    
+  }
+  
+}
+
+/**
+ * See if an older version of a node exists & revert it if possible
+ *
+ * @param string $nid 
+ * @param string $node 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_revert_node($nid, $node){
+  
+  if($vid = publication_node_get_revision($nid, $node->revision_timestamp)){
+    $node_revision = node_load($nid, $vid, true);
+    $node_revision->revision = 1;
+    $node_revision->log = t('Publication %title reverted to revision %date.', array('%title' => $node->title, '%date' => format_date($node->revision_timestamp)));
+    node_save($node_revision);          
+  }
+  
+}
+
+/**
+ * Get previous revision
+ *
+ * @param string $nid 
+ * @param string $timestamp 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_node_get_revision($nid, $timestamp){
+  
+  $result = db_query('SELECT r.vid FROM {node_revisions} r WHERE r.nid = %d AND r.timestamp <= %d ORDER BY r.timestamp DESC LIMIT 1', $nid, $timestamp);
+  
+  return db_result($result);
+  
+}
+
 
 /**
  * Implementation of hook_access().
  */
 function publication_access($op, $node, $account){
+
   switch($op){
     case 'create' :
       return user_access('create publication', $account);
@@ -500,7 +653,7 @@ function publication_load($node){
  * Implementation of hook_nodeapi().
  */
 function publication_nodeapi(&$node, $op, $arg = 0) {
-  
+    
   switch ($op) {
 
     case 'load':
@@ -514,7 +667,7 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
         return $output;
     
       }
-      break;
+    break;
     case 'view':
       if($node->type == 'publication'){
         foreach($node->content as $key => $value){
@@ -524,6 +677,14 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
         }
         $node->content['view']['#value'] = '<p id="publication-display-og-ron"><a>'.t('Display content associated with publication').'</a></p>'.$node->content['view']['#value'];
       }
+    break;
+    
+    case 'delete revision':
+    
+      _publication_delete($node->type, array('vid' => $node->vid));
+    
+    break;
+      
   }  
 }
 
@@ -784,7 +945,7 @@ function publication_access_node($node){
   
   if($node->type == 'publication'){
     global $user;
-    if(user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid)){
+    if(user_access('administer nodes') || user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid)){
       return TRUE;
     }
   }
@@ -902,9 +1063,6 @@ function _publication_node_get_image($nid, $publication_nid){
   $output .= '</div>';
   return $output;
 }
-
-
-
 
 function publication_nodes_get_terms($nids){
   $terms = array();
@@ -1077,12 +1235,6 @@ function publication_views_pre_view(&$view, $display_id){
       $view->set_item($display_id, 'filter', 'tid', NULL);
     }  
   }
-}
-
-function publication_get_referenced_nodes(){
-  
-  
-  
 }
 
 function publication_views_query_alter(&$view, &$query) {

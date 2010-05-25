@@ -720,6 +720,7 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
          'section_parent' => array(
            '#type' => 'textfield',
            '#default_value' => $parent,
+           '#name' => 'field_publication_section['.$nid.'][section_parent]',
            '#attributes' => array('class' => 'section-parent')
           ),
           'ops' => array(

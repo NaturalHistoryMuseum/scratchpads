@@ -121,7 +121,7 @@ Drupal.behaviors.publications = function(context) {
     
   });
   
-  $('#term-fields input, #edit-vocabulary, input.taxonomy-tree-checkbox').change(function(){
+  $('#default-fields input, #edit-vocabulary, input.taxonomy-tree-checkbox').change(function(){
     
     publication.insertTabWarning();
     
