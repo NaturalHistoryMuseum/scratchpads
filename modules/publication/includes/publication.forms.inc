@@ -790,7 +790,7 @@ function publication_taxonomy_form_vocabulary_submit($form, &$form_state){
  */
 function publication_node_add_form_submit($form, &$form_state){
 
-  $form_state['values']['og_description'] =  truncate_utf8($form_state['values']['field_publication_title'][0]['value'], 250, TRUE, TRUE);
+  $form_state['values']['og_description'] =  truncate_utf8($form_state['values']['field_publication_title'][0]['value'], 140, TRUE, TRUE);
 
 }
 
