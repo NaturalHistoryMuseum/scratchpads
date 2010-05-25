@@ -94,7 +94,29 @@ function itis_term_form_alter(&$form, &$form_state, $form_id){
     $form['group_usage']['field_accepted_name']['#suffix'] = '</div>';
     $form['group_usage']['field_unacceptability_reason']['#prefix'] = '<div id="itis_term_unacceptability_reason">';
     $form['group_usage']['field_unacceptability_reason']['#suffix'] = '</div>';
+    // Add a pre_render, so that we can remove options from rank/etc depending
+    // on the vocabulary kingdom.
   }
+}
+
+/**
+ *
+ */
+function itis_term_form_taxonomy_form_vocabulary_alter(&$form, &$form_state){
+  $classification_type = 0;
+  if(isset($form['vid']['#value']) && $form['vid']['#value']){
+    $classification_types = variable_get('itis_term_classification_types', array());
+    if(isset($classification_types[$form['vid']['#value']])){
+      $classification_type = $classification_types[$form['vid']['#value']];
+    } 
+  }  
+  $form['settings']['vocabulary_type'] = array(
+    '#type' => 'select',
+    '#options' => array('- N/A -', 'Animal', 'Plant', 'Protozoa'),
+    '#title' => t('Classification type'),
+    '#description' => t('If this vocabulary is to be used to store a biological classification, then please select which kingdom best represents your classification (and therefore the nomenclatural code to use)'),
+    '#default_value' => $classification_type
+  );
 }
 
 function itis_term_validate($form, &$form_state){
