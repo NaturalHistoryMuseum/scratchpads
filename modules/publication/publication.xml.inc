@@ -30,7 +30,13 @@ function publication_get_xml($nid, $vid=NULL){
     '. trim(_publication_get_fig_xml($node)).'
   </body>
   <back>
-    '.trim(_publication_get_references($node, $vid)).'      
+    <ack>
+      <title>Acknowledgements</title>
+      '.trim(_filter_autop($node->field_publication_acknowledgements)).'
+    </ack>
+    <ref-list>
+      '.trim(_publication_get_references($node, $vid)).'
+    </ref-list>      
   </back>
 </article>';
   return $xml;
@@ -110,10 +116,11 @@ function _publication_get_fig_xml(&$node){
       $image_node = node_load($image['nid']);
       $caption_node = publication_modal_image_caption_node_load($image['nid'], $node->nid);
       $xml .= '
-    <fig-group>
-      <caption>'.htmlspecialchars($caption_node->body).'</caption>
+    <fig id="'.$image_node->images['_original'].'">
+      <label></label>
+      <caption>'.trim(_filter_autop(htmlspecialchars($caption_node->body))).'</caption>
       <graphic href="'.url('/', array('absolute' => TRUE)).$image_node->images['_original'].'"></graphic>
-    </fig-group>';
+    </fig>';
     }
   }
   return $xml;
