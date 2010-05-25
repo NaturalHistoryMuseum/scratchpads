@@ -14,26 +14,29 @@ function publication_get_xml($nid, $vid=NULL){
 
   $xml = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <?xml-stylesheet type="text/xsl" href="/'.drupal_get_path('module','publication').'/publication.xsl"?>
-<Root>
-  <article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" dtd-version="3.0">
-    <front>
-      <article-meta>
-        <title-group>
-          <article-title>'.$node->field_publication_title[0]['value'].'</article-title>
-        </title-group>
-        <contrib-group>
-          '._publication_get_users_xml($node, $vid).'
-        </contrib-group>
-        <abstract>'.htmlspecialchars($node->body).'</abstract>
-        <kwd-group>'._publication_get_keyword_xml($node).'</kwd-group>
-      </article-meta>
-    </front>
-    <body>'._publication_get_sections_xml($node, $vid) . _publication_get_fig_xml($node).'
-    </body>
-    <back>'._publication_get_references($node, $vid).'      
-    </back>
-  </article>
-</Root>';
+<article 
+  xmlns:xlink = "http://www.w3.org/1999/xlink"
+  xmlns:mml   = "http://www.w3.org/1998/Math/MathML"
+  xmlns:tp    = "http://www.plazi.org/taxpub"
+  xmlns:xsi   = "http://www.w3.org/2001/XMLSchema-instance"
+  dtd-version="3.0">
+  <front>
+    <article-meta>
+      <title-group>
+        <article-title>'.$node->field_publication_title[0]['value'].'</article-title>
+      </title-group>
+      <contrib-group>
+        '._publication_get_users_xml($node, $vid).'
+      </contrib-group>
+      <abstract>'.trim(_filter_autop(htmlspecialchars($node->body))).'</abstract>
+      <kwd-group>'._publication_get_keyword_xml($node).'</kwd-group>
+    </article-meta>
+  </front>
+  <body>'._publication_get_sections_xml($node, $vid) . _publication_get_fig_xml($node).'
+  </body>
+  <back>'._publication_get_references($node, $vid).'      
+  </back>
+</article>';
   return $xml;
 }
 
@@ -70,16 +73,18 @@ function _publication_get_keyword_xml(&$node){
  */
 function _publication_get_users_xml(&$node, $vid){
   $user_xml = '';
-  foreach($node->field_publication_contrib as $user){
+  foreach($node->field_publication_authors as $user){
     if($user['nid']){
       $user_node = _publication_get_child_node($user['nid'], $vid);
       $user_node_user = user_load(array('uid' => $user_node->uid));
-      $user_xml .= '<name>
-            <given-names>'.$user_node->field_givennames[0]['value'].'</given-names>
-            <surname>'.$user_node->field_familyname[0]['value'].'</surname>
-            <aff>'.$user_node->field_institution[0]['value'].'</aff>
-            <email>'.$user_node_user->mail.'</email>
-          </name>';
+      $user_xml .= '<contrib>
+            <name>
+              <given-names>'.$user_node->field_givennames[0]['value'].'</given-names>
+              <surname>'.$user_node->field_familyname[0]['value'].'</surname>
+            </name>
+              <aff>'.$user_node->field_institution[0]['value'].'</aff>
+              <email>'.$user_node_user->mail.'</email>
+          </contrib>';
     }
   }
   return $user_xml;
@@ -103,7 +108,7 @@ function _publication_get_fig_xml(&$node){
 /**
  * Generate sections XML
  */
-function _publication_get_sections_xml(&$publication_node, $vid, $section_node = FALSE){
+function _publication_get_sections_xml(&$publication_node, $vid, $section_node = FALSE, $tag = 'sec', $title = 'title'){
   if($section_node){
     $this_node = $section_node;
   } else {
@@ -115,9 +120,14 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
       if(isset($publication_node->taxon_treatment_sections[$section['nid']])){
         $section_xml .= _publication_get_treatment_xml($child_node, $publication_node, $vid);
       } else {
+        if($child_node->type == 'publication_taxon_description'){
+          $section_xml .= _publication_get_treatment_sections($node, $vid, $term->tid);
+        } else if ($child_node->type == 'publication_section') {
         $section_xml .= '
-      <sec><title>'.$child_node->title.'</title><p>'.htmlspecialchars($child_node->body).'</p>'._publication_get_sections_xml($publication_node, $vid, $child_node).'
-      </sec>';
+      <'.$tag.'>
+        <'.$title.'>'.$child_node->title.'</'.$title.'>'.trim(_filter_autop(htmlspecialchars($child_node->body)))._publication_get_sections_xml($publication_node, $vid, $child_node, $tag).'
+      </'.$tag.'>';
+        }
       }
     }
   }
@@ -168,22 +178,30 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   module_invoke_all('taxonomy_term_load', $section_node->taxonomy);
   $term = array_pop($section_node->taxonomy);
   $term->name = $section_node->title;
-  if($section_node->body){
-    $section_node->body = '<p>'.htmlentities($section_node->body).'</p>';    
+  //print_r($term);
+  //print_r($section_node);exit;
+  $materials = '';
+  if($section_node->field_publication_taxon_material[0]['value']){
+    $materials = '<tp:treatment-sec type="type-material-guess">
+        <label>Type material</label>
+        '.trim(_filter_autop($section_node->field_publication_taxon_material[0]['value'])).'
+      </tp:treatment-sec>';
   }
   $treatment_xml .= '
-    <taxon-treatment>
-      <nomenclature>
-        <taxon-name>'.$term->name.'</taxon-name>
-        <taxon-author>
-          <string-name>'.$term->taxon_author.'</string-name>
-        </taxon-author>
-        <taxon-status>'.$term->usage.'</taxon-status>
-      </nomenclature>
-      '.$section_node->body.'
-      '._publication_get_treatment_sections($node, $vid, $term->tid).
-      _publication_get_sections_xml($node, $vid, $section_node).'
-    </taxon-treatment>';
+    <tp:taxon-treatment>
+      <tp:nomenclature>
+        <tp:taxon-name>'.$section_node->title.'</tp:taxon-name>
+        <tp:taxon-authority>'.$term->taxon_author.'</tp:taxon-authority>
+        <tp:taxon-status>'.$term->usage.'</tp:taxon-status>
+        <tp:nomenclature-citation-list>
+          <tp:nomenclature-citation>
+            <comment>'.$section_node->field_publication_taxon_citation[0]['value'].'</comment>
+          </tp:nomenclature-citation>
+        </tp:nomenclature-citation-list>
+      </tp:nomenclature>
+      '.$materials.'
+      '._publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'label').'
+    </tp:taxon-treatment>';
   return $treatment_xml;
 }
 
