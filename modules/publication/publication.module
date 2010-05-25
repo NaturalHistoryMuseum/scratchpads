@@ -552,7 +552,8 @@ function publication_views_api(){
 function publication_menu_alter(&$items){  
   $items['node/add/publication-image-caption']['hidden'] = 1;
   $items['node/add/publication-section']['hidden'] = 1;
-  $items['node/add/publication-taxon-treatment']['hidden'] = 1;
+  $items['node/add/publication-taxon-section']['hidden'] = 1;
+  $items['node/add/publication-taxon-description']['hidden'] = 1;
   
   $items['node/%node/og/forum']['access callback'] = 'publication_tab_access';
   $items['node/%node/og/forum']['access arguments'] = array(1);
@@ -567,7 +568,6 @@ function publication_menu_alter(&$items){
   $items['node/%node/broadcast']['access arguments'] = array(1, 1, 'og_broadcast_access');    
     
   return $items;  
-  
 }
 
 /**
