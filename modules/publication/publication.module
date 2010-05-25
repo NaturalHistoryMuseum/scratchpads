@@ -141,6 +141,17 @@ function publication_field_info(){
       'required' => 0, 
       'locked' => 0,
       'description' => t('Please enter a list of supplementary files.')
+    ),
+    array(
+      'label' => 'Acknowledgements', 
+      'field_name' => 'field_publication_acknowledge', 
+      'type_name' => 'publication', 
+      'group' => 'group_publication_supplementary', 
+      'type' => 'text', 
+      'widget_type' => 'text_textarea', 
+      'weight' => 0, 
+      'required' => 0, 
+      'locked' => 0
     ), 
     array(
       'field_name' => 'field_publication_images', 
