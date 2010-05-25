@@ -32,7 +32,7 @@ function publication_get_xml($nid, $vid=NULL){
   <back>
     <ack>
       <title>Acknowledgements</title>
-      '.trim(_filter_autop($node->field_publication_acknowledge)).'
+      '.trim(_filter_autop($node->field_publication_ack)).'
     </ack>
     <ref-list>
       '.trim(_publication_get_references($node, $vid)).'
