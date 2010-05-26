@@ -265,27 +265,21 @@ function publication_taxon_description_modal_node_form_submit(&$form, &$form_sta
  * @author Ben Scott
  */
 function publication_modal_image_caption_node_load($image_nid, $publication_nid){
-  
-  static $node;
-  
-  if(!isset($node)){
 
-    $cck_params = array(
-      'publication_caption_image' => $image_nid, 
-      'publication_caption_parent' => $publication_nid
+  $cck_params = array(
+    'publication_caption_image' => $image_nid, 
+    'publication_caption_parent' => $publication_nid
+  );
+
+  if(!$node = publication_content_node_load(NULL, $cck_params)){
+    
+    // Set up a dummy node
+    $node = array(
+      'uid' => $user->uid, 
+      'name' => (isset($user->name) ? $user->name : ''), 
+      'type' => 'publication_image_caption', 
+      'language' => ''
     );
-
-    if(!$node = publication_content_node_load(NULL, $cck_params)){
-      
-      // Set up a dummy node
-      $node = array(
-        'uid' => $user->uid, 
-        'name' => (isset($user->name) ? $user->name : ''), 
-        'type' => 'publication_image_caption', 
-        'language' => ''
-      );
-      
-    }
     
   }
 
