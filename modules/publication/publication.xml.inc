@@ -143,9 +143,6 @@ function _publication_get_treatment_sections(&$node, $vid, $tid, $term_fields){
     }
     $child_node = _publication_get_child_node($nid, $vid);
     $xml = '';
-    // if(isset($node->term_fields[$tid])){
-    //   $term_fields = $node->term_fields[$tid];
-    // }
     $labels = variable_get('spm_fields', array());
     foreach($term_fields as $key => $term_field){
       $labels_children = $labels[$key];
@@ -164,13 +161,6 @@ function _publication_get_treatment_sections(&$node, $vid, $tid, $term_fields){
  * to use the ITIS content type.
  */
 function _publication_get_treatment_xml($section_node, &$node, $vid){
-  
-  // dd('-----------');
-  // dd($section_node);
-  // dd($node);
-  
-  dd($section_node->taxon_treatment_description);
-  
   module_invoke_all('taxonomy_term_load', $section_node->taxonomy);
   $term = array_pop($section_node->taxonomy);
   $term->name = $section_node->title;
