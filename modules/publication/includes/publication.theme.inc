@@ -33,6 +33,8 @@ function theme_publication_node_edit_form($form){
   
   foreach($groups as $group_name => $group){
      
+     $closing_tab_content = null;
+     
      if(array_key_exists($group_name, $form)){
    
        $id = form_clean_id(drupal_strtolower($group['label']));
@@ -48,8 +50,12 @@ function theme_publication_node_edit_form($form){
            $tab_content .= drupal_render($form[$group_name]['field_publication_title']);
            $tab_content .= drupal_render($form['body_filter']);
            $tab_content .= drupal_render($form[$group_name]['field_publication_keywords']);
+           
+           $closing_tab_content = drupal_render($form[$group_name]['field_publication_supplementary']);
+           $closing_tab_content .= drupal_render($form[$group_name]['field_publication_ack']);
+           
            $form[$group_name]['#title'] = t('Authors');
-         
+          
          break;
          
          case 'group_publication_privacy':
@@ -89,15 +95,15 @@ function theme_publication_node_edit_form($form){
          
          break;
          
-         case 'group_publication_supplementary':
-         
-           unset($form['group_publication_supplementary']['#type']);
-         
-         break;
-         
        }
    
        $tab_content .= drupal_render($form[$group_name]);
+       
+       if($closing_tab_content){
+         
+         $tab_content .= $closing_tab_content;
+         
+       }
        
        $tab_content .= '</div>';
    
@@ -312,24 +318,6 @@ function theme_publication_message($message, $type = 'status'){
 }
 
 
-/*    VIEWS THEMING    */
-
-function theme_publication_view_filter_select($element) {
-  
-  $node = new stdClass();
-
-  $node->vid = $_GET['vid'];
-  $vocabulary = $_GET['vocabulary'];
-  
-  $node_terms = taxonomy_node_get_terms_by_vocabulary($node, $vocabulary);
-  
-  $select = '';
-  $size = $element['#size'] ? ' size="'. $element['#size'] .'"' : '';
-  _form_set_class($element, array('form-select'));
-  $multiple = $element['#multiple'];
-  return theme('form_element', $element, '<select name="'. $element['#name'] .''. ($multiple ? '[]' : '') .'"'. ($multiple ? ' multiple="multiple" ' : '') . drupal_attributes($element['#attributes']) .' id="'. $element['#id'] .'" '. $size .'>'. publication_view_filter_select_options($element, $node_terms) .'</select>');
-  
-}
 
 function theme_publication_term_fields_element($element){
   

@@ -93,13 +93,6 @@ function publication_group_info(){
       'group_name' => 'group_publication_privacy', 
       'type_name' => 'publication'
     ),
-    array(
-      'label' => 'Supplementary materials', 
-      'weight' => 7, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_supplementary', 
-      'type_name' => 'publication'
-    ),
   );
 }
 
@@ -136,7 +129,7 @@ function publication_field_info(){
       'label' => 'Supplementary materials', 
       'field_name' => 'field_publication_supplementary', 
       'type_name' => 'publication', 
-      'group' => 'group_publication_supplementary', 
+      'group' => 'group_publication_metadata', 
       'type' => 'text', 
       'widget_type' => 'text_textarea',
       'rows' => '3', 
@@ -149,7 +142,7 @@ function publication_field_info(){
       'label' => 'Acknowledgements', 
       'field_name' => 'field_publication_ack', 
       'type_name' => 'publication', 
-      'group' => 'group_publication_supplementary', 
+      'group' => 'group_publication_metadata', 
       'type' => 'text', 
       'widget_type' => 'text_textarea',
       'rows' => '3', 
@@ -1046,6 +1039,7 @@ function publication_add_files(){
   // Parent modal files
   modalframe_parent_js();
   drupal_add_js($path . '/js/publication.modal.parent.js', 'module', 'footer');
+  
 }
 
 
@@ -1341,12 +1335,6 @@ function publication_theme($existing, $type, $theme, $path){
     ), 'file' => 'publication.theme.inc', 
     'path' => $path
   ),    
-    'publication_view_filter_select' => array(
-      'arguments' => array(
-        'element' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
     'publication_term_fields_element' => array(
       'arguments' => array(
         'element' => array()
@@ -1401,35 +1389,6 @@ function publication_get_view_output($name, $args = array(), $display_id = 'defa
   }
 }
 
-
-function publication_view_filter_select_options($element, $node_terms, $choices = NULL){
-  if(!isset($choices)){
-    $choices = $element['#options'];
-  }
-  // array_key_exists() accommodates the rare event where $element['#value'] is NULL.
-  // isset() fails in this situation.
-  $value_valid = isset($element['#value']) || array_key_exists('#value', $element);
-  $value_is_array = is_array($element['#value']);
-  $options = '';
-  foreach($choices as $key => $choice){
-    if(is_array($choice)){
-      $options .= '<optgroup label="' . $key . '">';
-      $options .= publication_view_filter_select_options($element, $node_terms, $choice);
-      $options .= '</optgroup>';
-    }elseif(is_object($choice)){
-      $options .= publication_view_filter_select_options($element, $node_terms, $choice->option);
-    }else{
-      $key = (string)$key;
-      if($value_valid && (!$value_is_array && (string)$element['#value'] === $key || ($value_is_array && in_array($key, $element['#value'])))){
-        $selected = ' selected="selected"';
-      }else{
-        $selected = '';
-      }
-      $options .= '<option' . (array_key_exists($key, $node_terms) ? '' : ' style="color:#999"') . ' value="' . check_plain($key) . '"' . $selected . '>' . check_plain($choice) . '</option>';
-    }
-  }
-  return $options;
-}
 
 /**
  * Is this node form module?

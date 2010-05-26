@@ -141,6 +141,9 @@ Drupal.behaviors.publications = function(context) {
 
 
 
+
+
+
 /**
  * Rewrite queryString to include nid
  */
@@ -149,7 +152,7 @@ Drupal.nodeRelationshipsReferenceButtons.queryString = function() {
   var qs = {
     vocabulary: publication.getVocabulary(),
     vid: publication.getVID(),
-    nid: publication.getNID(),
+    nid: publication.getNID()
   };
   
   var excludeArgs = ['q', 'destination', 'pass', 'translation', 'language'];
@@ -166,7 +169,7 @@ Drupal.nodeRelationshipsReferenceButtons.queryString = function() {
       }
     }
   }
-
+  
   return qs;
   
 };

@@ -95,7 +95,7 @@
   display: none!important;
 }
 
-.view-publication-display, .publication-field{
+.publication-noderef .clearfix{
   clear: both;
 }
 
@@ -198,6 +198,8 @@ div.view-publication-display ul li{
 .ui-dialog-overlay{
   background: #000;
   opacity: 0.7;
+  /* IE */
+  filter: alpha(opacity=10);
 }
 
 .ui-dialog-container .ui-dialog-title{
@@ -349,4 +351,10 @@ html[xmlns] .clearfix {
 	height: 1%;
 }
 
+
+/* IE DEV - REMOVE */
+
+.hitarea{
+/*  border: 1px solid red;*/
+}
 

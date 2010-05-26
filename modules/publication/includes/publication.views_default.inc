@@ -101,17 +101,17 @@ function publication_views_default_views() {
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
-        'use_operator' => 0,
         'operator' => 'tid_op',
-        'identifier' => 'tid',
         'label' => 'Term name',
+        'use_operator' => 0,
+        'identifier' => 'tid',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
         'selective' => 0,
       ),
-      'type' => 'select',
+      'type' => 'textfield',
       'limit' => TRUE,
       'vid' => '1',
       'id' => 'tid',
@@ -342,17 +342,17 @@ function publication_views_default_views() {
       'group' => '0',
       'exposed' => TRUE,
       'expose' => array(
-        'use_operator' => 0,
         'operator' => 'tid_op',
-        'identifier' => 'tid',
         'label' => 'Term name',
+        'use_operator' => 0,
+        'identifier' => 'tid',
         'optional' => 1,
         'single' => 0,
         'remember' => 0,
         'reduce' => 0,
         'selective' => 0,
       ),
-      'type' => 'select',
+      'type' => 'textfield',
       'limit' => TRUE,
       'vid' => '1',
       'id' => 'tid',
@@ -554,7 +554,6 @@ function publication_views_default_views() {
     'weight' => 0,
     'name' => 'navigation',
   ));
-
 
 
 $views[$view->name] = $view;

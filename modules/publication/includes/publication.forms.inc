@@ -18,11 +18,10 @@ function publication_form(&$node, $form_state) {
       '#type' => 'textarea',
       '#title' => $type->body_label,
       '#default_value' => $node->body,
-      '#required' => ($type->body_required ? TRUE : FALSE)
+      '#required' => ($type->body_required ? TRUE : FALSE),
     );
     
-  }
-  
+  }  
   
   $func = '_'.$node->type.'_node_form';
   
@@ -322,7 +321,7 @@ function publication_form_alter(&$form, $form_state, $form_id) {
         $form['og_description'] = array('#type' => 'hidden', '#value' => NULL);
         $form['#theme'] = 'publication_node_add_form';
         array_unshift($form['#submit'], 'publication_node_add_form_submit');
-        
+
       }
       
       // Alter both add & edit forms
@@ -543,12 +542,6 @@ function publication_form_alter(&$form, $form_state, $form_id) {
           );
         
           unset($form['#info']['filter-group_nid']);
-          
-        }
-        
-        if(array_key_exists('tid', $form)){
-          
-          $form['tid']['#theme'][] = 'publication_view_filter_select';
           
         }
         
