@@ -92,14 +92,17 @@ function _publication_get_users_xml(&$node, $vid){
   foreach($node->field_publication_authors as $user){
     if($user['nid']){
       $user_node = _publication_get_child_node($user['nid'], $vid);
-      $user_node_user = user_load(array('uid' => $user_node->uid));
+      if($user_node->field_email == ''){
+        $user_node_user = user_load(array('uid' => $user_node->uid));
+        $user_node->field_email = $user_node_user->mail;
+      }
       $user_xml .= '<contrib>
             <name>
               <given-names>'.$user_node->field_givennames[0]['value'].'</given-names>
               <surname>'.$user_node->field_familyname[0]['value'].'</surname>
             </name>
               <aff>'.$user_node->field_institution[0]['value'].'</aff>
-              <email>'.$user_node_user->mail.'</email>
+              <email>'.$user_node->field_email.'</email>
           </contrib>';
     }
   }
@@ -175,10 +178,14 @@ function _publication_get_treatment_sections(&$node, $section_node, $vid, $tid){
     } else {
       $nid = array_pop($nids);
     }
+    $term_fields = $node->default_term_fields;
+    if($section_node->term_fields){
+      $term_fields = $section_node->term_fields;
+    }
     $child_node = _publication_get_child_node($nid, $vid);
     $xml = '';
     $labels = variable_get('spm_fields', array());
-    foreach($section_node->term_fields as $key => $term_field){
+    foreach($term_fields as $key => $term_field){
       $labels_children = $labels[$key];
       foreach($term_field as $term_field_child){
         if($term_field_child && $child_node->$term_field_child){
