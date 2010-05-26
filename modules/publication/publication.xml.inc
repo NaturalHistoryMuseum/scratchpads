@@ -36,7 +36,8 @@ function publication_get_xml($nid, $vid=NULL){
     </ack>
     <ref-list>
       '.trim(_publication_get_references($node, $vid)).'
-    </ref-list>      
+    </ref-list>
+    '.trim(_filter_autop($node->field_publication_supplementary)).'      
   </back>
 </article>';
   return $xml;
