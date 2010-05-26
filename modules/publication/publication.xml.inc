@@ -12,7 +12,7 @@ function publication_get_xml($nid, $vid=NULL){
   
   $node = node_load($nid, NULL, TRUE);
 
-  $xml = '<article>
+  $xml = '<article dtd-version="3.0" xmlns:tp="http://www.plazi.org/taxpub">  
   <front>
     <article-meta>
       <title-group>
@@ -21,7 +21,7 @@ function publication_get_xml($nid, $vid=NULL){
       <contrib-group>
         '._publication_get_users_xml($node, $vid).'
       </contrib-group>
-      <abstract>'.trim(_filter_autop(htmlspecialchars($node->body))).'</abstract>
+      <abstract><label>Abstract</label>'.trim(_filter_autop(htmlspecialchars($node->body))).'</abstract>
       <kwd-group>'._publication_get_keyword_xml($node).'</kwd-group>
     </article-meta>
   </front>
@@ -188,10 +188,10 @@ function _publication_get_treatment_sections(&$node, $vid, $tid){
       foreach($term_field as $term_field_child){
         if($term_field_child && $child_node->$term_field_child){
           $xml .= '
-      <treatment-sec>
+      <tp:treatment-sec>
         <label>'.$labels_children[$term_field_child]['name'].'</label>
         '.trim(_filter_autop($child_node->$term_field_child)).'
-      </treatment-sec>';
+      </tp:treatment-sec>';
         }
       }
     }
@@ -218,20 +218,20 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
       </treatment-sec>';
   }
   $treatment_xml .= '
-    <taxon-treatment>
-      <nomenclature>
-        <taxon-name>'.$section_node->title.'</taxon-name>
-        <taxon-authority>'.$term->taxon_author.'</taxon-authority>
-        <taxon-status>'.$term->usage.'</taxon-status>
-        <nomenclature-citation-list>
-          <nomenclature-citation>
+    <tp:taxon-treatment>
+      <tp:nomenclature>
+        <tp:taxon-name>'.$section_node->title.'</tp:taxon-name>
+        <tp:taxon-authority>'.$term->taxon_author.'</tp:taxon-authority>
+        <tp:taxon-status>'.$term->usage.'</tp:taxon-status>
+        <tp:nomenclature-citation-list>
+          <tp:nomenclature-citation>
             <comment>'.$section_node->field_publication_taxon_citation[0]['value'].'</comment>
-          </nomenclature-citation>
-        </nomenclature-citation-list>
-      </nomenclature>
+          </tp:nomenclature-citation>
+        </tp:nomenclature-citation-list>
+      </tp:nomenclature>
       '.$materials.'
-      '._publication_get_sections_xml($node, $vid, $section_node, 'treatment-sec', 'label').'
-    </taxon-treatment>';
+      '._publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'label').'
+    </tp:taxon-treatment>';
   return $treatment_xml;
 }
 
