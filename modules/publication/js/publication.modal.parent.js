@@ -62,8 +62,8 @@ Drupal.behaviors.modalNodeForm = function(context) {
               Drupal.tableDrag['publication-draggable-section'].changed = true;
               publication.insertChangedWarning($('#publication-draggable-section'));
             }
-            
-            $('td', tr).eq(1).hide();
+
+            $('td.section-data', tr).css('display', 'none');            
             Drupal.tableDrag['publication-draggable-section'].makeDraggable(tr.get(0));        
             tr.appendTo('#publication-draggable-section');
             Drupal.attachBehaviors(tr);
