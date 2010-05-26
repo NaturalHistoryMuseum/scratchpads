@@ -679,7 +679,7 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
     
         $output = array();
 
-        publication_get_taxon_treatment_sections($output['taxon_treatment_sections'], $node);
+        publication_get_taxon_child_nodes($output, $node);
 
         return $output;
     
@@ -1470,19 +1470,26 @@ function publication_noderelationships_view_alter(&$view_overrides, $view, $disp
 
 
 
-function publication_get_taxon_treatment_sections(&$taxon_treatment_sections, $node){
+function publication_get_taxon_child_nodes(&$output, $node){
 
   foreach($node->field_publication_section as $section){
     
-    if($section['nid']){
-
-      if($tid = @array_shift(publication_nodes_get_terms($section['nid']))){
+    $section_node = node_load($section['nid']);
+    
+    switch($section_node->type){
       
-        $taxon_treatment_sections[$section['nid']] = $tid;
-        
-      }
+      case 'publication_taxon_section':
       
-      publication_get_taxon_treatment_sections($taxon_treatment_sections, $section_node);
+        $term = array_shift($section_node->taxonomy);
+        $output['taxon_treatment_sections'][$section_node->nid] = $term->tid;
+      
+      break;
+      
+      case 'publication_taxon_description':
+      
+        $output['taxon_treatment_description'] = $section_node->nid;
+      
+      break;
       
     }
 
