@@ -21,7 +21,7 @@ function publication_get_xml($nid, $vid=NULL){
       <contrib-group>
         '._publication_get_users_xml($node, $vid).'
       </contrib-group>
-      <abstract><label>Abstract</label>'.trim(_filter_autop(htmlspecialchars($node->body))).'</abstract>
+      <abstract><label>Abstract</label>'.trim(_filter_autop($node->body)).'</abstract>
       <kwd-group>'._publication_get_keyword_xml($node).'</kwd-group>
     </article-meta>
   </front>
@@ -62,7 +62,7 @@ function _publication_get_references($node, $vid){
     $xml .= '
     </person-group>
       <year>'.$biblio_node->biblio_year.'</year>
-      <article-title>'.$biblio_node->title.'</article-title>
+      <article-title>'.htmlspecialchars($biblio_node->title).'</article-title>
       <source>'.$biblio_node->biblio_secondary_title.'</source>
       <volume>'.$biblio_node->biblio_volume.'</volume>
       <fpage>'.$biblio_node->biblio_section.'</fpage>
@@ -122,7 +122,7 @@ function _publication_get_fig_xml(&$node){
       $xml .= '
     <fig id="'.$image_node->images['_original'].'">
       <label></label>
-      <caption>'.trim(_filter_autop(htmlspecialchars($caption_node->body))).'</caption>
+      <caption>'.trim(_filter_autop($caption_node->body)).'</caption>
       <graphic href="'.url('/', array('absolute' => TRUE)).$image_node->images['_original'].'"></graphic>
     </fig>';
     }
@@ -153,7 +153,7 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
         } else if ($child_node->type == 'publication_section') {
         $section_xml .= '
       <'.$tag.'>
-        <'.$title.'>'.$child_node->title.'</'.$title.'>'.trim(_filter_autop(htmlspecialchars($child_node->body)))._publication_get_sections_xml($publication_node, $vid, $child_node, $tag).'
+        <'.$title.'>'.$child_node->title.'</'.$title.'>'.trim(_filter_autop($child_node->body))._publication_get_sections_xml($publication_node, $vid, $child_node, $tag).'
       </'.$tag.'>';
         }
       }
@@ -224,7 +224,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
     <tp:taxon-treatment>
       <tp:nomenclature>
         <tp:taxon-name>'.$section_node->title.'</tp:taxon-name>
-        <tp:taxon-authority>'.$term->taxon_author.'</tp:taxon-authority>
+        <tp:taxon-authority>'.$term->taxon_author.$term->description.'</tp:taxon-authority>
         <tp:taxon-status>'.$term->usage.'</tp:taxon-status>
         <tp:nomenclature-citation-list>
           <tp:nomenclature-citation>
