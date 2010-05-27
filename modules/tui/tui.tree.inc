@@ -31,7 +31,7 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     if($active == $term->tid){
       $output .= ' active';
     }
-    if(isset($term->usage) && ($term->usage == 'invalid' || $term->usage == 'not accepted')){
+    if(isset($term->usage) && ($term->usage == 4|| $term->usage == 2)){
       $output .= ' usage-invalid';
     }
     $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span></p>';
