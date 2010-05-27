@@ -13,15 +13,15 @@ function publication_form(&$node, $form_state) {
   );
 
   if($type->has_body){
-    
-    $form['body_filter']['body'] = array(
+        
+    $form['body_field']['body'] = array(
       '#type' => 'textarea',
       '#title' => $type->body_label,
       '#default_value' => $node->body,
-      '#required' => ($type->body_required ? TRUE : FALSE),
+      '#required' => ($type->body_required ? TRUE : FALSE)
     );
 
-    $form['body_filter']['filter'] = filter_form($node->format);
+    $form['body_field']['format'] = filter_form($node->format);
     
   }  
   
@@ -1078,7 +1078,7 @@ function publication_pre_render_node_form(&$form) {
   
     $element = &$form[$key];
     
-    if($element['#type'] == 'text_textarea' || $key == 'body_filter'){
+    if($element['#type'] == 'text_textarea' || $key == 'body_field'){
 
       $class = $element['format'][$format_id]['#attributes']['class'];
       $name = $element['format'][$format_id]['#name'];

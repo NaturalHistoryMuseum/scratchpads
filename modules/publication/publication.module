@@ -50,13 +50,18 @@ function publication_node_info(){
  * hook_wysiwyg_editor_settings_alter
  */
 function publication_wysiwyg_editor_settings_alter(&$settings, $context){
+
   if(arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'edit'){
-    $node = node_load(arg(1));
-    $node_types = publication_node_info();
-    if(isset($node_types[$node->type])){
-      $settings['theme_advanced_buttons1'] = 'bold,italic';
-    }
+   $node = node_load(arg(1));
+   $node_type = $node->type;
+  }elseif(arg(0) == 'node' && arg(1) == 'add'){
+    $node_type = str_replace('-', '_', arg(2));
   }
+  $node_types = publication_node_info();
+  if(isset($node_types[$node_type])){
+    $settings['theme_advanced_buttons1'] = 'bold,italic';
+  }
+
 }
 
 function publication_group_info(){

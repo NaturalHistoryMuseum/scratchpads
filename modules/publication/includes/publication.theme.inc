@@ -3,7 +3,7 @@
 function theme_publication_node_add_form($form){
 
   $output .= drupal_render($form['title']);
-  $output .= drupal_render($form['group_publication_metadata']['field_publication_title'][0]['value']);
+  $output .= drupal_render($form['group_publication_metadata']['field_publication_title']);
   $output .= drupal_render($form['og_selective']);
   $output .= drupal_render($form['og_private']);
   $output .= drupal_render($form['og_register']);
@@ -48,7 +48,7 @@ function theme_publication_node_edit_form($form){
    
            $tab_content .= drupal_render($form['title']);
            $tab_content .= drupal_render($form[$group_name]['field_publication_title']);
-           $tab_content .= drupal_render($form['body_filter']);
+           $tab_content .= drupal_render($form['body_field']);
            $tab_content .= drupal_render($form[$group_name]['field_publication_keywords']);
            
            $closing_tab_content = drupal_render($form[$group_name]['field_publication_supplementary']);
@@ -127,7 +127,7 @@ function theme_publication_image_caption_node_form($form){
   
   publication_add_modal_child_files();
   
-  $output = drupal_render($form['body_filter']);  
+  $output = drupal_render($form['body_field']);  
 
   $output .= theme('publication_node_form_base_elements', $form);
   
@@ -142,7 +142,7 @@ function theme_publication_section_node_form($form){
   
   $output = drupal_render($form['title']); 
   $output .= drupal_render($form['reset_manuscript_name']);  
-  $output .= drupal_render($form['body_filter']); 
+  $output .= drupal_render($form['body_field']); 
   $output .= drupal_render($form['term_fields']);
   $output .= drupal_render($form['reset_term_fields']);  
   $output .= theme('publication_node_form_base_elements', $form);
