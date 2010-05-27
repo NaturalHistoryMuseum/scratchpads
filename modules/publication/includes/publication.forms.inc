@@ -1055,18 +1055,18 @@ function publication_deselect_taxon_treatment_sections($node, &$deselected_tids,
  * @author Ben Scott
  */
 function publication_pre_render_node_form(&$form) {
+
+  static $profile;
   
-  static $format_id;
-  
-  if(!isset($format_id)){
+  if(!isset($profile)){
   
     $filter_formats = filter_formats();
     
     foreach($filter_formats as $filter_format){
       
       if($filter_format->name == t('Full HTML')){
-        
-        $format_id = $filter_format->format;
+
+        $profile = wysiwyg_get_profile($filter_format->format);
         
       }
       
@@ -1080,12 +1080,23 @@ function publication_pre_render_node_form(&$form) {
     
     if($element['#type'] == 'text_textarea' || $key == 'body_field'){
 
-      $class = $element['format'][$format_id]['#attributes']['class'];
-      $name = $element['format'][$format_id]['#name'];
+      if($element['#id']){
+        
+        $id = $element['#id'].'-value';
+        
+      }elseif($element['body']['#id']){
+
+          $id = $element['body']['#id'];
+          
+      }
+
+      $class = 'wysiwyg wysiwyg-format-' . $profile->format . ' wysiwyg-editor-' . $profile->editor . ' wysiwyg-field-' . $id . ' wysiwyg-status-1';
+ 
+      $name = $element['format'][$profile->format]['#name']; 
               
       $element['format'] = array(
         '#type' => 'hidden',
-        '#value' => $format_id,
+        '#value' => $profile->format,
         '#attributes' => array('checked' => 'checked', 'class' => $class),
         '#name' => $name
       );

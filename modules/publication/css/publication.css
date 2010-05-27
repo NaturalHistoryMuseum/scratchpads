@@ -206,6 +206,23 @@ div.view-publication-display ul li{
   color: #333;
 }
 
+/* wysiwyg */
+
+.mceStatusbar div{
+  display: none;
+}
+
+.mceStatusbar{
+  background: #fff!important;
+}
+
+td.mceIframeContainer{
+  border-bottom-style: none!important;
+}
+
+.grippie{
+  display: none;
+}
 
 
 
@@ -352,9 +369,4 @@ html[xmlns] .clearfix {
 }
 
 
-/* IE DEV - REMOVE */
-
-.hitarea{
-/*  border: 1px solid red;*/
-}
 
