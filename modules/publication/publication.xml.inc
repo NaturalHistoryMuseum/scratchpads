@@ -36,10 +36,15 @@ function publication_get_xml($nid, $vid=NULL){
     </ack>
     <ref-list>
       '.trim(_publication_get_references($node, $vid)).'
-    </ref-list>
+    </ref-list>';
+  if($node->field_publication_supplementary[0]['value']){
+    $xml .='
     <sec>
+      <title>Supplementary material</title>
       '.trim(_filter_autop($node->field_publication_supplementary[0]['value'])).'
-    </sec>      
+    </sec>';
+  }
+  $xml .= '    
   </back>
 </article>';
   return $xml;
@@ -68,6 +73,8 @@ function _publication_get_references($node, $vid){
       <source>'.$biblio_node->biblio_secondary_title.'</source>
       <volume>'.$biblio_node->biblio_volume.'</volume>
       <fpage>'.$biblio_node->biblio_section.'</fpage>
+      <publisher-loc>'.$biblio_node->biblio_place_published.'</publisher-loc>
+      <publisher-name>'.$biblio_node->biblio_publisher.'</publisher-name>
     </element-citation>
     </ref>';
   }
