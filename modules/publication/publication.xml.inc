@@ -37,7 +37,9 @@ function publication_get_xml($nid, $vid=NULL){
     <ref-list>
       '.trim(_publication_get_references($node, $vid)).'
     </ref-list>
-    '.trim(_filter_autop($node->field_publication_supplementary)).'      
+    <sec>
+      '.trim(_filter_autop($node->field_publication_supplementary[0]['value'])).'
+    </sec>      
   </back>
 </article>';
   return $xml;
@@ -103,7 +105,7 @@ function _publication_get_users_xml(&$node, $vid){
               <surname>'.$user_node->field_familyname[0]['value'].'</surname>
             </name>
               <aff>'.$user_node->field_institution[0]['value'].'</aff>
-              <email>'.$user_node->field_email.'</email>
+              <email>'.$user_node->field_email[0]['value'].'</email>
           </contrib>';
     }
   }
