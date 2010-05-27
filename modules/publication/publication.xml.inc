@@ -251,10 +251,12 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
       case 30:
       case 61:
         $rank = 'genus';
+        break;
       case 17:
       case 42:
       case 63:
         $rank = 'species';
+        break;
     }
     if($rank){
       $treatment_xml .= '
