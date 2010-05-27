@@ -14,18 +14,14 @@ function publication_form(&$node, $form_state) {
 
   if($type->has_body){
     
-    $form['body_field']['body'] = array(
+    $form['body_filter']['body'] = array(
       '#type' => 'textarea',
       '#title' => $type->body_label,
       '#default_value' => $node->body,
       '#required' => ($type->body_required ? TRUE : FALSE),
-      '#rows' => 7
     );
 
-    $form['body_field']['filter'] = filter_form($node->format);
-    
-    $form['body_field']['#prefix'] = '<div class="body-field-wrapper">';
-    $form['body_field']['#suffix'] = '</div>';
+    $form['body_filter']['filter'] = filter_form($node->format);
     
   }  
   
@@ -323,10 +319,10 @@ function publication_form_alter(&$form, $form_state, $form_id) {
       }else{ // Node add form
         
         // Default organic group membership to "Invite only"
-        // $form['og_selective']['#default_value'] = 2; 
-        // $form['og_description'] = array('#type' => 'hidden', '#value' => NULL);
-        // $form['#theme'] = 'publication_node_add_form';
-        // array_unshift($form['#submit'], 'publication_node_add_form_submit');
+        $form['og_selective']['#default_value'] = 2; 
+        $form['og_description'] = array('#type' => 'hidden', '#value' => NULL);
+        $form['#theme'] = 'publication_node_add_form';
+        array_unshift($form['#submit'], 'publication_node_add_form_submit');
 
       }
       
