@@ -4,6 +4,10 @@ function publication_display_xml($node, $vid = FALSE){
   drupal_set_header('Content-Type: application/xml');
   echo publication_get_xml($node->nid, $vid);
 }
+
+function _publication_cock_off_tinymce($text){
+  return preg_replace('/<br.*\/>/', '</p><p>', str_replace('<br>','<br/>',$text));
+}
 /**
  * Generate an XML document according to the PubTax schema.
  */
@@ -39,7 +43,7 @@ function publication_get_xml($nid, $vid=NULL){
     </ref-list>';
   if($node->field_publication_supplementary[0]['value']){
     $xml .='
-    <sec>
+    <sec type="Supplementary material">
       <title>Supplementary material</title>
       '.trim(_filter_autop($node->field_publication_supplementary[0]['value'])).'
     </sec>';
@@ -47,7 +51,7 @@ function publication_get_xml($nid, $vid=NULL){
   $xml .= '    
   </back>
 </article>';
-  return $xml;
+  return _publication_cock_off_tinymce($xml);
 }
 
 function _publication_get_references($node, $vid){
@@ -56,7 +60,7 @@ function _publication_get_references($node, $vid){
     $biblio_node = _publication_get_child_node($biblio['nid'], $vid);
     $xml .= '
     <ref>
-      <element-citation>
+      <mixed-citation>
         <person-group>';
     $contributors = array_pop($biblio_node->biblio_contributors);
     foreach($contributors as $contributor){
@@ -75,7 +79,7 @@ function _publication_get_references($node, $vid){
       <fpage>'.$biblio_node->biblio_section.'</fpage>
       <publisher-loc>'.$biblio_node->biblio_place_published.'</publisher-loc>
       <publisher-name>'.$biblio_node->biblio_publisher.'</publisher-name>
-    </element-citation>
+    </mixed-citation>
     </ref>';
   }
   return $xml;
@@ -124,17 +128,19 @@ function _publication_get_users_xml(&$node, $vid){
  */
 function _publication_get_fig_xml(&$node){
   $xml = '';
+  $fig_id = 1;
   foreach($node->field_publication_images as $image){
     if(isset($image['nid']) && $image['nid']){
       $image_node = node_load($image['nid']);
       $caption_node = publication_modal_image_caption_node_load($image['nid'], $node->nid);
       $xml .= '
-    <fig id="'.$image_node->images['_original'].'">
-      <label></label>
+    <fig id="'.$fig_id.'">
+      <label>Figure '.$fig_id.'</label>
       <caption>'.trim(_filter_autop($caption_node->body)).'</caption>
       <graphic href="'.url('/', array('absolute' => TRUE)).$image_node->images['_original'].'"></graphic>
     </fig>';
     }
+    $fig_id ++;
   }
   return $xml;
 }
@@ -161,7 +167,7 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
           }
         } else if ($child_node->type == 'publication_section') {
         $section_xml .= '
-      <'.$tag.'>
+      <'.$tag.' type="'.$child_node->title.'">
         <'.$title.'>'.$child_node->title.'</'.$title.'>'.trim(_filter_autop($child_node->body))._publication_get_sections_xml($publication_node, $vid, $child_node, $tag).'
       </'.$tag.'>';
         }
@@ -221,7 +227,6 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
     $term = $value;
     break;
   }
-  $term->name = $section_node->title;
   $materials = '';
   if($section_node->field_publication_taxon_material[0]['value']){
     $materials = '<treatment-sec type="type-material-guess">
@@ -232,14 +237,39 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   $treatment_xml .= '
     <tp:taxon-treatment>
       <tp:nomenclature>
-        <tp:taxon-name>'.$section_node->title.'</tp:taxon-name>
-        <tp:taxon-authority>'.$term->taxon_author.$term->description.'</tp:taxon-authority>
-        <tp:taxon-status>'.$term->usage.'</tp:taxon-status>
+        <tp:taxon-name>'.$section_node->title.'</tp:taxon-name>';
+  if($term->taxon_author){
+    $treatment_xml .= '
+        <tp:taxon-authority>'.$term->taxon_author.'</tp:taxon-authority>';
+  } else if($term->description) {
+    $treatment_xml .= '
+        <tp:taxon-authority>'.$term->description.'</tp:taxon-authority>';    
+  }
+  if($term->name != $section_node->title && $term->field_rank_name){
+    switch($term->field_rank_name){
+      case 13:
+      case 30:
+      case 61:
+        $rank = 'genus';
+      case 17:
+      case 42:
+      case 63:
+        $rank = 'species';
+    }
+    if($rank){
+      $treatment_xml .= '
+        <tp:taxon-status>new '.$rank.'</tp:taxon-status>';
+    }
+  }
+  if($section_node->field_publication_taxon_citation[0]['value']){
+    $treatment_xml .= '
         <tp:nomenclature-citation-list>
           <tp:nomenclature-citation>
             <comment>'.$section_node->field_publication_taxon_citation[0]['value'].'</comment>
           </tp:nomenclature-citation>
-        </tp:nomenclature-citation-list>
+        </tp:nomenclature-citation-list>';
+  }
+  $treatment_xml .= '
       </tp:nomenclature>
       '.$materials.'
       '._publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'label').'
