@@ -14,12 +14,18 @@ function publication_form(&$node, $form_state) {
 
   if($type->has_body){
     
-    $form['body_filter']['body'] = array(
+    $form['body_field']['body'] = array(
       '#type' => 'textarea',
       '#title' => $type->body_label,
       '#default_value' => $node->body,
       '#required' => ($type->body_required ? TRUE : FALSE),
+      '#rows' => 7
     );
+
+    $form['body_field']['filter'] = filter_form($node->format);
+    
+    $form['body_field']['#prefix'] = '<div class="body-field-wrapper">';
+    $form['body_field']['#suffix'] = '</div>';
     
   }  
   
@@ -317,10 +323,10 @@ function publication_form_alter(&$form, $form_state, $form_id) {
       }else{ // Node add form
         
         // Default organic group membership to "Invite only"
-        $form['og_selective']['#default_value'] = 2; 
-        $form['og_description'] = array('#type' => 'hidden', '#value' => NULL);
-        $form['#theme'] = 'publication_node_add_form';
-        array_unshift($form['#submit'], 'publication_node_add_form_submit');
+        // $form['og_selective']['#default_value'] = 2; 
+        // $form['og_description'] = array('#type' => 'hidden', '#value' => NULL);
+        // $form['#theme'] = 'publication_node_add_form';
+        // array_unshift($form['#submit'], 'publication_node_add_form_submit');
 
       }
       
@@ -607,6 +613,8 @@ function _publication_node_form_alter_base_elements(&$form){
     $form['author'][$key]['#type'] = 'value';
     
   }
+  
+  $form['#pre_render'] = array('publication_pre_render_node_form');
   
 }
 
@@ -1040,6 +1048,61 @@ function publication_deselect_taxon_treatment_sections($node, &$deselected_tids,
     node_save($node);
     
   }
+  
+}
+
+/**
+ * Hide all the input filter selects
+ *
+ * @param string $form 
+ * @return void
+ * @author Ben Scott
+ */
+function publication_pre_render_node_form(&$form) {
+  
+  static $format_id;
+  
+  if(!isset($format_id)){
+  
+    $filter_formats = filter_formats();
+    
+    foreach($filter_formats as $filter_format){
+      
+      if($filter_format->name == t('Full HTML')){
+        
+        $format_id = $filter_format->format;
+        
+      }
+      
+    }
+    
+  }
+  
+  foreach(element_children($form) as $key){
+  
+    $element = &$form[$key];
+    
+    if($element['#type'] == 'text_textarea' || $key == 'body_filter'){
+
+      $class = $element['format'][$format_id]['#attributes']['class'];
+      $name = $element['format'][$format_id]['#name'];
+              
+      $element['format'] = array(
+        '#type' => 'hidden',
+        '#value' => $format_id,
+        '#attributes' => array('checked' => 'checked', 'class' => $class),
+        '#name' => $name
+      );
+      
+    }else{
+  
+      publication_pre_render_node_form($element);  
+      
+    }
+  
+  }
+  
+  return $form; 
   
 }
 

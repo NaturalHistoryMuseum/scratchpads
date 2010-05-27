@@ -125,6 +125,7 @@ function publication_field_info(){
       'weight' => 0, 
       'required' => 1, 
       'locked' => 0,
+      'text_processing' => '1',
       'description' => t('Please enter a title for the publication.')
     ),
     array(
@@ -151,6 +152,7 @@ function publication_field_info(){
       'weight' => 0, 
       'required' => 0, 
       'locked' => 0,
+      'text_processing' => '1',
       'description' => t('Please enter a list of supplementary files.')
     ),
     array(
@@ -163,7 +165,8 @@ function publication_field_info(){
       'rows' => '3', 
       'weight' => 0, 
       'required' => 0, 
-      'locked' => 0
+      'locked' => 0,
+      'text_processing' => '1',
     ), 
     array(
       'field_name' => 'field_publication_images', 
@@ -382,6 +385,7 @@ function publication_field_info(){
       'weight' => 0, 
       'required' => 0, 
       'locked' => 0,
+      'text_processing' => '1',
       'description' => t('Citations for this taxon.')
     ),
     array(
@@ -394,6 +398,7 @@ function publication_field_info(){
       'weight' => 0, 
       'required' => 0, 
       'locked' => 0,
+      'text_processing' => '1',
       'description' => t('Type material for this taxon.')
     ),
   );
