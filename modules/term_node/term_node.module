@@ -159,7 +159,7 @@ function term_node_form_alter(&$form, $form_state, $form_id){
  * 
  * This function takes an array of terms
  */
-function term_node_taxonomy_term_load(&$terms){
+function term_node_taxonomy_term_load($terms){
   $types = array();
   foreach($terms as $term){
     if(!isset($types[$term->vid])){
@@ -187,6 +187,7 @@ function term_node_taxonomy_term_load(&$terms){
       }
     }
   }
+  return $terms;
 }
 
 /**
