@@ -16,11 +16,13 @@ function publication_get_xml($nid, $vid=NULL){
   
   $node = node_load($nid, NULL, TRUE);
 
-  $xml = '<article dtd-version="3.0" xmlns:tp="http://www.plazi.org/taxpub">  
+  $xml = '<article dtd-version="3.0" 
+    xmlns:tp="http://www.plazi.org/taxpub"
+    xmlns:xlink="http://www.w3.org/1999/xlink">  
   <front>
     <article-meta>
       <title-group>
-        <article-title>'.$node->field_publication_title[0]['value'].'</article-title>
+        <article-title>'.preg_replace('/<p.*>/','',_publication_cock_off_tinymce($node->field_publication_title[0]['value'])).'</article-title>
       </title-group>
       <contrib-group>
         '._publication_get_users_xml($node, $vid).'
@@ -43,7 +45,7 @@ function publication_get_xml($nid, $vid=NULL){
     </ref-list>';
   if($node->field_publication_supplementary[0]['value']){
     $xml .='
-    <sec type="Supplementary material">
+    <sec sec-type="Supplementary material">
       <title>Supplementary material</title>
       '.trim(_filter_autop($node->field_publication_supplementary[0]['value'])).'
     </sec>';
@@ -134,10 +136,10 @@ function _publication_get_fig_xml(&$node){
       $image_node = node_load($image['nid']);
       $caption_node = publication_modal_image_caption_node_load($image['nid'], $node->nid);
       $xml .= '
-    <fig id="'.$fig_id.'">
+    <fig id="F'.$fig_id.'">
       <label>Figure '.$fig_id.'</label>
       <caption>'.trim(_filter_autop($caption_node->body)).'</caption>
-      <graphic href="'.url('/', array('absolute' => TRUE)).$image_node->images['_original'].'"></graphic>
+      <graphic xlink:href="'.url('/', array('absolute' => TRUE)).$image_node->images['_original'].'"></graphic>
     </fig>';
     }
     $fig_id ++;
@@ -167,7 +169,7 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
           }
         } else if ($child_node->type == 'publication_section') {
         $section_xml .= '
-      <'.$tag.' type="'.$child_node->title.'">
+      <'.$tag.' sec-type="'.$child_node->title.'">
         <'.$title.'>'.$child_node->title.'</'.$title.'>'.trim(_filter_autop($child_node->body))._publication_get_sections_xml($publication_node, $vid, $child_node, $tag).'
       </'.$tag.'>';
         }
@@ -207,7 +209,7 @@ function _publication_get_treatment_sections(&$node, $section_node, $vid, $tid){
         if($term_field_child && $child_node->$term_field_child){
           $xml .= '
       <tp:treatment-sec>
-        <label>'.$labels_children[$term_field_child]['name'].'</label>
+        <title>'.$labels_children[$term_field_child]['name'].'</title>
         '.trim(_filter_autop($child_node->$term_field_child)).'
       </tp:treatment-sec>';
         }
@@ -229,8 +231,8 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   }
   $materials = '';
   if($section_node->field_publication_taxon_material[0]['value']){
-    $materials = '<treatment-sec type="type-material-guess">
-        <label>Type material</label>
+    $materials = '<treatment-sec sec-type="Type Material">
+        <title>Type Material</title>
         '.trim(_filter_autop($section_node->field_publication_taxon_material[0]['value'])).'
       </treatment-sec>';
   }
@@ -274,7 +276,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   $treatment_xml .= '
       </tp:nomenclature>
       '.$materials.'
-      '._publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'label').'
+      '._publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'title').'
     </tp:taxon-treatment>';
   return $treatment_xml;
 }
