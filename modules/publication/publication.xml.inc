@@ -7,7 +7,7 @@ function publication_display_xml($node, $vid = FALSE){
 
 function _publication_cock_off_tinymce($text){
   $text = str_replace('em>','italic>',$text);
-  return preg_replace('/<br.*\/>/', '</p><p>', str_replace('<br>','<br/>',$text));
+  return preg_replace('/<br[^>]*>/', '</p><p>', str_replace('<br>','<br/>',$text));
 }
 /**
  * Generate an XML document according to the PubTax schema.
