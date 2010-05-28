@@ -90,6 +90,20 @@ Drupal.tui.click_buttonclick = function(img_clicked){
     case 'tui-import':
       alert('Import is coming soon!');
       break;
+    case 'tui-link':
+      if(!Drupal.tui.link_is_displayed){
+        Drupal.tui.link_is_displayed = true;
+        $('#tui-link-box').fadeIn(500);
+        $('#tui-link-back').focus(function(){
+          this.select();
+        });
+        $('#tui-link-back').focus();        
+      } else {
+        Drupal.tui.link_is_displayed = false;
+        $('#tui-link-box').hide();
+        $('#tui-link-box').unbind('focus');
+      }
+      break;
     case 'tui-next':
     case 'tui-previous':
       Drupal.tui.selected_tab = $('.ui-tabs-selected > a').attr('href');
@@ -120,7 +134,7 @@ Drupal.tui.update_link = function(){
   for(var i in Drupal.settings.tui.opentids){
     tids_string += Drupal.settings.tui.opentids[i]+"%2C";
   }
-  $('#tui-link-back').attr('href', Drupal.settings.tui.callbacks.page+'/'+tids_string.substring(0, tids_string.length-3));
+  $('#tui-link-back').val(Drupal.settings.tui.callbacks.page+'/'+tids_string.substring(0, tids_string.length-3));
 }
 
 Drupal.tui.drag_start = function(event, ui){
@@ -255,6 +269,21 @@ Drupal.tui.form_success = function(data){
     $('#tabs > ul').tabs('select', Drupal.tui.selected_tab);
   }
   $('.loading').removeClass('loading');
+  var name_not_found = true;
+  var term_name = '';
+  var i='0';
+  while(name_not_found && i<10){
+    if(i>0){
+      id = '#edit-name-'+i;      
+    } else {
+      id = '#edit-name';     
+    }
+    if($(id).val()){
+      $('#tui-name-editing').html($(id).val());
+      name_not_found = false;
+    }
+    i ++;
+  }
 }
 
 Drupal.tui.display_form = function(element){

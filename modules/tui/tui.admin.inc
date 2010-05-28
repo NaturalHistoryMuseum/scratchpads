@@ -70,12 +70,9 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   // then hide the form.
   module_load_include('admin.inc', 'taxonomy');
 
-  drupal_set_title(t('Editing %vocabulary', array('%vocabulary' => $vocabulary->name)));
+  drupal_set_title(t('Editing %vocabulary', array('%vocabulary' => $vocabulary->name)).'<span id="tui-name-editing"></span>');
 
   return '<div id="tui">
-  <div id="tui-top-links">
-    <p>'.l('Link to this page.','admin/content/taxonomy/edit/tui/'.arg(5).'/'.arg(6), array('attributes' => array('id' => 'tui-link-back'))).'</p>
-  </div>
   <div id="tui-tree">
     <div id="tui-tree-container">
       <div id="tui-tree-links">
@@ -85,12 +82,19 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           <img id="tui-delete" src="'.base_path().drupal_get_path('module','tui').'/images/delete.png" alt="'.t('Delete term').'" title="'.t('Delete term').'"/>
           <img id="tui-undo" src="'.base_path().drupal_get_path('module','tui').'/images/undo.png" alt="'.t('Undo move').'" title="'.t('Undo move').'"/>
           <img id="tui-import" src="'.base_path().drupal_get_path('module','tui').'/images/import.png" alt="'.t('Import').'" title="'.t('Import').'"/>
+          <img id="tui-link" src="'.base_path().drupal_get_path('module','tui').'/images/link.png" alt="'.t('Link to this page').'" title="'.t('Link to this page').'"/>
           <img id="tui-search" src="'.base_path().drupal_get_path('module','tui').'/images/search.png" alt="'.t('Search').'" title="'.t('Search').'"/>
           <img id="tui-next" src="'.base_path().drupal_get_path('module','tui').'/images/next.png" alt="'.t('Next').'" title="'.t('Next').'"/>
         </p>
         <div id="tui-search-form-container">
           <div class="tui-modal"></div>
           <div class="tui-form">'.drupal_get_form('tui_search_form', arg(5)).'</div>
+        </div>
+        <div id="tui-link-box">
+          <div id="tui-link-subbox">
+            <p>'.t('Copy and paste the following link into an email, or webpage').'</p>
+            <textarea id="tui-link-back">'.url('admin/content/taxonomy/edit/tui/'.arg(5).'/'.arg(6), array('absolute' => TRUE)).'</textarea>
+          </div>
         </div>
       </div>
       <div id="tui-tree-subcontainer">

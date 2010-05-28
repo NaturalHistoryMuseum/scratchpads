@@ -14,10 +14,29 @@
  color:black;
  background-color:white;
 }
-#tui-top-links{
+
+/* TITLE OF FORM */
+#tui-name-editing{
+ float:right;
+ margin-right:7px;
+}
+
+/* LINK BOX */
+#tui-link-box{
  position:absolute;
- top:-30px;
- right:10px;
+ display:none;
+ border:solid 1px #999;
+ background-color:white;
+ color:black;
+ text-align:left;
+}
+#tui-link-box p{
+ margin:5px !important;
+}
+#tui-link-box textarea{
+ width:400px;
+ height:50px;
+ font-size:80%;
 }
 
 /* TREE */
@@ -234,10 +253,8 @@
  padding: 0.5em !important;
  font-size: 80% !important;
 }
-.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform, .tui-form{
+.ui-tabs-panel > fieldset, #tui-tree-container, #tui-form-noform, .tui-form, #tui-link-box{
  -moz-box-shadow: 2px 2px 2px #999;
  -webkit-box-shadow: 2px 2px 2px #999;
  box-shadow: 2px 2px 2px #999;
-}
-#999;
 }
