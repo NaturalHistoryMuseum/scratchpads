@@ -23,12 +23,13 @@
 }
 
 .treeview .hitarea {
-	background: url(../images/treeview-default.gif) -64px -25px no-repeat;
+	background: url("../images/treeview-default.gif") -64px -25px no-repeat;
 	height: 16px;
 	width: 16px;
-	margin-left: -16px;
+  margin-left: -16px;
 	float: left;
 	cursor: pointer;
+
 }
 /* fix for IE6 */
 * html .hitarea {
@@ -47,7 +48,7 @@
 
 #treecontrol { margin: 1em 0; display: none; }
 
-.treeview .hover { color: red; cursor: pointer; }
+.treeview label.option { cursor: pointer; }
 
 .treeview li { background: url(../images/treeview-default-line.gif) 0 0 no-repeat; }
 .treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
