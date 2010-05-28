@@ -270,7 +270,7 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
     $treatment_xml .= '
         <tp:nomenclature-citation-list>
           <tp:nomenclature-citation>
-            <comment>'.$section_node->field_publication_taxon_citation[0]['value'].'</comment>
+            <mixed-citation>'.$section_node->field_publication_taxon_citation[0]['value'].'</mixed-citation>
           </tp:nomenclature-citation>
         </tp:nomenclature-citation-list>';
   }
