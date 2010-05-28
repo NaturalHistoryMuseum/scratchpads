@@ -22,7 +22,7 @@ function publication_get_xml($nid, $vid=NULL){
   <front>
     <article-meta>
       <title-group>
-        <article-title>'.preg_replace('/<p[^>]*>/','',_publication_cock_off_tinymce($node->field_publication_title[0]['value'])).'</article-title>
+        <article-title>'.preg_replace('/<[\/ ]*p>/','',_publication_cock_off_tinymce($node->field_publication_title[0]['value'])).'</article-title>
       </title-group>
       <contrib-group>
         '._publication_get_users_xml($node, $vid).'
