@@ -21,7 +21,7 @@ function scratchpadify_theme_registry_alter(&$theme_registry){
     unset($theme_registry[$theme]['theme path']);
     unset($theme_registry[$theme]['theme paths']);
     $theme_registry[$theme]['function'] = 'scratchpadify_filter_tips';
-  }
+  }   
 }
 /*
 * Override filter.module's theme_filter_tips() function to disable tips display.
@@ -407,4 +407,62 @@ function _uservoice_expiration_timestamp($duration=10) {
 function scratchpadify_block($op = 'list', $delta = 0, $edit = array()){
   module_load_include('hook_block.inc','scratchpadify');
   return _scratchpadify_block($op, $delta, $edit);
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function scratchpadify_nodeapi(&$node, $op, $arg = 0) {
+
+  switch ($op) {
+
+    case 'load':
+
+      $node->title = scratchpadify_square_tags_to_html($node->title);
+      
+    break;
+    
+  }
+  
+}
+
+function scratchpadify_preprocess_page(&$variables) {
+	
+  $variables['title'] = htmlspecialchars_decode($variables['title']); 
+	$variables['head_title'] = strip_tags(htmlspecialchars_decode($variables['head_title']));
+	
+}
+
+function scratchpadify_preprocess_node(&$variables) {
+	
+  $variables['title'] = scratchpadify_square_tags_to_html($variables['node']->title);
+  return $variables;
+  
+}
+
+function scratchpadify_square_tags_to_html($text) {
+
+	$square_tags = array(
+		"[strong]", "[/strong]",
+		"[b]", "[/b]",
+		"[u]", "[/u]",
+		"[i]", "[/i]",
+		"[em]", "[/em]",
+		"[sub]", "[/sub]",
+		"[sup]", "[/sup]",
+	);
+	
+	  $html_tags = array(
+		  "<strong>", "</strong>",
+		  "<b>", "</b>",
+		  "<u>", "</u>",
+		  "<i>", "</i>",
+		  "<em>", "</em>",
+		  "<sub>", "</sub>",
+		  "<sup>", "</sup>",
+	  );
+
+	
+	return str_replace($square_tags, $html_tags, $text);
+	
 }
