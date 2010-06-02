@@ -610,7 +610,7 @@ function _publication_node_form_alter_base_elements(&$form){
     
   }
   
-  $form['#pre_render'][] = 'publication_pre_render_node_form';
+   $form['#pre_render'][] = 'publication_pre_render_node_form';
   
 }
 

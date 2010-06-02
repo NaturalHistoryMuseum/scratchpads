@@ -111,7 +111,7 @@ Drupal.behaviors.modalNodeForm = function(context) {
             $titleSpan.removeClass('manuscript-name');
             $titleSpan.removeAttr('title');
             
-          }else{
+          }else if(args.op == 'Updated'){
             
             $titleSpan.addClass('manuscript-name');
             $titleSpan.attr('title', args.term_name);

@@ -688,11 +688,11 @@ function publication_load($node){
  * Implementation of hook_nodeapi().
  */
 function publication_nodeapi(&$node, $op, $arg = 0) {
-    
+
   switch ($op) {
 
     case 'load':
-
+    	
       if($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section'){
     
         $output = array();
@@ -704,6 +704,7 @@ function publication_nodeapi(&$node, $op, $arg = 0) {
       }
     break;
     case 'view':
+    	
       if($node->type == 'publication'){
         foreach($node->content as $key => $value){
           if($key != 'view' && $key != 'formatted-document'){

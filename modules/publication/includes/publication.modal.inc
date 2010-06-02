@@ -218,7 +218,7 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
     $args['op'] = 'Reset';
     $args['title'] = $form_state['values']['term']->name;
     
-  }else{
+  }elseif($form_state['values']['title'] != $form_state['values']['term']->name){
     
     $args['op'] = 'Update';
     $args['title'] = $form_state['values']['title'];
@@ -231,6 +231,7 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
   $args['term_name'] = $form_state['values']['term']->name;
   
   $form_state['rebuild'] = true;
+  
   modalframe_close_dialog($args);
   
 }
