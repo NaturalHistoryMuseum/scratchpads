@@ -6,14 +6,10 @@ function publication_display_xml($node, $vid = FALSE){
 }
 
 function _publication_cock_off_tinymce($text){
-  return
-    str_replace('♀', '&#9792;', 
-      str_replace('♂', '&#9794;',
-        str_replace('em>','italic>', 
-          preg_replace('/<br[^>]*>/', '</p><p>', 
-            str_replace('<br>','<br/>',$text)
-          )
-        )
+  return 
+    str_replace('em>','italic>', 
+      preg_replace('/<br[^>]*>/', '</p><p>', 
+        str_replace('<br>','<br/>',$text)
       )
     );
 }
