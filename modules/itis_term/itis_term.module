@@ -134,8 +134,8 @@ function itis_term_validate($form, &$form_state){
 
 function itis_term_form_term_submit($form, &$form_state){
   if(isset($form_state['values']['field_unit_name1'][0]['value']) && $form_state['values']['field_unit_name1'][0]['value'] != ''){
-    $form_state['values']['name'] = $form_state['values']['field_unit_name1'][0]['value'] ." ". $form_state['values']['field_unit_name2'][0]['value']." ".
-                                    $form_state['values']['field_unit_name3'][0]['value'] ." ". $form_state['values']['field_unit_name4'][0]['value'];
+    $form_state['values']['name'] = trim($form_state['values']['field_unit_name1'][0]['value'] ." ". $form_state['values']['field_unit_name2'][0]['value']." ".
+                                    $form_state['values']['field_unit_name3'][0]['value'] ." ". $form_state['values']['field_unit_name4'][0]['value']);
   }
 }
 
