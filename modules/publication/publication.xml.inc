@@ -6,8 +6,7 @@ function publication_display_xml($node, $vid = FALSE){
 }
 
 function _publication_cock_off_tinymce($text){
-  $text = str_replace('em>','italic>',$text);
-  return preg_replace('/<br[^>]*>/', '</p><p>', str_replace('<br>','<br/>',$text));
+  return str_replace('em>','italic>', preg_replace('/<br[^>]*>/', '</p><p>', str_replace('<br>','<br/>',$text)));
 }
 /**
  * Generate an XML document according to the PubTax schema.
@@ -208,11 +207,14 @@ function _publication_get_treatment_sections(&$node, $section_node, $vid, $tid){
       $labels_children = $labels[$key];
       foreach($term_field as $term_field_child){
         if($term_field_child && $child_node->$term_field_child){
-          $xml .= '
+          $content = trim(_filter_autop($child_node->$term_field_child));
+          if($content){
+            $xml .= '
       <tp:treatment-sec>
         <title>'.$labels_children[$term_field_child]['name'].'</title>
-        '.trim(_filter_autop($child_node->$term_field_child)).'
+        '.$content.'
       </tp:treatment-sec>';
+          }
         }
       }
     }
@@ -232,10 +234,10 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
   }
   $materials = '';
   if($section_node->field_publication_taxon_material[0]['value']){
-    $materials = '<treatment-sec sec-type="Type Material">
+    $materials = '<tp:treatment-sec sec-type="Type Material">
         <title>Type Material</title>
         '.trim(_filter_autop($section_node->field_publication_taxon_material[0]['value'])).'
-      </treatment-sec>';
+      </tp:treatment-sec>';
   }
   $treatment_xml .= '
     <tp:taxon-treatment>
