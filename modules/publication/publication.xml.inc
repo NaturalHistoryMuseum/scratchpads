@@ -79,12 +79,30 @@ function _publication_get_references($node, $vid){
         <given-names>'.$contributor['firstname'].'</given-names>
       </name>';
     }
+    $first_page = FALSE;
+    $last_page = FALSE;
+    if($biblio_node->biblio_pages){
+      $pages = explode("-", $biblio_node->biblio_pages);
+      if(count($pages) == 2){
+        $first_page = trim($pages[0]);
+        $last_page = trim($pages[1]);
+      }
+    }
     $xml .= '
     </person-group>
       <year>'.$biblio_node->biblio_year.'</year>
       <article-title>'.htmlspecialchars($biblio_node->title).'</article-title>
       <source>'.$biblio_node->biblio_secondary_title.'</source>
-      <volume>'.$biblio_node->biblio_volume.'</volume>
+      <volume>'.$biblio_node->biblio_volume.'</volume>';
+    if($first_page && $last_page){
+      $xml .= '
+      <fpage>'.$first_page.'</fpage>
+      <lpage>'.$last_page.'</lpage>';
+    } else if ($biblio_node->biblio_section){
+      $xml .= '
+      <fpage>'.$biblio_node->biblio_section.'</fpage>';      
+    }
+    $xml .= '
       <fpage>'.$biblio_node->biblio_section.'</fpage>
       <publisher-loc>'.$biblio_node->biblio_place_published.'</publisher-loc>
       <publisher-name>'.$biblio_node->biblio_publisher.'</publisher-name>
