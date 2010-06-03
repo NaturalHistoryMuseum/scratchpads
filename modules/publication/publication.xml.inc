@@ -101,9 +101,11 @@ function _publication_get_references($node, $vid){
     } else if ($biblio_node->biblio_section){
       $xml .= '
       <fpage>'.$biblio_node->biblio_section.'</fpage>';      
+    } else {
+      $xml .= '
+      <fpage>'.$biblio_node->biblio_section.'</fpage>';
     }
     $xml .= '
-      <fpage>'.$biblio_node->biblio_section.'</fpage>
       <publisher-loc>'.$biblio_node->biblio_place_published.'</publisher-loc>
       <publisher-name>'.$biblio_node->biblio_publisher.'</publisher-name>
     </mixed-citation>
