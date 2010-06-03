@@ -76,7 +76,7 @@ function _publication_get_references($node, $vid){
       $xml .= '
       <name>
         <surname>'.$contributor['lastname'].'</surname>
-        <given-names>'.$contributor['firstname'].'</given-names>
+        <given-names>'.$contributor['firstname'].$contributor['initials'].'</given-names>
       </name>';
     }
     $first_page = FALSE;
