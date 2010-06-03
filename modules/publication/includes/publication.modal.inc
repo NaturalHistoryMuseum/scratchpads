@@ -220,7 +220,7 @@ function publication_taxon_section_modal_node_form_submit(&$form, &$form_state){
     
   }elseif($form_state['values']['title'] != $form_state['values']['term']->name){
     
-    $args['op'] = 'Update';
+    $args['op'] = 'Updated';
     $args['title'] = $form_state['values']['title'];
     
   }

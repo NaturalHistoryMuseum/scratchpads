@@ -1427,6 +1427,67 @@ function _publication_node_form_is_modal(){
 }
 
 
+/**
+ * 
+ * @param $node
+ * @return void
+ * Make a node public - currently user has clicked 'make public' button
+ * 
+ */
+function publication_node_make_public($node) {
+  
+  if (og_is_group_type ( $node->type )) {
+    $node->og_private = 0;
+    $node->og_selective = 0;
+    og_update_group ( $node );
+  }
+  
+  publication_update_taxa_with_manuscript_name($node);
+
+}
+
+
+/**
+ * Update taxon name with a manuscript name, if it exists
+ * @param object $node
+ */
+function publication_update_taxa_with_manuscript_name($node) {
+  
+  // Clean up section nodes for deselected terms
+  foreach ( $node->field_publication_section as $publication_section_key => $publication_section ) {
+    
+    $nid = $publication_section ['nid'];
+  
+    if($child_node = node_load($nid)){
+
+    	if($child_node->type == 'publication_taxon_section' && $term = array_shift ( $child_node->taxonomy )){
+    		
+    		if ($term->name != $child_node->title) {
+    		
+    			 $term_array = (array) $term;
+    			 $term_array['name'] = $child_node->title;
+    			 
+    			 taxonomy_save_term($term_array);
+    			 
+    			 drupal_set_message(t('Taxon <em>@term</em> has been updated to <em>@manuscript_name</em>', array('@term' => $term->name, '@manuscript_name' => $child_node->title)));
+    			 
+    		}
+    		
+    	}
+    	
+    	    
+          
+          
+    	
+    }
+    
+
+    
+  }
+
+}
+
+
 function publication_noderelationships_view_alter(&$view_overrides, $view, $display_id, $view_args){
   
   // Change the biblio list so it can be ordered by author
@@ -1580,4 +1641,6 @@ function phptemplate_noderelationships_noderef_page_prefix() {
   return '<div class="noderelationships-noderef-page-content clearfix">';
   
 }
+
+
 
