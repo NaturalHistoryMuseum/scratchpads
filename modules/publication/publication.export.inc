@@ -1,6 +1,7 @@
 <?php
 
 function publication_export_form($form_state, $node){
+	
   $form = array();
   $options = array('' => '- None -');  
   foreach (module_implements('publication_info') as $module) {
@@ -22,6 +23,9 @@ function publication_export_form($form_state, $node){
     ),
     '#suffix' => '<div id="export-form"></div>'
   );
+  
+  $form['#node'] = $node;
+  
   $form['submit'] = array(
     '#weight' => 1000,
     '#type' => 'submit',

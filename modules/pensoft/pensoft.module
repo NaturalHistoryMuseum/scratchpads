@@ -1,5 +1,7 @@
 <?php
 
+define('PENSOFT_EMAIL_ADDRESS', 'ben@benscott.co.uk');
+
 /**
  * Implementation of hook_export_publication().
  */
@@ -40,4 +42,31 @@ function pensoft_publication_export_form_validate($form, &$form_state){
 
 function pensoft_publication_export_form_submit($form, &$form_state){
   
+  global $user;
+  
+  if($filepath = publication_create_xml_file($form['#node'])){
+    
+    $destinations = array(PENSOFT_EMAIL_ADDRESS);
+    $message = new stdClass;
+    $message->subject = 'test';
+    $message->body = 'The XML can be downloaded from: ' . url($filepath, array('absolute' => true));
+    $message->sender_account = $user;
+    
+    if(messaging_message_send($destinations, $message, 'mail')){
+
+    	drupal_set_message(t('The XML file has been sent to Pensoft.'));
+    	
+    }else{
+    	
+    	drupal_set_message(t('The XML file could not be emailed.'), 'error');
+    	
+    }
+    
+   
+  }else{
+    
+    drupal_set_message(t('The XML file could not be created at this time.'), 'error');
+    
+  }
+	
 }

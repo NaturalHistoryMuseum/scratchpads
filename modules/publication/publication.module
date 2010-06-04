@@ -1643,4 +1643,29 @@ function phptemplate_noderelationships_noderef_page_prefix() {
 }
 
 
+function publication_create_xml_file($node){
+
+  $response = drupal_http_request(url('/node/' . $node->nid . '/taxpubxml', array('absolute' => true)));
+  
+  if($response->code == 200){
+    
+    $data = $response->data;
+    $filepath = file_create_path() . '/publication-xml';
+    $filename = $node->nid .'-'. time().'.xml';
+
+    // file_check_directory
+    if (!file_check_directory($filepath, FILE_CREATE_DIRECTORY)) {
+     watchdog('publication', t('Publication XML directory could not be created'));
+    }
+    
+    file_save_data($data, $filepath .'/'. $filename, FILE_EXISTS_REPLACE);
+    
+    return $filepath .'/'. $filename;
+    
+  }
+  
+  return false;
+  
+}
+
 
