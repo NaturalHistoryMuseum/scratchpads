@@ -153,7 +153,7 @@ function theme_mado_block($block, $id, $before_divider = TRUE) {
   switch($block['#type']){
     case 'view':      
       $view = views_get_view($block['#name']);
-      if($view){
+      if($view && !$view->disabled){
         $view->get_total_rows = 'TRUE';
         $view_content = $view->preview($display_id, array(arg(2)));
         if((isset($view->total_rows) && !$view->total_rows) && trim($view->display['default']->display_options['empty'])==''){
