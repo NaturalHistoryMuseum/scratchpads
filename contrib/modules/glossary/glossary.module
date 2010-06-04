@@ -537,12 +537,6 @@ function _glossary_filter_process($format, $text) {
           $term->vid = $vid;
           $terms[] = $term;
         }
-        if ($taxonomy_image_enabled) {
-          $term->image = taxonomy_image_display($term->tid);
-        }
-        else {
-          $term->image = NULL;
-        }
       }
     }
     
