@@ -137,7 +137,7 @@ function _publication_get_users_xml(&$node, $vid){
       $user_node = _publication_get_child_node($user['nid'], $vid);
       if($user_node->field_email == ''){
         $user_node_user = user_load(array('uid' => $user_node->uid));
-        $user_node->field_email = $user_node_user->mail;
+        $user_node->field_email[0]['value'] = $user_node_user->mail;
       }
       $user_xml .= '<contrib>
             <name>
