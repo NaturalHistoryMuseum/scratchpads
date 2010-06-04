@@ -216,14 +216,16 @@ function publication_form_alter(&$form, $form_state, $form_id) {
 					
 					if ($field ['type_name'] == $node->type && $field ['widget'] ['type'] == 'nodereference_autocomplete') {
 						
+					  $field_name = $field ['field_name'];
+					    
 						if ($field ['group']) {
 							
 							$form [$field ['group']] ['#attributes'] ['class'] .= ' publication-noderef';
-							publication_field_publication_nodereference_alter ( $form [$field ['group']] [$field ['field_name']], $field, $node->nid );
+							publication_field_publication_nodereference_alter ( $form [$field ['group']] [$field_name], $field, $node->nid );
 						
 						} else {
 							
-							publication_field_publication_nodereference_alter ( $form [$field ['field_name']], $field, $node->nid );
+							publication_field_publication_nodereference_alter ( $form [$field_name], $field, $node->nid );
 						
 						}
 					
@@ -525,7 +527,7 @@ function publication_field_publication_nodereference_alter(&$element, $field, $n
 	$nids = array ();
 	
 	// Get all the NIDs for this element
-	foreach ( element_children ( $element ) as $key ) {
+	foreach ( element_children ( $element ) as $key ) {	    
 		if ($element [$key] ['#default_value'] ['nid']) {
 			$nids [] = $element [$key] ['#default_value'] ['nid'];
 		}
@@ -621,6 +623,34 @@ function publication_field_nodereference_after_build($element) {
 	
 	foreach ( element_children ( $element ) as $key ) {
 		
+	 if($element['#field_name'] == 'field_publication_biblio'){
+      
+	     $nid = $element[$key]['#default_value'];
+
+	     $node = node_load($nid);
+	     
+	     $contributors = array_shift($node->biblio_contributors);
+       $value = '';
+$conj = '';
+       
+	     if($element[$key]['nid']['nid']['#value']){
+
+	      if(is_array($contributors)){
+	          
+	          foreach($contributors as $contributor){
+	              
+	              $value .= $conj . $contributor['lastname'].', '. drupal_strtoupper(drupal_substr($contributor['firstname'], 0, 1)); 
+	              $conj = ', ';
+	              
+	          }
+	          
+	      }   
+        $element[$key]['nid']['nid']['#value'] = $value . ' - ' . $element[$key]['nid']['nid']['#value'];
+	         
+	     }
+      
+  }  
+	    
 		$element [$key] ['nid'] ['#element_validate'] = array ('publication_field_nodereference_element_validate' );
 	
 	}
@@ -632,6 +662,8 @@ function publication_field_nodereference_after_build($element) {
 	return $element;
 
 }
+
+
 
 /**
  * Additional submit function for vocabulary form
@@ -983,6 +1015,5 @@ function publication_node_form_make_public_submit($form, &$form_state) {
 	publication_node_make_public ( $form ['#node'] );
 
 }
-
 
 ?>

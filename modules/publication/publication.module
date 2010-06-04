@@ -1101,8 +1101,7 @@ function publication_update_taxa_with_manuscript_name($node)
   }
 
 function publication_noderelationships_view_alter(&$view_overrides, $view, $display_id, $view_args)
-  {
-  
+  {      
   // Change the biblio list so it can be ordered by author
   if ($view->name == 'publication_noderefences' && $display_id == 'page_grid')
     {
