@@ -462,10 +462,90 @@ function _glossary_filter_process($format, $text) {
     $replace_mode = variable_get("glossary_replace_$format", 'superscript');
     $link_style = variable_get("glossary_link_$format", 'normal');
     $absolute_link = ($link_style == 'absolute');
-    $terms = _glossary_get_terms($format);
+    // SDRycroft - removed as function below replaces this
+    //$terms = _glossary_get_terms($format);
     $vids = _glossary_get_filter_vids();
     $terms_replace = array();
 
+    // We're going to get an array of terms which "MAY" be in the text, and only
+    // check against those.  This is A LOT more efficient that the current
+    // method which will pointlessly check little pieces of text against EVERY
+    // term in each glossary vocabulary.
+    
+    $words_including_small = preg_split('/[\ `!"Â£$%^&*()_\-+={\[}\]:;@\'~#<,>.?\/|\\\]/', strtolower($text), -1, PREG_SPLIT_NO_EMPTY);
+    // lets remove the shitty small words.
+    $words = array();
+    $words_placeholder = array();
+    foreach($words_including_small as $key => $word){
+      if(strlen(trim($word))>2){// Perhaps change this to a variable so that users can have definitions of two or one letter.
+        $words[$key] = $word;
+        $words_placeholder[] = "'%s'";
+      }
+    }    
+    // Because we're sending words as an array, we've also got to do vids in the
+    // same way
+    $vids_placeholder = array();
+    foreach($vids as $doesntmatter){
+      $vids_placeholder[] = "vid = %d";
+    }
+    if(count($words_placeholder) && count($vids)){
+      $results = db_query("SELECT tid FROM {term_data} WHERE LOWER(name) IN (".implode(",", $words_placeholder).") AND (".implode(" OR ",$vids_placeholder).") UNION
+                           SELECT tid FROM {term_data} t, {term_synonym} s WHERE s.tid = t.tid AND LOWER(s.name) IN (".implode(",",$words_placeholder).") AND (".implode(" OR ",$vids_placeholder).")",
+                         array_merge($words,$vids,$words,$vids));
+      while($row=db_fetch_array($results)){
+        $tids[] = $row['tid'];
+      }
+      $total_words = count($words);
+      $sql_array = array();
+      $sql_array_syn = array();
+      $words_array = array();
+      $words_array_syn = array();
+      foreach($words as $key => $word){
+        if(isset($words_including_small[$key+1])){
+          // Now lets search for "pairs" and search on "like".  If any hit, check back on the result against
+          // the original field
+          $sql_array[] = " LOWER(name) LIKE '%s%%%s%%' ";
+          $words_array[] = $word;
+          $words_array[] = $words_including_small[$key+1];
+          $sql_array_syn[] = " LOWER(name) LIKE '%s%%%s%%' ";
+          $words_array_syn[] = $word;
+          $words_array_syn[] = $words_including_small[$key+1];
+        }
+      }
+      if(count($sql_array)){
+        $results = db_query("SELECT tid FROM {term_data}  WHERE (".implode(" OR ",$sql_array).") UNION
+                             SELECT tid FROM {term_synonym} WHERE (".implode(" OR ",$sql_array_syn).")",
+                           array_merge($words_array, $words_array_syn));   
+        while($row=db_fetch_array($results)){
+          $tids[] = $row['tid'];
+        }
+      }
+    }
+    if(count($tids)){
+      // Get all glossary terms and attach synonyms.
+      // Omit terms without a description. those are usually container terms.
+      $result = db_query(db_rewrite_sql("SELECT t.tid, t.name, t.description, COUNT(tn.nid) as nodes FROM {term_data} t LEFT JOIN {term_node} tn USING(tid) WHERE t.tid IN (".implode(',', $tids).") GROUP BY t.tid, t.name, t.description ORDER BY LENGTH(t.name) DESC", 't', 'tid'), $vid);
+      while ($term = db_fetch_object($result)) {
+        if ($term->nodes) {
+          // If there were any nodes attached, we need to see if they were unpublished.
+          $unpubs = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {term_node} tn JOIN {node} n USING (nid) WHERE tn.tid=%d AND n.status=0"), $term->tid));
+          $term->nodes -= $unpubs;
+        }
+        if ($term->description || $show_all) {
+          $term->synonyms = _glossary_get_synonyms_for_tid($term->tid);
+          $term->synonyms[] = filter_xss($term->name);
+          $term->vid = $vid;
+          $terms[] = $term;
+        }
+        if ($taxonomy_image_enabled) {
+          $term->image = taxonomy_image_display($term->tid);
+        }
+        else {
+          $term->image = NULL;
+        }
+      }
+    }
+    
     foreach ($terms as $term) {
 //      $term_title = strip_tags($term->description);
       $term_title = filter_xss($term->description);
@@ -1166,12 +1246,21 @@ function _glossary_get_synonyms($vid) {
   return $synonyms;
 }
 
+// Get synonyms for a single term
+function _glossary_get_synonyms_for_tid($tid) {
+  $result = db_query(db_rewrite_sql('SELECT ts.name FROM {term_synonym} ts JOIN {term_data} t USING(tid) WHERE t.tid=%d', 't', 'tid'), $tid);
+  while ($synonym = db_fetch_object($result)) {
+    $synonyms[] = filter_xss($synonym->name);
+  }
+  return $synonyms;
+}
+
 function _glossary_is_boundary($char) {
   if (extension_loaded('mbstring')) {
-    return (mb_strpos("!\"#\$%&'()*+,-./:;<=>?@[\]^_`{|}~’ “”´°®©¼½¾ \t\n\r", $char) !== FALSE);
+    return (mb_strpos("!\"#\$%&'()*+,-./:;<=>?@[\]^_`{|}~Â’ Â“Â”Â´Â°Â®Â©Â¼Â½Â¾ \t\n\r", $char) !== FALSE);
   }
   else {
-    return (strpos("!\"#\$%&'()*+,-./:;<=>?@[\]^_`{|}~’ “”´°®©¼½¾ \t\n\r", $char) !== FALSE);
+    return (strpos("!\"#\$%&'()*+,-./:;<=>?@[\]^_`{|}~Â’ Â“Â”Â´Â°Â®Â©Â¼Â½Â¾ \t\n\r", $char) !== FALSE);
   }
 }
 
