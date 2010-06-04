@@ -490,7 +490,7 @@ function _glossary_filter_process($format, $text) {
     }
     if(count($words_placeholder) && count($vids)){
       $results = db_query("SELECT tid FROM {term_data} WHERE LOWER(name) IN (".implode(",", $words_placeholder).") AND (".implode(" OR ",$vids_placeholder).") UNION
-                           SELECT tid FROM {term_data} t, {term_synonym} s WHERE s.tid = t.tid AND LOWER(s.name) IN (".implode(",",$words_placeholder).") AND (".implode(" OR ",$vids_placeholder).")",
+                           SELECT t.tid FROM {term_data} t, {term_synonym} s WHERE s.tid = t.tid AND LOWER(s.name) IN (".implode(",",$words_placeholder).") AND (".implode(" OR ",$vids_placeholder).")",
                          array_merge($words,$vids,$words,$vids));
       while($row=db_fetch_array($results)){
         $tids[] = $row['tid'];
