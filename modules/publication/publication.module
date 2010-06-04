@@ -3,525 +3,202 @@
 /**
  * Implementation of hook_node_info().
  */
-function publication_node_info(){
-  return array(   
-    'publication' => array(
-      'name' => t('Publication'), 
-      'module' => 'publication', 
-      'description' => t('Export data as an XML publication.'), 
-      'title_label' => t('Short name'), 
-      'body_label' => t('Abstract')
-    ), 
-    'publication_image_caption' => array(
-      'name' => t('Publication image caption'), 
-      'module' => 'publication', 
-      'description' => t('A caption to annotate an image in a publication document.'), 
-      'body_label' => t('Caption'), 
-      'body_required' => TRUE
-    ), 
-    'publication_section' => array(
-      'name' => t('Publication sections'), 
-      'module' => 'publication', 
-      'description' => t('Sections for a publication document.'), 
-      'title_label' => t('Title'), 
-      'body_label' => t('Enter data'), 
-      'body_required' => FALSE
-    ),
-    'publication_taxon_section' => array(
-      'name' => t('Publication taxon section'), 
-      'module' => 'publication', 
-      'description' => t('A taxon section for a publication document.'), 
-      'title_label' => t('Final name'), 
-      'has_body' => FALSE
-    ),
-    'publication_taxon_description' => array(
-      'name' => t('Publication taxon description'), 
-      'module' => 'publication', 
-      'description' => t('Taxon description for a publication document.'), 
-      'title_label' => t('Title'), 
-      'has_body' => FALSE
-    )
-  );
-}
+function publication_node_info()
+  {
+  return array('publication' => array('name' => t('Publication') , 'module' => 'publication' , 'description' => t('Export data as an XML publication.') , 'title_label' => t('Short name') , 'body_label' => t('Abstract')) , 'publication_image_caption' => array('name' => t('Publication image caption') , 'module' => 'publication' , 'description' => t('A caption to annotate an image in a publication document.') , 'body_label' => t('Caption') , 'body_required' => TRUE) , 'publication_section' => array('name' => t('Publication sections') , 'module' => 'publication' , 'description' => t('Sections for a publication document.') , 'title_label' => t('Title') , 'body_label' => t('Enter data') , 'body_required' => FALSE) , 'publication_taxon_section' => array('name' => t('Publication taxon section') , 'module' => 'publication' , 'description' => t('A taxon section for a publication document.') , 'title_label' => t('Final name') , 'has_body' => FALSE) , 'publication_taxon_description' => array('name' => t('Publication taxon description') , 'module' => 'publication' , 'description' => t('Taxon description for a publication document.') , 'title_label' => t('Title') , 'has_body' => FALSE));
+  }
 
 /**
  * Display only bold and italic buttons.
  * 
  * hook_wysiwyg_editor_settings_alter
  */
-function publication_wysiwyg_editor_settings_alter(&$settings, $context){
-
-  if(arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'edit'){
-   $node = node_load(arg(1));
-   $node_type = $node->type;
-  }elseif(arg(0) == 'node' && arg(1) == 'add'){
+function publication_wysiwyg_editor_settings_alter(&$settings, $context)
+  {
+  
+  if (arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'edit')
+    {
+    $node = node_load(arg(1));
+    $node_type = $node->type;
+    } elseif (arg(0) == 'node' && arg(1) == 'add')
+    {
     $node_type = str_replace('-', '_', arg(2));
-  }
+    }
   $node_types = publication_node_info();
-  if(isset($node_types[$node_type])){
+  if (isset($node_types[$node_type]))
+    {
     $settings['theme_advanced_buttons1'] = 'bold,italic';
+    }
+  
   }
 
-}
-
-function publication_group_info(){
+function publication_group_info()
+  {
   return array(
-    
-    array(
-      'label' => 'Metadata', 'weight' => 1, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_metadata', 
-      'type_name' => 'publication'
-    ), 
-    array(
-      'label' => 'Taxa', 'weight' => 2, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_taxa', 
-      'type_name' => 'publication'
-    ), 
-    array(
-      'label' => 'Default fields', 
-      'weight' => 3, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_term_fields', 
-      'type_name' => 'publication'
-    ),
-    array(
-      'label' => 'Sections', 
-      'weight' => 4, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_sections', 
-      'type_name' => 'publication'
-    ),
-    array(
-      'label' => 'Images', 'weight' => 5, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_images', 
-      'type_name' => 'publication'
-    ), 
-    array(
-      'label' => 'Bibliography', 
-      'weight' => 6, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_biblio', 
-      'type_name' => 'publication'
-    ), 
-    array(
-      'label' => 'Privacy', 
-      'weight' => 7, 
-      'group_type' => 'standard', 
-      'group_name' => 'group_publication_privacy', 
-      'type_name' => 'publication'
-    ),
-  );
-}
 
-function publication_field_info(){
+  array('label' => 'Metadata' , 'weight' => 1 , 'group_type' => 'standard' , 'group_name' => 'group_publication_metadata' , 'type_name' => 'publication') , array('label' => 'Taxa' , 'weight' => 2 , 'group_type' => 'standard' , 'group_name' => 'group_publication_taxa' , 'type_name' => 'publication') , array('label' => 'Default fields' , 'weight' => 3 , 'group_type' => 'standard' , 'group_name' => 'group_publication_term_fields' , 'type_name' => 'publication') , array('label' => 'Sections' , 'weight' => 4 , 'group_type' => 'standard' , 'group_name' => 'group_publication_sections' , 'type_name' => 'publication') , array('label' => 'Images' , 'weight' => 5 , 'group_type' => 'standard' , 'group_name' => 'group_publication_images' , 'type_name' => 'publication') , array('label' => 'Bibliography' , 'weight' => 6 , 'group_type' => 'standard' , 'group_name' => 'group_publication_biblio' , 'type_name' => 'publication') , array('label' => 'Privacy' , 'weight' => 7 , 'group_type' => 'standard' , 'group_name' => 'group_publication_privacy' , 'type_name' => 'publication'));
+  }
+
+function publication_field_info()
+  {
   return array(
-    
-    array(
-      'label' => 'Publication title', 
-      'field_name' => 'field_publication_title', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_metadata', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 1, 
-      'locked' => 0,
-      'text_processing' => '1',
-      'description' => t('Please enter a title for the publication.')
-    ),
-    array(
-      'label' => 'Keywords (one per line)', 
-      'field_name' => 'field_publication_keywords', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_metadata', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 0, 
-      'locked' => 0,
-      'description' => t('Please enter a list of publication keywords, one keyword per line.')
-    ),
-    array(
-      'label' => 'Supplementary materials', 
-      'field_name' => 'field_publication_supplementary', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_metadata', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 0, 
-      'locked' => 0,
-      'text_processing' => '1',
-      'description' => t('Please enter a list of supplementary files.')
-    ),
-    array(
-      'label' => 'Acknowledgements', 
-      'field_name' => 'field_publication_ack', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_metadata', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 0, 
-      'locked' => 0,
-      'text_processing' => '1',
-    ), 
-    array(
-      'field_name' => 'field_publication_images', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_images', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '0', 'multiple' => '1', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'image' => 'image'
-      ), 
-      'widget' => array(
-        'autocomplete_match' => 'contains', 
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Images', 'description' => '', 
-        'type' => 'nodereference_autocomplete', 
-        'module' => 'nodereference'
-      )
-    ), 
-    array(
-      'field_name' => 'field_publication_biblio', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_biblio', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '0', 'multiple' => '1', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'biblio' => 'biblio'
-      ), 
-      'widget' => array(
-        'autocomplete_match' => 'contains', 
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Bibliographic references', 
-        'description' => '', 
-        'type' => 'nodereference_autocomplete', 
-        'module' => 'nodereference'
-      )
-    ), 
-    array(
-      'field_name' => 'field_publication_section', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_section', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '0', 'multiple' => '1', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'publication_section' => 'publication_section',
-        'publication_taxon_section' => 'publication_taxon_section',
-        'publication_taxon_description' => 'publication_taxon_description'
-      ), 
-      'widget' => array(
-        
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Section children', 
-        'description' => '', 
-        'type' => 'nodereference_select', 
-        'module' => 'nodereference'
-      )
-    ), 
-    array(
-      'field_name' => 'field_publication_authors', 
-      'type_name' => 'publication', 
-      'group' => 'group_publication_metadata', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '0', 'multiple' => '1', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'profile' => 'profile'
-      ), 
-      'widget' => array(
-        
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Authors', 
-        'description' => t('Authors to appear on paper.'), 
-        'type' => 'nodereference_autocomplete', 
-        'module' => 'nodereference'
-      )
-    ),
+
+  array('label' => 'Publication title' , 'field_name' => 'field_publication_title' , 'type_name' => 'publication' , 'group' => 'group_publication_metadata' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 1 , 'locked' => 0 , 'text_processing' => '1' , 'description' => t('Please enter a title for the publication.')) , array('label' => 'Keywords (one per line)' , 'field_name' => 'field_publication_keywords' , 'type_name' => 'publication' , 'group' => 'group_publication_metadata' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 0 , 'locked' => 0 , 'description' => t('Please enter a list of publication keywords, one keyword per line.')) , array('label' => 'Supplementary materials' , 'field_name' => 'field_publication_supplementary' , 'type_name' => 'publication' , 'group' => 'group_publication_metadata' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 0 , 'locked' => 0 , 'text_processing' => '1' , 'description' => t('Please enter a list of supplementary files.')) , array('label' => 'Acknowledgements' , 'field_name' => 'field_publication_ack' , 'type_name' => 'publication' , 'group' => 'group_publication_metadata' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 0 , 'locked' => 0 , 'text_processing' => '1') , array('field_name' => 'field_publication_images' , 'type_name' => 'publication' , 'group' => 'group_publication_images' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '0' , 'multiple' => '1' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array('nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('image' => 'image') , 'widget' => array('autocomplete_match' => 'contains' , 'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Images' , 'description' => '' , 'type' => 'nodereference_autocomplete' , 'module' => 'nodereference')) , array('field_name' => 'field_publication_biblio' , 'type_name' => 'publication' , 'group' => 'group_publication_biblio' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '0' , 'multiple' => '1' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array(
+
+  'nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('biblio' => 'biblio') , 'widget' => array('autocomplete_match' => 'contains' , 'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Bibliographic references' , 'description' => '' , 'type' => 'nodereference_autocomplete' , 'module' => 'nodereference')) , array('field_name' => 'field_publication_section' , 'type_name' => 'publication' , 'group' => 'group_publication_section' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '0' , 'multiple' => '1' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array(
+
+  'nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('publication_section' => 'publication_section' , 'publication_taxon_section' => 'publication_taxon_section' , 'publication_taxon_description' => 'publication_taxon_description') , 'widget' => array(
+
+  'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Section children' , 'description' => '' , 'type' => 'nodereference_select' , 'module' => 'nodereference')) , array('field_name' => 'field_publication_authors' , 'type_name' => 'publication' , 'group' => 'group_publication_metadata' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '0' , 'multiple' => '1' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array(
+
+  'nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('profile' => 'profile') , 'widget' => array(
+
+  'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Authors' , 'description' => t('Authors to appear on paper.') , 'type' => 'nodereference_autocomplete' , 'module' => 'nodereference')),
     /* IMAGE CAPTIONS */
     array(
-      
-      'field_name' => 'field_publication_caption_parent', 
-      'type_name' => 'publication_image_caption', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '1', 'multiple' => '0', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'publication' => 'publication'
-      ), 
-      'widget' => array(
-        'autocomplete_match' => 'contains', 
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Publication', 
-        'description' => '', 
-        'type' => 'nodereference_select', 
-        'module' => 'nodereference'
-      )
-    ), 
-    array(
-      
-      'field_name' => 'field_publication_caption_image', 
-      'type_name' => 'publication_image_caption', 
-      'widget_active' => '1', 'type' => 'nodereference', 
-      'required' => '1', 'multiple' => '0', 
-      'db_storage' => '1', 'module' => 'nodereference', 
-      'active' => '1', 'locked' => 0, 
-      'columns' => array(
-        
-        'nid' => array(
-          'type' => 'int', 
-          'unsigned' => true, 
-          'not null' => false
-        )
-      ), 
-      'referenceable_types' => array(
-        'image' => 'image'
-      ), 
-      'widget' => array(
-        
-        'default_value' => array(
-          
-          0 => array(
-            'nid' => ''
-          )
-        ), 'default_value_php' => NULL, 
-        'label' => 'Image', 'description' => '', 
-        'type' => 'nodereference_select', 
-        'module' => 'nodereference'
-      )
-    ),
+
+  'field_name' => 'field_publication_caption_parent' , 'type_name' => 'publication_image_caption' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '1' , 'multiple' => '0' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array(
+
+  'nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('publication' => 'publication') , 'widget' => array('autocomplete_match' => 'contains' , 'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Publication' , 'description' => '' , 'type' => 'nodereference_select' , 'module' => 'nodereference')) , array(
+
+  'field_name' => 'field_publication_caption_image' , 'type_name' => 'publication_image_caption' , 'widget_active' => '1' , 'type' => 'nodereference' , 'required' => '1' , 'multiple' => '0' , 'db_storage' => '1' , 'module' => 'nodereference' , 'active' => '1' , 'locked' => 0 , 'columns' => array(
+
+  'nid' => array('type' => 'int' , 'unsigned' => true , 'not null' => false)) , 'referenceable_types' => array('image' => 'image') , 'widget' => array(
+
+  'default_value' => array(
+
+  0 => array('nid' => '')) , 'default_value_php' => NULL , 'label' => 'Image' , 'description' => '' , 'type' => 'nodereference_select' , 'module' => 'nodereference')),
     /* SECTIONS */
-    array(
-      'field_name' => 'field_publication_section', 
-      'type_name' => 'publication_section'
-    ),
-    array(
-      'field_name' => 'field_publication_section', 
-      'type_name' => 'publication_taxon_section'
-    ),
-    array(
-      'label' => 'Citations', 
-      'field_name' => 'field_publication_taxon_citation', 
-      'type_name' => 'publication_taxon_section', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 0, 
-      'locked' => 0,
-      'text_processing' => '1',
-      'description' => t('Citations for this taxon.')
-    ),
-    array(
-      'label' => 'Type material', 
-      'field_name' => 'field_publication_taxon_material', 
-      'type_name' => 'publication_taxon_section', 
-      'type' => 'text', 
-      'widget_type' => 'text_textarea',
-      'rows' => '3', 
-      'weight' => 0, 
-      'required' => 0, 
-      'locked' => 0,
-      'text_processing' => '1',
-      'description' => t('Type material for this taxon.')
-    ),
-  );
-}
+    array('field_name' => 'field_publication_section' , 'type_name' => 'publication_section') , array('field_name' => 'field_publication_section' , 'type_name' => 'publication_taxon_section') , array('label' => 'Citations' , 'field_name' => 'field_publication_taxon_citation' , 'type_name' => 'publication_taxon_section' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 0 , 'locked' => 0 , 'text_processing' => '1' , 'description' => t('Citations for this taxon.')) , array('label' => 'Type material' , 'field_name' => 'field_publication_taxon_material' , 'type_name' => 'publication_taxon_section' , 'type' => 'text' , 'widget_type' => 'text_textarea' , 'rows' => '3' , 'weight' => 0 , 'required' => 0 , 'locked' => 0 , 'text_processing' => '1' , 'description' => t('Type material for this taxon.')));
+  }
 
 /**
  * Implementation of hook_insert().
  */
-function publication_insert($node){
+function publication_insert($node)
+  {
   
-  switch($node->type){
+  switch ($node->type)
+    {
     
     case 'publication':
-    
+      
       db_query("INSERT INTO {publication_node} (vid, nid, vocabulary, nomenclature_fields, term_field_defaults) VALUES (%d, %d, %d, '%s', '%s')", $node->vid, $node->nid, $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults));
       
       // On creation of a node, redirect to the edit page
       $_REQUEST['destination'] = 'node/' . $node->nid . '/edit' . $node->current_tab;
-    
-    break;
+      
+      break;
     
     case 'publication_taxon_description':
-
+      
       db_query("INSERT INTO {publication_taxon_description_node} (vid, nid, term_fields) VALUES (%d, %d, '%s')", $node->vid, $node->nid, serialize($node->term_fields));
-        
-    break;
+      
+      break;
     
-  }
+    }
   
-}
-
-
+  }
 
 /**
  * Implementation of hook_update().
  */
-function publication_update($node){
-
+function publication_update($node)
+  {
+  
   // if this is a new node or we're adding a new revision,
-  if($node->revision){
-  
-   publication_insert($node);
-  
-    if(($node->vid - $node->old_vid) > 1){
+  if ($node->revision)
+    {
+    
+    publication_insert($node);
+    
+    if (($node->vid - $node->old_vid) > 1)
+      {
       
       publication_revert($node);
       
-    }
-  
-  }else{
-  
-    switch($node->type){
+      }
     
-      case 'publication':
+    } else
+    {
     
-        db_query("UPDATE {publication_node} SET vocabulary = %d, nomenclature_fields = '%s', term_field_defaults = '%s' WHERE vid = %d", $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults), $node->vid);
+    switch ($node->type)
+      {
       
-      break;
-    
+      case 'publication':
+        
+        db_query("UPDATE {publication_node} SET vocabulary = %d, nomenclature_fields = '%s', term_field_defaults = '%s' WHERE vid = %d", $node->vocabulary, serialize($node->nomenclature_fields), serialize($node->term_field_defaults), $node->vid);
+        
+        break;
+      
       case 'publication_taxon_description':
-
+        
         db_query("UPDATE {publication_taxon_description_node} SET term_fields = '%s' WHERE vid = %d", serialize($node->term_fields), $node->vid);
-
-      break;
+        
+        break;
+      
+      }
     
     }
   
   }
-  
-}
-
-
-
-
 
 /**
  * Implementation of hook_delete().
  */
-function publication_delete($node){
+function publication_delete($node)
+  {
   
   _publication_delete($node->type, array('nid' => $node->nid));
   
-  if($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section'){
-
-    foreach($node->field_publication_section as $child_node){
-
-      if(is_numeric($child_node['nid'])){
-
+  if ($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section')
+    {
+    
+    foreach ($node->field_publication_section as $child_node)
+      {
+      
+      if (is_numeric($child_node['nid']))
+        {
+        
         node_delete($child_node['nid']);
-
+        
+        }
+      
       }
-
+    
     }
     
-  }
-  
   // Delete image captions
-  if($node->type == 'publication'){
+  if ($node->type == 'publication')
+    {
     
-    foreach($node->field_publication_images as $image){
+    foreach ($node->field_publication_images as $image)
+      {
       
-      $cck_params = array(
-        'publication_caption_image' => $image['nid'], 
-        'publication_caption_parent' => $node->nid
-      );
-
-      if($caption_node = publication_content_node_load(NULL, $cck_params)){
-       
+      $cck_params = array('publication_caption_image' => $image['nid'] , 'publication_caption_parent' => $node->nid);
+      
+      if ($caption_node = publication_content_node_load(NULL, $cck_params))
+        {
+        
         node_delete($caption_node->nid);
         
-      }
+        }
       
-    }
-
+      }
     
+    }
+  
   }
-
-}
 
 /**
  * Helper function to delete DB records on node delete / delete revision
@@ -531,27 +208,29 @@ function publication_delete($node){
  * @return void
  * @author Ben Scott
  */
-function _publication_delete($type, $args){
+function _publication_delete($type, $args)
+  {
   
-  switch($type){
+  switch ($type)
+    {
     
     case 'publication':
-    
+      
       $sql = 'DELETE FROM publication_node';
-    
-    break;
+      
+      break;
     
     case 'publication_taxon_description':
-  
+      
       $sql = 'DELETE FROM publication_taxon_description_node';
-  
-    break; 
+      
+      break;
     
-  }
+    }
   
   publication_db_query($sql, $args);
   
-}
+  }
 
 /**
  * Node is being reverted
@@ -560,43 +239,47 @@ function _publication_delete($type, $args){
  * @return void
  * @author Ben Scott
  */
-function publication_revert($node){
+function publication_revert($node)
+  {
   
   // Revert publication sections
-  if(property_exists($node, 'field_publication_section')){
+  if (property_exists($node, 'field_publication_section'))
+    {
     
-    foreach($node->field_publication_section as $child_node){
-
-      if(is_numeric($child_node['nid'])){
+    foreach ($node->field_publication_section as $child_node)
+      {
+      
+      if (is_numeric($child_node['nid']))
+        {
         
         publication_revert_node($child_node['nid'], $node);
-
+        
+        }
+      
       }
-      
+    
     }
-    
-  }
   
-  if($node->type == 'publication'){
+  if ($node->type == 'publication')
+    {
     
-    foreach($node->field_publication_images as $image){
+    foreach ($node->field_publication_images as $image)
+      {
       
-      $cck_params = array(
-        'publication_caption_image' => $image['nid'], 
-        'publication_caption_parent' => $node->nid
-      );
-
-      if($caption_node = publication_content_node_load(NULL, $cck_params)){
+      $cck_params = array('publication_caption_image' => $image['nid'] , 'publication_caption_parent' => $node->nid);
       
+      if ($caption_node = publication_content_node_load(NULL, $cck_params))
+        {
+        
         publication_revert_node($caption_node->nid, $node);
-
-      }
+        
+        }
       
-    }
+      }
     
-  }
+    }
   
-}
+  }
 
 /**
  * See if an older version of a node exists & revert it if possible
@@ -606,16 +289,18 @@ function publication_revert($node){
  * @return void
  * @author Ben Scott
  */
-function publication_revert_node($nid, $node){
+function publication_revert_node($nid, $node)
+  {
   
-  if($vid = publication_node_get_revision($nid, $node->revision_timestamp)){
+  if ($vid = publication_node_get_revision($nid, $node->revision_timestamp))
+    {
     $node_revision = node_load($nid, $vid, true);
     $node_revision->revision = 1;
-    $node_revision->log = t('Publication %title reverted to revision %date.', array('%title' => $node->title, '%date' => format_date($node->revision_timestamp)));
-    node_save($node_revision);          
-  }
+    $node_revision->log = t('Publication %title reverted to revision %date.', array('%title' => $node->title , '%date' => format_date($node->revision_timestamp)));
+    node_save($node_revision);
+    }
   
-}
+  }
 
 /**
  * Get previous revision
@@ -625,128 +310,140 @@ function publication_revert_node($nid, $node){
  * @return void
  * @author Ben Scott
  */
-function publication_node_get_revision($nid, $timestamp){
+function publication_node_get_revision($nid, $timestamp)
+  {
   
   $result = db_query('SELECT r.vid FROM {node_revisions} r WHERE r.nid = %d AND r.timestamp <= %d ORDER BY r.timestamp DESC LIMIT 1', $nid, $timestamp);
   
   return db_result($result);
   
-}
-
+  }
 
 /**
  * Implementation of hook_access().
  */
-function publication_access($op, $node, $account){
-
-  switch($op){
-    case 'create' :
+function publication_access($op, $node, $account)
+  {
+  
+  switch ($op)
+    {
+    case 'create':
       return user_access('create publication', $account);
-    case 'update' :
-      if(user_access('edit any publication', $account) || (user_access('edit own publication', $account) && ($account->uid == $node->uid))){
+    case 'update':
+      if (user_access('edit any publication', $account) || (user_access('edit own publication', $account) && ($account->uid == $node->uid)))
+        {
         return TRUE;
-      }
+        }
       break;
-    case 'delete' :
-      if(user_access('delete any publication', $account) || (user_access('delete own publication', $account) && ($account->uid == $node->uid))){
+    case 'delete':
+      if (user_access('delete any publication', $account) || (user_access('delete own publication', $account) && ($account->uid == $node->uid)))
+        {
         return TRUE;
-      }
+        }
       break;
-  }
+    }
   return FALSE;
-}
+  }
 
 /**
  * Implementation of hook_load().
  */
-function publication_load($node){
+function publication_load($node)
+  {
   
-  switch($node->type){
+  switch ($node->type)
+    {
     
     case 'publication':
-    
+      
       $additions = db_fetch_object(db_query("SELECT vocabulary, nomenclature_fields, term_field_defaults FROM {publication_node} WHERE vid = %d", $node->vid));
       $additions->nomenclature_fields = unserialize($additions->nomenclature_fields);
       $additions->term_field_defaults = unserialize($additions->term_field_defaults);
-    
-    break;
+      
+      break;
     
     case 'publication_taxon_description':
-    
+      
       $additions = db_fetch_object(db_query("SELECT term_fields FROM {publication_taxon_description_node} WHERE vid = %d", $node->vid));
       $additions->term_fields = unserialize($additions->term_fields);
+      
+      break;
     
-    break;
-    
+    }
+  
+  return $additions;
+  
   }
-
-  return $additions;    
-
-}
 
 /**
  * Implementation of hook_nodeapi().
  */
-function publication_nodeapi(&$node, $op, $arg = 0) {
-
-  switch ($op) {
-
+function publication_nodeapi(&$node, $op, $arg = 0)
+  {
+  
+  switch ($op)
+    {
+    
     case 'load':
-    	
-      if($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section'){
-    
+      
+      if ($node->type == 'publication' || $node->type == 'publication_section' || $node->type == 'publication_taxon_section')
+        {
+        
         $output = array();
-
+        
         publication_get_taxon_child_nodes($output, $node);
-
+        
         return $output;
-    
-      }
-    break;
-    case 'view':
-    	
-      if($node->type == 'publication'){
-        foreach($node->content as $key => $value){
-          if($key != 'view' && $key != 'formatted-document'){
-            unset($node->content[$key]);
-          }
+        
         }
-        $node->content['view']['#value'] = '<p id="publication-display-og-ron"><a>'.t('Display content associated with publication').'</a></p>'.$node->content['view']['#value'];
-      }
-    break;
+      break;
+    case 'view':
+      
+      if ($node->type == 'publication')
+        {
+        foreach ($node->content as $key => $value)
+          {
+          if ($key != 'view' && $key != 'formatted-document')
+            {
+            unset($node->content[$key]);
+            }
+          }
+        $node->content['view']['#value'] = '<p id="publication-display-og-ron"><a>' . t('Display content associated with publication') . '</a></p>' . $node->content['view']['#value'];
+        }
+      break;
     
     case 'delete revision':
-    
-      _publication_delete($node->type, array('vid' => $node->vid));
-    
-    break;
       
-  }  
-}
+      _publication_delete($node->type, array('vid' => $node->vid));
+      
+      break;
+    
+    }
+  }
 
-// FIXME - FIXME - FIXME!
+  // FIXME - FIXME - FIXME!
 /**
  * Implementation of hook_init().
  */
-function publication_init(){
+function publication_init()
+  {
   module_load_include('inc', 'publication', 'includes/publication.forms');
   module_load_include('inc', 'publication', 'includes/publication.modal');
-}
+  }
 
 /**
  * Implementation of hook_views_api().
  */
-function publication_views_api(){
-  return array(
-    'api' => 2.0, 
-    'path' => drupal_get_path('module', 'publication') . '/includes'
-  );
-}
+function publication_views_api()
+  {
+  return array('api' => 2.0 , 'path' => drupal_get_path('module', 'publication') . '/includes');
+  }
 
 /** 
  *Implementation of hook_menu_alter 
  */
-function publication_menu_alter(&$items){  
+function publication_menu_alter(&$items)
+  {
   $items['node/add/publication-image-caption']['hidden'] = 1;
   $items['node/add/publication-section']['hidden'] = 1;
   $items['node/add/publication-taxon-section']['hidden'] = 1;
@@ -754,18 +451,18 @@ function publication_menu_alter(&$items){
   
   $items['node/%node/og/forum']['access callback'] = 'publication_tab_access';
   $items['node/%node/og/forum']['access arguments'] = array(1);
-
+  
   $items['node/%node/track']['access callback'] = 'publication_tab_access';
-  $items['node/%node/track']['access arguments'] = array(1, 'access statistics');
-    
+  $items['node/%node/track']['access arguments'] = array(1 , 'access statistics');
+  
   $items['node/%node/clone']['access callback'] = 'publication_tab_access';
-  $items['node/%node/clone']['access arguments'] = array(1, 1, 'clone_access');  
-
+  $items['node/%node/clone']['access arguments'] = array(1 , 1 , 'clone_access');
+  
   $items['node/%node/broadcast']['access callback'] = 'publication_tab_access';
-  $items['node/%node/broadcast']['access arguments'] = array(1, 1, 'og_broadcast_access');    
-    
-  return $items;  
-}
+  $items['node/%node/broadcast']['access arguments'] = array(1 , 1 , 'og_broadcast_access');
+  
+  return $items;
+  }
 
 /**
  * Hide some tabs by checking node type before passing to default access check 
@@ -776,24 +473,27 @@ function publication_menu_alter(&$items){
  * @return void
  * @author Ben Scott
  */
-function publication_tab_access($node, $access_arguments = 'access content', $access_callback = 'user_access'){
-
-  if($node->type != 'publication'){
-
+function publication_tab_access($node, $access_arguments = 'access content', $access_callback = 'user_access')
+  {
+  
+  if ($node->type != 'publication')
+    {
+    
     return $access_callback($access_arguments);
     
-  }
+    }
   
   return false;
   
-}
+  }
 
-function publication_create_taxon_section_node($vid, $tid){
+function publication_create_taxon_section_node($vid, $tid)
+  {
   
   global $user;
-
-  $term = taxonomy_get_term($tid);  
-  $node = new stdClass();  
+  
+  $term = taxonomy_get_term($tid);
+  $node = new stdClass();
   $node->uid = $user->uid;
   $node->author = $user->name;
   $node->type = 'publication_taxon_section';
@@ -801,23 +501,20 @@ function publication_create_taxon_section_node($vid, $tid){
   $node->title = $term->name;
   $node->taxonomy[$vid] = array($tid => $tid);
   // Create taxon description node
-  $node->field_publication_section = array(
-    array(
-      'nid' => publication_create_taxon_description_node($term)
-    )
-  );
+  $node->field_publication_section = array(array('nid' => publication_create_taxon_description_node($term)));
   
   node_save($node);
   
   return $node->nid;
   
-}
+  }
 
-function publication_create_taxon_description_node($term){
+function publication_create_taxon_description_node($term)
+  {
   
   global $user;
   
-  $node = new stdClass();  
+  $node = new stdClass();
   $node->uid = $user->uid;
   $node->author = $user->name;
   $node->title = t('@name taxon description', array('@name' => $term->name));
@@ -827,19 +524,23 @@ function publication_create_taxon_description_node($term){
   
   return $node->nid;
   
-}
+  }
 
-function publication_view($node){
-  if(!$teaser && $node && $node->type == 'publication'){
+function publication_view($node)
+  {
+  if (! $teaser && $node && $node->type == 'publication')
+    {
     // Is this the latest vid?
     $current_vid = db_result(db_query("SELECT vid FROM {node} WHERE nid = %d", $node->nid));
-    drupal_add_css(drupal_get_path('module','publication').'/css/publication.css');
+    drupal_add_css(drupal_get_path('module', 'publication') . '/css/publication.css');
     module_load_include('xml.inc', 'publication');
-    if($current_vid == $node->vid){
+    if ($current_vid == $node->vid)
+      {
       $vid_to_load = FALSE;
-    } else {
+      } else
+      {
       $vid_to_load = $node->vid;
-    }
+      }
     $xml = publication_get_xml($node->nid, $vid_to_load);
     # LOAD XML FILE
     $xml_doc = new DOMDocument();
@@ -848,19 +549,14 @@ function publication_view($node){
     # START XSLT
     $xslt_proc = new XSLTProcessor();
     $xsl_doc = new DOMDocument();
-    $xsl_doc->load(drupal_get_path('module','publication').'/publication.xsl', LIBXML_NOCDATA);
+    $xsl_doc->load(drupal_get_path('module', 'publication') . '/publication.xsl', LIBXML_NOCDATA);
     $xslt_proc->importStylesheet($xsl_doc);
     #PRINT
-    $node->content = array(
-      'formatted-document' => array(
-        '#weight' => -1000,
-        '#value' => $xslt_proc->transformToXML($xml_doc)
-      ) 
-    );
-  }
-  drupal_add_js(drupal_get_path('module','publication').'/js/publication.hide_og.js');
+    $node->content = array('formatted-document' => array('#weight' => - 1000 , '#value' => $xslt_proc->transformToXML($xml_doc)));
+    }
+  drupal_add_js(drupal_get_path('module', 'publication') . '/js/publication.hide_og.js');
   return $node;
-}
+  }
 
 /**
  * Get an array of all vocabularies
@@ -868,158 +564,104 @@ function publication_view($node){
  * @return array
  * @author Ben Scott
  */
-function publication_get_classification_vocabularies(){
+function publication_get_classification_vocabularies()
+  {
   
-  $vocabularies = array(
-    '' => t('<none>')
-  );
-  
-  function _publication_vocabulary_filter($vocabulary){
+  $vocabularies = array('' => t('<none>'));
+
+  function _publication_vocabulary_filter($vocabulary)
+    {
     return array_key_exists('publication', $vocabulary->nodes);
-  }
-  
-  function _publication_vocabulary_array_map($vocabulary){
+    }
+
+  function _publication_vocabulary_array_map($vocabulary)
+    {
     return $vocabulary->name;
-  }
+    }
   
-  
-  $vocabularies += (array)array_map('_publication_vocabulary_array_map', array_filter(taxonomy_get_vocabularies(), '_publication_vocabulary_filter'));
+  $vocabularies += (array) array_map('_publication_vocabulary_array_map', array_filter(taxonomy_get_vocabularies(), '_publication_vocabulary_filter'));
   return $vocabularies;
   
-}
-
+  }
 
 /**
  * Implementation of hook_menu().
  */
-function publication_menu(){
-  return array(
-    'node/%node/taxpubxml' => array(
-      'title' => 'XML', 
-      'page callback' => 'publication_display_xml',
-      'page arguments' => array(1),
-      'access callback' => 'publication_access_callback', 
-      'access arguments' => array('xml', 1),
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 3, 
-      'file' => 'publication.xml.inc',      
-    ),    
-    'publication/js/%node' => array(
-      'page callback' => 'publication_js',
-      'page arguments' => array(2), 
-      'access callback' => 'publication_access_callback', 
-      'access arguments' => array('edit', 2),
-      'type' => MENU_CALLBACK
-    ), 
-    'publication/caption/%' => array(
-      'page callback' => 'publication_modal_image_caption_node_form', 
-      'page arguments' => array(
-        2
-      ),
-      'access callback' => 'publication_access_callback', 
-      'access arguments' => array('modal'), 
-      'type' => MENU_CALLBACK
-    ), 
-    'node/%node/publication-export' => array(
-      'title' => 'Export', 
-      'page callback' => 'drupal_get_form', 
-      'page arguments' => array(
-        'publication_export_form', 1
-      ), 
-      'access callback' => 'publication_access_callback', 
-      'access arguments' => array('export', 1),
-      'type' => MENU_LOCAL_TASK, 'weight' => 0, 
-      'file' => 'publication.export.inc',
-      'weight' => 2
-    ), 
-    'publication/export/js/%node' => array(
-      'page callback' => 'publication_export_js', 
-      'access callback' => 'publication_access_callback', 
-      'access arguments' => array('export', 3),
-      'type' => MENU_CALLBACK, 
-      'file' => 'publication.export.inc'
-    ),
-    'publication/%node/delete' => array(
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('publication_modal_node_delete_confirm', 1),
-      'access callback' => 'node_access',
-      'access arguments' => array('delete', 1),
-      // 'file' => 'publication.modal.inc'
-    )
+function publication_menu()
+  {
+  return array('node/%node/taxpubxml' => array('title' => 'XML' , 'page callback' => 'publication_display_xml' , 'page arguments' => array(1) , 'access callback' => 'publication_access_callback' , 'access arguments' => array('xml' , 1) , 'type' => MENU_LOCAL_TASK , 'weight' => 3 , 'file' => 'publication.xml.inc') , 'publication/js/%node' => array('page callback' => 'publication_js' , 'page arguments' => array(2) , 'access callback' => 'publication_access_callback' , 'access arguments' => array('edit' , 2) , 'type' => MENU_CALLBACK) , 'publication/caption/%' => array('page callback' => 'publication_modal_image_caption_node_form' , 'page arguments' => array(2) , 'access callback' => 'publication_access_callback' , 'access arguments' => array('modal') , 'type' => MENU_CALLBACK) , 'node/%node/publication-export' => array('title' => 'Export' , 'page callback' => 'drupal_get_form' , 'page arguments' => array('publication_export_form' , 1) , 'access callback' => 'publication_access_callback' , 'access arguments' => array('export' , 1) , 'type' => MENU_LOCAL_TASK , 'weight' => 0 , 'file' => 'publication.export.inc' , 'weight' => 2) , 'publication/export/js/%node' => array('page callback' => 'publication_export_js' , 'access callback' => 'publication_access_callback' , 'access arguments' => array('export' , 3) , 'type' => MENU_CALLBACK , 'file' => 'publication.export.inc') , 'publication/%node/delete' => array('page callback' => 'drupal_get_form' , 'page arguments' => array('publication_modal_node_delete_confirm' , 1) , 'access callback' => 'node_access' , 'access arguments' => array('delete' , 1))// 'file' => 'publication.modal.inc'
   );
-}
+  }
 
-function publication_access_callback($operation, $node = NULL){
-  switch($operation){
+function publication_access_callback($operation, $node = NULL)
+  {
+  switch ($operation)
+    {
     case 'export':
     case 'edit':
-
-        return publication_access_node($node);
-
-    break;
+      
+      return publication_access_node($node);
+      
+      break;
     case 'xml':
-      if($node->type == 'publication'){
+      if ($node->type == 'publication')
+        {
         return TRUE;
-      }
-    break;
+        }
+      break;
     
     case 'modal':
-    
-      $node = node_load($_GET['publication_nid']);
-    
-      return publication_access_node($node);
-    
-    break;  
       
-  }
+      $node = node_load($_GET['publication_nid']);
+      
+      return publication_access_node($node);
+      
+      break;
+    
+    }
   return FALSE;
-}
+  }
 
-function publication_access_node($node){
+function publication_access_node($node)
+  {
   
   global $user;
   
-  if($node->type == 'publication'){
+  if ($node->type == 'publication')
+    {
     global $user;
-    if(user_access('administer nodes') || user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid)){
+    if (user_access('administer nodes') || user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid))
+      {
       return TRUE;
+      }
     }
-  }
   
-}
+  }
 
 /**
  * Implementation of hook_perm().
  */
-function publication_perm(){
-  return array(
-    'create publication',  
-    'delete own publication', 
-    'delete any publication', 
-    'edit own publication', 
-    'edit any publication'
-  );
-}
+function publication_perm()
+  {
+  return array('create publication' , 'delete own publication' , 'delete any publication' , 'edit own publication' , 'edit any publication');
+  }
 
 /**
  * Menu callback for AHAH additions.
  */
-function publication_js($node){
+function publication_js($node)
+  {
   $output = '';
   $form = publication_ahah_form();
   unset($form['taxonomy']['#prefix'], $form['taxonomy']['#suffix']);
   $output .= drupal_render($form['taxonomy']);
-  drupal_json(array(
-    'status' => TRUE, 'data' => $output
-  ));
-}
+  drupal_json(array('status' => TRUE , 'data' => $output));
+  }
 
-function publication_ahah_form($reset_messages = true){
+function publication_ahah_form($reset_messages = true)
+  {
   include_once 'modules/node/node.pages.inc';
-  $form_state = array(
-    'storage' => NULL, 'submitted' => FALSE, 
-    'rebuild' => TRUE
-  );
+  $form_state = array('storage' => NULL , 'submitted' => FALSE , 'rebuild' => TRUE);
   $form_build_id = $_POST['form_build_id'];
   // Get the form from the cache.
   $form = form_get_cache($form_build_id, $form_state);
@@ -1038,11 +680,12 @@ function publication_ahah_form($reset_messages = true){
   // drupal_process_form set up.
   $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
   // Reset messages so you don't see them on next page load
-  if($reset_messages){
+  if ($reset_messages)
+    {
     drupal_get_messages(null, true);
-  }
+    }
   return $form;
-}
+  }
 
 /**
  * Add JS & CSS files
@@ -1051,8 +694,9 @@ function publication_ahah_form($reset_messages = true){
  * @return void
  * @author Ben Scott
  */
-function publication_add_files(){
-
+function publication_add_files()
+  {
+  
   //Add jquery.ui tabs files
   jquery_ui_add('ui.tabs');
   drupal_add_css(JQUERY_UI_PATH . '/themes/smoothness/ui.all.css');
@@ -1066,42 +710,34 @@ function publication_add_files(){
   modalframe_parent_js();
   drupal_add_js($path . '/js/publication.modal.parent.js', 'module', 'footer');
   
-}
+  }
 
-
-function _publication_node_get_image($nid, $publication_nid){
+function _publication_node_get_image($nid, $publication_nid)
+  {
   $node = node_load($nid);
-  $attributes = array(
-    'id' => form_clean_id('image-' . $nid), 
-    'class' => 'publication-image'
-  );
-  $cck_params = array(
-    'publication_caption_image' => $nid, 
-    'publication_caption_parent' => $publication_nid
-  );
+  $attributes = array('id' => form_clean_id('image-' . $nid) , 'class' => 'publication-image');
+  $cck_params = array('publication_caption_image' => $nid , 'publication_caption_parent' => $publication_nid);
   
-  if($caption_node = publication_content_node_load(NULL, $cck_params)){
+  if ($caption_node = publication_content_node_load(NULL, $cck_params))
+    {
     $image_title = t('Edit/delete the caption');
     $attributes['class'] .= ' has-caption';
-  }else{
+    } else
+    {
     $image_title = t('Add an image caption');
-  }
+    }
   $image_info = image_get_info($node->images['thumbnail']);
   $attributes['style'] = 'width:' . $image_info['width'] . 'px; height:' . $image_info['height'] . 'px';
   $image = theme('image', $node->images['thumbnail'], $node->title, $image_title);
   $output = '<div ' . drupal_attributes($attributes) . '>';
-  $output .= l($image, 'publication/caption/' . $nid, array(
-    'html' => true, 
-    'attributes' => array(
-      'class' => 'modal'
-    )
-  ));
+  $output .= l($image, 'publication/caption/' . $nid, array('html' => true , 'attributes' => array('class' => 'modal')));
   $output .= '<span>&nbsp;</span>';
   $output .= '</div>';
   return $output;
-}
+  }
 
-function publication_nodes_get_terms($nids){
+function publication_nodes_get_terms($nids)
+  {
   $terms = array();
   $sql = 'SELECT DISTINCT t.tid 
           FROM {term_node} t 
@@ -1109,39 +745,45 @@ function publication_nodes_get_terms($nids){
           INNER JOIN {node} n ON t.vid = n.vid 
           WHERE n.nid';
   
-  if(is_array($nids)){
+  if (is_array($nids))
+    {
     
     $sql .= 'IN (' . db_placeholders($nids, 'int') . ')';
     
-  }else{
+    } else
+    {
     
     $sql .= '=%d';
     
-  }               
-           
+    }
+  
   $sql = db_rewrite_sql($sql);
   $result = db_query($sql, $nids);
-  while($row = db_fetch_object($result)){
+  while ($row = db_fetch_object($result))
+    {
     $terms[] = $row->tid;
-  }
+    }
   return $terms;
-}
+  }
 
-function publication_db_query($sql, $args){
+function publication_db_query($sql, $args)
+  {
   $sql_params = array();
-  if(is_array($args)){
+  if (is_array($args))
+    {
     $sql .= ' WHERE';
-    foreach($args as $field => $value){
+    foreach ($args as $field => $value)
+      {
       $sql .= $conj . ' %s = %d';
       $sql_params[] = $field;
       $sql_params[] = $value;
       $conj = " AND";
+      }
     }
-  }
   
   return db_query($sql, $sql_params);
   
-}
+  }
 
 /**
  * Make the publication node public
@@ -1150,9 +792,11 @@ function publication_db_query($sql, $args){
  * @return void
  * @author Ben Scott
  */
-function publication_publish_node($nid){  // Make the organic group public?
-  
-}
+function publication_publish_node($nid)
+  {// Make the organic group public?
+
+
+  }
 
 /**
  * Based on the core node_load().
@@ -1160,68 +804,77 @@ function publication_publish_node($nid){  // Make the organic group public?
  * See http://drupal.org/node/360541
  *
  * @param $param
- *   An array of conditions for core node fields to match against in the database query.
- *   Since we also have the CCK conditions, this parameter can also be NULL.
+ * An array of conditions for core node fields to match against in the database query.
+ * Since we also have the CCK conditions, this parameter can also be NULL.
  * @param $cck_param
- *   An array of conditions for CCK fields to match against in the database query
+ * An array of conditions for CCK fields to match against in the database query
  * @param $revision
- *   Which numbered revision to load. Defaults to the current version.
+ * Which numbered revision to load. Defaults to the current version.
  *
  * @return
- *   A fully-populated node object.
+ * A fully-populated node object.
  */
-function publication_content_node_load($param = NULL, $cck_param = array(), $revision = NULL){
+function publication_content_node_load($param = NULL, $cck_param = array(), $revision = NULL)
+  {
   $arguments = array();
-  if(is_array($param)){
+  if (is_array($param))
+    {
     // Turn the conditions into a query.
-    foreach($param as $key => $value){
+    foreach ($param as $key => $value)
+      {
       $cond[] = 'n.' . db_escape_table($key) . " = '%s'";
       $arguments[] = $value;
-    }
+      }
     $cond = implode(' AND ', $cond);
-  }
-  // Process CCK parameters.
+    }
+    // Process CCK parameters.
   $cck_tables = array();
-  if(count($cck_param)){
+  if (count($cck_param))
+    {
     // Turn the conditions into a query.
     $i = 1;
-    foreach($cck_param as $key => $value){
+    foreach ($cck_param as $key => $value)
+      {
       $db_info = content_database_info(content_fields('field_' . $key));
       // If the field is from another table, increment sequence
-      if(!isset($cck_tables[$db_info['table']])){
+      if (! isset($cck_tables[$db_info['table']]))
+        {
         $cck_tables[$db_info['table']] = 'cck' . $i;
-      }
+        }
       $i++;
-      if($db_info['columns']['nid']){
+      if ($db_info['columns']['nid'])
+        {
         // For nodereference fields
         $cck_cond[] = $cck_tables[$db_info['table']] . '.' . db_escape_table($db_info['columns']['nid']['column']) . " = '%s'";
-      }else if($db_info['columns']['value']){
-        $cck_cond[] = $cck_tables[$db_info['table']] . '.' . db_escape_table($db_info['columns']['value']['column']) . " = '%s'";
-      }else if($db_info['columns'][$key]['column']){
-        $cck_cond[] = $cck_tables[$db_info['table']] . '.' . db_escape_table($db_info['columns'][$key]['column']) . " = '%s'";
-      }
+        } else 
+        if ($db_info['columns']['value'])
+          {
+          $cck_cond[] = $cck_tables[$db_info['table']] . '.' . db_escape_table($db_info['columns']['value']['column']) . " = '%s'";
+          } else 
+          if ($db_info['columns'][$key]['column'])
+            {
+            $cck_cond[] = $cck_tables[$db_info['table']] . '.' . db_escape_table($db_info['columns'][$key]['column']) . " = '%s'";
+            }
       $arguments[] = $value;
-    }
-    if(is_array($cck_cond)){
+      }
+    if (is_array($cck_cond))
+      {
       $cond .= (isset($cond) ? ' AND ' : '') . implode(' AND ', $cck_cond);
-      foreach($cck_tables as $table => $nick){
+      foreach ($cck_tables as $table => $nick)
+        {
         $cck_join .= ' INNER JOIN {' . $table . '} ' . $nick . ' ON ' . $nick . '.vid = n.vid';
+        }
       }
     }
-  }
-  
+    
   // Retrieve a field list based on the site's schema.
   $fields = drupal_schema_fields_sql('node', 'n');
   $fields = array_merge($fields, drupal_schema_fields_sql('node_revisions', 'r'));
-  $fields = array_merge($fields, array(
-    'u.name', 'u.picture', 'u.data'
-  ));
+  $fields = array_merge($fields, array('u.name' , 'u.picture' , 'u.data'));
   // Remove fields not needed in the query: n.vid and r.nid are redundant,
   // n.title is unnecessary because the node title comes from the
   // node_revisions table.  We'll keep r.vid, r.title, and n.nid.
-  $fields = array_diff($fields, array(
-    'n.vid', 'n.title', 'r.nid'
-  ));
+  $fields = array_diff($fields, array('n.vid' , 'n.title' , 'r.nid'));
   $fields = implode(', ', $fields);
   // Rename timestamp field for clarity.
   $fields = str_replace('r.timestamp', 'r.timestamp AS revision_timestamp', $fields);
@@ -1229,30 +882,37 @@ function publication_content_node_load($param = NULL, $cck_param = array(), $rev
   $fields = str_replace('r.uid', 'r.uid AS revision_uid', $fields);
   // Retrieve the node.
   // No db_rewrite_sql is applied so as to get complete indexing for search.
-  if($revision){
+  if ($revision)
+    {
     array_unshift($arguments, $revision);
     $sql = 'SELECT ' . $fields . ' FROM {node} n INNER JOIN {users} u ON u.uid = n.uid INNER JOIN {node_revisions} r ON r.nid = n.nid' . $cck_join . ' AND r.vid = %d WHERE ' . $cond;
     $node = db_fetch_object(db_query($sql, $arguments));
-  }else{
+    } else
+    {
     $sql = 'SELECT ' . $fields . ' FROM {node} n INNER JOIN {users} u ON u.uid = n.uid INNER JOIN {node_revisions} r ON r.vid = n.vid' . $cck_join . ' WHERE ' . $cond;
     $node = db_fetch_object(db_query($sql, $arguments));
-  }
-  if($node && $node->nid){
+    }
+  if ($node && $node->nid)
+    {
     // Call the node specific callback (if any) and piggy-back the
     // results to the node or overwrite some values.
-    if($extra = node_invoke($node, 'load')){
-      foreach($extra as $key => $value){
+    if ($extra = node_invoke($node, 'load'))
+      {
+      foreach ($extra as $key => $value)
+        {
         $node->$key = $value;
+        }
+      }
+    if ($extra = node_invoke_nodeapi($node, 'load'))
+      {
+      foreach ($extra as $key => $value)
+        {
+        $node->$key = $value;
+        }
       }
     }
-    if($extra = node_invoke_nodeapi($node, 'load')){
-      foreach($extra as $key => $value){
-        $node->$key = $value;
-      }
-    }
-  }
   return $node;
-}
+  }
 
 /**
  * Implementation of hook_views_pre_build
@@ -1261,39 +921,47 @@ function publication_content_node_load($param = NULL, $cck_param = array(), $rev
  * @return void
  * @author Ben Scott
  */
-function publication_views_pre_view(&$view, $display_id){
+function publication_views_pre_view(&$view, $display_id)
+  {
   
   // Set the taxonomy term filter to use the selected vocabulary vid
-  if($view->name == _publication_get_nodereference_view_name()){
+  if ($view->name == _publication_get_nodereference_view_name())
+    {
     $display_id = $view->current_display;
-    if(is_numeric($_GET['vocabulary'])){ //Viewing the form
+    if (is_numeric($_GET['vocabulary']))
+      { //Viewing the form
       $view->set_item_option($display_id, 'filter', 'tid', 'vid', $_GET['vocabulary']);
-    }else{
+      } else
+      {
       $view->set_item($display_id, 'filter', 'tid', NULL);
-    }  
+      }
+    }
   }
-}
 
-function publication_views_query_alter(&$view, &$query) {
+function publication_views_query_alter(&$view, &$query)
+  {
   
-  if($view->name == 'publication_display' && count($view->argument['nid']->value)){
-   
-    $query->orderby = array('FIELD(node.nid, '. implode(',', $view->argument['nid']->value) .')');
+  if ($view->name == 'publication_display' && count($view->argument['nid']->value))
+    {
     
-  }elseif($view->name == _publication_get_nodereference_view_name()){
-
+    $query->orderby = array('FIELD(node.nid, ' . implode(',', $view->argument['nid']->value) . ')');
+    
+    } elseif ($view->name == _publication_get_nodereference_view_name())
+    {
+    
     // Set by group by NID & aggregate all fields so views uses just the group_by field
     $query->add_groupby('nid');
     
-    foreach($query->fields as $field_id => $field){
+    foreach ($query->fields as $field_id => $field)
+      {
       
       $query->fields[$field_id]['aggregate'] = TRUE;
       
+      }
+    
     }
-
-  }
   
-}
+  }
 
 /**
  * Get the name of the view being used in the node reference fields
@@ -1301,120 +969,65 @@ function publication_views_query_alter(&$view, &$query) {
  * @return void
  * @author Ben Scott
  */
-function _publication_get_nodereference_view_name(){
+function _publication_get_nodereference_view_name()
+  {
   static $name;
-  if(!isset($name)){
+  if (! isset($name))
+    {
     module_load_include('inc', 'publication', 'includes/publication.views_default');
     $views = publication_views_default_views();
-    foreach($views as $view){
-      if($view->tag == 'noderelationships_noderef'){
+    foreach ($views as $view)
+      {
+      if ($view->tag == 'noderelationships_noderef')
+        {
         $name = $view->name;
         break;
+        }
       }
     }
-  }
   return $name;
-}
+  }
 
 /**
  * Implementation of hook_theme
  */
-function publication_theme($existing, $type, $theme, $path){
+function publication_theme($existing, $type, $theme, $path)
+  {
   // On theme registry rebuild, ensure publication.node.inc is available
   // module_load_include('inc', 'publication', '/includes/publication.node');
   $path = drupal_get_path('module', 'publication') . '/includes/';
   $themes = array(
-    
-    'publication_node_add_form' => array(    
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-    'publication_node_edit_form' => array(      
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-    'publication_taxon_description_node_form' => array(      
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-    'publication_image_caption_node_form' => array(
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-    'publication_section_node_form' => array(
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-  'publication_taxon_section_node_form' => array(
-    'arguments' => array(
-      'form' => array()
-    ), 'file' => 'publication.theme.inc', 
-    'path' => $path
-  ),    
-    'publication_term_fields_element' => array(
-      'arguments' => array(
-        'element' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ),
-    'term_fields_list' => array(
-      'arguments' => array(
-        'fields' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ),
-    'publication_node_form_base_elements' => array(
-      
-      'arguments' => array(
-        'form' => array()
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ), 
-    'publication_message' => array(    
-      'arguments' => array(
-        'message' => NULL, 
-        'type' => 'status'
-      ), 'file' => 'publication.theme.inc', 
-      'path' => $path
-    ),
-  );
-  $fields = publication_field_info();
-  foreach($fields as $field){
-    if($field['type'] == 'nodereference'){
-      $themes['publication_' . $field['field_name']] = array(
-        
-        'arguments' => array(
-          'nids' => array(), 
-          'publication_nid' => null
-        ), 'file' => 'publication.theme.inc', 
-        'path' => $path
-      );
-    }
-  }
-  return $themes;
-}
 
-function publication_get_view_output($name, $args = array(), $display_id = 'default'){
-  if($view = views_get_view($name)){
-    if($view->access($display_id)){
+  'publication_node_add_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_node_edit_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_taxon_description_node_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_image_caption_node_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_section_node_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_taxon_section_node_form' => array('arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_term_fields_element' => array('arguments' => array('element' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'term_fields_list' => array('arguments' => array('fields' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_node_form_base_elements' => array(
+
+  'arguments' => array('form' => array()) , 'file' => 'publication.theme.inc' , 'path' => $path) , 'publication_message' => array('arguments' => array('message' => NULL , 'type' => 'status') , 'file' => 'publication.theme.inc' , 'path' => $path));
+  $fields = publication_field_info();
+  foreach ($fields as $field)
+    {
+    if ($field['type'] == 'nodereference')
+      {
+      $themes['publication_' . $field['field_name']] = array(
+
+      'arguments' => array('nids' => array() , 'publication_nid' => null) , 'file' => 'publication.theme.inc' , 'path' => $path);
+      }
+    }
+  return $themes;
+  }
+
+function publication_get_view_output($name, $args = array(), $display_id = 'default')
+  {
+  if ($view = views_get_view($name))
+    {
+    if ($view->access($display_id))
+      {
       $errors = $view->validate();
-      if($errors === TRUE){
+      if ($errors === TRUE)
+        {
         return $view->preview($display_id, $args);
+        }
       }
     }
   }
-}
-
 
 /**
  * Is this node form module?
@@ -1422,10 +1035,10 @@ function publication_get_view_output($name, $args = array(), $display_id = 'defa
  * @return void
  * @author Ben Scott
  */
-function _publication_node_form_is_modal(){
-  return (!empty($GLOBALS['modalframe_page_template']) || $_GET['modal']);
-}
-
+function _publication_node_form_is_modal()
+  {
+  return (! empty($GLOBALS['modalframe_page_template']) || $_GET['modal']);
+  }
 
 /**
  * 
@@ -1434,115 +1047,107 @@ function _publication_node_form_is_modal(){
  * Make a node public - currently user has clicked 'make public' button
  * 
  */
-function publication_node_make_public($node) {
+function publication_node_make_public($node)
+  {
   
-  if (og_is_group_type ( $node->type )) {
+  if (og_is_group_type($node->type))
+    {
     $node->og_private = 0;
     $node->og_selective = 0;
-    og_update_group ( $node );
-  }
+    og_update_group($node);
+    }
   
   publication_update_taxa_with_manuscript_name($node);
-
-}
-
+  
+  }
 
 /**
  * Update taxon name with a manuscript name, if it exists
  * @param object $node
  */
-function publication_update_taxa_with_manuscript_name($node) {
+function publication_update_taxa_with_manuscript_name($node)
+  {
   
   // Clean up section nodes for deselected terms
-  foreach ( $node->field_publication_section as $publication_section_key => $publication_section ) {
+  foreach ($node->field_publication_section as $publication_section_key => $publication_section)
+    {
     
-    $nid = $publication_section ['nid'];
-  
-    if($child_node = node_load($nid)){
-
-    	if($child_node->type == 'publication_taxon_section' && $term = array_shift ( $child_node->taxonomy )){
-    		
-    		if ($term->name != $child_node->title) {
-    		
-    			 $term_array = (array) $term;
-    			 $term_array['name'] = $child_node->title;
-    			 
-    			 taxonomy_save_term($term_array);
-    			 
-    			 drupal_set_message(t('Taxon <em>@term</em> has been updated to <em>@manuscript_name</em>', array('@term' => $term->name, '@manuscript_name' => $child_node->title)));
-    			 
-    		}
-    		
-    	}
-    	
-    	    
+    $nid = $publication_section['nid'];
+    
+    if ($child_node = node_load($nid))
+      {
+      
+      if ($child_node->type == 'publication_taxon_section' && $term = array_shift($child_node->taxonomy))
+        {
+        
+        if ($term->name != $child_node->title)
+          {
           
+          $term_array = (array) $term;
+          $term_array['name'] = $child_node->title;
           
-    	
+          taxonomy_save_term($term_array);
+          
+          drupal_set_message(t('Taxon <em>@term</em> has been updated to <em>@manuscript_name</em>', array('@term' => $term->name , '@manuscript_name' => $child_node->title)));
+          
+          }
+        
+        }
+      
+      }
+    
     }
-    
-
-    
+  
   }
 
-}
-
-
-function publication_noderelationships_view_alter(&$view_overrides, $view, $display_id, $view_args){
+function publication_noderelationships_view_alter(&$view_overrides, $view, $display_id, $view_args)
+  {
   
   // Change the biblio list so it can be ordered by author
-  if($view->name == 'publication_noderefences' && $display_id == 'page_grid'){
-  
+  if ($view->name == 'publication_noderefences' && $display_id == 'page_grid')
+    {
+    
     $new_view_fields = array();
-  
-    $new_view_fields['publication_biblio_authors'] = array(
-      'id' => 'publication_biblio_authors',
-      'table' => 'biblio',
-      'field' => 'biblio_authors',
-      'relationship' => 'none',
-      'exclude' => 1
-    );
-  
+    
+    $new_view_fields['publication_biblio_authors'] = array('id' => 'publication_biblio_authors' , 'table' => 'biblio' , 'field' => 'biblio_authors' , 'relationship' => 'none' , 'exclude' => 1);
+    
     $view_overrides['fields'] = array_merge($new_view_fields, $view_overrides['fields']);
     
-    $view_overrides['fields']['noderelationships_title']['alter'] = array(
-      'text' => '[publication_biblio_authors] - [noderelationships_title]',
-      'alter_text' => 1,
-    );
+    $view_overrides['fields']['noderelationships_title']['alter'] = array('text' => '[publication_biblio_authors] - [noderelationships_title]' , 'alter_text' => 1);
+    
+    }
   
-  }    
+  }
+
+function publication_get_taxon_child_nodes(&$output, $node)
+  {
   
-}
-
-
-
-function publication_get_taxon_child_nodes(&$output, $node){
-
-  foreach($node->field_publication_section as $section){
+  foreach ($node->field_publication_section as $section)
+    {
     
     $section_node = node_load($section['nid']);
     
-    switch($section_node->type){
+    switch ($section_node->type)
+      {
       
       case 'publication_taxon_section':
-      
+        
         $term = array_shift($section_node->taxonomy);
         $output['taxon_treatment_sections'][$section_node->nid] = $term->tid;
-      
-      break;
+        
+        break;
       
       case 'publication_taxon_description':
-      
+        
         $output['taxon_treatment_description'] = $section_node->nid;
+        
+        break;
       
-      break;
-      
+      }
+    
     }
-
+  
   }
-   
-}
-
 
 /**
  * Preprocess views grid
@@ -1552,40 +1157,46 @@ function publication_get_taxon_child_nodes(&$output, $node){
  * @return void
  * @author Ben Scott
  */
-function publication_preprocess_views_view_grid($vars){
+function publication_preprocess_views_view_grid($vars)
+  {
   
   $view = $vars['view'];
   
-  if($view->name == _publication_get_nodereference_view_name()){
+  if ($view->name == _publication_get_nodereference_view_name())
+    {
     
     $number_of_columns = $vars['options']['columns'];
-
+    
     $first_row_columns = count($vars['rows'][0]);
-
-    if($first_row_columns < $number_of_columns){
-
-      for($x = $first_row_columns; $x < $number_of_columns; $x++){
-
-        $vars['rows'][0][$x] = '&nbsp;';  
+    
+    if ($first_row_columns < $number_of_columns)
+      {
+      
+      for ($x = $first_row_columns; $x < $number_of_columns; $x++)
+        {
+        
+        $vars['rows'][0][$x] = '&nbsp;';
+        }
+      
       }
-
-    }
-
+    
     return $vars;
     
+    }
+  
   }
-  
-}
 
-function publication_preprocess_views_view($vars){
+function publication_preprocess_views_view($vars)
+  {
   
-  if($vars['view']->name == 'publication_display'){
+  if ($vars['view']->name == 'publication_display')
+    {
     
     unset($vars['admin_links']);
     
-  } 
+    }
   
-}
+  }
 
 /**
  * Implementation of hook_theme_registry_alter().
@@ -1593,79 +1204,78 @@ function publication_preprocess_views_view($vars){
  * Make jQuery Update's page preprocess function run *after* everything else's,
  * so that a theme can't call drupal_get_js() and mess everything up.
  */
-function publication_theme_registry_alter(&$theme_registry) {
+function publication_theme_registry_alter(&$theme_registry)
+  {
   
   $theme_registry['views_view_grid']['preprocess functions'][] = 'publication_preprocess_views_view_grid';
   $theme_registry['views_view']['preprocess functions'][] = 'publication_preprocess_views_view';
-
-}
-
-
+  
+  }
 
 /**
  * Render the multi selection panel for search and reference views.
  */
-function phptemplate_noderelationships_noderef_multiselect($referrer_field) {
+function phptemplate_noderelationships_noderef_multiselect($referrer_field)
+  {
   $multiselect = '<div class="noderelationships-noderef-multiselect-items clearfix">';
-  $multiselect .=   '<div class="clear-block">';
+  $multiselect .= '<div class="clear-block">';
   $multiselect .= '<div class="noderelationships-noderef-multiselect-items-list"><ul></ul></div>';
   $multiselect .= '<div class="noderelationships-noderef-multiselect-actions">';
-  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-desc" title="'. check_plain(t('Sort descending')) .'">'. check_plain(t('Desc.')) .'</a>';
-  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-asc" title="'. check_plain(t('Sort ascending')) .'">'. check_plain(t('Asc.')) .'</a>';
-  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-reset" title="'. check_plain(t('Reset selection')) .'">'. check_plain(t('Reset')) .'</a><br />';
-  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-save" title="'. check_plain(t('Close dialog and save changes')) .'">'. check_plain(t('Save')) .'</a>';
-  $multiselect .=   '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-cancel" title="'. check_plain(t('Close dialog and discard changes')) .'">'. check_plain(t('Cancel')) .'</a>';
+  $multiselect .= '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-desc" title="' . check_plain(t('Sort descending')) . '">' . check_plain(t('Desc.')) . '</a>';
+  $multiselect .= '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-sort-asc" title="' . check_plain(t('Sort ascending')) . '">' . check_plain(t('Asc.')) . '</a>';
+  $multiselect .= '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-reset" title="' . check_plain(t('Reset selection')) . '">' . check_plain(t('Reset')) . '</a><br />';
+  $multiselect .= '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-save" title="' . check_plain(t('Close dialog and save changes')) . '">' . check_plain(t('Save')) . '</a>';
+  $multiselect .= '<a href="javascript:void(0)" class="modalframe-exclude noderelationships-noderef-multiselect-button noderelationships-noderef-multiselect-cancel" title="' . check_plain(t('Close dialog and discard changes')) . '">' . check_plain(t('Cancel')) . '</a>';
   $multiselect .= '</div>';
-  $multiselect .=   '</div>';
   $multiselect .= '</div>';
-
-  $output .= '<div class="noderelationships-noderef-multiselect clear-block">';
-
-  $output .= theme('fieldset', array(
-    '#collapsible' => TRUE,
-    '#title' => t('Selected @label', array('@label' => drupal_strtolower($referrer_field['widget']['label']))),
-    '#value' => $multiselect,
-  ));
+  $multiselect .= '</div>';
   
-  $output .= '</div>'."\n";
-
+  $output .= '<div class="noderelationships-noderef-multiselect clear-block">';
+  
+  $output .= theme('fieldset', array('#collapsible' => TRUE , '#title' => t('Selected @label', array('@label' => drupal_strtolower($referrer_field['widget']['label']))) , '#value' => $multiselect));
+  
+  $output .= '</div>' . "\n";
+  
   return $output;
   
-}
+  }
 
 /**
  * Render search/create content prefix.
  */
-function phptemplate_noderelationships_noderef_page_prefix() {
+function phptemplate_noderelationships_noderef_page_prefix()
+  {
   
   return '<div class="noderelationships-noderef-page-content clearfix">';
   
-}
+  }
 
-
-function publication_create_xml_file($node){
-
+function publication_create_xml_file($node)
+  {
+  
   $response = drupal_http_request(url('/node/' . $node->nid . '/taxpubxml', array('absolute' => true)));
   
-  if($response->code == 200){
+  if ($response->code == 200)
+    {
     
     $data = $response->data;
     $filepath = file_create_path() . '/publication-xml';
-    $filename = $node->nid .'-'. time().'.xml';
-
+    $filename = $node->nid . '-' . time() . '.xml';
+    
     // file_check_directory
-    if (!file_check_directory($filepath, FILE_CREATE_DIRECTORY)) {
-     watchdog('publication', t('Publication XML directory could not be created'));
+    if (! file_check_directory($filepath, FILE_CREATE_DIRECTORY))
+      {
+      watchdog('publication', t('Publication XML directory could not be created'));
+      }
+    
+    file_save_data($data, $filepath . '/' . $filename, FILE_EXISTS_REPLACE);
+    
+    return $filepath . '/' . $filename;
+    
     }
-    
-    file_save_data($data, $filepath .'/'. $filename, FILE_EXISTS_REPLACE);
-    
-    return $filepath .'/'. $filename;
-    
-  }
   
   return false;
   
-}
+  }
 
 

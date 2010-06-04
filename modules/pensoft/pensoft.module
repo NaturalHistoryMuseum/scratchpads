@@ -1,190 +1,111 @@
 <?php
 define('PENSOFT_EMAIL_ADDRESS', 'ben@benscott.co.uk');
+
 /**
  * Implementation of hook_export_publication().
  */
-function pensoft_publication_info ()
-{
-    return array('name' => 'Pensoft', 
-    'description' => 'Export to the Sofia based publisher of ZooKeys and PhytoKeys');
-}
-function pensoft_form_publication_export_form_alter ($form, $form_state, 
-$form_id)
-{
-    $node = $form['#node'];
-    if ($node->field_publication_authors[0]['nid']) {
-        $primary_author_node = node_load(
-        $node->field_publication_authors[0]['nid']);
-    }
-    if (isset($form_state['post']['module']) && $form_state['post']['module'] ==
-     'pensoft') {
-        if (isset($form['#validate'])) {
-            $form['#validate'][] = 'pensoft_publication_export_form_validate';
-        } else {
-            $form['#validate'] = array(
-            'pensoft_publication_export_form_validate');
-        }
-        $form['pensoft']['details'] = array(
-        '#type' => 'fieldset', 
-        '#title' => t('Your details'), 
-        '#collapsible' => TRUE, 
-        '#collapsed' => FALSE);
-        $form['pensoft']['details']['title'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Title'), 
-        '#required' => TRUE, 
-        '#default_value' => $primary_author_node->field_title[0]['value']);
-        $form['pensoft']['details']['first_name'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('First name'), 
-        '#required' => TRUE, 
-        '#default_value' => $primary_author_node->field_givennames[0]['value']);
-        $form['pensoft']['details']['surname'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Surname'), 
-        '#required' => TRUE, 
-        '#default_value' => $primary_author_node->field_familyname[0]['value']);
-        $form['pensoft']['details']['initials'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Initials'), 
-        '#required' => TRUE, 
-        '#default_value' => drupal_strtoupper(
-        drupal_substr(
-        $primary_author_node->field_givennames[0]['value'], 
-        0, 1) . drupal_substr(
-        $primary_author_node->field_familyname[0]['value'], 
-        0, 1)));
-        $form['pensoft']['institution'] = array(
-        '#type' => 'fieldset', 
-        '#title' => t('Institution'), 
-        '#collapsible' => TRUE, 
-        '#collapsed' => FALSE);
-        $form['pensoft']['institution']['affiliation'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Affilitation'), 
-        '#default_value' => $primary_author_node->field_institution[0]['value']);
-                $form['pensoft']['institution']['department'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('Department'));
-                $form['pensoft']['institution']['street'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('Street'), 
-                '#required' => TRUE);
-                $form['pensoft']['institution']['postal_code'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('Postal code'), 
-                '#required' => TRUE);
-                $form['pensoft']['institution']['city'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('City'), 
-                '#required' => TRUE);
-                $form['pensoft']['institution']['state'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('State'));
-                $form['pensoft']['institution']['country'] = array(
-                '#type' => 'textfield', 
-                '#title' => t('Country'), 
-                '#required' => TRUE);
-        $form['pensoft']['institution']['vat_number'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('VAT number'), 
-        '#description' => '(' . t(
-        'If present, for EU customers only.') . ')');
-        $form['pensoft']['contact_details'] = array(
-        '#type' => 'fieldset', 
-        '#title' => t('Contact details'), 
-        '#collapsible' => TRUE, 
-        '#collapsed' => FALSE);
-        $form['pensoft']['contact_details']['phone'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Phone'));
-        $form['pensoft']['contact_details']['fax'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Fax'));
-        $form['pensoft']['contact_details']['url'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('URL'));
-        $form['pensoft']['extra'] = array(
-        '#type' => 'fieldset', 
-        '#title' => t('Extra info'), 
-        '#collapsible' => TRUE, 
-        '#collapsed' => FALSE);
-        $form['pensoft']['extra']['notes'] = array(
-        '#type' => 'textarea', 
-        '#title' => t('Your notes'));
-        $form['pensoft']['extra']['geo_spatial'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Geo-spatial coverage'));
-        $form['pensoft']['extra']['supporting_agencies'] = array(
-        '#type' => 'textfield', 
-        '#title' => t('Supporting agencies'));
-    }
-}
-function pensoft_publication_export_form_validate ($form, &$form_state)
-{
-    if ($form_state['values']['vat_number'] &! is_numeric($form_state['values']['vat_number'])) {
-        form_set_error('vat_number', 
-        t('Must be numeric'));
-    }
-}
-function pensoft_publication_export_form_submit ($form, &$form_state)
-{
-    global $user;
-    if ($filepath = publication_create_xml_file($form['#node'])) {
-        $email_body = url($filepath, 
-        array('absolute' => true)) . pensoft_publication_build_email_body(
-        $form, &$form_state);
-        $destinations = array(
-        PENSOFT_EMAIL_ADDRESS);
-        $message = new stdClass();
-        $message->subject = 'Scratchpad publication';
-        $message->body = $email_body;
-        $message->sender_account = $user;
-        if (messaging_message_send($destinations, 
-        $message, 'mail')) {
-            drupal_set_message(
-            t(
-            'The XML file has been sent to Pensoft.'));
-        } else {
-            drupal_set_message(
-            t(
-            'The XML file could not be emailed.'), 
-            'error');
-        }
-    } else {
-        drupal_set_message(
-        t(
-        'The XML file could not be created at this time.'), 
-        'error');
-    }
-}
-function pensoft_publication_build_email_body ($form, &$form_state)
-{
-    static $body;
-    foreach (element_children($form) as $key) {
+function pensoft_publication_info()
+  {
+  return array('name' => 'Pensoft' , 'description' => 'Export to the Sofia based publisher of ZooKeys and PhytoKeys');
+  }
 
-        switch ($form[$key]['#type']) {
-            case 'fieldset':
-                $body .= "\n\n";
-                break;
-            case 'textarea':
-            case 'textfield':
-                
-                if($form_state['values'][$key]){
-                $body .= $form[$key]['#title'] .
-                 ': ' .
-                 $form_state['values'][$key] .
-                 "\n";                    
-                }
-                
+function pensoft_form_publication_export_form_alter($form, $form_state, $form_id)
+  {
+  $node = $form['#node'];
+  if ($node->field_publication_authors[0]['nid'])
+    {
+    $primary_author_node = node_load($node->field_publication_authors[0]['nid']);
+    }
+  if (isset($form_state['post']['module']) && $form_state['post']['module'] == 'pensoft')
+    {
+    if (isset($form['#validate']))
+      {
+      $form['#validate'][] = 'pensoft_publication_export_form_validate';
+      } else
+      {
+      $form['#validate'] = array('pensoft_publication_export_form_validate');
+      }
+    $form['pensoft']['details'] = array('#type' => 'fieldset' , '#title' => t('Your details') , '#collapsible' => TRUE , '#collapsed' => FALSE);
+    $form['pensoft']['details']['title'] = array('#type' => 'textfield' , '#title' => t('Title') , '#required' => TRUE , '#default_value' => $primary_author_node->field_title[0]['value']);
+    $form['pensoft']['details']['first_name'] = array('#type' => 'textfield' , '#title' => t('First name') , '#required' => TRUE , '#default_value' => $primary_author_node->field_givennames[0]['value']);
+    $form['pensoft']['details']['surname'] = array('#type' => 'textfield' , '#title' => t('Surname') , '#required' => TRUE , '#default_value' => $primary_author_node->field_familyname[0]['value']);
+    $form['pensoft']['details']['initials'] = array('#type' => 'textfield' , '#title' => t('Initials') , '#required' => TRUE , '#default_value' => drupal_strtoupper(drupal_substr($primary_author_node->field_givennames[0]['value'], 0, 1) . drupal_substr($primary_author_node->field_familyname[0]['value'], 0, 1)));
+    $form['pensoft']['institution'] = array('#type' => 'fieldset' , '#title' => t('Institution') , '#collapsible' => TRUE , '#collapsed' => FALSE);
+    $form['pensoft']['institution']['affiliation'] = array('#type' => 'textfield' , '#title' => t('Affilitation') , '#default_value' => $primary_author_node->field_institution[0]['value']);
+    $form['pensoft']['institution']['department'] = array('#type' => 'textfield' , '#title' => t('Department'));
+    $form['pensoft']['institution']['street'] = array('#type' => 'textfield' , '#title' => t('Street') , '#required' => TRUE);
+    $form['pensoft']['institution']['postal_code'] = array('#type' => 'textfield' , '#title' => t('Postal code') , '#required' => TRUE);
+    $form['pensoft']['institution']['city'] = array('#type' => 'textfield' , '#title' => t('City') , '#required' => TRUE);
+    $form['pensoft']['institution']['state'] = array('#type' => 'textfield' , '#title' => t('State'));
+    $form['pensoft']['institution']['country'] = array('#type' => 'textfield' , '#title' => t('Country') , '#required' => TRUE);
+    $form['pensoft']['institution']['vat_number'] = array('#type' => 'textfield' , '#title' => t('VAT number') , '#description' => '(' . t('If present, for EU customers only.') . ')');
+    $form['pensoft']['contact_details'] = array('#type' => 'fieldset' , '#title' => t('Contact details') , '#collapsible' => TRUE , '#collapsed' => FALSE);
+    $form['pensoft']['contact_details']['phone'] = array('#type' => 'textfield' , '#title' => t('Phone'));
+    $form['pensoft']['contact_details']['fax'] = array('#type' => 'textfield' , '#title' => t('Fax'));
+    $form['pensoft']['contact_details']['url'] = array('#type' => 'textfield' , '#title' => t('URL'));
+    $form['pensoft']['extra'] = array('#type' => 'fieldset' , '#title' => t('Extra info') , '#collapsible' => TRUE , '#collapsed' => FALSE);
+    $form['pensoft']['extra']['notes'] = array('#type' => 'textarea' , '#title' => t('Your notes'));
+    $form['pensoft']['extra']['geo_spatial'] = array('#type' => 'textfield' , '#title' => t('Geo-spatial coverage'));
+    $form['pensoft']['extra']['supporting_agencies'] = array('#type' => 'textfield' , '#title' => t('Supporting agencies'));
+    }
+  }
 
-                break;
-        }
+function pensoft_publication_export_form_validate($form, &$form_state)
+  {
+  if ($form_state['values']['vat_number'] & ! is_numeric($form_state['values']['vat_number']))
+    {
+    form_set_error('vat_number', t('Must be numeric'));
+    }
+  }
+
+function pensoft_publication_export_form_submit($form, &$form_state)
+  {
+  global $user;
+  if ($filepath = publication_create_xml_file($form['#node']))
+    {
+    $email_body = url($filepath, array('absolute' => true)) . pensoft_publication_build_email_body($form, &$form_state);
+    $destinations = array(PENSOFT_EMAIL_ADDRESS);
+    $message = new stdClass();
+    $message->subject = 'Scratchpad publication';
+    $message->body = $email_body;
+    $message->sender_account = $user;
+    if (messaging_message_send($destinations, $message, 'mail'))
+      {
+      drupal_set_message(t('The XML file has been sent to Pensoft.'));
+      } else
+      {
+      drupal_set_message(t('The XML file could not be emailed.'), 'error');
+      }
+    } else
+    {
+    drupal_set_message(t('The XML file could not be created at this time.'), 'error');
+    }
+  }
+
+function pensoft_publication_build_email_body($form, &$form_state)
+  {
+  static $body;
+  foreach (element_children($form) as $key)
+    {
+    
+    switch ($form[$key]['#type'])
+      {
+      case 'fieldset':
+        $body .= "\n\n";
+        break;
+      case 'textarea':
+      case 'textfield':
         
-                        pensoft_publication_build_email_body(
-                $form[$key], 
-                $form_state);
-                
+        if ($form_state['values'][$key])
+          {
+          $body .= $form[$key]['#title'] . ': ' . $form_state['values'][$key] . "\n";
+          }
+        
+        break;
+      }
+    
+    pensoft_publication_build_email_body($form[$key], $form_state);
+    
     }
-    return $body;
-}
+  return $body;
+  }
