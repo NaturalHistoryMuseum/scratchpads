@@ -462,7 +462,6 @@ function _glossary_filter_process($format, $text) {
     $replace_mode = variable_get("glossary_replace_$format", 'superscript');
     $link_style = variable_get("glossary_link_$format", 'normal');
     $absolute_link = ($link_style == 'absolute');
-    // SDRycroft - removed as function below replaces this
     //$terms = _glossary_get_terms($format);
     $vids = _glossary_get_filter_vids();
     $terms_replace = array();
@@ -1231,20 +1230,20 @@ function glossary_get_related($tid, $key = 'tid', $one_way = FALSE) {
   }
 }
 
-// Get all synonyms for all glossary terms.
-function _glossary_get_synonyms($vid) {
-  $result = db_query(db_rewrite_sql('SELECT ts.tid, ts.name FROM {term_synonym} ts JOIN {term_data} t USING(tid) WHERE t.vid=%d', 't', 'tid'), $vid);
-  while ($synonym = db_fetch_object($result)) {
-    $synonyms[$synonym->tid][] = filter_xss($synonym->name);
-  }
-  return $synonyms;
-}
-
 // Get synonyms for a single term
 function _glossary_get_synonyms_for_tid($tid) {
   $result = db_query(db_rewrite_sql('SELECT ts.name FROM {term_synonym} ts JOIN {term_data} t USING(tid) WHERE t.tid=%d', 't', 'tid'), $tid);
   while ($synonym = db_fetch_object($result)) {
     $synonyms[] = filter_xss($synonym->name);
+  }
+  return $synonyms;
+}
+
+// Get all synonyms for all glossary terms.
+function _glossary_get_synonyms($vid) {
+  $result = db_query(db_rewrite_sql('SELECT ts.tid, ts.name FROM {term_synonym} ts JOIN {term_data} t USING(tid) WHERE t.vid=%d', 't', 'tid'), $vid);
+  while ($synonym = db_fetch_object($result)) {
+    $synonyms[$synonym->tid][] = filter_xss($synonym->name);
   }
   return $synonyms;
 }
