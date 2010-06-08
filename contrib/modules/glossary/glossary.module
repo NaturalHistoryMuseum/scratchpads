@@ -715,7 +715,7 @@ function _glossary_insertlink($format, &$text, &$terms) {
         if (!isset($events[$offset]) || drupal_strlen($events[$offset]['match']) < drupal_strlen($match)) {
           // Get synonym with case as in text.
           $events[$offset] = array('type' => 'match', 'which' => $i, 'match' => $match);
-          if (!$replaceall) {
+          if (!$replaceall && _glossary_is_proper_match($format, $text, $offset, drupal_strlen($match))){
             $first_match_found = TRUE;
             break;
           }
@@ -762,31 +762,7 @@ function _glossary_insertlink($format, &$text, &$terms) {
     }
     if ($event['type'] == 'match') {
       $matchlen = drupal_strlen($event['match']);
-      $proper_match = FALSE;
-      switch (variable_get("glossary_match_$format", 'b')) {
-          case 'lr': // Require word break left or right.
-//            $proper_match = (_glossary_is_boundary($text {$next - 1}) || _glossary_is_boundary($text {$next + $matchlen}));
-            $proper_match = (_glossary_is_boundary(drupal_substr($text, $place - 1, 1)) ||
-                             _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1 )));
-            break;
-          case 'b': // Require word break left and right.
-//            $proper_match = (_glossary_is_boundary($text {$next - 1}) && _glossary_is_boundary($text {$next + $matchlen}));
-            $proper_match = (_glossary_is_boundary(drupal_substr($text, $place - 1, 1)) &&
-                             _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1)));
-            break;
-          case 'l':  // Require word break left.
-//            $proper_match = _glossary_is_boundary($text {$next - 1});
-            $proper_match = _glossary_is_boundary(drupal_substr($text, $place - 1, 1));
-            break;
-          case 'r': // Require word break right.
-//            $proper_match = _glossary_is_boundary($text {$next + $matchlen});
-            $proper_match = _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1));
-            break;
-          case 's': // Match any substring.
-          default:
-            $proper_match = TRUE;
-            break;
-      }
+      $proper_match = _glossary_is_proper_match($format, $text, $place, $matchlen);
       if ($proper_match) {
         $newtext .= $terms[$event['which']]['ins_before'] . $event['match'] . $terms[$event['which']]['ins_after'];
         $parsed += $matchlen;
@@ -796,6 +772,35 @@ function _glossary_insertlink($format, &$text, &$terms) {
 
   // Append remaining part.
   return $newtext . drupal_substr($text, $parsed);
+}
+
+function _glossary_is_proper_match($format, $text, $place, $matchlen){
+  $proper_match = FALSE;
+  switch (variable_get("glossary_match_$format", 'b')) {
+      case 'lr': // Require word break left or right.
+        //$proper_match = (_glossary_is_boundary($text {$next - 1}) || _glossary_is_boundary($text {$next + $matchlen}));
+        $proper_match = (_glossary_is_boundary(drupal_substr($text, $place - 1, 1)) ||
+                         _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1 )));
+        break;
+      case 'b': // Require word break left and right.
+        //$proper_match = (_glossary_is_boundary($text {$next - 1}) && _glossary_is_boundary($text {$next + $matchlen}));
+        $proper_match = (_glossary_is_boundary(drupal_substr($text, $place - 1, 1)) &&
+                         _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1)));
+        break;
+      case 'l':  // Require word break left.
+        //$proper_match = _glossary_is_boundary($text {$next - 1});
+        $proper_match = _glossary_is_boundary(drupal_substr($text, $place - 1, 1));
+        break;
+      case 'r': // Require word break right.
+        //$proper_match = _glossary_is_boundary($text {$next + $matchlen});
+        $proper_match = _glossary_is_boundary(drupal_substr($text, $place + $matchlen, 1));
+        break;
+      case 's': // Match any substring.
+      default:
+        $proper_match = TRUE;
+        break;
+  }
+  return $proper_match;
 }
 
 function glossary_page($vid = NULL, $letter = NULL) {
