@@ -112,7 +112,7 @@ function imageapi_imagemagick_image_crop(&$image, $x, $y, $width, $height) {
   return TRUE;
 }
 
-function imageapi_imagemagick_image_resize(&$image, $width, $height) {
+function imageapi_imagemagick_image_resize($image, $width, $height) {
   $image->ops[] = '-resize '. (int) $width .'x'. (int) $height .'!';
   $image->info['width'] = $width;
   $image->info['height'] = $height;
