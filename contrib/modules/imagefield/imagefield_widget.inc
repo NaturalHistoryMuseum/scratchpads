@@ -268,7 +268,7 @@ function imagefield_widget_process($element, $edit, &$form_state, $form) {
 /**
  * FormAPI theme function. Theme the output of an image field.
  */
-function theme_imagefield_widget(&$element) {
+function theme_imagefield_widget($element) {
   drupal_add_css(drupal_get_path('module', 'imagefield') .'/imagefield.css');
   return theme('form_element', $element, $element['#children']);
 }
