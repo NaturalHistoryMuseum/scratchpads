@@ -51,7 +51,7 @@ function spm_menu(){
       'access arguments' => array('create spm content'), 
       'type' => MENU_CALLBACK
     ),
-    'spm/export' => array(
+    'spm/export.xml' => array(
       'title' => 'Live SPM Export',
       'page callback' => 'spm_export',
       'file' => 'spm.export.inc',
