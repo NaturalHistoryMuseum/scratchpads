@@ -705,6 +705,7 @@ function scratchpad_profile_set_perms(){
                               "fotonotes add notes to all images",
                               "fotonotes add notes to own images",
                               "fotonotes edit own notes",
+                              "import classification", // TEMPORARY UNTIL CLASSIFICATION MODULE IS REMOVED
                               "import content",
                               "post with no checking",
                               "set own user location",
