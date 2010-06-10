@@ -74,7 +74,9 @@ function scratchpad_profile_modules(){
       'nagger','bio_image','itis_term','term_node', 'spm',
       'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail',
       'term_node','scratchpad','tui','classification_import', 'csv_import',
-      'publication'
+      'publication',
+    // Classification (Temporary)
+      'classification', 'classification_scratchpads', 'classification_biblio'
   );
 }
 
