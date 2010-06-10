@@ -161,20 +161,37 @@ function term_node_form_alter(&$form, $form_state, $form_id){
  */
 function term_node_taxonomy_term_load($terms){
   $types = array();
+  $terms_not_in_cache = array();
+  $all_in_cache = TRUE;
   foreach($terms as $term){
-    if(!isset($types[$term->vid])){
-      $types[$term->vid] = _term_node_get_content_type_for_vid($term->vid);
+    // Try and get a cached copy of the term
+    $cache_term = cache_get($term->tid, 'cache_term');
+    if($cache_term){
+      $terms[$cache_term->tid] = $cache_term;
+    } else {
+      $all_in_cache = FALSE;
+      $terms_not_in_cache[$term->tid] = $term;
+      // Set the content type for this VID.
+      if(!isset($types[$term->vid])){
+        $types[$term->vid] = _term_node_get_content_type_for_vid($term->vid);
+      }
     }
   }
+  if($all_in_cache){
+    return $terms;
+  }
+  // Unset the vocabularies which do not have a node type set (are FALSE).
   foreach($types as $vid => $type){
     if(!$type){
       unset($types[$vid]);
     }
   }
   if(count($types)){
-    $results = db_query("SELECT nid, tid  FROM {term_node} WHERE tid IN (%s) AND nid IN (SELECT nid FROM {node} WHERE type IN ('".implode("','", $types)."'))", implode("," ,array_keys($terms)));
+    $results = db_query("SELECT nid, tid  FROM {term_node} WHERE tid IN (%s) AND nid IN (SELECT nid FROM {node} WHERE type IN ('".implode("','", $types)."'))", implode("," ,array_keys($terms_not_in_cache)));
     while($row = db_fetch_array($results)){
-      $node = node_load(array('nid' => $row['nid']));
+      // We reset the node cache, as it's more likely that we'll be loading a large number of nodes using this hook.
+      // We'll run into memory issues if we don't!
+      $node = node_load(array('nid' => $row['nid']), NULL, TRUE);
       foreach($node as $key => $value){
         if(substr($key, 0, 6) == 'field_'){
           if(is_array($value) && count($value) == 1){
@@ -185,6 +202,7 @@ function term_node_taxonomy_term_load($terms){
           $terms[$row['tid']]->{substr($key, 6)} = $terms[$row['tid']]->$key; 
         }
       }
+      cache_set($row['tid'], $terms[$row['tid']], 'cache_term');
     }
   }
   return $terms;
@@ -207,6 +225,7 @@ function term_node_taxonomy($op, $type, $array = NULL){
             node_delete($row['nid']);
           }
         }
+        cache_clear_all($array['tid'], 'cache_term');
         break;
       case 'insert':
         // We're creating a new node, we'll assume that
@@ -246,6 +265,13 @@ function term_node_taxonomy($op, $type, $array = NULL){
           $node->revision = in_array('revision', $node_options);
           $node->title = $array['name'];
           node_save($node);
+          
+          // Here we save it to the cache for use later.
+          $term = taxonomy_get_term($array['tid']);
+          $terms = array($term);
+          $terms = module_invoke_all('taxonomy_term_load', $terms);
+          $term = array_pop($terms);
+          cache_set($term->tid, $term, 'cache_term');
         }
         break;
     }

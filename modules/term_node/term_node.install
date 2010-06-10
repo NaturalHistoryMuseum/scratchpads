@@ -9,6 +9,16 @@
 function term_node_install(){
   $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
   db_query("UPDATE {system} SET weight=%d WHERE name='term_node'", $taxonomy_or_cck_weight+10);
+  drupal_install_schema('term_node');
+}
+
+/**
+ * hook_schema
+ */
+function term_node_schema(){
+  return array(
+    'cache_term' => drupal_get_schema_unprocessed('system', 'cache')
+  );
 }
 
 /**
@@ -19,4 +29,12 @@ function term_node_update_6101(){
   $ret[] = update_sql("CREATE TEMPORARY TABLE nodes_to_delete AS (SELECT n.nid FROM {term_node} tn, {term_data} td, {node} n WHERE tn.nid = n.nid AND td.tid = tn.tid AND title = name AND type = '')");
   $ret[] = update_sql("DELETE FROM {node} WHERE nid IN (SELECT nid FROM nodes_to_delete)");
   return $ret;
+}
+
+/**
+ * hook_update_n
+ */
+function term_node_update_6102(){
+  drupal_install_schema('term_node');
+  return array('#finished' => TRUE);  
 }
