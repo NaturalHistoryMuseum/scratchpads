@@ -85,6 +85,12 @@
     </div>
   </xsl:template>
   
+  <!--  TEMPLATE FOR ITALICS -->
+  <xsl:template match="italic">
+    <em>
+      <xsl:value-of select="."/>
+    </em>
+  </xsl:template>
   <!--  TEMPLATE FOR FIG GROUP -->
   <xsl:template match="fig">
     <div class="image">
@@ -119,10 +125,12 @@
           </ol>
         </div>
         <div class="abstract">
-	        <p>
-	          <xsl:value-of select="article-meta/abstract"/>
-	        </p>
+	        <h3>Abstract:</h3>
+		      <xsl:for-each select="article-meta/abstract/p">
+		        <p><xsl:value-of select="."/></p>
+		      </xsl:for-each>
 	        <div class="keywords">
+            <h3>Keywords:</h3>
 	          <p>
 	            <xsl:for-each select="article-meta/kwd-group/kwd">
 	              <xsl:value-of select="."/><xsl:if test="position()!=last()">, </xsl:if>
