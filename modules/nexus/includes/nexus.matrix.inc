@@ -95,8 +95,9 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         
           $column['setValueHandler'] = 'nexusControlledStateUpdateItem';
           $column['validator'] = 'nexusControlledStateValidator';
-        
-          $x = 1;
+          $column['type'] = 'controlled';
+          
+          $x = 0;
           
           $column['states'] = $default_states;  
 
@@ -118,12 +119,14 @@ function nexus_project_get_matrix_data($node, $editable = true) {
         }else{ // Is free entry
         
           $column['setValueHandler'] = 'nexusFreeEntryUpdateItem';
+          $column['type'] = 'free';
                
           // Numeric validator
           
           if(isset($character_settings['numeric'][$character->tid])){
             
             $column['validator'] = 'nexusNumericStateValidator';
+            $column['type'] = 'quantitative';
             
           }
           
@@ -275,7 +278,7 @@ function nexus_matrix_editor_populate_data($tree, $taxa, &$character_terms, &$st
                 
               $data_item[$character_term->tid] .= $conj.$state_order_number[$nexus_nodes[$x]->nid]; 
 
-              if($nexus_relationships[$character_term->tid][$ordered_tid] = '/'){
+              if($nexus_relationships[$character_term->tid][$ordered_tid] == '/'){
                 
                 $conj = '/';
                 

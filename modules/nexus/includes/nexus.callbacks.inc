@@ -382,6 +382,7 @@ function nexus_callback_save_state(){
       }
     }
   }
+  
   if($nids[0] == '?' || $nids[0] == '-'){
     nexus_insert_relationship($nids[0], $character_tid, $taxa_tid);
     return;
@@ -477,6 +478,24 @@ function nexus_callback_note_node_form_submit(){
     'op' => $submitted_form['form_state']['op'], 
     'new_note' => $submitted_form['form_state']['new_note'], 
     'character_tid' => $character_tid, 'taxa_tid' => $taxa_tid);
+}
+
+/**
+ * Get the characters to export select lit
+ */
+function nexus_callback_get_characters_to_export_element(){
+  
+  module_load_include('inc', 'nexus', 'includes/nexus.matrix');
+  
+  $node = node_load($_POST['projectNid']);
+  
+  $matrix_data = nexus_project_get_matrix_data($node);
+  array_shift($matrix_data->columns);
+  
+  $element = nexus_characters_to_export_element($node, $matrix_data);
+  
+  return array('data' => drupal_render($element));
+  
 }
 
 
