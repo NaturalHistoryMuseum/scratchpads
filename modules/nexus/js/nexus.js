@@ -92,7 +92,7 @@ function nexus() {
       $('#matrix-editor-controls .item-list a').click(function(){
         var id = this.href.split('#')[1];
         
-        var $this = $(this);
+        var $this = $(this);	
         
           if(id == 'edit-taxa' &! gotTree){
 
@@ -104,7 +104,32 @@ function nexus() {
             
             gotTree = true;
             
-          }
+          }else if(id == 'export-data' && options.regenerated){	  
+        	  
+        	  $('#edit-characters').hide();
+        	  
+        	  var $loadingTxt = $('<p>').text('Please wait while character list is refreshed.');
+        	  
+        	  $('#edit-characters').after($loadingTxt);
+        	  
+              args = {
+                      projectNid: self.getProjectNid(),
+                    };
+                
+                    $.post(
+                      Drupal.settings.nexusCallback+'/get_characters_to_export_element', 
+                      args,
+                      function(response){
+                    	  $('#edit-characters optgroup').replaceWith($(response.data).find('optgroup'));
+                    	  $('#edit-characters').show();
+                    	  $loadingTxt.remove();
+                        },
+                        'json'                      
+                    );
+                    
+        	  
+        	  
+          }	  
         
         self.showTab(id, $this);        
         return false;
@@ -782,7 +807,7 @@ function nexus() {
           
         }else{ // This is numeric
           
-          $('<p>This is a <em>numeric character</em> - please enter only numeric values.<p>').appendTo($cellForm);
+          $('<p>This is a <em>numeric character</em> - please enter only numeric values.<p><p>For numeric ranges, please enter as <em>x-y</em>.</p>').appendTo($cellForm);
           
         }
         
@@ -919,9 +944,9 @@ function nexus() {
      },
      
      attachDeleteFormEvents: function(){
-       
-       $('#edit-delete').click(function(){
-         
+     	 
+       $('input.delete').click(function(){
+   	   
          $('div.columns').hide();
          $('#confirm-delete').show();
          

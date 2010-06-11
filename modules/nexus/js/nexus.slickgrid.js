@@ -94,7 +94,7 @@ var nexusCellEditor = function($container, columnDef, value, dataContext) {
     }
     
     this.validate = function(){
-      
+    	
       if (columnDef.validator) 
       {
           var validationResults = columnDef.validator(scope.getValue(), columnDef, $container);
@@ -183,8 +183,8 @@ function nexusControlledStateValidator(value, columnDef, $container) {
 
 
 function nexusNumericStateValidator(value, columnDef, $container) {
-
-  if (value.indexOf('?') == -1 && !value.toString().match(/^[-]?\d*\.?\d*$/) ){ 
+	
+  if (value.length && (value.toString().match(/^\d+\-\d+$|^\d+$|^\?$/) == null)){ 
     
     nexusErrorBeautyTip($container, 'Please enter a numeric value')
     
