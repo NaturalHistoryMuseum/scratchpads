@@ -2,6 +2,11 @@
 
 function nexus_export() {
   
+  //  Ensure form is submitted
+  if(!isset($_POST['nid'])){
+    drupal_goto();
+  }
+  
   $node = node_load($_POST['nid']);
   $format = $_POST['format'];
   
