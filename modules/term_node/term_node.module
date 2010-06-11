@@ -158,16 +158,27 @@ function term_node_form_alter(&$form, $form_state, $form_id){
  * we have implemented ourselves in the TinyTax and a number of other modules.
  * 
  * This function takes an array of terms
+ * 
+ * 
+ * FIXME - This function needs work - it is messy, and it's not ideal that we
+ * return a TID indexed array, instead of simply tweaking the one that we have.
  */
-function term_node_taxonomy_term_load($terms){
+function term_node_taxonomy_term_load(&$terms){
   $types = array();
   $terms_not_in_cache = array();
+  // We return a tid indexed array.
+  $terms_to_return = array();
+  foreach($terms as $key => $value){
+    $terms_to_return[$value->tid] = $value;
+  }
+  $terms = $terms_to_return;
+  unset($terms_to_return);
   $all_in_cache = TRUE;
   foreach($terms as $term){
     // Try and get a cached copy of the term
     $cache_term = cache_get($term->tid, 'cache_term');
     if($cache_term){
-      $terms[$cache_term->tid] = $cache_term;
+      $terms[$cache_term->data->tid] = $cache_term->data;
     } else {
       $all_in_cache = FALSE;
       $terms_not_in_cache[$term->tid] = $term;
@@ -178,7 +189,7 @@ function term_node_taxonomy_term_load($terms){
     }
   }
   if($all_in_cache){
-    return $terms;
+    return;
   }
   // Unset the vocabularies which do not have a node type set (are FALSE).
   foreach($types as $vid => $type){
@@ -205,7 +216,6 @@ function term_node_taxonomy_term_load($terms){
       cache_set($row['tid'], $terms[$row['tid']], 'cache_term');
     }
   }
-  return $terms;
 }
 
 /**
