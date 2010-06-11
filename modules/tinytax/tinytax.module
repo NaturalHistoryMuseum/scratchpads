@@ -132,7 +132,7 @@ function _tinytax_get_vocabulary_name($vid){
  */
 function tinytax_taxonomy_get_children($tid, $vid = 0){
   $children = taxonomy_get_children($tid, $vid);
-  module_invoke_all('taxonomy_term_load', $children);
+  $children = module_invoke_all('taxonomy_term_load', $children);
   if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE) == 1){
     foreach($children as $tid => $child){
       if(isset($child->usage) && (strtolower($child->usage) == 'invalid' || strtolower($child->usage) == 'not accepted')){
@@ -148,8 +148,7 @@ function tinytax_taxonomy_get_children($tid, $vid = 0){
  */
 function tinytax_taxonomy_get_parents_all($tid){
   $parents = taxonomy_get_parents_all($tid);
-  module_invoke_all('taxonomy_term_load', $parents);
-  return $parents;
+  return module_invoke_all('taxonomy_term_load', $parents);
 }
 
 /**
