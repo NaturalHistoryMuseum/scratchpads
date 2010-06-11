@@ -4,20 +4,54 @@
   xmlns:xlink="http://www.w3.org/1999/xlink"
   xmlns:tp="http://www.plazi.org/taxpub">
   
+  <!--  TEMPLATE FOR "P" -->
+  <xsl:template match="p">
+	  <p>
+	    <xsl:for-each select="node()">
+		    <xsl:choose>
+		    <xsl:when test="self::text()">
+		      <xsl:value-of select="."/>
+		    </xsl:when>
+		    <xsl:when test="self::*">
+		      <xsl:apply-templates select="."/>
+		    </xsl:when>
+	      </xsl:choose>
+      </xsl:for-each>
+	  </p>
+  </xsl:template>
+  
+  <!-- TEMPLATE TO SHUT UP THINGS -->
+  <xsl:template match="tp:taxon-name"/>
+  <xsl:template match="tp:taxon-authority"/>
+  <xsl:template match="label"/>
+  
+  <xsl:template match="title">
+    <h1><xsl:value-of select="."/></h1>
+  </xsl:template>
+            
   <!-- TEMPLATE FOR <italic> -->
   <xsl:template match="italic">
     <em><xsl:value-of select="."/></em>
+  </xsl:template>
+  
+  <!-- TEMPLATE FOR ARTICLE TITLE -->
+  <xsl:template match="article-title">
+    <xsl:for-each select="node()">
+      <xsl:choose>
+      <xsl:when test="self::text()">
+        <xsl:value-of select="."/>
+      </xsl:when>
+      <xsl:when test="self::*">
+        <xsl:apply-templates select="."/>
+      </xsl:when>
+      </xsl:choose>
+    </xsl:for-each>
   </xsl:template>
 
   <!-- TEMPLATE FOR A SECTION -->
   <xsl:template match="sec">
     <div class="section">
-      <xsl:for-each select="title">
-        <h1><xsl:value-of select="."/></h1>
-      </xsl:for-each>
-      <xsl:for-each select="p">
-        <p><xsl:value-of select="."/></p>
-      </xsl:for-each>
+      <xsl:apply-templates/>
       <xsl:apply-templates select="taxon-treatment"/>
       <xsl:apply-templates select="sec"/>
     </div>
@@ -26,12 +60,7 @@
   <!-- TEMPLATE FOR A TREATMENT SECTION -->
   <xsl:template match="tp:treatment-sec">
     <div class="section">
-      <xsl:for-each select="title">
-        <h1><xsl:value-of select="."/></h1>
-      </xsl:for-each>
-      <xsl:for-each select="p">
-        <p><xsl:value-of select="."/></p>
-      </xsl:for-each>
+      <xsl:apply-templates/>
       <xsl:apply-templates select="taxon-treatment"/>
       <xsl:apply-templates select="sec"/>
     </div>
@@ -66,7 +95,8 @@
   
   <!--  TEMPLATE FOR  REFERENCES-->
   <xsl:template match="ref-list">
-    <div class="references">
+    <div class="references section">
+      <h3>References</h3>
       <ul>
 	      <xsl:for-each select="ref">
 	       <li>
@@ -111,23 +141,23 @@
     <div class="publication">
     <xsl:for-each select="front">
       <div class="publication-front">
-        <h1 class="title"><xsl:value-of select="article-meta/title-group/article-title"/></h1>
+        <h1 class="title"><xsl:apply-templates select="article-meta/title-group"/></h1>
         <h2 class="authors">
-        <xsl:for-each select="article-meta/contrib-group/name">
-          <xsl:value-of select="given-names"/><xsl:text> </xsl:text><xsl:value-of select="surname"/><span class="superscript"><xsl:number/></span><xsl:if test="position()!=last()">, </xsl:if>
+        <xsl:for-each select="article-meta/contrib-group/contrib">
+          <xsl:value-of select="name/given-names"/><xsl:text> </xsl:text><xsl:value-of select="name/surname"/><span class="superscript"><xsl:number/></span><xsl:if test="position()!=last()">, </xsl:if>
         </xsl:for-each>
         </h2>
         <div class="affiliations">
           <ol>
-          <xsl:for-each select="article-meta/contrib-group/name">
+          <xsl:for-each select="article-meta/contrib-group/contrib">
             <li><xsl:value-of select="email"/>, <xsl:value-of select="aff"/></li>
           </xsl:for-each>
           </ol>
         </div>
         <div class="abstract">
 	        <h3>Abstract:</h3>
-		      <xsl:for-each select="article-meta/abstract/p">
-		        <p><xsl:value-of select="."/></p>
+		      <xsl:for-each select="article-meta/abstract">
+		        <xsl:apply-templates/>
 		      </xsl:for-each>
 	        <div class="keywords">
             <h3>Keywords:</h3>
