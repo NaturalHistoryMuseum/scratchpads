@@ -13,6 +13,8 @@ if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'd6'){
 if((array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'dev' || array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'www') && $_SERVER['HTTP_HOST'] != 'dev.scratchpads.eu'){
   $database = substr($database, 3);
   $conf['file_directory_path'] = 'sites/'.substr($_SERVER['HTTP_HOST'], 4).'/files';
+  $conf['preprocess_css'] = 0;
+  $conf['preprocess_js'] = 0;
 }
 
 $user_password = parse_ini_file("/etc/drupal/6/drupal_db_passwords",true);
