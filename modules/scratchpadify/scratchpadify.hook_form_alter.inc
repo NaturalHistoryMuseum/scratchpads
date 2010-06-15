@@ -206,6 +206,9 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     } else {
       $form['#submit'] = array('scratchpadify_node_type_form_submit');
     }
+  } else if($form_id == 'system_theme_settings'){
+    unset($form['favicon']);
+    $form['logo']['logo_upload']['#description'] .= '<br/><b>' . t('Please ensure that your logo is no greater than 100 pixels high.').'</b>';
   }
 }
 
