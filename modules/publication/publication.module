@@ -854,6 +854,9 @@ function publication_access_node($node, $account=FALSE){
     global $user;
     $account = $user;
   }
+  if($account->uid == 1){
+    return TRUE;
+  }
   if($node->type == 'publication'){
     $subscriptions = og_get_subscriptions($account->uid);
     if(isset($subscriptions[$node->nid])){
