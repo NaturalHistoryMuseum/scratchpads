@@ -534,15 +534,15 @@ function publication_access($op, $node, $account){
     case 'create' :
       return user_access('create publication', $account);
     case 'update' :
-      if(user_access('edit any publication', $account) || (user_access('edit own publication', $account) && ($account->uid == $node->uid))){
-        return TRUE;
-      }
-      break;
+      // Check the user is a member of this group
+      return publication_access_node($node, $account);
     case 'delete' :
       if(user_access('delete any publication', $account) || (user_access('delete own publication', $account) && ($account->uid == $node->uid))){
         return TRUE;
       }
       break;
+    case 'view' :
+      return publication_access_node($node, $account);
   }
   return FALSE;
 }
@@ -695,8 +695,8 @@ function publication_create_taxon_description_node($term){
   return $node->nid;
 }
 
-function publication_view($node){
-  if(!$teaser && $node && $node->type == 'publication'){
+function publication_view($node, $teaser = FALSE, $page = FALSE){
+  if($node && $node->type == 'publication'){
     // Is this the latest vid?
     $current_vid = db_result(db_query("SELECT vid FROM {node} WHERE nid = %d", $node->nid));
     drupal_add_css(drupal_get_path('module', 'publication') . '/css/publication.css');
@@ -705,24 +705,35 @@ function publication_view($node){
       $vid_to_load = FALSE;
     }else{
       $vid_to_load = $node->vid;
+    }    
+    if($teaser){
+      // Need to check permissions
+      if(!publication_access_node($node)){
+        $node->content = array(
+          'formatted-document' => array(
+            '#weight' => -1000,
+            '#value' => t('Hidden publication')
+          )
+        );
+      }
+    } else { 
+      $xml = publication_get_xml($node->nid, $vid_to_load);
+      # LOAD XML FILE
+      $xml_doc = new DOMDocument();
+      $xml_doc->loadXML($xml);
+      # START XSLT
+      $xslt_proc = new XSLTProcessor();
+      $xsl_doc = new DOMDocument();
+      $xsl_doc->load(drupal_get_path('module', 'publication') . '/publication.xsl', LIBXML_NOCDATA);
+      $xslt_proc->importStylesheet($xsl_doc);
+      #PRINT
+      $node->content = array(        
+        'formatted-document' => array(
+          '#weight' => -1000, 
+          '#value' => $xslt_proc->transformToXML($xml_doc)
+        )
+      );
     }
-    $xml = publication_get_xml($node->nid, $vid_to_load);
-    # LOAD XML FILE
-    $xml_doc = new DOMDocument();
-    $xml_doc->loadXML($xml);
-    # START XSLT
-    $xslt_proc = new XSLTProcessor();
-    $xsl_doc = new DOMDocument();
-    $xsl_doc->load(drupal_get_path('module', 'publication') . '/publication.xsl', LIBXML_NOCDATA);
-    $xslt_proc->importStylesheet($xsl_doc);
-    #PRINT
-    $node->content = array(
-      
-      'formatted-document' => array(
-        '#weight' => -1000, 
-        '#value' => $xslt_proc->transformToXML($xml_doc)
-      )
-    );
   }
   drupal_add_js(drupal_get_path('module', 'publication') . '/js/publication.hide_og.js');
   return $node;
@@ -827,12 +838,8 @@ function publication_access_callback($operation, $node = NULL){
   switch($operation){
     case 'export' :
     case 'edit' :
-      return publication_access_node($node);
-      break;
     case 'xml' :
-      if($node->type == 'publication'){
-        return TRUE;
-      }
+      return publication_access_node($node);
       break;
     case 'modal' :
       $node = node_load($_GET['publication_nid']);
@@ -842,14 +849,18 @@ function publication_access_callback($operation, $node = NULL){
   return FALSE;
 }
 
-function publication_access_node($node){
-  global $user;
-  if($node->type == 'publication'){
+function publication_access_node($node, $account=FALSE){
+  if(!$account){
     global $user;
-    if(user_access('administer nodes') || user_access('edit any publication') || (user_access('edit own publication') && $node->uid == $user->uid)){
+    $account = $user;
+  }
+  if($node->type == 'publication'){
+    $subscriptions = og_get_subscriptions($account->uid);
+    if(isset($subscriptions[$node->nid])){
       return TRUE;
     }
   }
+  return FALSE;
 }
 
 /**
@@ -857,9 +868,7 @@ function publication_access_node($node){
  */
 function publication_perm(){
   return array(
-    'create publication', 'delete own publication', 
-    'delete any publication', 'edit own publication', 
-    'edit any publication'
+    'create publication', 'delete own publication', 'delete any publication'
   );
 }
 
