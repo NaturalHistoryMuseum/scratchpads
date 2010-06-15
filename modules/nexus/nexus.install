@@ -128,3 +128,11 @@ function nexus_schema(){
     'primary key' => array('tid'));
   return $schema;
 }
+
+/**
+ * Added menu path for export
+ */
+function nexus_update_6102(){
+  menu_rebuild();
+  return array('#finished' => TRUE);
+}
