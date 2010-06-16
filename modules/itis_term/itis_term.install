@@ -429,7 +429,7 @@ function itis_term_update_6101(){
   // Firstly, we need to update the database table so that int fields become
   // text fields.
   $ret = array();
-  $ret[] = update_sql("UPDATE {content_node_field} SET type = 'text', module = 'text' WHERE field_name IN ('field_rank_name_value', 'field_unit_ind1_value', 'field_unit_ind2_value', 'field_unit_ind3_value', 'field_unit_ind4_value', 'field_unacceptability_reason_value')");
+  $ret[] = update_sql("UPDATE {content_node_field} SET type = 'text', module = 'text' WHERE field_name IN ('field_rank_name', 'field_unit_ind1', 'field_unit_ind2', 'field_unit_ind3', 'field_unit_ind4', 'field_unacceptability_reason')");
   $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_rank_name_value field_rank_name_value LONGTEXT');
   $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind1_value field_unit_ind1_value LONGTEXT');
   $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind2_value field_unit_ind2_value LONGTEXT');
