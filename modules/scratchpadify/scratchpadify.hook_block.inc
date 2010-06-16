@@ -63,7 +63,7 @@ function _scratchpadify_block($op, $delta, $edit){
               $items[$row['name']] .= ' '.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/add.gif" alt="Add"/>', 'node/add/'.str_replace("_","-",$row['type']), array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
               // We'll assume that a many permission won't exist when a single
               // doesn't.
-              if(isset($links_override[$row['type']]['import'])){
+              if(isset($links_override[$row['type']]['import']) && is_array($links_override[$row['type']]['import'])){
                 foreach($links_override[$row['type']]['import'] as $additional_item){
                   $sub_menu_item = menu_get_item($additional_item[1]);
                   if(function_exists($sub_menu_item['access_callback'])){
