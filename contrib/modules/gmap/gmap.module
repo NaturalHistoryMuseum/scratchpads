@@ -76,7 +76,7 @@ function gmap_theme() {
 /**
  * Implementation of hook_gmap().
  */
-function gmap_gmap($op, &$map) {
+function gmap_gmap($op, $map) {
   switch ($op) {
     case 'macro':
       return array(
