@@ -1352,10 +1352,13 @@ function _publication_node_form_is_modal(){
  * 
  */
 function publication_node_make_public($node){
-  if(og_is_group_type($node->type)){
-    $node->og_private = 0;
-    $node->og_selective = 0;
-    og_update_group($node);
+  $account = user_load(array('uid' => 0));
+  og_subscribe_user($node->nid, $account);
+  $nids = og_group_child_nids($node->nid);
+  foreach($nids as $nid){
+    $node = node_load($nid, NULL, TRUE);
+    $node->og_public = TRUE;
+    node_save($node);
   }
   publication_update_taxa_with_manuscript_name($node);
 }
