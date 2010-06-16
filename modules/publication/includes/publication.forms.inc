@@ -861,9 +861,12 @@ function publication_node_edit_form_submit($form, &$form_state) {
 			
 			$profile_node = node_load ( $field ['nid'] );
 			
-			$account = user_load ( $profile_node->uid );
-			
-			og_subscribe_user ( $node->nid, $account );
+			if($profile_node->uid){
+  			$account = user_load ( $profile_node->uid );
+
+  			og_subscribe_user ( $node->nid, $account );			  
+			}
+
 		
 		}
 	
