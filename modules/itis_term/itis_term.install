@@ -428,12 +428,13 @@ function _itis_term_get_groups(){
 function itis_term_update_6101(){
   // Firstly, we need to update the database table so that int fields become
   // text fields.
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_rank_name_value field_rank_name_value LONGTEXT');
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind1_value field_unit_ind1_value LONGTEXT');
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind2_value field_unit_ind2_value LONGTEXT');
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind3_value field_unit_ind3_value LONGTEXT');
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind4_value field_unit_ind4_value LONGTEXT');
-  update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unacceptability_reason_value field_unacceptability_reason_value LONGTEXT');
+  $ret = array();
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_rank_name_value field_rank_name_value LONGTEXT');
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind1_value field_unit_ind1_value LONGTEXT');
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind2_value field_unit_ind2_value LONGTEXT');
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind3_value field_unit_ind3_value LONGTEXT');
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unit_ind4_value field_unit_ind4_value LONGTEXT');
+  $ret[] = update_sql('ALTER TABLE {content_type_itis_term} CHANGE field_unacceptability_reason_value field_unacceptability_reason_value LONGTEXT');
   // Following can't be executed using update_sql (STUPID DRUPAL)
   $fields = array(
     'field_rank_name' => array(
@@ -594,6 +595,10 @@ return array(
     ),
   );
   foreach($fields as $field => $values){
-    db_query("UPDATE {content_node_field} SET global_settings = '%s', db_columns = '%s' WHERE field_name = '%s'", $values['global_settings'], $values['db_columns'], $field);
+    $sql = "UPDATE {content_node_field} SET global_settings = '%s', db_columns = '%s' WHERE field_name = '%s'";
+    $result = db_query($sql, $values['global_settings'], $values['db_columns'], $field);
+    $ret[] = array('success' => $result, 'query' => check_plain($sql));
   }
+  content_clear_type_cache(TRUE);
+  return $ret;
 }
