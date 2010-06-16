@@ -913,6 +913,9 @@ function publication_access_node($node, $account = FALSE){
   }
   if($account->uid == 1){return TRUE;}
   if($node->type == 'publication'){
+    if(!$node->og_private){
+      return TRUE;
+    }
     $subscriptions = og_get_subscriptions($account->uid);
     if(isset($subscriptions[$node->nid])){return TRUE;}
   }
