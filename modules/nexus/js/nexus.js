@@ -1083,7 +1083,7 @@ function nexus() {
                            
           }
           
-          $('#'+columns[i]['groupID'], $select).append('<option value="'+columns[i]['id']+'">'+columns[i]['term']+'</option');
+          $('#'+columns[i]['groupID'], $select).append('<option selected="selected" value="'+columns[i]['id']+'">'+columns[i]['term']+'</option');
 
       }
 
