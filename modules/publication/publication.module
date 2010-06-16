@@ -913,8 +913,12 @@ function publication_access_node($node, $account = FALSE){
   }
   if($account->uid == 1){return TRUE;}
   if($node->type == 'publication'){
-    $subscriptions = array_merge(og_get_subscriptions($account->uid), og_get_subscriptions(0));
-    if(isset($subscriptions[$node->nid])){return TRUE;}
+    $account_subs = og_get_subscriptions($account->uid);
+    $annon_subs = og_get_subscriptions(0);
+    foreach($account_subs as $sub_nid => $sub_value){
+      $annon_subs[$sub_nid] = $sub_value;
+    }
+    if(isset($annon_subs[$node->nid])){return TRUE;}
   }
   return FALSE;
 }
