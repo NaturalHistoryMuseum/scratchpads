@@ -63,7 +63,7 @@ function spm_menu(){
       'page callback' => 'drupal_get_form',
       'page arguments' => array('spm_settings'),
       'file' => 'spm.export.inc',
-      'access arguments' => 'administer site configuration'
+      'access arguments' => array('administer site configuration')
     )
   );
 }
