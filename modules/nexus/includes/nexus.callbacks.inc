@@ -261,7 +261,6 @@ function nexus_callback_character_form_submit(){
  * Delete callback - either character or group
  */
 function nexus_callback_confirm_delete_form_submit(){
-  $form_id = $_POST['form_id'];
   $output = array('status' => true);
   switch($form_id){
     case 'nexus_group_form' :
@@ -306,45 +305,6 @@ function nexus_delete_group(){
   return array('action' => 'NEXUS.deleteGroupCallback');
 }
 
-/** 
- * Column order has been changed so save to DB
- */
-function nexus_callback_reorder_groups(){
-  $groups = $_POST['groups'];
-  $project_nid = $_POST['project_nid'];
-  $active_group = $_POST['active_group'];
-  $root_character_tid = nexus_get_project_character_root_tid($project_nid);
-  if(count($groups)){
-    foreach($groups as $weight => $group){
-      $term = taxonomy_get_term($group);
-      $term->parent = array($root_character_tid);
-      $term->weight = $weight;
-      _nexus_callback_save_term($term);
-    }
-  }
-  $output .= nexus_callback_regenerate_matrix_data($project_nid);
-  return array('status' => TRUE, 'data' => $output, 
-    'active_group' => $active_group);
-}
-
-/** 
- * Column order has been changed so save to DB
- */
-function nexus_callback_reorder_columns(){
-  $characters = $_POST['c'];
-  $parent_tid = $_POST['groupID'];
-  if(count($characters)){
-    foreach($characters as $weight => $character){
-      $character_term = taxonomy_get_term($character);
-      $character_term->parent = $parent_tid;
-      $character_term->weight = $weight;
-      _nexus_callback_save_term($character_term);
-    }
-  }else{
-    drupal_set_message('error', 'Saving the character order failed. Please contact your administer.');
-  }
-  return array('status' => TRUE, 'data' => theme('status_messages'));
-}
 
 /** 
  * Update a taxonomy term
@@ -480,23 +440,24 @@ function nexus_callback_note_node_form_submit(){
     'character_tid' => $character_tid, 'taxa_tid' => $taxa_tid);
 }
 
-/**
- * Get the characters to export select lit
+/** 
+ * Save character
  */
-function nexus_callback_get_characters_to_export_element(){
+function nexus_callback_organise_characters_form_submit(){
   
-  module_load_include('inc', 'nexus', 'includes/nexus.matrix');
+  $project_nid = $_POST['project_nid'];
   
-  $node = node_load($_POST['projectNid']);
-  
-  $matrix_data = nexus_project_get_matrix_data($node);
-  array_shift($matrix_data->columns);
-  
-  $element = nexus_characters_to_export_element($node, $matrix_data);
-  
-  return array('data' => drupal_render($element));
-  
-}
+  $return = array('status' => true);
 
+  nexus_callback_ahah_form_submit();
+  
+  $return['action'] = 'NEXUS.organiseCharactersCallback';
+
+  
+  $return['data'] = theme('status_messages');
+  $return['data'] .= nexus_callback_regenerate_matrix_data($project_nid);
+  
+  return $return;
+}
 
 

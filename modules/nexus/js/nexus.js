@@ -19,9 +19,9 @@ function nexus() {
       // Attach events
       project_nid = nid; 
       self = this;
-      
-      self.initBeautyTips();     
       self.initGroups();
+      self.initBeautyTips();     
+      
       grid.onViewportChanged  = self.onViewportChanged;
 
       if(!options.editable){
@@ -34,10 +34,7 @@ function nexus() {
       
       grid.onSelectedRowsChanged = self.onSelectedRowsChanged;
       grid.onColumnHeaderClick = self.onColumnHeaderClick;
-      grid.onColumnsReordered = self.onColumnsReordered;
-      grid.onColumnsReorderStart = self.onColumnsReorderStart;
-      grid.onColumnsResized  = self.onColumnsResized;
-      
+      grid.onColumnsResized  = self.onColumnsResized;      
       grid.onViewportResized  = self.onViewportResized;
       
       self.initHeaders();
@@ -104,31 +101,14 @@ function nexus() {
             
             gotTree = true;
             
-          }else if(id == 'export-data' && options.regenerated){	  
-        	  
-        	  $('#edit-characters').hide();
-        	  
-        	  var $loadingTxt = $('<p>').text('Please wait while character list is refreshed.');
-        	  
-        	  $('#edit-characters').after($loadingTxt);
-        	  
-              args = {
-                      projectNid: self.getProjectNid(),
-                    };
-                
-                    $.post(
-                      Drupal.settings.nexusCallback+'/get_characters_to_export_element', 
-                      args,
-                      function(response){
-                    	  $('#edit-characters optgroup').replaceWith($(response.data).find('optgroup'));
-                    	  $('#edit-characters').show();
-                    	  $loadingTxt.remove();
-                        },
-                        'json'                      
-                    );
+          }else if(id == 'export-data'){	  
                     
+        	  self.buildExportDataTab();
         	  
-        	  
+          }else if(id == 'organise-characters'){
+            
+            self.buildOrganiseCharactersTab();
+                      
           }	  
         
         self.showTab(id, $this);        
@@ -239,7 +219,7 @@ function nexus() {
     
       $('.grid-header .h span').bt(
         {
-          contentSelector: "NEXUS.getBeautyTipText($(this).parents('.h').attr('id'))", 
+          contentSelector: "NEXUS.getColumnBeautyTipText($(this).parents('.h').attr('id'))", 
           positions: 'top',
           offsetParent: 'body',
           shrinkToFit: true,
@@ -248,28 +228,93 @@ function nexus() {
           closeWhenOthersOpen: true,
           spikeLength: 10,
           trigger: 'none',
-          strokeWidth: 0
+          strokeWidth: 0,
+          preShow:          function(box){
+                  
+                  // Need to append to body so bt oesn't get obscured, but need to pos re-adjust for body margin
+                  var top = parseInt($(box).css('top')) + parseInt($('body').css('margin-top')) - 5;
+                  $(box).css('top', top + 'px');
+                  
+          },
         }
       );
+              
+      $('#myGrid .main-data div.c:not(:empty)').bt(
+        {
+          contentSelector: "NEXUS.getCellBeautyTipText($(this))", 
+          positions: 'top',
+          shrinkToFit: true,
+          offsetParent: 'body',
+          fill: 'rgba(0, 0, 0, .7)',
+          cssStyles: {color: 'white', 'font-size': '10px'},
+          closeWhenOthersOpen: true,
+          spikeLength: 10,
+          preShow:          function(box){
+                  
+                  // Need to append to body so bt oesn't get obscured, but need to pos re-adjust for body margin
+                  var top = parseInt($(box).css('top')) + parseInt($('body').css('margin-top')) - 2;
+                  $(box).css('top', top + 'px');
+                  
+          },
+        }
+      );
+
+      
+      
       
     },
     
-    getBeautyTipText: function(id){
+    getColumnBeautyTipText: function(id){
       
-      var tiptext;
+      var columnIndex = grid.getColumnIndex(id);
       
-      $(columns).each(function(){
+      var tipText = '<span>' + columns[columnIndex]['group'] + ':</span> ' + columns[columnIndex]['term'];
+
+      return tipText;
+      
+    },
+    
+    getCellBeautyTipText: function($cell){
+      
+      var columnIndex = $cell.attr('cell');
+      
+      var txt = $cell.text();
+      
+      if(txt == '-'){
         
-        if(this.id == id){
-          
-         tiptext = this.term;
-         return false;
-          
-        }
+        return '<span>'+ txt + '</span> Not applicable';
         
-      })
-      // console.log(columns[id]);
-      return tiptext;
+      }else if(txt == '?'){
+        
+        return '<span>'+ txt + '</span> Undefined';
+        
+      }
+      
+      switch (columns[columnIndex]['type']){
+        
+        case 'free':
+        
+          return txt;
+        
+        break;
+        
+        case 'quantitative':
+        
+          return 'Quantitative: <span>'+txt+'</span>';
+        
+        break;
+        
+        case 'controlled':
+        
+          if(typeof(columns[columnIndex]['states']) != 'undefined'){
+
+            return '<span>'+ txt + ':</span> ' + columns[columnIndex]['states'][txt]['state'];
+
+          }
+        
+        break;
+        
+      }
       
     },
     
@@ -406,52 +451,6 @@ function nexus() {
         self.groupSelected($(this));
       });
       
-      // Make groups sortable
-      $($groups).sortable({ 
-        axis: 'x', 
-        scroll: true,
-        start: function(e, ui){
-
-          sorting = true;
-
-        },
-        sort: function(e, ui){
-
-          var $charGroup = $('#character-groups');
-          var charGroupMarginLeft = parseInt($charGroup.css('margin-left'));
-          var charGroupWidth = $charGroup.width();
-
-          if((ui.position.left - 50) < charGroupMarginLeft){
-
-          $('.main-scroller').animate({scrollLeft:0}, 1000);
-
-          }else if((ui.position.left + ui.item.width()) > charGroupWidth + charGroupMarginLeft - 50){
-
-            $('.main-scroller').animate({scrollLeft:50000}, 1000);
-
-          }
-
-        },
-        containment: $('#character-groups'),
-        update: function(e, ui){
-
-          $('#character-groups')[0].scrollLeft = 0;
-          self.onGroupsReordered(e, ui);
-
-          $('.main-scroller').addClass('loading');
-          $('.grid-canvas').hide();
-          $('.main-scroller').stop();
-
-        },
-        deactivate: function(event, ui){
-
-          $('.main-scroller').stop();
-
-        }
-
-
-      });      
-      
     },
     
     initGroups: function(){
@@ -500,36 +499,7 @@ function nexus() {
       }
 
     },
-    
-    onGroupsReordered: function(e, ui){
-      
-      var data = 'project_nid='+self.getProjectNid();
-      data += '&active_group='+ui.item.attr('id');
-      
-      $('.character-group').each(function(){
-
-        data+='&groups[]='+$(this).attr('id');
-
-      });
-
-      $.post(
-        Drupal.settings.nexusCallback+'/reorder_groups', 
-        data,
-        function(response){
-
-          self.updateDialog(response.data);
-          
-          $('#'+response.active_group).addClass('selected');
-
-        },
-        'json'
-      );
-      
-      sorting = false;
-      
-    },
-
-    
+        
     groupsDeselect: function(){
       
       $('div#character-groups div.selected').removeClass('selected');
@@ -617,118 +587,6 @@ function nexus() {
        }
 
      },
-
-     // After reordering
-     onColumnsReordered: function(e, ui){
-
-        var column = columns[grid.getColumnIndex($(ui.item).attr('id'))];
-        var groupID = null;
-        var prevColumn = null;
-        var nextColumn = null;
-        var args = null;
-        
-        if($(ui.item).prev('div.h').length){
-          
-          prevColumn = columns[grid.getColumnIndex($(ui.item).prev('div.h').attr('id'))];
-          
-        }
-        
-        if($(ui.item).next('div.h').length){
-          
-          nextColumn = columns[grid.getColumnIndex($(ui.item).next('div.h').attr('id'))];
-          
-        }
-        
-        if(prevColumn && column.groupID == prevColumn.groupID){
-          
-          groupID = prevColumn.groupID;
-          group = prevColumn.group;
-          
-        }else if(nextColumn && (column.groupID == nextColumn.groupID)){
-          
-          groupID = nextColumn.groupID;
-          group = nextColumn.group;
-          
-        }else if(prevColumn){
-          
-          groupID = prevColumn.groupID;
-          group = prevColumn.group;
-          
-        }else if(nextColumn){
-
-          groupID = nextColumn.groupID;
-          group = nextColumn.group;
-
-        }
-        
-        if(groupID){
-          
-          args = 'groupID='+groupID;
-          
-          $(columns).each(function(){
-            
-            if(this.groupID == groupID || this.id == column.id){
-              
-              args+='&c[]='+this.id;
-              
-            }
-            
-          });
-          
-        }
-
-       $.post(
-         Drupal.settings.nexusCallback+'/reorder_columns', 
-         args,
-         function(response){
-           
-          if(response.status){
-            
-            self.columnsReorderedCallback(column.id, groupID, group);
-            
-          }
-
-         },
-         'json'
-       );
-       
-       sorting = false;
-
-     },
-     
-     onColumnsReorderStart: function(event, ui){
-       
-       sorting = true;
-       
-     },
-
-
-
-     columnsReorderedCallback: function(characterID, groupID, group){
-
-       $(columns).each(function(i){
-         
-         if(i > 0){
-       
-          $('#'+this.id+' span').html(i);
-           
-         }
-         
-         if(this.id == characterID){
-           
-           if(this.groupID != groupID){
-             
-             this.groupID = parseInt(groupID);
-             this.group = group;
-             self.initGroups();
-             
-           }
-          
-         }
-         
-       });
-
-     }, 
 
      cellSelected: function($container, columnDef, value, dataContext){
 
@@ -1103,8 +961,16 @@ function nexus() {
       
       self.displayDialog();
     
-    },  
+    },
     
+    // AHAH action callback
+    organiseCharactersCallback: function(response){
+      // Remove the changed warnings
+      $('#character-list .warning').remove();
+      self.displayDialog();
+    
+    },
+
     updateTaxonomyCallback: function(response){
       
       self.displayDialog();
@@ -1137,6 +1003,93 @@ function nexus() {
       
       self.updateDialog(response.data);
     
+    },
+    
+    markChanged: function($element){
+      
+      var marker = Drupal.theme('tableDragChangedMarker');
+      if ($('span.tabledrag-changed', $element).length == 0) {
+        $element.append(marker);
+      }
+      
+      if(!$('div.warning').length){
+        $('#character-list').append($(Drupal.theme('nexusChangedWarning')));
+      }
+      
+    },
+    
+    buildOrganiseCharactersTab: function(){
+      
+      //  Only rebuild if the matrix has regenerated or first time tabs being viewed
+      if($('#character-lists').length && (typeof (options.regenerated) == 'undefined' || options.regenerated == false)){
+        return;
+      }
+      
+      var $ul = $('<ul class="clearfix" id="character-lists">');
+
+     for (i=1;i<columns.length;i++)
+      {
+          if(!($ul.find('#'+columns[i]['groupID']).length)){
+                             
+          $ul.append('<li id="'+columns[i]['groupID'] + '" class="sortable-character-group nexus-collapsed"><input type="hidden" name="groups[]" value="'+columns[i]['groupID']+'" /><h6><span class="h6-title" title="'+columns[i]['group']+'">'+columns[i]['short_group']+'</span><a href="#" class="expand-contract"></a></h6><ul></ul></li>');
+                           
+      }
+                           
+          $ul.find('#'+columns[i]['groupID']+' ul').append('<li id="'+columns[i]['id']+'" title="'+columns[i]['term']+'"><input type="hidden" name="characters['+columns[i]['groupID']+'][]" value="'+columns[i]['id']+'" />'+columns[i]['short_term']+'</li>');
+
+      }
+      
+      $('a.expand-contract', $ul).click(function(){
+        
+        var $li = $(this).parents('li:first');
+
+        $li.toggleClass('nexus-collapsed');
+        
+        return false;
+        
+      });
+      
+      $('#character-list').html($ul);
+      
+      $ul.sortable({
+        stop: function(event, ui) { self.markChanged($('h6 span', ui.item)) }
+      });
+      
+      $('ul', $ul).sortable({
+           connectWith: '.sortable-character-group ul',
+           stop: function(event, ui) { self.markChanged(ui.item) },
+           containment: $('#character-list')
+      });
+      
+      options.regenerated = false;
+      
+      
+    },
+    
+    buildExportDataTab: function(){
+
+      if($('#edit-characters-to-export options').length &! options.regenerated){
+        return;
+      }
+
+      var $select = $('#edit-characters-to-export').empty();
+      
+      for (i=1;i<columns.length;i++)
+      {
+
+          if(!($select.find('#'+columns[i]['groupID']).length)){
+                
+          $select.append('<optgroup id="'+columns[i]['groupID']+'" label="'+columns[i]['group']+'"></optgroup>');
+                           
+          }
+          
+          $('#'+columns[i]['groupID'], $select).append('<option value="'+columns[i]['id']+'">'+columns[i]['term']+'</option');
+
+      }
+
+  	  
+
+      
     }
 
     
@@ -1145,6 +1098,11 @@ function nexus() {
 }
 
 
+Drupal.theme.prototype.nexusChangedWarning = function () {
+  
+  return '<div class="warning">' + Drupal.theme('tableDragChangedMarker') + ' ' + Drupal.t("Changes made will not be saved until the form is submitted. Adding or changing characters & states will reset this form.") + '</div>';
+
+}
 
 
 

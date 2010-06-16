@@ -1,7 +1,7 @@
 <?php
 
 function nexus_export() {
-  
+
   //  Ensure form is submitted
   if(!isset($_POST['nid'])){
     drupal_goto();
@@ -26,7 +26,7 @@ function nexus_export() {
   
   // Filter columns for selected characters
   function _nexus_export_filter_columns($column) {
-    return (in_array($column['id'], $_POST['characters']));
+    return (in_array($column['id'], $_POST['characters_to_export']));
   }
   
   $matrix_data->columns = array_filter($matrix_data->columns, "_nexus_export_filter_columns");
@@ -566,9 +566,11 @@ function nexus_export_rtf($node, $matrix_data) {
 }
 \f0\fs35 Characters\par';
   
-  foreach ($matrix_data->columns as $i => $column) {
+  $column_count = 1;
+  
+  foreach ($matrix_data->columns as $column) {
     
-    $output .= '\f0\fs25 ' . $i . '. \i ' . $column['term'] . ' \plain:';
+    $output .= '\f0\fs25 ' . $column_count . '. \i ' . $column['term'] . ' \plain:';
     
     foreach ($column['states'] as $state_key => $state) {
       
@@ -583,6 +585,8 @@ function nexus_export_rtf($node, $matrix_data) {
     if ($column['description']) {
       $output .= $column['description'] . '\par ';
     }
+    
+    $column_count++;
   }
   
   $output .= '}';
