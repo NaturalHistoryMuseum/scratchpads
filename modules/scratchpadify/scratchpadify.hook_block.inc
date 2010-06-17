@@ -42,22 +42,25 @@ function _scratchpadify_block($op, $delta, $edit){
             'group' => array('view' => 'og', 'import' => FALSE)
           );
           $query = array();
+          $viewing_group = array();
           if(arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))){
             $query = array('tid' => arg(2));
           } elseif(arg(0) == 'node' && is_numeric(arg(1))){
             $node = node_load(array('nid' => arg(1)));
             if(variable_get('og_content_type_usage_'.$node->type, '') == 'group'){
-              $viewing_group = $node->type;
+              $viewing_group[] = $node->type;
               $query = array('gids[]' => arg(1));
+            }
+            if(arg(2) == 'edit'){
+              $links_override[$node->type]['active'] = TRUE;
             }
           }
           $results = db_query("SELECT type, name FROM node_type, menu_links WHERE (link_path = CONCAT('node/add/', type) OR link_path = CONCAT('node/add/', REPLACE(type, '_', '-'))) AND hidden = 0");
           $sub_menu_item = menu_get_item('admin/content/node_import/add');
           $can_access_import = call_user_func_array($sub_menu_item['access_callback'], unserialize($sub_menu_item['access_arguments']));
-            
           while($row = db_fetch_array($results)){
             $link_path = isset($links_override[$row['type']]['view']) ? $links_override[$row['type']]['view'] : 'content/'.$row['type'];
-            $items[$row['name']] = l(t($row['name']), $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])))));
+            $items[$row['name']] = l(t($row['name']), $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])), 'style' => (isset($links_override[$row['type']]['active']) && $links_override[$row['type']]['active']) ? 'text-decoration:underline;' : '')));
             $menu_item = menu_get_item('node/add/'.str_replace('_','-',$row['type']));
             if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
               $items[$row['name']] .= ' '.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/add.gif" alt="Add"/>', 'node/add/'.str_replace("_","-",$row['type']), array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
@@ -78,7 +81,7 @@ function _scratchpadify_block($op, $delta, $edit){
                 }
               }
             }
-            if($row['type'] == $viewing_group && og_menu_access_picture(arg(1))){
+            if(in_array($row['type'],$viewing_group) && og_menu_access_picture(arg(1))){
               $items[$row['name']] .= '<br/><span style="font-size:80%">'.l(t('Members'),'og/users/'.arg(1).'/faces') . ' | '.l(t('My membership'), 'og/manage/'.arg(1)).'</span>';
             }
           }
@@ -88,7 +91,7 @@ function _scratchpadify_block($op, $delta, $edit){
             $items['Taxonomy'] = l(t('Taxonomy'), 'admin/content/taxonomy', array('attributes' => array('title' => 'View your site\'s taxonomies'))).' '.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification'))));
           }
           uksort($items, "strnatcasecmp");
-          return array('subject'=>'Content','content'=>theme_item_list($items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
+          return array('subject'=>'Content','content'=>theme('item_list', $items , NULL , 'ul' , array('class'=>'scratchpadify-block')));
           break;
         case 2:
           $uid = array_pop(db_fetch_array(db_query("SELECT uid FROM users WHERE uid > 1 AND uid IN (SELECT uid FROM users_roles WHERE rid = 5) ORDER BY uid ASC LIMIT 1")));
