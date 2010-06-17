@@ -23,8 +23,10 @@ Drupal.itis_term.init = function(context) {
   Drupal.itis_term.showorhide_usage_fields(context);
   Drupal.itis_term.showorhide_unit_fields(context);
   $('#itis_term_name', context).hide();
-  if(!Drupal.tui.selected_tab){
-    Drupal.tui.selected_tab = 'fragment-group_scientificname';
+  if(Drupal.tui){
+    if(!Drupal.tui.selected_tab){
+      Drupal.tui.selected_tab = 'fragment-group_scientificname';
+    }
   }
 }
 
@@ -59,7 +61,7 @@ Drupal.itis_term.showorhide_unit_fields = function(context){
 }
 
 Drupal.itis_term.showorhide_usage_fields = function(context){
-  if($('#itis_term_usage select', context).val()==='2' || $('#itis_term_usage select').val()==='4'){
+  if($('#itis_term_usage select', context).val()==='not accepted' || $('#itis_term_usage select').val()==='invalid'){
     $('#itis_term_accepted_name', context).fadeIn(500);
     $('#itis_term_unacceptability_reason', context).fadeIn(500);
   } else {
