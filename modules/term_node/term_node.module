@@ -371,9 +371,11 @@ function _term_node_get_form_no_render($form_id) {
   drupal_prepare_form($form_id, $form, $form_state);
   
   drupal_process_form($form_id, $form, $form_state);
-  if (!empty($form_state['rebuild']) || !empty($form_state['storage'])) {
+  // FIXME - Not sute if this is required or not doesn't seem to be, and is 
+  // screwing things up
+  /*if (!empty($form_state['rebuild']) || !empty($form_state['storage'])) {
     $form = drupal_rebuild_form($form_id, $form_state, $args);
-  }
+  }*/
   $_POST = $temp_post;
   return $form;
 }
