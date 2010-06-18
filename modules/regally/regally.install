@@ -25,7 +25,22 @@ function regally_install(){
 /**
  * hook_requirements
  */
-function regally_requirements(){
+function regally_requirements($phase){
   // Ensure that imagecache and co are available, or installed.  We therefore 
   // don't add them as dependencies.
+  $requirements = array();
+  if($phase == 'install'){
+    module_rebuild_cache();  
+    $modules = array('imagecache', 'imageapi', 'imageapi_imagemagick', 'filefield', 'imagefield');
+    foreach($modules as $module){
+      if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
+        $requirements['regally_'.$module] = array(
+          'title' => t('Regally module requirement'),
+          'description' => t('Regally requires that "!module" is installed.', array('!module' => $module)),
+          REQUIREMENT_ERROR
+        );
+      }
+    }
+  }
+  return $requirements;
 }
