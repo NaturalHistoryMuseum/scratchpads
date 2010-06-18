@@ -622,6 +622,6 @@ function scratchpadify_update_6141(){
  * Upgrade from image module to imagecache etc.
  */
 function scratchpadify_update_6142(){
-  include_once(drupal_get_path('module', 'regally').'/migrate_image_to_imagefield.inc');
+  include_once(drupal_get_path('module', 'scratchpadify').'/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
