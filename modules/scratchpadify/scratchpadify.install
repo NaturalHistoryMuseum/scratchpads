@@ -617,3 +617,11 @@ function scratchpadify_update_6141(){
   $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
   return $ret;
 }
+
+/**
+ * Upgrade from image module to imagecache etc.
+ */
+function scratchpadify_update_6142(){
+  include_once(drupal_get_path('module', 'regally').'/migrate_image_to_imagefield.inc');
+  return migrate_image_to_imagefield();
+}
