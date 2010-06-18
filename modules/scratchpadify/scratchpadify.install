@@ -601,3 +601,20 @@ function scratchpadify_update_6140(){
   }
   return $ret;
 }
+
+/**
+ * Fix an issue with path_redirect module.
+ *
+ */
+function scratchpadify_update_6141(){
+  $ret = array();
+  // First, update bio_image_biblio
+  $sql = "UPDATE {content_node_field_instance} SET widget_module = 'nodereference', widget_type = 'nodereference_select', widget_active = 1, widget_settings = '%s', display_settings = '%s' WHERE field_name = 'bio_image_biblio'";
+  $result = db_query($sql, 'a:4:{s:18:"autocomplete_match";s:8:"contains";s:4:"size";N;s:13:"default_value";a:1:{i:0;a:1:{s:3:"nid";s:0:"";}}s:17:"default_value_php";N;}', 'a:6:{s:5:"label";a:2:{s:6:"format";s:5:"above";s:7:"exclude";i:0;}s:6:"teaser";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:4:"full";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:11:"email_plain";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:10:"email_html";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:5:"token";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}}');
+  $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
+  // Next update bio_image_specimen
+  $sql = "UPDATE {content_node_field_instance} SET widget_module = 'nodereference', widget_type = 'nodereference_select', widget_active = 1, widget_settings = '%s', display_settings = '%s' WHERE field_name = 'bio_image_darwincore'";
+  $result = db_query($sql, 'a:4:{s:18:"autocomplete_match";s:8:"contains";s:4:"size";N;s:13:"default_value";a:1:{i:0;a:1:{s:3:"nid";s:0:"";}}s:17:"default_value_php";N;}', 'a:10:{s:5:"label";a:2:{s:6:"format";s:5:"above";s:7:"exclude";i:0;}s:6:"teaser";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:4:"full";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:4;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:2;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:3;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:5;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:11:"email_plain";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:10:"email_html";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:5:"token";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}}');
+  $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
+  return $ret;
+}
