@@ -14,6 +14,23 @@ function scratchpadify_views_api(){
 }
 
 /**
+ * hook_views_pre_render
+ */
+function scratchpadify_views_pre_render(&$view){
+  if($view->name == 'image_thumbnails'){
+    // We need to tweak the breadcrumb here too.
+    $breadcrumbs = drupal_get_breadcrumb();
+    $breadcrumbs[0] = l(t('Image Galleries'), 'image');
+    drupal_set_breadcrumb($breadcrumbs);
+    // Add the subgalleries
+    // NOTE, I tried to do this with views, but found it wasn't possible
+    // without defining handlers and plugins and various other bits 'n'
+    // pieces (see the image_gallery module component of image.module)
+    // F' that!
+  }
+}
+
+/**
  * hook_theme
  */
 function scratchpadify_theme_registry_alter(&$theme_registry){
