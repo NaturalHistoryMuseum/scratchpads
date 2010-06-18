@@ -1308,6 +1308,7 @@ function scratchpadify_views_default_views(){
   ));
   $views[$view->name] = $view;
   // ---------------------- IMAGE GALLERY THUMBNAILS ---------------------------
+  $vid_of_image_gallery = variable_get('image_gallery_nav_vocabulary', 0);
   $view = new view();
   $view->name = 'image_thumbnails';
   $view->description = 'Image Gallery Thumbnails';
@@ -1321,59 +1322,21 @@ function scratchpadify_views_default_views(){
   $handler->override_option('fields', array(
     'field_imagefield_fid' => array(
       'label' => '',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'link_class' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0
-      ),
-      'link_to_node' => 0,
-      'label_type' => 'none',
       'format' => 'imagefield__lightbox2__thumbnail__preview',
-      'multiple' => array(
-        'group' => 1,
-        'multiple_number' => '',
-        'multiple_from' => '',
-        'multiple_reversed' => 0
-      ),
       'exclude' => 0,
       'id' => 'field_imagefield_fid',
       'table' => 'node_data_field_imagefield',
       'field' => 'field_imagefield_fid',
-      'relationship' => 'none'
+      'relationship' => 'none',
+      'label_type' => 'none'
     ),
     'title' => array(
       'label' => '',
       'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'link_class' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
         'trim' => 1,
-        'max_length' => '50',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'strip_tags' => 0,
-        'html' => 0
+        'max_length' => '50'
       ),
       'link_to_node' => 1,
-      'exclude' => 0,
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
@@ -1401,105 +1364,18 @@ function scratchpadify_views_default_views(){
       'id' => 'tid',
       'table' => 'term_node',
       'field' => 'tid',
-      'validate_user_argument_type' => 'uid',
-      'validate_user_roles' => array(
-        '2' => 0,
-        '3' => 0,
-        '4' => 0,
-        '5' => 0
-      ),
-      'relationship' => 'none',
-      'default_options_div_prefix' => '',
-      'default_argument_user' => 0,
-      'default_argument_fixed' => '0',
-      'default_argument_php' => '',
-      'validate_argument_node_type' => array(
-        'webform' => 0,
-        'blog' => 0,
-        'poll' => 0,
-        'countriesmap' => 0,
-        'ispecies' => 0,
-        'nexus_project' => 0,
-        'nexus_controlled_state' => 0,
-        'nexus_note' => 0,
-        'nexus_free_state' => 0,
-        'spm' => 0,
-        'tree' => 0,
-        'forum' => 0,
-        'biblio' => 0,
-        'darwincore' => 0,
-        'darwincorelocation' => 0,
-        'itis_term' => 0,
-        'publication' => 0,
-        'publication_image_caption' => 0,
-        'publication_section' => 0,
-        'publication_taxon_section' => 0,
-        'publication_taxon_description' => 0,
-        'citation' => 0,
-        'description' => 0,
-        'glossary' => 0,
-        'group' => 0,
-        'holdings' => 0,
-        'image' => 0,
-        'links' => 0,
-        'page' => 0,
-        'profile' => 0,
-        'simplenews' => 0,
-        'species_description' => 0,
-        'story' => 0
-      ),
-      'validate_argument_node_access' => 0,
-      'validate_argument_nid_type' => 'nid',
       'validate_argument_vocabulary' => array(
-        '4' => 4,
-        '1' => 0,
-        '39' => 0,
-        '46' => 0,
-        '48' => 0,
-        '3' => 0,
-        '42' => 0,
-        '44' => 0,
-        '32' => 0,
-        '34' => 0,
-        '43' => 0,
-        '33' => 0,
-        '40' => 0,
-        '45' => 0,
-        '41' => 0
-      ),
-      'validate_argument_type' => 'tids',
-      'validate_argument_transform' => 0,
-      'validate_user_restrict_roles' => 0,
-      'validate_argument_is_member' => 0,
-      'validate_argument_php' => ''
+        $vid_of_image_gallery => $vid_of_image_gallery
+      )
     )
-  ));
-  $handler->override_option('access', array(
-    'type' => 'none'
-  ));
-  $handler->override_option('cache', array(
-    'type' => 'none'
   ));
   $handler->override_option('items_per_page', 25);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'list');
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'image');
-  $handler->override_option('menu', array(
-    'type' => 'none',
-    'title' => '',
-    'description' => '',
-    'weight' => 0,
-    'name' => 'navigation'
-  ));
-  $handler->override_option('tab_options', array(
-    'type' => 'none',
-    'title' => '',
-    'description' => '',
-    'weight' => 0
-  ));
   $views[$view->name] = $view;
-  // ---------------------- IMAGE GALLERY SUB-GALLERIES ------------------------
+
   // At the end, return array of default views.
   return $views;
 }
