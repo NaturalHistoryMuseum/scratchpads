@@ -3,7 +3,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   $ret = array();
   // Ensure that the following modules are enabled
   module_rebuild_cache();
-  $modules = array('imagecache', 'imageapi', 'imageapi_imagemagick', 'filefield', 'imagefield');
+  $modules = array('imagecache', 'imageapi', 'imageapi_imagemagick', 'filefield', 'imagefield', 'views_gallery', 'nodereference_url', 'views_attach');
   foreach($modules as $module){
     if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
       $ret['#abort'] = array('success' => FALSE, 'query' => t('A required module is missing.'));
