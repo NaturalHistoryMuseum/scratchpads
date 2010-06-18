@@ -209,6 +209,11 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       }
     }
   }
+  
+  // ADD Rewrites from current taxonomy/term based URLs to image/[tid] URLS
+  
+  // 
+  
   // Clear ALL CACHE, AND SESSIONS  
   drupal_rebuild_theme_registry();
   node_types_rebuild();
