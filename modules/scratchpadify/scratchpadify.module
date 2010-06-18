@@ -543,3 +543,41 @@ function scratchpadify_square_tags_to_html($text){
   );
   return str_replace($square_tags, $html_tags, $text);
 }
+
+/**
+ * hook_imagecache_default_presets
+ */
+function scratchpadify_imagecache_default_presets(){
+  return array(
+    'thumbnail' => array(
+      'presetname' => 'thumbnail', 
+      'actions' => array(
+        array(
+          'weight' => '0', 
+          'module' => 'imagecache', 
+          'action' => 'imagecache_scale', 
+          'data' => array(
+            'width' => '100', 
+            'height' => '100', 
+            'upscale' => 1
+          )
+        )
+      )
+    ), 
+    'preview' => array(
+      'presetname' => 'preview', 
+      'actions' => array(
+        array(
+          'weight' => '0', 
+          'module' => 'imagecache', 
+          'action' => 'imagecache_scale', 
+          'data' => array(
+            'width' => '800', 
+            'height' => '600', 
+            'upscale' => 0
+          )
+        )
+      )
+    )
+  );
+}
