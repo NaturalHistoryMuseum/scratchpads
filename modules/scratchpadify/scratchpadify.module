@@ -70,9 +70,9 @@ function theme_scratchpadify_subgallery($term){
     $tids[] = $temp_term->tid;
   }
   // Now join the term_node, content_field_imagefield, and node table together.
-  $count_and_created = db_fetch_array(db_query('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n, {term_node} t, {content_field_imagefield} c WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN (' . implode(',', $tids) . ')'));
+  $count_and_created = db_fetch_array(db_query(db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n INNER JOIN {term_node} t ON t.nid = n.nid INNER JOIN {content_field_imagefield} c ON c.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ')')));
   // Top image
-  $thumbnail_nid = db_result(db_query('SELECT n.nid FROM {node} n, {content_field_imagefield} c, {term_node} t WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created'));
+  $thumbnail_nid = db_result(db_query(db_rewrite_sql('SELECT n.nid FROM {node} n INNER JOIN {content_field_imagefield} c ON c.nid = n.nid INNER JOIN {term_node} t ON t.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created')));
   $thumbnail_node = node_load($thumbnail_nid);
   // Create HTML
   return '<div class="scratchpadify-subgallery">
@@ -645,6 +645,28 @@ function scratchpadify_square_tags_to_html($text){
 }
 
 /**
+ * hook_imagecache_actions
+ */
+function scratchpadify_imagecache_actions(){
+  return array(
+    'scratchpadify_convert' => array(
+      'name' => 'JPEGise',
+      'description' => 'Convert image file format to JPEG.',
+    )
+  );
+}
+
+/**
+ * Implementation of hook_image()
+ *
+ * Process the imagecache action on the passed image
+ */
+function scratchpadify_convert_image(&$image){
+  $image->ops['convert_to'] = 'jpeg';
+  return TRUE;
+}
+
+/**
  * hook_imagecache_default_presets
  */
 function scratchpadify_imagecache_default_presets(){
@@ -664,11 +686,9 @@ function scratchpadify_imagecache_default_presets(){
         ),
         array(
           'weight' => '0',
-          'module' => 'imagecache_coloractions',
-          'action' => 'imagecache_convert',
-          'data' => array(
-            'format' => 'image/jpeg'
-          )
+          'module' => 'scratchpadify',
+          'action' => 'scratchpadify_convert',
+          'data' => array()
         )
       )
     ),
@@ -687,11 +707,9 @@ function scratchpadify_imagecache_default_presets(){
         ),
         array(
           'weight' => '0',
-          'module' => 'imagecache_coloractions',
-          'action' => 'imagecache_convert',
-          'data' => array(
-            'format' => 'image/jpeg'
-          )
+          'module' => 'scratchpadify',
+          'action' => 'scratchpadify_convert',
+          'data' => array()
         )
       )
     ),
@@ -710,11 +728,9 @@ function scratchpadify_imagecache_default_presets(){
         ),
         array(
           'weight' => '0',
-          'module' => 'imagecache_coloractions',
-          'action' => 'imagecache_convert',
-          'data' => array(
-            'format' => 'image/jpeg'
-          )
+          'module' => 'scratchpadify',
+          'action' => 'scratchpadify_convert',
+          'data' => array()
         )
       )
     )
