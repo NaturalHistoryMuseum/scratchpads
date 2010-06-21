@@ -63,25 +63,31 @@ function theme_scratchpadify_subgallery($term){
   // thumbnail, and a last updated time.
   // First, we'll get the branch of terms below this one.
   $branch = taxonomy_get_tree($term->vid, $term->tid);
-  $tids = array($term->tid);
+  $tids = array(
+    $term->tid
+  );
   foreach($branch as $temp_term){
     $tids[] = $temp_term->tid;
   }
   // Now join the term_node, content_field_imagefield, and node table together.
-  $count_and_created = db_fetch_array(db_query('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n, {term_node} t, {content_field_imagefield} c WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN ('.implode(',', $tids).')'));
+  $count_and_created = db_fetch_array(db_query('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n, {term_node} t, {content_field_imagefield} c WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN (' . implode(',', $tids) . ')'));
   // Top image
-  $thumbnail_nid = db_result(db_query('SELECT n.nid FROM {node} n, {content_field_imagefield} c, {term_node} t WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN ('.implode(',', $tids).') ORDER BY sticky DESC, created'));
+  $thumbnail_nid = db_result(db_query('SELECT n.nid FROM {node} n, {content_field_imagefield} c, {term_node} t WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created'));
   $thumbnail_node = node_load($thumbnail_nid);
   // Create HTML
   return '<div class="scratchpadify-subgallery">
   <div class="scratchpadify-subgallery-image">
-    '.theme_imagecache('thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']).'
+    ' . theme_imagecache('thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']) . '
   </div>
   <div class="scratchpadify-subgallery-details">
-    <h3>'.l(check_plain($term->name), 'image/'.$term->tid).'</h3>
+    <h3>' . l(check_plain($term->name), 'image/' . $term->tid) . '</h3>
     <ul>
-      <li>'.t('There !num_images in this gallery.', array('!num_images' => format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images'))).'</li>
-      <li>'.t('Last updated: !time.', array('!time' => format_date($count_and_created['max_created'], 'long'))).'</li>
+      <li>' . t('There !num_images in this gallery.', array(
+    '!num_images' => format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images')
+  )) . '</li>
+      <li>' . t('Last updated: !time.', array(
+    '!time' => format_date($count_and_created['max_created'], 'long')
+  )) . '</li>
     </ul>
   </div>
   <div style="clear:both"></div>
@@ -112,7 +118,7 @@ function scratchpadify_theme($existing, $type, $theme, $path){
  */
 function scratchpadify_theme_registry_alter(&$theme_registry){
   foreach(array(
-    'filter_tips', 
+    'filter_tips',
     'filter_tips_more_info'
   ) as $theme){
     unset($theme_registry[$theme]['file']);
@@ -149,65 +155,65 @@ function scratchpadify_cron(){
 function scratchpadify_menu(){
   return array(
     'admin/settings/scratchpadmessage' => array(
-      'title' => 'Scratchpad Notification Message', 
-      'description' => 'Change the default autotag settings.', 
-      'page callback' => 'drupal_get_form', 
+      'title' => 'Scratchpad Notification Message',
+      'description' => 'Change the default autotag settings.',
+      'page callback' => 'drupal_get_form',
       'page arguments' => array(
         'scratchpadify_notification_message_form'
-      ), 
+      ),
       'access arguments' => array(
         'SCRATCHPADIFY'
-      ),  // Only for UID 1
-      'type' => MENU_NORMAL_ITEM, 
+      ), // Only for UID 1
+      'type' => MENU_NORMAL_ITEM,
       'file' => 'scratchpadify.admin.inc'
-    ), 
+    ),
     'admin/settings/disableuservoice' => array(
-      'title' => 'Disable Uservoice', 
-      'description' => 'Disable Uservoice, as it is sloooooooooow', 
-      'page callback' => 'drupal_get_form', 
+      'title' => 'Disable Uservoice',
+      'description' => 'Disable Uservoice, as it is sloooooooooow',
+      'page callback' => 'drupal_get_form',
       'page arguments' => array(
         'scratchpadify_disable_uservoice_form'
-      ), 
+      ),
       'access arguments' => array(
         'access administration pages'
-      ), 
-      'type' => MENU_NORMAL_ITEM, 
+      ),
+      'type' => MENU_NORMAL_ITEM,
       'file' => 'scratchpadify.admin.inc'
-    ), 
+    ),
     'notification.txt' => array(
-      'title' => '', 
-      'page callback' => 'scratchpadify_notification_message', 
+      'title' => '',
+      'page callback' => 'scratchpadify_notification_message',
       'access arguments' => array(
         'access content'
-      ), 
-      'file' => 'scratchpadify.admin.inc', 
+      ),
+      'file' => 'scratchpadify.admin.inc',
       'type' => MENU_CALLBACK
-    ), 
+    ),
     'taskguide' => array(
-      'title' => 'Task guide', 
-      'page callback' => 'scratchpadify_taskguide', 
+      'title' => 'Task guide',
+      'page callback' => 'scratchpadify_taskguide',
       'access arguments' => array(
         'create type content'
-      ), 
-      'type' => MENU_NORMAL_ITEM, 
+      ),
+      'type' => MENU_NORMAL_ITEM,
       'file' => 'scratchpadify.admin.inc'
-    ), 
+    ),
     'basicadmin' => array(
-      'title' => 'Administer', 
-      'page callback' => 'scratchpadify_admin_page', 
+      'title' => 'Administer',
+      'page callback' => 'scratchpadify_admin_page',
       'access arguments' => array(
         'access administration pages'
-      ), 
-      'file' => 'scratchpadify.admin.inc', 
+      ),
+      'file' => 'scratchpadify.admin.inc',
       'type' => MENU_NORMAL_ITEM
-    ), 
+    ),
     'hidenotification' => array(
-      'title' => '', 
-      'page callback' => 'scratchpadify_set_cookie', 
+      'title' => '',
+      'page callback' => 'scratchpadify_set_cookie',
       'access arguments' => array(
         'access content'
-      ), 
-      'file' => 'scratchpadify.admin.inc', 
+      ),
+      'file' => 'scratchpadify.admin.inc',
       'type' => MENU_CALLBACK
     )
   );
@@ -319,21 +325,21 @@ function scratchpadify_menu_alter(&$items){
     }
   }
   $items['node'] = array(
-    'title' => 'Content', 
-    'page callback' => 'scratchpadify_node_page_default', 
+    'title' => 'Content',
+    'page callback' => 'scratchpadify_node_page_default',
     'access arguments' => array(
       'access content'
-    ), 
+    ),
     'type' => MENU_CALLBACK
   );
   $items['admin/compact'] = array(
-    'title' => 'Compact mode', 
-    'page callback' => 'scratchpadify_compact_page', 
+    'title' => 'Compact mode',
+    'page callback' => 'scratchpadify_compact_page',
     'access arguments' => array(
       'access administration pages'
-    ), 
-    'type' => MENU_CALLBACK, 
-    'module' => 'scratchpadify', 
+    ),
+    'type' => MENU_CALLBACK,
+    'module' => 'scratchpadify',
     'file' => 'scratchpadify.admin.inc'
   );
 }
@@ -442,7 +448,7 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
   $return_html .= '</div>';
   $links = array();
   $links[] = array(
-    'title' => $return_html, 
+    'title' => $return_html,
     'html' => true
   );
   return $links;
@@ -525,10 +531,10 @@ function _uservoice_generate_encrypted_sso($account_key, $api_key){
     }
     $expiration_timestamp = _uservoice_expiration_timestamp(30);
     $user_data = array(
-      "expiration" => $expiration_timestamp, 
-      "guid" => $user_guid, 
-      "display_name" => $user_name, 
-      "email" => $user->mail, 
+      "expiration" => $expiration_timestamp,
+      "guid" => $user_guid,
+      "display_name" => $user_name,
+      "email" => $user->mail,
       "url" => "http://" . $_SERVER["SERVER_NAME"] . "/user/" . $user->uid
     );
     $data = json_encode($user_data);
@@ -604,35 +610,35 @@ function scratchpadify_preprocess_node(&$variables){
 
 function scratchpadify_square_tags_to_html($text){
   $square_tags = array(
-    "[strong]", 
-    "[/strong]", 
-    "[b]", 
-    "[/b]", 
-    "[u]", 
-    "[/u]", 
-    "[i]", 
-    "[/i]", 
-    "[em]", 
-    "[/em]", 
-    "[sub]", 
-    "[/sub]", 
-    "[sup]", 
+    "[strong]",
+    "[/strong]",
+    "[b]",
+    "[/b]",
+    "[u]",
+    "[/u]",
+    "[i]",
+    "[/i]",
+    "[em]",
+    "[/em]",
+    "[sub]",
+    "[/sub]",
+    "[sup]",
     "[/sup]"
   );
   $html_tags = array(
-    "<strong>", 
-    "</strong>", 
-    "<b>", 
-    "</b>", 
-    "<u>", 
-    "</u>", 
-    "<i>", 
-    "</i>", 
-    "<em>", 
-    "</em>", 
-    "<sub>", 
-    "</sub>", 
-    "<sup>", 
+    "<strong>",
+    "</strong>",
+    "<b>",
+    "</b>",
+    "<u>",
+    "</u>",
+    "<i>",
+    "</i>",
+    "<em>",
+    "</em>",
+    "<sub>",
+    "</sub>",
+    "<sup>",
     "</sup>"
   );
   return str_replace($square_tags, $html_tags, $text);
@@ -644,45 +650,45 @@ function scratchpadify_square_tags_to_html($text){
 function scratchpadify_imagecache_default_presets(){
   return array(
     'thumbnail' => array(
-      'presetname' => 'thumbnail', 
+      'presetname' => 'thumbnail',
       'actions' => array(
         array(
-          'weight' => '0', 
-          'module' => 'imagecache', 
-          'action' => 'imagecache_scale', 
+          'weight' => '0',
+          'module' => 'imagecache',
+          'action' => 'imagecache_scale',
           'data' => array(
-            'width' => '100', 
-            'height' => '100', 
+            'width' => '100',
+            'height' => '100',
             'upscale' => 1
           )
         )
       )
-    ), 
+    ),
     'thumbnail_square' => array(
-      'presetname' => 'thumbnail_square', 
+      'presetname' => 'thumbnail_square',
       'actions' => array(
         array(
-          'weight' => '0', 
-          'module' => 'imagecache', 
-          'action' => 'imagecache_scale_and_crop', 
+          'weight' => '0',
+          'module' => 'imagecache',
+          'action' => 'imagecache_scale_and_crop',
           'data' => array(
-            'width' => '100', 
-            'height' => '100', 
+            'width' => '100',
+            'height' => '100',
             'upscale' => 1
           )
         )
       )
-    ), 
+    ),
     'preview' => array(
-      'presetname' => 'preview', 
+      'presetname' => 'preview',
       'actions' => array(
         array(
-          'weight' => '0', 
-          'module' => 'imagecache', 
-          'action' => 'imagecache_scale', 
+          'weight' => '0',
+          'module' => 'imagecache',
+          'action' => 'imagecache_scale',
           'data' => array(
-            'width' => '800', 
-            'height' => '600', 
+            'width' => '800',
+            'height' => '600',
             'upscale' => 0
           )
         )
