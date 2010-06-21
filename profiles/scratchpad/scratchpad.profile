@@ -48,8 +48,8 @@ function scratchpad_profile_modules(){
       'nodereference','date_timezone','fieldgroup','date_php4','nodereferrer',
       'noderelationships',
     // Image
-      'image','fotonotes','image_gallery','image_im_advanced','imagex',
-      'image_attach','lightbox2',
+      'imagecache','imageapi','imageapi_imagemagick','filefield','imagefield', 
+      'lightbox2',
     // Location
       'location','gmap','gmap_location','location_user','location_node',
     // Messaging
@@ -233,9 +233,6 @@ function scratchpad_profile_tasks_2(){
   // The following really shouldn't be necesary, but a module is being silly
   variable_del('node_access_needs_rebuild');
   
-  // Set to use imagemagick
-  variable_set('image_toolkit','imagemagick');
-  
   // Set statistics module up to count node accesses.
   variable_set('statistics_count_content_views', 1);
   
@@ -413,11 +410,6 @@ function scratchpad_profile_tasks_2(){
     variable_set('upload_uploadsize_'.$rid, '20');
     variable_set('upload_extensions_'.$rid, 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp');
   }
-  
-  // Image and gallery
-  variable_set('image_images_per_page','25');
-  variable_set('image_gallery_sort_order','3');
-  variable_set('image_max_upload_size', '12000');
   
   // Set Jquery_update to use no compressions - VERY BAD, but necessary due to
   // the fact that the module is BORKED.
@@ -645,6 +637,7 @@ function scratchpad_profile_set_perms(){
                               "access user profiles",
                               "create citations",
                               "create forum topics",
+                              "create spm", // FIXME!
                               "download original image",
                               "fotonotes view notes",
                               "post comments",
