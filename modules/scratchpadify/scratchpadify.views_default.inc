@@ -1322,7 +1322,7 @@ function scratchpadify_views_default_views(){
   $handler->override_option('fields', array(
     'field_imagefield_fid' => array(
       'label' => '',
-      'format' => 'imagefield__lightbox2__thumbnail__preview',
+      'format' => 'imagefield__lightbox2__thumbnail_square__preview',
       'exclude' => 0,
       'id' => 'field_imagefield_fid',
       'table' => 'node_data_field_imagefield',
@@ -1334,7 +1334,8 @@ function scratchpadify_views_default_views(){
       'label' => '',
       'alter' => array(
         'trim' => 1,
-        'max_length' => '50'
+        'max_length' => '12',
+        'word_boundary' => 0
       ),
       'link_to_node' => 1,
       'id' => 'title',
@@ -1369,13 +1370,12 @@ function scratchpadify_views_default_views(){
       )
     )
   ));
-  $handler->override_option('items_per_page', 25);
+  $handler->override_option('items_per_page', 24);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'list');
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'image');
   $views[$view->name] = $view;
-
   // At the end, return array of default views.
   return $views;
 }
