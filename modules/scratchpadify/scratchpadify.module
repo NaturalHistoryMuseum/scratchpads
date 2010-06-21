@@ -28,8 +28,9 @@ function scratchpadify_views_pre_render(&$view){
     // pieces (see the image_gallery module component of image.module)
     // F' that!
     // OK, here we'll prepare the header!
-    $parent_tid = arg(1);
-    if(!$parent_tid){
+    if($view->args){
+      $parent_tid = $view->args[0];
+    } else {
       $parent_tid = 0;
     }
     $vid = variable_get('image_gallery_vid', 0);

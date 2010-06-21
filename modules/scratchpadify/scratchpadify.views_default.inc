@@ -1375,6 +1375,8 @@ function scratchpadify_views_default_views(){
   $handler->override_option('style_plugin', 'list');
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('path', 'image');
+  $handler = $view->new_display('page', 'Page', 'page_2');
+  $handler->override_option('path', 'image/tid');
   $views[$view->name] = $view;
   // At the end, return array of default views.
   return $views;

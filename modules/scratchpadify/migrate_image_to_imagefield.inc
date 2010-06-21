@@ -211,6 +211,18 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       }
     }
   }
+  // Move files with "+" in them (remove the +).
+  $results = db_query("SELECT * FROM {files} WHERE filepath LIKE '%%+%%'");
+  while($row = db_fetch_array($results)){
+    if(rename($row['filepath'], str_replace('+', '', $row['filepath']))){
+      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '+', ''), filepath = REPLACE(filepath, '+', '') WHERE fid = ".$row['fid']);
+    } else {
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => t('Failed to rename !image_filename with FID !fid', array('!image_filename' => $row['filename'], '!fid' => $row['fid']))
+      );      
+    }
+  }
   // ADD Rewrites from current taxonomy/term based URLs to image/[tid] URLS
   // 
   // Clear ALL CACHE, AND SESSIONS  
