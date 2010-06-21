@@ -1,3 +1,32 @@
+.scratchpadify-subgallery{
+ border: solid 1px #ccc;
+ margin: 1em 0;
+ padding: 1em;
+}
+.scratchpadify-subgallery-details, .scratchpadify-subgallery-image{
+ float:left;
+}
+.scratchpadify-subgallery-details{
+ margin-left: 1em;
+}
+.view-id-image_thumbnails .view-content .views-field-title{
+ width:100px;
+ overflow:hidden;
+ white-space:nowrap;
+}
+.view-id-image_thumbnails .view-content ul li{
+ border: solid 1px #ccc;
+ background:none;
+ padding:1em;
+ float: left;
+}
+.view-id-image_thumbnails .view-content ul:after{
+ content: ".";
+ display: block;
+ height: 0;
+ clear: both;
+ visibility: hidden;
+}
 .scratchpadify-terms{
  padding: 5px 0;
 }
@@ -166,5 +195,3 @@ background:url("images/454545_11x11_icon_close.gif") no-repeat scroll 0 0 transp
 .view-publication-noderefences .collapse-processed a{
   background:url("images/page_find.png") no-repeat 2px 2px!important;
 }
-
-
