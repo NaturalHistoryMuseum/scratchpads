@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Following is called to ensure that the scratchpadify module is HEAVY
  * This ensures that its hook_form_alter is called last.
@@ -7,7 +8,6 @@ function scratchpadify_install(){
   // Place it almost last (before Devel).
   db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");
   scratchpadify_update_6128();
-    
   // Image and gallery
   $gallery_vocab = array(
     'name' => 'Image Galleries',
@@ -18,10 +18,8 @@ function scratchpadify_install(){
   );
   taxonomy_save_vocabulary($gallery_vocab);
   variable_get('image_gallery_vid', $gallery_vocab->vid);
-  
   // Create the image content type that was previously created by the
   // image.module
-  
   // Create a content type "image"
   $type = new stdClass();
   $type->type = 'image';
@@ -60,22 +58,28 @@ function scratchpadify_install(){
 function scratchpadify_update_6101(){
   // Remove the fileshare module
   db_query("DELETE FROM {system} WHERE name = 'fileshare'");
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6102(){
   // Removed as 6119 overwrites this.
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6103(){
   variable_set('weight_range', 90);
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6104(){
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
@@ -86,13 +90,11 @@ function scratchpadify_update_6105(){
   if(function_exists('content_profile_init')){
     // Convert profile.module to content_profile.module
     variable_del('scratchpad_profile_fields');
-    
     // Install the profile
-    require_once("profiles/scratchpad/scratchpad.profile");
+    require_once ("profiles/scratchpad/scratchpad.profile");
     if(function_exists("scratchpad_profile_install_profile")){
       scratchpad_profile_install_profile();
     }
-    
     // Convert the current profile stuff to the new node type
     $results = db_query("SELECT uid FROM {users} WHERE uid > 1");
     while($row = db_fetch_array($results)){
@@ -103,58 +105,91 @@ function scratchpadify_update_6105(){
       $node = new stdClass();
       $node->type = 'profile';
       $node->uid = $row['uid'];
-      $node->field_title = array(array('value'=> $results_array['profile_title']));
-      $node->field_givennames = array(array('value'=> $results_array['profile_givennames']));
-      $node->field_familyname = array(array('value'=> $results_array['profile_familyname']));
+      $node->field_title = array(
+        array(
+          'value' => $results_array['profile_title']
+        )
+      );
+      $node->field_givennames = array(
+        array(
+          'value' => $results_array['profile_givennames']
+        )
+      );
+      $node->field_familyname = array(
+        array(
+          'value' => $results_array['profile_familyname']
+        )
+      );
       $node->title = "{$results_array['profile_title']} {$results_array['profile_givennames']} {$results_array['profile_familyname']}";
-      $node->auto_nodetitle_applied = TRUE;  
-      $node->field_institution = array(array('value'=> $results_array['profile_institution']));
-      $node->field_taxonomicinterest = array(array('value'=> $results_array['profile_taxonomy']));
+      $node->auto_nodetitle_applied = TRUE;
+      $node->field_institution = array(
+        array(
+          'value' => $results_array['profile_institution']
+        )
+      );
+      $node->field_taxonomicinterest = array(
+        array(
+          'value' => $results_array['profile_taxonomy']
+        )
+      );
       node_save($node);
     }
-    
-    return array('#finished' => TRUE);
-  } else {
-    return array('#abort' => array('success' => FALSE, 'query' => 'The content_profile module is not installed'));
+    return array(
+      '#finished' => TRUE
+    );
+  }else{
+    return array(
+      '#abort' => array(
+        'success' => FALSE,
+        'query' => 'The content_profile module is not installed'
+      )
+    );
   }
 }
 
 function scratchpadify_update_6106(){
   // Boost/Performance
-  variable_set('boost',1);
-  variable_set('boost_gzip',0);
-  variable_set('boost_expire_cron',1);
-  variable_set('cache_lifetime',3600);
-  variable_set('boost_clear_cache_offline',1);
-  variable_set('boost_halt_on_errors',1);
-  variable_set('preprocess_css',1);
-  variable_set('preprocess_js',1);
-  return array('#finished' => TRUE);
+  variable_set('boost', 1);
+  variable_set('boost_gzip', 0);
+  variable_set('boost_expire_cron', 1);
+  variable_set('cache_lifetime', 3600);
+  variable_set('boost_clear_cache_offline', 1);
+  variable_set('boost_halt_on_errors', 1);
+  variable_set('preprocess_css', 1);
+  variable_set('preprocess_js', 1);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6107(){
   // we'll try this one again
   db_query("DELETE FROM {variable} WHERE name LIKE 'boost%'");
-  variable_set('boost_enabled',1);
-  return array('#finished' => TRUE);
+  variable_set('boost_enabled', 1);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6108(){
-  $relationTypes = array (
-    1  => "synonym", 
-    2  => "synonym (objective = homotypic)", 
-    3  => "synonym (subjective = heterotypic)", 
-    4  => "lexical variant", 
-    5  => "disputed synonym", 
-    6  => "spelling alternative", 
-    7  => "incorrect spelling", 
-    8  => "incorrect authority information", 
-    9  => "vernacular name", 
-    10 => "usage reference" );
-  foreach ( $relationTypes as $key => $value ){
-    db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')", $key, $value );
+  $relationTypes = array(
+    1 => "synonym",
+    2 => "synonym (objective = homotypic)",
+    3 => "synonym (subjective = heterotypic)",
+    4 => "lexical variant",
+    5 => "disputed synonym",
+    6 => "spelling alternative",
+    7 => "incorrect spelling",
+    8 => "incorrect authority information",
+    9 => "vernacular name",
+    10 => "usage reference"
+  );
+  foreach($relationTypes as $key => $value){
+    db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')", $key, $value);
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -179,27 +214,32 @@ function scratchpadify_update_6114(){
 
 function scratchpadify_update_6115(){
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6117(){
   variable_del('scratchpadify_sites_list');
   variable_del('scratchpadify_last_reported');
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6118(){
   variable_set('preprocess_js', 0);
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 // 6119 removed as 6120 replaces it completely.
 // 6135 replaces 6120
-
 function scratchpadify_update_6135(){
   // Setup TinyMCE and WYSIWYG
   $tinymce_settings = array(
@@ -236,10 +276,14 @@ function scratchpadify_update_6135(){
         'copy' => 1,
         'paste' => 1
       ),
-      'advimage' => array('advimage' => 1),
-      'inlinepopups' => array('inlinepopups' => 1),
+      'advimage' => array(
+        'advimage' => 1
+      ),
+      'inlinepopups' => array(
+        'inlinepopups' => 1
+      ),
       'font' => array(
-        'formatselect' => 1,
+        'formatselect' => 1
       ),
       'paste' => array(
         'pasteword' => 1,
@@ -273,12 +317,16 @@ function scratchpadify_update_6135(){
   );
   db_query("TRUNCATE {wysiwyg}");
   db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6121(){
   variable_set('statistics_count_content_views', 1);
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6122(){
@@ -292,7 +340,7 @@ function scratchpadify_update_6122(){
 
 function scratchpadify_update_6123(){
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
@@ -304,17 +352,21 @@ function scratchpadify_update_6125(){
   variable_del('scratchpadify_last_reported');
   variable_del('scratchpad_sites_list');
   variable_del('scratchpad_last_reported');
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6126(){
   // Blank just to update the menu.
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function scratchpadify_update_6127(){
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
@@ -336,7 +388,7 @@ function scratchpadify_update_6128(){
     'tree',
     'poll',
     'profile',
-    'webform'    
+    'webform'
   );
   $fieldsets = array(
     'menu',
@@ -352,9 +404,11 @@ function scratchpadify_update_6128(){
     'notifications'
   );
   foreach($node_types as $node_type){
-    variable_set('vertical_tabs_fieldsets_'. $node_type, $fieldsets);
+    variable_set('vertical_tabs_fieldsets_' . $node_type, $fieldsets);
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -362,7 +416,7 @@ function scratchpadify_update_6128(){
  */
 function scratchpadify_update_6129(){
   variable_set('forum_auto_public', 1);
-  variable_set('forum_default_container_yn', 1);  
+  variable_set('forum_default_container_yn', 1);
   $term = array(
     'vid' => variable_get('forum_nav_vocabulary', 0),
     'name' => st('Groups'),
@@ -383,12 +437,14 @@ function scratchpadify_update_6129(){
  */
 function scratchpadify_update_6130(){
   // Og_user stuff
-  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4));
+  variable_set('og_user_roles_roles_group', array(
+    3 => 3,
+    4 => 4
+  ));
   variable_set('ogur_assign_founder_group', 1);
   variable_set('ogur_founder_value_group', 4);
   variable_set('og_user_roles_admingrouprole_value', 4);
   variable_set('og_user_roles_assign_admingrouprole', 1);
-
   // Set the og node type for all content types
   $node_types = array_keys(array_map('check_plain', node_get_types('names')));
   foreach($node_types as $node_type){
@@ -396,16 +452,16 @@ function scratchpadify_update_6130(){
     if($node_type == 'group'){
       $usage = 'group';
     }
-    variable_set('og_content_type_usage_'.$node_type, $usage);
+    variable_set('og_content_type_usage_' . $node_type, $usage);
   }
-  
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
-  
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -431,11 +487,13 @@ function scratchpadify_update_6132(){
  */
 function scratchpadify_update_6133(){
   // Update permissions
-  require_once("profiles/scratchpad/scratchpad.profile");
+  require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -452,7 +510,9 @@ function scratchpadify_update_6134(){
  */
 function scratchpadify_update_6136(){
   variable_set('image_max_upload_size', '12000');
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -460,37 +520,38 @@ function scratchpadify_update_6136(){
  */
 function scratchpadify_update_6137(){
   variable_set('imce_profiles', array(
-      1 => array(
-        'name' => st('All users IMCE'),
-        'filesize' => 20,
-        'quota' => 200,
-        'tuquota' => 0,
-        'extensions' => 'gif png jpg jpeg pdf doc xls txt',
-        'dimensions' => '800x600',
-        'filenum' => 1,
-        'directories' => array(
-          array(
-            'name' => 'u%uid',
-            'subnav' => 1,
-            'browse' => 1,
-            'upload' => 1,
-            'thumb' => 1,
-            'delete' => 0,
-            'resize' => 0
-          )
-        ),
-        'thumbnails' => array(
-          array(
-            'name' => 'Thumb',
-            'dimensions' => '90x90',
-            'prefix' => 'thumb_',
-            'suffix' => ''
-          )
+    1 => array(
+      'name' => st('All users IMCE'),
+      'filesize' => 20,
+      'quota' => 200,
+      'tuquota' => 0,
+      'extensions' => 'gif png jpg jpeg pdf doc xls txt',
+      'dimensions' => '800x600',
+      'filenum' => 1,
+      'directories' => array(
+        array(
+          'name' => 'u%uid',
+          'subnav' => 1,
+          'browse' => 1,
+          'upload' => 1,
+          'thumb' => 1,
+          'delete' => 0,
+          'resize' => 0
+        )
+      ),
+      'thumbnails' => array(
+        array(
+          'name' => 'Thumb',
+          'dimensions' => '90x90',
+          'prefix' => 'thumb_',
+          'suffix' => ''
         )
       )
     )
+  ));
+  return array(
+    '#finished' => TRUE
   );
-  return array('#finished' => TRUE);
 }
 
 /**
@@ -499,12 +560,14 @@ function scratchpadify_update_6137(){
 function scratchpadify_update_6138(){
   // Update permissions
   if(variable_get('scratchpadify_is_scratchpad', FALSE)){
-    require_once("profiles/scratchpad/scratchpad.profile");
+    require_once ("profiles/scratchpad/scratchpad.profile");
     if(function_exists("scratchpad_profile_set_perms")){
       scratchpad_profile_set_perms();
     }
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -512,21 +575,27 @@ function scratchpadify_update_6138(){
  *
  */
 function scratchpadify_update_6139(){
-  return array(update_sql('ALTER TABLE path_redirect MODIFY rid INT(10) NOT NULL AUTO_INCREMENT'));
+  return array(
+    update_sql('ALTER TABLE path_redirect MODIFY rid INT(10) NOT NULL AUTO_INCREMENT')
+  );
 }
+
 /**
  * Upgrade classification module storage to term_node storage.
  */
 function scratchpadify_update_6140(){
   // We need to ensure that the itis_term and term_node modules are installed, 
   // if they are, we can proceed.
-  if(!function_exists('itis_term_node_info') || !function_exists('term_node_form_alter')){
-    return array('#abort' => array('success' => FALSE, 'query' => 'ITIS Term and Term Node modules must be installed first'));
-  }
+  if(!function_exists('itis_term_node_info') || !function_exists('term_node_form_alter')){return array(
+      '#abort' => array(
+        'success' => FALSE,
+        'query' => 'ITIS Term and Term Node modules must be installed first'
+      )
+    );}
   $ret = array();
   $vocabularies = taxonomy_get_vocabularies();
   $term_node = variable_get('term_node_vocabularies-contenttypes', array());
-  $classification_vocabularies = variable_get('classification_scratchpads',array());
+  $classification_vocabularies = variable_get('classification_scratchpads', array());
   foreach($vocabularies as $vocabulary){
     if(isset($classification_vocabularies[$vocabulary->vid]) && $classification_vocabularies[$vocabulary->vid]){
       // Firstly, we'll associate this vocabulary with the ITIS term content
@@ -534,7 +603,12 @@ function scratchpadify_update_6140(){
       if(isset($term_node[$vocabulary->vid]) && $term_node[$vocabulary->vid]){
         // Already set, we need to set an error message to explain that this
         // vocabulary has not been upgraded.
-        $ret[] = array('success' => FALSE, 'query' => t('"@vocabulary" is already associated with a content type, it can no be converted', array('@vocabulary' => $vocabulary->name)));
+        $ret[] = array(
+          'success' => FALSE,
+          'query' => t('"@vocabulary" is already associated with a content type, it can no be converted', array(
+            '@vocabulary' => $vocabulary->name
+          ))
+        );
         // Skip the rest of the upgrade for this vocabulary.
         continue;
       }
@@ -542,7 +616,12 @@ function scratchpadify_update_6140(){
       // it use
       $term_node[$vocabulary->vid] = 'itis_term';
       variable_set('term_node_vocabularies-contenttypes', $term_node);
-      $ret[] = array('success' => TRUE, 'query' => t('"@vocabulary" is now associated with ITIS Name', array('@vocabulary' => $vocabulary->name)));
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => t('"@vocabulary" is now associated with ITIS Name', array(
+          '@vocabulary' => $vocabulary->name
+        ))
+      );
       // We need to delete all the terms marked as being "vernacular names", and 
       // add them as metadata to their related term.  The Lifedesk code has made
       // this a little easier to do, as the term_relation table always has the 
@@ -555,19 +634,35 @@ function scratchpadify_update_6140(){
         if($scientific_name->field_vernacular_name){
           // We need to add this on the end!
           if(!is_array($scientific_name->field_vernacular_name)){
-            $scientific_name->field_vernacular_name = array(array('value' => $scientific_name->field_vernacular_name));
+            $scientific_name->field_vernacular_name = array(
+              array(
+                'value' => $scientific_name->field_vernacular_name
+              )
+            );
           }
-          $scientific_name->field_vernacular_name[] = array('value' => $vernacular_name->name);
-        } else {
+          $scientific_name->field_vernacular_name[] = array(
+            'value' => $vernacular_name->name
+          );
+        }else{
           // No other vernaculars set, lets set one
-          $scientific_name->field_vernacular_name = array(array('value' => $vernacular_name->name));
+          $scientific_name->field_vernacular_name = array(
+            array(
+              'value' => $vernacular_name->name
+            )
+          );
         }
         // SET THE F*****G parent!
         $scientific_name->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $scientific_name->tid));
         // Save the scientific name, and delete the vernacular
         $scientific_name = (array)$scientific_name;
         $saved = taxonomy_save_term($scientific_name);
-        $ret[] = array('success' => $saved, 'query' => t('Added vernacular name "@vernacular" to @term', array('@term' => $scientific_name['name'], '@vernacular' => $vernacular_name->name)));
+        $ret[] = array(
+          'success' => $saved,
+          'query' => t('Added vernacular name "@vernacular" to @term', array(
+            '@term' => $scientific_name['name'],
+            '@vernacular' => $vernacular_name->name
+          ))
+        );
         taxonomy_del_term($vernacular_name->tid);
       }
       // Now to handle the various types of synonym (we'll handle all at once)
@@ -596,12 +691,17 @@ function scratchpadify_update_6140(){
         $tid1->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $tid1->tid));
         $tid1 = (array)$tid1;
         $saved = taxonomy_save_term($tid1);
-        $ret[] = array('success' => $saved, 'query' => t('Saving !term', array('!term' => $tid1['name'])));
+        $ret[] = array(
+          'success' => $saved,
+          'query' => t('Saving !term', array(
+            '!term' => $tid1['name']
+          ))
+        );
       }
       // Save the ranks from the taxonomy enhancer table
       // We'll use the ranks from the animal kingdom, as we have far more animal
       // Scratchpads than botanical ones.
-      $ranks = array(    
+      $ranks = array(
         'kingdom' => 23,
         'subkingdom' => 24,
         'phylum' => 25,
@@ -632,18 +732,33 @@ function scratchpadify_update_6140(){
           $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
           $term = (array)$term;
           $saved = taxonomy_save_term($term);
-          $ret[] = array('success' => $saved, 'query' => t('Saving rank "@rank" for @term', array('@term' => $term['name'], '@rank' => $row['value'])));
+          $ret[] = array(
+            'success' => $saved,
+            'query' => t('Saving rank "@rank" for @term', array(
+              '@term' => $term['name'],
+              '@rank' => $row['value']
+            ))
+          );
         }
       }
       // Save the Biblio link from the taxonomy enhancer table.
       $results = db_query("SELECT tid, nid FROM {taxonomy_enhancer_value_nodereference} WHERE nid > 0 AND fid = 'field_biblio_citation_original' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
       while($row = db_fetch_array($results)){
         $term = taxonomy_get_term($row['tid']);
-        $term->field_reference = array(array('nid' => $row['nid']));
+        $term->field_reference = array(
+          array(
+            'nid' => $row['nid']
+          )
+        );
         $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
         $term = (array)$term;
         $saved = taxonomy_save_term($term);
-        $ret[] = array('success' => $saved, 'query' => t('Saving reference for @term', array('@term' => $term['name'])));
+        $ret[] = array(
+          'success' => $saved,
+          'query' => t('Saving reference for @term', array(
+            '@term' => $term['name']
+          ))
+        );
       }
     }
   }
@@ -658,11 +773,17 @@ function scratchpadify_update_6141(){
   // First, update bio_image_biblio
   $sql = "UPDATE {content_node_field_instance} SET widget_module = 'nodereference', widget_type = 'nodereference_select', widget_active = 1, widget_settings = '%s', display_settings = '%s' WHERE field_name = 'bio_image_biblio'";
   $result = db_query($sql, 'a:4:{s:18:"autocomplete_match";s:8:"contains";s:4:"size";N;s:13:"default_value";a:1:{i:0;a:1:{s:3:"nid";s:0:"";}}s:17:"default_value_php";N;}', 'a:6:{s:5:"label";a:2:{s:6:"format";s:5:"above";s:7:"exclude";i:0;}s:6:"teaser";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:4:"full";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:11:"email_plain";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:10:"email_html";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:5:"token";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}}');
-  $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
+  $ret[] = array(
+    'success' => $result !== FALSE,
+    'query' => check_plain($sql)
+  );
   // Next update bio_image_specimen
   $sql = "UPDATE {content_node_field_instance} SET widget_module = 'nodereference', widget_type = 'nodereference_select', widget_active = 1, widget_settings = '%s', display_settings = '%s' WHERE field_name = 'bio_image_darwincore'";
   $result = db_query($sql, 'a:4:{s:18:"autocomplete_match";s:8:"contains";s:4:"size";N;s:13:"default_value";a:1:{i:0;a:1:{s:3:"nid";s:0:"";}}s:17:"default_value_php";N;}', 'a:10:{s:5:"label";a:2:{s:6:"format";s:5:"above";s:7:"exclude";i:0;}s:6:"teaser";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:4:"full";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:4;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:2;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:3;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}i:5;a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:11:"email_plain";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:10:"email_html";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}s:5:"token";a:2:{s:6:"format";s:7:"default";s:7:"exclude";i:0;}}');
-  $ret[] = array('success' => $result !== FALSE, 'query' => check_plain($sql));
+  $ret[] = array(
+    'success' => $result !== FALSE,
+    'query' => check_plain($sql)
+  );
   return $ret;
 }
 
@@ -670,6 +791,6 @@ function scratchpadify_update_6141(){
  * Upgrade from image module to imagecache etc.
  */
 function scratchpadify_update_6142(){
-  include_once(drupal_get_path('module', 'scratchpadify').'/migrate_image_to_imagefield.inc');
+  include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
