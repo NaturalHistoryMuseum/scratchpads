@@ -7,6 +7,54 @@ function scratchpadify_install(){
   // Place it almost last (before Devel).
   db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");
   scratchpadify_update_6128();
+    
+  // Image and gallery
+  $gallery_vocab = array(
+    'name' => 'Image Galleries',
+    'description' => '',
+    'nodes' => array(
+      'image' => 'image'
+    )
+  );
+  taxonomy_save_vocabulary($gallery_vocab);
+  variable_get('image_gallery_vid', $gallery_vocab->vid);
+  
+  // Create the image content type that was previously created by the
+  // image.module
+  
+  // Create a content type "image"
+  $type = new stdClass();
+  $type->type = 'image';
+  $type->name = t('Image');
+  $type->description = t('An image (with thumbnail). This is ideal for publishing photographs or screenshots.');
+  $type->custom = 1;
+  $type->custom = 1;
+  $type->locked = 1;
+  $type->body_label = t('Notes');
+  $type->title_label = t('Title');
+  $type->has_title = 1;
+  $type->has_body = 1;
+  $type->module = 'node';
+  node_type_save($type);
+  // Create a field which will be used for storing the images for the new content
+  // type.
+  $field = array(
+    'label' => 'Image',
+    'field_name' => $field_name,
+    'type_name' => 'image',
+    'type' => 'filefield',
+    'widget_type' => 'imagefield_widget',
+    'file_extensions' => 'jpg gif png',
+    'progress_indicator' => 'bar',
+    'file_path' => 'images',
+    'group' => false,
+    'required' => 0,
+    'multiple' => '1',
+    'module' => 'filefield',
+    'widget_module' => 'imagefield'
+  );
+  module_load_include('crud.inc', 'content', 'includes/content');
+  content_field_instance_create($field);
 }
 
 function scratchpadify_update_6101(){
