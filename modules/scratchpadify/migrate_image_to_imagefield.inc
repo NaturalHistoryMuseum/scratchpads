@@ -5,26 +5,28 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   // Ensure that the following modules are enabled
   module_rebuild_cache();
   $modules = array(
-    'imagecache', 
-    'imageapi', 
-    'imageapi_imagemagick', 
-    'filefield', 
+    'imagecache',
+    'imageapi',
+    'imageapi_imagemagick',
+    'filefield',
     'imagefield'
   );
   foreach($modules as $module){
     if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
       $ret['#abort'] = array(
-        'success' => FALSE, 
+        'success' => FALSE,
         'query' => t('A required module is missing.')
       );
       return $ret;
     }
   }
+  // Set the variable for the Image gallery
+  variable_set('image_gallery_vid', variable_get('image_gallery_nav_vocabulary', 0));
   module_enable($modules);
   include_once './includes/install.inc';
   drupal_install_modules($modules);
   $ret[] = array(
-    'success' => TRUE, 
+    'success' => TRUE,
     'query' => t('Required modules installed.')
   );
   // Clear caches (we'll do this again at the end).
@@ -47,7 +49,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
     if($name != '_original' && !isset($imagecache_sizes[$name])){
       $presets_to_create[$name] = $values;
       $ret[] = array(
-        'success' => TRUE, 
+        'success' => TRUE,
         'query' => t('Created additional preset !name', array(
           '!name' => $name
         ))
@@ -66,13 +68,13 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
         'presetname' => $name
       ));
       $action = array(
-        'presetid' => $preset['presetid'], 
-        'weight' => '0', 
-        'module' => 'imagecache', 
-        'action' => ($values['operation'] == 'scale') ? 'imagecache_scale' : 'imagecache_scale_and_crop', 
+        'presetid' => $preset['presetid'],
+        'weight' => '0',
+        'module' => 'imagecache',
+        'action' => ($values['operation'] == 'scale') ? 'imagecache_scale' : 'imagecache_scale_and_crop',
         'data' => array(
-          'width' => $values['width'], 
-          'height' => $values['height'], 
+          'width' => $values['width'],
+          'height' => $values['height'],
           'upscale' => 0
         )
       );
@@ -87,7 +89,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   $image_attach_was_enabled = module_exists('image_attach');
   module_disable($uninstall_modules);
   $ret[] = array(
-    'success' => TRUE, 
+    'success' => TRUE,
     'query' => t('Disabled modules (!modules)', array(
       '!modules' => implode(", ", $uninstall_modules)
     ))
@@ -109,24 +111,24 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   // Create a field which will be used for storing the images for the new content
   // type.
   $field = array(
-    'label' => 'Image', 
-    'field_name' => $field_name, 
-    'type_name' => 'image', 
-    'type' => 'filefield', 
-    'widget_type' => 'imagefield_widget', 
-    'file_extensions' => 'jpg gif png', 
-    'progress_indicator' => 'bar', 
-    'file_path' => 'images', 
-    'group' => false, 
-    'required' => 0, 
-    'multiple' => '1', 
-    'module' => 'filefield', 
+    'label' => 'Image',
+    'field_name' => $field_name,
+    'type_name' => 'image',
+    'type' => 'filefield',
+    'widget_type' => 'imagefield_widget',
+    'file_extensions' => 'jpg gif png',
+    'progress_indicator' => 'bar',
+    'file_path' => 'images',
+    'group' => false,
+    'required' => 0,
+    'multiple' => '1',
+    'module' => 'filefield',
     'widget_module' => 'imagefield'
   );
   module_load_include('crud.inc', 'content', 'includes/content');
   content_field_instance_create($field);
   $ret[] = array(
-    'success' => TRUE, 
+    'success' => TRUE,
     'query' => t('Recreated image content type')
   );
   // We need to add the field to all the content types that have image_attach
@@ -138,7 +140,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       $field['type_name'] = $type;
       content_field_instance_create($field);
       $ret[] = array(
-        'success' => TRUE, 
+        'success' => TRUE,
         'query' => t('Associated imagefield with "!name" content type.', array(
           '!name' => $type
         ))
@@ -188,7 +190,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
     $results = db_query("SELECT n.nid, n.vid, " . $field_name . "_fid, " . $field_name . "_data FROM {node} n, {content_$field_name} c, {image_attach} i WHERE i.iid = c.nid AND i.nid = n.nid;");
     if(!$results){
       $ret[] = array(
-        'success' => FALSE, 
+        'success' => FALSE,
         'query' => t('Failed with initial image_attach query.')
       );
     }
@@ -196,12 +198,12 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       $result = db_query("INSERT INTO {content_$field_name} (nid, vid, delta, " . $field_name . "_fid, " . $field_name . "_list, " . $field_name . "_data) VALUES (%d, %d, 0, %d, 1, '%s')", $row['nid'], $row['vid'], $row[$field_name . '_fid'], $row[$field_name . '_data']);
       if(!$result){
         $ret[] = array(
-          'success' => FALSE, 
+          'success' => FALSE,
           'query' => t('Failed with image_attach.')
         );
       }else{
         $ret[] = array(
-          'success' => TRUE, 
+          'success' => TRUE,
           'query' => t('Attached image to node nid:!nid', array(
             '!nid' => $row['nid']
           ))
@@ -209,16 +211,15 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       }
     }
   }
-  
   // ADD Rewrites from current taxonomy/term based URLs to image/[tid] URLS
-  
   // 
-  
   // Clear ALL CACHE, AND SESSIONS  
   drupal_rebuild_theme_registry();
   node_types_rebuild();
   menu_rebuild();
-  cache_clear_all('schema', 'cache');
+  cache_clear_all('*', 'cache_views', TRUE);
+  cache_clear_all('*', 'cache_views_data', TRUE);
+  cache_clear_all('*', 'cache_menu', TRUE);
   drupal_clear_css_cache();
   drupal_clear_js_cache();
   return $ret;
