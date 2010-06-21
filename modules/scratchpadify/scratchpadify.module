@@ -27,11 +27,88 @@ function scratchpadify_views_pre_render(&$view){
     // without defining handlers and plugins and various other bits 'n'
     // pieces (see the image_gallery module component of image.module)
     // F' that!
+    // OK, here we'll prepare the header!
+    $parent_tid = arg(1);
+    if(!$parent_tid){
+      $parent_tid = 0;
+    }
+    $vid = variable_get('image_gallery_vid', 0);
+    $content = theme('scratchpadify_subgalleries', $parent_tid, $vid);
+    foreach($view->display as $display_name => $who_cares_what_this_pointless_king_variable_is){
+      $view->display[$display_name]->handler->options['header'] = $content;
+      $view->display[$display_name]->handler->options['header_format'] = 1;
+      $view->display[$display_name]->handler->options['header_empty'] = 1;
+    }
   }
 }
 
 /**
+ *
+ */
+function theme_scratchpadify_subgalleries($parent, $vid){
+  // Get the terms from the vid with set parent
+  $children = taxonomy_get_children($parent, $vid);
+  $output = '';
+  foreach($children as $child){
+    $output .= theme('scratchpadify_subgallery', $child);
+  }
+  return $output;
+}
+
+/**
+ * 
+ */
+function theme_scratchpadify_subgallery($term){
+  // We need the number of images in this gallery (or child galleries), a 
+  // thumbnail, and a last updated time.
+  // First, we'll get the branch of terms below this one.
+  $branch = taxonomy_get_tree($term->vid, $term->tid);
+  $tids = array($term->tid);
+  foreach($branch as $temp_term){
+    $tids[] = $temp_term->tid;
+  }
+  // Now join the term_node, content_field_imagefield, and node table together.
+  $count_and_created = db_fetch_array(db_query('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n, {term_node} t, {content_field_imagefield} c WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN ('.implode(',', $tids).')'));
+  // Top image
+  $thumbnail_nid = db_result(db_query('SELECT n.nid FROM {node} n, {content_field_imagefield} c, {term_node} t WHERE n.nid = c.nid AND t.nid = n.nid AND tid IN ('.implode(',', $tids).') ORDER BY sticky DESC, created'));
+  $thumbnail_node = node_load($thumbnail_nid);
+  // Create HTML
+  return '<div class="scratchpadify-subgallery">
+  <div class="scratchpadify-subgallery-image">
+    '.theme_imagecache('thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']).'
+  </div>
+  <div class="scratchpadify-subgallery-details">
+    <h3>'.l(check_plain($term->name), 'image/'.$term->tid).'</h3>
+    <ul>
+      <li>'.t('There !num_images in this gallery.', array('!num_images' => format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images'))).'</li>
+      <li>'.t('Last updated: !time.', array('!time' => format_date($count_and_created['max_created'], 'long'))).'</li>
+    </ul>
+  </div>
+  <div style="clear:both"></div>
+</div>';
+}
+
+/**
  * hook_theme
+ */
+function scratchpadify_theme($existing, $type, $theme, $path){
+  return array(
+    'scratchpadify_subgalleries' => array(
+      'arguments' => array(
+        'tid' => NULL,
+        'vid' => NULL
+      )
+    ),
+    'scratchpadify_subgallery' => array(
+      'arguments' => array(
+        'term' => NULL
+      )
+    )
+  );
+}
+
+/**
+ * hook_theme_registry_alter
  */
 function scratchpadify_theme_registry_alter(&$theme_registry){
   foreach(array(
@@ -573,6 +650,21 @@ function scratchpadify_imagecache_default_presets(){
           'weight' => '0', 
           'module' => 'imagecache', 
           'action' => 'imagecache_scale', 
+          'data' => array(
+            'width' => '100', 
+            'height' => '100', 
+            'upscale' => 1
+          )
+        )
+      )
+    ), 
+    'thumbnail_square' => array(
+      'presetname' => 'thumbnail_square', 
+      'actions' => array(
+        array(
+          'weight' => '0', 
+          'module' => 'imagecache', 
+          'action' => 'imagecache_scale_and_crop', 
           'data' => array(
             'width' => '100', 
             'height' => '100', 
