@@ -105,7 +105,7 @@ function imageapi_imagemagick_image_close($image, $dst) {
   return _imageapi_imagemagick_convert($image->source, $dst, $image->ops);
 }
 
-function imageapi_imagemagick_image_crop(&$image, $x, $y, $width, $height) {
+function imageapi_imagemagick_image_crop($image, $x, $y, $width, $height) {
   $image->ops[]  = '-crop '. (int) $width .'x'. (int) $height .'+'. (int) $x .'+'. (int) $y .'!';
   $image->info['width'] = $width;
   $image->info['height'] = $height;
