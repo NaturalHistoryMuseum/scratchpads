@@ -149,7 +149,11 @@ function _imageapi_imagemagick_convert($source, $dest, $args) {
   // To make use of ImageMagick 6's parenthetical command grouping we need to make
   // the $source image the first parameter and $dest the last.
   // See http://www.imagemagick.org/Usage/basics/#cmdline for more info.
-  $command = escapeshellarg($source) .' '. implode(' ', $args) .' '. escapeshellarg($dest);
+  if(isset($args['convert_to']) && $args['convert_to']){
+    $convert_to = $args['convert_to'].':';
+    unset($args['convert_to']);
+  }
+  $command = escapeshellarg($source) .' '. implode(' ', $args) .' '. $convert_to . escapeshellarg($dest);
 
   if (0 != _imageapi_imagemagick_convert_exec($command, $output, $errors)) {
     return FALSE;
