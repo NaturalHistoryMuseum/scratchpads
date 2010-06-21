@@ -215,12 +215,15 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   $results = db_query("SELECT * FROM {files} WHERE filepath LIKE '%%+%%'");
   while($row = db_fetch_array($results)){
     if(rename($row['filepath'], str_replace('+', '', $row['filepath']))){
-      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '+', ''), filepath = REPLACE(filepath, '+', '') WHERE fid = ".$row['fid']);
-    } else {
+      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '+', ''), filepath = REPLACE(filepath, '+', '') WHERE fid = " . $row['fid']);
+    }else{
       $ret[] = array(
         'success' => FALSE,
-        'query' => t('Failed to rename !image_filename with FID !fid', array('!image_filename' => $row['filename'], '!fid' => $row['fid']))
-      );      
+        'query' => t('Failed to rename !image_filename with FID !fid', array(
+          '!image_filename' => $row['filename'],
+          '!fid' => $row['fid']
+        ))
+      );
     }
   }
   // Clear ALL CACHE, AND SESSIONS  
