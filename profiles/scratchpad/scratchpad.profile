@@ -1,11 +1,9 @@
 <?php
 
-
 /**
  * The Scratchpad profile.  This will replace the default profile so that all
  * sites installed will become Scratchpads.
  */
-
 /**
  * Details about this module
  */
@@ -21,62 +19,167 @@ function scratchpad_profile_details(){
  */
 function scratchpad_profile_modules(){
   return array(
-  
     // -------------------------------------------------------------------------
     // 
     // NOTE - IF THE FOLLOWING IS CHANGED, THE UPGRADE SCRIPT 
     // /home/simor/upgrade/createdatabase MUST ALSO BE CHANGED.
     //
     // -------------------------------------------------------------------------
-  
     // Core - optional
-      'blog','color','comment','contact','locale','dblog','help','menu','openid'
-      ,'path','poll','search','taxonomy','trigger','upload','forum',
-      'translation','tracker',
+    'blog',
+    'color',
+    'comment',
+    'contact',
+    'locale',
+    'dblog',
+    'help',
+    'menu',
+    'openid',
+    'path',
+    'poll',
+    'search',
+    'taxonomy',
+    'trigger',
+    'upload',
+    'forum',
+    'translation',
+    'tracker',
     // No requirements/Other
-      'biblio','boost','node_import','creativecommons_lite','simplenews',
-      'advanced_help','auto_nodetitle','checkbox_validate','clone','modalframe',
-      'globalredirect','legal','path_redirect','pathauto','quote','statistics',
-      'roleassign','search_files','thickbox','token','vertical_tabs','weight',
-      'jstools','wysiwyg','print','imce','imce_wysiwyg','porterstemmer','ajax',
+    'biblio',
+    'boost',
+    'node_import',
+    'creativecommons_lite',
+    'simplenews',
+    'advanced_help',
+    'auto_nodetitle',
+    'checkbox_validate',
+    'clone',
+    'modalframe',
+    'globalredirect',
+    'legal',
+    'path_redirect',
+    'pathauto',
+    'quote',
+    'statistics',
+    'roleassign',
+    'search_files',
+    'thickbox',
+    'token',
+    'vertical_tabs',
+    'weight',
+    'jstools',
+    'wysiwyg',
+    'print',
+    'imce',
+    'imce_wysiwyg',
+    'porterstemmer',
+    'ajax',
     // Spam control
-      'mollom','hashcash',
+    'mollom',
+    'hashcash',
     // JQuery
-      'jquery_update','jquery_ui',
+    'jquery_update',
+    'jquery_ui',
     // CCK
-      'content','number','optionwidgets','text','date_api','date','date_popup',
-      'nodereference','date_timezone','fieldgroup','date_php4','nodereferrer',
-      'noderelationships',
+    'content',
+    'number',
+    'optionwidgets',
+    'text',
+    'date_api',
+    'date',
+    'date_popup',
+    'nodereference',
+    'date_timezone',
+    'fieldgroup',
+    'date_php4',
+    'nodereferrer',
+    'noderelationships',
     // Image
-      'imagecache','imageapi','imageapi_imagemagick','filefield','imagefield', 
-      'lightbox2',
+    'imagecache',
+    'imageapi',
+    'imageapi_imagemagick',
+    'filefield',
+    'imagefield',
+    'lightbox2',
     // Location
-      'location','gmap','gmap_location','location_user','location_node',
+    'location',
+    'gmap',
+    'gmap_location',
+    'location_user',
+    'location_node',
     // Messaging
-      'messaging','notifications','notifications_lite','notifications_content',
-      'messaging_mail',
+    'messaging',
+    'notifications',
+    'notifications_lite',
+    'notifications_content',
+    'messaging_mail',
     // Organic Groups
-      'og','og_access','og_user_roles','og_views','og_notifications','og_forum',
+    'og',
+    'og_access',
+    'og_user_roles',
+    'og_views',
+    'og_notifications',
+    'og_forum',
     // Views
-      'views','views_ui','views_xml',
+    'views',
+    'views_ui',
+    'views_xml',
     // Content profile
-      'content_profile','content_profile_registration',
+    'content_profile',
+    'content_profile_registration',
     // Webforms
-      'webform',
+    'webform',
     // EDIT
-      'countriesmap','citation','backup','batax','ispecies','bhl','darwincore',
-      'fixperms','flickr','gbifmap','googlescholar','lowername','mado','ncbi',
-      'node_term_edit','autotag','nbnmap','foundation','content_taxonomy',
-      'content_taxonomy_autocomplete',
-//'leftandright',
-      'taxtab','tinytax','morphbank',
-      'view_sort','wikipedia','yahooimages','scratchpadify','tablesorter',
-      'nagger','bio_image','itis_term','term_node', 'spm',
-      'taxonomy_tree','ahah_action','matrix_editor','nexus','tree','femail',
-      'term_node','scratchpad','tui','classification_import', 'csv_import',
-      'publication',
+    'countriesmap',
+    'citation',
+    'backup',
+    'batax',
+    'ispecies',
+    'bhl',
+    'darwincore',
+    'fixperms',
+    'flickr',
+    'gbifmap',
+    'googlescholar',
+    'lowername',
+    'mado',
+    'ncbi',
+    'node_term_edit',
+    'autotag',
+    'nbnmap',
+    'foundation',
+    'content_taxonomy',
+    'content_taxonomy_autocomplete',
+    //'leftandright',
+    'taxtab',
+    'tinytax',
+    'morphbank',
+    'view_sort',
+    'wikipedia',
+    'yahooimages',
+    'scratchpadify',
+    'tablesorter',
+    'nagger',
+    'bio_image',
+    'itis_term',
+    'term_node',
+    'spm',
+    'taxonomy_tree',
+    'ahah_action',
+    'matrix_editor',
+    'nexus',
+    'tree',
+    'femail',
+    'term_node',
+    'scratchpad',
+    'tui',
+    'classification_import',
+    'csv_import',
+    'publication',
     // Classification (Temporary)
-      'classification', 'classification_scratchpads', 'classification_biblio'
+    'classification',
+    'classification_scratchpads',
+    'classification_biblio'
   );
 }
 
@@ -110,7 +213,7 @@ function scratchpad_profile_tasks_1(){
       'modified' => TRUE,
       'locked' => FALSE,
       'help' => '',
-      'min_word_count' => '',
+      'min_word_count' => ''
     ),
     array(
       'type' => 'group',
@@ -125,11 +228,11 @@ function scratchpad_profile_tasks_1(){
     )
   );
   foreach($types as $type){
-    $type = (object) _node_type_set_defaults($type);
+    $type = (object)_node_type_set_defaults($type);
     node_type_save($type);
   }
   // Set the "group" type, to be a group
-  variable_set('og_content_type_usage_group','group');
+  variable_set('og_content_type_usage_group', 'group');
   // Add the default profile fields to the content type profile
   scratchpad_profile_install_profile();
   /*
@@ -145,13 +248,11 @@ function scratchpad_profile_tasks_1(){
 function scratchpad_profile_install_profile(){
   // Load the file for doing the stuff!
   module_load_include('inc', 'content', 'includes/content.crud');
-  
   fieldgroup_save_group('profile', array(
     'label' => 'Personal Information',
     'group_name' => 'group_personal',
     'group_type' => 'standard'
   ));
-  
   $fields = array(
     array(
       'label' => 'Title',
@@ -195,7 +296,7 @@ function scratchpad_profile_install_profile(){
       'widget_type' => 'text_textfield',
       'type_name' => 'profile',
       'weight' => 4
-    ),
+    )
   );
   foreach($fields as $field){
     content_field_instance_create($field);
@@ -209,43 +310,49 @@ function scratchpad_profile_install_profile(){
     'add_link' => 1,
     'registration_use' => 1,
     'admin_user_create_use' => 1,
-    'registration_hide' => array('other') 
+    'registration_hide' => array(
+      'other'
+    )
   ));
   db_query("UPDATE {node_type} SET has_body = 0 WHERE type = 'profile'");
   variable_set('content_profile_use_profile', TRUE);
   variable_set('ant_pattern_profile', '[field_title-formatted] [field_givennames-formatted] [field_familyname-formatted]');
-  variable_set('ant_php_profile',0);
-  variable_set('ant_profile',1);
-  variable_set('node_options_profile', array('status'));
+  variable_set('ant_php_profile', 0);
+  variable_set('ant_profile', 1);
+  variable_set('node_options_profile', array(
+    'status'
+  ));
 }
 
 function scratchpad_profile_tasks_2(){
   // Og_user_roles  
-  variable_set('og_user_roles_roles_group', array(3=>3, 4=>4));
+  variable_set('og_user_roles_roles_group', array(
+    3 => 3,
+    4 => 4
+  ));
   variable_set('ogur_assign_founder_group', 1);
   variable_set('ogur_founder_value_group', 4);
   variable_set('og_user_roles_admingrouprole_value', 4);
   variable_set('og_user_roles_assign_admingrouprole', 1);
-  
   // Finally, do the following
-  variable_set('date_default_timezone_name','Europe/London');
-  
+  variable_set('date_default_timezone_name', 'Europe/London');
   // The following really shouldn't be necesary, but a module is being silly
   variable_del('node_access_needs_rebuild');
-  
   // Set statistics module up to count node accesses.
   variable_set('statistics_count_content_views', 1);
-  
   // Alter the USER to be UID 2, and create a user with UID 1
   db_query("UPDATE {users} SET uid = 2 WHERE uid = 1");
   db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'admin','no-direct-login',1,NOW())");
   db_query("INSERT INTO {users_roles} (uid,rid) VALUES (2,5)"); // Tsk, adding role when none exist!
   db_query("UPDATE {url_alias} SET src = 'user/2' WHERE src = 'user/1'");
-  $openids = array('http://simon.rycroft.name/','http://vsmith.info/','http://scratchpads.eu/');
+  $openids = array(
+    'http://simon.rycroft.name/',
+    'http://vsmith.info/',
+    'http://scratchpads.eu/'
+  );
   foreach($openids as $openid){
     db_query("INSERT INTO {authmap} (uid,authname,module) VALUES (1,'%s','openid')", $openid);
   }
-  
   // Delete the filter HTML filter, and update Full to be the default
   db_query("DELETE FROM {filters} WHERE format = 1");
   db_query("DELETE FROM {filter_formats} WHERE format = 1");
@@ -254,7 +361,6 @@ function scratchpad_profile_tasks_2(){
   db_query("INSERT INTO {filter_formats} (format, name, cache) VALUES (2, 'Full HTML (script allowed)', 1)");
   db_query("INSERT INTO {filters} (format,module,delta,weight) VALUES (1,'biblio',0,10),(1,'gmap',0,10),(1,'quote',0,10),(1,'scratchpadify',0,10)");
   db_query("INSERT INTO {filters} (format, module, delta, weight) VALUES (2,'gmap',0,10),(2,'quote',0,10),(2,'biblio',0,10),(2,'filter',2,0),(2,'filter',1,1),(2,'filter',3,10)");
-    
   // Insert conditions into the Scratchpad
   $conditions = '<ol>
 <li><b>ACCEPTANCE OF TERMS</b> This agreement is between the European Distributed Institute of Taxonomy and its agents (collectively “EDIT”), and you and your agents (collectively “you”) regarding the use of this website (the "Site"). By using the Site, you agree to the Terms and Conditions in this document.</li>
@@ -273,54 +379,71 @@ function scratchpad_profile_tasks_2(){
 <li><b>LIMITATION OF LIABILITY</b> You understand and agree that EDIT shall not be liable for any direct, indirect, incidental, special, consequential, or exemplary damages resulting from any matter related to your or other persons use of the site.</li>
 <li><b>DISCLAIMER OF CONTENT</b> You understand and acknowledge that EDIT assumes no responsibility to screen or review Content and that EDIT shall have the right, but not the obligation, in its sole discretion to review, refuse, monitor, edit or remove any Content. EDIT expressly disclaims all responsibility or liability to you or any other person or entity for the Content and you acknowledge and agree that you assume all risk associated with the use of any and all Content.</li>
 </ol>';
-  $extras = array('extras-1' => '','extras-2'=>'','extras-3'=>'','extras-4'=>'','extras-5'=>'');
-  db_query("INSERT INTO {legal_conditions} (conditions, date, extras) VALUES ('%s',NOW(),'%s')", $conditions, serialize($extras));
-  variable_set('legal_display',2);
-  
-  variable_set('lightbox2_display_image_size','preview');
-  variable_set('lightbox2_trigger_image_size',array('thumbnail'=>'thumbnail'));
-  variable_set('lightbox2_disable_nested_galleries',1);
-  variable_set('lightbox2_lite',FALSE);
-  variable_set('lightbox2_image_node',2);
-  
-  // Location
-  variable_set('location_default_country','');
-  variable_set('location_usegmap',1);
-  variable_set('location_settings_user', array(
-      'multiple' => array('min'=>1,'max'=>1,'add'=>1),
-      'form' => array(
-        'weight' => 0,
-        'collapsible' => 1,
-        'collapsed' => 0,
-        'fields' => array(
-          'name' => array('collect'=>1,'weight'=>2),
-          'street' => array('collect'=>1,'weight'=>4),
-          'additional' => array('collect'=>1, 'weight'=>6),
-          'country' => array('collect'=>1,'weight'=>8)
-        ),
-        'register' => 1
-      ),
-      'display' => array(
-        'weight' => 0
-      )
-    )
+  $extras = array(
+    'extras-1' => '',
+    'extras-2' => '',
+    'extras-3' => '',
+    'extras-4' => '',
+    'extras-5' => ''
   );
-    
+  db_query("INSERT INTO {legal_conditions} (conditions, date, extras) VALUES ('%s',NOW(),'%s')", $conditions, serialize($extras));
+  variable_set('legal_display', 2);
+  variable_set('lightbox2_display_image_size', 'preview');
+  variable_set('lightbox2_trigger_image_size', array(
+    'thumbnail' => 'thumbnail'
+  ));
+  variable_set('lightbox2_disable_nested_galleries', 1);
+  variable_set('lightbox2_lite', FALSE);
+  variable_set('lightbox2_image_node', 2);
+  // Location
+  variable_set('location_default_country', '');
+  variable_set('location_usegmap', 1);
+  variable_set('location_settings_user', array(
+    'multiple' => array(
+      'min' => 1,
+      'max' => 1,
+      'add' => 1
+    ),
+    'form' => array(
+      'weight' => 0,
+      'collapsible' => 1,
+      'collapsed' => 0,
+      'fields' => array(
+        'name' => array(
+          'collect' => 1,
+          'weight' => 2
+        ),
+        'street' => array(
+          'collect' => 1,
+          'weight' => 4
+        ),
+        'additional' => array(
+          'collect' => 1,
+          'weight' => 6
+        ),
+        'country' => array(
+          'collect' => 1,
+          'weight' => 8
+        )
+      ),
+      'register' => 1
+    ),
+    'display' => array(
+      'weight' => 0
+    )
+  ));
   // Contact form
-  db_query("INSERT INTO {contact} (category, recipients, selected) SELECT '%s',mail,1 FROM users WHERE uid = 2", st('Website feedback'));  
-  
+  db_query("INSERT INTO {contact} (category, recipients, selected) SELECT '%s',mail,1 FROM users WHERE uid = 2", st('Website feedback'));
   // Mollom
-  variable_set('mollom_public_key','ebe52536e33b662497bad0f451187161');
-  variable_set('mollom_private_key','f86117722dcd1d12aa1a1065edfb0fb2');
-
+  variable_set('mollom_public_key', 'ebe52536e33b662497bad0f451187161');
+  variable_set('mollom_private_key', 'f86117722dcd1d12aa1a1065edfb0fb2');
   // Performance
-  variable_set('preprocess_css',1);
-  variable_set('preprocess_js',1);
-  
+  variable_set('preprocess_css', 1);
+  variable_set('preprocess_js', 1);
   // Set various blocks to be visible
   db_query("DELETE FROM {blocks} WHERE module = 'search' AND delta = 0");
   db_query("DELETE FROM {blocks} WHERE module = 'system' AND delta = 0");
-  foreach (list_themes() as $theme) {
+  foreach(list_themes() as $theme){
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 1", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('scratchpadify',1,'%s','left',1)", $theme->name);
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 4", $theme->name);
@@ -331,21 +454,53 @@ function scratchpad_profile_tasks_2(){
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight, title) VALUES ('search',0,'%s','left',1,-200,'<none>')", $theme->name);
   }
   // Hide the theme search form
-  variable_set('theme_settings', array('toggle_search' => 0));
+  variable_set('theme_settings', array(
+    'toggle_search' => 0
+  ));
   db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
-  
   // Remove the "Biblio" & "Taskguide" links from the navigation menu - they
   // look ugly.    
   $links = array(
-    'biblio' => array('menu_name' => 'primary-links','link_title' => st('Bibliography'),'module'=>'system'),
-    'contact' => array('menu_name' => 'primary-links','link_title' => st('Contact us'),'module'=>'system','hidden'=>0),
-    'forum' => array('menu_name' => 'primary-links','module'=>'system'),
-    'map/node' => array('hidden' => 1,'module'=>'system'),
-    'map/node/load/%/%' => array('hidden' => 1,'module'=>'system'),
-    'map/user' => array('hidden' => 1,'module'=>'system'),
-    'map/user/load' => array('hidden' => 1,'module'=>'system'),
-    'node/add' => array('module'=>'system', 'hidden' => 1),
-    'admin' => array('plid' => array_pop(db_fetch_array(db_query("SELECT mlid FROM {menu_links} WHERE link_path = 'basicadmin'"))), 'module'=>'system','link_title'=>st('Advanced'))
+    'biblio' => array(
+      'menu_name' => 'primary-links',
+      'link_title' => st('Bibliography'),
+      'module' => 'system'
+    ),
+    'contact' => array(
+      'menu_name' => 'primary-links',
+      'link_title' => st('Contact us'),
+      'module' => 'system',
+      'hidden' => 0
+    ),
+    'forum' => array(
+      'menu_name' => 'primary-links',
+      'module' => 'system'
+    ),
+    'map/node' => array(
+      'hidden' => 1,
+      'module' => 'system'
+    ),
+    'map/node/load/%/%' => array(
+      'hidden' => 1,
+      'module' => 'system'
+    ),
+    'map/user' => array(
+      'hidden' => 1,
+      'module' => 'system'
+    ),
+    'map/user/load' => array(
+      'hidden' => 1,
+      'module' => 'system'
+    ),
+    'node/add' => array(
+      'module' => 'system',
+      'hidden' => 1
+    ),
+    'admin' => array(
+      'plid' => array_pop(db_fetch_array(db_query("SELECT mlid FROM {menu_links} WHERE link_path = 'basicadmin'"))),
+      'module' => 'system',
+      'link_title' => st('Advanced')
+    )
   );
   foreach($links as $path => $changes){
     $item = menu_get_item($path);
@@ -353,21 +508,27 @@ function scratchpad_profile_tasks_2(){
     $item['link_title'] = $item['title'];
     // FFS, Drupal doesn't have a function to return the MLID for an item. WTF!
     $item['mlid'] = array_pop(db_fetch_array(db_query("SELECT mlid FROM {menu_links} WHERE link_path = '%s'", $path)));
-    foreach($changes as $key=>$value){
+    foreach($changes as $key => $value){
       $item[$key] = $value;
     }
     $item['customized'] = 1;
     menu_link_save($item);
   }
   // Create a link to help
-  $link = array('menu_name' => 'primary-links', 'weight' => -100, 'link_path' => 'http://scratchpads.eu/help', 'link_title' => 'Help');
+  $link = array(
+    'menu_name' => 'primary-links',
+    'weight' => -100,
+    'link_path' => 'http://scratchpads.eu/help',
+    'link_title' => 'Help'
+  );
   menu_link_save($link);
-      
   scratchpad_profile_set_perms();
-  
   // Role assign settings
-  variable_set('roleassign_roles',array(3=>3,4=>4,5=>5));
-  
+  variable_set('roleassign_roles', array(
+    3 => 3,
+    4 => 4,
+    5 => 5
+  ));
   // Forum
   variable_set('forum_order', 2);
   $term = array(
@@ -376,10 +537,9 @@ function scratchpad_profile_tasks_2(){
     'description' => st('A forum for posts related, or not, to this site, and which do not fit in any other forum')
   );
   taxonomy_save_term($term);
-  
   // Og_forum settings
   variable_set('forum_auto_public', 1);
-  variable_set('forum_default_container_yn', 1);  
+  variable_set('forum_default_container_yn', 1);
   $term = array(
     'vid' => variable_get('forum_nav_vocabulary', 0),
     'name' => st('Groups'),
@@ -391,30 +551,29 @@ function scratchpad_profile_tasks_2(){
   $containers[] = $term['tid'];
   variable_set('forum_containers', $containers);
   variable_set('forum_default_container', $term['tid']);
-  
   // Users settings
-  variable_set('user_register',2);
-  variable_set('user_signatures',1);
-  variable_set('user_pictures',1);
-  
+  variable_set('user_register', 2);
+  variable_set('user_signatures', 1);
+  variable_set('user_pictures', 1);
   // Change the newsletter name (Set to Drupal newsletter, as the site name
   // wasn't known when the module was installed).
-  db_query("UPDATE {term_data} SET name = '%s' WHERE vid = '%d'", variable_get('site_name', 'Drupal')." ".st('newsletter'), variable_get('simplenews_vid',0));
-  
+  db_query("UPDATE {term_data} SET name = '%s' WHERE vid = '%d'", variable_get('site_name', 'Drupal') . " " . st('newsletter'), variable_get('simplenews_vid', 0));
   // Error level
-  variable_set('error_level','0');
-  
+  variable_set('error_level', '0');
   // File uploads settings
-  foreach(array('3','4','5','default') as $rid){
-    variable_set('upload_usersize_'.$rid, '2000');
-    variable_set('upload_uploadsize_'.$rid, '20');
-    variable_set('upload_extensions_'.$rid, 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp');
+  foreach(array(
+    '3',
+    '4',
+    '5',
+    'default'
+  ) as $rid){
+    variable_set('upload_usersize_' . $rid, '2000');
+    variable_set('upload_uploadsize_' . $rid, '20');
+    variable_set('upload_extensions_' . $rid, 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp');
   }
-  
   // Set Jquery_update to use no compressions - VERY BAD, but necessary due to
   // the fact that the module is BORKED.
-  variable_set('jquery_update_compression_type','none');
-  
+  variable_set('jquery_update_compression_type', 'none');
   // Setup TinyMCE and WYSIWYG
   $tinymce_settings = array(
     'default' => 1,
@@ -457,7 +616,7 @@ function scratchpad_profile_tasks_2(){
         'inlinepopups' => 1
       ),
       'font' => array(
-        'formatselect' => 1,
+        'formatselect' => 1
       ),
       'paste' => array(
         'pasteword' => 1,
@@ -490,85 +649,99 @@ function scratchpad_profile_tasks_2(){
     'css_settings' => 'theme'
   );
   db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
-  
   // Setup IMCE
   variable_set('imce_profiles', array(
-      1 => array(
-        'name' => st('All users IMCE'),
-        'filesize' => 20,
-        'quota' => 200,
-        'tuquota' => 0,
-        'extensions' => 'gif png jpg jpeg pdf doc xls txt',
-        'dimensions' => '800x600',
-        'filenum' => 1,
-        'directories' => array(
-          array(
-            'name' => 'u%uid',
-            'subnav' => 1,
-            'browse' => 1,
-            'upload' => 1,
-            'thumb' => 1,
-            'delete' => 0,
-            'resize' => 0
-          )
-        ),
-        'thumbnails' => array(
-          array(
-            'name' => 'Thumb',
-            'dimensions' => '90x90',
-            'prefix' => 'thumb_',
-            'suffix' => ''
-          )            
+    1 => array(
+      'name' => st('All users IMCE'),
+      'filesize' => 20,
+      'quota' => 200,
+      'tuquota' => 0,
+      'extensions' => 'gif png jpg jpeg pdf doc xls txt',
+      'dimensions' => '800x600',
+      'filenum' => 1,
+      'directories' => array(
+        array(
+          'name' => 'u%uid',
+          'subnav' => 1,
+          'browse' => 1,
+          'upload' => 1,
+          'thumb' => 1,
+          'delete' => 0,
+          'resize' => 0
+        )
+      ),
+      'thumbnails' => array(
+        array(
+          'name' => 'Thumb',
+          'dimensions' => '90x90',
+          'prefix' => 'thumb_',
+          'suffix' => ''
         )
       )
     )
-  );
+  ));
   variable_set('imce_roles_profiles', array(
-      5 => array('weight' => 0, 'pid' => 1),
-      4 => array('weight' => 0, 'pid' => 1),
-      3 => array('weight' => 0, 'pid' => 1),
-      2 => array('weight' => 11, 'pid' => 0),
-      1 => array('weight' => 12, 'pid' => 0),
+    5 => array(
+      'weight' => 0,
+      'pid' => 1
+    ),
+    4 => array(
+      'weight' => 0,
+      'pid' => 1
+    ),
+    3 => array(
+      'weight' => 0,
+      'pid' => 1
+    ),
+    2 => array(
+      'weight' => 11,
+      'pid' => 0
+    ),
+    1 => array(
+      'weight' => 12,
+      'pid' => 0
     )
-  );
-
+  ));
   // Set the og node type for all content types
   $node_types = array_keys(array_map('check_plain', node_get_types('names')));
   foreach($node_types as $node_type){
     $usage = 'group_post_standard';
-    if($node_type == 'group'  || $node_type == 'publication'){
+    if($node_type == 'group' || $node_type == 'publication'){
       $usage = 'group';
     }
-    variable_set('og_content_type_usage_'.$node_type, $usage);
+    variable_set('og_content_type_usage_' . $node_type, $usage);
   }
-  
   // Add an alias from 'content' to 'node'
-  path_set_alias('node','content');
+  path_set_alias('node', 'content');
   // Update pathauto for users
-  variable_set('pathauto_user_pattern','user/[user-raw]');
+  variable_set('pathauto_user_pattern', 'user/[user-raw]');
   // Update the alias set for the maintainer (it was created before we could
   // have changed it)
   db_query("UPDATE {url_alias} SET dst = REPLACE(dst, 'users/','user/') WHERE dst LIKE 'users/%'");
-  
   // Run cron
   module_invoke_all('cron');
-  variable_set('cron_last',time());
-  
+  variable_set('cron_last', time());
   // Log the user out
   session_destroy();
 }
 
-function scratchpad_profile_tasks_3(){  
+function scratchpad_profile_tasks_3(){
   // Email the user to say the site has been setup
-  $maintainer = user_load(array('uid'=>2));
+  $maintainer = user_load(array(
+    'uid' => 2
+  ));
   $password = user_password();
   db_query("UPDATE {users} SET pass = '%s' , status = 1 WHERE uid = 2", md5($password));
   $name = $maintainer->name;
   $mail = $maintainer->mail;
-  $site = url("",array('absolute'=>TRUE));
+  $site = url("", array(
+    'absolute' => TRUE
+  ));
   $paragraphs = array(
-    'Dear '.$maintainer->name,
-    url('', array('absolute' => TRUE)),
+    'Dear ' . $maintainer->name,
+    url('', array(
+      'absolute' => TRUE
+    )),
     'Your new Scratchpad has been created for you.  Your login details are provided below.  Please login as soon as possible, and change your password.',
     "username: '$name'\npassword: $password",
     'Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.',
@@ -585,12 +758,11 @@ function scratchpad_profile_tasks_3(){
     'body' => drupal_wrap_mail(implode("\n\n", $paragraphs)),
     'headers' => array(
       'From' => $from,
-      'Bcc' => $from 
+      'Bcc' => $from
     )
   );
   drupal_mail_send($message);
 }
-
 
 function scratchpad_profile_tasks_4(){
   // Update the menu router information.
@@ -609,7 +781,6 @@ function scratchpad_profile_set_perms(){
   // Add roles and permissions
   db_query("DELETE FROM {role} WHERE name IN ('contributor','editor','maintainer')");
   db_query("INSERT INTO {role} (rid, name) VALUES (3, 'contributor'),(4, 'editor'),(5, 'maintainer')");
-
   $contributor_perms = array();
   $editor_perms = array();
   if(function_exists('content_types')){
@@ -617,159 +788,163 @@ function scratchpad_profile_set_perms(){
     $content_types[] = "type";
     foreach($content_types as $content_type){
       if($content_type != 'group'){
-        variable_set('og_content_type_usage_'.$content_type, 'group_post_standard');
+        variable_set('og_content_type_usage_' . $content_type, 'group_post_standard');
       }
       $contributor_perms[] = "create $content_type content";
       $contributor_perms[] = "delete own $content_type content";
       $contributor_perms[] = "edit own $content_type content";
-      
       $editor_perms[] = "edit any $content_type content";
       $editor_perms[] = "delete any $content_type content";
     }
-    
-    $anonymous_perms = array("access all views",
-                              "access biblio content",
-                              "access comments",
-                              "access content",
-                              "access news feeds",
-                              "access print",
-                              "access site-wide contact form",
-                              "access user profiles",
-                              "create citations",
-                              "create forum topics",
-                              "create spm", // FIXME!
-                              "download original image",
-                              "fotonotes view notes",
-                              "post comments",
-                              "search content",
-                              "show download links",
-                              "show export links",
-                              "show node map",
-                              "show own download links",
-                              "show sort links",
-                              "show user map",
-                              "use advanced search",
-                              "use share this",
-                              "user locations",
-                              "view all user locations",
-                              "view full text",
-                              "view original images",
-                              "view post access counter",
-                              "view search_files results",
-                              "view Terms and Conditions",
-                              "view uploaded files",
-                              "vote on polls");
+    $anonymous_perms = array(
+      "access all views",
+      "access biblio content",
+      "access comments",
+      "access content",
+      "access news feeds",
+      "access print",
+      "access site-wide contact form",
+      "access user profiles",
+      "create citations",
+      "create forum topics",
+      "create spm", // FIXME!
+      "download original image",
+      "fotonotes view notes",
+      "post comments",
+      "search content",
+      "show download links",
+      "show export links",
+      "show node map",
+      "show own download links",
+      "show sort links",
+      "show user map",
+      "use advanced search",
+      "use share this",
+      "user locations",
+      "view all user locations",
+      "view full text",
+      "view original images",
+      "view post access counter",
+      "view search_files results",
+      "view Terms and Conditions",
+      "view uploaded files",
+      "vote on polls"
+    );
     $authenticated_perms = array_merge($anonymous_perms, array(
-                              "access own webform submissions",
-                              "edit own forum topics",
-                              "maintain own subscriptions",
-                              "post by femail",
-                              "post comments without approval",
-                              "show filter tab",
-                              "submit form without hashcash",
-                              "subscribe to content in groups",
-                              "subscribe to newsletters",
-                              "view own user location",
-                              "view revisions"));
+      "access own webform submissions",
+      "edit own forum topics",
+      "maintain own subscriptions",
+      "post by femail",
+      "post comments without approval",
+      "show filter tab",
+      "submit form without hashcash",
+      "subscribe to content in groups",
+      "subscribe to newsletters",
+      "view own user location",
+      "view revisions"
+    ));
     $contributor_perms = array_merge($contributor_perms, $authenticated_perms, array(
-                              "access webform results",
-                              "assign node weight",
-                              "attach images",
-                              "clone own nodes",
-                              "create biblio",
-                              "create blog entries",
-                              "create darwincore content",
-                              "create images",
-                              "create nexus projects",
-                              "create url aliases",
-                              "create webforms",
-                              "delete own blog entries",
-                              "delete own darwincore content",
-                              "delete own forum topics",
-                              "delete own images",
-                              "delete own nexus projects",
-                              "edit biblio authors",
-                              "edit own biblio entries",
-                              "edit own blog entries",
-                              "edit own darwincore content",
-                              "edit own images",
-                              "edit own nexus projects",
-                              "edit own webforms",
-                              "fotonotes add notes to all images",
-                              "fotonotes add notes to own images",
-                              "fotonotes edit own notes",
-                              "import classification", // TEMPORARY UNTIL CLASSIFICATION MODULE IS REMOVED
-                              "import content",
-                              "post with no checking",
-                              "set own user location",
-                              "set user location",
-                              "submit latitude/longitude",
-                              "translate content",
-                              "translate interface",
-                              "upload files",
-                              "view advanced help index",
-                              "view advanced help popup",
-                              "view advanced help topic"));
+      "access webform results",
+      "assign node weight",
+      "attach images",
+      "clone own nodes",
+      "create biblio",
+      "create blog entries",
+      "create darwincore content",
+      "create images",
+      "create nexus projects",
+      "create url aliases",
+      "create webforms",
+      "delete own blog entries",
+      "delete own darwincore content",
+      "delete own forum topics",
+      "delete own images",
+      "delete own nexus projects",
+      "edit biblio authors",
+      "edit own biblio entries",
+      "edit own blog entries",
+      "edit own darwincore content",
+      "edit own images",
+      "edit own nexus projects",
+      "edit own webforms",
+      "fotonotes add notes to all images",
+      "fotonotes add notes to own images",
+      "fotonotes edit own notes",
+      "import classification", // TEMPORARY UNTIL CLASSIFICATION MODULE IS REMOVED
+      "import content",
+      "post with no checking",
+      "set own user location",
+      "set user location",
+      "submit latitude/longitude",
+      "translate content",
+      "translate interface",
+      "upload files",
+      "view advanced help index",
+      "view advanced help popup",
+      "view advanced help topic"
+    ));
     $editor_perms = array_merge($editor_perms, $contributor_perms, array(
-                              "administer comments",
-                              "administer images",
-                              "administer imports",
-                              "administer menu",
-                              "administer newsletters",
-                              "administer taxonomy",
-                              "administer users",
-                              "administer views",
-                              "clone node",
-                              "configure member roles",
-                              "delete any blog entry",
-                              "delete any forum topic",
-                              "delete any images",
-                              "delete any nexus projects",
-                              "delete darwincore content",
-                              "edit all biblio entries",
-                              "edit any blog entry",
-                              "edit any forum topic",
-                              "edit any images",
-                              "edit any nexus projects",
-                              "edit darwincore content",
-                              "edit images",
-                              "edit webforms",
-                              "fotonotes edit all notes",
-                              "import from file",
-                              "inspect all votes",
-                              "mado sort",
-                              "revert revisions",
-                              "send newsletter",
-                              "view sort sort"));
+      "administer comments",
+      "administer images",
+      "administer imports",
+      "administer menu",
+      "administer newsletters",
+      "administer taxonomy",
+      "administer users",
+      "administer views",
+      "clone node",
+      "configure member roles",
+      "delete any blog entry",
+      "delete any forum topic",
+      "delete any images",
+      "delete any nexus projects",
+      "delete darwincore content",
+      "edit all biblio entries",
+      "edit any blog entry",
+      "edit any forum topic",
+      "edit any images",
+      "edit any nexus projects",
+      "edit darwincore content",
+      "edit images",
+      "edit webforms",
+      "fotonotes edit all notes",
+      "import from file",
+      "inspect all votes",
+      "mado sort",
+      "revert revisions",
+      "send newsletter",
+      "view sort sort"
+    ));
     $maintainer_perms = array_merge($editor_perms, array(
-                              "access administration pages",
-                              "access statistics",
-                              "administer biblio",
-                              "administer blocks",
-                              "administer content types",
-                              "administer creative commons lite",
-                              "administer forums",
-                              "administer languages",
-                              "administer lightbox2",
-                              "administer messaging",
-                              "administer news feeds",
-                              "administer nodes",
-                              "administer notifications",
-                              "administer organic groups",
-                              "administer print",
-                              "administer redirects",
-                              "administer simplenews settings",
-                              "administer simplenews subscriptions",
-                              "administer site configuration",
-                              "administer site-wide contact form",
-                              "administer Terms and Conditions",
-                              "administer url aliases",
-                              "administer user locations",
-                              "assign roles",
-                              "clear webform results",
-                              "delete revisions",
-                              "edit webform submissions",
-                              "make backups"));
+      "access administration pages",
+      "access statistics",
+      "administer biblio",
+      "administer blocks",
+      "administer content types",
+      "administer creative commons lite",
+      "administer forums",
+      "administer languages",
+      "administer lightbox2",
+      "administer messaging",
+      "administer news feeds",
+      "administer nodes",
+      "administer notifications",
+      "administer organic groups",
+      "administer print",
+      "administer redirects",
+      "administer simplenews settings",
+      "administer simplenews subscriptions",
+      "administer site configuration",
+      "administer site-wide contact form",
+      "administer Terms and Conditions",
+      "administer url aliases",
+      "administer user locations",
+      "assign roles",
+      "clear webform results",
+      "delete revisions",
+      "edit webform submissions",
+      "make backups"
+    ));
     $anonymous_perms = implode(", ", $anonymous_perms);
     $authenticated_perms = implode(", ", $authenticated_perms);
     $contributor_perms = implode(", ", $contributor_perms);
@@ -784,7 +959,7 @@ function scratchpad_profile_set_perms(){
  * Code for the tasks
  */
 function scratchpad_profile_tasks(&$task, $url){
-  if($task == 'profile'){    
+  if($task == 'profile'){
     $task = 'personal';
     scratchpad_profile_tasks_1();
   }
@@ -793,19 +968,19 @@ function scratchpad_profile_tasks(&$task, $url){
     if(!variable_get('personal_submitted', FALSE)){
       drupal_set_title(st('Personal Information'));
       return $output;
-    } else {
+    }else{
       // Delete the variable
       variable_del('personal_submitted');
       // Form was submitted
       $task = 'gmapkey';
     }
   }
-  if($task  == 'gmapkey'){
+  if($task == 'gmapkey'){
     $output = drupal_get_form('scratchpad_gmapkey', $url);
     if(!variable_get('googlemap_api_key', FALSE)){
       drupal_set_title(st('Google Maps API Key'));
       return $output;
-    } else {
+    }else{
       // Form was submitted
       $task = 'clustrmap';
     }
@@ -815,7 +990,7 @@ function scratchpad_profile_tasks(&$task, $url){
     if(!variable_get('clustrmap_submitted', FALSE)){
       drupal_set_title(st('ClustrMap HTML Code'));
       return $output;
-    } else {
+    }else{
       // Delete the variable
       variable_del('clustrmap_submitted');
       // Form was submitted
@@ -827,7 +1002,7 @@ function scratchpad_profile_tasks(&$task, $url){
     if(!variable_get('mission_submitted', FALSE)){
       drupal_set_title(st('Site mission and slogan'));
       return $output;
-    } else {
+    }else{
       // Delete the variable
       variable_del('mission_submitted');
       // Form was submitted
@@ -835,17 +1010,20 @@ function scratchpad_profile_tasks(&$task, $url){
     }
   }
   if($task == 'scratchpadcleanup'){
-    scratchpad_profile_tasks_2();  
-    scratchpad_profile_tasks_3();  
-    scratchpad_profile_tasks_4();  
+    scratchpad_profile_tasks_2();
+    scratchpad_profile_tasks_3();
+    scratchpad_profile_tasks_4();
     $task = 'profile-finished';
   }
 }
+
 /**
  * Define form used by clustrmap installer task
  */
 function scratchpad_personal($form_state, $url){
-  $user = user_load(array('uid'=>1));// Still uid 1 as we've not moved it
+  $user = user_load(array(
+    'uid' => 1
+  )); // Still uid 1 as we've not moved it
   $name_parts = explode(" ", $user->name);
   $familyname = array_pop($name_parts);
   $givenname = implode(" ", $name_parts);
@@ -883,7 +1061,7 @@ function scratchpad_personal($form_state, $url){
     ),
     'submit' => array(
       '#type' => 'submit',
-      '#value' => st('Save and continue'),
+      '#value' => st('Save and continue')
     )
   );
 }
@@ -896,11 +1074,31 @@ function scratchpad_personal_submit($form, &$form_state){
   $node = new stdClass();
   $node->type = 'profile';
   $node->uid = 2;
-  $node->field_title = array(array('value'=>$form_state['values']['title']));
-  $node->field_givennames = array(array('value'=>$form_state['values']['given']));
-  $node->field_familyname = array(array('value'=>$form_state['values']['family']));
-  $node->field_institution = array(array('value'=>$form_state['values']['institution']));
-  $node->field_taxonomicinterest = array(array('value'=>$form_state['values']['expertise']));
+  $node->field_title = array(
+    array(
+      'value' => $form_state['values']['title']
+    )
+  );
+  $node->field_givennames = array(
+    array(
+      'value' => $form_state['values']['given']
+    )
+  );
+  $node->field_familyname = array(
+    array(
+      'value' => $form_state['values']['family']
+    )
+  );
+  $node->field_institution = array(
+    array(
+      'value' => $form_state['values']['institution']
+    )
+  );
+  $node->field_taxonomicinterest = array(
+    array(
+      'value' => $form_state['values']['expertise']
+    )
+  );
   $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
   $node->auto_nodetitle_applied = TRUE;
   node_save($node);
@@ -922,7 +1120,7 @@ function scratchpad_gmapkey($form_state, $url){
     ),
     'submit' => array(
       '#type' => 'submit',
-      '#value' => st('Save and continue'),
+      '#value' => st('Save and continue')
     )
   );
 }
@@ -932,42 +1130,57 @@ function scratchpad_gmapkey($form_state, $url){
  */
 function scratchpad_gmapkey_submit($form, &$form_state){
   // Set the google API key
-  variable_set('googlemap_api_key',$form_state['values']['gmapkey']);
+  variable_set('googlemap_api_key', $form_state['values']['gmapkey']);
   variable_set('gmap_default', array(
-      'width' => '100%',
-      'height' => '400px',
-      'latlong' => '56,11',
-      'zoom' => 3,
-      'maxzoom' => 14,
-      'styles' => array(
-        'line_default' => array('0000ff',5,45,'',''),
-        'poly_default' => array('000000',3,25,'ff0000',45)
+    'width' => '100%',
+    'height' => '400px',
+    'latlong' => '56,11',
+    'zoom' => 3,
+    'maxzoom' => 14,
+    'styles' => array(
+      'line_default' => array(
+        '0000ff',
+        5,
+        45,
+        '',
+        ''
       ),
-      'controltype' => 'Large',
-      'mtc' => 'standard',
-      'maptype' => 'Hybrid',
-      'baselayers' => array(
-        'Map' => 1,
-        'Satellite' => 0,
-        'Hybrid' => 1,
-        'Physical' => 1
-      ),
-      'behavior' => array(
-        'locpick' => '',
-        'nodrag' => 0,
-        'nokeyboard' => 1,
-        'nomousezoom' => 1,
-        'nocontzoom' => 0,
-        'autozoom' => 1,
-        'dynmarkers' => 1,
-        'overview' => 0,
-        'collapsehack' => 1,
-        'scale' => 0
-      ),
-      'markermode' => 0,
-      'line_colors' => array('#00cc00','#ff0000','#0000ff')
+      'poly_default' => array(
+        '000000',
+        3,
+        25,
+        'ff0000',
+        45
+      )
+    ),
+    'controltype' => 'Large',
+    'mtc' => 'standard',
+    'maptype' => 'Hybrid',
+    'baselayers' => array(
+      'Map' => 1,
+      'Satellite' => 0,
+      'Hybrid' => 1,
+      'Physical' => 1
+    ),
+    'behavior' => array(
+      'locpick' => '',
+      'nodrag' => 0,
+      'nokeyboard' => 1,
+      'nomousezoom' => 1,
+      'nocontzoom' => 0,
+      'autozoom' => 1,
+      'dynmarkers' => 1,
+      'overview' => 0,
+      'collapsehack' => 1,
+      'scale' => 0
+    ),
+    'markermode' => 0,
+    'line_colors' => array(
+      '#00cc00',
+      '#ff0000',
+      '#0000ff'
     )
-  );
+  ));
 }
 
 /**
@@ -984,7 +1197,7 @@ function scratchpad_clustrmap($form_state, $url){
     ),
     'submit' => array(
       '#type' => 'submit',
-      '#value' => st('Save and continue'),
+      '#value' => st('Save and continue')
     )
   );
 }
@@ -994,7 +1207,7 @@ function scratchpad_clustrmap($form_state, $url){
  */
 function scratchpad_clustrmap_submit($form, &$form_state){
   // Create a block with the required code in it.
-  if(trim($form_state['values']['clustrmap'])!=''){
+  if(trim($form_state['values']['clustrmap']) != ''){
     $box = array(
       'body' => $form_state['values']['clustrmap'],
       'info' => 'ClustrMap',
@@ -1024,7 +1237,7 @@ function scratchpad_mission($form_state, $url){
     ),
     'submit' => array(
       '#type' => 'submit',
-      '#value' => st('Save and continue'),
+      '#value' => st('Save and continue')
     )
   );
 }
@@ -1034,11 +1247,11 @@ function scratchpad_mission($form_state, $url){
  */
 function scratchpad_mission_submit($form, &$form_state){
   // Create a block with the required code in it.
-  if(trim($form_state['values']['mission'])!=''){
-    variable_set('site_mission',$form_state['values']['mission']);
+  if(trim($form_state['values']['mission']) != ''){
+    variable_set('site_mission', $form_state['values']['mission']);
   }
-  if(trim($form_state['values']['slogan'])!=''){
-    variable_set('site_slogan',$form_state['values']['slogan']);
+  if(trim($form_state['values']['slogan']) != ''){
+    variable_set('site_slogan', $form_state['values']['slogan']);
   }
   variable_set('mission_submitted', TRUE);
 }
@@ -1046,10 +1259,10 @@ function scratchpad_mission_submit($form, &$form_state){
 /**
  * Add a box/block and display it
  */
-function scratchpad_block_add($box){  
+function scratchpad_block_add($box){
   db_query("INSERT INTO {boxes} (body, info, format) VALUES ('%s', '%s', 1)", $box['body'], $box['info']);
   $delta = db_last_insert_id('boxes', 'bid');
-  foreach (list_themes() as $theme) {
+  foreach(list_themes() as $theme){
     db_query("INSERT INTO {blocks} (module,delta,theme,status,region,cache,title) VALUES ('block', %d, '%s', 1, 'left', %d, '%s')", $delta, $theme->name, BLOCK_NO_CACHE, $box['title']);
   }
   return;
