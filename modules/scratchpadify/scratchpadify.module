@@ -81,7 +81,7 @@ function theme_scratchpadify_subgallery($term){
     ' . theme_imagecache('thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']) . '
   </div>
   <div class="scratchpadify-subgallery-details">
-    <h3>' . l(check_plain($term->name), 'image/' . $term->tid) . '</h3>
+    <h3>' . l(check_plain($term->name), 'image/tid/' . $term->tid) . '</h3>
     <ul>
       <li>' . t('There !num_images in this gallery.', array(
     '!num_images' => format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images')
