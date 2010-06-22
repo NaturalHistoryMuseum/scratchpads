@@ -30,7 +30,7 @@ function scratchpadify_views_pre_render(&$view){
     // OK, here we'll prepare the header!
     if($view->args){
       $parent_tid = $view->args[0];
-    } else {
+    }else{
       $parent_tid = 0;
     }
     $vid = variable_get('image_gallery_vid', 0);
@@ -652,7 +652,7 @@ function scratchpadify_imagecache_actions(){
   return array(
     'scratchpadify_convert' => array(
       'name' => 'JPEGise',
-      'description' => 'Convert image file format to JPEG.',
+      'description' => 'Convert image file format to JPEG.'
     )
   );
 }
