@@ -51,7 +51,7 @@ function sandbox_profile_tasks(&$task, $url){
     $values = array('values'=>array('gmapkey'=>'INSERT KEY HERE'));
     scratchpad_gmapkey_submit(array(), $values);
         
-    variable_set('site_mission',"<p>The purpose of this site is to allow Scratchpad maintainers and users a chance to practice what they daren't do on their own site.  The site is automatically updated every hour, wiping clean any of the changes that have been made to it.  For that reason, there is no need to worry about making any changes that will break this site, that is what it is here for.  We have provided a default password for this site, please login, and try out the features of the site.</p><h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>");
+    variable_set('site_mission',"<p>The purpose of this site is to allow Scratchpad maintainers and users a chance to practice what they daren't do on their own site.  The site is automatically updated every six hours, wiping clean any of the changes that have been made to it.  For that reason, there is no need to worry about making any changes that will break this site, that is what it is here for.  We have provided a default password for this site, please login, and try out the features of the site.</p><h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>");
   
     scratchpad_profile_tasks_2();
     
