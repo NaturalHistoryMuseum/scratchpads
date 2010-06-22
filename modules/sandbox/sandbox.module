@@ -4,12 +4,10 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
     case 'list':
       return array(array('info' => t('Sandbox timer')));
     case 'view':
-      $update_time = variable_get('sandbox_site_created',time());
-      $current_time = time();
-      $time_passed = $current_time - $update_time;
-      $time_left = floor((21600 - $time_passed)/60);
-      $time_passed = ceil($time_passed/60);
-      return array('subject' => '', 'content' => "<p>The Sandbox was last updated $time_passed minutes ago. You have approximately $time_left minutes before the site is wiped.</p>");
+      $time_passed = time() - variable_get('sandbox_site_created',time());
+      $time_left = format_interval(21600 - $time_passed);
+      $time_passed = format_interval($time_passed);
+      return array('subject' => '', 'content' => "<p>The Sandbox was last updated $time_passed ago. You have approximately $time_left before the site is wiped.</p>");
   }
 }
 
