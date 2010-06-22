@@ -395,6 +395,11 @@ function scratchpad_profile_tasks_2(){
   variable_set('lightbox2_disable_nested_galleries', 1);
   variable_set('lightbox2_lite', FALSE);
   variable_set('lightbox2_image_node', 2);
+  // Messaging
+  // Set the default send method.
+  variable_set('messaging_default_method', 'mail');
+  variable_set('notifications_default_send_interval', 0);
+  variable_get('notifications_send_immediate', 1);
   // Location
   variable_set('location_default_country', '');
   variable_set('location_usegmap', 1);
