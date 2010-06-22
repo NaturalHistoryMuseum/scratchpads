@@ -17,8 +17,15 @@ function scratchpadify_install(){
       'image' => 1
     )
   );
+  $term = array(
+    'name' => 'Library',
+    'description' => 'The default gallery intended as a starting point for all images'
+  );
   taxonomy_save_vocabulary($gallery_vocab);
   variable_set('image_gallery_vid', $gallery_vocab['vid']);
+  // Save the Library term
+  $term['vid'] = $gallery_vocab['vid'];
+  taxonomy_save_term($term);
   // Create the image content type that was previously created by the
   // image.module
   // Create a content type "image"
@@ -789,9 +796,35 @@ function scratchpadify_update_6141(){
 }
 
 /**
- * Upgrade from image module to imagecache etc.
+ * Uninstall and reinstall the messaging and other modules - They failed to 
+ * upgrade properly.
  */
-function scratchpadify_update_6142(){
+function scratchpadify_update_6142(){  
+  // Disable the messaging 
+  $module_cache = module_rebuild_cache();
+  $uninstall_modules = array_merge(array(
+    'messaging' => 'messaging'
+  ), $module_cache['messaging']->info['dependents']);
+  module_disable($uninstall_modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Disabled modules (!modules)', array(
+      '!modules' => implode(", ", $uninstall_modules)
+    ))
+  );
+  // Uninstall so that they're reinstalled and therefore their schema is 
+  // updated.
+  foreach($uninstall_modules as $module){
+    drupal_uninstall_module($module);
+  }
+  // Finally, reinstall.
+  module_enable($uninstall_modules);
+}
+
+/**
+ * Upgrade from image module to imagecache etc.
+function scratchpadify_update_6143(){
   include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
+ */
