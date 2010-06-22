@@ -11,13 +11,14 @@ function scratchpadify_install(){
   // Image and gallery
   $gallery_vocab = array(
     'name' => 'Image Galleries',
-    'description' => '',
+    'description' => 'Structure for your images.',
+    'hierarchy' => 1,
     'nodes' => array(
-      'image' => 'image'
+      'image' => 1
     )
   );
   taxonomy_save_vocabulary($gallery_vocab);
-  variable_get('image_gallery_vid', $gallery_vocab->vid);
+  variable_set('image_gallery_vid', $gallery_vocab['vid']);
   // Create the image content type that was previously created by the
   // image.module
   // Create a content type "image"
