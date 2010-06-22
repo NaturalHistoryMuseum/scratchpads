@@ -1370,7 +1370,7 @@ function scratchpadify_views_default_views(){
       )
     )
   ));
-  $handler->override_option('items_per_page', 24);
+  $handler->override_option('items_per_page', 30);
   $handler->override_option('use_pager', '1');
   $handler->override_option('style_plugin', 'list');
   $handler = $view->new_display('page', 'Page', 'page_1');
