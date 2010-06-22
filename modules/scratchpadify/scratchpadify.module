@@ -84,7 +84,7 @@ function theme_scratchpadify_subgallery($term){
     <h3>' . l(check_plain($term->name), 'image/tid/' . $term->tid) . '</h3>
     <ul>
       <li>' . t('There !num_images in this gallery.', array(
-    '!num_images' => format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images')
+    '!num_images' => $count_and_created['total_count'] ? format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images') : 'no images'
   )) . '</li>
       <li>' . t('Last updated: !time.', array(
     '!time' => format_date($count_and_created['max_created'], 'long')
