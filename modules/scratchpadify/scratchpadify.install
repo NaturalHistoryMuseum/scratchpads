@@ -799,12 +799,15 @@ function scratchpadify_update_6141(){
  * Uninstall and reinstall the messaging and other modules - They failed to 
  * upgrade properly.
  */
-function scratchpadify_update_6142(){  
-  // Disable the messaging 
-  $module_cache = module_rebuild_cache();
-  $uninstall_modules = array_merge(array(
-    'messaging' => 'messaging'
-  ), $module_cache['messaging']->info['dependents']);
+function scratchpadify_update_6142(){
+  // Disable the messaging
+  $uninstall_modules = array(
+    'messaging',
+    'notifications',
+    'messaging_mail',
+    'og_notifications',
+    'notifications_content'
+  );
   module_disable($uninstall_modules);
   $ret[] = array(
     'success' => TRUE,
@@ -817,8 +820,35 @@ function scratchpadify_update_6142(){
   foreach($uninstall_modules as $module){
     drupal_uninstall_module($module);
   }
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Uninstalled modules (!modules)', array(
+      '!modules' => implode(", ", $uninstall_modules)
+    ))
+  );
   // Finally, reinstall.
-  module_enable($uninstall_modules);
+  drupal_install_modules($uninstall_modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Enabled modules (!modules)', array(
+      '!modules' => implode(", ", $uninstall_modules)
+    ))
+  );
+  
+  // Set the default send method.
+  variable_set('messaging_default_method', 'mail');
+  variable_set('notifications_default_send_interval', 0);
+  variable_get('notifications_send_immediate', 1);
+  
+  // Cache shit!
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
+  menu_rebuild();
+  cache_clear_all('schema', 'cache');
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  
+  return $ret;
 }
 
 /**
