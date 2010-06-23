@@ -31,6 +31,7 @@ function scratchpadify_install(){
         'name' => 'Image Galleries',
         'description' => 'Structure for your images.',
         'hierarchy' => 1,
+        'module' => 'scratchpadify',
         'nodes' => array(
           'image' => 1
         )
@@ -48,7 +49,7 @@ function scratchpadify_install(){
         'help' => 'Select the imaging technique that was used to produce the images.',
         'description' => 'Describes the way that images have been taken',
         'hierarchy' => 1,
-        'module' => 'bio_image',
+        'module' => 'scratchpadify',
         'nodes' => array(
           'image' => 1
         )
@@ -89,7 +90,7 @@ function scratchpadify_install(){
         'name' => 'Preparation Technique',
         'help' => 'Describe how the specimen was prepared for imaging (Leave blank if your image isn\'t a specimen)',
         'description' => 'Describe how the specimen was prepared for imaging.',
-        'module' => 'bio_image',
+        'module' => 'scratchpadify',
         'tags' => 1,
         'nodes' => array(
           'image' => 1
@@ -102,7 +103,7 @@ function scratchpadify_install(){
         'name' => 'Keywords',
         'help' => 'Comma-separated keywords describing the image Parts, sex, form, developmental stage, view angle, people, building etc. Enclose phrases in "quotation marks". Examples: Antenna, Head, Juvenile, "First instar", conference, museum, specimen.',
         'description' => 'Describe the parts, sex, form, developmental stage, view angle etc shown in the image.',
-        'module' => 'bio_image',
+        'module' => 'scratchpadify',
         'tags' => 1,
         'nodes' => array(
           'image' => 1
@@ -1061,4 +1062,11 @@ function scratchpadify_update_6142(){
 function scratchpadify_update_6143(){
   include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
+}
+
+/**
+ * Update bio_image vocabularies.
+ */
+function scratchpadify_update_6144(){
+  update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
 }

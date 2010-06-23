@@ -15,7 +15,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
   }
   if($form_id == 'taxonomy_overview_vocabularies'){
     foreach($form as $key => $value){
-      if(is_numeric($key) && isset($value['#vocabulary']['module']) && $value['#vocabulary']['module'] == 'bio_image'){
+      if(is_numeric($key) && isset($value['#vocabulary']['module']) && $value['#vocabulary']['module'] == 'scratchpadify' && $key != variable_get('image_gallery_vid', 0)){
         unset($form[$key]);
       }
     }
@@ -160,7 +160,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
       $form['content_types']['#collapsed'] = TRUE;
       $form['settings']['#collapsed'] = TRUE;
     }
-    if($form['module']['#value'] == 'bio_image'){
+    if($form['module']['#value'] == 'scratchpadify' && $form['vid']['#value'] && $form['vid']['#value'] != variable_get('image_gallery_vid', 0)){
       $vocabulary = check_plain($form['identification']['name']['#default_value']);
       drupal_set_message(t('The %vocabulary vocabulary can not be edited', array(
         '%vocabulary' => $vocabulary

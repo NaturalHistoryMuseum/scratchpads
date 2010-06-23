@@ -14,6 +14,17 @@ function scratchpadify_views_api(){
 }
 
 /**
+ * hook_term_path
+ */
+function scratchpadify_term_path($term){
+  if($term->vid == variable_get('image_gallery_vid', 0)){
+    return 'image/tid/'.$term->tid;
+  }else{
+    return FALSE;
+  }
+}
+
+/**
  * hook_views_pre_render
  */
 function scratchpadify_views_pre_render(&$view){
@@ -442,7 +453,7 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
     $return_html .= '<p><b>' . check_plain($vocabulary->name) . ':</b> <span>';
     $terms_array = array();
     foreach($terms as $term){
-      $terms_array[] = l($term->name, 'taxonomy/term/' . $term->tid);
+      $terms_array[] = l($term->name, taxonomy_term_path($term));
     }
     $return_html .= implode("; ", $terms_array) . '</span></p>';
   }
