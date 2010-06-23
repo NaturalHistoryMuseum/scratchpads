@@ -123,6 +123,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
     'required' => 0,
     'multiple' => '1',
     'module' => 'filefield',
+    'weight' => -1,
     'widget_module' => 'imagefield'
   );
   module_load_include('crud.inc', 'content', 'includes/content');
