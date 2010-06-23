@@ -1,12 +1,12 @@
-/* $Id: gmarkermanager_marker.js,v 1.3 2009/02/11 18:45:50 bdragon Exp $ */
+/* $Id: markermanager_marker.js,v 1.1 2009/02/12 23:45:23 bdragon Exp $ */
 
 /**
  * @file
  * GMap Markers
- * Google GMarkerManager API version
+ * Gmaps Utility Library MarkerManager API version
  */
 
-/*global Drupal, GMarker, GMarkerManager */
+/*global Drupal, GMarker, MarkerManager */
 
 // Replace to override marker creation
 Drupal.gmap.factory.marker = function (loc, opts) {
@@ -18,7 +18,7 @@ Drupal.gmap.addHandler('gmap', function (elem) {
 
   obj.bind('init', function () {
     // Set up the markermanager.
-    obj.mm = new GMarkerManager(obj.map, Drupal.settings.gmap_markermanager);
+    obj.mm = new MarkerManager(obj.map, Drupal.settings.gmap_markermanager);
   });
 
   obj.bind('addmarker', function (marker) {
@@ -40,10 +40,10 @@ Drupal.gmap.addHandler('gmap', function (elem) {
   });
 
   obj.bind('delmarker', function (marker) {
-    // @@@ This is NOT AVAILABLE in this version.
+    obj.mm.removeMarker(marker.marker);
   });
 
   obj.bind('clearmarkers', function () {
-    // @@@ This is NOT AVAILABLE in this version.
+    obj.mm.clearMarkers();
   });
 });

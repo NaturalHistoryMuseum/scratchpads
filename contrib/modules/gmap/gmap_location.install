@@ -1,5 +1,5 @@
 <?php
-// $Id: gmap_location.install,v 1.5 2008/09/15 16:57:38 bdragon Exp $
+// $Id: gmap_location.install,v 1.8 2009/03/13 17:10:45 bdragon Exp $
 
 /**
  * @file
@@ -21,6 +21,14 @@ function gmap_location_uninstall() {
   variable_del('gmap_node_map');
   variable_del('gmap_node_markers');
   variable_del('gmap_role_markers');
+  variable_del('gmap_location_block_macro');
+  variable_del('gmap_location_author_block_macro');
+  variable_del('gmap_location_author_block_types');
+  variable_del('gmap_location_author_block_marker');
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'gmap_location_block_macro_%%'");
+  while ($row = db_fetch_object($result)) {
+    variable_del($row->name);
+  }
 }
 
 function gmap_location_update_1() {
@@ -34,7 +42,7 @@ function gmap_location_update_2() {
 // 5.x-0.8 first update
 function gmap_location_update_5080() {
   // Convert role markers to single variable.
-  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'gmap_role_map_marker_%'");
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'gmap_role_map_marker_%%'");
   $markers = array();
   while ($row = db_fetch_object($result)) {
     $num = (int)substr($row->name, 21);
@@ -46,7 +54,7 @@ function gmap_location_update_5080() {
   variable_del('gmap_user_map_marker');
 
   // Convert node type markers to single variable.
-  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'gmap_node_marker_%'");
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'gmap_node_marker_%%'");
   $markers = array();
   while ($row = db_fetch_object($result)) {
     $type = substr($row->name, 17);
@@ -143,5 +151,33 @@ function gmap_location_update_5100() {
     }
   }
 
+  return $ret;
+}
+
+/**
+ * 5.x-1.0 update 2. (Post-release)
+ * Delete unneeded variable.
+ */
+function gmap_location_update_5101() {
+  $ret = array();
+  variable_del('gmap_geocode');
+  return $ret;
+}
+
+/**
+ * 5.x-1.1 update 1 (Still haven't diverged for 6.x.)
+ * #392130: Use better permission names.
+ */
+function gmap_location_update_5102() {
+  $ret = array();
+  $result = db_query("SELECT rid, perm FROM {permission} ORDER BY rid");
+  while ($role = db_fetch_object($result)) {
+    $renamed_permission = preg_replace('/(?<=^|,\ )user\ locations(?=,|$)/', 'view user location details', $role->perm);
+    $renamed_permission = preg_replace('/(?<=^|,\ )show\ user\ map(?=,|$)/', 'view user map', $renamed_permission);
+    $renamed_permission = preg_replace('/(?<=^|,\ )show\ node\ map(?=,|$)/', 'view node map', $renamed_permission);
+    if ($renamed_permission != $role->perm) {
+      $ret[] = update_sql("UPDATE {permission} SET perm = '$renamed_permission' WHERE rid = $role->rid");
+    }
+  }
   return $ret;
 }
