@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 
   else
@@ -12,7 +13,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
   if($form_id == 'block_admin_display_form'){
     unset($form['scratchpadify_4']);
   }
-  if ($form_id == 'taxonomy_overview_vocabularies'){
+  if($form_id == 'taxonomy_overview_vocabularies'){
     foreach($form as $key => $value){
       if(is_numeric($key) && isset($value['#vocabulary']['module']) && $value['#vocabulary']['module'] == 'bio_image'){
         unset($form[$key]);
@@ -25,109 +26,117 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     $form['image_publication']['#weight'] = -1;
     $form['image_specimen']['#weight'] = -1;
   }
-  if($form_id == 'node_import_add_form'  && isset($_GET['type']) && !$form_state['submitted']){
-    $form_state = array (
+  if($form_id == 'node_import_add_form' && isset($_GET['type']) && !$form_state['submitted']){
+    $form_state = array(
       'process_input' => TRUE,
-      'storage' => array ( 
-        'page' => 'file', 
-        'back_button' => 'Back', 
-        'reload_button' => 'Reload page', 
-        'reset_button' => 'Reset page', 
-        'op' => 'Reload page', 
-        'next_button' => 'Next',  
-        'form_id' => 'node_import_add_form', 
-        'type' => 'node:'.$_GET['type'], 
-        'file_upload' => '', 
-        'file_upload_button' => 'Upload file', 
-      ), 
-      'submitted' => true, 
-      'values' => array ( 
-        'file_upload' => '', 
-        'file_upload_button' => 'Upload file', 
-        'back_button' => 'Back', 
-        'op' => 'Reload page', 
-        'reload_button' => 'Reload page', 
-        'reset_button' => 'Reset page', 
-        'next_button' => 'Next', 
-        'form_id' => 'node_import_add_form', 
-      ), 
-      'clicked_button' => array ( 
+      'storage' => array(
+        'page' => 'file',
+        'back_button' => 'Back',
+        'reload_button' => 'Reload page',
+        'reset_button' => 'Reset page',
+        'op' => 'Reload page',
+        'next_button' => 'Next',
+        'form_id' => 'node_import_add_form',
+        'type' => 'node:' . $_GET['type'],
+        'file_upload' => '',
+        'file_upload_button' => 'Upload file'
+      ),
+      'submitted' => true,
+      'values' => array(
+        'file_upload' => '',
+        'file_upload_button' => 'Upload file',
+        'back_button' => 'Back',
+        'op' => 'Reload page',
+        'reload_button' => 'Reload page',
+        'reset_button' => 'Reset page',
+        'next_button' => 'Next',
+        'form_id' => 'node_import_add_form'
+      ),
+      'clicked_button' => array(
         '#type' => 'submit',
         '#value' => 'Reload page',
-        '#submit' => array ( 
-          0 => 'node_import_add_form_submit_reload', 
-        ), 
-        '#disabled' => false, 
-        '#post' => array ( 
-          'op' => 'Reload page', 
-          'form_id' => 'node_import_add_form', 
-        ), 
-        '#programmed' => false, 
-        '#tree' => false, 
-        '#parents' => array ( 
-          0 => 'reload_button', 
-        ), 
-        '#array_parents' => array ( 
-          0 => 'buttons-top', 
-          1 => 'reload_button', 
-        ), 
-        '#weight' => 0.001, 
-        '#processed' => false, 
-        '#description' => NULL, 
-        '#attributes' => array ( ), 
-        '#required' => false, 
-        '#input' => true, 
-        '#name' => 'op', 
-        '#button_type' => 'submit', 
-        '#executes_submit_callback' => true, 
-        '#process' => array ( 
-          0 => 'form_expand_ahah', 
-        ), 
-        '#id' => 'edit-reload-button-1', 
-      ), 
-      'submit_handlers' => array ( 
-        0 => 'node_import_add_form_submit_reload', 
-      ), 
-      'redirect' => NULL, 
-      'rebuild' => true, 
+        '#submit' => array(
+          0 => 'node_import_add_form_submit_reload'
+        ),
+        '#disabled' => false,
+        '#post' => array(
+          'op' => 'Reload page',
+          'form_id' => 'node_import_add_form'
+        ),
+        '#programmed' => false,
+        '#tree' => false,
+        '#parents' => array(
+          0 => 'reload_button'
+        ),
+        '#array_parents' => array(
+          0 => 'buttons-top',
+          1 => 'reload_button'
+        ),
+        '#weight' => 0.001,
+        '#processed' => false,
+        '#description' => NULL,
+        '#attributes' => array(),
+        '#required' => false,
+        '#input' => true,
+        '#name' => 'op',
+        '#button_type' => 'submit',
+        '#executes_submit_callback' => true,
+        '#process' => array(
+          0 => 'form_expand_ahah'
+        ),
+        '#id' => 'edit-reload-button-1'
+      ),
+      'submit_handlers' => array(
+        0 => 'node_import_add_form_submit_reload'
+      ),
+      'redirect' => NULL,
+      'rebuild' => true
     );
     unset($_GET['type']);
-  }
-  else if($form_id == 'user_admin_account'){
-    $form_parts = array('status','name','roles','member_for','last_access','operations');
+  }else if($form_id == 'user_admin_account'){
+    $form_parts = array(
+      'status',
+      'name',
+      'roles',
+      'member_for',
+      'last_access',
+      'operations'
+    );
     foreach($form_parts as $form_part){
       unset($form[$form_part][1]);
     }
     unset($form['accounts']['#options'][1]);
-  }
-  // Prevent editing admin user
+  }// Prevent editing admin user
   else if($form_id == 'user_profile_form'){
     if($form['#uid'] == 1){
-      drupal_set_message(t('You can not edit the admin user'),'error');
+      drupal_set_message(t('You can not edit the admin user'), 'error');
       if(isset($_GET['destination'])){
         drupal_goto($_GET['destination']);
-      } else {
+      }else{
         drupal_goto(referer_uri());
-      }      
+      }
     }
-  }
-  else if($form['#id'] == 'node-form'){
+  }else if($form['#id'] == 'node-form'){
     if(isset($form['attachments']['wrapper']['new']['upload']['#description'])){
       global $user;
       $limits = _upload_file_limits($user);
       global $base_url;
-      $form['attachments']['wrapper']['new']['upload']['#description'] .= " ".t("You are currently using <b>!using</b> of your <b>!quota</b> quota. If you would like this quota increasing, please <a href=\"mailto:scratchpad@nhm.ac.uk?subject=Increase upload quota&body=Scratchpad Administrators! Please can you increase the quota for !user on <!site>.\">mail</a> us.", array('!using' => format_size(upload_space_used($user->uid)), '!quota' => format_size($limits['user_size']), '!user' => print_r($user->name, true), '!site' => $base_url));
+      $form['attachments']['wrapper']['new']['upload']['#description'] .= " " . t("You are currently using <b>!using</b> of your <b>!quota</b> quota. If you would like this quota increasing, please <a href=\"mailto:scratchpad@nhm.ac.uk?subject=Increase upload quota&body=Scratchpad Administrators! Please can you increase the quota for !user on <!site>.\">mail</a> us.", array(
+        '!using' => format_size(upload_space_used($user->uid)),
+        '!quota' => format_size($limits['user_size']),
+        '!user' => print_r($user->name, true),
+        '!site' => $base_url
+      ));
     }
     if($form['type']['#value'] == 'image'){
-      $vid = variable_get('image_gallery_nav_vocabulary',0);
+      $vid = variable_get('image_gallery_nav_vocabulary', 0);
       if(is_array($form['taxonomy'][$vid]) && (!isset($form['taxonomy'][$vid]['#description']) || trim($form['taxonomy'][$vid]['#description']) == '')){
         $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
         if($vid){
-          $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/taxonomy/'.$vid.'/add/term') . ".  (".t('N.B. Any changes you have made on this page will be lost').")";
+          $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/taxonomy/' . $vid . '/add/term') . ".  (" . t('N.B. Any changes you have made on this page will be lost') . ")";
         }
       }
-    }
-    else if($form['type']['#value'] == 'biblio'){
+    }else if($form['type']['#value'] == 'biblio'){
       if(isset($form['contributors2_wrapper'])){
         $form['contributors2_wrapper']['#collapsed'] = 1;
       }
@@ -141,8 +150,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         $form['contributors5_wrapper']['#collapsed'] = 1;
       }
     }
-  }
-  else if($form_id == 'taxonomy_form_vocabulary'){
+  }else if($form_id == 'taxonomy_form_vocabulary'){
     if(!isset($form['vid']) && isset($form['settings']['multiple']['#default_value'])){
       // Set default value of multiple to checked.
       $form['settings']['multiple']['#default_value'] = 1;
@@ -154,20 +162,22 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     }
     if($form['module']['#value'] == 'bio_image'){
       $vocabulary = check_plain($form['identification']['name']['#default_value']);
-      drupal_set_message(t('The %vocabulary vocabulary can not be edited', array('%vocabulary'=>$vocabulary)), 'error');
+      drupal_set_message(t('The %vocabulary vocabulary can not be edited', array(
+        '%vocabulary' => $vocabulary
+      )), 'error');
       drupal_goto('admin/content/taxonomy');
     }
-  }
-  else if($form_id == 'install_configure_form'){
+  }else if($form_id == 'install_configure_form'){
     $form['server_settings']['#collapsed'] = TRUE;
     $form['server_settings']['#collapsible'] = TRUE;
     $form['admin_account']['account']['pass'] = array(
       '#type' => 'hidden',
       '#value' => user_password() // Not ideal, but it's only set for seconds!
     );
-    $form['#submit'] = array('scratchpadify_install_configure_form_submit');
-  }
-  else if($form_id == 'node_type_form'){
+    $form['#submit'] = array(
+      'scratchpadify_install_configure_form_submit'
+    );
+  }else if($form_id == 'node_type_form'){
     // Add vocabulary options to the node type form
     // We're going to reorder the form, and not by weight
     foreach($form as $key => $value){
@@ -187,7 +197,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
               $default_value[] = $key;
             }
           }
-        } else {
+        }else{
           // New one
           $default_value = array();
         }
@@ -225,17 +235,19 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     $form = $new_form;
     if(is_array($form['#submit'])){
       $form['#submit'][] = 'scratchpadify_node_type_form_submit';
-    } else {
-      $form['#submit'] = array('scratchpadify_node_type_form_submit');
+    }else{
+      $form['#submit'] = array(
+        'scratchpadify_node_type_form_submit'
+      );
     }
-  } else if($form_id == 'system_theme_settings'){
+  }else if($form_id == 'system_theme_settings'){
     $form['node_info']['#collapsed'] = TRUE;
     $form['node_info']['#collapsible'] = TRUE;
     $form['theme_settings']['#collapsed'] = TRUE;
     $form['theme_settings']['#collapsible'] = TRUE;
     $form['favicon']['#collapsed'] = TRUE;
     $form['favicon']['#collapsible'] = TRUE;
-    $form['logo']['logo_upload']['#description'] .= '<br/><b>' . t('Please ensure that your logo is no greater than 100 pixels high.').'</b>';
+    $form['logo']['logo_upload']['#description'] .= '<br/><b>' . t('Please ensure that your logo is no greater than 100 pixels high.') . '</b>';
   }
 }
 
@@ -247,7 +259,7 @@ function scratchpadify_node_type_form_submit($form, &$form_state){
     $vocabulary = (array)taxonomy_vocabulary_load($vid);
     if($value){
       $vocabulary['nodes'][$form_state['values']['type']] = $form_state['values']['type'];
-    } else {
+    }else{
       unset($vocabulary['nodes'][$form_state['values']['type']]);
     }
     taxonomy_save_vocabulary($vocabulary);
@@ -257,5 +269,5 @@ function scratchpadify_node_type_form_submit($form, &$form_state){
   if($form_state['values']['autotag_settings']){
     $dont_autotag[$form_state['values']['type']] = $form_state['values']['type'];
   }
-  variable_set('autotag_dont_autotag' , $dont_autotag);
+  variable_set('autotag_dont_autotag', $dont_autotag);
 }
