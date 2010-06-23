@@ -1,30 +1,93 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Biblio Change Log</title>
 </head>
 <body>
+<div>
 
-Upgrades from 5.x or RC2 and later are directly supported without any intermediate updates.
+<h3>6.x-1.x-dev</h3>
 
+<b>Bugs Fixed...</b>
+<ul> 
+  <li><a href="http://drupal.org/node/833716">#833716</a> Issue with commit #362416 (redirect causing SEO issues)</li>
+  <li><a href="http://drupal.org/node/801996">#801996</a> w3c validation issue when citing a reference from the bibliography</li>
+  <li><a href="http://drupal.org/node/820404">#820404</a> Wrong column biblio_volumne in file biblio.import.export.inc</li>
+  <li><a href="http://drupal.org/node/818810">#818810</a> upgrade + fields settings = broken forms?</li>
+  <li><a href="http://drupal.org/node/798922">#798922</a> Crossref settings missing in profile</li>
+</ul>
+<hr />
+<h3>6.x-1.13</h3>
+
+<b>Bugs Fixed...</b>
+<ul> 
+  <li><a href="http://drupal.org/node/797954">#797954</a> Anomymous users not authorised to access biblio entries</li>
+  <li><a href="http://drupal.org/node/797888">#797888</a> Syntax Error in biblio.db.trans.inc</li>
+</ul>
+
+<hr />
+<h3>6.x-1.12</h3>
+
+<b>Bugs Fixed...</b>
+<ul> 
+  <li><a href="http://drupal.org/node/797382">#797382</a> Error on import</li>
+  <li><a href="http://drupal.org/node/741176">#741176</a> Views arguments fixes</li>
+</ul>
+
+<hr />
+<h3>6.x-1.11</h3>
+
+<b>New features...</b>
+<ul> 
+  <li><a href="http://drupal.org/node/767718">#767718</a> added new class attributes to each data column in the node view</li>
+  <li><a href="http://drupal.org/node/712404">#712404</a> added Views argument handler for publication types</li>
+  <li><a href="http://drupal.org/node/722790">#722790</a> added Translation into Norwegian (bokmål) by gisle</li>
+  <li><a href="http://drupal.org/node/89038#comment-2496844">#89038</a> added "Token" for citekey</li>
+  <li><a href="http://drupal.org/node/660846">#660846</a> added David Lesieur's Edit publication type names patch</li>
+</ul>
+<b>Bugs Fixed...</b>
+<ul>
+  <li><a href="http://drupal.org/node/443266">#443266</a> updated German translation by Niels Hackius </li>
+  <li><a href="http://drupal.org/node/773258">#773258</a> "wrong" taxonomy term added to keyword list</li>
+  <li><a href="http://drupal.org/node/769806">#769806</a> keywords cannot be removed from entries</li>
+  <li><a href="http://drupal.org/node/759972">#759972</a> no keywords</li>
+  <li><a href="http://drupal.org/node/736958">#736958</a> Biblio field group title on user page despite nothing to show</li>
+  <li><a href="http://drupal.org/node/261109#comment-2724616">#2724616</a> Incompatible with node_clone?</li>
+  <li><a href="http://drupal.org/node/748900">#748900</a> How to let only authenticated users see the 'My Biblio' menu item?</li>
+  <li><a href="http://drupal.org/node/288957">#288957</a> RIS parser handles BT tag incorrect for types other than BOOK</li>
+  <li><a href="http://drupal.org/node/734682">#734682</a> Theming error - $base not supplied</li>
+  <li>APA Style: fixed name-part ordering for first author</li>
+  <li><a href="http://drupal.org/node/719706">#719706</a> MLA Style: Book Chapters and missing quotation marks</li>
+  <li><a href="http://drupal.org/node/699092">#699092</a> fixed biblio_admin_get_styles() includes temporary files (*.inc~)</li>
+  <li><a href="http://drupal.org/node/697680">#697680</a> fixed Authors sorted randomly</li>
+  <li>updated German translation (biblio.de.po) by Niels Hackius</li>
+  <li><a href="http://drupal.org/node/575676">#575676</a> Biblio items mangle taxonomy term title</li>
+  <li>fixed db errors when upgrading from 5.x</li>
+  <li><a href="http://drupal.org/node/691574">#691574</a> biblio_delete needs to require biblio.keywords.inc</li>
+  <li><a href="http://drupal.org/node/683868">#683868</a> Biblio Access restricts access to node if you have "User may edit his own node"</li>
+  <li><a href="http://drupal.org/node/689320">#689320</a> 'Not unique table/alias' in RSS feed</li>
+  <li><a href="http://drupal.org/node/502562#comment-2481200">#502562</a> "CrossRef OpenURL Account ID" descriptive text on user profile page enhanced to avoid confusion between different types of  CrossRef accounts </li>
+</ul>
+<hr />
 <h3>6.x-1.10</h3>
 <b>New features...</b>
 <ul> 
   <li>added new table (biblio_type_maps), which will be used in the 6.2 release, however I want it installed prior to the 6.2 release in case people forget to run update.php and then try to enable the new import modules.</li>
-  <li><a href="http://drupal.org/node/660846">#660846</a>added David Lesieur's Edit publication type names patch</li>
+  <li><a href="http://drupal.org/node/660846">#660846</a> added David Lesieur's Edit publication type names patch</li>
 </ul>
 <b>Bugs Fixed...</b>
 <ul>
-  <li><a href="http://drupal.org/node/681730">#681730</a>Rendering biblio as citation style for views omits status</li>
-  <li><a href="http://drupal.org/node/670394">#670394</a>fixed MLA Style issue: missing punctuation for Book Chapter type</li>
+  <li><a href="http://drupal.org/node/681730">#681730</a> Rendering biblio as citation style for views omits status</li>
+  <li><a href="http://drupal.org/node/670394">#670394</a> fixed MLA Style issue: missing punctuation for Book Chapter type</li>
   <li>fixed problem with closing italics tag on secondary titles</li>
-  <li><a href="http://drupal.org/node/662214">#662214</a>fixed Fields don't show after selecting biblio type, was a problem related to localization of the submit "Op"</li>
-  <li><a href="http://drupal.org/node/661604">#661604</a>fixed Vancouver style - More than one author - Final period not inserted</li>
-  <li><a href="http://drupal.org/node/645046">#645046</a>fixed fatal error introduced by <a href="http://drupal.org/node/645046#comment-2376504">#645046</a></li>
-  <li><a href="http://drupal.org/node/660554">#660554</a>fixed (another) missing escape in preg_match</li>
+  <li><a href="http://drupal.org/node/662214">#662214</a> fixed Fields don't show after selecting biblio type, was a problem related to localization of the submit "Op"</li>
+  <li><a href="http://drupal.org/node/661604">#661604</a> fixed Vancouver style - More than one author - Final period not inserted</li>
+  <li><a href="http://drupal.org/node/645046">#645046</a> fixed fatal error introduced by <a href="http://drupal.org/node/645046#comment-2376504">#645046</a></li>
+  <li><a href="http://drupal.org/node/660554">#660554</a> fixed (another) missing escape in preg_match</li>
 </ul>
-
+<hr />
 <h3>6.x-1.9</h3>
 <b>New features...</b>
 <ul> 
@@ -37,6 +100,7 @@ Upgrades from 5.x or RC2 and later are directly supported without any intermedia
   <li><a href="http://drupal.org/node/653596">#653596</a>fixed biblio_separator_bar not showing "Submitted" or "In Press" correctly</li>
   <li><a href="http://drupal.org/node/654242">#654242</a>fixed bug Update to biblio 1.8 breaks citations with &lt;bib&gt; tags (introduced by <a href="http://drupal.org/node/586494">#586494</a>)</li>
 </ul>
+<hr />
 <h3>6.x-1.8</h3>
 <b>New features...</b>
 <ul>
@@ -73,7 +137,7 @@ Upgrades from 5.x or RC2 and later are directly supported without any intermedia
   <li><a href="http://drupal.org/node/584616">#584616</a>Import: Invalid argument supplied for foreach() in biblio.import.export.inc</li>
   <li><a href="http://drupal.org/node/592750">#592750</a>Error when Block Settings is ordered by Year Published following upgrade from 6.x-1.6 to 6.x-1.7</li>
 </ul>
-
+<hr />
 <h3>6.x-1.7</h3>
 <b>New features...</b>
 <ul>
@@ -82,7 +146,7 @@ Upgrades from 5.x or RC2 and later are directly supported without any intermedia
   <li>Reworked export functions such that the data is streamed to the client node by node thus reducing the memory footprint required to export large datasets.</li>
   <li>Thanks to <a href="http://drupal.org/user/106698">Filipe Rocha</a> for the Portuguese translation file (biblio.pt-pt.po)</li>
   <li>Added links to file attachments in the Tagged, bibtex and EndNote 8 export file formats</li>
-  <li>Thanks to Tur�czi Attil for the Hungarian translation file (biblio.hu.po)</li>
+  <li>Thanks to Turóczi Attil for the Hungarian translation file (biblio.hu.po)</li>
 </ul>
 <b>Bugs Fixed...</b>
 <ul>
@@ -140,7 +204,7 @@ Upgrades from 5.x or RC2 and later are directly supported without any intermedia
   <li>Added new settings in the links section on the admin/settings/biblio page.  You can now toggle the export links on/off individually as well as the Google Scholar link</li>
   <li>Added links from each entry to Google Scholar.  Following the link does a Google Scholar search using the title and first authors name.</li>
   <li>Added a new feature (and setting to turn it on/off) which will allow you to retain BibTex protected capitalization braces in title strings, they will be stripped out on display, but will still be in place when exported in BibTex format. </li>
-  <li>Added a <b><em>new permission</em></b> called "access biblio content" which will allow you to restrict access to any of the biblio pages (biblio, biblio/authors, biblio/keywords etc.) <b>A user <u>MUST</u> have this permission to see anything from the biblio module!</b></li>
+  <li>Added a <b><em>new permission</em></b> called "access biblio content" which will allow you to restrict access to any of the biblio pages (biblio, biblio/authors, biblio/keywords etc.) <b>A user MUST have this permission to see anything from the biblio module!</b></li>
   <li>Added a section to the user profile page to allow entry of CrossRef login information used for DOI lookup</li>
   <li>Added a new option when selecting taxonomy terms from a vocabulary, you can now choose to copy them to the biblio keyword database or not.  There is a check box on the input and import forms and there is also a new check box in the "Keywords" section of the admin/settings page which sets the default for this option.</li>
   <li>Added a setting in the links section to toggle the hyperlinks on the author names.</li>
@@ -300,5 +364,7 @@ differently. i.e. Smith, J and John Smith are the same person so you merge the t
   <li>[#365435] fixed URL search doesn't show search keywords</li>
   <li>[#362696] RIS Import omits Journal Abbreviation field (JA)</li>
 </ul>
+</div>
+
 </body>
 </html>

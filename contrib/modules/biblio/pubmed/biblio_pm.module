@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_pm.module,v 1.1.2.6 2009/12/14 21:54:02 rjerome Exp $
+// $Id: biblio_pm.module,v 1.1.2.7 2010/05/12 01:55:40 rjerome Exp $
 /*
  * @file pubmed.module
  *
@@ -49,7 +49,7 @@ function biblio_pm_form_biblio_node_form_validate($form, &$form_state) {
     if(!isset($result->PubmedArticle)) {
       unset($form_state['values']['biblio_type']);
       unset($form_state['post']['biblio_type']);
-      form_set_error('PMID', 'No data available for PubMed ID: '.$pmid);
+      form_set_error('PMID', 'No data available for PubMed ID: '.check_plain($pmid));
       return;
     }
     $data = new BiblioEntrezPubmedArticle($result->PubmedArticle);

@@ -6,7 +6,7 @@
 //
 // Modified for use in biblio by Ron Jerome
 //
-// $Id: biblio_style_mla.inc,v 1.7.2.14 2009/12/30 03:19:45 rjerome Exp $
+// $Id: biblio_style_mla.inc,v 1.7.2.16 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -78,7 +78,7 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
         if (!empty($authors)) $output .= " ";
         $output .= '"' ;
         $output .= '<span class="biblio-title-mla">';
-        $url = biblio_get_title_url_info($node);
+        $url = biblio_get_title_url_info($node, $base, $inline);
         $output .= l($node->title, $url['link'], $url['options']);
         $output .= "</span>";
         if (!preg_match("/[?!.]$/", $node->title)) $output .= ".";
@@ -179,8 +179,8 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
           if (!empty($authors))  $output .= " ";
 
           //$output .= '"<i>' ;
-          $output .= '<span class="biblio-title-mla">';
-          $url = biblio_get_title_url_info($node);
+          $output .= '"<span class="biblio-title-mla">';
+          $url = biblio_get_title_url_info($node, $base, $inline);
           $output .= l($node->title, $url['link'], $url['options']);
           $output .= "</span>";
          // $output .= '</i>';
@@ -319,7 +319,7 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
 
       if (!empty($node->title))      // title
       {
-        $url = biblio_get_title_url_info($node);
+        $url = biblio_get_title_url_info($node, $base, $inline);
         if (!empty($authors))
         $output .= " ";
 

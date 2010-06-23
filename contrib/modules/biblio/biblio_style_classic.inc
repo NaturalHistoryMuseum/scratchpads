@@ -1,6 +1,6 @@
 <?PHP
 
-// $Id: biblio_style_classic.inc,v 1.8.2.13 2009/09/30 15:48:25 rjerome Exp $
+// $Id: biblio_style_classic.inc,v 1.8.2.14 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -51,7 +51,7 @@ function biblio_style_classic($node, $base = 'biblio', $inline = false) {
     $output .= '[' . check_plain($node->biblio_citekey) . '] ';
   }
   $output .= '<span class="biblio-title">';
-  $url = biblio_get_title_url_info($node);
+  $url = biblio_get_title_url_info($node, $base, $inline);
   $output .= l($node->title, $url['link'], $url['options']);
   $output .= "</span>, \n";
   $output .= '<span class="biblio-authors">' . $authors . "</span> \n";

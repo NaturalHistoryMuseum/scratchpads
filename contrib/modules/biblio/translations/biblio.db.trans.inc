@@ -1,7 +1,7 @@
 <?php
 //dummy file to capture text from database for translation
 //
-t("Select Type..."\);
+t("Select Type...");
 t("Book");
 t("Book Chapter");
 t("Journal Article");

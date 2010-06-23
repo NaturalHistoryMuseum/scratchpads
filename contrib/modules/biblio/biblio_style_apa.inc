@@ -1,7 +1,7 @@
 <?php
 
 
-// $Id: biblio_style_apa.inc,v 1.9.2.17 2009/09/30 15:48:25 rjerome Exp $
+// $Id: biblio_style_apa.inc,v 1.9.2.19 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -22,8 +22,8 @@ function biblio_style_apa_author_options() {
     'AuthorsInitialsDelimStandard'    =>  ' ',       //8
     'betweenInitialsDelim'            =>  '. ',      //9
     'initialsBeforeAuthorFirstAuthor' =>  FALSE,     //10
-    'initialsBeforeAuthorStandard'    =>  TRUE,      //11
-    'shortenGivenNames'               =>  FALSE,     //12
+    'initialsBeforeAuthorStandard'    =>  FALSE,      //11
+    'shortenGivenNames'               =>  TRUE,     //12
     'numberOfAuthorsTriggeringEtAl'   =>  6,         //13
     'includeNumberOfAuthors'          =>  6,         //14
     'customStringAfterFirstAuthors'   =>  ', et al.',//15
@@ -76,7 +76,7 @@ function biblio_style_apa($node, $base = 'biblio', $inline = FALSE) {
         $output .= "(" . check_plain($node->biblio_year) . ").&nbsp;&nbsp;";
       }
       $output .= '<span class="biblio-title">';
-      $url = biblio_get_title_url_info($node);
+      $url = biblio_get_title_url_info($node, $base, $inline);
       $output .= l($node->title, $url['link'], $url['options']);
       $output .= ". </span> \n";
       $output .= !empty ($node->biblio_contributors[2]) ? '(' . theme('biblio_authors', $node->biblio_contributors[2], 'apa', 2, $inline) . ', Ed.).' : "";

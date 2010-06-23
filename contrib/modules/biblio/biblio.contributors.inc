@@ -1,5 +1,5 @@
 <?php
-//$Id: biblio.contributors.inc,v 1.1.2.33 2009/11/09 21:29:02 rjerome Exp $
+//$Id: biblio.contributors.inc,v 1.1.2.34 2010/04/14 01:23:49 rjerome Exp $
 /**
  * @param $aid
  * @return unknown_type
@@ -13,12 +13,16 @@ function biblio_get_contributor($aid) {
   return $contributor[$aid];
 }
 
+function biblio_get_contributor_by_name($name) {
+  return db_fetch_object(db_query("SELECT * FROM {biblio_contributor_data} bcd WHERE bcd.name = '%s'", array($name)));
+}
+
 function biblio_get_first_contributor($vid) {
   static $contributor = array();
   if (!isset($contributor[$vid])) {
     $contributor[$vid] = db_fetch_object(db_query("SELECT * FROM {biblio_contributor} bc
-			INNER JOIN {biblio_contributor_data} bcd ON bc.cid=bcd.cid
-			WHERE bc.vid=%d AND bc.rank=0", $vid));
+      INNER JOIN {biblio_contributor_data} bcd ON bc.cid=bcd.cid
+      WHERE bc.vid=%d AND bc.rank=0", $vid));
   }
   return $contributor[$vid];
 }
@@ -30,9 +34,9 @@ function biblio_get_first_contributor($vid) {
 function biblio_load_contributors($vid) {
   $contributors = array();
   $query = "SELECT * FROM {biblio_contributor} bc
-			INNER JOIN {biblio_contributor_data} bcd ON bc.cid=bcd.cid
-			WHERE bc.vid=%d
-			ORDER BY bc.rank ASC"; // do not change order of presentation
+      INNER JOIN {biblio_contributor_data} bcd ON bc.cid=bcd.cid
+      WHERE bc.vid=%d
+      ORDER BY bc.rank ASC"; // do not change order of presentation
 
   $result = db_query($query, $vid);
   while ($creator = db_fetch_array($result)) {
@@ -94,28 +98,73 @@ function biblio_delete_contributors($node) {
   return;
 }
 
-function biblio_update_contributors($node) {
-  _save_contributors($node->biblio_contributors, $node->nid, $node->vid, TRUE);
+function biblio_delete_contributors_revision($node) {
+  db_query('DELETE FROM {biblio_contributor} WHERE vid = %d', array(':vid' => $node->vid));
+  $count = db_affected_rows();
   biblio_delete_orphan_authors();
-  return;
+  return $count;
 }
 
-function biblio_delete_orphan_authors() {
-  if (variable_get('biblio_auto_orphaned_author_delete', 0)) {
+function biblio_delete_contributor($cid) {
+  db_query('DELETE FROM {biblio_contributor}
+            WHERE cid = %d', array(':cid' => $cid));
+
+  db_query('DELETE FROM {biblio_contributor_data}
+            WHERE cid = %d', array(':cid' => $cid));
+
+  $count = db_affected_rows();
+  return $count;
+}
+
+function biblio_delete_contributor_revision($cid, $vid) {
+  db_query('DELETE FROM {biblio_contributor}
+            WHERE cid = %d and vid = %d', array(':cid' => $cid, ':vid' => $vid));
+
+  $count = db_affected_rows();
+  return $count;
+}
+
+function biblio_count_orphan_authors() {
+
+  return db_result(db_query('SELECT COUNT(*) FROM {biblio_contributor_data} bcd WHERE bcd.cid NOT IN (SELECT DISTINCT(bc.cid) FROM {biblio_contributor} bc )'));
+}
+
+function biblio_get_orphan_authors() {
+  $authors = array();
+  $result =  db_query('SELECT bcd.* FROM {biblio_contributor_data} bcd WHERE bcd.cid NOT IN (SELECT DISTINCT(bc.cid) FROM {biblio_contributor} bc )');
+  while ($author = db_fetch_array($result)) {
+    $authors[] = $author;
+  }
+  return $authors;
+}
+
+function biblio_delete_orphan_authors($force = FALSE) {
+  if (variable_get('biblio_auto_orphaned_author_delete', 0) || $force) {
     db_query('DELETE FROM {biblio_contributor_data} WHERE cid NOT IN (SELECT DISTINCT(cid) FROM {biblio_contributor})');
   }
 }
 
-/**
- * Save $node->biblio_contributors to database
- * @param $node
- * @param $update
- * @return success of database operations
- */
-function biblio_save_contributors($node, $update = FALSE) {
+function biblio_insert_contributors($node) {
   if (empty ($node->biblio_contributors)) return true;
-  return _save_contributors($node->biblio_contributors, $node->nid, $node->vid, $update);
+  return _save_contributors($node->biblio_contributors, $node->nid, $node->vid);
 }
+
+function biblio_update_contributors($node) {
+  _save_contributors($node->biblio_contributors, $node->nid, $node->vid, TRUE);
+  biblio_delete_orphan_authors();
+  return;
+
+}
+
+function biblio_save_contributor(&$author) {
+  return drupal_write_record('biblio_contributor_data', $author);
+}
+
+function biblio_update_contributor(&$author) {
+  if (!isset($author['cid'])) return false;
+  return drupal_write_record('biblio_contributor_data', $author, 'cid');
+}
+
 /**
  * Save contributors to the database
  * @param $authors
@@ -124,25 +173,28 @@ function biblio_save_contributors($node, $update = FALSE) {
  * @param $update
  * @return success of database operations
  */
-function _save_contributors($contributors, $nid, $vid, $update = FALSE) {
+function _save_contributors(&$contributors, $nid, $vid, $update = FALSE) {
   $md5 = _loadMD5();
   db_query('DELETE FROM {biblio_contributor} WHERE nid = %d AND vid = %d', array($nid, $vid));
   foreach ($contributors as $cat => $authors) {
     foreach ($authors as $key => $author) {
-      if ($update && !empty($author['cid']))  $author['cid'] = null; // null out the cid so we don't do a global change
-      if (empty ($author['cid']) && !empty ($md5))
-        $author['cid'] = array_search($author['md5'], $md5);
-      if (empty ($author['cid'])) {
-        if (!drupal_write_record('biblio_contributor_data', $author)) return false;
-        $cid = db_last_insert_id('biblio_contributor_data', 'cid');
-      } else {
-        $cid = $author['cid'];
+      if(empty($author['lastname'])) {
+        $contributors[$cat][$key] = $author = biblio_parse_author($author, $cat);
       }
+      if ($update && !empty($author['cid']))  $author['cid'] = null; // null out the cid so we don't do a global change
+      if (empty ($author['cid']) && isset($author['md5']) && !empty ($md5)) {
+        $author['cid'] = array_search($author['md5'], $md5);
+      }
+      if (empty ($author['cid'])) {
+        biblio_save_contributor($author);
+        if (empty ($author['cid'])) return false;
+      }
+
       $link_array = array(
         'nid' => $nid,
         'vid' => $vid,
-        'cid' => $cid,
-        'rank' => (isset($author['rank']) && is_numeric($author['rank'])) ? $author['rank'] : $key,
+        'cid' => $author['cid'],
+        'rank' => ((isset($author['rank']) && is_numeric($author['rank'])) ? $author['rank'] : $key),
         'auth_type' => $author['auth_type'],
         'auth_category' => $cat,
       );
@@ -209,11 +261,11 @@ function biblio_parse_author($author_array, $cat = 0) {
       // clause rules out things such as author="a{\"{o}}"
       //
       if (preg_match("/(.*){([^\\\].*)}/", $value, $matches) && !(preg_match("/(.*){\\\.{.*}.*}/", $value, $matches2))) {
-        $author = split(" ", $matches[1]);
+        $author = explode(" ", $matches[1]);
         $surname = $matches[2];
       }
       else {
-        $author = split(" ", $value);
+        $author = explode(" ", $value);
         // last of array is surname (no prefix if entered correctly)
         $surname = array_pop($author);
       }
@@ -227,11 +279,11 @@ function biblio_parse_author($author_array, $cat = 0) {
     // If $size is 3, we're looking at something like Bush, Jr. III, George W
     else {
       // middle of array is 'Jr.', 'IV' etc.
-      $appellation = join(' ', array_splice($author, 1, 1));
+      $appellation = implode(' ', array_splice($author, 1, 1));
       // first of array is surname (perhaps with prefix)
       list ($surname, $prefix) = _grabSurname(array_shift($author));
     }
-    $remainder = join(" ", $author);
+    $remainder = implode(" ", $author);
     list ($firstname, $initials, $prefix2) = _grabFirstnameInitials($remainder);
     if (!empty ($prefix2))
     $prefix .= $prefix2;
@@ -263,7 +315,7 @@ function _md5sum($creator) {
 function _grabFirstnameInitials($remainder) {
   $prefix = array();
   $firstname = $initials = '';
-  $array = split(" ", $remainder);
+  $array = explode(" ", $remainder);
   foreach ($array as $value) {
     $firstChar = drupal_substr($value, 0, 1);
     if ((ord($firstChar) >= 97) && (ord($firstChar) <= 122)){
@@ -275,13 +327,13 @@ function _grabFirstnameInitials($remainder) {
     }
   }
   if (isset ($initialsArray)) {
-    $initials = join(" ", $initialsArray);
+    $initials = implode(" ", $initialsArray);
   }
   if (isset ($firstnameArray)) {
-    $firstname = join(" ", $firstnameArray);
+    $firstname = implode(" ", $firstnameArray);
   }
   if (!empty ($prefix)){
-    $prefix = join(" ", $prefix);
+    $prefix = implode(" ", $prefix);
   }
   return array($firstname,$initials,$prefix);
 }
@@ -292,41 +344,41 @@ function _grabFirstnameInitials($remainder) {
  * @return unknown_type
  */
 function _grabSurname($input) {
-  $surnameArray = split(" ", $input);
-  $noPrefix = $surname = FALSE;
+  $noPrefix = FALSE;
+  $surname = FALSE;
+  $prefix  = FALSE;
+
+  $surnameArray = explode(" ", $input);
+
   foreach ($surnameArray as $value) {
     $firstChar = substr($value, 0, 1);
-    if (!$noPrefix && (ord($firstChar) >= 97) && (ord($firstChar) <= 122))
-    $prefix[] = $value;
+    if (!$noPrefix && (ord($firstChar) >= 97) && (ord($firstChar) <= 122)) {
+      $prefix[] = $value;
+    }
     else {
       $surname[] = $value;
       $noPrefix = TRUE;
     }
   }
-  if ($surname)
-  $surname = join(" ", $surname);
-  if (isset ($prefix)) {
-    $prefix = join(" ", $prefix);
-    return array(
-    $surname,
-    $prefix
-    );
+  if (!empty($surname)) {
+    $surname = implode(" ", $surname);
   }
-  return array(
-  $surname,
-  FALSE
-  );
+  if (!empty ($prefix)) {
+    $prefix = implode(" ", $prefix);
+  }
+  return array($surname, $prefix);
 }
 /**
  * @return unknown_type
  */
 function _loadMD5() {
-  static $md5 = array();
-  static $count =0;
+  static $md5   = array();
+  static $count = 0;
   $db_count = db_result(db_query("SELECT COUNT(*) FROM {biblio_contributor_data}"));
-  if ($db_count > $count){
+  if ($db_count != $count){
     $count = $db_count;
-    $result = db_query('SELECT md5,cid	FROM {biblio_contributor_data} ');
+    $md5 = array();
+    $result = db_query('SELECT md5,cid  FROM {biblio_contributor_data} ');
     while ($row = db_fetch_array($result)) {
       $md5[$row['cid']] = $row['md5'];
     }

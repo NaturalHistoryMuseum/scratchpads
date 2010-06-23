@@ -1,6 +1,6 @@
 <?php
 
-// $Id: biblio_style_ieee.inc,v 1.8.2.15 2009/09/30 15:48:25 rjerome Exp $
+// $Id: biblio_style_ieee.inc,v 1.8.2.16 2010/05/03 00:57:36 rjerome Exp $
 // by Jeffrey Dwoskin
 // A style closer to IEEE format
 // see http://standards.ieee.org/guides/style/section7.html#992
@@ -56,7 +56,7 @@ function biblio_style_ieee($node, $base = 'biblio', $inline = false) {
   $output .= '<span class="biblio-authors">' . $authors . ", </span> \n";
   switch ($node->biblio_type) {
     default :
-      $url = biblio_get_title_url_info($node);
+      $url = biblio_get_title_url_info($node, $base, $inline);
       if (!empty ($node->biblio_secondary_title)) {
         $output .= '<span class="biblio-title">&quot;';
         $output .= l($node->title, $url['link'], $url['options']);

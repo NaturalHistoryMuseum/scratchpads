@@ -15,7 +15,7 @@
 
 // Modified for use in biblio by Ron Jerome
 //
-// $Id: biblio_style_ama.inc,v 1.1.2.16 2009/12/19 01:27:07 rjerome Exp $
+// $Id: biblio_style_ama.inc,v 1.1.2.17 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -76,7 +76,7 @@ function biblio_style_ama($node, $base = 'biblio', $inline = false) {
         if (!empty($authors)) $output .= " ";
         $output .= '"' ;
         $output .= '<span class="biblio-title-ama">';
-        $url = biblio_get_title_url_info($node);
+        $url = biblio_get_title_url_info($node, $base, $inline);
         $output .= l($node->title, $url['link'], $url['options']);
         $output .= "</span>";
         if (!preg_match("/[?!.]$/", $node->title)) $output .= ".";
@@ -186,7 +186,7 @@ function biblio_style_ama($node, $base = 'biblio', $inline = false) {
 
         $output .= '"<i>' ;
         $output .= '<span class="biblio-title-ama">';
-        $url = biblio_get_title_url_info($node);
+        $url = biblio_get_title_url_info($node, $base, $inline);
         $output .= l($node->title, $url['link'], $url['options']);
         $output .= "</span>";
         $output .= '</i>';
@@ -333,7 +333,7 @@ function biblio_style_ama($node, $base = 'biblio', $inline = false) {
         $output .= '<i>';
         // TODO: book/volume/report/etc titles should be formatted in heading caps, however, this doesn't yet work correctly if the publication title contains HTML entities
         $output .= '<span class="biblio-title-ama">';
-        $url = biblio_get_title_url_info($node);
+        $url = biblio_get_title_url_info($node, $base, $inline);
         $output .= l($node->title, $url['link'], $url['options']);
         $output .= "</span>";
         $output .= '</i>';

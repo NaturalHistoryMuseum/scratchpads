@@ -203,7 +203,7 @@ function en8_parser_field_map($enfield) {
   if(empty($fmap)) {
     $fmap = array(
        'source-app'               => '',
-       'rec-number'               => 'biblio_custom1',
+       'rec-number'               => '',
        'ref-type'                 => 'biblio_type',
        'auth-address'             => 'biblio_auth_address',
        'auth-affiliaton'          => '',

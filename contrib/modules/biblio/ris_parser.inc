@@ -1,5 +1,5 @@
 <?php
-// $Id: ris_parser.inc,v 1.4.2.22 2009/07/22 18:20:51 rjerome Exp $
+// $Id: ris_parser.inc,v 1.4.2.23 2010/03/22 00:10:57 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *
@@ -105,8 +105,15 @@ function _ris_tagged_import($file, $terms = array(), $batch = FALSE, $session_id
         case 'TI' :
         case 'T1' :
         case 'CT' :
-        case 'BT' :
           $node['title'] .= $value;
+          break;
+        case 'BT' :
+          if ($node['biblio_type'] == 100) {
+            $node['title'] = $value;
+          }
+          else {
+            $node['biblio_secondary_title'] = $value;
+          }
           break;
         case 'UR' :
           $node['biblio_url'] .= $value;
