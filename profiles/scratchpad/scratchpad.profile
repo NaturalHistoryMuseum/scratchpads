@@ -160,7 +160,7 @@ function scratchpad_profile_modules(){
     'scratchpadify',
     'tablesorter',
     'nagger',
-    'bio_image',
+    //'bio_image',  DISABLED. REMOVE SOON
     'itis_term',
     'term_node',
     'spm',
