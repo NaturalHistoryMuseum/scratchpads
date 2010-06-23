@@ -8,24 +8,6 @@ function scratchpadify_install(){
   // Place it almost last (before Devel).
   db_query("UPDATE {system} SET weight = 77 WHERE name = 'scratchpadify'");
   scratchpadify_update_6128();
-  // Image and gallery
-  $gallery_vocab = array(
-    'name' => 'Image Galleries',
-    'description' => 'Structure for your images.',
-    'hierarchy' => 1,
-    'nodes' => array(
-      'image' => 1
-    )
-  );
-  $term = array(
-    'name' => 'Library',
-    'description' => 'The default gallery intended as a starting point for all images'
-  );
-  taxonomy_save_vocabulary($gallery_vocab);
-  variable_set('image_gallery_vid', $gallery_vocab['vid']);
-  // Save the Library term
-  $term['vid'] = $gallery_vocab['vid'];
-  taxonomy_save_term($term);
   // Create the image content type that was previously created by the
   // image.module
   // Create a content type "image"
@@ -42,25 +24,234 @@ function scratchpadify_install(){
   $type->has_body = 1;
   $type->module = 'node';
   node_type_save($type);
-  // Create a field which will be used for storing the images for the new content
-  // type.
-  $field = array(
-    'label' => 'Image',
-    'field_name' => 'field_imagefield',
-    'type_name' => 'image',
-    'type' => 'filefield',
-    'widget_type' => 'imagefield_widget',
-    'file_extensions' => 'jpg gif png',
-    'progress_indicator' => 'bar',
-    'file_path' => 'images',
-    'group' => false,
-    'required' => 0,
-    'multiple' => '1',
-    'module' => 'filefield',
-    'widget_module' => 'imagefield'
+  // Install the taxonomies:
+  $vocabularies = array(
+    array(
+      array(
+        'name' => 'Image Galleries',
+        'description' => 'Structure for your images.',
+        'hierarchy' => 1,
+        'nodes' => array(
+          'image' => 1
+        )
+      ),
+      array(
+        array(
+          'name' => 'Library',
+          'description' => 'The default gallery intended as a starting point for all images'
+        )
+      )
+    ),
+    array(
+      array(
+        'name' => 'Imaging Technique',
+        'help' => 'Select the imaging technique that was used to produce the images.',
+        'description' => 'Describes the way that images have been taken',
+        'hierarchy' => 1,
+        'module' => 'bio_image',
+        'nodes' => array(
+          'image' => 1
+        )
+      ),
+      array(
+        array(
+          'name' => 'Photograph',
+          'description' => 'Captured with a regular camera.'
+        ),
+        array(
+          'name' => 'Illustration',
+          'description' => 'Figurative, hand drawn or computer rendered.'
+        ),
+        array(
+          'name' => 'Light Micrograph',
+          'description' => 'Captured through a regular microscope.'
+        ),
+        array(
+          'name' => 'Scan',
+          'description' => 'A scan of a printed image/diagram/text'
+        ),
+        array(
+          'name' => 'Scanning Electron Micrograph',
+          'description' => 'Captured through a Scanning Electron Microscope.'
+        ),
+        array(
+          'name' => 'Transmission Electron Micrograph',
+          'description' => 'Captured through a Transmission Electron Microscope.'
+        ),
+        array(
+          'name' => 'Other',
+          'description' => 'None of the above.'
+        )
+      )
+    ),
+    array(
+      array(
+        'name' => 'Preparation Technique',
+        'help' => 'Describe how the specimen was prepared for imaging (Leave blank if your image isn\'t a specimen)',
+        'description' => 'Describe how the specimen was prepared for imaging.',
+        'module' => 'bio_image',
+        'tags' => 1,
+        'nodes' => array(
+          'image' => 1
+        )
+      ),
+      array()
+    ),
+    array(
+      array(
+        'name' => 'Keywords',
+        'help' => 'Comma-separated keywords describing the image Parts, sex, form, developmental stage, view angle, people, building etc. Enclose phrases in "quotation marks". Examples: Antenna, Head, Juvenile, "First instar", conference, museum, specimen.',
+        'description' => 'Describe the parts, sex, form, developmental stage, view angle etc shown in the image.',
+        'module' => 'bio_image',
+        'tags' => 1,
+        'nodes' => array(
+          'image' => 1
+        )
+      ),
+      array()
+    )
+  );
+  foreach($vocabularies as $key => $vocabulary){
+    taxonomy_save_vocabulary($vocabulary[0]);
+    if($key == 'image_gallery'){
+      variable_set('image_gallery_vid', $vocabulary[0]['vid']);
+    }
+    $vid = $vocabulary[0]['vid'];
+    foreach($vocabulary[1] as $term){
+      $term['vid'] = $vid;
+      $children = $term['children'];
+      taxonomy_save_term($term);
+      $parent = array(
+        $term['tid']
+      );
+      if(isset($children)){
+        foreach($children as $term){
+          $term['parent'] = $parent;
+          $term['vid'] = $vid;
+          taxonomy_save_term($term);
+        }
+      }
+    }
+  }
+  $fields = array(
+    array(
+      'label' => 'Image',
+      'field_name' => 'field_imagefield',
+      'type_name' => 'image',
+      'type' => 'filefield',
+      'widget_type' => 'imagefield_widget',
+      'file_extensions' => 'jpg gif png',
+      'progress_indicator' => 'bar',
+      'file_path' => 'images',
+      'group' => false,
+      'required' => 0,
+      'multiple' => '1',
+      'module' => 'filefield',
+      'widget_module' => 'imagefield'
+    ),
+    array(
+      'field_name' => 'image_publication',
+      'type_name' => 'image',
+      'display_settings' => array(
+        'label' => array(
+          'format' => 'above',
+          'exclude' => 0
+        ),
+        'teaser' => array(
+          'format' => 'default',
+          'exclude' => 0
+        ),
+        'full' => array(
+          'format' => 'default',
+          'exclude' => 0
+        ),
+        'email_plain' => array(
+          'format' => 'default',
+          'exclude' => 0
+        ),
+        'email_html' => array(
+          'format' => 'default',
+          'exclude' => 0
+        ),
+        'token' => array(
+          'format' => 'default',
+          'exclude' => 0
+        )
+      ),
+      'widget_active' => '1',
+      'type' => 'nodereference',
+      'required' => '0',
+      'multiple' => '0',
+      'db_storage' => '1',
+      'module' => 'nodereference',
+      'active' => '1',
+      'locked' => '1',
+      'columns' => array(
+        'nid' => array(
+          'type' => 'int',
+          'unsigned' => true,
+          'not null' => false
+        )
+      ),
+      'referenceable_types' => array(),
+      'advanced_view' => 'biblio_nodes',
+      'widget' => array(
+        'autocomplete_match' => 'contains',
+        'default_value' => array(
+          0 => array(
+            'nid' => ''
+          )
+        ),
+        'default_value_php' => NULL,
+        'label' => 'Publication',
+        'weight' => '31',
+        'description' => '',
+        'type' => 'nodereference_select',
+        'module' => 'nodereference'
+      )
+    ),
+    array(
+      'field_name' => 'image_specimen',
+      'type_name' => 'image',
+      'widget_active' => '1',
+      'type' => 'nodereference',
+      'required' => '0',
+      'multiple' => '0',
+      'db_storage' => '1',
+      'module' => 'nodereference',
+      'active' => '1',
+      'locked' => '1',
+      'columns' => array(
+        'nid' => array(
+          'type' => 'int',
+          'unsigned' => true,
+          'not null' => false
+        )
+      ),
+      'referenceable_types' => array(
+        'darwincore' => 'darwincore'
+      ),
+      'widget' => array(
+        'autocomplete_match' => 'contains',
+        'default_value' => array(
+          0 => array(
+            'nid' => ''
+          )
+        ),
+        'default_value_php' => NULL,
+        'label' => 'Specimen',
+        'weight' => '31',
+        'description' => '',
+        'type' => 'nodereference_select',
+        'module' => 'nodereference'
+      )
+    )
   );
   module_load_include('crud.inc', 'content', 'includes/content');
-  content_field_instance_create($field);
+  foreach($fields as $field){
+    // Add the field
+    content_field_instance_create($field);
+  }
 }
 
 function scratchpadify_update_6101(){
@@ -834,12 +1025,10 @@ function scratchpadify_update_6142(){
       '!modules' => implode(", ", $uninstall_modules)
     ))
   );
-  
   // Set the default send method.
   variable_set('messaging_default_method', 'mail');
   variable_set('notifications_default_send_interval', 0);
   variable_get('notifications_send_immediate', 1);
-  
   // Cache shit!
   drupal_rebuild_theme_registry();
   node_types_rebuild();
@@ -847,14 +1036,13 @@ function scratchpadify_update_6142(){
   cache_clear_all('schema', 'cache');
   drupal_clear_css_cache();
   drupal_clear_js_cache();
-  
   return $ret;
 }
 
 /**
  * Upgrade from image module to imagecache etc.
+ */
 function scratchpadify_update_6143(){
   include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
- */

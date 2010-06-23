@@ -1,4 +1,8 @@
 <?php
+/**
+ * 
+  else
+ */
 function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
   if(isset($form['og_nodeapi'])){
     $form['og_nodeapi']['#type'] = 'fieldset';
@@ -7,6 +11,16 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
   // Prevent displaying of admin user on user list.
   if($form_id == 'block_admin_display_form'){
     unset($form['scratchpadify_4']);
+  }
+  if ($form_id == 'taxonomy_overview_vocabularies'){
+    foreach($form as $key => $value){
+      if(is_numeric($key) && isset($value['#vocabulary']['module']) && $value['#vocabulary']['module'] == 'bio_image'){
+        unset($form[$key]);
+      }
+    }
+  }
+  if($form_id == 'image_node_form'){    
+    $form['taxonomy']['#title'] = t('Annotations');
   }
   if($form_id == 'node_import_add_form'  && isset($_GET['type']) && !$form_state['submitted']){
     $form_state = array (
@@ -134,6 +148,11 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
       // Collapse the content types and settings fieldsets.
       $form['content_types']['#collapsed'] = TRUE;
       $form['settings']['#collapsed'] = TRUE;
+    }
+    if($form['module']['#value'] == 'bio_image'){
+      $vocabulary = check_plain($form['identification']['name']['#default_value']);
+      drupal_set_message(t('The %vocabulary vocabulary can not be edited', array('%vocabulary'=>$vocabulary)), 'error');
+      drupal_goto('admin/content/taxonomy');
     }
   }
   else if($form_id == 'install_configure_form'){
