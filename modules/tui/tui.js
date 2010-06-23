@@ -280,6 +280,10 @@ Drupal.tui.form_success = function(data){
     }
     if($(id).val()){
       $('#tui-name-editing').html($(id).val());
+      // Another one for the f'ing ITIS module.
+      if($('#itis_term_unit_name1 input').val()){
+        $('#tui-name-editing').html($('#itis_term_unit_name1 input').val()+' '+$('#itis_term_unit_name2 input').val()+' '+$('#itis_term_unit_name3 input').val()+' '+$('#itis_term_unit_name4 input').val())
+      }
       name_not_found = false;
     }
     i ++;

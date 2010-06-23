@@ -17,6 +17,9 @@ Drupal.itis_term.init = function(context) {
   $('.itis_term_unit input', context).bind('focusout', function(){
     Drupal.itis_term.showorhide_unit_fields(context);
   });
+  $('.itis_term_unit select', context).change(function(){
+    Drupal.itis_term.showorhide_unit_fields(context);
+  });
   $('#itis_term_usage select', context).change(function(){
     Drupal.itis_term.showorhide_usage_fields(context);
   });
@@ -57,6 +60,9 @@ Drupal.itis_term.showorhide_unit_fields = function(context){
     $('#itis_term_unit_ind4', context).hide();
   } else {
     $('#itis_term_unit_ind4', context).fadeIn(500);
+  }
+  if($('#itis_term_unit_name1 input', context).val()){
+    $('#tui-name-editing').html($('#itis_term_unit_ind1 select', context).val()+' '+$('#itis_term_unit_name1 input', context).val()+' '+$('#itis_term_unit_ind2 select', context).val()+' '+$('#itis_term_unit_name2 input', context).val()+' '+$('#itis_term_unit_ind3 select', context).val()+' '+$('#itis_term_unit_name3 input', context).val()+' '+$('#itis_term_unit_ind4 select', context).val()+' '+$('#itis_term_unit_name4 input', context).val())
   }
 }
 
