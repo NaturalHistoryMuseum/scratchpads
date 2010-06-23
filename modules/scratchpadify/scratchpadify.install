@@ -145,10 +145,25 @@ function scratchpadify_install(){
       'file_path' => 'images',
       'group' => false,
       'required' => 0,
-      'weight' => -1,
+      'weight' => -2,
       'multiple' => '1',
       'module' => 'filefield',
-      'widget_module' => 'imagefield'
+      'widget_module' => 'imagefield',
+      'display_settings' => array(
+        'weight' => 0,
+        'parent' => '',
+        'label' => array(
+          'format' => 'hidden'
+        ),
+        'teaser' => array(
+          'format' => 'imagefield__lightbox2__thumbnail__preview',
+          'exclude' => 0
+        ),
+        'full' => array(
+          'format' => 'preview_default',
+          'exclude' => 0
+        )
+      )
     ),
     array(
       'field_name' => 'image_publication',
