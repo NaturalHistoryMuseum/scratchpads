@@ -774,7 +774,19 @@ function scratchpad_profile_tasks_4(){
   drupal_rebuild_theme_registry();
   node_types_rebuild();
   menu_rebuild();
-  cache_clear_all('schema', 'cache');
+  // Clear all caches
+  cache_clear_all('*', 'cache', TRUE);
+  cache_clear_all('*', 'cache_block', TRUE);
+  cache_clear_all('*', 'cache_content', TRUE);
+  cache_clear_all('*', 'cache_filter', TRUE);
+  cache_clear_all('*', 'cache_form', TRUE);
+  cache_clear_all('*', 'cache_location', TRUE);
+  cache_clear_all('*', 'cache_menu', TRUE);
+  cache_clear_all('*', 'cache_mollom', TRUE);
+  cache_clear_all('*', 'cache_page', TRUE);
+  cache_clear_all('*', 'cache_term', TRUE);
+  cache_clear_all('*', 'cache_views', TRUE);
+  cache_clear_all('*', 'cache_views_data', TRUE);
 }
 
 /**
