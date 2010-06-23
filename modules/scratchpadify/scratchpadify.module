@@ -78,7 +78,7 @@ function theme_scratchpadify_subgallery($term){
   // Create HTML
   return '<div class="scratchpadify-subgallery">
   <div class="scratchpadify-subgallery-image">
-    ' . theme_imagecache('thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']) . '
+    ' . theme('imagecache', 'thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']) . '
   </div>
   <div class="scratchpadify-subgallery-details">
     <h3>' . l(check_plain($term->name), 'image/tid/' . $term->tid) . '</h3>
