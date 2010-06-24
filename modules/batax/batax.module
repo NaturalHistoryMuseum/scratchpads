@@ -343,7 +343,7 @@ function batax_use_batax($vid, $type = FALSE){
   if(isset($vids[$vid]) && $vids[$vid]){
     return false;
   }
-  $num_terms = array_pop(db_fetch_array(db_query("SELECT COUNT(tid) FROM {term_data} WHERE vid = %d", $vid)));
+  $num_terms = array_pop(db_fetch_array(db_query(db_rewrite_sql("SELECT COUNT(tid) FROM {term_data} t WHERE vid = %d", 't', 'tid'), $vid)));
   $minimum_to_use_batax = variable_get('batax_max_options', 100);
   return $num_terms > $minimum_to_use_batax;
 }
@@ -364,7 +364,7 @@ function batax_split_field($string, $vid){
     }
     // For sanity sake we'll make sure these TIDs could have been added
     $tids[] = $vid;
-    $results = db_query("SELECT tid FROM {term_data} WHERE tid IN (".implode(",",$place_holder).") AND vid = %d", $tids);
+    $results = db_query("SELECT tid FROM {term_data} t WHERE tid IN (".implode(",",$place_holder).") AND vid = %d", 't', 'tid'), $tids);
     $return_array = array();
     while($row = db_fetch_array($results)){
       $return_array[$row['tid']] = $row['tid'];
