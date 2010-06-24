@@ -23,7 +23,7 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     $term_has_children = FALSE;
     if(!is_array($branch) || !count($branch)){
       // Does this term have children
-      $term_has_children = db_result(db_query('SELECT COUNT(*) FROM {term_hierarchy} WHERE parent = %d', $term->tid));
+      $term_has_children = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $term->tid));
     }
     $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><p><span class="tui-nodeleaf ';
     if(is_array($branch) && count($branch)){
@@ -81,8 +81,8 @@ function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
       // PREVIOUS
       // Get the parent of the current term, then get all children, and return
       // the previous term.  If we're already at the root, and previous is
-      // pressed, then return the last child of the previous term
-      $parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $tid));
+      // pressed, then return the last child of the previous term      
+      $parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $tid));
       $siblings = taxonomy_get_children($parent, $vid);
       $previous_found = FALSE;
       while($siblings){
@@ -117,7 +117,7 @@ function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
 }
 
 function _tui_get_next_sibling($vid, $tid){
-  $parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $tid));
+  $parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $tid));
   $siblings = taxonomy_get_children($parent, $vid);
   $next_found = FALSE;
   while($siblings){
@@ -172,21 +172,21 @@ function tui_move_term($method, $vid, $term, $to){
   }
   $term_bits = explode("-", $term);
   $term = taxonomy_get_term($term_bits[1]);
-  $term->parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $term->tid));
+  $term->parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $term->tid));
   $to_bits = explode("-", $to);
   $to = taxonomy_get_term($to_bits[1]);
-  $to->parent = db_result(db_query("SELECT parent FROM {term_hierarchy} WHERE tid = %d", $to->tid));
+  $to->parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $to->tid));
   $current_term = (array)$term;
 
   if($method=='child'){
-    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->tid, $term->tid, $vid);
+    $results = db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t LEFT JOIN {term_hierarchy} h ON h.tid = t.tid WHERE parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name"), $to->tid, $term->tid, $vid);
     $siblings = array($term->tid);
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
     }
     $term->parent = $to->tid;
   } else {
-    $results = db_query("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", $to->parent, $term->tid, $vid);
+    $results = db_query(db_rewrite_sql("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", 't', 'tid'), $to->parent, $term->tid, $vid);
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
       if($row['tid'] == $to->tid){
@@ -199,6 +199,8 @@ function tui_move_term($method, $vid, $term, $to){
   taxonomy_save_term($term);
   $weight = 1;
   foreach($siblings as $sibling){
+    // Note, we're not using a taxonomy function here for efficieny and speed.
+    // A little naughty, but hey, it's only the weight FFS!
     db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
     $weight++;
   }
@@ -216,6 +218,8 @@ function tui_undo_move($vid){
     $current_term['weight'] = $old_settings['term']['weight'];
     taxonomy_save_term($current_term);
     foreach($old_settings['siblings'] as $sibling){
+      // Note, we're not using a taxonomy function here for efficieny and speed.
+      // A little naughty, but hey, it's only the weight FFS!
       db_query("UPDATE {term_data} SET weight = %d WHERE tid = %d", $sibling['weight'], $sibling['tid']);
     }
     echo $current_term['tid'];
@@ -256,7 +260,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
         array_shift($ancestors);
         while($ancestors){
           $term = array_shift($ancestors);
-          $result = db_query('SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE parent = %d AND vid = %d AND t.tid = h.tid ORDER BY weight, name', $term->tid, $vid);
+          $result = db_query(db_rewrite_sql('SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE parent = %d AND vid = %d AND t.tid = h.tid ORDER BY weight, name', 't', 'tid'), $term->tid, $vid);
           $previous_branch = $branch;
           $branch = array();
           while($row = db_fetch_array($result)){
@@ -325,7 +329,7 @@ function tui_get_tree_themed($vid){
   }
   // Check to see if we want to display the most recently added.
   if(arg(3) == 'added'){
-    $active = db_result(db_query('SELECT tid FROM {term_data} WHERE vid = %d ORDER BY tid DESC LIMIT 1', $vid));
+    $active = db_result(db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE vid = %d ORDER BY tid DESC LIMIT 1', 't', 'tid'), $vid));
     $tids[] = $active;
   } else {
     $active = FALSE;
