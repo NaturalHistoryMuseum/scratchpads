@@ -10,12 +10,14 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
   $output = '<ul>';
   foreach($taxonomy_tree as $tid => $branch){
     $term = taxonomy_get_term($tid);
-    $terms = array($term->tid => $term);
+    $terms = array(
+      $term->tid => $term
+    );
     module_invoke_all('taxonomy_term_load', $terms);
     // Similar to module_invoke_all, excepts passes by reference correctly.
     foreach($modules as $module => $values){
-      if(function_exists($module.'_taxonomy_term_load')){
-        $function = $module.'_taxonomy_term_load';
+      if(function_exists($module . '_taxonomy_term_load')){
+        $function = $module . '_taxonomy_term_load';
         $function($terms);
       }
     }
@@ -25,23 +27,22 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
       // Does this term have children
       $term_has_children = db_result(db_query(db_rewrite_sql('SELECT COUNT(*) FROM {term_hierarchy} t WHERE parent = %d', 't', 'tid'), $term->tid));
     }
-    $output .= '<li id="tidandvid-'.$term->tid.'-'.$term->vid.'"><p><span class="tui-nodeleaf ';
+    $output .= '<li id="tidandvid-' . $term->tid . '-' . $term->vid . '"><p><span class="tui-nodeleaf ';
     if(is_array($branch) && count($branch)){
       $output .= 'tui-node-open';
-    }
-    else if($term_has_children){
+    }else if($term_has_children){
       $output .= 'tui-node-closed';
-    } else {
+    }else{
       $output .= 'tui-leaf';
     }
-    $output .= '"><img src="'.base_path().drupal_get_path('module','tui').'/images/empty.gif" width="9px" height="9px"></span><span class="tui-term';  
+    $output .= '"><img src="' . base_path() . drupal_get_path('module', 'tui') . '/images/empty.gif" width="9px" height="9px"></span><span class="tui-term';
     if($active == $term->tid){
       $output .= ' active';
     }
-    if(isset($term->usage) && ($term->usage == 4|| $term->usage == 2)){
+    if(isset($term->usage) && ($term->usage == 4 || $term->usage == 2)){
       $output .= ' usage-invalid';
     }
-    $output .= '" id="tid-'.$term->tid.'">'.check_plain($term->name).'</span></p>';
+    $output .= '" id="tid-' . $term->tid . '">' . check_plain($term->name) . '</span></p>';
     if(is_array($branch)){
       $output .= theme_tui_tree($branch, $active);
     }
@@ -65,19 +66,19 @@ function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
       if(count($children)){
         $next_child = array_shift($children);
         echo $next_child->tid;
-      } else {
+      }else{
         // We have no children, we need the following siblings.
         $ancestors = taxonomy_get_parents_all($tid);
         foreach($ancestors as $ancestor){
           $next_tid = _tui_get_next_sibling($vid, $ancestor->tid);
           if($next_tid){
             echo $next_tid;
-            exit;
+            exit();
           }
         }
         echo $tid;
       }
-    } else {
+    }else{
       // PREVIOUS
       // Get the parent of the current term, then get all children, and return
       // the previous term.  If we're already at the root, and previous is
@@ -90,7 +91,7 @@ function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
         if($sibling->tid == $tid && count($siblings)){
           $previous_term = array_pop($siblings);
           echo _tui_get_last_child($vid, $previous_term->tid);
-          exit;
+          exit();
         }
       }
       // No previous siblings - lets return the parent if we're not at the root.
@@ -98,18 +99,18 @@ function tui_nextorprevious_tid($nextorprevious, $vid, $tid){
       // must be the first term, so there isn't a previous one!
       if($parent){
         echo $parent;
-      } else {
+      }else{
         echo $tid;
       }
     }
-  } else {
+  }else{
     // We need either the first, or the last term - taxonomy_get_tree would be 
     // the lazy man's choice here!
     if($nextorprevious == 'tui-next'){
       // NEXT - get the first
       $first_child = array_shift(taxonomy_get_children(0, $vid));
       echo $first_child->tid;
-    } else {
+    }else{
       $tid = 0;
       echo _tui_get_last_child($vid, $tid);
     }
@@ -137,11 +138,11 @@ function _tui_get_last_child($vid, $tid){
     if(count($children)){
       $last_child = array_pop($children);
       $tid = $last_child->tid;
-    } else {
+    }else{
       $has_children = FALSE;
     }
   }
-  return $tid;  
+  return $tid;
 }
 
 /**
@@ -150,7 +151,6 @@ function _tui_get_last_child($vid, $tid){
 function tui_get_children($tid_and_vid){
   // Get the tree, then theme it, then return it.
   $parts = explode("-", $tid_and_vid);
-  
   $tree = array();
   $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d) ORDER BY weight, name', 't', 'tid'), $parts[1]);
   while($tid = db_result($results)){
@@ -167,9 +167,7 @@ function tui_get_children($tid_and_vid){
  */
 function tui_move_term($method, $vid, $term, $to){
   // Only continue if term != to, as JS can mess things up occasionaly
-  if($term == $to){
-    return;
-  }
+  if($term == $to){return;}
   $term_bits = explode("-", $term);
   $term = taxonomy_get_term($term_bits[1]);
   $term->parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $term->tid));
@@ -177,15 +175,16 @@ function tui_move_term($method, $vid, $term, $to){
   $to = taxonomy_get_term($to_bits[1]);
   $to->parent = db_result(db_query(db_rewrite_sql('SELECT parent FROM {term_hierarchy} t WHERE t.tid = %d', 't', 'tid'), $to->tid));
   $current_term = (array)$term;
-
-  if($method=='child'){
+  if($method == 'child'){
     $results = db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t LEFT JOIN {term_hierarchy} h ON h.tid = t.tid WHERE parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name"), $to->tid, $term->tid, $vid);
-    $siblings = array($term->tid);
+    $siblings = array(
+      $term->tid
+    );
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
     }
     $term->parent = $to->tid;
-  } else {
+  }else{
     $results = db_query(db_rewrite_sql("SELECT t.tid FROM {term_hierarchy} h, {term_data} t WHERE h.tid = t.tid AND parent = %d AND t.tid != %d AND vid = %d ORDER BY weight, name", 't', 'tid'), $to->parent, $term->tid, $vid);
     while($row = db_fetch_array($results)){
       $siblings[] = $row['tid'];
@@ -193,7 +192,7 @@ function tui_move_term($method, $vid, $term, $to){
         $siblings[] = $term->tid;
       }
     }
-    $term->parent = $to->parent;    
+    $term->parent = $to->parent;
   }
   $term = (array)$term;
   taxonomy_save_term($term);
@@ -204,7 +203,10 @@ function tui_move_term($method, $vid, $term, $to){
     db_query('UPDATE {term_data} SET weight = %d WHERE tid = %d', $weight, $sibling);
     $weight++;
   }
-  $_SESSION['tui_moved_terms'][$vid][] = array('term' => $current_term, 'siblings' => $siblings);
+  $_SESSION['tui_moved_terms'][$vid][] = array(
+    'term' => $current_term,
+    'siblings' => $siblings
+  );
 }
 
 /**
@@ -238,7 +240,7 @@ function tui_delete_term($term_id){
   }
 }
 
-function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
+function tui_get_tree($vid, $tids = array(), &$all_tids = array()){
   $tree = array();
   $all_tids = array();
   $results = db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = 0) AND vid = %d ORDER BY weight, name', 't', 'tid'), $vid);
@@ -254,7 +256,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
       // Term exists, now we should get all its ancestors
       $ancestors = taxonomy_get_parents_all($tid);
       // If we have more than one ancestor, then we need to do stuff
-      if(count($ancestors)>1){
+      if(count($ancestors) > 1){
         // For every term in the list, we need to show all the children of that
         // term (except for the very last one).
         array_shift($ancestors);
@@ -267,7 +269,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
             $all_tids[$row['tid']] = $row['tid'];
             if($row['tid'] == $previous_tid){
               $branch[$row['tid']] = $previous_branch;
-            } else {
+            }else{
               $branch[$row['tid']] = array();
             }
           }
@@ -275,7 +277,7 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
         }
         if(is_array($tree[$term->tid])){
           $tree[$term->tid] = array_merge_recursive_distinct($branch, $tree[$term->tid]);
-        } else {
+        }else{
           $tree[$term->tid] = $branch;
         }
       }
@@ -297,19 +299,26 @@ function tui_get_tree($vid, $tids = array(), &$all_tids=array()){
 function array_merge_recursive_distinct(){
   $arrays = func_get_args();
   $base = array_shift($arrays);
-  if(!is_array($base)) $base = empty($base) ? array() : array($base);
-  foreach($arrays as $append) {
-    if(!is_array($append)) $append = array($append);
-    foreach($append as $key => $value) {
-      if(!array_key_exists($key, $base) and !is_numeric($key)) {
+  if(!is_array($base))
+    $base = empty($base) ? array() : array(
+      $base
+    );
+  foreach($arrays as $append){
+    if(!is_array($append))
+      $append = array(
+        $append
+      );
+    foreach($append as $key => $value){
+      if(!array_key_exists($key, $base) and !is_numeric($key)){
         $base[$key] = $append[$key];
         continue;
       }
-      if(is_array($value) or is_array($base[$key])) {
+      if(is_array($value) or is_array($base[$key])){
         $base[$key] = array_merge_recursive_distinct($base[$key], $append[$key]);
-      } else if(is_numeric($key)) {
-        if(!in_array($value, $base)) $base[] = $value;
-      } else {
+      }else if(is_numeric($key)){
+        if(!in_array($value, $base))
+          $base[] = $value;
+      }else{
         $base[$key] = $value;
       }
     }
@@ -331,7 +340,7 @@ function tui_get_tree_themed($vid){
   if(arg(3) == 'added'){
     $active = db_result(db_query(db_rewrite_sql('SELECT tid FROM {term_data} t WHERE vid = %d ORDER BY tid DESC LIMIT 1', 't', 'tid'), $vid));
     $tids[] = $active;
-  } else {
+  }else{
     $active = FALSE;
   }
   $tree = tui_get_tree($vid, $tids);
