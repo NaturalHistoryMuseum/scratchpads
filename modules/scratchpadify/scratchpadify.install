@@ -1058,15 +1058,15 @@ function scratchpadify_update_6142(){
 
 /**
  * Upgrade from image module to imagecache etc.
- */
 function scratchpadify_update_6143(){
   include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
+ */
 
 /**
  * Update bio_image vocabularies.
- */
 function scratchpadify_update_6144(){
   update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
 }
+ */
