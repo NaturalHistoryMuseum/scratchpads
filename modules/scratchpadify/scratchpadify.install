@@ -1068,8 +1068,10 @@ function scratchpadify_update_6143(){
   cache_clear_all('*', 'cache_views_data', TRUE);
   cache_clear_all('*', 'cache_menu', TRUE);
   drupal_clear_css_cache();
-  drupal_clear_js_cache();
-  return $ret;
+  drupal_clear_js_cache();  
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
