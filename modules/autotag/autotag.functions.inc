@@ -63,20 +63,24 @@ function _autotag_search_field($field, $vids){
           SELECT 
             t.tid, t.vid 
           FROM 
-            {term_lowername} l,
-            {term_data} t 
+            {term_data} t
+          INNER JOIN          
+            {term_lowername} l
+          ON 
+            t.tid = l.tid 
           WHERE 
-            t.tid = l.tid AND 
             lowername IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql 
+            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql ", 't' , 'tid').'
           UNION 
-          SELECT 
+          '.db_rewrite_sql("SELECT 
             t.tid, t.vid 
           FROM 
-            {term_data} t, 
-            {term_synonym} s 
-          WHERE 
-            s.tid = t.tid AND 
+            {term_data} t
+          INNER JOIN          
+            {term_synonym} s
+          ON
+            s.tid = t.tid 
+          WHERE             
             LOWER(s.name) IN (".implode(",",$words_placeholder).") AND 
             (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql", 't', 'tid'),
         array_merge($words,$vids,$words,$vids));
@@ -410,7 +414,7 @@ function _autotag_update_table($nid, $values){
  * Gets the terms that this node will ignore
  */
 function _autotag_get_ignore_terms($nid){
-  $results = db_query(db_rewrite_sql("SELECT a.tid FROM {autotag} a, {term_data} t WHERE nid = %d AND a.tid = t.tid ORDER BY vid,name", 't', 'tid'), $nid);
+  $results = db_query(db_rewrite_sql("SELECT a.tid FROM {term_data} t INNER JOIN {autotag} a ON a.tid = t.tid WHERE nid = %d ORDER BY vid,name", 't', 'tid'), $nid);
   $terms = array();
   while($nid = db_fetch_array($results)){
     $terms[] = taxonomy_get_term($nid['tid']);
