@@ -1,10 +1,8 @@
 <?php
 
-
 /**
  * 
  */
-
 /**
  * Implementation of hook_menu
  */
@@ -13,8 +11,12 @@ function tui_menu(){
     'admin/content/taxonomy/edit/tui/%taxonomy_vocabulary' => array(
       'title' => 'Edit vocabulary',
       'page callback' => 'tui_admin_vocabulary_edit',
-      'page arguments' => array(5),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        5
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.admin.inc'
     ),
@@ -22,81 +24,126 @@ function tui_menu(){
       'title' => 'TUI settings',
       'description' => 'Change the default TUI settings.',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('tui_admin_settings'),
-      'access arguments' => array('administer site configuration'),
+      'page arguments' => array(
+        'tui_admin_settings'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'file' => 'tui.admin.inc'
     ),
     'tui/getform/%' => array(
       'title' => 'Get form',
       'page callback' => 'tui_get_term_form',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
-      'file' => 'tui.admin.inc'    
+      'file' => 'tui.admin.inc'
     ),
     'tui/getchildren/%' => array(
       'title' => 'Get children',
       'page callback' => 'tui_get_children',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/moveterm/%/%/%/%' => array(
       'title' => 'Move term',
       'page callback' => 'tui_move_term',
-      'page arguments' => array(2, 3, 4, 5),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2,
+        3,
+        4,
+        5
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/deleteterm/%' => array(
       'title' => 'Move term',
       'page callback' => 'tui_delete_term',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/nextorprevious/%/%/%' => array(
       'title' => 'Move term',
       'page callback' => 'tui_nextorprevious_tid',
-      'page arguments' => array(2,3,4),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2,
+        3,
+        4
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/undo/%' => array(
       'title' => 'Undo move term',
       'page callback' => 'tui_undo_move',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/gettree' => array(
       'title' => 'Get tree',
       'page callback' => 'tui_get_tree_themed',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.tree.inc'
     ),
     'tui/autocomplete/%' => array(
       'title' => 'Search autocomplete',
       'page callback' => 'tui_autocomplete',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
-      'file' => 'tui.admin.inc'    
+      'file' => 'tui.admin.inc'
     ),
     'tui/search/%' => array(
       'title' => 'Search',
       'page callback' => 'tui_search',
-      'page arguments' => array(2),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'type' => MENU_CALLBACK,
-      'file' => 'tui.admin.inc'    
+      'file' => 'tui.admin.inc'
     )
   );
 }
@@ -107,11 +154,7 @@ function tui_menu(){
 function tui_help($path, $arg){
   switch($path){
     case 'admin/content/taxonomy/edit/tui':
-      return '<h1>'.t('Taxonomy User Interface').'</h1>'.
-      '<p>'.t('Clicking on a term from the taxonomy browser on the left, will bring up a form here.  This form will be identical to the standard term edit form, but with the addition of tabs.').'</p>'.
-      '<p>'.t('Terms can be moved in the tree by simply dragging and dropping.  Click the mouse on a term, ensuring you hold down the button, and then move it to where you would like the term.').
-      ' '.t('When moving a name, if you drag the term being moved over another term, then the term being moved will become a child of the other term.  If you move the mouse to the left whilst over a term, then term will become a sibling of the other term.').'</p>'.
-      '<p>'.t('This editor interface is still under development.  Please provide any feedback in the usual way.').'</p>';
+      return '<h1>' . t('Taxonomy User Interface') . '</h1>' . '<p>' . t('Clicking on a term from the taxonomy browser on the left, will bring up a form here.  This form will be identical to the standard term edit form, but with the addition of tabs.') . '</p>' . '<p>' . t('Terms can be moved in the tree by simply dragging and dropping.  Click the mouse on a term, ensuring you hold down the button, and then move it to where you would like the term.') . ' ' . t('When moving a name, if you drag the term being moved over another term, then the term being moved will become a child of the other term.  If you move the mouse to the left whilst over a term, then term will become a sibling of the other term.') . '</p>' . '<p>' . t('This editor interface is still under development.  Please provide any feedback in the usual way.') . '</p>';
   }
 }
 
@@ -121,11 +164,17 @@ function tui_help($path, $arg){
 function tui_theme(){
   return array(
     'tui_page' => array(
-      'arguments' => array('taxonomy_tree' => NULL, 'vocabulary' => NULL),
+      'arguments' => array(
+        'taxonomy_tree' => NULL,
+        'vocabulary' => NULL
+      ),
       'file' => 'tui.admin.inc'
     ),
     'tui_tree' => array(
-      'arguments' => array('taxonomy_tree' => NULL, 'active' => NULL),
+      'arguments' => array(
+        'taxonomy_tree' => NULL,
+        'active' => NULL
+      ),
       'file' => 'tui.tree.inc'
     )
   );
@@ -145,7 +194,6 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     // These should get added by the Ajax module FIXME
     $form['#submit'][] = 'ajax_submitter';
     $form['#attributes']['class'] = 'ajax-form';
-
     // Tabify the form
     $form['#pre_render'] = array(
       'tui_taxonomy_form_pre_render'
@@ -164,12 +212,14 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     // set).
     if(substr(arg(2), 0, 3) == 'new'){
       $tid_parts = explode('-', arg(2));
-      if(isset($tid_parts[3]) && $tid_parts[3]!='' && $tid_parts[3] != 'undefined'){
+      if(isset($tid_parts[3]) && $tid_parts[3] != '' && $tid_parts[3] != 'undefined'){
         $form['advanced']['parent']['#default_value'] = $tid_parts[3];
         $parent = taxonomy_get_term($tid_parts[3]);
         $form['identification']['parent_message'] = array(
           '#weight' => -1000,
-          '#value' => '<div class="tui-parent-message messages"><p>'.t('This term will be added as a child of %term', array('%term' => $parent->name)).'</p></div>' 
+          '#value' => '<div class="tui-parent-message messages"><p>' . t('This term will be added as a child of %term', array(
+            '%term' => $parent->name
+          )) . '</p></div>'
         );
       }
     }
@@ -181,16 +231,16 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
  */
 function tui_form_taxonomy_overview_vocabularies_alter(&$form, &$form_state){
   $vocabularies = taxonomy_get_vocabularies();
-  foreach ($vocabularies as $vocabulary) {
-    $form[$vocabulary->vid]['edit']['#value'] = '<b>'.l(t('Editor'), "admin/content/taxonomy/edit/tui/$vocabulary->vid").'</b><br/>'.$form[$vocabulary->vid]['edit']['#value'];
+  foreach($vocabularies as $vocabulary){
+    $form[$vocabulary->vid]['edit']['#value'] = '<b>' . l(t('Editor'), "admin/content/taxonomy/edit/tui/$vocabulary->vid") . '</b><br/>' . $form[$vocabulary->vid]['edit']['#value'];
   }
 }
 
 /**
  * Implementation of hook_preprocess_hook
  */
-function tui_preprocess_page(&$variables) {
-  drupal_add_js(drupal_get_path('module', 'tui').'/tui_ajax_plugin.js', 'theme');
+function tui_preprocess_page(&$variables){
+  drupal_add_js(drupal_get_path('module', 'tui') . '/tui_ajax_plugin.js', 'theme');
   return TRUE;
 }
 
@@ -200,7 +250,7 @@ function tui_preprocess_page(&$variables) {
  * included one resets the form.  We want the form to remain as it is to avoid
  * confusing the users.
  */
-function tui_ajax_plugin_ajax_options(&$options) {
+function tui_ajax_plugin_ajax_options(&$options){
   $options['tui_ajax_plugin'] = array(
     '#value' => t('TUI the term form')
   );
