@@ -43,3 +43,22 @@ function imagex_install() {
 function imagex_uninstall(){
   db_query("DELETE FROM {variable} WHERE name = 'imagex_gallery_tid'");
 }
+
+/**
+ * Implements hook_requirements().
+ */
+function imagex_requirements($phase) {
+  $t = get_t();
+
+  // Run this regardless of the phase.
+  if (!module_exists('image') && !module_exists('imagefield')) {
+    $requirements['image_module'] = array(
+      'title' => $t('Required image module'),
+      'value' => $t('The Imagex module requires either <a href="!image">Image</a> or <a href="!imagefield">Imagefield</a> module to be installed first.', array('!image' => 'http://drupal.org/project/image', '!imagefield' => 'http://drupal.org/project/imagefield')),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+  
+  return $requirements;
+}
+
