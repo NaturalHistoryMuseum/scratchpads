@@ -364,7 +364,7 @@ function batax_split_field($string, $vid){
     }
     // For sanity sake we'll make sure these TIDs could have been added
     $tids[] = $vid;
-    $results = db_query("SELECT tid FROM {term_data} t WHERE tid IN (".implode(",",$place_holder).") AND vid = %d", 't', 'tid'), $tids);
+    $results = db_query(db_rewrite_sql("SELECT tid FROM {term_data} t WHERE tid IN (".implode(",",$place_holder).") AND vid = %d", 't', 'tid'), $tids);
     $return_array = array();
     while($row = db_fetch_array($results)){
       $return_array[$row['tid']] = $row['tid'];
