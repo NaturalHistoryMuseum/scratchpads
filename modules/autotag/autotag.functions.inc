@@ -59,7 +59,7 @@ function _autotag_search_field($field, $vids){
     }
     if(count($words_placeholder) && count($vids)){
       // To make the following SQL command easier to read, it has been spaced!
-      $results = db_query("
+      $results = db_query(db_rewrite_sql("
           SELECT 
             t.tid, t.vid 
           FROM 
@@ -78,7 +78,7 @@ function _autotag_search_field($field, $vids){
           WHERE 
             s.tid = t.tid AND 
             LOWER(s.name) IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql",
+            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql", 't', 'tid'),
         array_merge($words,$vids,$words,$vids));
         
       while($row=db_fetch_array($results)){
@@ -105,34 +105,34 @@ function _autotag_search_field($field, $vids){
         $tag_only_leaves_sql = ' AND tid NOT IN (SELECT parent FROM {term_hierarchy}) ';
       }
       if(count($sql_array)){
-        $results = db_query("
+        $results = db_query(db_rewrite_sql("
             SELECT 
               tid
             FROM 
-              {term_lowername} l 
+              {term_lowername} t 
             WHERE 
-              (".implode(" OR ",$sql_array).") $tag_only_leaves_sql 
+              (".implode(" OR ",$sql_array).") $tag_only_leaves_sql ", 't', 'tid'). '
             UNION
-            SELECT 
+            '. db_rewrite_sql("SELECT 
               tid 
             FROM 
-              {term_synonym} s
+              {term_synonym} t
             WHERE 
-              (".implode(" OR ",$sql_array_syn).") $tag_only_leaves_sql",
+              (".implode(" OR ",$sql_array_syn).") $tag_only_leaves_sql", 't', 'tid'),
           array_merge($words_array, $words_array_syn));
         
         while($row=db_fetch_array($results)){
           // Get the full term name, and its synonyms, and check back against the field
-          $results_2 = db_query("
+          $results_2 = db_query(db_rewrite_sql("
               SELECT 
                 tid, vid, LOWER(name) AS name
               FROM 
-                {term_data}
+                {term_data} t
               WHERE 
                 tid = %d AND
-                (".implode(" OR ",$vids_placeholder).")
+                (".implode(" OR ",$vids_placeholder).")", 't', 'tid').'
               UNION
-              SELECT
+              '.db_rewrite_sql("SELECT
                 s.tid, vid, LOWER(s.name) AS name
               FROM 
                 {term_synonym} s,
@@ -140,7 +140,7 @@ function _autotag_search_field($field, $vids){
               WHERE 
                 s.tid = %d AND
                 t.tid=s.tid AND 
-                (".implode(" OR ",$vids_placeholder).")",
+                (".implode(" OR ",$vids_placeholder).")", 't', 'tid'),
             array_merge(array($row['tid']),$vids,array($row['tid']),$vids));
             
           while($row_2=db_fetch_array($results_2)){
@@ -265,7 +265,7 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
           $matches[1][$key] = trim($value, '"');
           $words_place_holders[] = "'%s'";
         }
-        $result = db_query("SELECT tid, name FROM {term_data} WHERE vid IN (%s) AND LOWER(name) IN (".implode(",",$words_place_holders).")", array_merge(array(implode(",",$vids)), $matches[1]));
+        $result = db_query(db_rewrite_sql("SELECT tid, name FROM {term_data} t WHERE vid IN (%s) AND LOWER(name) IN (".implode(",",$words_place_holders).")", 't', 'tid'), array_merge(array(implode(",",$vids)), $matches[1]));
         while($row = db_fetch_array($result)){
           if(!isset($terms[$row['vid']]) || !in_array($row['tid'], $terms[$row['vid']])){
             $terms[$row['vid']][] = $row['tid'];
@@ -410,7 +410,7 @@ function _autotag_update_table($nid, $values){
  * Gets the terms that this node will ignore
  */
 function _autotag_get_ignore_terms($nid){
-  $results = db_query("SELECT a.tid FROM {autotag} a,{term_data} t WHERE nid = %d AND a.tid = t.tid ORDER BY vid,name", $nid);
+  $results = db_query(db_rewrite_sql("SELECT a.tid FROM {autotag} a, {term_data} t WHERE nid = %d AND a.tid = t.tid ORDER BY vid,name", 't', 'tid'), $nid);
   $terms = array();
   while($nid = db_fetch_array($results)){
     $terms[] = taxonomy_get_term($nid['tid']);
