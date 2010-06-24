@@ -261,7 +261,7 @@ function _autotag_form_alter(&$form, &$form_state, $form_id){
             $terms = array($terms);
           }
           if(count($place_holders)){
-            $results = db_query("SELECT * FROM {term_data} WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", $terms);
+            $results = db_query(db_rewrite_sql("SELECT * FROM {term_data} t WHERE tid IN (".implode(',',$place_holders).") ORDER BY name", 't', 'tid'), $terms);
             while($term=db_fetch_object($results)){
               $add_terms[] = $term;
               if(!in_array($term,$ignore_terms)){
