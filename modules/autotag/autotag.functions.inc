@@ -19,29 +19,28 @@
  *       no:continue
  */
 function _autotag_search_field($field, $vids){
-  $terms=array();
+  $terms = array();
   if(is_array($field) || is_object($field)){
     // Field is an array (and likely to be an array of arrays).  Lets
     // recurse into it and check away
-    foreach($field as $field_part=>$value){
-      $terms = array_merge($terms,_autotag_search_field($value, $vids));
+    foreach($field as $field_part => $value){
+      $terms = array_merge($terms, _autotag_search_field($value, $vids));
     }
-  } else {
+  }else{
     // Only search if there is text
-    if(trim($field)==''){return array();}
+    if(trim($field) == ''){return array();}
     // Field is raw text search it for stuff
     /**
      * Discovered that the following only seems to work in PHP 5.2, FARP!
     // Thanks to http://stackoverflow.com/questions/790596/split-a-text-into-single-words
     $words_including_small = preg_split('/[\p{P}\s\{\}\[\]\(\)]/', strtolower($field), -1, PREG_SPLIT_NO_EMPTY);
      */
-    
     $words_including_small = preg_split('/[\ `!"£$%^&*()_\-+={\[}\]:;@\'~#<,>.?\/|\\\]/', strtolower($field), -1, PREG_SPLIT_NO_EMPTY);
     // lets remove the shitty small words.
     $words = array();
     $words_placeholder = array();
     foreach($words_including_small as $key => $word){
-      if(strlen(trim($word))>3){
+      if(strlen(trim($word)) > 3){
         $words[$key] = $word;
         $words_placeholder[] = "'%s'";
       }
@@ -51,7 +50,6 @@ function _autotag_search_field($field, $vids){
     if($tag_only_leaves){
       $tag_only_leaves_sql = ' AND t.tid NOT IN (SELECT parent FROM {term_hierarchy}) ';
     }
-    
     // Because I'm sending words as an array, I've also got to do vids in the same way
     $vids_placeholder = array();
     foreach($vids as $doesntmatter){
@@ -69,10 +67,10 @@ function _autotag_search_field($field, $vids){
           ON 
             t.tid = l.tid 
           WHERE 
-            lowername IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql ", 't' , 'tid').'
+            lowername IN (" . implode(",", $words_placeholder) . ") AND 
+            (" . implode(" OR ", $vids_placeholder) . ") $tag_only_leaves_sql ", 't', 'tid') . '
           UNION 
-          '.db_rewrite_sql("SELECT 
+          ' . db_rewrite_sql("SELECT 
             t.tid, t.vid 
           FROM 
             {term_data} t
@@ -81,12 +79,13 @@ function _autotag_search_field($field, $vids){
           ON
             s.tid = t.tid 
           WHERE             
-            LOWER(s.name) IN (".implode(",",$words_placeholder).") AND 
-            (".implode(" OR ",$vids_placeholder).") $tag_only_leaves_sql", 't', 'tid'),
-        array_merge($words,$vids,$words,$vids));
-        
-      while($row=db_fetch_array($results)){
-        $terms[] = array('tid'=>$row['tid'], 'vid'=>$row['vid']);
+            LOWER(s.name) IN (" . implode(",", $words_placeholder) . ") AND 
+            (" . implode(" OR ", $vids_placeholder) . ") $tag_only_leaves_sql", 't', 'tid'), array_merge($words, $vids, $words, $vids));
+      while($row = db_fetch_array($results)){
+        $terms[] = array(
+          'tid' => $row['tid'],
+          'vid' => $row['vid']
+        );
       }
       $total_words = count($words);
       $sql_array = array();
@@ -94,15 +93,15 @@ function _autotag_search_field($field, $vids){
       $words_array = array();
       $words_array_syn = array();
       foreach($words as $key => $word){
-        if(isset($words_including_small[$key+1])){
+        if(isset($words_including_small[$key + 1])){
           // Now lets search for "pairs" and search on "like".  If any hit, check back on the result against
           // the original field
           $sql_array[] = " lowername LIKE '%s%%%s%%' ";
           $words_array[] = $word;
-          $words_array[] = $words_including_small[$key+1];
+          $words_array[] = $words_including_small[$key + 1];
           $sql_array_syn[] = " LOWER(s.name) LIKE '%s%%%s%%' ";
           $words_array_syn[] = $word;
-          $words_array_syn[] = $words_including_small[$key+1];
+          $words_array_syn[] = $words_including_small[$key + 1];
         }
       }
       if($tag_only_leaves){
@@ -115,17 +114,15 @@ function _autotag_search_field($field, $vids){
             FROM 
               {term_lowername} t 
             WHERE 
-              (".implode(" OR ",$sql_array).") $tag_only_leaves_sql ", 't', 'tid'). '
+              (" . implode(" OR ", $sql_array) . ") $tag_only_leaves_sql ", 't', 'tid') . '
             UNION
-            '. db_rewrite_sql("SELECT 
+            ' . db_rewrite_sql("SELECT 
               tid 
             FROM 
               {term_synonym} t
             WHERE 
-              (".implode(" OR ",$sql_array_syn).") $tag_only_leaves_sql", 't', 'tid'),
-          array_merge($words_array, $words_array_syn));
-        
-        while($row=db_fetch_array($results)){
+              (" . implode(" OR ", $sql_array_syn) . ") $tag_only_leaves_sql", 't', 'tid'), array_merge($words_array, $words_array_syn));
+        while($row = db_fetch_array($results)){
           // Get the full term name, and its synonyms, and check back against the field
           $results_2 = db_query(db_rewrite_sql("
               SELECT 
@@ -134,9 +131,9 @@ function _autotag_search_field($field, $vids){
                 {term_data} t
               WHERE 
                 tid = %d AND
-                (".implode(" OR ",$vids_placeholder).")", 't', 'tid').'
+                (" . implode(" OR ", $vids_placeholder) . ")", 't', 'tid') . '
               UNION
-              '.db_rewrite_sql("SELECT
+              ' . db_rewrite_sql("SELECT
                 s.tid, vid, LOWER(s.name) AS name
               FROM 
                 {term_synonym} s,
@@ -144,12 +141,17 @@ function _autotag_search_field($field, $vids){
               WHERE 
                 s.tid = %d AND
                 t.tid=s.tid AND 
-                (".implode(" OR ",$vids_placeholder).")", 't', 'tid'),
-            array_merge(array($row['tid']),$vids,array($row['tid']),$vids));
-            
-          while($row_2=db_fetch_array($results_2)){
-            if(strpos(strtolower($field),$row_2['name'])!== FALSE){
-              $terms[] = array('tid'=>$row_2['tid'],'vid'=>$row_2['vid']);
+                (" . implode(" OR ", $vids_placeholder) . ")", 't', 'tid'), array_merge(array(
+            $row['tid']
+          ), $vids, array(
+            $row['tid']
+          ), $vids));
+          while($row_2 = db_fetch_array($results_2)){
+            if(strpos(strtolower($field), $row_2['name']) !== FALSE){
+              $terms[] = array(
+                'tid' => $row_2['tid'],
+                'vid' => $row_2['vid']
+              );
             }
           }
         }
@@ -158,7 +160,6 @@ function _autotag_search_field($field, $vids){
   }
   return $terms;
 }
-
 
 /**
  * Following function takes the posted shit in a form, and searches it. EASY!
@@ -179,7 +180,6 @@ function _autotag_search_post($values){
   return $terms_to_return;
 }
 
-
 /**
  * Implementation of hook_nodeapi
  * 
@@ -189,27 +189,24 @@ function _autotag_search_post($values){
 function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   // This is completely broken with some node types
   $dont_autotag = variable_get('autotag_dont_autotag', array());
-  if(in_array($node->type, variable_get('autotag_totally_borked', array())) || (isset($dont_autotag[$node->type]) && $dont_autotag[$node->type])){
-    return;
-  }
+  if(in_array($node->type, variable_get('autotag_totally_borked', array())) || (isset($dont_autotag[$node->type]) && $dont_autotag[$node->type])){return;}
   switch($op){
     case 'update':
       if(isset($_POST['files']) && is_array($_POST['files'])){
         foreach($_POST['files'] as $fid => $file_details){
           db_query("UPDATE {upload} SET description = '%s', weight = %d, list = %d WHERE fid = %d AND nid = %d AND vid = %d", $file_details['description'], $file_details['weight'], $file_details['list'], $fid, $node->nid, $node->vid);
-	}
+        }
       }
     case 'insert':
       // Return if this node doesn't have any autotag vids associated with it
       $vids = _autotag_get_vids_for_type($node->type);
       if(!count($vids)){return;}
-      
       $all_tids = _autotag_search_node($node);
-      $tids_to_ignore = explode("|",$node->hideterms);      
+      $tids_to_ignore = explode("|", $node->hideterms);
       // Remove the ignore ones from the add ones
       if(!isset($node->taxonomy)){
         $terms = array();
-      } else {
+      }else{
         $terms = $node->taxonomy;
       }
       // Check to see whether or not we have objects
@@ -223,19 +220,22 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
       foreach($all_tids as $tid){
         if($terms_are_objects){
           $terms[$tid['tid']] = taxonomy_get_term($tid['tid']);
-        } else {
+        }else{
           if(!in_array($tid['tid'], $tids_to_ignore)){
             if(is_array($terms[$tid['vid']])){
               if(!isset($terms[$tid['vid']]) || !in_array($tid['tid'], $terms[$tid['vid']])){
                 $terms[$tid['vid']][] = $tid['tid'];
               }
-            } else {
+            }else{
               // If there isn't currently anything set
               if(is_string($terms[$tid['vid']]) && trim($terms[$tid['vid']]) == ''){
                 $terms[$tid['vid']] = $tid['tid'];
-              } else {
+              }else{
                 // else combine
-                $terms[$tid['vid']] = array($tid['tid'], $terms[$tid['vid']]);
+                $terms[$tid['vid']] = array(
+                  $tid['tid'],
+                  $terms[$tid['vid']]
+                );
               }
             }
           }
@@ -250,7 +250,7 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
               if($vocab_value == $tid){
                 unset($terms);
               }
-            } else {
+            }else{
               foreach($vocab_value as $term_key => $term_value){
                 if($term_value == $tid){
                   unset($terms[$vocab_key][$term_key]);
@@ -269,15 +269,19 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
           $matches[1][$key] = trim($value, '"');
           $words_place_holders[] = "'%s'";
         }
-        $result = db_query(db_rewrite_sql("SELECT tid, name FROM {term_data} t WHERE vid IN (%s) AND LOWER(name) IN (".implode(",",$words_place_holders).")", 't', 'tid'), array_merge(array(implode(",",$vids)), $matches[1]));
+        $result = db_query(db_rewrite_sql("SELECT tid, name FROM {term_data} t WHERE vid IN (%s) AND LOWER(name) IN (" . implode(",", $words_place_holders) . ")", 't', 'tid'), array_merge(array(
+          implode(",", $vids)
+        ), $matches[1]));
         while($row = db_fetch_array($result)){
           if(!isset($terms[$row['vid']]) || !in_array($row['tid'], $terms[$row['vid']])){
             $terms[$row['vid']][] = $row['tid'];
           }
-        }      
+        }
       }
       if($terms_are_objects){
-        $terms = array_unique(array_flatten(array($terms)));
+        $terms = array_unique(array_flatten(array(
+          $terms
+        )));
       }
       $terms['tags'] = $node->taxonomy['tags'];
       taxonomy_node_save($node, $terms);
@@ -286,13 +290,12 @@ function _autotag_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   }
 }
 
-
-function array_flatten($array) {
+function array_flatten($array){
   $new_array = array();
-  foreach ($array as $child) {
-    if (is_array($child) || is_object($child)) {
+  foreach($array as $child){
+    if(is_array($child) || is_object($child)){
       $new_array = array_merge($new_array, array_flatten($child));
-    } else {
+    }else{
       $new_array[] = $child;
     }
   }
@@ -305,27 +308,15 @@ function array_flatten($array) {
 function _autotag_get_vids_for_type($type, $just_vids = TRUE){
   // First lets make sure this content type is being autotagged.
   $types_to_not_tag = variable_get('autotag_dont_autotag', array());
-  if(isset($types_to_not_tag[$type]) && $types_to_not_tag[$type]){
-    return array();
-  }
+  if(isset($types_to_not_tag[$type]) && $types_to_not_tag[$type]){return array();}
   $vocabularies = taxonomy_get_vocabularies();
   $vids = array();
   $disable_vids = variable_get('autotag_disable_vids', array());
   foreach($vocabularies as $vocabulary){
-    if(in_array($type,$vocabulary->nodes) &&
-       $vocabulary->required == 0 &&
-       $vocabulary->multiple == 1 &&
-       $vocabulary->module == 'taxonomy' &&
-       (
-         !isset($disable_vids[$vocabulary->vid]) ||
-         (
-           isset($disable_vids[$vocabulary->vid]) &&
-           !$disable_vids[$vocabulary->vid]
-         )
-       )){
+    if(in_array($type, $vocabulary->nodes) && $vocabulary->required == 0 && $vocabulary->multiple == 1 && $vocabulary->module == 'taxonomy' && (!isset($disable_vids[$vocabulary->vid]) || (isset($disable_vids[$vocabulary->vid]) && !$disable_vids[$vocabulary->vid]))){
       if($just_vids){
         $vids[] = $vocabulary->vid;
-      } else {
+      }else{
         $vids[] = $vocabulary;
       }
     }
@@ -364,22 +355,79 @@ function _autotag_search_node($node){
 function _autotag_fields_to_search($node){
   $fields = array();
   $ignore_fields = array(
-    'op','attach-url','nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links','additionaltags'
+    'op',
+    'attach-url',
+    'nid',
+    'vid',
+    'status',
+    'type',
+    'created',
+    'comment',
+    'changed',
+    'promote',
+    'sticky',
+    'revision_timestamp',
+    'log',
+    'format',
+    'uid',
+    'name',
+    'picture',
+    'data',
+    'path',
+    'last_comment_timestamp',
+    'last_comment_name',
+    'comment_count',
+    'files',
+    'iid',
+    'taxonomy',
+    'readmore',
+    'content',
+    'links',
+    'additionaltags'
   );
-  foreach($node as $key=>$value){
+  foreach($node as $key => $value){
     if(!in_array($key, $ignore_fields)){
       $fields[] = $key;
     }
   }
   return $fields;
 }
+
 function _autotag_fields_to_search_post($post_form, $type){
   $fields = array();
   $ignore_fields = array(
-    'op','attach-url','nid','vid','status','type','created','comment','changed','promote','sticky','revision_timestamp','log','format','uid','name','picture','data','path','last_comment_timestamp','last_comment_name','comment_count','files','iid','taxonomy','readmore','content','links','additionaltags'
+    'op',
+    'attach-url',
+    'nid',
+    'vid',
+    'status',
+    'type',
+    'created',
+    'comment',
+    'changed',
+    'promote',
+    'sticky',
+    'revision_timestamp',
+    'log',
+    'format',
+    'uid',
+    'name',
+    'picture',
+    'data',
+    'path',
+    'last_comment_timestamp',
+    'last_comment_name',
+    'comment_count',
+    'files',
+    'iid',
+    'taxonomy',
+    'readmore',
+    'content',
+    'links',
+    'additionaltags'
   );
   if(is_object($post_form) || is_array($post_form)){
-    foreach($post_form as $key=>$value){
+    foreach($post_form as $key => $value){
       if(!in_array($key, $ignore_fields)){
         $fields[] = $key;
       }
@@ -395,18 +443,18 @@ function _autotag_fields_to_search_post($post_form, $type){
 function _autotag_update_table($nid, $values){
   // Add the ignore terms to the database so that the next time the node is edited
   // the terms are in the ignore list, and not the add list.
-  db_query("DELETE FROM {autotag} WHERE nid=%d",$nid);
+  db_query("DELETE FROM {autotag} WHERE nid=%d", $nid);
   $tids_nids = array();
   $tids_nid_placeholder = array();
   foreach($values as $value){
-    if($value!=''){
+    if($value != ''){
       $tids_nid_placeholder[] = "(%d,%d)";
       $tids_nids[] = $nid;
       $tids_nids[] = $value;
     }
   }
   if(count($tids_nid_placeholder)){
-    db_query("INSERT INTO {autotag} (nid, tid) VALUES ".implode(",",$tids_nid_placeholder), $tids_nids);
+    db_query("INSERT INTO {autotag} (nid, tid) VALUES " . implode(",", $tids_nid_placeholder), $tids_nids);
   }
 }
 
