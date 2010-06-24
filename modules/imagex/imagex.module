@@ -1,4 +1,5 @@
 <?php
+
 // $Id$
 /**
  * This is a complete rewrite of the imagex module.  The module
@@ -9,41 +10,54 @@
 /***********************************************************************************
  * HOOKS
  ***********************************************************************************/
-function imagex_menu() {
+function imagex_menu(){
   $items['imagex/upload'] = array(
-    'access arguments' => array('create images'),
+    'access arguments' => array(
+      'create images'
+    ),
     'title' => 'Imagex upload',
     'page callback' => 'imagex_upload_image',
-    'type' => MENU_CALLBACK);
+    'type' => MENU_CALLBACK
+  );
   $items['imagex/get'] = array(
     'title' => 'Imagex thumbs',
-    'access arguments' => array('create images'),
+    'access arguments' => array(
+      'create images'
+    ),
     'type' => MENU_CALLBACK,
     'page callback' => 'imagex_js'
   );
   $items['imagex'] = array(
     'title' => 'Upload images',
-    'access arguments' => array('create images'),
+    'access arguments' => array(
+      'create images'
+    ),
     'type' => MENU_CALLBACK,
     'page callback' => 'imagex_upload_page'
   );
   $items['admin/settings/imagex'] = array(
     'title' => 'Configure imagex',
-    'access arguments' => array('administer imagex'),
+    'access arguments' => array(
+      'administer imagex'
+    ),
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('imagex_admin_settings')
+    'page arguments' => array(
+      'imagex_admin_settings'
+    )
   );
-  
   return $items;
 }
+
 function imagex_form_alter(&$form, &$form_state, $form_id){
   // Lets add a small message to the top of the node/add/image form to point to the 
   // multiple add image page
-  if ($form_id == 'image_node_form' && (variable_get('imagex_imagefield_or_image', 'image') == 'image')) {
+  if($form_id == 'image_node_form' && (variable_get('imagex_imagefield_or_image', 'image') == 'image')){
     $form['imagex'] = array(
       '#weight' => -100, // make sure it is at the top
-      '#value' => '<div class="messages"><p>'.t('You can add multiple images quickly to the site from the <a href="@uploadpage">multiple upload page</a>', array('@uploadpage'=>url('imagex/imagex'))).'</p></div>'
+      '#value' => '<div class="messages"><p>' . t('You can add multiple images quickly to the site from the <a href="@uploadpage">multiple upload page</a>', array(
+        '@uploadpage' => url('imagex/imagex')
+      )) . '</p></div>'
     );
   }
 }
@@ -51,21 +65,27 @@ function imagex_form_alter(&$form, &$form_state, $form_id){
 /**
  * Implements hook_perm().
  */
-function imagex_perm() {
-  return array('administer imagex');
+function imagex_perm(){
+  return array(
+    'administer imagex'
+  );
 }
 
-function imagex_admin_settings() {
+function imagex_admin_settings(){
   // Figure out which, if any, of the supported modules are installed.  
   $modules = array();
-  if (module_exists('image')) {
+  if(module_exists('image')){
     $modules['image'] = t('Image');
   }
-  if (module_exists('filefield')) {
+  if(module_exists('filefield')){
     $modules['filefield'] = t('Filefield/Imagefield');
   }
-  if (!count($modules)) {
-    drupal_set_message(t('The Imagex module requires either <a href="!image">Image</a> or <a href="!imagefield">Imagefield</a> module to be installed <a href="!enabled">and enabled</a> before you can use it.', array('!image' => 'http://drupal.org/project/image', '!imagefield' => 'http://drupal.org/project/imagefield', '!enabled' => url('admin/build/modules'))));
+  if(!count($modules)){
+    drupal_set_message(t('The Imagex module requires either <a href="!image">Image</a> or <a href="!imagefield">Imagefield</a> module to be installed <a href="!enabled">and enabled</a> before you can use it.', array(
+      '!image' => 'http://drupal.org/project/image',
+      '!imagefield' => 'http://drupal.org/project/imagefield',
+      '!enabled' => url('admin/build/modules')
+    )));
     return;
   }
   $form['imagex_imagefield_or_image'] = array(
@@ -73,35 +93,32 @@ function imagex_admin_settings() {
     '#title' => t('Image upload system'),
     '#description' => t('Select whether you are using the image module .'),
     '#options' => $modules,
-    '#default_value' => variable_get('imagex_imagefield_or_image', ''),
+    '#default_value' => variable_get('imagex_imagefield_or_image', '')
   );
-
   // If filefield is enabled show them options of fields to upload.
-  if (isset($modules['filefield'])) {
+  if(isset($modules['filefield'])){
     $types = content_types();
-    foreach ($types as $key => $type) {
-      foreach ($type['fields'] as $field) {
-        if ($field['type'] == 'filefield') {
-          $available['matches'][$key .':::'. $field['field_name']] = $type['name'] .': '. $field['widget']['label'];
-          $available['keys'][] = $key .':::'. $field['field_name'];
+    foreach($types as $key => $type){
+      foreach($type['fields'] as $field){
+        if($field['type'] == 'filefield'){
+          $available['matches'][$key . ':::' . $field['field_name']] = $type['name'] . ': ' . $field['widget']['label'];
+          $available['keys'][] = $key . ':::' . $field['field_name'];
         }
       }
     }
     // Show them a filefield-content-type to use or nag them to create one. 
-    if (!empty($available['matches'])) {
+    if(!empty($available['matches'])){
       $form['imagex_imagefield_import_field'] = array(
         '#type' => 'select',
         '#title' => t('Target field'),
         '#description' => t('If you selected Filefield/Imagefield above, select the specific filefield you want to import photos into. When you do the import, nodes of your selected type will be created and the selected field will be populated with the imported image. The image name will be used for the title and all other fields will be blank.'),
         '#options' => $available['matches'],
-        '#default_value' => variable_get('imagex_imagefield_import_field', $available['keys'][0]),
+        '#default_value' => variable_get('imagex_imagefield_import_field', $available['keys'][0])
       );
-    }
-    else {
+    }else{
       drupal_set_message('You must enable a content type with a filefield.');
     }
-  }  
- 
+  }
   return system_settings_form($form);
 }
 
@@ -116,14 +133,18 @@ function imagex_admin_settings() {
  */
 function imagex_upload_page(){
   // If we're lookin' at this page, then chuffin heck, we need t'JavaScript & CSS
-  drupal_add_js(drupal_get_path('module','imagex').'/imagex.js');
-  drupal_add_css(drupal_get_path('module','imagex').'/imagex.css');
-  return '<div class="messages imagex header"><p>'.t('Drop images into the box below, or click the "Add" button, and select the images you\'d like to upload').'</p></div><div class="imagex postlet">
-	<applet name="postlet" code="Main.class" archive="'.url(drupal_get_path('module','imagex').'/postlet/postlet.jar', array('absolute' => TRUE)).'" width="100%" height="300" mayscript>
+  drupal_add_js(drupal_get_path('module', 'imagex') . '/imagex.js');
+  drupal_add_css(drupal_get_path('module', 'imagex') . '/imagex.css');
+  return '<div class="messages imagex header"><p>' . t('Drop images into the box below, or click the "Add" button, and select the images you\'d like to upload') . '</p></div><div class="imagex postlet">
+	<applet name="postlet" code="Main.class" archive="' . url(drupal_get_path('module', 'imagex') . '/postlet/postlet.jar', array(
+    'absolute' => TRUE
+  )) . '" width="100%" height="300" mayscript>
 		<param name = "maxthreads"		value = "5" />
 		<param name = "language"		value = "EN" />
 		<param name = "type"			value = "application/x-java-applet;version=1.3.1" />
-		<param name = "destination"		value = "'.url('imagex/upload', array('absolute' => TRUE)).'" />
+		<param name = "destination"		value = "' . url('imagex/upload', array(
+    'absolute' => TRUE
+  )) . '" />
 		<param name = "backgroundcolour" value = "16777215" />
 		<param name = "tableheaderbackgroundcolour" value = "14079989" />
 		<param name = "tableheadercolour" value = "0" />
@@ -136,22 +157,23 @@ function imagex_upload_page(){
 		<param name = "fileextensions" value = "Image Files,jpg,gif,jpeg,bmp,png" />
 	</applet>
 	<script type="text/javascript">
-	  imagesreturnurl ="'.url('imagex/get', array('absolute' => TRUE)).'";
+	  imagesreturnurl ="' . url('imagex/get', array(
+    'absolute' => TRUE
+  )) . '";
 	</script>
 </div>
 <div id="imagexthumbs" class="imagex thumbs"></div>';
 }
+
 /**
  * Callback for the upload destination.  This is where images are sent to by the applet.
  * This page is NOT designed to be viewed by humans/browsers.
  */
 function imagex_upload_image(){
-  
   list($type, $field_name) = split(':::', variable_get('imagefield_import_field', ''));
   $mode = variable_get('imagex_imagefield_or_image', 'image');
-  
   // Output a postlet error if the user isn't allowed to upload.
-  if (($mode == 'image' && !user_access('create images')) || ($mode == 'filefield' && !node_access('create', $type))) {
+  if(($mode == 'image' && !user_access('create images')) || ($mode == 'filefield' && !node_access('create', $type))){
     ?>
 POSTLET REPLY
 POSTLET:NO
@@ -159,30 +181,29 @@ POSTLET:SERVER ERROR
 POSTLET:ABORT ALL
 END POSTLET REPLY
     <?php
-    exit;
-  }
-  else {
+    exit();
+  }else{
     // User is allowed to upload, well lets do it    
     $uploaded = 0;
     // The image module doesn't rename the files when it moves them, so we need to do that first
-    $temp_filename = dirname($_FILES['userfile']['tmp_name']).'/'.$_FILES['userfile']['name'];
-    file_move($_FILES['userfile']['tmp_name'],$temp_filename);
-    if ($mode == 'image') {
+    $temp_filename = dirname($_FILES['userfile']['tmp_name']) . '/' . $_FILES['userfile']['name'];
+    file_move($_FILES['userfile']['tmp_name'], $temp_filename);
+    if($mode == 'image'){
       $image_node = image_create_node_from($temp_filename, $_FILES['userfile']['name']);
-    }
-    else if ($mode == 'filefield') {
+    }else if($mode == 'filefield'){
       $image_node = imagex_imagefield_create_node_from($temp_filename, $_FILES['userfile']['name']);
     }
-    if (!$image_node){
+    if(!$image_node){
       // Lets work out why it wasn't uploaded and change the error accordingly.
-      
       // For now we'll say this type isn't allowed
       $uploaded = 2;
-    } else {
+    }else{
       // Image has been added, lets add it to the image_gallery
       $gallery_tid = variable_get('imagex_gallery_tid', 0);
       if($gallery_tid){
-        taxonomy_node_save($image_node, array($gallery_tid));
+        taxonomy_node_save($image_node, array(
+          $gallery_tid
+        ));
       }
     }
     switch($uploaded){
@@ -219,11 +240,12 @@ POSTLET:SERVER ERROR
 POSTLET:ABORT ALL
 END POSTLET REPLY
         <?php
-        break;        
+        break;
     }
   }
-  exit;
+  exit();
 }
+
 /**
  * Menu callback, ajax call to populate the page with the thumbnails
  */
@@ -231,11 +253,14 @@ function imagex_js(){
   // Reurns HTML as JS for the thumbs of images uploaded
   // Does this for the user logged in only
   if(function_exists('matrix_editor_menu')){
-    $matrix = " ".l('Edit your most recent images', 'matrix/image');
+    $matrix = " " . l('Edit your most recent images', 'matrix/image');
   }
-  print drupal_to_js(array('html' => '<p>'.t('The following images have been uploaded by you in the last hour.') . $matrix .'</p>'.imagex_get_thumbs_html(60)));
+  print drupal_to_js(array(
+    'html' => '<p>' . t('The following images have been uploaded by you in the last hour.') . $matrix . '</p>' . imagex_get_thumbs_html(60)
+  ));
   exit();
 }
+
 /***********************************************************************************
  * HELPER FUNCTIONS
  ***********************************************************************************/
@@ -248,14 +273,21 @@ function imagex_js(){
 function imagex_get_thumbs_html($minutes = NULL){
   global $user;
   if(is_null($minutes)){
-    $result = db_query(db_rewrite_sql("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image'"),$user->uid);
+    $result = db_query(db_rewrite_sql("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image'"), $user->uid);
   }else{
-    $result = db_query(db_rewrite_sql("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image' AND created>%d"),$user->uid , time()-($minutes*60));
+    $result = db_query(db_rewrite_sql("SELECT nid FROM {node} WHERE uid = %d AND created=changed AND type='image' AND created>%d"), $user->uid, time() - ($minutes * 60));
   }
   $html = '';
   while($node = db_fetch_object($result)){
     $node = node_load($node->nid);
-    $html .= '<div class="imagexthumb" id="imagexthumb-'.$node->nid.'">'.l(image_display($node,  IMAGE_THUMBNAIL, array('alt'=>$node->title)),'node/'.$node->nid.'/edit', array('html'=>TRUE, 'attributes'=>array('target'=>'_blank'))).'</div>';
+    $html .= '<div class="imagexthumb" id="imagexthumb-' . $node->nid . '">' . l(image_display($node, IMAGE_THUMBNAIL, array(
+      'alt' => $node->title
+    )), 'node/' . $node->nid . '/edit', array(
+      'html' => TRUE,
+      'attributes' => array(
+        'target' => '_blank'
+      )
+    )) . '</div>';
   }
   return $html;
 }
@@ -270,34 +302,32 @@ function imagex_get_thumbs_html($minutes = NULL){
  * @return $node
  *   a node object.
  */
-function imagex_imagefield_create_node_from($temp_filepath, $file_name) {
+function imagex_imagefield_create_node_from($temp_filepath, $file_name){
   // Only get files from Drupal's tmp directory.
   $directory = file_directory_temp();
-  if (file_check_location($temp_filepath, $directory)) {
+  if(file_check_location($temp_filepath, $directory)){
     // Only get files where we can get some image info.
-    if ($info = image_get_info($temp_filepath)) {
+    if($info = image_get_info($temp_filepath)){
       // Figure out which node and field to put this into.
       list($type, $field_name) = split(':::', variable_get('imagefield_import_field', 'photo:::field_photo'));
-  
       // Get the field and its validators.
       $field = content_fields($field_name, $type);
       $validators = imagefield_widget_upload_validators($field);
-  
       // make sure that the directory exists
       $directory = filefield_widget_file_path($field);
       field_file_check_directory($directory, FILE_CREATE_DIRECTORY);
-  
       // Create some defaults that imagefield expects.
       $form_state_values = array(
         'title' => $file_name,
         'body' => '',
-        'field_photo' => array(0 => array(
+        'field_photo' => array(
+          0 => array(
             'fid' => 0,
             'list' => '1',
             'data' => array(
               'description' => '',
               'alt' => '',
-              'title' => '',
+              'title' => ''
             ),
             'alt' => '',
             'title' => '',
@@ -307,33 +337,29 @@ function imagex_imagefield_create_node_from($temp_filepath, $file_name) {
             'filesize' => 0,
             'filefield_upload' => 'Upload',
             'filefield_remove' => 'Remove',
-            'upload' => 0,
+            'upload' => 0
           ),
-        'node_status' => NULL,
+          'node_status' => NULL
         )
       );
       // Save the file and create a node.
-      if ($file = field_file_save_file($temp_filepath, $validators, $directory)) {
+      if($file = field_file_save_file($temp_filepath, $validators, $directory)){
         $file['original_path'] = $temp_filepath;
         $node = _imagex_imagefield_import_create_node($field, $form_state_values, $file);
         file_delete($temp_filepath);
       }
     }
   }
-  
   return $node;
 }
-
 
 /**
  * Create a new node with an attached image file.
  * Largely copied from imagefield_import.
  */
-function _imagex_imagefield_import_create_node($field, $form_state_values, $file = NULL) {
+function _imagex_imagefield_import_create_node($field, $form_state_values, $file = NULL){
   global $user;
-
   module_load_include('inc', 'node', 'node.pages');
-
   // Create a basic node object.
   $node = new stdClass();
   $node->type = $field['type_name'];
@@ -341,36 +367,31 @@ function _imagex_imagefield_import_create_node($field, $form_state_values, $file
   $node->name = $user->name;
   $node->title = $form_state_values['title'];
   $node->body = $form_state_values['body'];
-
   node_object_prepare($node);
-
   // Add the image to the node object.
   $field_name = $field['field_name'];
-  $node->$field_name = array($file);
-
+  $node->$field_name = array(
+    $file
+  );
   // Make it easy for other modules to add data to imported nodes using
   // hook_form_alter (@see http://drupal.org/node/714550).
-  foreach (array_keys($form_state_values) as $key) {
-    if (!isset($node->$key)) {
+  foreach(array_keys($form_state_values) as $key){
+    if(!isset($node->$key)){
       $node->$key = $form_state_values[$key];
     }
   }
-
   // Add any additional cck fields set during import.
   $type = content_types($field['type_name']);
-  if (!empty($type['fields'])) {
-    foreach ($type['fields'] as $name => $field) {
-      if ($field['type'] != 'filefield') {
+  if(!empty($type['fields'])){
+    foreach($type['fields'] as $name => $field){
+      if($field['type'] != 'filefield'){
         $node->$name = $form_state_values[$name];
       }
     }
   }
-
   // Pretend we're saving the node from a node form to please modules like filefield_paths.
-  $node->form_id = $node->type .'_node_form';
-
+  $node->form_id = $node->type . '_node_form';
   $node = node_submit($node);
   node_save($node);
-
   return $node;
 }

@@ -1,9 +1,8 @@
 <?php
-// $Id$
 /**
  * hook_install
  */
-function imagex_install() {  
+function imagex_install(){
   // If we have the image_gallery module installed, we'll use it to our
   // advantage
   if(function_exists('_image_gallery_get_vid')){
@@ -21,10 +20,11 @@ function imagex_install() {
     if(!$num_rows){
       drupal_set_message('Creating new gallery');
       $form_values = array(
-          'vid' => $gallery_vid,
-          'name' => $library_word,
-          'description' => t('Default image gallery for images uploaded via imagex'),
-          'weight' => 100);
+        'vid' => $gallery_vid,
+        'name' => $library_word,
+        'description' => t('Default image gallery for images uploaded via imagex'),
+        'weight' => 100
+      );
       taxonomy_save_term($form_values);
     }
     // We should now have our Library image gallery, lets get its tid (this is
@@ -32,7 +32,7 @@ function imagex_install() {
     $tid = array_pop(db_fetch_array(db_query(db_rewrite_sql("SELECT t.tid FROM {term_data} t WHERE t.name = '%s'", 't', 'tid'), $library_word)));
     // Set the imagex_gallery_tid variable
     variable_set('imagex_gallery_tid', $tid);
-  } else {
+  }else{
     drupal_set_message(t('Imagex will work with the Image Gallery module to add all uploaded images to a default gallery called "Library".  Reinstalling this module, after installing "Image Gallery" will help users locate images uploaded using Imagex'), 'error');
   }
 }
@@ -47,18 +47,18 @@ function imagex_uninstall(){
 /**
  * Implements hook_requirements().
  */
-function imagex_requirements($phase) {
+function imagex_requirements($phase){
   $t = get_t();
-
   // Run this regardless of the phase.
-  if (!module_exists('image') && !module_exists('imagefield')) {
+  if(!module_exists('image') && !module_exists('imagefield')){
     $requirements['image_module'] = array(
       'title' => $t('Required image module'),
-      'value' => $t('The Imagex module requires either <a href="!image">Image</a> or <a href="!imagefield">Imagefield</a> module to be installed first.', array('!image' => 'http://drupal.org/project/image', '!imagefield' => 'http://drupal.org/project/imagefield')),
-      'severity' => REQUIREMENT_ERROR,
+      'value' => $t('The Imagex module requires either <a href="!image">Image</a> or <a href="!imagefield">Imagefield</a> module to be installed first.', array(
+        '!image' => 'http://drupal.org/project/image',
+        '!imagefield' => 'http://drupal.org/project/imagefield'
+      )),
+      'severity' => REQUIREMENT_ERROR
     );
   }
-  
   return $requirements;
 }
-
