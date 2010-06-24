@@ -99,7 +99,7 @@ function _autotag_search_field($field, $vids){
           $sql_array[] = " lowername LIKE '%s%%%s%%' ";
           $words_array[] = $word;
           $words_array[] = $words_including_small[$key + 1];
-          $sql_array_syn[] = " LOWER(s.name) LIKE '%s%%%s%%' ";
+          $sql_array_syn[] = " LOWER(t.name) LIKE '%s%%%s%%' ";
           $words_array_syn[] = $word;
           $words_array_syn[] = $words_including_small[$key + 1];
         }
@@ -136,10 +136,12 @@ function _autotag_search_field($field, $vids){
               ' . db_rewrite_sql("SELECT
                 s.tid, vid, LOWER(s.name) AS name
               FROM 
-                {term_synonym} s,
                 {term_data} t
+              INNER JOIN              
+                {term_synonym} s
+              ON 
+                s.tid = %d
               WHERE 
-                s.tid = %d AND
                 t.tid=s.tid AND 
                 (" . implode(" OR ", $vids_placeholder) . ")", 't', 'tid'), array_merge(array(
             $row['tid']
