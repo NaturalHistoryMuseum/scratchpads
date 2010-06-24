@@ -36,9 +36,9 @@ function imagex_menu(){
     'page callback' => 'imagex_upload_page'
   );
   $items['admin/settings/imagex'] = array(
-    'title' => 'Configure imagex',
+    'title' => 'Imagex Configuration',
     'access arguments' => array(
-      'administer imagex'
+      'administer site configuration'
     ),
     'type' => MENU_NORMAL_ITEM,
     'page callback' => 'drupal_get_form',
@@ -60,15 +60,6 @@ function imagex_form_alter(&$form, &$form_state, $form_id){
       )) . '</p></div>'
     );
   }
-}
-
-/**
- * Implements hook_perm().
- */
-function imagex_perm(){
-  return array(
-    'administer imagex'
-  );
 }
 
 function imagex_admin_settings(){
