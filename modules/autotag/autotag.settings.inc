@@ -76,7 +76,7 @@ function autotag_tag_content_type_submit($form, &$form_state){
     }
     if(count($types)){
       $types = "'".implode("','", $types)."'";
-      $result = db_query("SELECT nid FROM node WHERE type IN ($types)");
+      $result = db_query(db_rewrite_sql("SELECT nid FROM {node} n WHERE type IN ($types)"));
       $nodes = array();
       while($nid = db_result($result)){
         $nodes[] = $nid;
