@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * 
+ */
+/**
+ * 
+ */
+function dragon_init(){
+  drupal_add_js(drupal_get_path('module', 'dragon') . '/dragon.js');
+  drupal_add_js(array(
+    'dragon' => array(
+      'callbacks' => array(
+        'upload' => url('upload/js'),
+        'list' => url('dragon/list')
+      )
+    )
+  ), 'setting');
+  drupal_add_css(drupal_get_path('module', 'dragon') . '/dragon.css');
+}
+
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function dragon_form_alter(&$form, $form_state, $form_id) {
+  // Need to add ad pre_render to the form, as other modules may add a file 
+  // field after (i.e. CCK) this module has done its thang!
+  if(isset($form['#pre_render'])){
+    if(!is_array($form['#pre_render'])){
+      $form['#pre_render'] = array($form['#pre_render']);
+    }
+  } else {    
+    $form['#pre_render'] = array();
+  }
+  $form['#pre_render'][] = '_dragon_alter_file_field';
+}
+
+/**
+ * Recursive helper for hook_form_alter
+ */
+function _dragon_alter_file_field($element, $id = array()){
+  if(isset($element['#type']) &&  $element['#type'] == 'file'){
+    // Not sure if this is always the case, but the id we want is 0 in the id
+    // array
+    $element['#prefix'] = '<div id="dragon-'.$id[0].'" class="dragon"><p>'.t('Please drop file(s) here').'</p></div>';
+  } else {
+    $keys = element_children($element);
+    foreach($keys as $key){
+      $temp_id = $id;
+      $temp_id[] = $key;
+      $element[$key] = _dragon_alter_file_field($element[$key], $temp_id);
+    }
+  }
+  return $element;
+}

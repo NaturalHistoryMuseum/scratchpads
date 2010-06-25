@@ -37,6 +37,7 @@ function imagex_menu(){
   );
   $items['admin/settings/imagex'] = array(
     'title' => 'Imagex Configuration',
+    'description' => 'Select whether you\'re using the Imagefield/Imagecache or Image modules.',  
     'access arguments' => array(
       'administer site configuration'
     ),
