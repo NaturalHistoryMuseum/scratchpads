@@ -235,6 +235,9 @@ function nexus_node_page_edit($node){
 }
 
 function nexus_project_node_page_edit($node){
+  //	Ensure projects always use taxonomy tree
+  global $conf;
+  $conf['taxonomy_tree_node_types']['nexus_project'] = 'nexus_project';
   $path = drupal_get_path('module', 'nexus');
   $output = '<div id="nexus" class="editable">';
   module_load_include('inc', 'nexus', 'includes/nexus.matrix');
@@ -849,7 +852,19 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         );
       }
       break;
+    case 'taxonomy_tree_admin_settings_form':
+      $form['#after_build'][] = 'taxonomy_tree_admin_settings_form_after_build';
+      break;
   }
+}
+
+function taxonomy_tree_admin_settings_form_after_build(&$form, $form_state){
+  $form['taxonomy_tree_node_types']['nexus_project']['#value'] = 1;
+  $form['taxonomy_tree_node_types']['nexus_project']['#attributes'] = array(
+    'disabled' => 'disabled'
+  ); // #disabled not working
+  $form['taxonomy_tree_node_types']['nexus_project']['#description'] = t('This is required by the character project.');
+  return $form;
 }
 
 /**
