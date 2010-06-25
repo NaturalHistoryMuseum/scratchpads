@@ -266,7 +266,11 @@ function nexus_import_batch_process_file($lines, &$context){
 
 function nexus_import_batch_process_file_finished($success, $results, $operations){
   if($success){
-    $_SESSION['import_file'] = $results;
+    if(count($results['data']['chars'])){
+      $_SESSION['import_file'] = $results;
+    }else{
+      drupal_set_message(t('There are no characters in this file to import.'), 'error');
+    }
   }else{
     drupal_set_message(t('An error occurred while processing the file'), 'error');
   }
