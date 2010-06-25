@@ -235,7 +235,7 @@ function nexus() {
                   var top = parseInt($(box).css('top')) + parseInt($('body').css('margin-top')) - 5;
                   $(box).css('top', top + 'px');
                   
-          },
+          }
         }
       );
               
@@ -255,7 +255,7 @@ function nexus() {
                   var top = parseInt($(box).css('top')) + parseInt($('body').css('margin-top')) - 2;
                   $(box).css('top', top + 'px');
                   
-          },
+          }
         }
       );
 
@@ -305,10 +305,21 @@ function nexus() {
         break;
         
         case 'controlled':
+
         
           if(typeof(columns[columnIndex]['states']) != 'undefined'){
 
-            return '<span>'+ txt + ':</span> ' + columns[columnIndex]['states'][txt]['state'];
+        	if(txt.indexOf('/')){
+        		txt = txt.split('/');	
+        	}else if(txt.indexOf('+')){
+        		txt = txt.split('+');	
+        	}else{
+        		txt = new Array(txt);
+        	}
+          
+          	return self.controlledStateTipTxt(columnIndex, txt);
+        	
+            
 
           }
         
@@ -316,6 +327,22 @@ function nexus() {
         
       }
       
+    },
+    controlledStateTipTxt: function(columnIndex, txt){
+    	
+    	var tipTxt = '';
+    	var br = '';
+    	
+    	for (t in txt)
+    	  {
+    		tipTxt += br+'<span>'+ txt[t] + ':</span> ' + columns[columnIndex]['states'][txt[t]]['state'];
+    		br = '<br />'; 
+    	  }
+    	
+    	
+    	
+    	return tipTxt;
+
     },
     
     onColumnsResized: function(e, ui){
@@ -1025,19 +1052,28 @@ function nexus() {
         return;
       }
       
-      var $ul = $('<ul class="clearfix" id="character-lists">');
-
+     var $ul = $('<ul class="clearfix" id="character-lists">');
+     var groupCount = 1;
+     
      for (i=1;i<columns.length;i++)
       {
-          if(!($ul.find('#'+columns[i]['groupID']).length)){
-                             
-          $ul.append('<li id="'+columns[i]['groupID'] + '" class="sortable-character-group nexus-collapsed"><input type="hidden" name="groups[]" value="'+columns[i]['groupID']+'" /><h6><span class="h6-title" title="'+columns[i]['group']+'">'+columns[i]['short_group']+'</span><a href="#" class="expand-contract"></a></h6><ul></ul></li>');
-                           
-      }
+                   
+          if(!($ul.find('#'+columns[i]['groupID']).length)){      
+          $ul.append('<li id="'+columns[i]['groupID'] + '" class="sortable-character-group nexus-collapsed"><input type="hidden" name="groups[]" value="'+columns[i]['groupID']+'" /><h6><span class="h6-title" title="'+columns[i]['group']+'">'+columns[i]['short_group']+'</span><a href="#" class="expand-contract"></a></h6><ul></ul></li>');                 
+          
+          if (groupCount % 4 == 0) {
+            $ul.append($('<div class="nexus-clear">'));
+          }
+          
+          groupCount++;
+          
+          }
                            
           $ul.find('#'+columns[i]['groupID']+' ul').append('<li id="'+columns[i]['id']+'" title="'+columns[i]['term']+'"><input type="hidden" name="characters['+columns[i]['groupID']+'][]" value="'+columns[i]['id']+'" />'+columns[i]['short_term']+'</li>');
 
       }
+      
+      
       
       $('a.expand-contract', $ul).click(function(){
         

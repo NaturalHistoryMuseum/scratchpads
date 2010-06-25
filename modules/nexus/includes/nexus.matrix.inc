@@ -1,6 +1,6 @@
 <?php
 
-DEFINE('SHORT_NAME_CHAR_LENGTH', 30); // Number of characters to shorten groups / character names to
+DEFINE('SHORT_NAME_CHAR_LENGTH', 27); // Number of characters to shorten groups / character names to
 
 /**
  * Prepare the matrix data
@@ -83,17 +83,17 @@ function nexus_project_get_matrix_data($node, $editable = true) {
             'cssClass' => 'cell-title', 
             'editor' => 'nexusCellEditor', 
             'term' => $character->name,
-            'short_term' => truncate_utf8($character->name, SHORT_NAME_CHAR_LENGTH, TRUE, TRUE),  
+            'short_term' => truncate_utf8($character->name, SHORT_NAME_CHAR_LENGTH, FALSE, TRUE),  
             'description' => addslashes($character->description), 
             'groupID' => $character_group_tid, 
             'group' => $character_group->name,
-            'short_group' => truncate_utf8($character_group->name, SHORT_NAME_CHAR_LENGTH, TRUE, TRUE),  
+            'short_group' => truncate_utf8($character_group->name, SHORT_NAME_CHAR_LENGTH, FALSE, TRUE),  
             'resizable' => ($editable ? 1 : 0)
           );
           
           // Get options for this character
           $nexus_controlled_states = nexus_get_states_for_character($character_tid);
-          
+
           if (count($nexus_controlled_states)) {
             
             $column['setValueHandler'] = 'nexusControlledStateUpdateItem';
