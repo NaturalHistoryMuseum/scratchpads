@@ -5,6 +5,7 @@ Drupal.behaviors.dragon = function(context){
 Drupal.dragon = new Object;
 Drupal.dragon.original_form = false;
 Drupal.dragon.original_drop_event = false;
+Drupal.dragon.upload_path = false;
 
 Drupal.dragon.init = function(context) {
   // Register listeners.
@@ -99,7 +100,7 @@ Drupal.dragon.single_file_upload = function(file_num){
   builder += dashdash;
   builder += crlf;
   
-  xhr.open("POST", Drupal.settings.dragon.callbacks.upload, true);
+  xhr.open("POST", Drupal.dragon.upload_path, true);
   xhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary);
   xhr.sendAsBinary(builder);        
   
@@ -120,7 +121,8 @@ Drupal.dragon.single_file_upload = function(file_num){
 
 Drupal.dragon.upload = function(event) {
   Drupal.dragon.original_drop_event = event;
-  Drupal.dragon.original_form = $(event.currentTarget).parents('form')
+  Drupal.dragon.original_form = $(event.currentTarget).parents('form');
+  Drupal.dragon.upload_path = event.currentTarget.id.substring(7,event.currentTarget.id.length);
   Drupal.dragon.single_file_upload(0);     
   /* Prevent FireFox opening the dragged file. */
   event.stopPropagation();

@@ -39,16 +39,17 @@ function dragon_form_alter(&$form, $form_state, $form_id) {
 /**
  * Recursive helper for hook_form_alter
  */
-function _dragon_alter_file_field($element, $id = array()){
-  if(isset($element['#type']) &&  $element['#type'] == 'file'){
+function _dragon_alter_file_field($element, $submit_sibling = array()){
+  print_r($element;exit;)
+  if(isset($element['#ahah']['path']) && ($element['#ahah']['path'] == 'upload/js' || substr($element['#ahah']['path'], 0, 14) == 'filefield/ahah')){
     // Not sure if this is always the case, but the id we want is 0 in the id
     // array
-    $element['#prefix'] = '<div id="dragon-'.$id[0].'" class="dragon"><p>'.t('Please drop file(s) here').'</p></div>';
+    $element['#suffix'] = '<div id="dragon-'.url($element['#ahah']['path']).'" class="dragon"><p>'.t('Please drop file(s) here').'</p></div>';
   } else {
     $keys = element_children($element);
     foreach($keys as $key){
       $temp_id = $id;
-      $temp_id[] = $key;
+      $temp_id[] = isset($element['#id']) ? $element['#id'] : '';
       $element[$key] = _dragon_alter_file_field($element[$key], $temp_id);
     }
   }
