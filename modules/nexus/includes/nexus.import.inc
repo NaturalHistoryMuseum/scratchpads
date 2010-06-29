@@ -329,7 +329,7 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
       $taxonomy[$form_values['vid']][] = $form_values['taxonomy'][$i];
     }
     //  Save the node at this point so we know the tid to use for the character group parent
-    $node = _nexus_import_save_node('nexus_project', $form_values['title'], $taxonomy);
+    $node = _nexus_import_save_node('nexus_project', $form_values['title'], $taxonomy, array('taxa_vid' => $form_values['vid']));
     $context['results']['node'] = $node;
     $context['sandbox']['matrix'] = nexus_import_parse_matrix($import_file['matrix'], $form_values['taxonomy'], $base);
     $context['sandbox']['progress'] = 0;

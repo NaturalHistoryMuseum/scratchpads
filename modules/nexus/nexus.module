@@ -783,6 +783,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
             'taxa_vid'
           )
         );
+        
         // Need to validate form so we know all required data i set up
         $form['#validate'][] = 'nexus_project_node_add_form_validate';
         $form['buttons']['submit']['#submit'][] = 'nexus_project_node_add_form_submit';
@@ -796,6 +797,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         unset($form['taxonomy']['#title']);
         unset($form['buttons']);
         $character_vid = nexus_get_character_vid();
+        
         // We don't let users pick characters - generated automatically
         unset($form['taxonomy'][$character_vid]);
         // Add html so these are shown / hidden depending on taxonomy chosen
@@ -805,7 +807,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
           }else{
             $form['taxonomy'][$vid]['#no_tree'] = true;
           }
-        }
+        }        
         $form['save_settings'] = array(
           '#type' => 'image_button', 
           '#src' => $path . '/images/save_changes.gif', 
