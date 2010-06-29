@@ -14,13 +14,6 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
       $term->tid => $term
     );
     module_invoke_all('taxonomy_term_load', $terms);
-    // Similar to module_invoke_all, excepts passes by reference correctly.
-    foreach($modules as $module => $values){
-      if(function_exists($module . '_taxonomy_term_load')){
-        $function = $module . '_taxonomy_term_load';
-        $function($terms);
-      }
-    }
     $term = array_pop($terms);
     $term_has_children = FALSE;
     if(!is_array($branch) || !count($branch)){
