@@ -887,8 +887,8 @@ function publication_menu(){
         'delete', 
         1
       )
-    ),
-        'publication/%node/make-public' => array(
+    ), 
+    'publication/%node/make-public' => array(
       'page callback' => 'drupal_get_form', 
       'page arguments' => array(
         'publication_node_confirm_make_public', 
@@ -899,7 +899,7 @@ function publication_menu(){
         'delete', 
         1
       )
-    )  
+    )
   );
 }
 
@@ -1002,7 +1002,7 @@ function publication_add_files(){
   //Add jquery.ui tabs files
   jquery_ui_add('ui.tabs');
   drupal_add_css(JQUERY_UI_PATH . '/themes/smoothness/ui.all.css');
-  // Add taxonomy tree files
+  // Add taxonomy tree files  
   taxonomy_tree_add_files();
   // Publication files
   $path = drupal_get_path('module', 'publication');
@@ -1393,6 +1393,12 @@ function publication_update_taxa_with_manuscript_name($node){
       if($child_node->type == 'publication_taxon_section' && $term = array_shift($child_node->taxonomy)){
         if($term->name != $child_node->title){
           $term_array = (array)$term;
+          // Add parent terms 
+          if(is_array($parents = taxonomy_get_parents($term->tid))){
+            foreach($parents as $parent){
+              $term_array['parent'][] = $parent->tid;
+            }
+          }
           $term_array['name'] = $child_node->title;
           taxonomy_save_term($term_array);
           drupal_set_message(t('Taxon <em>@term</em> has been updated to <em>@manuscript_name</em>', array(
