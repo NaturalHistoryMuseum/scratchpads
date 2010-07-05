@@ -1,151 +1,130 @@
 <?php
-
 DEFINE(TAXONOMY_TREE_CALLBACK_PATH, 'taxonomy_tree/js');
 
 /** 
-*Implementation of hook_perm(). 
-*/
+ *Implementation of hook_perm(). 
+ */
 function taxonomy_tree_perm(){
-
-  return array('administer taxonomy tree');
-
+  return array(
+    'administer taxonomy tree'
+  );
 }
 
 /** 
-*Implementation of hook_menu(). 
-*/
+ *Implementation of hook_menu(). 
+ */
 function taxonomy_tree_menu(){
-  
   $items['admin/settings/taxonomy_tree'] = array(
-    'title' => 'Taxonomy tree',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('taxonomy_tree_admin_settings_form'),
-    'access arguments' => array('administer taxonomy tree'),
-    'file' => 'taxonomy_tree.admin.inc',
+    'title' => 'Taxonomy tree', 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array(
+      'taxonomy_tree_admin_settings_form'
+    ), 
+    'access arguments' => array(
+      'administer taxonomy tree'
+    ), 
+    'file' => 'taxonomy_tree.admin.inc', 
     'description' => t('Configure which taxonomy form elements display as expandable trees.')
   );
-  
   $items[TAXONOMY_TREE_CALLBACK_PATH] = array(
-    'title' => 'Add project',
-    'page callback' => 'taxonomy_tree_callback',
-    'page arguments' => array(2),
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-    'file' => 'taxonomy_tree.callbacks.inc',
+    'title' => 'Add project', 
+    'page callback' => 'taxonomy_tree_callback', 
+    'page arguments' => array(
+      2
+    ), 
+    'access arguments' => array(
+      'access content'
+    ), 
+    'type' => MENU_CALLBACK, 
+    'file' => 'taxonomy_tree.callbacks.inc'
   );
-  
   $items['taxonomy_tree/test'] = array(
-    'title' => 'Test taxonomy tree',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('taxonomy_tree_test_form'),
-    'file' => 'taxonomy_tree.test.inc',
-    'access arguments' => array('administer taxonomy tree'),
+    'title' => 'Test taxonomy tree', 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array(
+      'taxonomy_tree_test_form'
+    ), 
+    'file' => 'taxonomy_tree.test.inc', 
+    'access arguments' => array(
+      'administer taxonomy tree'
+    )
   );
-
   return $items;
-  
 }
 
 /**
-* Implementation of hook_elements().
-*/
-function taxonomy_tree_elements() {
-  
+ * Implementation of hook_elements().
+ */
+function taxonomy_tree_elements(){
   $type['taxonomy_tree'] = array(
-    '#input' => TRUE,
-    '#process' => array('taxonomy_tree_process'),
-    '#element_validate' => array('taxonomy_tree_validate'),
-    '#vid' => NULL,
+    '#input' => TRUE, 
+    '#process' => array(
+      'taxonomy_tree_process'
+    ), 
+    '#element_validate' => array(
+      'taxonomy_tree_validate'
+    ), 
+    '#vid' => NULL
   );
-  
   return $type;
-  
 }
 
 function taxonomy_tree_process($element, $edit = array(), $form_state = array(), $complete_form = array()){
-
-  static $js_added;
-  
+  static $js_added;  
   if(!$js_added){
-
     $callback_path = TAXONOMY_TREE_CALLBACK_PATH;
-
     if(isset($complete_form['#node']->nid)){
       $callback_path .= '/' . $complete_form['#node']->nid;
     }
-
-    drupal_add_js(array('taxonomyTree' => array('path' => url($callback_path))), 'setting');
-
+    drupal_add_js(array(
+      'taxonomyTree' => array(
+        'path' => url($callback_path)
+      )
+    ), 'setting');
     taxonomy_tree_add_files();
-    
     $js_added = TRUE;
-    
   }
-
   $element['#tree'] = TRUE;
-  
   $items = taxonomy_tree_get_treeview_items($element['#vid'], $element['#value']);
-  
   $element['tree'] = array(
     '#value' => theme('taxonomy_tree_items', $items, $element)
   );
-    
   $element['#attributes']['class'] = 'taxonomy-tree';
   $element['#attributes']['id'] = $element['#id'];
-   
   return $element;
-  
 }
 
-function taxonomy_tree_add_files(){
-   
-   $path = drupal_get_path('module', 'taxonomy_tree');
-
-   drupal_add_js($path.'/js/plugins/jquery.cookie.js');
-   drupal_add_js($path.'/js/plugins/jquery.treeview.js');
-   drupal_add_js($path.'/js/plugins/jquery.treeview.async.js');
-   
-   drupal_add_js($path.'/js/taxonomy_tree.js');
-   drupal_add_css($path.'/css/taxonomy_tree.css');
-        
+function taxonomy_tree_add_files(){	
+  $path = drupal_get_path('module', 'taxonomy_tree');
+  drupal_add_js($path . '/js/plugins/jquery.cookie.js');
+  drupal_add_js($path . '/js/plugins/jquery.treeview.js');
+  drupal_add_js($path . '/js/plugins/jquery.treeview.async.js');
+  drupal_add_js($path . '/js/taxonomy_tree.js');
+  drupal_add_css($path . '/css/taxonomy_tree.css');
 }
 
 function taxonomy_tree_validate($element, $edit = array(), $form_state = array(), $complete_form = array()){
-
   if($element['#multiple'] == 0 && count($element['#value']) > 1){
-
-   form_error($element, t('Multiple values aren\'t allowed for @title', array('@title' => $element['#title'])));
-    
+    form_error($element, t('Multiple values aren\'t allowed for @title', array(
+      '@title' => $element['#title']
+    )));
   }
-  
 }
 
-
 /** 
-*Implementation of hook_alter(). 
-*/
-function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {  
-  
-  if (isset($form['type']) && isset($form['#node'])) {
-  
+ *Implementation of hook_alter(). 
+ */
+function taxonomy_tree_form_alter(&$form, $form_state, $form_id){
+  if(isset($form['type']) && isset($form['#node'])){
     if(is_array($form['taxonomy'])){
-      
       $taxonomy_tree_node_types = variable_get('taxonomy_tree_node_types', array());
-
       if($taxonomy_tree_node_types[$form['type']['#value']]){
-        
-        taxonomy_tree_form_add_treeview($form);
-        
+        taxonomy_tree_form_add_treeview($form); 
       }else{
-        
         taxonomy_tree_form_add_treeview($form, variable_get('taxonomy_tree_vocabularies', array()));
-        
       }
-    
     }
-  
   }
-  
 }
 
 /**
@@ -157,35 +136,24 @@ function taxonomy_tree_form_alter(&$form, $form_state, $form_id) {
  * @author Ben Scott
  */
 function taxonomy_tree_form_add_treeview(&$form, $vids = null){
-  
   foreach(element_children($form['taxonomy']) as $vid){
-
     if(is_array($vids) && !in_array($vid, $vids) || !is_numeric($vid)){
       continue;
-    }    
-      
-    if($form['taxonomy'][$vid]['#type']){      
+    }
+    if($form['taxonomy'][$vid]['#type']){
       $form['taxonomy'][$vid]['#type'] = 'taxonomy_tree';
       $form['taxonomy'][$vid]['#vid'] = $vid;
-      unset($form['taxonomy'][$vid]['#theme']);  
-      unset($form['taxonomy'][$vid]['#options']);  
-    
+      unset($form['taxonomy'][$vid]['#theme']);
+      unset($form['taxonomy'][$vid]['#options']);
     }
-   
   }
-  
 }
 
-
-
-
 /*********************************************************************
- *  
- *                          TREE FORMATTING
+ * 
+ * TREE FORMATTING
  * 
  ********************************************************************/
-
-
 /**
  * Generate an array of data structured for the treeview plugin
  * This data can be passed to a drupal_json() function 
@@ -198,59 +166,33 @@ function taxonomy_tree_form_add_treeview(&$form, $vids = null){
  * @author Ben Scott
  */
 function taxonomy_tree_get_treeview_items($vid, $selected_tids, $parent = 0, $select_all = false){
-
   $treeview_items = array();
-
   if(is_array($selected_tids)){
-    
     $branches_to_expand = taxonomy_tree_get_branches($selected_tids);
     $depth = count($branches_to_expand);
-    
   }else{
-    
     $depth = 1;
-    
   }
-
   $tree = taxonomy_get_tree($vid, $parent, -1, $count);
-
   $tree_array = taxonomy_tree_to_nested_array($tree);
-
   foreach($tree_array as $root){
-
-    $item = taxonomy_tree_get_element($root['data']->vid, $root['data']->tid, $root['data']->name, $selected_tids, $select_all);   
-        
+    $item = taxonomy_tree_get_element($root['data']->vid, $root['data']->tid, $root['data']->name, $selected_tids, $select_all);
     if(count($root['children'])){
-      
       if($branches_to_expand[$root['data']->tid]){
-        
-      $item['children'] = taxonomy_tree_add_children($root['children'], $branches_to_expand, $selected_tids);
-      $item['expanded'] = true;
-      
+        $item['children'] = taxonomy_tree_add_children($root['children'], $branches_to_expand, $selected_tids);
+        $item['expanded'] = true;
       }else{
-      
-      $item['hasChildren'] = true;
-      
+        $item['hasChildren'] = true;
       }
-      
     }else{
-      
       $children = taxonomy_get_children($root['data']->tid);
-      
       if(count($children)){
-        
-      $item['hasChildren'] = true;  
-        
+        $item['hasChildren'] = true;
       }
-      
     }
-
     $treeview_items[] = $item;
-    
   }
-  
   return $treeview_items;
-  
 }
 
 /**
@@ -261,251 +203,172 @@ function taxonomy_tree_get_treeview_items($vid, $selected_tids, $parent = 0, $se
  * @author Ben Scott
  */
 function taxonomy_tree_get_branches($tids){
- 
   $branches = array();
- 
   foreach($tids as $tid){
-
     $parents = taxonomy_get_parents_all($tid);
-
     // We need to know all the parents so we can automatically expand the tree      
     foreach($parents as $parent){
-
       if($tid != $parent->tid){
-        
         $branches[$parent->tid] = $parent->tid;
-        
       }
-
     }
-
   }
-
   return $branches;
-  
 }
 
 /** 
-* Recursive; Add all the child terms
-*/
+ * Recursive; Add all the child terms
+ */
 function taxonomy_tree_add_children($children, $branches_to_expand, $selected_tids){
-    
   $child_items = array();
-  
-    foreach($children as $child){
-      
-      $child_item = taxonomy_tree_get_element($child['data']->vid, $child['data']->tid, $child['data']->name, $selected_tids);
-
-      if(count($child['children']) && $branches_to_expand[$child['data']->tid]){
-
-        $child_item['children'] = taxonomy_tree_add_children($child['children'], $branches_to_expand, $selected_tids);
-        
-        $child_item['expanded'] = true;
-
-        
-      }else{
-
-          $c = taxonomy_get_children($child['data']->tid);
-
-          if(count($c)){
-
-          $child_item['hasChildren'] = true;  
-
-          }
-
+  foreach($children as $child){
+    $child_item = taxonomy_tree_get_element($child['data']->vid, $child['data']->tid, $child['data']->name, $selected_tids);
+    if(count($child['children']) && $branches_to_expand[$child['data']->tid]){
+      $child_item['children'] = taxonomy_tree_add_children($child['children'], $branches_to_expand, $selected_tids);
+      $child_item['expanded'] = true;
+    }else{
+      $c = taxonomy_get_children($child['data']->tid);
+      if(count($c)){
+        $child_item['hasChildren'] = true;
       }
-      
-
-      
-      $child_items[] = $child_item;
-      
     }
-
+    $child_items[] = $child_item;
+  }
   return $child_items;
-  
 }
 
 function taxonomy_tree_get_element($vid, $tid, $name, $selected_tids, $select_all = false){
-  
   if($tid && is_array($selected_tids) && in_array($tid, $selected_tids) || $select_all){
-    
     $value = 1;
-    
   }else{
-    
     $value = 0;
-    
   }
-  
   $element[$tid] = array(
-    '#type' => 'checkbox',
-    '#title' => '<span>'.$name.'</span>',
-    '#value' => $value,
-    '#name' => 'taxonomy['.$vid.']['.$tid.']',
-    '#return_value' => $tid,
-    '#attributes' => array('class' => 'taxonomy-tree-checkbox')
+    '#type' => 'checkbox', 
+    '#title' => '<span>' . $name . '</span>', 
+    '#value' => $value, 
+    '#name' => 'taxonomy[' . $vid . '][' . $tid . ']', 
+    '#return_value' => $tid, 
+    '#attributes' => array(
+      'class' => 'taxonomy-tree-checkbox'
+    )
   );
-  
   $id = $tid;
-  
   if($select_all || (is_array($selected_tids) && in_array($tid, $selected_tids))){
     $selected = true;
-    $id.='-1';
+    $id .= '-1';
   }else{
-    $id.='-0';
+    $id .= '-0';
     $selected = false;
   }
-  
   $taxonomy_tree_element = array(
-    'text' => drupal_render($element),
+    'text' => drupal_render($element), 
     'id' => $id
   );
-
   drupal_alter('taxonomy_tree_element', $taxonomy_tree_element, $vid, $tid, $name, $selected);
-  
   return $taxonomy_tree_element;
-  
 }
 
 /** 
-* Convert a taxonomy tree into a multidimensional array
-*/
-function &taxonomy_tree_to_nested_array(&$nvocs) {
-
-$map = array();
-
-//go through the tree and find the lowest depth aswell as all available depth levels to scan
-$startdepth = false;
-$depthlist = array();
-foreach($nvocs as $vocindex => &$vocitem) {
-if ($startdepth === false || $startdepth > $vocitem->depth) {
-//new start depth found
-$startdepth = $vocitem->depth;
-}
-
-//add this item to the speciffic depth level
-$depthlist[$vocitem->depth][$vocitem->tid] = &$vocitem;
-}
-
-//sort the depthlist so lowest is first
-ksort($depthlist);
-
-//scan all depth levels found
-$lastdepth = null;
-foreach($depthlist as $depthlevel => &$depths) {
-//check for first depth (root) level
-$currentdepthdata = array();
-
-if ($depthlevel == $startdepth) {
-//add root items to the map
-foreach($depths as $itemindex => &$item) {
-$mapindex = count($map);
-$map[$mapindex] = array("data" => &$item,"children" => array());
-$currentdepthdata[$itemindex] = &$map[$mapindex];
-}
-} else {
-//scan through all items within this depth
-  foreach($depths as $itemindex => &$item) {
-  //find a matching "map" in teh last depth to assign the item too
-    foreach($item->parents as $parentindex) {
-    $mapindex = count($lastdepthdata[$parentindex]["children"]);
-    $lastdepthdata[$parentindex]["children"][$mapindex] = array("data" => &$item,"children" => array());
-    $currentdepthdata[$itemindex] = &$lastdepthdata[$parentindex]["children"][$mapindex];
+ * Convert a taxonomy tree into a multidimensional array
+ */
+function &taxonomy_tree_to_nested_array(&$nvocs){
+  $map = array();
+  //go through the tree and find the lowest depth aswell as all available depth levels to scan
+  $startdepth = false;
+  $depthlist = array();
+  foreach($nvocs as $vocindex => &$vocitem){
+    if($startdepth === false || $startdepth > $vocitem->depth){
+      //new start depth found
+      $startdepth = $vocitem->depth;
     }
+    //add this item to the speciffic depth level
+    $depthlist[$vocitem->depth][$vocitem->tid] = &$vocitem;
   }
+  //sort the depthlist so lowest is first
+  ksort($depthlist);
+  //scan all depth levels found
+  $lastdepth = null;
+  foreach($depthlist as $depthlevel => &$depths){
+    //check for first depth (root) level
+    $currentdepthdata = array();
+    if($depthlevel == $startdepth){
+      //add root items to the map
+      foreach($depths as $itemindex => &$item){
+        $mapindex = count($map);
+        $map[$mapindex] = array(
+          "data" => &$item, 
+          "children" => array()
+        );
+        $currentdepthdata[$itemindex] = &$map[$mapindex];
+      }
+    }else{
+      //scan through all items within this depth
+      foreach($depths as $itemindex => &$item){
+        //find a matching "map" in teh last depth to assign the item too
+        foreach($item->parents as $parentindex){
+          $mapindex = count($lastdepthdata[$parentindex]["children"]);
+          $lastdepthdata[$parentindex]["children"][$mapindex] = array(
+            "data" => &$item, 
+            "children" => array()
+          );
+          $currentdepthdata[$itemindex] = &$lastdepthdata[$parentindex]["children"][$mapindex];
+        }
+      }
+    }
+    $lastdepthdata = $currentdepthdata;
+  }
+  return $map;
 }
-
-$lastdepthdata = $currentdepthdata;
-
-}
-
-return $map;
-
-
-}
-
-
-
-
-
-
-
-
-
-
 
 /** 
-* Implementation of hook_theme(). 
-*/ 
-function taxonomy_tree_theme() { 
-    
+ * Implementation of hook_theme(). 
+ */
+function taxonomy_tree_theme(){
   return array(
     'taxonomy_tree' => array(
-       'arguments' => array('element' => NULL),
-    ),
+      'arguments' => array(
+        'element' => NULL
+      )
+    ), 
     'taxonomy_tree_items' => array(
-       'arguments' => array('items' => array()),
-    ),    
-  
+      'arguments' => array(
+        'items' => array()
+      )
+    )
   );
-
 }
 
-
-
-
 /** 
-* Theme the tree form element
-*/
+ * Theme the tree form element
+ */
 function theme_taxonomy_tree($element){
-  return theme('form_element', $element, '<div '.drupal_attributes($element['#attributes']).'>'. $element['#children'] .'</div>');
+  return theme('form_element', $element, '<div ' . drupal_attributes($element['#attributes']) . '>' . $element['#children'] . '</div>');
 }
 
 function theme_taxonomy_tree_items($items, $element){
-  
   $output .= '<ul>';
-
   foreach($items as $item){
-    
-    $output .= '<li id="'.$item['id'].'" class="treeview-item';  
-    
+    $output .= '<li id="' . $item['id'] . '" class="treeview-item';
     if(count($item['children'])){
-      
       $output .= ' open">';
-      
-      $output .= '<span>'.$item['text'].'</span>';
-      
-      $output .= theme('taxonomy_tree_items', $item['children'], $element); 
-        
+      $output .= '<span>' . $item['text'] . '</span>';
+      $output .= theme('taxonomy_tree_items', $item['children'], $element);
     }else{
-      
       if($item['hasChildren']){
-        
-      $output .= ' hasChildren">';  
-      $output .= '<div class="hitarea hasChildren-hitarea expandable-hitarea "></div>';
-      $output .= '<span>'.$item['text'].'</span>';
-      $output .= '<ul><li><span class="placeholder">&nbsp;</span></li></ul>';
-            
+        $output .= ' hasChildren">';
+        $output .= '<div class="hitarea hasChildren-hitarea expandable-hitarea "></div>';
+        $output .= '<span>' . $item['text'] . '</span>';
+        $output .= '<ul><li><span class="placeholder">&nbsp;</span></li></ul>';
       }else{
-        
-      $output .= ' noChildren">';  
-      $output .= '<span>'.$item['text'].'</span>'; 
-        
+        $output .= ' noChildren">';
+        $output .= '<span>' . $item['text'] . '</span>';
       }
-      
-
     }
-    
-    
     $output .= '</li>';
-    
   }
-  
-  
   $output .= '</ul>';
-  
   return $output;
-  
 }
 
 
