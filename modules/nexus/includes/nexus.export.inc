@@ -61,7 +61,7 @@ function nexus_export_sdd($node, $matrix_data) {
   $doc->preserveWhiteSpace = false;
   $doc->formatOutput = true;
   $Datasets = $doc->createElement("Datasets");
-  $Datasets->setAttribute('xsi:schemaLocation', 'http://rs.tdwg.org/UBIF/2006 http://rs.tdwg.org/UBIF/2006/Schema/1.1/SDD.xsd');
+  $Datasets->setAttribute('xsi:schemaLocation', 'http://rs.tdwg.org/UBIF/2006/ http://rs.tdwg.org/UBIF/2006/Schema/1.1/SDD.xsd');
   $Datasets->setAttribute('xmlns', 'http://rs.tdwg.org/UBIF/2006/');
   $Datasets->setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
   
@@ -172,7 +172,7 @@ function nexus_export_sdd($node, $matrix_data) {
           if (is_numeric($state_key)) {
             $s[$column['id']][$state_key] = $state_count;
             $StateDefinition = $doc->createElement("StateDefinition");
-            $StateDefinition->appendChild(_nexus_export_sdd_representation_xml($doc, $state['state'], $state['state']));
+            $StateDefinition->appendChild(_nexus_export_sdd_representation_xml($doc, $state['state']));
             $StateDefinition->setAttribute('id', 's' . $state_count);
             $States->appendChild($StateDefinition);
             $state_count++;
@@ -181,14 +181,18 @@ function nexus_export_sdd($node, $matrix_data) {
         
         }
         
-        $Character->appendChild($States);
-        
         break;
     
     }
     
     $Character->setAttribute('id', 'c' . $c[$column['id']]['index']);
     $Character->appendChild(_nexus_export_sdd_representation_xml($doc, $column['term'], $column['description']));
+    
+    if($column['type'] == 'controlled'){
+    	$Character->appendChild($States);
+    }
+    
+    
     $Characters->appendChild($Character);
     
     if (! isset($g[$column['groupID']])) {
@@ -230,10 +234,13 @@ function nexus_export_sdd($node, $matrix_data) {
   $Dataset->appendChild($DescriptiveConcepts);
   
   $Dataset->appendChild($Characters);
+
   
   //  Character trees 
   $CharacterTrees = $doc->createElement("CharacterTrees");
   $CharacterTree = $doc->createElement("CharacterTree");
+  $CharacterTree->appendChild(_nexus_export_sdd_representation_xml($doc, 'Character list'));
+  
   $CharacterTree->appendChild($Nodes);
   $CharacterTrees->appendChild($CharacterTree);
   
