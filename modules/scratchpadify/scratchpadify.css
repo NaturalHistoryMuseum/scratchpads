@@ -80,6 +80,11 @@
 /* Node relationship modal popup*/
 
 /* Layout */
+
+.noderelationships-noderef-page-content{
+  width: 1100px!important;
+}
+
 div.noderelationships-noderef-multiselect{
   width: 400px;
   float:left;
@@ -92,7 +97,9 @@ div.noderelationships-noderef-multiselect div.fieldset-wrapper{
 div.noderelationships-noderef-multiselect-actions{
   float: none;
   margin-top: 30px;
+  width: 390px;
 }
+
 
 .noderelationships-noderef-multiselect-items-list ul{
   width: 360px!important;
@@ -111,6 +118,7 @@ div.view-publication-noderefences .view-empty{
   background-color:#FFCCCC;
   border:1px solid #A30000;
   padding: 10px;
+  margin-top: 10px;
 }
 
 div.view-publication-noderefences .view-empty p{
@@ -183,8 +191,12 @@ background:url("images/454545_11x11_icon_close.gif") no-repeat scroll 0 0 transp
 }
 
 .noderelationships-noderef-multiselect-items-list ul li div{
-  background:#fff url("/misc/draggable.png") no-repeat 5px 5px!important;
+  background:#fff url("images/draggable_off.png") no-repeat 5px 5px!important;
   padding-left: 25px!important;
+}
+
+.noderelationships-noderef-multiselect-items-list ul li div:hover{
+	background-image: url("images/draggable_on.png")!important;
 }
 
 .noderelationships-noderef-multiselect-ui-sortable-helper{
