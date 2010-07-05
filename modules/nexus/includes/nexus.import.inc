@@ -186,6 +186,16 @@ function nexus_import_batch_process_file($lines, &$context){
       preg_match('/.*?SYMBOLS="([0-9]+).*"/', $line, $symbols);
       $context['results']['base'] = substr($symbols[1], 0, 1);
     }
+    //    Checkdata type = standard (& maybe DNA)
+    if(strpos($line, 'DATATYPE')){
+      preg_match('/.*?DATATYPE\s?=\s?([A-Z]+)\s.*/', $line, $datatype);
+      if(strtolower($datatype[1]) != 'standard'){ // If this isn't a standard nexus file, error out
+        drupal_set_message(t('Sorry, this file could not be imported - only standard datatype nexus files are currently supported.'), 'error');
+        $context['results']['error'] = true;
+        $context['finished'] = 1;
+        return;
+      }
+    }
     switch($line){
       case 'TAXLABELS':
         $context['sandbox']['key'] = 'taxa';
@@ -265,14 +275,16 @@ function nexus_import_batch_process_file($lines, &$context){
 }
 
 function nexus_import_batch_process_file_finished($success, $results, $operations){
-  if($success){
-    if(count($results['data']['chars'])){
-      $_SESSION['import_file'] = $results;
+  if(!$results['error']){ // Results error can be set in batch process; if it isset there will already be an error message 
+    if($success){
+      if(count($results['data']['chars'])){
+        $_SESSION['import_file'] = $results;
+      }else{
+        drupal_set_message(t('There are no characters in this file to import.'), 'error');
+      }
     }else{
-      drupal_set_message(t('There are no characters in this file to import.'), 'error');
+      drupal_set_message(t('An error occurred while processing the file'), 'error');
     }
-  }else{
-    drupal_set_message(t('An error occurred while processing the file'), 'error');
   }
 }
 
@@ -282,7 +294,7 @@ function nexus_import_batch_process_file_finished($success, $results, $operation
  * @param $form_state
  */
 function nexus_import_form_previous_submit(&$form, &$form_state){
-  $form_state['storage']['step'] = 1;
+  unset($form_state['storage']['import_file']);
 }
 
 function nexus_import_form_import_submit(&$form, &$form_state){
@@ -329,7 +341,9 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
       $taxonomy[$form_values['vid']][] = $form_values['taxonomy'][$i];
     }
     //  Save the node at this point so we know the tid to use for the character group parent
-    $node = _nexus_import_save_node('nexus_project', $form_values['title'], $taxonomy, array('taxa_vid' => $form_values['vid']));
+    $node = _nexus_import_save_node('nexus_project', $form_values['title'], $taxonomy, array(
+      'taxa_vid' => $form_values['vid']
+    ));
     $context['results']['node'] = $node;
     $context['sandbox']['matrix'] = nexus_import_parse_matrix($import_file['matrix'], $form_values['taxonomy'], $base);
     $context['sandbox']['progress'] = 0;
