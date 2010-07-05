@@ -50,7 +50,9 @@ function publication_node_info(){
  * hook_wysiwyg_editor_settings_alter
  */
 function publication_wysiwyg_editor_settings_alter(&$settings, $context){
-  if(arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'edit'){
+  if(arg(0) == 'publication' && arg(1) == 'caption'){
+    $node_type = 'publication_image_caption';
+  }elseif(arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == 'edit'){
     $node = node_load(arg(1));
     $node_type = $node->type;
   }elseif(arg(0) == 'node' && arg(1) == 'add'){
@@ -60,6 +62,7 @@ function publication_wysiwyg_editor_settings_alter(&$settings, $context){
   if(isset($node_types[$node_type])){
     $settings['theme_advanced_buttons1'] = 'bold,italic';
   }
+  $settings['strict_loading_mode'] = 0;
 }
 
 function publication_group_info(){

@@ -535,7 +535,7 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
           '#value' => $nid, 
           '#name' => 'field_publication_section[nids][]'
         ), 
-        '#depth' => $depth, 
+        '#depth' =>  $depth,
         'section_parent' => array(
           '#type' => 'textfield', 
           '#default_value' => $parent, 
@@ -801,34 +801,10 @@ function publication_deselect_taxon_treatment_sections($node, &$deselected_tids,
  * @author Ben Scott
  */
 function publication_pre_render_node_form(&$form){
-  static $profile;
-  if(!isset($profile)){
-    $filter_formats = filter_formats();
-    foreach($filter_formats as $filter_format){
-      if($filter_format->name == t('Full HTML')){
-        $profile = wysiwyg_get_profile($filter_format->format);
-      }
-    }
-  }
   foreach(element_children($form) as $key){
     $element = &$form[$key];
     if(array_key_exists('format', $element)){
-      if($element['#id']){
-        $id = $element['#id'] . '-value';
-      }elseif($element['body']['#id']){
-        $id = $element['body']['#id'];
-      }
-      $class = 'wysiwyg wysiwyg-format-' . $profile->format . ' wysiwyg-editor-' . $profile->editor . ' wysiwyg-field-' . $id . ' wysiwyg-status-1';
-      $name = $element['format'][$profile->format]['#name'];
-      $element['format'] = array(
-        '#type' => 'hidden', 
-        '#value' => $profile->format, 
-        '#attributes' => array(
-          'checked' => 'checked', 
-          'class' => $class
-        ), 
-        '#name' => $name
-      );
+      $element['format']['#attributes']['class'] .= ' wysiwyg-format';
     }else{
       publication_pre_render_node_form($element);
     }
@@ -837,39 +813,33 @@ function publication_pre_render_node_form(&$form){
 }
 
 function publication_node_form_make_public_submit($form, &$form_state){
-
-	  $destination = '';
-  if (isset($_REQUEST['destination'])) {
+  $destination = '';
+  if(isset($_REQUEST['destination'])){
     $destination = drupal_get_destination();
     unset($_REQUEST['destination']);
   }
   $node = $form['#node'];
-  $form_state['redirect'] = array('publication/'. $node->nid .'/make-public', $destination);
-  
+  $form_state['redirect'] = array(
+    'publication/' . $node->nid . '/make-public', 
+    $destination
+  );
 }
 
-function publication_node_confirm_make_public(&$form_state, $node) {
+function publication_node_confirm_make_public(&$form_state, $node){
   $form['node'] = array(
-    '#type' => 'value',
-    '#value' => $node,
+    '#type' => 'value', 
+    '#value' => $node
   );
-  
-  return confirm_form($form,
-    t('Are you sure you want to make %title public?', array('%title' => $node->title)),
-    isset($_GET['destination']) ? $_GET['destination'] : 'node/'. $node->nid .'/edit',
-    t('This action cannot be undone.'),
-    t('Make public'),
-    t('Cancel')
-  );
+  return confirm_form($form, t('Are you sure you want to make %title public?', array(
+    '%title' => $node->title
+  )), isset($_GET['destination']) ? $_GET['destination'] : 'node/' . $node->nid . '/edit', t('This action cannot be undone.'), t('Make public'), t('Cancel'));
 }
 
-function publication_node_confirm_make_public_submit($form, &$form_state) {
-
-	publication_node_make_public($form_state['values']['node']);
-	drupal_set_message(t('Publication %title has been made public.', array('%title' => $form_state['values']['node']->title)));
-	$form_state['redirect'] = 'node/'.$form_state['values']['node']->nid;
-	
+function publication_node_confirm_make_public_submit($form, &$form_state){
+  publication_node_make_public($form_state['values']['node']);
+  drupal_set_message(t('Publication %title has been made public.', array(
+    '%title' => $form_state['values']['node']->title
+  )));
+  $form_state['redirect'] = 'node/' . $form_state['values']['node']->nid;
 }
-
-
 ?>
