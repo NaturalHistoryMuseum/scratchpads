@@ -31,6 +31,9 @@ class matrix_editor_views_plugin extends views_plugin_style{
     $options['viewportHeight'] = array(
       'default' => 200
     );
+        $options['rowHeight'] = array(
+      'default' => 24
+    );
     return $options;
   }
 
@@ -94,6 +97,12 @@ class matrix_editor_views_plugin extends views_plugin_style{
       '#title' => t('Viewport height'), 
       '#type' => 'textfield', 
       '#default_value' => $this->options['viewportHeight'], 
+      '#size' => 10, '#maxlength' => 10
+    );
+        $form['rowHeight'] = array(
+      '#title' => t('Row height'), 
+      '#type' => 'textfield', 
+      '#default_value' => $this->options['rowHeight'], 
       '#size' => 10, '#maxlength' => 10
     );
     $form['#theme'] = 'matrix_editor_views_plugin_table';

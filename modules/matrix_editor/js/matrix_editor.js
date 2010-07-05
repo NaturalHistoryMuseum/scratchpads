@@ -265,21 +265,16 @@ function initMatrixEditor(){
          args,
          function(response){
            
-           if(response.data){
-             
              var cell = $('#myGrid .editor-text').parents('div.c').attr('cell');
              var columnID = columns[cell]['id'];
              
              $('#myGrid .editor-text, #myGrid .multiSelected').each(function(){
-                             
+
                var row = $(this).parents('div.r').attr('row');
-               
-               data[row][columnID] = response.data
+               data[row][columnID] = response.data;               
                $(this).html(response.data);
 
              });
-             
-            }
             
             $result = $("#matrix-editor-result");
             $result.html(response.result);
@@ -335,20 +330,21 @@ var MatrixCellEditor = function($container, columnDef, value, dataContext) {
         }
         
         field_args = columnDef.args+'&field='+columnDef.id+'&nid='+dataContext.id+'&view_field='+columnDef.field;
-           
+        
+        $('#matrix-editor-field').html('<div class="progress"><div class="bar"><div class="filled"></div></div>'+
+        '<div class="message">Loading form...</div></div>');
+        
         $.post(
            Drupal.settings.matrixEditorCallbackPath+'/get_form_field', 
            field_args,
            function(response){
-             
+        	   
              $('#matrix-editor-field').html($(response.data));
              
              if($('#matrix-editor-panel').is(':hidden')){
                $('#matrix-editor-panel').slideDown(1000);
              }
-             
-             $('#matrix-editor-field').find('input');
-             
+
              Drupal.attachBehaviors($('#matrix-editor-field'));
              
            },
@@ -393,6 +389,5 @@ var MatrixCellEditor = function($container, columnDef, value, dataContext) {
     this.init();
     
 }
-
 
 

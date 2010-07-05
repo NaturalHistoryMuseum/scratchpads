@@ -6,7 +6,54 @@
 function matrix_editor_install(){
   // Set the module's weight high so that it runs after other modules.
   db_query("UPDATE {system} SET weight = 100 WHERE name = 'matrix_editor' and type = 'module'");
+  // Create tables.
+  drupal_install_schema('matrix_editor');
 }
 
-function matrix_editor_uninstall(){}
+function matrix_editor_uninstall(){
+  drupal_uninstall_schema('matrix_editor');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function matrix_editor_schema(){
+  $schema['matrix_editor'] = array(
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
+        'description' => 'Primary Key: The {node}.vid of the node.'
+      ), 
+      'view_name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'default' => '',
+        'not null' => TRUE,
+        'description' => 'The unique name of the view. May only be alphanumeric characters plus underscores.',
+      ),
+      'settings' => array(
+        'type' => 'text', 
+        'not null' => FALSE, 
+        'size' => 'big', 
+        'description' => 'A serialized array of view settings.'
+      )
+    ), 
+    'primary key' => array(
+      'uid', 
+      'view_name'
+    )
+  );
+  return $schema;
+}
+
+function matrix_editor_update_6102(){
+  drupal_install_schema('matrix_editor');
+  return array(
+    '#finished' => TRUE
+  );
+}
+
 

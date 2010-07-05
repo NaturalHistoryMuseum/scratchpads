@@ -80,11 +80,11 @@ function SlickGrid($container,data,columns,options)
 		defaultColumnWidth: 80,
 		enableColumnReorder: false,
 		asyncEditorLoading: true,
-		fixedFirstColumn: false
+		fixedFirstColumn: false,
+		rowHeight: 24
 	};
 	
 	// consts
-	var ROW_HEIGHT = 24;
 	var CAPACITY = 50;
 	var BUFFER = 5;  // will be set to equal one page
 	
@@ -454,10 +454,10 @@ function SlickGrid($container,data,columns,options)
 		var css = "r" + (dataLoading ? " loading" : "") + (selectedRowsLookup[row] ? " selected" : "");
 		var placeholder;
 		
-		stringArray.main.push("<div class='" + css + "' row='" + row + "' style='top:" + (ROW_HEIGHT*row) + "px'>");
+		stringArray.main.push("<div class='" + css + "' row='" + row + "' style='top:" + (options.rowHeight*row) + "px'>");
 		
 		if(options.fixedFirstColumn){		  
-		stringArray.fixedCol.push("<div class='" + css + "' row='" + row + "' style='top:" + (ROW_HEIGHT*row) + "px'>");  		  
+		stringArray.fixedCol.push("<div class='" + css + "' row='" + row + "' style='top:" + (options.rowHeight*row) + "px'>");  		  
 		}
 		
 		for (var i= 0, cols=columns.length; i<cols; i++) 
@@ -471,7 +471,7 @@ function SlickGrid($container,data,columns,options)
 		  
 			var m = columns[i];
 
-			placeholder.push("<div " + (m.unselectable ? "" : "hideFocus tabIndex=0 ") + "class='c c" + i + (m.cssClass ? " " + m.cssClass : "") + "' cell=" + i + ">");
+			placeholder.push("<div " + (m.unselectable ? "" : "hideFocus tabIndex=0 ") + "class='c c" + i + (m.cssClass ? " " + m.cssClass : "") + "' cell=" + i + " style=\"height: "+(options.rowHeight - 5)+"px\">");
 
 			// if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)				
 			if (d && row < data.length)
@@ -653,7 +653,7 @@ function SlickGrid($container,data,columns,options)
 		viewportW = $divMainScroller.innerWidth();
 		viewportH = $divMainScroller.innerHeight();
 	    
-		BUFFER = numVisibleRows = Math.ceil(viewportH / ROW_HEIGHT);
+		BUFFER = numVisibleRows = Math.ceil(viewportH / options.rowHeight);
 		CAPACITY = Math.max(CAPACITY, numVisibleRows + 2*BUFFER);
 
 		var totalWidth = 0;
@@ -688,7 +688,7 @@ function SlickGrid($container,data,columns,options)
 			}
 		}
 		
-	    var newHeight = Math.max(ROW_HEIGHT * (data.length + numVisibleRows - 2) - (viewportH  - $.getScrollbarWidth() - 20), viewportH - $.getScrollbarWidth());
+	    var newHeight = Math.max(options.rowHeight * (data.length + numVisibleRows - 2) - (viewportH  - $.getScrollbarWidth() - 20), viewportH - $.getScrollbarWidth());
 		
         // browsers sometimes do not adjust scrollTop/scrollHeight when the height of contained objects changes
 		if ($divMainScroller.scrollTop() > newHeight - $divMainScroller.height() + $.getScrollbarWidth()) {
@@ -705,8 +705,8 @@ function SlickGrid($container,data,columns,options)
 	function getViewport()
 	{
 		return {
-			top:	Math.floor(currentScrollTop / ROW_HEIGHT),
-			bottom:	Math.floor((currentScrollTop + viewportH) / ROW_HEIGHT)
+			top:	Math.floor(currentScrollTop / options.rowHeight),
+			bottom:	Math.floor((currentScrollTop + viewportH) / options.rowHeight)
 		};	
 	}
 	
@@ -767,7 +767,7 @@ function SlickGrid($container,data,columns,options)
 		var from = Math.max(0, vp.top - (scrollDir >= 0 ? 5 : BUFFER));
 		var to = Math.min(options.enableAddRow ? data.length : data.length - 1, vp.bottom + (scrollDir > 0 ? BUFFER : 5));
 		
-		if (renderedRows > 10 && Math.abs(lastRenderedScrollTop - currentScrollTop) > ROW_HEIGHT*CAPACITY)
+		if (renderedRows > 10 && Math.abs(lastRenderedScrollTop - currentScrollTop) > options.rowHeight*CAPACITY)
 			removeAllRows();
 		else //if (renderedRows >= CAPACITY)
 			cleanupRows(from,to);
@@ -791,7 +791,7 @@ function SlickGrid($container,data,columns,options)
 	  if (self.onViewportChanged)
       self.onViewportChanged();
 		
-		if (scrollDistance < 5*ROW_HEIGHT) return;
+		if (scrollDistance < 5*options.rowHeight) return;
 		
 		if (lastRenderedScrollTop == currentScrollTop)
 			scrollDir = 0;
@@ -803,7 +803,7 @@ function SlickGrid($container,data,columns,options)
 		if (h_render)
 			window.clearTimeout(h_render);
 
-		if (scrollDistance < numVisibleRows*ROW_HEIGHT) // || avgRowRenderTime*CAPACITY < 30 ||  _forceSyncScrolling) 
+		if (scrollDistance < numVisibleRows*options.rowHeight) // || avgRowRenderTime*CAPACITY < 30 ||  _forceSyncScrolling) 
 			render();
 		else
 			h_render = window.setTimeout(render, 50);
@@ -932,7 +932,7 @@ function SlickGrid($container,data,columns,options)
 	}
 
 	function getCellFromPoint(x,y) {
-		var row = Math.floor(y/ROW_HEIGHT);
+		var row = Math.floor(y/options.rowHeight);
 		var cell = 0;
 		
 		var w = 0;		
@@ -1078,16 +1078,16 @@ function SlickGrid($container,data,columns,options)
 		var scrollTop = $divMainScroller[0].scrollTop;
 		
 		// need to page down?
-		if ((currentRow + 2) * ROW_HEIGHT > scrollTop + viewportH) 
+		if ((currentRow + 2) * options.rowHeight > scrollTop + viewportH) 
 		{
-			$divMainScroller[0].scrollTop = (currentRow ) * ROW_HEIGHT;
+			$divMainScroller[0].scrollTop = (currentRow ) * options.rowHeight;
 			
 			handleScroll();
 		}
 		// or page up?
-		else if (currentRow * ROW_HEIGHT < scrollTop)
+		else if (currentRow * options.rowHeight < scrollTop)
 		{
-			$divMainScroller[0].scrollTop = (currentRow + 2) * ROW_HEIGHT - viewportH;
+			$divMainScroller[0].scrollTop = (currentRow + 2) * options.rowHeight - viewportH;
 			
 			handleScroll();			
 		}	

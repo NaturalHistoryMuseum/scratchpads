@@ -1,3 +1,22 @@
 #views-live-preview #matrix-editor-panel{
   display: none;
 }
+
+#edit-fields-wrapper label,
+#edit-fields-wrapper select,
+#matrix-editor-fields-form input.form-submit{
+	float: left;
+}
+
+#edit-fields-wrapper label{	
+	width: 150px
+}
+
+#edit-fields-wrapper select{
+  min-width: 200px;
+             height: 100px
+}
+
+#matrix-editor-fields-form input.form-submit{
+	margin: 0 0 0 30px
+}
