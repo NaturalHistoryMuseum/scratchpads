@@ -783,7 +783,6 @@ function nexus_form_alter(&$form, $form_state, $form_id){
             'taxa_vid'
           )
         );
-        
         // Need to validate form so we know all required data i set up
         $form['#validate'][] = 'nexus_project_node_add_form_validate';
         $form['buttons']['submit']['#submit'][] = 'nexus_project_node_add_form_submit';
@@ -797,7 +796,6 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         unset($form['taxonomy']['#title']);
         unset($form['buttons']);
         $character_vid = nexus_get_character_vid();
-        
         // We don't let users pick characters - generated automatically
         unset($form['taxonomy'][$character_vid]);
         // Add html so these are shown / hidden depending on taxonomy chosen
@@ -807,7 +805,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
           }else{
             $form['taxonomy'][$vid]['#no_tree'] = true;
           }
-        }        
+        }
         $form['save_settings'] = array(
           '#type' => 'image_button', 
           '#src' => $path . '/images/save_changes.gif', 
@@ -856,6 +854,13 @@ function nexus_form_alter(&$form, $form_state, $form_id){
       break;
     case 'taxonomy_tree_admin_settings_form':
       $form['#after_build'][] = 'taxonomy_tree_admin_settings_form_after_build';
+      break;
+    case 'taxonomy_form_vocabulary':
+      $nexus_node_types = nexus_node_info();
+      unset($nexus_node_types['nexus_project']);
+      foreach($nexus_node_types as $node_type => $node_info){
+        unset($form['content_types']['nodes']['#options'][$node_type]);
+      }
       break;
   }
 }
@@ -943,13 +948,15 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#options' => array(
       'controlled' => t('Controlled'), 
       'text' => t('Text'), 
-      'numeric' => t('Numeric')
+      'numeric' => t('Numeric'), 
+      'dna' => t('DNA')
     ), 
     '#required' => TRUE, 
     '#description' => '<p class="text">' . t('Unrestricted input - useful for text descriptions') . '</p>
       <p class="numeric">' . t('Numeric input - useful for measurements.') . '</p>
       <p class="controlled">' . t('  Restricted to the states below - useful for building
-        phylogenies & keys.') . '</p>', 
+        phylogenies & keys.') . '</p>
+       <p class="dna">' . t('For DNA sequences.') . '</p>', 
     '#prefix' => '</div><div class="columns" id="right"><div class="inner"><div id="character-type">', 
     '#suffix' => '</div>'
   );
@@ -968,7 +975,11 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
       }
     }elseif(nexus_is_numeric_state($character_tid)){
       $form['type']['#default_value'] = 'numeric';
+    }elseif(nexus_is_dna_state($character_tid)){
+      $form['type']['#default_value'] = 'dna';
     }
+    
+    
   }
   if(isset($form_state['states_count'])){
     $states_count = $form_state['states_count'];
@@ -1208,18 +1219,29 @@ function nexus_character_form_submit($form, &$form_state){
         }
       }
       nexus_delete_term_setting($character_term['tid'], 'numeric');
+      nexus_delete_term_setting($character_term['tid'], 'dna');
       nexus_delete_free_states($character_term['tid']);
       break;
     case 'numeric':
+      nexus_delete_term_setting($character_term['tid'], 'dna');
       nexus_update_term_setting($character_term['tid'], 'numeric', 1);
-      // If this has been changed to numeric from text, we need to delete all non numeric free states
-      if($form['type']['#default_value'] == 'text'){
+      // If this has been changed to numeric from text or DNA, we need to delete all non numeric free states
+      if($form['type']['#default_value'] == 'text' || $form['type']['#default_value'] == 'dna'){
+        nexus_delete_free_states($character_term['tid'], true);
+      }
+      break;
+    case 'dna':
+    	           nexus_delete_term_setting($character_term['tid'], 'numeric');
+      nexus_update_term_setting($character_term['tid'], 'dna', 1);
+      // If this has been changed to numeric from text or numeric, we need to delete states
+      if($form['type']['#default_value'] == 'text' || $form['type']['#default_value'] == 'numeric'){
         nexus_delete_free_states($character_term['tid'], true);
       }
       break;
     case 'text':
-      // If it was numeric, delete from the numeric table
+      // If it was numeric or DNA, delete from the numeric table
       nexus_delete_term_setting($character_term['tid'], 'numeric');
+      nexus_delete_term_setting($character_term['tid'], 'dna');
       break;
   }
   // If there's any exisitng state nodes we're not using, delete them
@@ -1529,6 +1551,11 @@ function nexus_get_collapsed_taxa($terms){
 
 function nexus_is_numeric_state($character_tid){
   $result = db_query('SELECT COUNT(*) FROM {nexus_term_settings} WHERE tid = %d AND setting_type = "numeric"', $character_tid);
+  return db_result($result);
+}
+
+function nexus_is_dna_state($character_tid){
+  $result = db_query('SELECT COUNT(*) FROM {nexus_term_settings} WHERE tid = %d AND setting_type = "dna"', $character_tid);
   return db_result($result);
 }
 

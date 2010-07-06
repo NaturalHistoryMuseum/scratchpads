@@ -357,7 +357,7 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
     );
     // If there's no groups, create a default one 
     if(!$import_file['groups']){ // No groups
-      $group_term['name'] = 'Default';
+      $group_term['name'] = 'Morphology';
       taxonomy_save_term($group_term);
       // No groups so get all charsfil
       foreach($import_file['chars'] as $character_order => $character){

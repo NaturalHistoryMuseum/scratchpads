@@ -304,6 +304,12 @@ function nexus() {
         
         break;
         
+        case 'dna':
+            
+            return 'DNA: <span>'+txt+'</span>';
+          
+          break;
+        
         case 'controlled':
 
         
@@ -658,11 +664,17 @@ function nexus() {
           $(ul).appendTo($cellForm);
           $('<p>For multiple states, please use <strong>/</strong> for <em>or</em> and <strong>+</strong> for <em>and</em>.<p>').appendTo($cellForm);
           
-        }else if(typeof columnDef.validator == 'undefined'){ // This is a text field so add the textarea
+        }else if(typeof columnDef.validator == 'undefined' || columnDef.type == 'dna'){ // This is a text field so add the textarea
           
           var defaultValue;
           
+          if(columnDef.type == 'dna'){
+              $('<p>This is a <em>DNA sequence</em> - please enter only DNA characters (ACGTU or ? and -).<p>').appendTo($cellForm);
+
+          }else{
+        	  
           $('<p>This is a <em>free state text character</em> - please enter text in the table cell or the field below.<p>').appendTo($cellForm);
+          }
           
           var $resizableTextarea = $(".note-form .resizable-textarea").clone()
           
@@ -690,6 +702,7 @@ function nexus() {
 
           })
           
+        	
         }else{ // This is numeric
           
           $('<p>This is a <em>numeric character</em> - please enter only numeric values.<p><p>For numeric ranges, please enter as <em>x-y</em>.</p>').appendTo($cellForm);

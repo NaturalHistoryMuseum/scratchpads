@@ -95,6 +95,9 @@ function nexus_project_get_matrix_data($node, $editable = true){
             if(isset($character_settings['numeric'][$character->tid])){
               $column['validator'] = 'nexusNumericStateValidator';
               $column['type'] = 'quantitative';
+            }else if(isset($character_settings['dna'][$character->tid])){
+              $column['validator'] = 'nexusDNAStateValidator';
+              $column['type'] = 'dna';
             }
           }
           $matrix_editor->columns[] = $column;
