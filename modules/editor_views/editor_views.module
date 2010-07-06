@@ -1,0 +1,118 @@
+<?php
+// $Id: editor_views.module,v 1.1 2010/03/22 10:22:11 b3n Exp $
+
+/**
+ * @file
+ * Defines a view containing nodes user can edit delete
+ */
+ 
+function editor_views_views_api() {
+  
+  return array('api' => 2.0);
+
+}
+
+/**
+ * Filter by node_access records.
+ */
+function _editor_views_where_sql($ops) {
+
+  global $user;
+  
+  $args = array();
+
+  $result = db_query("SELECT name, type FROM {node_type}");
+  
+  $filters = _editor_views_get_filters();
+  
+  while ($node = db_fetch_object($result)) {
+    
+    if (count($filters[$node->type])) {
+      
+      foreach ($filters[$node->type] as $filter) {
+        
+        if (filter_access($filter)) {
+          
+          break;
+          
+        }
+        
+        continue(2);
+        
+      }
+      
+    }
+    
+    foreach ($ops as $op) {
+     
+      if (node_access($op, $node)) {
+
+        $any_node_types[] = $node->type;
+        break;
+
+      }
+      else{ // See if user has access if they're the author
+        
+        $node->uid = $user->uid;
+        
+        if (node_access($op, $node)) {
+        
+          $own_node_types[] = $node->type;
+          break;
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+  
+  if (count($any_node_types)) {
+    
+    $sql = 'node.type IN('. db_placeholders($any_node_types, $type = 'text') .')';
+    $args = $any_node_types;
+    
+  }
+  
+  if (count($own_node_types)) {
+    
+    if ($sql) {
+      
+      $sql .= ' OR ';
+      
+    }
+    
+    $sql .= '(node.type IN('. db_placeholders($own_node_types, $type = 'text') .') AND node.uid = %d)';
+    
+    $args = array_merge($args, $own_node_types);;
+    $args[] = $user->uid;
+    
+  }
+  elseif (!count($any_node_types)) {
+    
+    // User has no access to any nodes
+    $sql = 'node.type IS NULL';
+    
+  }
+  
+  return array(
+    'sql' => $sql,
+    'args' => $args
+  );
+  
+}
+
+function _editor_views_get_filters() {
+  
+  $result = db_query("SELECT DISTINCT n.type, r.format FROM {node} n INNER JOIN {node_revisions} r ON r.nid = n.nid");
+  
+  while ($filter = db_fetch_object($result)) {
+   
+   $filters[$filter->type][] = $filter->format;
+    
+  }
+  
+  return $filters;
+  
+}
