@@ -391,3 +391,23 @@ var MatrixCellEditor = function($container, columnDef, value, dataContext) {
 }
 
 
+$(document).ready(function() {
+	  $('#matrix-editor-toggle-advanced-options').click(function() {
+		  
+		  var el = $('.view-filters, .attachment-before', '.view-matrix-editor-page');
+		  
+		  if(el.is(':visible')){
+			el.hide('fast');
+			$(this).removeClass('me-collapsed');
+		  }else{
+			  el.show('fast');
+			  $(this).addClass('me-collapsed');
+			  
+		  }
+		  
+		  return false;
+
+		}); 
+	 });
+
+

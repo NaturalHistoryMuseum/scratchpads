@@ -96,8 +96,19 @@ function matrix_editor_views_default_views(){
       }
     }
     $handler->override_option('fields', $views_fields);
+    // Sorting
+    $handler->override_option('sorts', array(
+      'created' => array(
+        'order' => 'DESC', 
+        'granularity' => 'second', 
+        'id' => 'created', 
+        'table' => 'node', 
+        'field' => 'created', 
+        'relationship' => 'none'
+      )
+    ));
     // Add node type filter
-    $handler->override_option('filters', array(
+    $filters = array(
       'type' => array(
         'operator' => 'in', 
         'value' => array(
@@ -116,15 +127,71 @@ function matrix_editor_views_default_views(){
           'button' => 'Override'
         ), 
         'relationship' => 'none'
+      ), 
+      'title' => array(
+        'operator' => 'contains', 
+        'value' => '', 
+        'group' => '0', 
+        'exposed' => TRUE, 
+        'expose' => array(
+          'use_operator' => 0, 
+          'operator' => 'title_op', 
+          'identifier' => 'title', 
+          'label' => 'Title', 
+          'optional' => 1, 
+          'remember' => 0
+        ), 
+        'case' => 0, 
+        'id' => 'title', 
+        'table' => 'node', 
+        'field' => 'title', 
+        'relationship' => 'none'
+      ), 
+      'uid_touch' => array(
+        'operator' => 'in', 
+        'value' => '', 
+        'group' => '0', 
+        'exposed' => TRUE, 
+        'expose' => array(
+          'use_operator' => 0, 
+          'operator' => 'uid_touch_op', 
+          'identifier' => 'uid_touch', 
+          'label' => 'Author', 
+          'optional' => 1, 
+          'remember' => 0, 
+          'reduce' => 0
+        ), 
+        'id' => 'uid_touch', 
+        'table' => 'node', 
+        'field' => 'uid_touch', 
+        'relationship' => 'none'
       )
-    ));
+    );
+    if(module_exists('editor_views')){
+      $filters['edit_delete'] = array(
+        'operator' => 'in', 
+        'value' => array(
+          'update' => 'update'
+        ), 
+        'group' => '0', 
+        'exposed' => FALSE, 
+        'expose' => array(
+          'operator' => FALSE, 
+          'label' => ''
+        ), 
+        'id' => 'edit_delete', 
+        'table' => 'node_access', 
+        'field' => 'edit_delete', 
+        'relationship' => 'none'
+      );
+    }
+    $handler->override_option('filters', $filters);
     $handler->override_option('access', array(
       'type' => 'none'
     ));
     $handler->override_option('cache', array(
       'type' => 'none'
     ));
-
     $handler->override_option('empty', t('Sorry no %node_type nodes could be found.', array(
       '%node_type' => $node_type->name
     )));

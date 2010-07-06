@@ -221,6 +221,12 @@ function matrix_editor_theme(){
   );
 }
 
+function matrix_editor_preprocess_views_view(&$vars){
+	
+	$vars['header'] .= '<a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
+	
+}
+
 /**
  * Array of jQuery files to replace if jQuery is loaded.
  */
@@ -414,7 +420,7 @@ function matrix_editor_views_pre_view(&$view, $display_id){
     $display_id = $view->current_display;
     $filter = $view->get_item($display_id, 'filter', 'type');
     foreach($filter['value'] as $node_type){
-      if(!user_access('edit any ' . $node_type . ' content')){
+      if(!(user_access('edit any ' . $node_type . ' content') || user_access('edit own ' . $node_type . ' content'))){
         drupal_access_denied();
       }
     }

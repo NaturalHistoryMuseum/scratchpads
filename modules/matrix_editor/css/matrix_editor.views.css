@@ -20,3 +20,71 @@
 #matrix-editor-fields-form input.form-submit{
 	margin: 0 0 0 30px
 }
+
+.view-matrix-editor-page .view-header{
+	padding-top: 20px;
+}
+
+.view-matrix-editor-page .view-filters,
+.view-matrix-editor-page .attachment-before
+{
+	display: none;
+	background: #F8F8F8;
+	padding: 5px 10px;
+	border-color:#C0C0C0;
+border-style:none solid none solid;
+border-width:1px;
+}
+
+.view-matrix-editor-page .view-filters{
+	border-top-style: solid;
+}
+
+.view-matrix-editor-page .attachment-before{
+	padding-bottom: 15px;
+}
+
+.view-matrix-editor-page .view-filters form,
+.view-matrix-editor-page .view-filters div.views-exposed-widgets,
+.view-matrix-editor-page .attachment-before form,
+.view-matrix-editor-page .view-filters .form-item,
+	.view-matrix-editor-page .attachment-before .form-item{
+	margin-bottom:0!important;
+	margin-top:0!important;
+}
+
+ 
+
+
+
+#matrix-editor-toggle-advanced-options{
+background: #F8F8F8 url("../images/888888_7x7_arrow_right.gif") no-repeat 7px 7px;
+padding-left: 2em;
+line-height: 22px;
+border-color:#C0C0C0;
+border-style:solid solid none solid;
+border-width:1px;
+height:22px;
+padding-bottom: 2px;
+display: block;
+width: 11em;
+position: relative;
+top: 1px
+}
+
+#matrix-editor-toggle-advanced-options:hover{
+	background-image: url("../images/454545_7x7_arrow_right.gif")
+}
+
+a#matrix-editor-toggle-advanced-options.me-collapsed{
+	background-image: url("../images/888888_7x7_arrow_down.gif")
+}
+
+a#matrix-editor-toggle-advanced-options.me-collapsed:hover{
+  background-image: url("../images/454545_7x7_arrow_down.gif")
+}
+
+
+a.me-collapsed{
+	border: 1px solid red;
+}
