@@ -476,7 +476,7 @@ function matrix_editor_fields_form($form_state, $view, $field_options, $field_se
   );
   $form['submit'] = array(
     '#type' => 'submit', 
-    '#value' => t('Submit')
+    '#value' => t('Update fields')
   );
   return $form;
 }
