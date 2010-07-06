@@ -1,36 +1,31 @@
 <?php
 
 /**
- * 
+ * The Dragon module adds the ability to drag and drop files onto a node edit
+ * page, adding them as either attachments, or as filefield files.
  */
 /**
- * 
+ * hook_init
  */
 function dragon_init(){
   drupal_add_js(drupal_get_path('module', 'dragon') . '/dragon.js');
-  drupal_add_js(array(
-    'dragon' => array(
-      'callbacks' => array(
-        'upload' => url('upload/js'),
-        'list' => url('dragon/list')
-      )
-    )
-  ), 'setting');
+  drupal_add_js(drupal_get_path('module', 'dragon') . '/dragon.shah.js');
   drupal_add_css(drupal_get_path('module', 'dragon') . '/dragon.css');
 }
 
-
 /**
- * Implementation of hook_form_alter().
+ * hook_form_alter
  */
-function dragon_form_alter(&$form, $form_state, $form_id) {
+function dragon_form_alter(&$form, $form_state, $form_id){
   // Need to add ad pre_render to the form, as other modules may add a file 
   // field after (i.e. CCK) this module has done its thang!
   if(isset($form['#pre_render'])){
     if(!is_array($form['#pre_render'])){
-      $form['#pre_render'] = array($form['#pre_render']);
+      $form['#pre_render'] = array(
+        $form['#pre_render']
+      );
     }
-  } else {    
+  }else{
     $form['#pre_render'] = array();
   }
   $form['#pre_render'][] = '_dragon_alter_file_field';
@@ -39,18 +34,38 @@ function dragon_form_alter(&$form, $form_state, $form_id) {
 /**
  * Recursive helper for hook_form_alter
  */
-function _dragon_alter_file_field($element, $submit_sibling = array()){
-  print_r($element;exit;)
-  if(isset($element['#ahah']['path']) && ($element['#ahah']['path'] == 'upload/js' || substr($element['#ahah']['path'], 0, 14) == 'filefield/ahah')){
-    // Not sure if this is always the case, but the id we want is 0 in the id
-    // array
-    $element['#suffix'] = '<div id="dragon-'.url($element['#ahah']['path']).'" class="dragon"><p>'.t('Please drop file(s) here').'</p></div>';
-  } else {
+function _dragon_alter_file_field($element){
+  // Following checks for core Drupal attachments upload form field.
+  if(isset($element['#ahah']['path']) && $element['#ahah']['path'] == 'upload/js' && !isset($element['#dragon_added'])){
+    $element['#suffix'] .= '<div id="' . $element['#id'] . '__dragon__" class="dragon"><p>' . t('Please drop file(s) here') . '</p></div>';
+    $element['#dragon_added'] = TRUE;
+  }elseif(isset($element[0]['upload']) && !isset($element['#dragon_added'])){ // Following instead checks for filefield
+    $keys = element_children($element[0]);
+    foreach($keys as $key){
+      if(isset($element[0][$key]['#ahah']['path']) && substr($element[0][$key]['#ahah']['path'], 0, 14) == 'filefield/ahah' && !isset($element['#dragon_added'])){
+        $fid_found = FALSE;
+        $i = 0;
+        while(!$fid_found){
+          if(!$element[$i]['#default_value']['fid']){
+            $fid_found = TRUE;
+            break;
+          }
+          $i++;
+        }
+        // For the CCK filefield, we'll set the ID as the ID of the upload and
+        // the ID of the "Add another" button seperated by "-dragon- 
+        $add_mode = '';
+        if(isset($element[$element['#field_name'].'_add_more'])){
+          $add_mode = $element[$element['#field_name'].'_add_more']['#id'];
+        }
+        $element['#suffix'] .= '<div id="' . $element[$i][$key]['#id'] . '__dragon__'.$add_mode.'" class="dragon"><p>' . t('Please drop file(s) here') . '</p></div>';
+        $element['#dragon_added'] = TRUE;
+      }
+    }
+  }else{
     $keys = element_children($element);
     foreach($keys as $key){
-      $temp_id = $id;
-      $temp_id[] = isset($element['#id']) ? $element['#id'] : '';
-      $element[$key] = _dragon_alter_file_field($element[$key], $temp_id);
+      $element[$key] = _dragon_alter_file_field($element[$key]);
     }
   }
   return $element;
