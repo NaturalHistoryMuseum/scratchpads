@@ -22,8 +22,8 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="'.$language.'" xml:lang="'.$language.'">
 <head>
+<meta name="description" content="A social networking tool to build, share and publish information on the diversity of life." />
 <title>
-  <meta name="description" content="A social networking tool to build, share and publish information on the diversity of life." />';
   $output .= $title ? strip_tags($title)." | ". variable_get("site_name", "Drupal") : variable_get("site_name", "Drupal") ." | ". variable_get("site_slogan", "");
   $output .='</title>';
   if(function_exists('jquery_ui_backport_add')){
