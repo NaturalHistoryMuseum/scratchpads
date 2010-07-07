@@ -852,7 +852,7 @@ function publication_menu(){
       ), 
       'type' => MENU_CALLBACK
     ), 
-    'node/%node/publication-export' => array(
+    'node/%publication_menu_node/publication-export' => array(
       'title' => 'Export', 
       'page callback' => 'drupal_get_form', 
       'page arguments' => array(
@@ -904,6 +904,16 @@ function publication_menu(){
       )
     )
   );
+}
+
+function publication_menu_node_load($nid){
+	if ($nid) {
+    $node = node_load($nid);
+    if ($node->type == 'publication') {
+      return $node;
+    }
+  }
+  return FALSE;
 }
 
 function publication_access_callback($operation, $node = NULL){
