@@ -1,4 +1,16 @@
 /**
+ * Attaches the shah behavior to each shah form element.
+ */
+Drupal.shah_create = function(id) {
+  var element_settings = Drupal.settings.ahah[id];
+
+  $(element_settings.selector).each(function() {
+    element_settings.element = this;
+    var shah = new Drupal.shah(id, element_settings);
+  });
+};
+
+/**
  * shah object.
  */
 Drupal.shah = function(base, element_settings) {
@@ -62,12 +74,16 @@ Drupal.shah = function(base, element_settings) {
     type: 'POST',
     async: false
   };
-  $.ajax(options);
+
+  // Unbind the ahah one first
+  $(element_settings.element).unbind(element_settings.event);
+  // Bind the ajaxSubmit function to the element event.
+  $(element_settings.element).bind(element_settings.event, function() {
+    $(element_settings.element).parents('form').ajaxSubmit(options);
+    return false;
+  });
 };
 
-/**
- * Handler for the form redirection submission.
- */
 Drupal.shah.prototype.beforeSubmit = function (form_values, element, options) {
   // Disable the element that received the change.
   $(this.element).addClass('progress-disabled').attr('disabled', true);
@@ -126,27 +142,6 @@ Drupal.shah.prototype.success = function (response, status) {
   else {
     wrapper[this.method](new_content);
   }
-
-  // Immediately hide the new content if we're using any effects.
-  if (this.showEffect != 'show') {
-    new_content.hide();
-  }
-
-  // Determine what effect use and what content will receive the effect, then
-  // show the new content. For browser compatibility, Safari is excluded from
-  // using effects on table rows.
-  if (($.browser.safari && $("tr.shah-new-content", new_content).size() > 0)) {
-    new_content.show();
-  }
-  else if ($('.shah-new-content', new_content).size() > 0) {
-    $('.shah-new-content', new_content).hide();
-    new_content.show();
-    $(".shah-new-content", new_content)[this.showEffect](this.showSpeed);
-  }
-  else if (this.showEffect != 'show') {
-    new_content[this.showEffect](this.showSpeed);
-  }
-
   // Attach all javascript behaviors to the new content, if it was successfully
   // added to the page, this if statement allows #shah[wrapper] to be optional.
   if (new_content.parents('html').length > 0) {

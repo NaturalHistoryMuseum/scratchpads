@@ -18,14 +18,14 @@ Drupal.dragon.init = function(context) {
     });
     $('body').get(0).addEventListener('dragenter', function(event){
       $('.dragon').animate({height:'100px',width:'99%'}, 1000);
-      $('.dragon p').css({color:'#000'});
       $('.dragon').css({backgroundColor : '#f5f5b5'});
+      $('.dragon').css({border : 'solid 1px #ccc'});
     }, false);
     $('body').get(0).addEventListener('dragexit', function(event){
       if(event.clientX == 0 && event.clientY == 0){
-        $('.dragon').animate({height:'50px',width:'200px'}, 1000);
-        $('.dragon p').css({color:'#ccc'});
+        $('.dragon').animate({height:'50px',width:'32px'}, 1000);
         $('.dragon').css({backgroundColor : '#fff'});
+        $('.dragon').css({border : 'none'});
       }
     }, false);
     $('body').get(0).addEventListener('dragover', function(event){ 
@@ -42,15 +42,6 @@ Drupal.dragon.single_file_upload = function(file_num){
   if(file_num == Drupal.dragon.original_drop_event.dataTransfer.files.length){
     return;
   }
-  var other_form_bits = $(Drupal.dragon.original_form).serializeArray();
-  /* Build RFC2388 string. */
-  var builder = dashdash + boundary + crlf;
-  var xhr = new XMLHttpRequest();
-  for(var j = 0; j < other_form_bits.length; j++){
-    builder += 'Content-Disposition: form-data; name="'+other_form_bits[j]['name']+'"' + crlf + crlf + other_form_bits[j]['value'] + crlf + dashdash + boundary + crlf;
-  }
-  var file = Drupal.dragon.original_drop_event.dataTransfer.files[file_num];
-  /* Generate headers. */
   temp_field_name = Drupal.dragon.field_name;
   temp_wrapper = Drupal.dragon.wrapper;
   temp_upload_path = Drupal.dragon.upload_path;
@@ -62,9 +53,19 @@ Drupal.dragon.single_file_upload = function(file_num){
     if(!$('#'+temp_wrapper).html()){
       // We haven't got this form item actually on the page, we need to mimic
       // the pressing of the "Add another item" button
-      var shah = new Drupal.shah(Drupal.dragon.id_parts[1], Drupal.settings.ahah[Drupal.dragon.id_parts[1]]);
+      Drupal.shah_create(Drupal.dragon.id_parts[1]);
+      $('#'+Drupal.dragon.id_parts[1]).trigger('mousedown');
     }
   }
+  var other_form_bits = $(Drupal.dragon.original_form).serializeArray();
+  /* Build RFC2388 string. */
+  var builder = dashdash + boundary + crlf;
+  var xhr = new XMLHttpRequest();
+  for(var j = 0; j < other_form_bits.length; j++){
+    builder += 'Content-Disposition: form-data; name="'+other_form_bits[j]['name']+'"' + crlf + crlf + other_form_bits[j]['value'] + crlf + dashdash + boundary + crlf;
+  }
+  var file = Drupal.dragon.original_drop_event.dataTransfer.files[file_num];
+  /* Generate headers. */
   builder += 'Content-Disposition: form-data; name="'+temp_field_name+'"';
   if (file.fileName) {
     builder += '; filename="' + file.fileName + '"';
@@ -88,9 +89,9 @@ Drupal.dragon.single_file_upload = function(file_num){
   };  
 }
 Drupal.dragon.upload = function(event) {
-  $('.dragon').animate({height:'50px',width:'200px'}, 1000);
-  $('.dragon p').css({color:'#ccc'});
+  $('.dragon').animate({height:'50px',width:'32px'}, 1000);
   $('.dragon').css({backgroundColor : '#fff'});
+  $('.dragon').css({border : 'none'});
   Drupal.dragon.original_drop_event = event;
   Drupal.dragon.original_form = $(event.currentTarget).parents('form');
   Drupal.dragon.id_parts = event.currentTarget.id.split('__dragon__');

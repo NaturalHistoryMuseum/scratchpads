@@ -37,7 +37,7 @@ function dragon_form_alter(&$form, $form_state, $form_id){
 function _dragon_alter_file_field($element){
   // Following checks for core Drupal attachments upload form field.
   if(isset($element['#ahah']['path']) && $element['#ahah']['path'] == 'upload/js' && !isset($element['#dragon_added'])){
-    $element['#suffix'] .= '<div id="' . $element['#id'] . '__dragon__" class="dragon"><p>' . t('Please drop file(s) here') . '</p></div>';
+    $element['#suffix'] .= '<div id="' . $element['#id'] . '__dragon__" class="dragon"><p><img src="'.base_path().drupal_get_path('module', 'dragon').'/drop.png" alt="'.t('Drop Files Here').'"</p></div>';
     $element['#dragon_added'] = TRUE;
   }elseif(isset($element[0]['upload']) && !isset($element['#dragon_added'])){ // Following instead checks for filefield
     $keys = element_children($element[0]);
@@ -58,7 +58,7 @@ function _dragon_alter_file_field($element){
         if(isset($element[$element['#field_name'].'_add_more'])){
           $add_mode = $element[$element['#field_name'].'_add_more']['#id'];
         }
-        $element['#suffix'] .= '<div id="' . $element[$i][$key]['#id'] . '__dragon__'.$add_mode.'" class="dragon"><p>' . t('Please drop file(s) here') . '</p></div>';
+        $element['#suffix'] .= '<div id="' . $element[$i][$key]['#id'] . '__dragon__'.$add_mode.'" class="dragon"><p><img src="'.base_path().drupal_get_path('module', 'dragon').'/drop.png" alt="'.t('Drop Files Here').'"</p></div>';
         $element['#dragon_added'] = TRUE;
       }
     }
