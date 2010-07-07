@@ -223,7 +223,9 @@ function matrix_editor_theme(){
 
 function matrix_editor_preprocess_views_view(&$vars){
 	
+	if($vars['view']->tag == 'matrix_editor'){
 	$vars['header'] .= '<a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
+	}
 	
 }
 
