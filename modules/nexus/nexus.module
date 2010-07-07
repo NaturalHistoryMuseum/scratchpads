@@ -1324,6 +1324,7 @@ function nexus_note_node_form_submit($form, &$form_state){
 }
 
 function nexus_export_form($form_state, $node, $matrix_data){
+	$form = array();
   $form['format']['sdd'] = array(
     '#type' => 'radio', 
     '#title' => 'SDD', 
@@ -1338,7 +1339,7 @@ function nexus_export_form($form_state, $node, $matrix_data){
     '#title' => 'NEXUS', 
     '#return_value' => 'nex', 
     '#name' => 'format', 
-    '#description' => t('Only controlled characters will be exported.<br />Characters will be renumbered in the exported file.')
+    '#description' => t('Only controlled and DNA sequence characters will be exported.<br />Characters will be renumbered in the exported file.')
   );
   $form['format']['rtf'] = array(
     '#type' => 'radio', 

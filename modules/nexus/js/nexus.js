@@ -123,7 +123,24 @@ function nexus() {
         self.showTab(id, $this);
         return false;
         
-      })
+      });
+      
+      $('input[name=format]').click(function(){
+    	if($(this).val() == 'nex'){
+    		
+    	      if($('#nexus-export-warning').length){
+    	    	  $('#nexus-export-warning').show();
+    	      }else if($('#edit-characters-to-export option.nexus-option-controlled').length && $('#edit-characters-to-export option.nexus-option-dna').length){
+    	    	  
+    	          $('#edit-characters-to-export').after($(Drupal.theme('nexusExportWarning')));
+    	        }
+    		
+    		$('#edit-characters-to-export option:not(.nexus-option-controlled, .nexus-option-dna)').hide();
+    	}else{
+    		$('#nexus-export-warning').hide();
+    		$('#edit-characters-to-export option:not(.nexus-option-controlled, .nexus-option-dna)').show();
+    	}
+      });
       
     },
     
@@ -306,7 +323,7 @@ function nexus() {
         
         case 'dna':
             
-            return 'DNA: <span>'+txt+'</span>';
+            return 'DNA sequence';
           
           break;
         
@@ -1132,7 +1149,7 @@ function nexus() {
                            
           }
           
-          $('#'+columns[i]['groupID'], $select).append('<option selected="selected" value="'+columns[i]['id']+'">'+columns[i]['term']+'</option');
+          $('#'+columns[i]['groupID'], $select).append('<option class="nexus-option-'+columns[i]['type']+'" selected="selected" value="'+columns[i]['id']+'">'+columns[i]['term']+'</option');
 
       }
 
@@ -1152,6 +1169,12 @@ Drupal.theme.prototype.nexusChangedWarning = function () {
   return '<div class="warning">' + Drupal.theme('tableDragChangedMarker') + ' ' + Drupal.t("Changes made will not be saved until the form is submitted. Adding or changing characters & states will reset this form.") + '</div>';
 
 }
+
+Drupal.theme.prototype.nexusExportWarning = function () {
+	  
+	  return '<div class="warning" id="nexus-export-warning"> ' + Drupal.t("There are both DNA sequences and controlled characters in this project. Including DNA sequences in the export will prevent it being re-imported into the NEXUS data editor.") + '</div>';
+
+	}
 
 
 
