@@ -760,10 +760,11 @@ function scratchpad_profile_tasks_3(){
     'to' => "$name <$mail>",
     'from' => $from,
     'subject' => st('Your new Scratchpad'),
-    'body' => drupal_wrap_mail(implode("\n\n", $paragraphs)),
+    'body' => quoted_printable_encode(drupal_wrap_mail(implode("\n\n", $paragraphs))),
     'headers' => array(
       'From' => $from,
-      'Bcc' => $from
+      'Bcc' => $from,
+      'Content-Transfer-Encoding' => 'quoted-printable'
     )
   );
   drupal_mail_send($message);
