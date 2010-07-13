@@ -34,6 +34,7 @@ function image_import_form() {
   // To avoid this we use a pager and rather than setting up all the variables
   // ourself we just send in a fake query and then select the desired part of
   // the files array.
+  ini_set('memory_limit',             '1024M');
   $page_size = variable_get('image_import_page_size', 50);
   pager_query('SELECT %d', $page_size, 0, 'SELECT %d', array(count($files)));
   $files = array_slice($files, $GLOBALS['pager_page_array'][0] * $page_size, $page_size);
