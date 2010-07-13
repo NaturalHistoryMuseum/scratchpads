@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.inc,v 1.7.2.13 2009/04/21 17:57:37 robrechtj Exp $
+// $Id: taxonomy.inc,v 1.7.2.10 2009/01/15 20:05:52 robrechtj Exp $
 
 /**
  * @file
@@ -17,7 +17,7 @@ function taxonomy_node_import_types() {
   // Import taxonomy vocabularies.
   $types['vocabulary'] = array(
     'title' => t('Vocabularies'),
-    'can_create' => user_access('administer taxonomy'),
+    'can_create' => 'node_import_can_create_taxonomy',
     'create' => 'node_import_create_taxonomy',
   );
 
@@ -26,12 +26,29 @@ function taxonomy_node_import_types() {
     $types['term:'. $vid] = array(
       'title' => t('Terms of %name vocabulary', array('%name' => $vocabulary->name)),
       'vocabulary' => $vocabulary,
-      'can_create' => user_access('administer taxonomy'),
+      'can_create' => 'node_import_can_create_taxonomy',
       'create' => 'node_import_create_taxonomy',
     );
   }
 
   return $types;
+}
+
+/**
+ * Check if the user can create terms or vocabularies.
+ *
+ * @param $type
+ *   String. Node_import $type.
+ *
+ * @return
+ *   TRUE if the user can create this content type, FALSE
+ *   otherwise.
+ */
+function node_import_can_create_taxonomy($type) {
+  if ($type == 'vocabulary' || strpos($type, 'term:') === 0) {
+    return user_access('administer taxonomy');
+  }
+  return FALSE;
 }
 
 /**
@@ -302,6 +319,7 @@ function taxonomy_node_import_fields($type) {
     // Copy from taxonomy_form_alter().
     $c = db_query(db_rewrite_sql("SELECT v.* FROM {vocabulary} v INNER JOIN {vocabulary_node_types} n ON v.vid = n.vid WHERE n.type = '%s' ORDER BY v.weight, v.name", 'v', 'vid'), $node_type);
 
+    $vocabularies = array();
     while ($vocabulary = db_fetch_object($c)) {
       $fields['taxonomy:'. $vocabulary->vid] = array(
         'title' => $vocabulary->name,
@@ -329,7 +347,6 @@ function taxonomy_node_import_fields_alter(&$fields, $type) {
       if (!$vocab->tags) {
         $fields[$fieldname]['preprocess'][] = 'node_import_check_taxonomy_term';
       }
-      $fields[$fieldname]['tips'][] = t('Taxonomy term (by tid, name or synonym).');
     }
   }
 }

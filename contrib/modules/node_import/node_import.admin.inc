@@ -1,5 +1,5 @@
 <?php
-// $Id: node_import.admin.inc,v 1.1.2.35 2009/04/21 09:26:56 robrechtj Exp $
+// $Id: node_import.admin.inc,v 1.1.2.31 2009/02/14 10:23:16 robrechtj Exp $
 
 /**
  * @file
@@ -113,7 +113,7 @@ function node_import_add_form(&$form_state) {
   $pages = array(
     'intro' => array(
       'title' => t('Introduction'),
-      'description' => t('The <em>Node import</em> module allows you to import content (such as users, vocabularies, terms or nodes) into your site from a tabular file (such as Comma or Tab Separated Values files). This wizard guides you through a number of steps to configure such an import.') . (module_exists('advanced_help') ? ' ' . theme('advanced_help_topic', 'node_import', 'new-import', t('[more help]')) : ''),
+      'description' => t('The <em>Node import</em> module allows you to import content (such as users, vocabularies, terms or nodes) into your site from a tabular file (such as Comma or Tab Separated Values files). This wizard guides you through a number of steps to configure such an import.') .' '. theme('advanced_help_topic', 'node_import', 'new-import', t('[more help]')),
     ),
     'type' => array(
       'title' => t('Select content type'),
@@ -335,24 +335,33 @@ function node_import_add_form(&$form_state) {
     $map_optional = array('' => t('- None -')) + $map;
     foreach ($fields as $fieldname => $fieldinfo) {
       if ($fieldinfo['is_mappable']) {
-        $description = '';
-        if (count($fieldinfo['tips']) > 1) {
-          $description = $form[$fieldname]['#description'] = '<ul class="tips">';
-          $description .= '<li>' . implode('</li><li>', $fieldinfo['tips']) . '</li>';
-          $description .= '</ul>';
+        if (empty($fieldinfo['columns'])) {
+          $form['map'][$fieldname] = array(
+            '#title' => $fieldinfo['title'],
+            '#node_import-group' => $fieldinfo['group'],
+            '#type' => 'select',
+            '#options' => $fieldinfo['map_required'] ? $map_required : $map_optional,
+            '#multiple' => $fieldinfo['has_multiple'] || $fieldinfo['has_hierarchy'],
+            '#default_value' => isset($values['map'][$fieldname]) ? $values['map'][$fieldname] : '',
+          );
         }
-        else if (!empty($fieldinfo['tips'])) {
-          $description = implode('', $fieldinfo['tips']);
+        else {
+          $form['map'][$fieldname] = array(
+            '#title' => $fieldinfo['title'],
+            '#node_import-group' => $fieldinfo['group'],
+          );
+          foreach ($fieldinfo['columns'] as $colname => $colinfo) {
+            if ($colinfo['is_mappable']) {
+              $form['map'][$fieldname][$colname] = array(
+                '#title' => $colinfo['title'],
+                '#type' => 'select',
+                '#options' => $colinfo['map_required'] ? $map_required : $map_optional,
+                '#multiple' => $colinfo['has_multiple'],
+                '#default_value' => isset($values['map'][$fieldname][$colname]) ? $values['map'][$fieldname][$colname] : '',
+              );
+            }
+          }
         }
-        $form['map'][$fieldname] = array(
-          '#title' => $fieldinfo['title'],
-          '#description' => $description,
-          '#node_import-group' => $fieldinfo['group'],
-          '#type' => 'select',
-          '#options' => $fieldinfo['map_required'] ? $map_required : $map_optional,
-          '#multiple' => $fieldinfo['has_multiple'] || $fieldinfo['has_hierarchy'],
-          '#default_value' => isset($values['map'][$fieldname]) ? $values['map'][$fieldname] : '',
-        );
       }
     }
 
@@ -536,7 +545,7 @@ function node_import_add_form_submit_upload_file($form, &$form_state) {
   $file = file_save_upload('file_upload', $validators, $dest, FILE_EXISTS_RENAME);
 
   if (($file = file_save_upload('file_upload', $validators, $dest, FILE_EXISTS_RENAME))) {
-    drupal_set_message(t('New file %name uploaded to %path.', array('%name' => $file->filename, '%path' => $file->filepath)));
+    drupal_set_message(t('New file uploaded to %filename.', array('%filename' => $file->filepath)));
     file_set_status($file, FILE_STATUS_PERMANENT);
     $form_state['values']['fid'] = $file->fid;
   }
@@ -616,11 +625,11 @@ function node_import_add_form_submit_reload($form, &$form_state) {
 
     $i = variable_get('node_import:number_of_samples', 5);
     $num_cols = 0;
-    $file_offset = 0;
+    $offset = 0;
     $data = array();
     while ($i > 0 && is_array($data)) {
       $i--;
-      list($file_offset, $data) = node_import_read_from_file($file->filepath, $file_offset, $form_state['storage']['file_options']);
+      list($offset, $data) = node_import_read_from_file($file->filepath, $offset, $form_state['storage']['file_options']);
       if (is_array($data)) {
         $samples[] = $data;
         $num_cols = max($num_cols, count($data));
@@ -662,10 +671,10 @@ function node_import_add_form_submit_reload($form, &$form_state) {
     $preview_count = $form_state['storage']['preview_count'];
     $has_headers = $form_state['storage']['has_headers'];
 
-    $file_offset = 0;
+    $offset = 0;
     $data = array();
     if ($has_headers) {
-      list($file_offset, $data) = node_import_read_from_file($file->filepath, $file_offset, $form_state['storage']['file_options']);
+      list($offset, $data) = node_import_read_from_file($file->filepath, $offset, $form_state['storage']['file_options']);
     }
 
     global $node_import_can_continue;
@@ -676,7 +685,7 @@ function node_import_add_form_submit_reload($form, &$form_state) {
 
     while ($preview_count > 0 && is_array($data) && $node_import_can_continue) {
       $preview_count--;
-      list($file_offset, $data) = node_import_read_from_file($file->filepath, $file_offset, $form_state['storage']['file_options']);
+      list($offset, $data) = node_import_read_from_file($file->filepath, $offset, $form_state['storage']['file_options']);
       if (is_array($data)) {
         $previews[] = node_import_create($form_state['storage']['type'], $data, $form_state['storage']['map'], $form_state['storage']['defaults'], $form_state['storage']['options'], TRUE);
       }
@@ -921,7 +930,7 @@ function node_import_view_form_submit_download($form, &$form_state) {
       break;
   }
 
-  $sql .= " ORDER BY file_offset ASC";
+  $sql .= " ORDER BY offset ASC";
 
   header('Content-Type: '. $mime);
   header('Content-Disposition: attachment; filename='. $filename);
@@ -942,7 +951,7 @@ function node_import_view_form_submit_download($form, &$form_state) {
 
   $result = db_query($sql, $task['taskid']);
   while (($row = db_fetch_object($result))) {
-    list($file_offset, $data) = node_import_read_from_file($task['file']->filepath, $row->file_offset, $file_options);
+    list($offset, $data) = node_import_read_from_file($task['file']->filepath, $row->offset, $file_options);
     if ($objid) {
       array_unshift($data, $row->objid);
     }
@@ -1190,17 +1199,15 @@ function theme_node_import_field_table($form) {
   foreach (element_children($form) as $child) {
     if (!isset($form[$child]['#type']) || $form[$child]['#type'] != 'value') {
       $title = check_plain($form[$child]['#title']);
-      $description = $form[$child]['#description'];
       $group = isset($form[$child]['#node_import-group']) ? $form[$child]['#node_import-group'] : '';
       unset($form[$child]['#title']);
-      unset($form[$child]['#description']);
 
       if (!isset($groups[$group])) {
         $groups[$group] = array();
       }
 
       $groups[$group][] = array(
-        check_plain($title) . '<div class="description">'. $description .'</div>',
+        check_plain($title),
         drupal_render($form[$child]),
       );
     }
@@ -1287,7 +1294,7 @@ function node_import_debug_report($task) {
     $row->errors = unserialize($row->errors);
     print '$row_status = '; var_dump($row);
 
-    list($file_offset, $data) = node_import_read_from_file($task['file']->filepath, $row->file_offset, $task['file_options']);
+    list($offset, $data) = node_import_read_from_file($task['file']->filepath, $row->offset, $task['file_options']);
     print '$data = '; var_dump($data);
   }
   print "\n";

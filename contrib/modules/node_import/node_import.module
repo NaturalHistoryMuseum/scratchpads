@@ -1,10 +1,28 @@
 <?php
-// $Id: node_import.module,v 1.51.2.16 2009/04/07 09:44:21 robrechtj Exp $
+// $Id: node_import.module,v 1.51.2.15 2009/02/14 10:23:16 robrechtj Exp $
 
 /**
  * @file
  * Let users import content from CSV or TSV file.
  */
+
+/**
+ * Minimum Drupal version Node import will work with.
+ *
+ * We need Drupal 6.5 or later because we need the patch of
+ * http://drupal.org/node/180063 : No way to flush form errors
+ * during iterative programatic form submission.
+ *
+ * Without this patch, we can't do multiple drupal_execute()s
+ * in one page request. This is a requirement for validating
+ * reliable and for generating previews.
+ *
+ * This patch was included in Drupal 6.5, see:
+ * http://drupal.org/node/318701.
+ *
+ * @ingroup node_import_constants
+ */
+define('NODE_IMPORT_MINIMUM_DRUPAL', '6.5');
 
 /**
  * Implementation of hook_perm().

@@ -1,5 +1,5 @@
 <?php
-// $Id: node.inc,v 1.12.2.23 2009/04/21 09:42:26 robrechtj Exp $
+// $Id: node.inc,v 1.12.2.21 2009/02/06 09:36:31 robrechtj Exp $
 
 /**
  * @file
@@ -15,7 +15,7 @@ function node_node_import_types() {
   foreach (node_get_types('names') as $type => $name) {
     $types['node:'. $type] = array(
       'title' => t('%name content type', array('%name' => $name)),
-      'can_create' => node_access('create', $type),
+      'can_create' => 'node_import_can_create_node',
       'create' => 'node_import_create_node',
     );
   }
@@ -36,6 +36,24 @@ function node_node_import_types() {
 function node_import_type_is_node($type) {
   if (strpos($type, 'node:') === 0) {
     return substr($type, strlen('node:'));
+  }
+  return FALSE;
+}
+
+/**
+ * Check if the user can create specified node content
+ * type.
+ *
+ * @param $type
+ *   String. Node_import $type.
+ *
+ * @return
+ *   TRUE if the user can create this content type, FALSE
+ *   otherwise.
+ */
+function node_import_can_create_node($type) {
+  if (($node_type = node_import_type_is_node($type)) !== FALSE && node_access('create', $node_type)) {
+    return TRUE;
   }
   return FALSE;
 }

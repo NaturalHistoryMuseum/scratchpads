@@ -1,5 +1,5 @@
 <?php
-// $Id: node_import.inc,v 1.1.2.55 2009/04/21 17:57:37 robrechtj Exp $
+// $Id: node_import.inc,v 1.1.2.41 2009/02/25 21:43:13 robrechtj Exp $
 
 /**
  * @file
@@ -75,27 +75,6 @@ foreach ((array)drupal_system_listing('.*\.inc', drupal_get_path('module', 'node
 }
 
 /**
- * Returns the API version of node_import.
- *
- * Currently versions are/were:
- * - 1.x : 4.7.x version (unsupported),
- * - 2.x : 5.x version (unsupported),
- * - 3.x : 6.x-1.x version (current).
- *
- * @return
- *   A string similar to PHP or Drupal version. Major versions
- *   will not change function prototypes or return values. Minor
- *   versions may add additional keys to returned arrays and
- *   add non-required parameters to functions.
- *
- *   Note that the version does not reflect the version of the
- *   support files only of the API.
- */
-function node_import_version() {
-  return '3.0';
-}
-
-/**
  * @defgroup node_import_hooks Node import hooks
  * @{
  */
@@ -120,7 +99,7 @@ function node_import_types($check_access = TRUE, $reset = FALSE) {
   if (!isset($types) || $reset) {
     $defaults = array(
       'title' => '',
-      'can_create' => FALSE,
+      'can_create' => '',
       'create' => '',
     );
 
@@ -138,7 +117,7 @@ function node_import_types($check_access = TRUE, $reset = FALSE) {
 
     $allowed_types = array();
     foreach ($types as $type => $typeinfo) {
-      if ($typeinfo['can_create'] === TRUE || (function_exists($function = $typeinfo['can_create']) && $function($type) == TRUE)) {
+      if (function_exists($function = $typeinfo['can_create']) && $function($type) === TRUE) {
         $allowed_types[$type] = $typeinfo;
       }
     }
@@ -166,7 +145,6 @@ function node_import_fields($type, $reset = FALSE) {
   if (!isset($fields[$type]) || $reset) {
     $defaults = array(
       'title' => '',
-      'tips' => array(),
       'group' => '',
       'module' => '',
       'weight' => 0,
@@ -187,7 +165,7 @@ function node_import_fields($type, $reset = FALSE) {
 
       'default_value' => NULL,
       'allow_empty' => FALSE,
-      'map_required' => FALSE,
+      'is_required' => FALSE,
       'is_checkboxes' => FALSE,
     );
 
@@ -200,26 +178,15 @@ function node_import_fields($type, $reset = FALSE) {
       // Add preprocessors for builtin input_formats.
       if (!empty($fieldinfo['allowed_values'])) {
         $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_values';
-        $s = '';
-        foreach ($fieldinfo['allowed_values'] as $key => $value) {
-          if (drupal_strlen($s) > 60) {
-            $s .= ', &#8230;';
-            break;
-          }
-          $s .= ($s == '' ? '' : ', ') . check_plain(drupal_strtolower($key)) . ': ' . check_plain(drupal_strtolower($value));
-        }
-        $fields[$type][$fieldname]['tips'][] = t('Allowed values (!values).', array('!values' => $s));
       }
 
       switch ($fieldinfo['input_format']) {
         case 'boolean':
           $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_boolean';
-          $fields[$type][$fieldname]['tips'][] = t('Boolean (0/1, off/on, no/yes, false/true).');
           break;
 
         case 'date':
           $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_date';
-          $fields[$type][$fieldname]['tips'][] = t('Date ("YYYY-MM-DD HH:MM" or specified custom format).');
           break;
 
         case 'email':
@@ -232,12 +199,10 @@ function node_import_fields($type, $reset = FALSE) {
 
         case 'node_reference':
           $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_node_reference';
-          $fields[$type][$fieldname]['tips'][] = t('Node reference (by nid or title).');
           break;
 
         case 'user_reference':
           $fields[$type][$fieldname]['preprocess'][] = 'node_import_check_user_reference';
-          $fields[$type][$fieldname]['tips'][] = t('User reference (by uid, name or mail).');
           break;
 
         case 'weight':
@@ -289,18 +254,6 @@ function node_import_defaults($type, $defaults, $fields, $map) {
     // Set #weight if not set.
     if (isset($form[$fieldname]) && !isset($form[$fieldname]['#weight'])) {
       $form[$fieldname]['#weight'] = $fieldinfo['weight'];
-    }
-
-    // Set #description if not set.
-    if (isset($form[$fieldname]) && !isset($form[$fieldname]['#description'])) {
-      if (count($fieldinfo['tips']) > 1) {
-        $form[$fieldname]['#description'] = '<ul class="tips">';
-        $form[$fieldname]['#description'] .= '<li>' . implode('</li><li>', $fieldinfo['tips']) . '</li>';
-        $form[$fieldname]['#description'] .= '</ul>';
-      }
-      else if (!empty($fieldinfo['tips'])) {
-        $form[$fieldname]['#description'] = implode('', $fieldinfo['tips']);
-      }
     }
 
     // Set default_value as value.
@@ -358,18 +311,6 @@ function node_import_options($type, $options, $fields, $map) {
     // Set #node_import-group if not set.
     if (isset($form[$fieldname]) && !isset($form[$fieldname]['#node_import-group'])) {
       $form[$fieldname]['#node_import-group'] = $fieldinfo['group'];
-    }
-
-    // Set #description if not set.
-    if (isset($form[$fieldname]) && !isset($form[$fieldname]['#description'])) {
-      if (count($fieldinfo['tips']) > 1) {
-        $form[$fieldname]['#description'] = '<ul class="tips">';
-        $form[$fieldname]['#description'] .= '<li>' . implode('</li><li>', $fieldinfo['tips']) . '</li>';
-        $form[$fieldname]['#description'] .= '</ul>';
-      }
-      else if (!empty($fieldinfo['tips'])) {
-        $form[$fieldname]['#description'] = implode('', $fieldinfo['tips']);
-      }
     }
 
     // Set #weight if not set.
@@ -568,9 +509,7 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
   $values = module_invoke_all('node_import_values', $type, $defaults, $options, $fields, $preview);
 
   foreach ($fields as $fieldname => $fieldinfo) {
-    $map[$fieldname] = is_array($map[$fieldname]) ? $map[$fieldname] : array($map[$fieldname]);
     $map_count = node_import_field_map_count($fieldname, $map);
-
     $mseparator = isset($options[$fieldname]['multiple_separator']) ? $options[$fieldname]['multiple_separator'] : $fieldinfo['multiple_separator'];
     $hseparator = isset($options[$fieldname]['hierarchy_separator']) ? $options[$fieldname]['hierarchy_separator'] : $fieldinfo['hierarchy_separator'];
     $hreverse = isset($options[$fieldname]['hierarchy_reverse']) ? $options[$fieldname]['hierarchy_reverse'] : $fieldinfo['hierarchy_reverse'];
@@ -584,15 +523,11 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
         $values[$fieldname] = $defaults[$fieldname];
       }
     }
-    else if (isset($fieldinfo['default_value'])) {
-      $values[$fieldname] = $fieldinfo['default_value'];
-    }
 
     // Map the data ONLY IF the data to map is not empty.
     if ($fieldinfo['has_multiple']) {
       if ($map_count > 0) {
         $fieldvalues = array();
-
         foreach ($map[$fieldname] as $col) {
           $value = isset($data[$col]) ? (string)$data[$col] : '';
           if ($map_count == 1 && strlen($mseparator) > 0) {
@@ -612,22 +547,16 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
           }
         }
 
-        if (empty($fieldvalues) && isset($values[$fieldname])) {
-          $values[$fieldname] = $values[$fieldname];
-        }
-        else {
-          $values[$fieldname] = $fieldvalues;
-        }
+        $values[$fieldname] = empty($fieldvalues) ? $values[$fieldname] : $fieldvalues;
       }
     }
     else {
       if ($map_count > 0 && $fieldinfo['has_hierarchy']) {
         $fieldvalues = array();
-
         foreach ($map[$fieldname] as $col) {
           $value = isset($data[$col]) ? (string)$data[$col] : '';
           if ($map_count == 1 && strlen($hseparator) > 0) {
-            $fieldvalues = drupal_strlen($value) > 0 ? array_map('trim', explode($hseparator, $value)) : array();
+            $fieldvalues = strlen($value) > 0 ? array_map('trim', explode($hseparator, $value)) : array();
             break;
           }
           $fieldvalues[] = $value;
@@ -644,11 +573,8 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
         $values[$fieldname] = empty($fieldvalues) ? $values[$fieldname] : $fieldvalues;
       }
       else if ($map_count == 1) {
-        foreach ($map[$fieldname] as $col) {
-          $value = isset($data[$col]) ? (string)$data[$col] : '';
-        }
-
-        $values[$fieldname] = drupal_strlen($value) > 0 ? $value : (isset($values[$fieldname]) ? $values[$fieldname] : '');
+        $value = isset($data[$map[$fieldname]]) ? (string)$data[$map[$fieldname]] : '';
+        $values[$fieldname] = strlen($value) > 0 ? $value : (isset($values[$fieldname]) ? $values[$fieldname] : '');
       }
 
       $values[$fieldname] = array(isset($values[$fieldname]) ? $values[$fieldname] : '');
@@ -658,10 +584,8 @@ function node_import_values($type, $data, $map, $defaults, $options, $fields, $p
     // validates.
     foreach ((array)$values[$fieldname] as $i => $value) {
       foreach ($fieldinfo['preprocess'] as $function) {
-        if ((is_array($values[$fieldname][$i]) && !empty($values[$fieldname][$i])) // has_multiple values are arrays
-            || (is_string($values[$fieldname][$i]) && drupal_strlen($values[$fieldname][$i]) > 0)) {
-          $options[$fieldname] = isset($options[$fieldname]) ? $options[$fieldname] : array();
-          $return = $function($values[$fieldname][$i], $fieldinfo, $options[$fieldname], $preview);
+        if (drupal_strlen($values[$fieldname][$i]) > 0) {
+          $return = $function($values[$fieldname][$i], $fieldinfo, isset($options[$fieldname]) ? $options[$fieldname] : array(), $preview);
           if ($return === FALSE) {
             $values[$fieldname][$i] = '';
             continue 2;
@@ -788,12 +712,12 @@ function node_import_do_all_tasks($unit = 'all', $count = 0) {
   timer_start('node_import:do_all_tasks');
 
   foreach (node_import_list_tasks(TRUE) as $taskid => $task) {
-    $bytes = $task['file_offset'];
+    $bytes = $task['offset'];
     $rows = $task['row_done'] + $task['row_error'];
 
     node_import_do_task($task, $unit, $count);
 
-    $byte_count += $task['file_offset'] - $bytes;
+    $byte_count += $task['offset'] - $bytes;
     $row_count += $task['row_done'] + $task['row_error'] - $rows;
 
     if ($node_import_can_continue && ($unit == 'all'
@@ -853,7 +777,6 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
 
     $taskid = $task['taskid'];
 
-    $file_offset = 0;
     $byte_count = 0;
     $row_count = 0;
     timer_start('node_import:do_task:'. $taskid);
@@ -861,69 +784,69 @@ function node_import_do_task(&$task, $unit = 'all', $count = 0) {
     $data = array();
     switch ($task['status']) {
       case NODE_IMPORT_STATUS_PENDING:
-        if ($task['file_offset'] == 0 && $task['has_headers']) {
-          list($file_offset, $data) = node_import_read_from_file($task['file']->filepath, $file_offset, $task['file_options']);
+        if ($task['offset'] == 0 && $task['has_headers']) {
+          list($offset, $data) = node_import_read_from_file($task['file']->filepath, $offset, $task['file_options']);
         }
         else {
-          $file_offset = $task['file_offset'];
+          $offset = $task['offset'];
         }
         break;
 
       case NODE_IMPORT_STATUS_ERROR:
         $task['status'] = NODE_IMPORT_STATUS_DONE;
-        $file_offset = $task['file']->filesize; //TODO
+        $offset = $task['file']->filesize; //TODO
         break;
     }
 
     module_invoke_all('node_import_task', $task, 'continue');
 
     while ($task['status'] != NODE_IMPORT_STATUS_DONE) {
-      list($new_offset, $data) = node_import_read_from_file($task['file']->filepath, $file_offset, $task['file_options']);
+      list($new_offset, $data) = node_import_read_from_file($task['file']->filepath, $offset, $task['file_options']);
 
       if (is_array($data)) {
         switch ($task['status']) {
           case NODE_IMPORT_STATUS_PENDING:
-            db_query("DELETE FROM {node_import_status} WHERE taskid = %d AND file_offset = %d", $taskid, $file_offset);
-            db_query("INSERT INTO {node_import_status} (taskid, file_offset, errors) VALUES (%d, %d, '%s')", $taskid, $file_offset, serialize(array()));
+            db_query("DELETE FROM {node_import_status} WHERE taskid = %d AND offset = %d", $taskid, $offset);
+            db_query("INSERT INTO {node_import_status} (taskid, offset, errors) VALUES (%d, %d, '%s')", $taskid, $offset, serialize(array()));
             break;
 
           case NODE_IMPORT_STATUS_ERROR:
-            db_query("UPDATE {node_import_status} SET errors = '%s', status = %d WHERE taskid = %d AND file_offset = %d", serialize(array()), NODE_IMPORT_STATUS_PENDING, $taskid, $file_offset);
+            db_query("UPDATE {node_import_status} SET errors = '%s', status = %d WHERE taskid = %d AND offset = %d", serialize(array()), NODE_IMPORT_STATUS_PENDING, $taskid, $offset);
             break;
         }
 
-        db_query("UPDATE {node_import_tasks} SET file_offset = %d, changed = %d WHERE taskid = %d", $new_offset, time(), $taskid);
-        $task['file_offset'] = $new_offset;
+        db_query("UPDATE {node_import_tasks} SET offset = %d, changed = %d WHERE taskid = %d", $new_offset, time(), $taskid);
+        $task['offset'] = $new_offset;
 
         $errors = node_import_create($task['type'], $data, $task['map'], $task['defaults'], $task['options'], FALSE);
 
         if (is_array($errors)) {
-          db_query("UPDATE {node_import_status} SET status = %d, errors = '%s' WHERE taskid = %d AND file_offset = %d", NODE_IMPORT_STATUS_ERROR, serialize($errors), $taskid, $file_offset);
+          db_query("UPDATE {node_import_status} SET status = %d, errors = '%s' WHERE taskid = %d AND offset = %d", NODE_IMPORT_STATUS_ERROR, serialize($errors), $taskid, $offset);
           db_query("UPDATE {node_import_tasks} SET row_error = row_error + 1 WHERE taskid = %d", $taskid);
           $task['row_error']++;
         }
         else {
-          db_query("UPDATE {node_import_status} SET status = %d, objid = %d WHERE taskid = %d AND file_offset = %d", NODE_IMPORT_STATUS_DONE, $errors, $taskid, $file_offset);
+          db_query("UPDATE {node_import_status} SET status = %d, objid = %d WHERE taskid = %d AND offset = %d", NODE_IMPORT_STATUS_DONE, $errors, $taskid, $offset);
           db_query("UPDATE {node_import_tasks} SET row_done = row_done + 1 WHERE taskid = %d", $taskid);
           $task['row_done']++;
         }
 
-        $byte_count += $new_offset - $file_offset;
+        $byte_count += $new_offset - $offset;
         $row_count++;
       }
       else {
-        db_query("UPDATE {node_import_tasks} SET status = %d, file_offset = %d WHERE taskid = %d", NODE_IMPORT_STATUS_DONE, $task['file']->filesize, $taskid);
+        db_query("UPDATE {node_import_tasks} SET status = %d, offset = %d WHERE taskid = %d", NODE_IMPORT_STATUS_DONE, $task['file']->filesize, $taskid);
         $task['status'] = NODE_IMPORT_STATUS_DONE;
-        $task['file_offset'] = $task['file']->filesize;
+        $task['offset'] = $task['file']->filesize;
       }
 
       switch ($task['status']) {
         case NODE_IMPORT_STATUS_PENDING:
-          $file_offset = $new_offset;
+          $offset = $new_offset;
           break;
 
         case NODE_IMPORT_STATUS_ERROR:
-          $file_offset = $task['file']->filesize; //TODO
+          $offset = $task['file']->filesize; //TODO
           break;
       }
 
@@ -963,7 +886,7 @@ function node_import_js($task) {
     'status' => 1,
     'message' => format_plural($task['row_done'], t('1 row imported'), t('@count rows imported')) .'<br />'.
                  format_plural($task['row_error'], t('1 row with errors'), t('@count rows with errors')),
-    'percentage' => $task['status'] == NODE_IMPORT_STATUS_DONE ? 100 : round(floor(100.0 * $task['file_offset'] / $task['file']->filesize), 0),
+    'percentage' => $task['status'] == NODE_IMPORT_STATUS_DONE ? 100 : round(floor(100.0 * $task['offset'] / $task['file']->filesize), 0),
   ));
   exit();
 }
@@ -1176,6 +1099,11 @@ function node_import_check_date(&$value, $field, $options, $preview) {
   $input_format = $options['date_format'] == 'custom' ? $options['date_custom'] : $options['date_format'];
   $output_format = isset($field['output_format']) ? $field['output_format'] : DATE_UNIX;
 
+  if (date_is_valid($value, DATE_UNIX)) {
+    $value = date_convert($value, DATE_UNIX, $output_format, $timezone);
+    return TRUE;
+  }
+
   if (date_is_valid($value, DATE_ISO)) {
     $value = date_convert($value, DATE_ISO, $output_format, $timezone);
     return TRUE;
@@ -1186,11 +1114,6 @@ function node_import_check_date(&$value, $field, $options, $preview) {
   if (($date = date_convert_from_custom($value, $input_format))) {
     // It is useless to check for date_is_valid() as it is a DATE_DATETIME already.
     $value = date_convert($date, DATE_DATETIME, $output_format, $timezone);
-    return TRUE;
-  }
-
-  if (date_is_valid($value, DATE_UNIX)) {
-    $value = date_convert($value, DATE_UNIX, $output_format, $timezone);
     return TRUE;
   }
 
@@ -1327,7 +1250,7 @@ function node_import_check_values(&$value, $field, $options, $preview) {
   foreach ($field['allowed_values'] as $key => $title) {
     $tmp = drupal_strtolower($value);
     if ($tmp === drupal_strtolower($key) || $tmp === drupal_strtolower($title)) {
-      $value = (string)$key;
+      $value = $key;
       return TRUE;
     }
   }
@@ -1557,7 +1480,7 @@ function node_import_list_files($reset = FALSE) {
 
       if (!empty($extensions)) {
         $existing_files = array();
-        $result = db_query("SELECT filepath FROM {files} WHERE filepath LIKE '%s%%' AND status = %d", $path, FILE_STATUS_PERMANENT);
+        $result = db_query("SELECT filepath FROM {files} WHERE filepath LIKE '%s%%'", $path);
         while (($file = db_fetch_object($result))) {
           $existing_files[$file->filepath] = TRUE;
         }
@@ -1573,7 +1496,6 @@ function node_import_list_files($reset = FALSE) {
               'timestamp' => time(),
             );
             drupal_write_record('files', $record);
-            drupal_set_message(t('A new file %name was detected in %path.', array('%name' => $record->filename, '%path' => $path)));
           }
         }
       }
@@ -1582,21 +1504,13 @@ function node_import_list_files($reset = FALSE) {
     // Users with 'administer imports' permission can see all files.
     //TODO: we should also filter out files that are already in use by another task.
     if (user_access('administer imports')) {
-      $result = db_query("SELECT * FROM {files} WHERE filepath LIKE '%s%%' AND status = %d ORDER BY filename, timestamp", $path, FILE_STATUS_PERMANENT);
+      $result = db_query("SELECT * FROM {files} WHERE filepath LIKE '%s%%' ORDER BY filename, timestamp", $path);
     }
     else {
-      $result = db_query("SELECT * FROM {files} WHERE filepath LIKE '%s%%' AND (uid = %d OR uid = 0) AND status = %d ORDER BY filename, timestamp", $path, $user->uid, FILE_STATUS_PERMANENT);
+      $result = db_query("SELECT * FROM {files} WHERE filepath LIKE '%s%%' AND (uid = %d OR uid = 0) ORDER BY filename, timestamp", $path, $user->uid);
     }
-
-    // Create the list, keep only the still existing files.
     while (($file = db_fetch_object($result))) {
-      if (!file_exists(file_create_path($file->filepath))) {
-        drupal_set_message(t('The previously uploaded file %name is no longer present. Removing it from the list of uploaded files.', array('%name' => $file->filepath)));
-        file_set_status($file, FILE_STATUS_TEMPORARY);
-      }
-      else {
-        $files[$file->fid] = $file;
-      }
+      $files[$file->fid] = $file;
     }
   }
 
@@ -1662,13 +1576,13 @@ function node_import_autodetect($filepath) {
 }
 
 /**
- * Returns one record from the file starting at file offset using
+ * Returns one record from the file starting at offset using
  * the supplied file options.
  *
  * @param $filepath
  *   String. Path to file.
  *
- * @param $file_offset
+ * @param $offset
  *   Integer. Starting point of record.
  *
  * @param $file_options
@@ -1677,18 +1591,18 @@ function node_import_autodetect($filepath) {
  *   CSV options ("\n", ',', '"', '"').
  *
  * @return
- *   Array ($file_offset, $record). The $file_offset is the start offset
- *   of the next record. The $record is an array of fields (strings).
+ *   Array ($offset, $record). The $offset is the start offset of the
+ *   next record. The $record is an array of fields (strings).
  *
  *   On error or when the end of the file has been reached we return
  *   FALSE.
  */
-function node_import_read_from_file($filepath, $file_offset, $file_options) {
+function node_import_read_from_file($filepath, $offset, $file_options) {
   // Open file and set to file offset.
   if (($fp = fopen($filepath, 'r')) === FALSE) {
     return FALSE;
   }
-  if (fseek($fp, $file_offset)) {
+  if (fseek($fp, $offset)) {
     return FALSE;
   }
 
@@ -1702,10 +1616,9 @@ function node_import_read_from_file($filepath, $file_offset, $file_options) {
 
   // The current record is stored in the $fields array. The $new_offset
   // contains the file position of the end of the returned record. Note
-  // that if $new_offset == $file_offset we have reached the end of the
-  // file.
+  // that if $new_offset == $offset we have reached the end of the file.
   $fields = array();
-  $new_offset = $file_offset;
+  $new_offset = $offset;
   $start = 0;
 
   // We read $length bytes at a time in the $buffer.

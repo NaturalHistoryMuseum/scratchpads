@@ -1,5 +1,5 @@
 <?php
-// $Id: content.inc,v 1.2.2.6 2009/04/22 07:13:08 robrechtj Exp $
+// $Id: content.inc,v 1.2.2.5 2009/02/23 21:54:41 robrechtj Exp $
 
 /**
  * @file
@@ -63,9 +63,6 @@ function node_import_cck_name($fieldname, $colname) {
 function node_import_cck_field_defaults($fieldinfo) {
   return array(
     'group' => (count($fieldinfo['columns']) > 1 ? $fieldinfo['widget']['label'] : ''),
-    'tips' => array(
-      t('Imports into %name CCK field (%type type).', array('%name' => $fieldinfo['field_name'], '%type' => $fieldinfo['type'])),
-    ),
     'has_multiple' => $fieldinfo['multiple'],
     'module' => $fieldinfo['module'],
     'allowed_values' => content_allowed_values($fieldinfo),

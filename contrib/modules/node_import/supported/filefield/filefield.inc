@@ -1,5 +1,5 @@
 <?php
-// $Id: filefield.inc,v 1.1.2.2 2009/04/14 06:32:05 robrechtj Exp $
+// $Id: filefield.inc,v 1.1.2.1 2009/02/24 09:30:43 robrechtj Exp $
 
 /**
  * @file
@@ -23,7 +23,7 @@ function filefield_node_import_fields($type) {
           $fields[$cck_fieldname]['title'] = $fieldinfo['widget']['label'];
           $fields[$cck_fieldname]['input_format'] = 'filepath';
           $fields[$cck_fieldname]['to_directory'] = $fieldinfo['widget']['file_path'];
-          $fields[$cck_fieldname]['map_required'] = $fieldinfo['required'];
+          $fields[$cck_fieldname]['is_required'] = $fieldinfo['required'];
           break;
 
         case 'list':

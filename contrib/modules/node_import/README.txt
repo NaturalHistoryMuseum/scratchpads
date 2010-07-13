@@ -10,7 +10,8 @@ Installing node_import (first time installation)
 ------------------------------------------------------------------------------
 
 The module depends on:
-- Date API (http://drupal.org/project/date).
+- Date API (http://drupal.org/project/date),
+- Advanced help (http://drupal.org/project/advanced_help).
 
 Upgrading node_import (on Drupal 5.x or 6.x)
 ------------------------------------------------------------------------------
@@ -21,9 +22,8 @@ Uninstalling node_import
 Documentation
 ------------------------------------------------------------------------------
 
-If you install the "Advanced help" (http://drupal.org/project/advanced_help)
-module, you can read the documentation on "admin/advanced_help/node_import" on
-your site.
+You can read the documentation on "admin/advanced_help/node_import" on your
+site.
 
 Extending node_import (for developers)
 ------------------------------------------------------------------------------
@@ -68,4 +68,4 @@ if you attach a (small) file that shows the problem. When you do, mention how
 you configured the type you are trying to import, eg what vocabularies you
 have defined, whether the content type is event- or location-enabled, etc.
 
-$Id: README.txt,v 1.16.2.6 2009/03/17 09:14:23 robrechtj Exp $
+$Id: README.txt,v 1.16.2.5 2009/01/15 16:39:18 robrechtj Exp $
