@@ -36,9 +36,9 @@ function dragon_form_alter(&$form, $form_state, $form_id){
  */
 function _dragon_alter_file_field($element){
   // Following checks for core Drupal attachments upload form field.
-  $suffix_end = '" class="dragon"><p><img src="'.base_path().drupal_get_path('module', 'dragon').'/drop.png" alt="'.t('Drop Files Here').'"</p><p class="dragon-message"></p></div>';
+  $suffix_end = '" class="dragon"><p><img src="' . base_path() . drupal_get_path('module', 'dragon') . '/drop.png" alt="' . t('Drop Files Here') . '"</p><p class="dragon-message"></p></div>';
   if(isset($element['#ahah']['path']) && $element['#ahah']['path'] == 'upload/js' && !isset($element['#dragon_added'])){
-    $element['#suffix'] .= '<div id="' . $element['#id'] . '__dragon__'.$suffix_end;
+    $element['#suffix'] .= '<div id="' . $element['#id'] . '__dragon__' . $suffix_end;
     $element['#dragon_added'] = TRUE;
   }elseif(isset($element[0]['upload']) && !isset($element['#dragon_added'])){ // Following instead checks for filefield
     $keys = element_children($element[0]);
@@ -56,10 +56,10 @@ function _dragon_alter_file_field($element){
         // For the CCK filefield, we'll set the ID as the ID of the upload and
         // the ID of the "Add another" button seperated by "-dragon- 
         $add_mode = '';
-        if(isset($element[$element['#field_name'].'_add_more'])){
-          $add_mode = $element[$element['#field_name'].'_add_more']['#id'];
+        if(isset($element[$element['#field_name'] . '_add_more'])){
+          $add_mode = $element[$element['#field_name'] . '_add_more']['#id'];
         }
-        $element['#suffix'] .= '<div id="' . $element[$i][$key]['#id'] . '__dragon__'.$add_mode.$suffix_end;
+        $element['#suffix'] .= '<div id="' . $element[$i][$key]['#id'] . '__dragon__' . $add_mode . $suffix_end;
         $element['#dragon_added'] = TRUE;
       }
     }
