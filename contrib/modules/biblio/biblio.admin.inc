@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.admin.inc,v 1.9.2.93 2010/06/07 21:21:16 rjerome Exp $
+// $Id: biblio.admin.inc,v 1.9.2.95 2010/06/28 20:43:17 rjerome Exp $
 /**
  *   biblio.admin.inc
  *
@@ -33,7 +33,7 @@ function biblio_admin_ahah($form, $element, $value) {
 * Implementation of hook_settings().
 */
 function biblio_admin_settings() {
-  $version = '$Name: DRUPAL-6--1 $ $Date: 2010/06/07 21:21:16 $';
+  $version = '$Name: DRUPAL-6--1-14 $ $Date: 2010/06/28 20:43:17 $';
   $version = str_replace('$', '', $version);
   $form['biblio_rev'] = array(
     '#value' => $version,
@@ -328,8 +328,9 @@ function biblio_admin_settings() {
   $form['links']['export']['biblio_export_links'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Show export links'),
-    '#default_value' => variable_get('biblio_export_links', array('tagged', 'xml', 'bibtex')),
+    '#default_value' => variable_get('biblio_export_links', array('rtf', 'tagged', 'xml', 'bibtex')),
     '#options' => array(
+      'rtf'     => t('Rich Text Format'),
       'tagged'  => t('EndNote Tagged'),
       'xml'     => t('EndNote XML'),
       'bibtex'  => t('BibTex'),

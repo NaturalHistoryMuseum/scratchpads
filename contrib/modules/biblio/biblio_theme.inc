@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_theme.inc,v 1.8.2.102 2010/05/22 17:13:42 rjerome Exp $
+// $Id: biblio_theme.inc,v 1.8.2.104 2010/06/28 01:00:22 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -835,7 +835,7 @@ function theme_biblio_download_links($node = NULL) {
   if (module_exists('filefield')) { // now lets get any CCK FileField files...
     $fields = filefield_get_field_list('biblio');
     foreach ($fields as $field_name => $field) {
-      if (filefield_view_access($field_name)) {
+      if (filefield_view_access($field_name, $node)) {
         $field_files = filefield_get_node_files($node, $field_name);
         if ($field_files) {
           foreach ($field_files as $file) {
@@ -859,10 +859,11 @@ function theme_biblio_download_links($node = NULL) {
 function theme_biblio_export_links($node = NULL) {
   global $pager_total_items;
   $base = variable_get('biblio_base', 'biblio');
-  $show_link = variable_get('biblio_export_links', array('tagged' => TRUE, 'xml' => TRUE, 'bibtex' => TRUE));
+  $show_link = variable_get('biblio_export_links', array('rtf' => TRUE, 'tagged' => TRUE, 'xml' => TRUE, 'bibtex' => TRUE));
   $show_link['google'] = variable_get('biblio_google_link', 1);
 
   $links = '';
+  if ($show_link['rtf'])    $links .= '<li> '. _build_biblio_link($base, $node, 'rtf') .'</li>';
   if ($show_link['tagged']) $links .= '<li> '. _build_biblio_link($base, $node, 'tagged') .'</li>';
   if ($show_link['xml'])    $links .= '<li> '. _build_biblio_link($base, $node, 'xml') .'</li>';
   if ($show_link['bibtex']) $links .= '<li> '. _build_biblio_link($base, $node, 'bibtex') .'</li>';
@@ -901,8 +902,21 @@ function _build_biblio_link($base, $node = NULL, $type = NULL) {
     case 'google':
       $link = _build_google_scholar_link($node);
       break;
+    case 'rtf':
+      $link = _build_biblio_rtf_link($base, $nid);
+      break;
   }
   return  l($link['title'], $link['href'], $link);
+}
+
+function _build_biblio_rtf_link($base, $nid) {
+    return array(
+      'title'      => t('RTF'),
+      'href'       => "$base/export/rtf/$nid",
+      'attributes' => array(
+        'title' => t("Click to download the RTF formatted file")
+        )
+      );
 }
 
 function _build_biblio_tagged_link($base, $nid) {

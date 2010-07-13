@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.type.mapper.inc,v 1.1.2.3 2009/12/09 01:33:15 rjerome Exp $
+// $Id: biblio.type.mapper.inc,v 1.1.2.4 2010/06/23 02:21:30 rjerome Exp $
 function biblio_get_type_map($file_format, $default = FALSE) {
   if ($default) {
     switch ($file_format) {
@@ -170,6 +170,35 @@ function biblio_get_type_map($file_format, $default = FALSE) {
                 'database'     => 125, // online database
                 'sa_component' => 129
         );
+      case 'marc':
+        return array(
+                'ab' => 102, // Journal Article
+                'as' => 102, // Journal Article
+                'am' => 100, // Book
+                2 => 108, // Thesis
+                3 => 103, // Conference Proceedings
+                4 => 120, // Personal Communication
+                5 => 105, // NewsPaper Article
+                6 => 113, // Computer Program
+                'aa' => 101, // Book Section
+                8 => 106, // Magazine Article
+                9 => 100, // Edited Book
+                10 => 109, // Report
+                'em' => 122, // Map
+                12 => 114, // Audiovisual Material
+                13 => 112, // Artwork
+                15 => 119, // Patent
+                16 => 107, // Electronic Source
+                17 => 117, // Bill
+                18 => 116, // Case
+                19 => 115, // Hearing
+                20 => 121, // Manuscript
+                21 => 110, // Film or Broadcast
+                22 => 118, // Statute
+                26 => 123, // Chart or Table
+                31 => 129 // Generic
+        );
+
     }
   }
   else {

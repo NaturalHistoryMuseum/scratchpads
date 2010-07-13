@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.pages.inc,v 1.1.2.115 2010/06/22 01:47:11 rjerome Exp $
+// $Id: biblio.pages.inc,v 1.1.2.116 2010/06/30 19:31:11 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -21,7 +21,7 @@
  ****************************************************************************/
 
 function biblio_view_node($nid) {
-  drupal_goto('node/'.(int)$nid, NULL, NULL, 301);
+  drupal_goto('node/'.(int)$nid, NULL, NULL, 301); // set a 301 response code
 }
 /**
  * @return unknown_type
@@ -99,6 +99,7 @@ function biblio_db_search() {
     //$count = db_result(db_query($query_info['count_query'],$query_info['query_terms']));
     $nodes = array();
     $result = pager_query($query_info['query'], variable_get('biblio_rowsperpage', 25),0,$query_info['count_query'],$query_info['query_terms']);
+    $query_info['filter_line'] = _biblio_filter_info_line($query_info['args']);
 
     while ($res = db_fetch_array($result)) {
       $node = node_load($res['nid']);
@@ -485,7 +486,7 @@ function biblio_show_results($nodes, $query_info, $inline=false) {
     $content .= '</div>';
 
     if  (user_access('show filter tab')) {
-      $content .= _biblio_filter_info_line($args);
+      $content .=  $query_info['filter_line'];
     }
   }
 

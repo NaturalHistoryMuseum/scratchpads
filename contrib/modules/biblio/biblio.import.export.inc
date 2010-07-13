@@ -1,6 +1,6 @@
 <?PHP
 
-// $Id: biblio.import.export.inc,v 1.7.2.75 2010/06/07 21:24:20 rjerome Exp $
+// $Id: biblio.import.export.inc,v 1.7.2.80 2010/06/29 21:26:40 rjerome Exp $
 /**
  * @file
  * Functions that are used to import and export biblio data.
@@ -200,10 +200,12 @@ function biblio_import_form_submit($form, & $form_state) {
       // the array of terms to be attached to the node(s)
       $userid = (isset ($form_state['values']['userid'])) ? $form_state['values']['userid'] : 1;
       $filetype = $form_state['values']['filetype'];
+      $filesize = sprintf("%01.1f", $import_file->filesize / 1000);
+      $filesize = " ($filesize KB)";
       if ($batch_proc) {
         $session_id = microtime();
         $batch_op = array(
-          'title' => t('Importing '.$import_file->filename),
+          'title' => t('Importing '.$import_file->filename). $filesize,
           'operations' => array(
             array('biblio_import', array($import_file, $filetype, $userid, $terms, $batch_proc, $session_id)),
             array('biblio_import_batch_operations', array($session_id, $userid, $terms)),
@@ -231,6 +233,7 @@ function biblio_import_form_submit($form, & $form_state) {
   }
 }
 function biblio_import_batch_operations($session_id, $userid, $terms, &$context) {
+  $limit = 10;
   if (empty($context['sandbox'])) {
     // Initiate multistep processing.
     $context['results']['session_id'] = $session_id;
@@ -240,10 +243,14 @@ function biblio_import_batch_operations($session_id, $userid, $terms, &$context)
     $context['sandbox']['current_id'] = 0;
     $context['results']['nids'] = array();
     $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(DISTINCT(id)) FROM {biblio_import_cache} WHERE session_id = '%s'", $session_id));
+    $context['sandbox']['itters'] = $context['sandbox']['max'] / $limit;
+    $context['sandbox']['eta'] = 0;
   }
 
   // Process the next 20 nodes.
-  $limit = 5;
+
+
+  timer_start('biblio_import');
   $result = db_query_range("SELECT id, data FROM {biblio_import_cache} WHERE id > %d AND session_id = '%s' ORDER BY id ASC", $context['sandbox']['current_id'], $session_id, 0, $limit);
   while ($row = db_fetch_array($result)) {
     $node = unserialize($row['data']);
@@ -252,7 +259,21 @@ function biblio_import_batch_operations($session_id, $userid, $terms, &$context)
     $context['sandbox']['progress']++;
     $context['sandbox']['current_id'] = $row['id'];
   }
-
+  $looptime = timer_stop('biblio_import');
+  $context['sandbox']['eta'] += $looptime['time'];
+  $itters = $context['sandbox']['progress'] / $limit;
+  $average_time = $context['sandbox']['eta'] / $itters;
+  $eta = (($context['sandbox']['itters'] * $average_time) - ($average_time * $itters)) / 1000;
+  if ($eta >= 60) {
+    $min = (int) $eta / 60;
+  }
+  else {
+    $min = 0;
+  }
+  $sec = $eta % 60;
+  $eta = sprintf("%d:%02d", $min, $sec);
+  $progress = sprintf("%d / %d", $context['sandbox']['progress'],  $context['sandbox']['max'] );
+  $context['message'] = t('<br>Nodes saved: %progress <br> Time remaining: %eta min.<br>' , array('%progress' => $progress, '%eta' => $eta));
   // Multistep processing : report progress.
   if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
@@ -468,10 +489,31 @@ function _biblio_export($nids, $format = "tagged", $popup = false, $version = 8)
         drupal_set_header('Content-Disposition: attachment; filename=Biblio-export.csv');
         print biblio_csv_export($node);
         break;
+      case 'rtf':
+        if ($count == 1) {
+          $style_name = biblio_get_style();
+          module_load_include('inc','biblio',"biblio_style_$style_name");
+          module_load_include('php','biblio',"class_rtf");
+          $style_function = "biblio_style_$style_name";
+
+          $rtf = new rtf();
+          $rtf->setPaperSize(5);
+          $rtf->setPaperOrientation(1);
+          $rtf->setDefaultFontFace(1);
+          $rtf->setDefaultFontSize(24);
+          $rtf->setAuthor("Biblio");
+          $rtf->setOperator("");
+          $rtf->setTitle("Biblio RTF Export");
+          $rtf->addColour("#000000");
+        }
+        $rtf->addText(filter_xss($style_function ($node, $base, $inline).'<br><br>',array('i','b','br','u','p','strong','em','sub','sup','ul','li')));
+
+        break;
     }
   }
 
   if ($format == 'xml' && $count > 0) print _endnote8_XML_export('', 'end');
+  if ($format == 'rtf' && $count > 0) $rtf->getDocument();
   if ($popup && !empty($popup_data)) return '<pre>' . $popup_data . '</pre>';
 
 }
@@ -507,10 +549,17 @@ function biblio_marc_import($file, $terms, $batch, $session_id) {
   module_load_include('php', 'biblio', 'marcParse/php-marc');
   $marcfile = new File($file->filepath);
   while ($record = $marcfile->next() ) {
-    $node=array();
-    foreach($record->fields() as $fields) {
+    $node = array();
+    $node['biblio_contributors'] = array();
+		$node['biblio_keywords'] = array();
+    $leader = $record->leader();
+    $pubtype = $leader[6];
+    $pubtype .= $leader[7];
+    $node['biblio_type'] = marc_type_map($pubtype);
+    foreach ($record->fields() as $fields) {
       foreach ($fields as $field){
-        switch ($field->tagno) {
+        $tagnum = $field->tagno;
+        switch ($tagnum) {
           case '008':
             $data = $field->data();
             $node['biblio_year'] = substr($data,7,4);
@@ -553,12 +602,26 @@ function biblio_marc_import($file, $terms, $batch, $session_id) {
           case '490':
             $node['biblio_volume'] = $field->subfield('v');
             break;
+          case ($tagnum >= 500 && $tagnum <= 599):
+            $value = $field->subfield('a');
+            if (!empty($value)) {
+              $node['biblio_notes'] .= $value;
+            }
+            break;
+          case '650':
+            foreach ($field->subfields() as $subject) {
+              $node['biblio_keywords'][] = $subject;
+            }
+            break;
           case '100':
           case '700':
-            $node['biblio_contributors'][1][] = array(
-              'name' => $field->subfield('a'),
+            $value = $field->subfield('a');
+            if (!empty($value)) {
+              $node['biblio_contributors'][1][] = array(
+              'name' => $value,
               'auth_type' => 1
-            );
+              );
+            }
             break;
           case '110':
           case '710':
@@ -567,6 +630,13 @@ function biblio_marc_import($file, $terms, $batch, $session_id) {
               'auth_type' => 5
             );
             break;
+          case '856':
+            $value = $field->subfield('u');
+            if (!empty($value)) {
+              $node['biblio_url'] = $value;
+            }
+            break;
+
         }
       }
     }
@@ -581,6 +651,15 @@ function biblio_marc_import($file, $terms, $batch, $session_id) {
   }
   return $nids;
 }
+function marc_type_map($type) {
+  static $map = array();
+  if (empty($map)) {
+    module_load_include('inc', 'biblio', 'biblio.type.mapper');
+    $map = biblio_get_type_map('marc');
+  }
+  return (isset($map[$type]))?$map[$type]:129; //return the biblio type or 129 (Misc) if type not found
+}
+
 /**
  * Export data in bibtex format.
  *

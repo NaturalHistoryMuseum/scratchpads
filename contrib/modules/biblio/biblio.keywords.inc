@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.keywords.inc,v 1.6.2.17 2010/05/12 01:55:40 rjerome Exp $
+// $Id: biblio.keywords.inc,v 1.6.2.19 2010/06/27 18:44:19 rjerome Exp $
 /**
  *   biblio.module for Drupal
  *
@@ -50,7 +50,7 @@ function biblio_get_keyword_by_id($kid) {
   static $keywords = array();
 
   if (!isset($keywords[$kid])) {
-    $keywords[$kid] = db_fetch_array(db_query('SELECT * FROM {biblio_keyword_data} WHERE kid = %d', $kid));
+    $keywords[$kid] = db_fetch_object(db_query('SELECT * FROM {biblio_keyword_data} WHERE kid = %d', $kid));
   }
 
   return $keywords[$kid];
@@ -103,7 +103,6 @@ function biblio_load_keywords($vid) {
  * @return
  */
 function biblio_insert_keywords($node, $update = FALSE) {
-  if (empty($node->biblio_keywords)) return;
   $kw_vocab = variable_get('biblio_keyword_vocabulary', 0);
   $freetagging = variable_get('biblio_keyword_freetagging', 0);
   $taxo_terms = $typed_keywords = array();
@@ -117,26 +116,38 @@ function biblio_insert_keywords($node, $update = FALSE) {
   if ($update) db_query('DELETE FROM {biblio_keyword} WHERE nid = %d AND vid = %d', array($node->nid, $node->vid));
   if (isset($node->taxonomy) && is_array($node->taxonomy) && variable_get('biblio_copy_taxo_terms_to_keywords', 0)) { //add any taxonomy terms to our keyword list
     foreach ($node->taxonomy as $vid => $term) {
-      if ($vid == 'copy_to_biblio') {
-        if ($term == 0) $taxo_terms = array(); // don't copy if user overrides the default to copy, just set the $taxo_terms to an empty array and break out of the for loop
-        continue;
-      }
-      if (is_array($term) && !empty($term)) {
-        foreach ($term as $tid) {
-          if ($tid) {
-            $term_obj = taxonomy_get_term($tid);
-            $taxo_terms[$term_obj->tid] = $term_obj->name;
+      switch ($vid) {
+        case 'tags':
+          if (is_array($term)) {
+            foreach ($term as $vid => $terms) {
+              $taxo_terms = array_merge($taxo_terms, biblio_explode_keywords($terms, ','));
+            }
+          }
+        break;
+        case 'copy_to_biblio':
+          if ($term == 0) {
+            $taxo_terms = array(); // don't copy if user overrides the default to copy, just set the $taxo_terms to an empty array and break out of the for loop
+          }
+          unset ($node->taxonomy['copy_to_biblio']);
+        break;
+        default:
+          if (is_array($term) && !empty($term)) {
+            foreach ($term as $tid) {
+              if ($tid) {
+                $term_obj = taxonomy_get_term($tid);
+                $taxo_terms[] = $term_obj->name;
+              }
+            }
+          }
+          else if ($term) {
+            $term_obj = taxonomy_get_term($term);
+            $taxo_terms[] = $term_obj->name;
           }
         }
-      }
-      else if ($term) {
-        $term_obj = taxonomy_get_term($term);
-        $taxo_terms[$term_obj->tid] = $term_obj->name;
-      }
-    }
+     }
   }
 
-  $keywords = array_merge($typed_keywords, $taxo_terms);
+  $keywords = array_unique(array_merge($typed_keywords, $taxo_terms));
 
   foreach ($keywords as $keyword) {
     $word = (is_object($keyword)) ? trim($keyword->word) : trim($keyword);
@@ -165,7 +176,7 @@ function biblio_insert_keywords($node, $update = FALSE) {
     $node->taxonomy['tags'][$kw_vocab] =  biblio_implode_keywords($typed_keywords, ',');
   }
 
-  return array_keys($inserted);
+  return ;
 }
 /**
  * @param $word
@@ -232,8 +243,10 @@ function biblio_delete_keyword($keyword_id) {
   return db_affected_rows();
 }
 
-function biblio_explode_keywords($string) {
-  $sep = check_plain(variable_get('biblio_keyword_sep', ','));
+function biblio_explode_keywords($string, $sep = NULL) {
+  if (!$sep) {
+    $sep = check_plain(variable_get('biblio_keyword_sep', ','));
+  }
   $regexp = '%(?:^|'.$sep.'\ *)("(?>[^"]*)(?>""[^"]* )*"|(?: [^"'.$sep.']*))%x';
   preg_match_all($regexp, $string, $matches);
   $keyword_array = array_unique($matches[1]);

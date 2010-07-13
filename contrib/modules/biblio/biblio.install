@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.install,v 1.30.2.98 2010/04/14 01:00:00 rjerome Exp $
+// $Id: biblio.install,v 1.30.2.99 2010/06/27 18:40:27 rjerome Exp $
 
 /**
  * @file
@@ -1667,13 +1667,13 @@ function biblio_update_6015() {
   }
   $result[] = array('success' => TRUE,
                     'query' => "Copied $count keywords to the new database stucture from taxonomy");
-  $count=0;
+  $count = array();
   $db_result = db_query('SELECT nid,vid,biblio_keywords FROM {biblio} where biblio_keywords != "" ');
   while ($node = db_fetch_object($db_result)){
     $count += biblio_insert_keywords($node, TRUE);
   }
   $result[] = array('success' => TRUE,
-                    'query' => "Moved $count keywords to the new database stucture");
+                    'query' => "Moved ". count($count) ." keywords to the new database stucture");
   db_drop_field($result,'biblio', 'biblio_keywords');
   return $result;
 }

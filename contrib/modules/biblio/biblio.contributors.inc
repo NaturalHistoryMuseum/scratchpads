@@ -1,5 +1,5 @@
 <?php
-//$Id: biblio.contributors.inc,v 1.1.2.34 2010/04/14 01:23:49 rjerome Exp $
+//$Id: biblio.contributors.inc,v 1.1.2.35 2010/06/23 02:21:30 rjerome Exp $
 /**
  * @param $aid
  * @return unknown_type
@@ -68,6 +68,7 @@ function biblio_authors_add_etal (&$authors, $type) {
  */
 function biblio_parse_contributors($contributors) {
   $result = array();
+  if (!count($contributors)) return;
   foreach ($contributors as $cat => $authors) {
     $etal = array();
     foreach ($authors as $author) {
