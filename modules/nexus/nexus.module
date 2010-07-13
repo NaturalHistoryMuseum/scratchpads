@@ -51,7 +51,7 @@ function nexus_theme(){
 }
 
 function theme_nexus_matrix($matrix_editor, $node){
-  $output .= '<div id="character-groups"></div>';
+  $output .= '<div id="character-groups"></div>'; 
   $output .= theme('matrix_editor', $matrix_editor->options, $matrix_editor->columns, $matrix_editor->data, $matrix_editor->filter);
   $path = drupal_get_path('module', 'nexus');
   drupal_add_js(array(
@@ -1065,7 +1065,7 @@ function nexus_get_characters($parent){
      FROM {term_data} td 
      INNER JOIN {term_hierarchy} th ON th.tid = td.tid 
      WHERE th.parent = %d ORDER BY td.weight ASC';
-  $result = db_query(db_rewrite_sql($sql), $parent);
+  $result = db_query($sql, $parent);
   while($term = db_fetch_object($result)){
     $characters[$term->tid] = $term;
   }
@@ -1325,23 +1325,36 @@ function nexus_note_node_form_submit($form, &$form_state){
 
 function nexus_export_form($form_state, $node, $matrix_data){
 	$form = array();
-  $form['format']['sdd'] = array(
+  $form['sdd'] = array(
     '#type' => 'radio', 
     '#title' => 'SDD', 
     '#return_value' => 'sdd', 
     '#name' => 'format', 
-    '#description' => t('AND / OR characters will be output as SDD multi-states.'), 
+    '#description' => t('AND / OR characters will be output as SDD multi-states. Only non-molecular controlled charcters (DNA) will be exported.' ), 
     '#default_value' => 'sdd', 
     '#prefix' => '<div id="format-options"><label class="output-format">Output format:</label>'
   );
-  $form['format']['nex'] = array(
+  $form['nex'] = array(
     '#type' => 'radio', 
     '#title' => 'NEXUS', 
     '#return_value' => 'nex', 
     '#name' => 'format', 
-    '#description' => t('Only controlled and DNA sequence characters will be exported.<br />Characters will be renumbered in the exported file.')
+    '#description' => t('Characters will be renumbered in the exported file.')
   );
-  $form['format']['rtf'] = array(
+  
+  $form['character_type'] = array(
+    '#type' => 'radios', 
+    '#title' => 'Character type', 
+    '#options' => array(
+      'dna' => 'DNA', 
+      'controlled' => 'Controlled Characters'
+    ), 
+    '#default_value' => 'dna',
+    '#prefix' => '<div id="nexus-character-types"',
+    '#suffix' => '</div>'
+   );
+  
+  $form['rtf'] = array(
     '#type' => 'radio', 
     '#title' => 'Character list (RTF)', 
     '#return_value' => 'rtf', 

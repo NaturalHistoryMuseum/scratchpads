@@ -203,9 +203,9 @@ function nexusNumericStateValidator(value, columnDef, $container) {
 
 function nexusDNAStateValidator(value, columnDef, $container) {
 		
-	  if (value.length && (value.toString().match(/^[ACGTU\-\?]*$/i) == null)){ 
+	  if (value.length && (value.toString().match(/^[ACGTUYRKW\-\?]*$/i) == null)){ 
 	    
-	    nexusErrorBeautyTip($container, 'Please enter only DNA sequence characters (ACGTU) or ? and -')
+	    nexusErrorBeautyTip($container, 'Please enter only DNA sequence characters (ACGTUYRKW) or ? and -')
 	    
 	    valid = false;
 	    

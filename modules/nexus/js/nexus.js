@@ -28,6 +28,8 @@ function nexus() {
         return;
       }
       
+      
+      
       // Everything past this point are for editors only
             
       self.addGroupEvents();
@@ -126,22 +128,31 @@ function nexus() {
       });
       
       $('input[name=format]').click(function(){
+    	      	  
     	if($(this).val() == 'nex'){
-    		
-    	      if($('#nexus-export-warning').length){
-    	    	  $('#nexus-export-warning').show();
-    	      }else if($('#edit-characters-to-export option.nexus-option-controlled').length && $('#edit-characters-to-export option.nexus-option-dna').length){
-    	    	  
-    	          $('#edit-characters-to-export').after($(Drupal.theme('nexusExportWarning')));
-    	        }
-    		
-    		$('#edit-characters-to-export option:not(.nexus-option-controlled, .nexus-option-dna)').hide();
+    	if($('#edit-characters-to-export option.nexus-option-controlled').length || $('#edit-characters-to-export option.nexus-option-dna').length){
+        	$('#nexus-character-types').show();
+        	self.exportCharactersFilter();    		
+    	}
+
     	}else{
-    		$('#nexus-export-warning').hide();
-    		$('#edit-characters-to-export option:not(.nexus-option-controlled, .nexus-option-dna)').show();
+    		$('#nexus-character-types').hide();
+    		$('#edit-characters-to-export option').removeAttr('disabled').attr('selected', 'selected').show();
     	}
       });
       
+      $('input[name=character_type]').change(function(){
+    	  self.exportCharactersFilter();
+      });
+      
+    },
+    
+    exportCharactersFilter: function(){
+    	
+    	var type = $('input[name=character_type]:checked').val();
+    	$('#edit-characters-to-export option:not(.nexus-option-'+type+')').removeAttr('selected').attr('disabled', 'disabled').hide(); // Add disabled for browsers than don't let you hide options
+    	$('#edit-characters-to-export option.nexus-option-'+type).removeAttr('disabled').attr('selected', 'selected').show();
+    	
     },
     
     initHeaders: function(){
@@ -306,7 +317,7 @@ function nexus() {
         return '<span>'+ txt + '</span> Undefined';
         
       }
-      
+
       switch (columns[columnIndex]['type']){
         
         case 'free':
@@ -323,7 +334,7 @@ function nexus() {
         
         case 'dna':
             
-            return 'DNA sequence';
+        	return 'DNA: <span>'+txt+'</span>';
           
           break;
         
@@ -686,7 +697,7 @@ function nexus() {
           var defaultValue;
           
           if(columnDef.type == 'dna'){
-              $('<p>This is a <em>DNA sequence</em> - please enter only DNA characters (ACGTU or ? and -).<p>').appendTo($cellForm);
+              $('<p>This is a <em>DNA sequence</em> - please enter only DNA characters (ACGTUYRKW or ? and -).<p>').appendTo($cellForm);
 
           }else{
         	  
@@ -1133,10 +1144,12 @@ function nexus() {
     },
     
     buildExportDataTab: function(){
-
-      if($('#edit-characters-to-export options').length &! options.regenerated){
+    	
+      if($('#edit-characters-to-export option').length && (typeof options.regenerated == 'undefined')){
         return;
       }
+      
+      $("#edit-sdd").trigger('click');
 
       var $select = $('#edit-characters-to-export').empty();
       
@@ -1170,11 +1183,7 @@ Drupal.theme.prototype.nexusChangedWarning = function () {
 
 }
 
-Drupal.theme.prototype.nexusExportWarning = function () {
-	  
-	  return '<div class="warning" id="nexus-export-warning"> ' + Drupal.t("There are both DNA sequences and controlled characters in this project. Including DNA sequences in the export will prevent it being re-imported into the NEXUS data editor.") + '</div>';
 
-	}
 
 
 

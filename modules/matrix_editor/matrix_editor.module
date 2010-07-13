@@ -106,7 +106,7 @@ function theme_matrix_editor($options, $columns, $data, $filter = null){
   drupal_add_js('var data = []; data = ' . drupal_to_js($data), 'inline');
   if($filter){
     drupal_add_js('var filter = ' . $filter, 'inline');
-  }
+  }  
   drupal_add_js('var columns = ' . matrix_editor_to_js($columns) . ';', 'inline');
   $output = '<div id="resizableWrapper">
   <div id="myGrid" style="width:100%;height:' . $options['viewportHeight'] . 'px;" class="hideCols hideRows ' . ($options['editable'] ? 'editable' : '') . '">

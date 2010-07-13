@@ -287,86 +287,73 @@ function nexus_export_nex($node, $matrix_data){
   }
   $output .= "\t;\r";
   $output .= "ENDBLOCK;\r";
-  //  Characters
   $output .= "\r";
+  $func = 'nexus_export_nex_' . $_POST['character_type'] . '_characters';
+  if(function_exists($func)){
+    $output .= $func($matrix_data, $taxon);
+  }
+  return $output;
+}
+
+function nexus_export_nex_controlled_characters($matrix_data, $taxon){
   $column_count = 0;
   foreach($matrix_data->columns as $i => $column){
-    if($column['type'] == 'controlled' || $column['type'] == 'dna'){
-      $column_count++;
-      $character_labels .= "\t\t[" . $column_count . "] '" . $column['term'] . "'\r";
-      
-      if($column['description']){
-        $character_comments .= "\tTEXT CHARACTER=" . $column_count . " TEXT='" . $column['description'] . "';\r";
-      }
-      $tid = $matrix_data->data[$i]['id'];
-      $nid = $column['id'];
-      if($matrix_data->intersection_info[$nid][$tid] && strlen($matrix_data->intersection_info[$nid][$tid]['note']['body']) > 0){
-        $attribute_comments .= "\tTEXT TAXON=" . $taxon[$tid] . " CHARACTER=" . $column_count . " TEXT='" . $matrix_data->intersection_info[$nid][$tid]['note']['body'] . "';\r";
-      }
-      $last_column_key = end(array_keys($column['states']));
-      if($column['type'] == 'controlled'){
-      	$state_labels .= "\t\t" . $column_count . "\r";
-        foreach($column['states'] as $state_key => $state){
-          if(is_numeric($state_key)){
-            $state_labels .= "\t\t\t'" . $state['state'] . "'";
-            if($state_key == $last_column_key){
-              $state_labels .= ",\r";
-            }else{
-              $state_labels .= "\r";
-            }
-          }
-        }
-      }
-      //  Groups
-      if(!isset($groups[$column['groupID']])){
-        $groups[$column['groupID']] = array(
-          'name' => $column['group'], 
-          'chars' => $column_count
-        );
-      }else{
-        $groups[$column['groupID']]['chars'] .= ' ' . $column_count;
-      }
-      $indent = (count($morphology_matrix) % 11 == 0);
-      // Matrix data
-      if($column['type'] == 'controlled'){
-        foreach($matrix_data->data as $matrix_data_key => $data){
-          if($indent){
-            $morphology_matrix[$matrix_data_key] .= ' ';
-          }
-          if(isset($data[$column['id']])){
-            if(strpos($data[$column['id']], '/')){
-              $morphology_matrix[$matrix_data_key] .= "(" . str_replace('/', '', $data[$column['id']]) . ")";
-            }elseif(strpos($data[$column['id']], '+')){
-              $morphology_matrix[$matrix_data_key] .= "{" . str_replace('+', '', $data[$column['id']]) . "}";
-            }else{
-              $morphology_matrix[$matrix_data_key] .= $data[$column['id']];
-            }
-          }else{
-            $morphology_matrix[$matrix_data_key] .= '?';
-          }
-        }
-        if(!isset($morphology_matrix_chars_from)){
-          $morphology_matrix_chars_from = $column_count;
-        }
-      }else{ // DNA
-        _morphology_matrix_chars($morphology_matrix_chars, $morphology_matrix_chars_from, $column_count - 1);
-        unset($morphology_matrix_chars_from);
-        $dna_matrix .= "\r\t\t['" . $column['term'] . "', character " . $column_count . "]\r";
-        foreach($matrix_data->data as $matrix_data_key => $data){
-          $dna_matrix .= "\t\t" . str_pad("'" . $data['taxa'] . "'", 50);
-          if(isset($data[$column['id']])){
-            $dna_matrix .= $data[$column['id']];
-          }
-          
-          $dna_matrix .= "\r";
+    if($column['type'] != 'controlled'){
+      continue;
+    }
+    $column_count++;
+    $character_labels .= "\t\t[" . $column_count . "] '" . $column['term'] . "'\r";
+    $state_labels .= "\t\t" . $column_count . "\r";
+    if($column['description']){
+      $character_comments .= "\tTEXT CHARACTER=" . $column_count . " TEXT='" . $column['description'] . "';\r";
+    }
+    $tid = $matrix_data->data[$i]['id'];
+    $nid = $column['id'];
+    if($matrix_data->intersection_info[$nid][$tid] && strlen($matrix_data->intersection_info[$nid][$tid]['note']['body'])){
+      $attribute_comments .= "\tTEXT TAXON=" . $taxon[$tid] . " CHARACTER=" . $column_count . " TEXT='" . $matrix_data->intersection_info[$nid][$tid]['note']['body'] . "';\r";
+    }
+    $last_column_key = end(array_keys($column['states']));
+    foreach($column['states'] as $state_key => $state){
+      if(is_numeric($state_key)){
+        $state_labels .= "\t\t\t'" . $state['state'] . "'";
+        if($state_key == $last_column_key){
+          $state_labels .= ",\r";
+        }else{
+          $state_labels .= "\r";
         }
       }
     }
+    //  Groups
+    if(!isset($groups[$column['groupID']])){
+      $groups[$column['groupID']] = array(
+        'name' => $column['group'], 
+        'chars' => $column_count
+      );
+    }else{
+      $groups[$column['groupID']]['chars'] .= ' ' . $column_count;
+    }
+    $indent = ($column_count % 11 == 0);
+    // Matrix data
+    foreach($matrix_data->data as $data_key => $data){
+      if($indent){
+        $matrix[$data_key] .= ' ';
+      }
+      if(isset($data[$column['id']])){
+        if(strpos($data[$column['id']], '/')){
+          $matrix[$data_key] .= "(" . str_replace('/', '', $data[$column['id']]) . ")";
+        }elseif(strpos($data[$column['id']], '+')){
+          $matrix[$data_key] .= "{" . str_replace('+', '', $data[$column['id']]) . "}";
+        }else{
+          $matrix[$data_key] .= $data[$column['id']];
+        }
+      }else{
+        $matrix[$data_key] .= '?';
+      }
+    }
   }
-  _morphology_matrix_chars($morphology_matrix_chars, $morphology_matrix_chars_from, $column_count);
   $output .= "BEGIN CHARACTERS;\r";
   $output .= "\tDIMENSIONS NCHAR=" . $column_count . ";\r";
-  $output .= "\tFORMAT DATATYPE=" . (count($dna_matrix) ? 'DNA' : 'STANDARD') . " MISSING=? GAP=- " . (count($morphology_matrix) ? "SYMBOLS=\"0123456789\"" : "") . ";\r";
+  $output .= "\tFORMAT DATATYPE=STANDARD MISSING=? GAP=- SYMBOLS=\"0123456789\";\r";
   $output .= "\tCHARLABELS\r";
   $output .= $character_labels;
   $output .= "\t;\r";
@@ -374,19 +361,10 @@ function nexus_export_nex($node, $matrix_data){
   $output .= $state_labels;
   $output .= "\t;\r";
   $output .= "\tMATRIX\r";
-  if(is_array($morphology_matrix)){
-    if($dna_matrix){
-      $output .= "\r\t\t[Morphology, characters " . $morphology_matrix_chars . "]\r";
-      ;
-    }
-    foreach($morphology_matrix as $id => $data){
-      $output .= "\t\t" . str_pad("'" . $matrix_data->data[$id]['taxa'] . "'", 50);
-      $output .= $data;
-      $output .= "\r";
-    }
-  }
-  if($dna_matrix){
-    $output .= $dna_matrix;
+  foreach($matrix as $id => $data){
+    $output .= "\t\t" . str_pad("'" . $matrix_data->data[$id]['taxa'] . "'", 50);
+    $output .= $data;
+    $output .= "\r";
   }
   $output .= "\t;\r";
   $output .= "ENDBLOCK;\r\r";
@@ -412,17 +390,96 @@ function nexus_export_nex($node, $matrix_data){
   return $output;
 }
 
-function _morphology_matrix_chars(&$morphology_matrix_chars, $morphology_matrix_chars_from, $column_count){
-  if($morphology_matrix_chars_from){
-    if($morphology_matrix_chars){
-      $morphology_matrix_chars .= ', ';
+function nexus_export_nex_dna_characters($matrix_data, $taxon){
+  $column_count = 0;
+  foreach($matrix_data->columns as $i => $column){
+    if($column['type'] != 'dna'){
+      continue;
     }
-    if($morphology_matrix_chars_from == $column_count){
-      $morphology_matrix_chars .= $morphology_matrix_chars_from;
+    $column_count++;
+    if($column['description']){
+      $character_comments .= "\tTEXT CHARACTER=" . $column_count . " TEXT='" . $column['description'] . "';\r";
+    }
+    $tid = $matrix_data->data[$i]['id'];
+    $nid = $column['id'];
+    if($matrix_data->intersection_info[$nid][$tid] && strlen($matrix_data->intersection_info[$nid][$tid]['note']['body'])){
+      $attribute_comments .= "\tTEXT TAXON=" . $taxon[$tid] . " CHARACTER=" . $column_count . " TEXT='" . $matrix_data->intersection_info[$nid][$tid]['note']['body'] . "';\r";
+    }
+
+    $dna_sets = 0;
+    
+    foreach($matrix_data->data as $data){
+      if(isset($data[$column['id']])){
+        $l = strlen($data[$column['id']]);
+        if($matrix_data->columns[$i]['max'] < $l){
+          $total_chars += ($l - $matrix_data->columns[$i]['max']);
+          $matrix_data->columns[$i]['max'] = $l;
+        }
+      }
+      $dna_sets++;
+    }
+    
+        //  Groups
+    if(!isset($groups[$column['groupID']])){
+      $groups[$column['groupID']] = array(
+        'name' => $column['group'], 
+        'from' => $groups[$last_group_id]['to'] + 1,
+        'to' => $groups[$last_group_id]['to'] + $matrix_data->columns[$i]['max'],
+      );
     }else{
-      $morphology_matrix_chars .= $morphology_matrix_chars_from . '-' . $column_count;
+      $groups[$column['groupID']]['to'] += $matrix_data->columns[$i]['max'];
     }
+    
+    $last_group_id = $column['groupID'];
+    
   }
+  $output .= "BEGIN CHARACTERS;\r";
+  $output .= "\tDIMENSIONS NCHAR=" . $total_chars . ";\r";
+  $output .= "\tFORMAT DATATYPE=DNA ".($dna_sets > 1 ? 'interleave' : '')." MISSING=? GAP=-;\r";
+  $output .= "\tMATRIX\r";
+  foreach($matrix_data->columns as $i => $column){
+  	
+  	if($column['max'] < 1){
+  		continue;
+  	}
+  	
+  	$output .= "\t\t[".$column['term']."]\r";
+    foreach($matrix_data->data as $data){
+      $output .= "\t\t" . str_pad("'" . $data['taxa'] . "'", 50);
+      $output .= str_pad($data[$column['id']], $column['max'], '-');
+      $output .= "\r";
+    }
+    $output .= "\r";
+  }
+  $output .= "\t;\r";
+  $output .= "ENDBLOCK;\r\r";
+  //  Notes
+  $output .= "BEGIN NOTES;\r";
+  if($character_comments){
+    $output .= "\t[Character comments]\r";
+    $output .= $character_comments;
+    $output .= "\r";
+  }
+  if($attribute_comments){
+    $output .= "\t[Attribute comments]\r";
+    $output .= $attribute_comments;
+    $output .= "\r";
+  }
+  $output .= "ENDBLOCK;\r\r";
+  // Groups
+  $output .= "BEGIN SETS;\r";
+  foreach($groups as $group){
+  	
+  	if($group['from'] == $group['to']){
+  	$output .= "\tCHARSET '" . $group['name'] . "' = " . $group['from']  . ";\r\r";	
+  	}else{
+  	$output .= "\tCHARSET '" . $group['name'] . "' = " . $group['from']  . "-" . $group['to'] .";\r\r";	
+  	}
+    
+  }
+  $output .= "ENDBLOCK;\r";
+  return $output;
+  return $output;
 }
 
 /**

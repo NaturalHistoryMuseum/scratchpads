@@ -19,7 +19,7 @@ function nexus_import_form($form_state){
     if(isset($form_state['values']['vid'])){
       $vid = $form_state['values']['vid'];
     }else{
-      if(!$vid = db_result(db_query('SELECT vid FROM term_data WHERE name IN (' . $placeholders . ') ORDER BY COUNT(*) DESC LIMIT 1', $import_file['taxa']))){
+      if(!$vid = db_result(db_query('SELECT td.vid FROM {term_data} td INNER JOIN {vocabulary_node_types} v ON td.vid = v.vid WHERE td.name IN (' . $placeholders . ') AND v.type = "nexus_project" ORDER BY COUNT(*) DESC LIMIT 1', $import_file['taxa']))){
         drupal_set_message(t('No vocabulary could be found with terms matching the import file.'), 'warning');
       }
     }
@@ -91,6 +91,10 @@ function nexus_import_form($form_state){
       '#submit' => array(
         'nexus_import_form_import_submit'
       )
+    );
+    $form['datatype'] = array(
+      '#type' => 'hidden', 
+      '#value' => $form_state['storage']['import_file']['datatype']
     );
   }else{
     $form['import_file'] = array(
@@ -182,60 +186,76 @@ function nexus_import_batch_process_file($lines, &$context){
     if(_nexus_import_skip_line($line)){
       continue;
     }
-    if(strpos($line, 'SYMBOLS')){
-      preg_match('/.*?SYMBOLS="([0-9]+).*"/', $line, $symbols);
+    if(strpos(strtolower($line), 'symbols')){
+      preg_match('/.*?SYMBOLS="([0-9]+).*"/i', $line, $symbols);
       $context['results']['base'] = substr($symbols[1], 0, 1);
     }
     //    Checkdata type = standard (& maybe DNA)
-    if(strpos($line, 'DATATYPE')){
-      preg_match('/.*?DATATYPE\s?=\s?([A-Z]+)\s.*/', $line, $datatype);
-      if(strtolower($datatype[1]) != 'standard'){ // If this isn't a standard nexus file, error out
-        drupal_set_message(t('Sorry, this file could not be imported - only standard datatype nexus files are currently supported.'), 'error');
+    if(strpos(strtolower($line), 'datatype')){
+      preg_match('/.*?DATATYPE\s?=\s?([A-Z]+)\s.*/i', $line, $datatype);
+      if(!(strtolower($datatype[1]) == 'standard' || strtolower($datatype[1]) == 'dna')){ // If this isn't a standard nexus file, error out
+        drupal_set_message(t('Sorry, this file could not be imported - only standard or DNA datatype nexus files are currently supported.'), 'error');
         $context['results']['error'] = true;
         $context['finished'] = 1;
         return;
+      }else{
+        $context['results']['datatype'] = strtolower($datatype[1]);
       }
     }
     switch($line){
       case 'TAXLABELS':
+      case 'Taxlabels':
+      case 'taxlabels':
         $context['sandbox']['key'] = 'taxa';
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
         $context['message'] = t('Processing taxa');
         break;
       case 'CHARLABELS':
+      case 'Charlabels':
+      case 'charlabels':
         $context['sandbox']['key'] = 'chars';
-        $context['sandbox']['regex'] = "/\[([0-9]+)\]\s'?(.+?)'?$/";
+        $context['sandbox']['regex'] = "/\[([0-9]+)\]\s'?(.+?)'?$/i";
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
         $context['message'] = t('Processing characters');
         break;
       case 'STATELABELS':
+      case 'Statelabels':
+      case 'statelabels':
         $context['sandbox']['key'] = 'states';
-        $context['sandbox']['regex'] = "/^'?(.+?)'?,{0,1}$/";
+        $context['sandbox']['regex'] = "/^'?(.+?)'?,{0,1}$/i";
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
         $context['message'] = t('Processing character states');
         break;
       case 'MATRIX':
+      case 'Matrix':
+      case 'matrix':
         $context['sandbox']['key'] = 'matrix';
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
-        $context['sandbox']['regex'] = "/(?>'(.+)'\s+|(.+)\s+)([{}0-9()?-\s]+)/";
+        if($context['results']['datatype'] == 'dna'){
+          $context['sandbox']['regex'] = "/^'?(.+?)'?\s{2,}([ACGTUYRKW\-\?]+)/i";
+        }else{
+          $context['sandbox']['regex'] = "/(?>'(.+)'\s+|(.+)\s+)([{}0-9()?-\s]+)/i";
+        }
         $context['message'] = t('Processing matrix data');
         break;
       case '[Character comments]':
         $context['sandbox']['key'] = 'char_comments';
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
-        $context['sandbox']['regex'] = "/TEXT\sCHARACTER=([0-9]*)\sTEXT='?(.*?)'?;$/";
+        $context['sandbox']['regex'] = "/TEXT\sCHARACTER=([0-9]*)\sTEXT='?(.*?)'?;$/i";
         $context['message'] = t('Processing character comments');
         break;
       case '[Attribute comments]':
         $context['sandbox']['key'] = 'attribute_comments';
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
-        $context['sandbox']['regex'] = "/TEXT\sTAXON=([0-9]*)\sCHARACTER=([0-9]*)\sTEXT='?(.*?)'?;$/";
+        $context['sandbox']['regex'] = "/TEXT\sTAXON=([0-9]*)\sCHARACTER=([0-9]*)\sTEXT='?(.*?)'?;$/i";
         $context['message'] = t('Processing attribute comments');
         break;
       case 'BEGIN SETS;':
+      case 'Begin sets;':
+      case 'begin sets;':
         $context['sandbox']['key'] = 'groups';
         $context['sandbox']['ref'] = &$context['results']['data'][$context['sandbox']['key']];
-        $context['sandbox']['regex'] = "/CHARSET\s'?(.*)'?\s=\s(.*);/";
+        $context['sandbox']['regex'] = "/CHARSET\s'?(.*?)'?\s=\s(.*);/i";
         $context['message'] = t('Processing character groups');
         break;
       case is_numeric($line):
@@ -243,6 +263,8 @@ function nexus_import_batch_process_file($lines, &$context){
         break;
       case ';':
       case 'ENDBLOCK;':
+      case 'Endblock;':
+      case 'endblock;':
         unset($context['sandbox']['key']);
         break;
       default:
@@ -277,11 +299,17 @@ function nexus_import_batch_process_file($lines, &$context){
 function nexus_import_batch_process_file_finished($success, $results, $operations){
   if(!$results['error']){ // Results error can be set in batch process; if it isset there will already be an error message 
     if($success){
-      if(count($results['data']['chars'])){
-        $_SESSION['import_file'] = $results;
-      }else{
+      if(!count($results['data']['taxa'])){
+      	
+      	foreach($results['data']['matrix'] as $matrix){
+      		$results['data']['taxa'][] = $matrix[0];
+      	}
+
+      }elseif(!count($results['data']['chars']) && $results['datatype'] != 'dna'){
         drupal_set_message(t('There are no characters in this file to import.'), 'error');
+        return;
       }
+      $_SESSION['import_file'] = $results;
     }else{
       drupal_set_message(t('An error occurred while processing the file'), 'error');
     }
@@ -321,7 +349,9 @@ function nexus_import_form_import_submit(&$form, &$form_state){
 function nexus_import_batch_process_import($import_file, $base, $form_values, &$context){
   global $user;
   $taxonomy = array();
-  $number_of_groups = count($import_file['groups']) || 1;
+  if(!$number_of_groups = count($import_file['groups'])){
+    $number_of_groups = 1;
+  }
   $character_vid = nexus_get_character_vid();
   if(!isset($context['sandbox']['progress'])){
     $context['message'] = t('Creating the character project');
@@ -345,7 +375,7 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
       'taxa_vid' => $form_values['vid']
     ));
     $context['results']['node'] = $node;
-    $context['sandbox']['matrix'] = nexus_import_parse_matrix($import_file['matrix'], $form_values['taxonomy'], $base);
+    $context['sandbox']['matrix'] = nexus_import_parse_matrix($import_file['matrix'], $form_values['taxonomy'], $form_values['datatype'], $form_values['vid'], $base);
     $context['sandbox']['progress'] = 0;
   }elseif($context['sandbox']['progress'] < $number_of_groups){
     // Create groups
@@ -355,21 +385,37 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
       'parent' => $context['results']['node']->character_root_tid, 
       'weight' => $context['sandbox']['progress']
     );
+    $func = 'nexus_import_add_' . $form_values['datatype'] . '_character';
     // If there's no groups, create a default one 
     if(!$import_file['groups']){ // No groups
-      $group_term['name'] = 'Morphology';
+      $group_term['name'] = 'Default';
       taxonomy_save_term($group_term);
-      // No groups so get all charsfil
-      foreach($import_file['chars'] as $character_order => $character){
-        nexus_import_add_character($character[0], $character[1], $character_order, $character_vid, $group_term, $import_file, $context, $form_values);
+      // No groups so get all chars
+      if($form_values['datatype'] == 'dna'){
+        $m = reset($context['sandbox']['matrix']);
+        for($x = 1; $x <= strlen($m['characters']); $x++){
+          $func($x, $x, $x, $character_vid, $group_term, $import_file, $context, $form_values);
+        }
+      }else{
+        foreach($import_file['chars'] as $character_order => $character){
+          $func($character[0], $character[1], $character_order, $character_vid, $group_term, $import_file, $context, $form_values);
+        }
       }
     }elseif($group = $import_file['groups'][$context['sandbox']['progress']]){
-      $characters = explode(' ', $group[1]);
+      if(strpos($group[1], '-')){
+        $exploded_group = explode('-', $group[1]);
+        $characters = range($exploded_group[0], $exploded_group[1]);
+      }else{
+        $characters = explode(' ', $group[1]);
+      }
       $group_term['name'] = $group[0];
       taxonomy_save_term($group_term);
       foreach($characters as $character_order => $character){
-        $character_name = _nexus_import_get_char_name($import_file, $character);
-        nexus_import_add_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, $context, $form_values);
+        if(!$character_name = _nexus_import_get_char_name($import_file, $character)){
+          $character_name = $character_order;
+        }
+        // Call add character function
+        $func($character, $character_name, $character_order, $character_vid, $group_term, $import_file, $context, $form_values);
       }
     }
     $context['sandbox']['progress']++;
@@ -392,7 +438,7 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
   $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
 }
 
-function nexus_import_add_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, &$context, &$form_values){
+function nexus_import_add_standard_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, &$context, &$form_values){
   $character_term = array(
     'name' => $character_name,  // chars are indexed from 0 
     'vid' => $character_vid, 
@@ -421,6 +467,31 @@ function nexus_import_add_character($character, $character_name, $character_orde
   }
 }
 
+function nexus_import_add_dna_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, &$context, &$form_values){
+  $character_term = array(
+    'name' => $character_name,  // chars are indexed from 0 
+    'vid' => $character_vid, 
+    'parent' => $group_term['tid'], 
+    'weight' => $character_order, 
+    'description' => _nexus_import_get_char_description($import_file, $character)
+  );
+  taxonomy_save_term($character_term);
+  $context['sandbox']['character_terms'][$character] = $character_term;
+  //  Mark as being DNA
+  nexus_update_term_setting($character_term['tid'], 'dna', 1);
+  $taxonomy = array(
+    $character_vid => $character_term['tid']
+  );
+  foreach($context['sandbox']['matrix'] as $matrix_data){
+    if(strlen($state = substr($matrix_data['characters'], $character - 1, 1)) > 0){
+      $taxonomy[$form_values['vid']] = $matrix_data['tid'];
+      _nexus_import_save_node('nexus_free_state', 'NEXUS DNA STATE: ' . $character_term['name'] . ' (' . $matrix_data['tid'] . ')', $taxonomy, array(
+        'body' => $state
+      ));
+    }
+  }
+}
+
 function _nexus_import_get_char_name($import_file, $character){
   foreach($import_file['chars'] as $char){
     if($char[0] == $character){return $char[1];}
@@ -433,38 +504,55 @@ function _nexus_import_get_char_description($import_file, $character){
   }
 }
 
-function nexus_import_parse_matrix($matrix, $taxonomy, $base = 0){
+function nexus_import_parse_matrix($matrix, $taxonomy, $datatype, $vid, $base = 0){
   $parsed_data = array();
-  foreach($matrix as $matrix_data){
-    $character_associations = preg_split('//', str_replace(' ', '', $matrix_data[1]), -1, PREG_SPLIT_NO_EMPTY);
-    $term_name = trim($matrix_data[0]);
-    if($tid = $taxonomy[$term_name]){
-      $count = 1;
-      $buffer = false;
-      foreach($character_associations as $character_association){
-        // Buffer is set to true for character associations with multiple states selected
-        if(!$buffer){
-          $char = array();
-        }
-        if($character_association == '('){ // Multistate OR
-          $char['relationship'] = '/';
-          $buffer = true;
-        }elseif($character_association == '{'){ // Multistate AND
-          // Don't need to specify relationship: default is AND 
-          $buffer = true;
-        }elseif($character_association == '}' || $character_association == ')'){ // END OF Multistate
-          $buffer = false;
-        }elseif($character_association == '?' || $character_association == '-'){ // Unknown
-          $char['relationship'] = $character_association;
+  switch($datatype){
+    case 'dna':
+      foreach($matrix as $matrix_data){
+        if(!array_key_exists($matrix_data[0], $parsed_data)){
+          $term = reset(nexus_get_term_by_name_and_vid($matrix_data[0], $vid));
+          $parsed_data[$matrix_data[0]] = array(
+            'characters' => $matrix_data[1], 
+            'tid' => $term->tid
+          );
         }else{
-          $char['states'][] = $character_association - $base;
-        }
-        if(!$buffer){
-          $parsed_data[$tid][$count] = $char; // Subtract base to allow for keys starting from 1 etc.,
-          $count++;
+          $parsed_data[$matrix_data[0]]['characters'] .= $matrix_data[1];
         }
       }
-    }
+      break;
+    default:
+      foreach($matrix as $matrix_data){
+        $character_associations = preg_split('//', str_replace(' ', '', $matrix_data[1]), -1, PREG_SPLIT_NO_EMPTY);
+        $term_name = trim($matrix_data[0]);
+        if($tid = $taxonomy[$term_name]){
+          $count = 1;
+          $buffer = false;
+          foreach($character_associations as $character_association){
+            // Buffer is set to true for character associations with multiple states selected
+            if(!$buffer){
+              $char = array();
+            }
+            if($character_association == '('){ // Multistate OR
+              $char['relationship'] = '/';
+              $buffer = true;
+            }elseif($character_association == '{'){ // Multistate AND
+              // Don't need to specify relationship: default is AND 
+              $buffer = true;
+            }elseif($character_association == '}' || $character_association == ')'){ // END OF Multistate
+              $buffer = false;
+            }elseif($character_association == '?' || $character_association == '-'){ // Unknown
+              $char['relationship'] = $character_association;
+            }else{
+              $char['states'][] = $character_association - $base;
+            }
+            if(!$buffer){
+              $parsed_data[$tid][$count] = $char; // Subtract base to allow for keys starting from 1 etc.,
+              $count++;
+            }
+          }
+        }
+      }
+      break;
   }
   return $parsed_data;
 }
@@ -507,7 +595,7 @@ function nexus_import_batch_process_import_finished($success, $results, $operati
     drupal_set_message(t('Character project %title has been created.', array(
       '%title' => $results['node']->title
     )));
-    drupal_goto('node/' . $results['node']->nid);
+        drupal_goto('node/' . $results['node']->nid .'/edit');
   }else{
     drupal_set_message(t('An error occurred while importing the file'), 'error');
   }
