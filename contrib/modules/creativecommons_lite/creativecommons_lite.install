@@ -62,7 +62,7 @@ function creativecommons_lite_uninstall() {
   // TODO: remove the content type variables
 }
 
-function creativecommons_lite_update_6000() {
+function creativecommons_lite_update_6102() {
   $ret = array();
   if (db_column_exists('creativecommons_lite', 'licence')) {
     db_change_field($ret, 'creativecommons_lite', 'licence', 'license', array('type' => 'varchar', 'length' => 12, 'not null' => TRUE));

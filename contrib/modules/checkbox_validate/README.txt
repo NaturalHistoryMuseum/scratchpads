@@ -66,4 +66,9 @@ AUTHOR CONTACT
 ********************************************************************
 ACKNOWLEDGEMENT
 
+- Extensive refactoring
+sun (Daniel F. Kudwien) http://www.unleashedmind.com
 
+- Optimisation
+jcmarco (Jose Carlos Marco)
+dboulet (Daniel Boulet) http://www.urbanink.net
