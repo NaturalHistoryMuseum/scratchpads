@@ -764,7 +764,8 @@ function scratchpad_profile_tasks_3(){
     'headers' => array(
       'From' => $from,
       'Bcc' => $from,
-      'Content-Transfer-Encoding' => 'quoted-printable'
+      'Content-Transfer-Encoding' => 'quoted-printable',
+      'Content-Type' => 'text/plain; charset="utf-8"'
     )
   );
   drupal_mail_send($message); 
