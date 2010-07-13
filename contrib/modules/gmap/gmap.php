@@ -1,9 +1,9 @@
 <?php
-// $Id: gmap.php,v 1.2.2.1 2010/01/09 22:03:36 bdragon Exp $
+// $Id: gmap.php,v 1.2 2008/07/15 16:30:29 bdragon Exp $
 
 /**
  * @file
- * GMap plugin API.
+ * These functions are used to implement a plugin for gmap.
  */
 
 /**
