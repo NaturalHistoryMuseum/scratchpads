@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.components.inc,v 1.6 2009/07/04 04:49:20 quicksketch Exp $
+// $Id: webform_components.inc,v 1.9.2.30 2009/11/06 00:25:43 quicksketch Exp $
 
 /**
  * @file
@@ -13,57 +13,7 @@
  */
 
 /**
- * Overview page of all components for this webform.
- */
-function webform_components_page($node, $mode = 'auto', $page_number = 1) {
-  if (module_exists('form_builder') && $mode != 'overview') {
-    module_load_include('inc', 'webform', 'includes/webform.form_builder');
-    $mode = 'form_builder';
-    $output = webform_form_builder_components($node);
-  }
-  else {
-    $output = drupal_get_form('webform_components_form', $node);
-  }
-
-  return theme('webform_components_page', $node, $mode, $output);
-}
-
-/**
- * Theme the output of the main components page.
- *
- * This theming provides a way to toggle between the editing modes if Form
- * Builder module is available.
- */
-function theme_webform_components_page($node, $mode, $form) {
-  $output = '';
-
-  // Add CSS and JS. Don't preprocess because these files are used rarely.
-  drupal_add_css(drupal_get_path('module', 'webform') .'/webform.css', 'module', 'all', FALSE);
-  drupal_add_js(drupal_get_path('module', 'webform') .'/webform.js', 'module', 'header', FALSE, TRUE, FALSE);
-
-  if (module_exists('form_builder')) {
-    $output .= '<div class="webform-components-mode">';
-    $output .= '<span class="webform-components-mode-label">' . t('Display mode') . ':</span> ';
-    if ($mode == 'overview') {
-      $output .= '<a href="' . url('node/' . $node->nid . '/webform') . '">' . t('Form builder') . '</a>';
-      $output .= ' | ';
-      $output .= '<strong>' . t('Overview') . '</strong>';
-    }
-    else {
-      $output .= '<strong>' . t('Form builder') . '</strong>';
-      $output .= ' | ';
-      $output .= '<a href="' . url('node/' . $node->nid . '/webform/overview') . '">' . t('Overview') . '</a>';
-    }
-    $output .= '</div>';
-  }
-
-  $output .= $form;
-
-  return $output;
-}
-
-/**
- * The table-based listing of all components for this webform.
+ * Overview form of all components for this webform.
  */
 function webform_components_form($form_state, $node) {
   $form = array(
@@ -154,6 +104,13 @@ function webform_components_form($form_state, $node) {
     '#weight' => 45,
   );
 
+  $form['publish'] = array(
+    '#type' => 'submit',
+    '#value' => t('Publish'),
+    '#weight' => 50,
+    '#access' => !$node->status,
+  );
+
   return $form;
 }
 
@@ -236,9 +193,9 @@ function theme_webform_components_form($form) {
         drupal_render($form['components'][$cid]['mandatory']),
         drupal_render($form['components'][$cid]['email']),
         drupal_render($form['components'][$cid]['cid']) . drupal_render($form['components'][$cid]['pid']) . drupal_render($form['components'][$cid]['weight']),
-        l(t('Edit'), 'node/'. $node->nid .'/webform/components/'. $cid, array('query' => drupal_get_destination())),
-        l(t('Clone'), 'node/'. $node->nid .'/webform/components/'. $cid .'/clone', array('query' => drupal_get_destination())),
-        l(t('Delete'), 'node/'. $node->nid .'/webform/components/'. $cid .'/delete', array('query' => drupal_get_destination())),
+        l(t('Edit'), 'node/'. $node->nid .'/edit/components/'. $cid),
+        l(t('Clone'), 'node/'. $node->nid .'/edit/components/'. $cid .'/clone'),
+        l(t('Delete'), 'node/'. $node->nid .'/edit/components/'. $cid .'/delete'),
       );
       $row_class = 'draggable'. ($component['type'] != 'fieldset' ? ' tabledrag-leaf' : '');
       $rows[] = array('data' => $row_data, 'class' => $row_class);
@@ -303,14 +260,14 @@ function webform_components_form_submit($form, &$form_state) {
   }
   elseif (isset($_POST['op']) && $_POST['op'] == t('Add')) {
     $component = $form_state['values']['add'];
-    $form_state['redirect'] = array('node/'. $node->nid .'/webform/components/new/'. $component['type'], drupal_get_destination() . '&name='. urlencode($component['name']) .'&mandatory='. $component['mandatory'] .'&email='. $component['email'] .'&pid='. $component['pid'] .'&weight='. $component['weight']);
+    $form_state['redirect'] = array('node/'. $node->nid .'/edit/components/new/'. $component['type'], 'name='. urlencode($component['name']) .'&mandatory='. $component['mandatory'] .'&email='. $component['email'] .'&pid='. $component['pid'] .'&weight='. $component['weight']);
   }
   else {
     drupal_set_message(t('The component positions and mandatory values have been updated.'));
   }
 }
 
-function webform_component_edit_form($form_state, &$node, $component, $clone = FALSE) {
+function webform_component_edit_form(&$form_state, $node, $component, $clone = FALSE) {
   drupal_set_title(t('Edit component: @name (@type)', array('@name' => $component['name'], '@type' => t($component['type']))));
 
   // Print the correct field type specification.
@@ -502,7 +459,7 @@ function webform_component_edit_form_submit($form, &$form_state) {
     $cid = webform_component_insert($form_state['values']);
   }
 
-  $form_state['redirect'] = array('node/'. $form_state['values']['nid'] .'/webform/components', isset($cid) ? 'cid='. $cid : '');
+  $form_state['redirect'] = array('node/'. $form_state['values']['nid'] .'/edit/components', isset($cid) ? 'cid='. $cid : '');
 }
 
 function webform_component_delete_form($form_state, $node, $component) {
@@ -527,13 +484,13 @@ function webform_component_delete_form($form_state, $node, $component) {
     $description = t('This will immediately delete the %name component from the %webform webform. This cannot be undone.', array('%name' => $node->webform['components'][$cid]['name'], '%webform' => $node->title));
   }
 
-  return confirm_form($form, $question, 'node/'. $node->nid .'/webform/components', $description, t('Delete'));
+  return confirm_form($form, $question, 'node/'. $node->nid .'/edit/components', $description, t('Delete'));
 }
 
 function webform_component_delete_form_submit($form, &$form_state) {
   drupal_set_message(t('Component %name deleted.', array('%name' => $form_state['values']['component']['name'])));
   webform_component_delete($form_state['values']['node'], $form_state['values']['component']);
-  $form_state['redirect'] = 'node/'. $form_state['values']['node']->nid .'/webform/components';
+  $form_state['redirect'] = 'node/'. $form_state['values']['node']->nid .'/edit/components';
 }
 
 /**
@@ -570,7 +527,7 @@ function webform_component_delete($node, $component) {
   // load all submissions and allow the component to delete each one.
   $delete_function = '_webform_delete_'. $component['type'];
   if (function_exists($delete_function)) {
-    module_load_include('inc', 'webform', 'includes/webform.submissions');
+    module_load_include('inc', 'webform', 'webform_submissions');
     $submissions = webform_get_submissions($node->nid);
     foreach ($submissions as $submission) {
       if (isset($submission->data[$component['cid']])) {

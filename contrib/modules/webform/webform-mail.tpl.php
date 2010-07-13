@@ -1,5 +1,5 @@
 <?php
-// $Id: webform-mail.tpl.php,v 1.2 2009/06/17 23:01:32 quicksketch Exp $
+// $Id: webform-mail.tpl.php,v 1.1.2.5 2009/11/06 00:59:47 quicksketch Exp $
 
 /**
  * @file
@@ -23,19 +23,24 @@
  * logic on CIDs you can customize various e-mails.
  */
 ?>
-<?php print t('Submitted on %date'); ?>
+<?php print t('Submitted on @date', array('@date' => format_date(time(), 'small'))) ?>
 
 <?php if ($user->uid): ?>
-<?php print t('Submitted by user: %username'); ?>
+<?php print t('Submitted by user: @username [@ip_address]', array('@username' => $user->name, '@ip_address' => $ip_address)) ?>
 <?php else: ?>
-<?php print t('Submitted by anonymous user: [%ip_address]'); ?>
+<?php print t('Submitted by anonymous user: [@ip_address]', array('@ip_address' => $ip_address)) ?>
 <?php endif; ?>
 
 
 <?php print t('Submitted values are') ?>:
 
-%email_values
+<?php
+  // Print out all the Webform fields. This is purposely a theme function call
+  // so that you may remove items from the submitted tree if you so choose.
+  // unset($form_values['submitted_tree']['element_key']);
+  print theme('webform_mail_fields', 0, $form_values['submitted_tree'], $node);
+?>
 
 <?php print t('The results of this submission may be viewed at:') ?>
 
-%submission_url
+<?php print url('node/'. $node->nid .'/submission/'. $sid, array('absolute' => TRUE)) ?>

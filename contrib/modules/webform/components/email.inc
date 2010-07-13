@@ -1,5 +1,5 @@
 <?php
-// $Id: email.inc,v 1.22 2009/06/20 23:04:58 quicksketch Exp $
+// $Id: email.inc,v 1.19.2.12 2009/03/04 05:05:12 quicksketch Exp $
 
 /**
  * @file
@@ -21,6 +21,7 @@ function _webform_defaults_email() {
     'extra' => array(
       'width' => '',
       'disabled' => 0,
+      'email' => 0,
       'description' => '',
       'attributes' => array(),
     ),
@@ -65,6 +66,13 @@ function _webform_edit_email($currfield) {
     '#size' => 5,
     '#maxlength' => 10,
   );
+  $edit_fields['extra']['email'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('E-mail a submission copy'),
+    '#return_value' => 1,
+    '#default_value' => $currfield['extra']['email'],
+    '#description' => t('Check this option if this component contains an e-mail address that should get a copy of the submission. Emails are sent individually so other emails will not be shown to the recipient.'),
+  );
   $edit_fields['extra']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disabled'),
@@ -107,7 +115,6 @@ function _webform_render_email($component) {
     '#suffix'        => '</div>',
     '#element_validate'  => array('_webform_validate_email'),
     '#webform_component' => $component,
-    '#form_builder'  => array('element_type' => 'email'),
   );
 
   if ($component['extra']['disabled']) {
@@ -160,41 +167,6 @@ function _webform_submission_display_email($data, $component, $enabled = FALSE) 
     $form_item['#attributes']['readonly'] = 'readonly';
   }
   return $form_item;
-}
-
-/**
- * Convert a FAPI form element into settings savable in a component.
- */
-function _webform_form_builder_save_email(&$component, $form_element) {
-  $component['extra']['width'] = isset($form_element['#size']) ? $form_element['#size'] : NULL;
-  $component['extra']['description'] = isset($form_element['#description']) ? $form_element['#description'] : NULL;
-  $component['extra']['disabled'] = isset($form_element['#disabled']) ? $form_element['#disabled'] : FALSE;
-}
-
-/**
- * Module specific instance of hook_form_builder_types().
- */
-function _webform_form_builder_types_email() {
-  $fields = array();
-
-  $fields['email'] = array(
-    'title' => t('E-mail'),
-    'properties' => array(
-      'title',
-      'description',
-      'default_value',
-      'required',
-      'size',
-      'key',
-    ),
-    'default' => array(
-      '#title' => t('New e-mail'),
-      '#type' => 'textfield',
-      '#form_builder' => array('element_type' => 'email'),
-    ),
-  );
-
-  return $fields;
 }
 
 /**

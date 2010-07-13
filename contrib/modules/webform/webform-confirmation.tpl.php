@@ -1,5 +1,5 @@
 <?php
-// $Id: webform-confirmation.tpl.php,v 1.1 2009/05/22 03:11:18 quicksketch Exp $
+// $Id: webform-confirmation.tpl.php,v 1.1.2.3 2009/01/09 08:31:06 quicksketch Exp $
 
 /**
  * @file

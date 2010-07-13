@@ -1,5 +1,5 @@
 <?php
-// $Id: hidden.inc,v 1.15 2009/06/20 23:04:58 quicksketch Exp $
+// $Id: hidden.inc,v 1.12.2.11 2009/03/04 05:05:12 quicksketch Exp $
 
 /**
  * @file
@@ -17,6 +17,7 @@ function _webform_defaults_hidden() {
     'weight' => 0,
     'value' => '',
     'extra' => array(
+      'email' => 0,
     ),
   );
 }
@@ -45,6 +46,13 @@ function _webform_edit_hidden($currfield) {
     '#type' => 'hidden',
     '#value' => 1,
   );
+  $edit_fields['extra']['email'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('E-mail a submission copy'),
+    '#return_value' => 1,
+    '#default_value' => $currfield['extra']['email'],
+    '#description' => t('Check this option if this component contains an e-mail address that should get a copy of the submission. Emails are sent individually so other emails will not be shown to the recipient.'),
+  );
   $edit_fields['extra']['description'] = array(); // Hide the description box.
   return $edit_fields;
 }
@@ -57,11 +65,10 @@ function _webform_edit_hidden($currfield) {
  * @return
  *   An array of a form item to be displayed on the client-side webform.
  */
-function _webform_render_hidden($component, $filter = TRUE) {
+function _webform_render_hidden($component) {
   $form_item = array(
     '#type'          => 'hidden',
-    '#title'         => $component['name'],
-    '#default_value' => $filter ? _webform_filter_values($component['value']) : $component['value'],
+    '#default_value' => _webform_filter_values($component['value']),
     '#weight'        => $component['weight'],
   );
 
@@ -95,39 +102,6 @@ function _webform_submission_display_hidden($data, $component, $enabled = FALSE)
     }
   }
   return $form_item;
-}
-
-/**
- * Module specific instance of hook_form_builder_preview_alter().
- *
- * Make hidden fields visible while editing.
- */
-function _webform_form_builder_preview_alter_hidden(&$form_element) {
-  $form_element['#field_suffix'] = '(' . t('hidden') . ')';
-  $form_element['#autocomplete_path'] = NULL; // Needed to avoid notices.
-  $form_element['#type'] = 'textfield';
-}
-
-/**
- * Module specific instance of hook_form_builder_types().
- */
-function _webform_form_builder_types_hidden() {
-  $fields = array();
-
-  $fields['hidden'] = array(
-    'title' => t('Hidden'),
-    'properties' => array(
-      'title',
-      'default_value',
-      'key',
-    ),
-    'default' => array(
-      '#title' => t('Hidden field'),
-      '#type' => 'hidden',
-    ),
-  );
-
-  return $fields;
 }
 
 /**

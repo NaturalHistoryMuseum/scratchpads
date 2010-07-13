@@ -1,5 +1,5 @@
 <?php
-// $Id: select.inc,v 1.25 2009/06/20 23:04:58 quicksketch Exp $
+// $Id: select.inc,v 1.22.2.30 2009/11/06 00:49:00 quicksketch Exp $
 
 /**
  * @file
@@ -20,6 +20,7 @@ function _webform_defaults_select() {
     'value' => '',
     'extra' => array(
       'items' => '',
+      'email' => 0,
       'multiple' => NULL,
       'aslist' => NULL,
       'description' => '',
@@ -72,7 +73,14 @@ function _webform_edit_select($currfield) {
     '#default_value' => $currfield['extra']['aslist'],
     '#description' => t('Check this option if you want the select component to be of listbox type instead of radiobuttons or checkboxes.'),
   );
-
+  $edit_fields['extra']['email'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('E-mail a submission copy'),
+    '#return_value' => 1,
+    '#default_value' => $currfield['extra']['email'],
+    '#description' => t('Check this option if this component contains an e-mail address that should get a copy of the submission. Emails are sent individually so other emails will not be shown to the recipient.') .' '.
+                      t('To use the option with a select component, you must use key-value pairs seperated by pipes. i.e. user@example.com|Sample user.'),
+  );
   return $edit_fields;
 }
 
@@ -126,25 +134,22 @@ function _webform_edit_validate_select($element, $form_state) {
  * @param $component
  *   An array of information describing the component, directly correlating to
  *   the webform_component database schema.
- * @param $filter
- *   Whether or not to filter the descriptions and values within this component.
- *   Values need to be unfiltered to be edited in Form Builder.
  * @return
  *   An array of a form item to be displayed on the client-side webform.
  */
-function _webform_render_select($component, $filter = TRUE) {
+function _webform_render_select($component) {
   $form_item = array(
     '#title'         => $component['name'],
     '#required'      => $component['mandatory'],
     '#weight'        => $component['weight'],
-    '#description'   => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
+    '#description'   => _webform_filter_descriptions($component['extra']['description']),
     '#prefix'        => '<div class="webform-component-'. $component['type'] .'" id="webform-component-'. $component['form_key'] .'">',
     '#suffix'        => '</div>',
   );
 
   // Convert the user-entered options list into an array.
-  $default_value = $filter ? _webform_filter_values($component['value'], NULL, NULL, FALSE) : $component['value'];
-  $options = _webform_select_options($component['extra']['items'], $component['extra']['aslist'] !== 'Y', $filter);
+  $default_value = _webform_filter_values($component['value'], NULL, NULL, FALSE);
+  $options = _webform_select_options($component['extra']['items'], $component['extra']['aslist'] !== 'Y');
 
   if ($component['extra']['aslist'] === 'Y' && $component['extra']['multiple'] !== 'Y') {
     $options = array('' => t('select...')) + $options;
@@ -199,14 +204,14 @@ function webform_expand_checkboxes($element) {
   $default_value = array();
   foreach (element_children($element) as $key) {
     if (isset($element[$key]['#default_value'])) {
-      $default_value[] = $key;
+      $default_value[$key] = $element[$key]['#default_value'];
       unset($element[$key]);
     }
   }
 
   $element = expand_checkboxes($element);
-  foreach ($default_value as $key) {
-    $element[$key]['#default_value'] = 1;
+  foreach ($default_value as $key=>$val) {
+    $element[$key]['#default_value'] = $val;
   }
   return $element;
 }
@@ -274,103 +279,6 @@ function _webform_submit_select(&$data, $component) {
       }
     }
   }
-}
-
-/**
- * Module specific instance of hook_form_builder_types().
- */
-function _webform_form_builder_types_select() {
-  $fields = array();
-
-  $fields['select'] = array(
-    'title' => t('Select list'),
-    'properties' => array(
-      'title',
-      'description',
-      'default_value',
-      'required',
-      'options',
-      'multiple',
-      'key',
-    ),
-    'default' => array(
-      '#title' => t('New select list'),
-      '#type' => 'select',
-      '#options' => array('one' => 'one', 'two' => 'two', 'three' => 'three'),
-      '#default_value' => 'one',
-      '#webform' => array('type' => 'select'),
-    ),
-  );
-
-  $fields['checkboxes'] = array(
-    'title' => t('Checkboxes'),
-    'properties' => array(
-      'title',
-      'description',
-      'default_value',
-      'required',
-      'options',
-      'multiple',
-      'key',
-    ),
-    'default' => array(
-      '#title' => t('New checkboxes'),
-      '#type' => 'checkboxes',
-      '#options' => array('one' => 'one', 'two' => 'two', 'three' => 'three'),
-      '#default_value' => array('one', 'two'),
-      '#multiple' => TRUE,
-      '#webform' => array('type' => 'select'),
-    ),
-  );
-
-  $fields['radios'] = array(
-    'title' => t('Radios'),
-    'properties' => array(
-      'title',
-      'description',
-      'default_value',
-      'required',
-      'options',
-      'key',
-    ),
-    'default' => array(
-      '#title' => t('New radios'),
-      '#type' => 'radios',
-      '#options' => array('one' => 'one', 'two' => 'two', 'three' => 'three'),
-      '#default_value' => 'one',
-      '#webform' => array('type' => 'select'),
-    ),
-  );
-
-  return $fields;
-}
-
-/**
- * Module specific instance of hook_form_builder_load().
- */
-function _webform_form_builder_load_select(&$form_element) {
-  if (in_array($form_element['#type'], array('radios', 'checkboxes', 'select'))) {
-    $form_element['#webform']['type'] = 'select';
-    if ($form_element['#type'] == 'checkboxes') {
-      $form_element['#multiple'] = TRUE;
-    }
-  }
-}
-
-/**
- * Convert a FAPI form element into settings savable in a component.
- */
-function _webform_form_builder_save_select(&$component, $form_element) {
-  $options = '';
-
-  foreach ($form_element['#options'] as $key => $value) {
-    $options .= $key .'|'. $value ."\n";
-  }
-
-  $component['extra']['items'] = $options;
-  $component['extra']['multiple'] = empty($form_element['#multiple']) ? 'N' : 'Y';
-  $component['extra']['aslist'] = $form_element['#type'] == 'select' ? 'Y' : 'N';
-  $component['extra']['description'] = isset($form_element['#description']) ? $form_element['#description'] : '';
 }
 
 /**
@@ -575,10 +483,8 @@ function _webform_csv_data_select($data, $component) {
  *   Text to be converted into a select option array.
  * @param $flat
  *   Optional. If specified, return the option array and exclude any optgroups.
- * @param $filter
- *   Optional. Whether or not to filter returned values.
  */
-function _webform_select_options($text, $flat = FALSE, $filter = TRUE) {
+function _webform_select_options($text, $flat = FALSE) {
   $options = array();
   $rows = array_filter(explode("\n", trim($text)));
   $group = NULL;
@@ -599,16 +505,16 @@ function _webform_select_options($text, $flat = FALSE, $filter = TRUE) {
         unset($group);
       }
       elseif (!$flat) {
-        $group = $filter ? _webform_filter_values($matches[1], NULL, NULL, FALSE) : $matches[1];
+        $group = _webform_filter_values($matches[1], NULL, NULL, FALSE);
       }
     }
     elseif (preg_match('/^([^|]+)\|(.*)$/', $option, $matches)) {
-      $key = $filter ? _webform_filter_values($matches[1], NULL, NULL, FALSE) : $matches[1];
-      $value = $filter ? _webform_filter_values($matches[2], NULL, NULL, FALSE) : $matches[2];
+      $key = _webform_filter_values($matches[1], NULL, NULL, FALSE);
+      $value = _webform_filter_values($matches[2], NULL, NULL, FALSE);
       isset($group) ? $options[$group][$key] = $value : $options[$key] = $value;
     }
     else {
-      $filtered_option = $filter ? _webform_filter_values($option, NULL, NULL, FALSE) : $option;
+      $filtered_option = _webform_filter_values($option, NULL, NULL, FALSE);
       isset($group) ? $options[$group][$filtered_option] = $filtered_option : $options[$filtered_option] = $filtered_option;
     }
   }

@@ -1,5 +1,5 @@
 <?php
-// $Id: webform.report.inc,v 1.1 2009/06/15 20:31:02 quicksketch Exp $
+// $Id: webform_report.inc,v 1.17.2.15 2009/03/04 05:05:12 quicksketch Exp $
 
 /**
  * @file
@@ -10,8 +10,8 @@
  * @copyright Pontus Ullgren 2004
  */
 
-// All functions within this file need the webform.submissions.inc.
-module_load_include('inc', 'webform', 'includes/webform.submissions');
+// All functions within this file need the webform_submissions.inc.
+module_load_include('inc', 'webform', 'webform_submissions');
 
 /**
  * Retrieve lists of submissions for a given webform.
@@ -300,7 +300,7 @@ function webform_results_clear_form_submit($form, &$form_state) {
  * Form to configure the download of CSV files.
  */
 function webform_results_download_form(&$form_state, $node) {
-  module_load_include('inc', 'webform', 'includes/webform.export');
+  module_load_include('inc', 'webform', 'webform_export');
 
   $form = array();
 
@@ -377,7 +377,7 @@ function webform_results_download_form_submit(&$form, &$form_state) {
  *
  */
 function webform_results_download($node, $format = 'delimiter', $options = array()) {
-  module_load_include('inc', 'webform', 'includes/webform.export');
+  module_load_include('inc', 'webform', 'webform_export');
 
   if (empty($options)) {
     $options = array(
