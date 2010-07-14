@@ -36,7 +36,8 @@ function _scratchpadify_block($op, $delta, $edit){
               )
             ),
             'publication' => array('import' => FALSE),
-            'nexus_project' => array('import' => FALSE),
+            'nexus_project' => array(
+              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>','nexus/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a nexus file')))))),
             'forum' => array('view' => 'forum'),
             'blog' => array('view' => 'blog'),
             'group' => array('view' => 'og', 'import' => FALSE)
