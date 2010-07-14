@@ -13,7 +13,7 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     $terms = array(
       $term->tid => $term
     );
-    module_invoke_all('taxonomy_term_load', $terms);
+    _tui_module_invoke_all_by_reference('taxonomy_term_load', $terms);
     $term = array_pop($terms);
     $term_has_children = FALSE;
     if(!is_array($branch) || !count($branch)){
@@ -32,7 +32,7 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     if($active == $term->tid){
       $output .= ' active';
     }
-    if(isset($term->usage) && ($term->usage == 4 || $term->usage == 2)){
+    if(isset($term->usage) && ($term->usage == 'invalid' || $term->usage == 'not accepted')){
       $output .= ' usage-invalid';
     }
     $output .= '" id="tid-' . $term->tid . '">' . check_plain($term->name) . '</span></p>';
@@ -42,6 +42,20 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     $output .= '</li>';
   }
   return $output . '</ul>';
+}
+
+/**
+ * Invoke all pass by reference.  This doesn't belong here, but here it is for
+ * now.
+ */
+function _tui_module_invoke_all_by_reference($hook, &$args){
+  $modules = module_list();
+  foreach($modules as $module => $values){
+    if(function_exists($module.'_'.$hook)){
+      $function = $module.'_'.$hook;
+      $function($args);
+    }
+  }
 }
 
 /**
