@@ -9,7 +9,8 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
     'imageapi',
     'imageapi_imagemagick',
     'filefield',
-    'imagefield'
+    'imagefield',
+    'plupload'
   );
   foreach($modules as $module){
     if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
