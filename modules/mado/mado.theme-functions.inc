@@ -7,7 +7,7 @@
  */
 function mado_get_blocks($all_views = FALSE){
   $blocks_and_views = array ();
-  $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', array(
+  $default_to_ignore = array(
       'views' => array('biblio', // Hide Biblio as we have the improved biblio_table view
         'darwincore',
         'darwincorelocation',
@@ -66,7 +66,11 @@ function mado_get_blocks($all_views = FALSE){
         'system' => array('all' => TRUE),
         'user' => array('all' => TRUE),
         'views' => array('ids' => array('og_members_block-block','og_my-block_1','og_files-block_1','og_members_block-block_1'))
-      )));
+      ));
+  foreach(array_keys(node_get_types('names')) as $name){
+    $default_to_ignore['views'][] = 'matrix_editor_'.$name;
+  }
+  $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', $default_to_ignore);
   foreach ( views_get_all_views () as $view ) {
     if ((($view->display ['default']->display_options ['arguments'] ['tid'] || 
         $view->display ['default']->display_options ['arguments'] ['term_node_tid_depth'])
