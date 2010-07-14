@@ -299,7 +299,7 @@ function tui_taxonomy_form_pre_render($form){
     $class = ' class="tui-hide-tabs"';
   }
   foreach($form as $key => $value){
-    if(isset($value['#type']) && $value['#type'] == 'fieldset'){
+    if(isset($value['#type']) && $value['#type'] == 'fieldset' && $key != 'term_node'){
       $tab_html .= '<li' . $class . ' title="' . $value['#title'] . '"><a href="#fragment-' . $key . '"><span>';
       if($class && strlen($value['#title']) > 8){
         $tab_html .= substr($value['#title'], 0, 5) . '...';
@@ -312,6 +312,19 @@ function tui_taxonomy_form_pre_render($form){
       $form[$key]['#collapsible'] = FALSE;
       $form[$key]['#collapsed'] = FALSE;
     }
+  }
+  if(isset($form['term_node'])){
+    $tab_html .= '<li' . $class . ' title="' . $form['term_node']['#title'] . '"><a href="#fragment-term_node"><span>';
+    if($class && strlen($form['term_node']['#title']) > 8){
+      $tab_html .= substr($form['term_node']['#title'], 0, 5) . '...';
+    }else{
+      $tab_html .= $form['term_node']['#title'];
+    }
+    $tab_html .= '</span></a></li>';
+    $form['term_node']['#prefix'] = '<div id="fragment-term_node">';
+    $form['term_node']['#suffix'] = '</div>';
+    $form['term_node']['#collapsible'] = FALSE;
+    $form['term_node']['#collapsed'] = FALSE;    
   }
   $tab_html .= '</ul>';
   if(isset($form['group_scientificname']) && isset($form['identification']['parent_message'])){
