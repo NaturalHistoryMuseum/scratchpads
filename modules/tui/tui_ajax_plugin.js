@@ -20,7 +20,7 @@ $(document).ready(function(){
         Drupal.tui.form_being_displayed = false;
       }
       setTimeout("$('.messages').slideUp(200, Drupal.tui.display_form(false))", 2000);
-      Drupal.tui.reload_tree(true);
+      Drupal.tui.reload_tree();
       return false;
     }
   }

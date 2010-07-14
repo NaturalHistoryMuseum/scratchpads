@@ -77,6 +77,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       $('#'+Drupal.tui.term_id).addClass('tui-added-original');
       Drupal.tui.term_id = 'new-'+Drupal.settings.tui.vocabulary+'-'+Drupal.tui.term_id;
       Drupal.tui.display_form(false);
+      Drupal.tui.add_clicked = true;
       break;
     case 'tui-delete':
       if(Drupal.tui.term_id){
@@ -84,7 +85,7 @@ Drupal.tui.click_buttonclick = function(img_clicked){
         $('#dialog').attr('title', Drupal.settings.tui.dialog.dlete.title);
         $('#dialog').html(Drupal.settings.tui.dialog.dlete.content);
         $('#tui-dialog-term-name').html($('.tui-term.active').html());
-        $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$(this).dialog("close");}},width:'450px',height:'150px'});
+        $('#dialog').dialog({modal:true,buttons:{"Cancel":function(){$(this).dialog("close");},"OK":function(){Drupal.tui.do_delete(Drupal.tui.term_id);$('#tui-form-container').html('');$('#tui-name-editing').html('');$(this).dialog("close");}},width:'450px',height:'150px'});
       }
       break;
     case 'tui-import':
@@ -291,6 +292,10 @@ Drupal.tui.form_success = function(data){
 }
 
 Drupal.tui.display_form = function(element){
+  if($(element).attr('id')){
+    Drupal.settings.tui.opentids[$(element).attr('id').substring(4)] = $(element).attr('id').substring(4);
+  }
+  Drupal.tui.add_clicked = false;
   if(element){
     $('.tui-term').removeClass('active');
     Drupal.tui.form_being_displayed = $(element).attr('id');
@@ -303,9 +308,9 @@ Drupal.tui.display_form = function(element){
   $.ajax({cache:false,url:Drupal.settings.tui.callbacks.form+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.form_success(data);}}); 
 }
 
-Drupal.tui.reload_tree = function(display_added){
+Drupal.tui.reload_tree = function(){
   var callback_url = Drupal.settings.tui.callbacks.full_tree+"/"+Drupal.settings.tui.vocabulary;
-  if(display_added){
+  if(Drupal.tui.add_clicked){
     callback_url += "/added";
   }
   $.ajax({type:'POST',cache:false,url:callback_url,success:function(data){Drupal.tui.full_tree_success(data);},data:Drupal.settings.tui.opentids});
