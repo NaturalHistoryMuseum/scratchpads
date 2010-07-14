@@ -272,36 +272,65 @@ function scratchpadify_install(){
   // Set OpenID for Biblio
   variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
   variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');
+  // Count content views  
+  variable_set('statistics_count_content_views', 1);
 }
 
-function scratchpadify_update_6101(){
-  // Remove the fileshare module
-  db_query("DELETE FROM {system} WHERE name = 'fileshare'");
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6102(){
-  // Removed as 6119 overwrites this.
-  return array(
-    '#finished' => TRUE
-  );
-}
-
+/**
+ * -------------- UPDATES ------------------------------------------------------
+ * 
+ * 6101: Remove fileshare module *
+ * 6102: WYSIWYG *
+ * 6103: Set weight range to 90
+ * 6104: Update permissions *
+ * 6105: Convert profiles to content_profile
+ * 6106: Boost settings *
+ * 6107: Boost settings
+ * 6108: Term relation types for classification module *
+ * 6109: *
+ * 6110: *
+ * 6111: *
+ * 6112: Set sticky weight for after upgrade
+ * 6113: *
+ * 6114: Fix issue with path_redirect after upgrade
+ * 6115: Update permissions *
+ * 6116: *
+ * 6117: Sites list variables *
+ * 6118: Don't preprocess JS *
+ * 6119: *
+ * 6120: WYSIWYG *
+ * 6121: Set statistics to count content views
+ * 6122: Fix shitty CC_lite
+ * 6123: Update permissions *
+ * 6124: *
+ * 6125: Sites list variables *
+ * 6126: Menu update *
+ * 6127: Update permissions *
+ * 6128: Vertical tabs fieldsets
+ * 6129: Og Forum stuff
+ * 6130: Og_userroles
+ * 6131: Clean up url_alias table
+ * 6132: Clean up url_alias table *
+ * 6133: Update permissions *
+ * 6134: Delete vertical tab fieldsets variables
+ * 6135: WYSIWYG Settings
+ * 6136: Max image size
+ * 6137: IMCE settings
+ * 6138: Update permissions *
+ * 6139: Fix issue with path_redirect module
+ * 6140: Upgrade classification -> term_node
+ * 6141: Fix publication and specimen image fields in upgraded sites
+ * 6142: Fix messaging modules
+ * 6143: Clear all caches and other bits and bobs
+ * 6144: OpenID URL and Image settings
+ * 
+ * * Updates removed as later updates render them unnecessary.
+ */
 function scratchpadify_update_6103(){
   variable_set('weight_range', 90);
   return array(
     '#finished' => TRUE
   );
-}
-
-function scratchpadify_update_6104(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
 }
 
 function scratchpadify_update_6105(){
@@ -366,46 +395,10 @@ function scratchpadify_update_6105(){
   }
 }
 
-function scratchpadify_update_6106(){
-  // Boost/Performance
-  variable_set('boost', 1);
-  variable_set('boost_gzip', 0);
-  variable_set('boost_expire_cron', 1);
-  variable_set('cache_lifetime', 3600);
-  variable_set('boost_clear_cache_offline', 1);
-  variable_set('boost_halt_on_errors', 1);
-  variable_set('preprocess_css', 1);
-  variable_set('preprocess_js', 1);
-  return array(
-    '#finished' => TRUE
-  );
-}
-
 function scratchpadify_update_6107(){
   // we'll try this one again
   db_query("DELETE FROM {variable} WHERE name LIKE 'boost%'");
   variable_set('boost_enabled', 1);
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6108(){
-  $relationTypes = array(
-    1 => "synonym",
-    2 => "synonym (objective = homotypic)",
-    3 => "synonym (subjective = heterotypic)",
-    4 => "lexical variant",
-    5 => "disputed synonym",
-    6 => "spelling alternative",
-    7 => "incorrect spelling",
-    8 => "incorrect authority information",
-    9 => "vernacular name",
-    10 => "usage reference"
-  );
-  foreach($relationTypes as $key => $value){
-    db_query("INSERT INTO {term_relation_types} (rtid,name) VALUES (%d,'%s')", $key, $value);
-  }
   return array(
     '#finished' => TRUE
   );
@@ -429,32 +422,6 @@ function scratchpadify_update_6114(){
   $ret[] = update_sql("DELETE FROM path_redirect WHERE path IS NULL");
   $ret[] = update_sql("TRUNCATE {boost_cache}");
   return $ret;
-}
-
-function scratchpadify_update_6115(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6117(){
-  variable_del('scratchpadify_sites_list');
-  variable_del('scratchpadify_last_reported');
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6118(){
-  variable_set('preprocess_js', 0);
-  return array(
-    '#finished' => TRUE
-  );
 }
 
 // 6119 removed as 6120 replaces it completely.
@@ -557,40 +524,6 @@ function scratchpadify_update_6122(){
   return $ret;
 }
 
-function scratchpadify_update_6123(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
-}
-
-function scratchpadify_update_6125(){
-  // Delete the variables and start again with the new stuff.
-  variable_del('scratchpadify_sites_list');
-  variable_del('scratchpadify_last_reported');
-  variable_del('scratchpad_sites_list');
-  variable_del('scratchpad_last_reported');
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6126(){
-  // Blank just to update the menu.
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-function scratchpadify_update_6127(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
-}
-
 //function scratchpadify_update_6111(){
 function scratchpadify_update_6128(){
   $node_types = array(
@@ -684,35 +617,14 @@ function scratchpadify_update_6130(){
 }
 
 /**
- * Clean up URL_ALIAS table
+ * Clean up URL_ALIAS table - properly now that we have a fix for the issue
  */
-function scratchpadify_update_6131(){
+function scratchpadify_update_6132(){
   $ret = array();
   $ret[] = update_sql("CREATE TEMPORARY TABLE url_alias_temp AS ( SELECT lft.pid FROM {url_alias} lft, {url_alias} rgt WHERE lft.dst = rgt.dst AND lft.language='en' AND lft.pid != rgt.pid)");
   $ret[] = update_sql("DELETE FROM {url_alias} WHERE pid IN (SELECT pid FROM url_alias_temp)");
   $ret[] = update_sql("UPDATE url_alias SET language = 'en' WHERE language = ''");
   return $ret;
-}
-
-/**
- * Clean up URL_ALIAS table - properly now that we have a fix for the issue
- */
-function scratchpadify_update_6132(){
-  scratchpadify_update_6131();
-}
-
-/**
- * Fix permissions - AGAIN!
- */
-function scratchpadify_update_6133(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
-  return array(
-    '#finished' => TRUE
-  );
 }
 
 /**
@@ -768,22 +680,6 @@ function scratchpadify_update_6137(){
       )
     )
   ));
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-/**
- * Add image.module permissions.
- */
-function scratchpadify_update_6138(){
-  // Update permissions
-  if(variable_get('scratchpadify_is_scratchpad', FALSE)){
-    require_once ("profiles/scratchpad/scratchpad.profile");
-    if(function_exists("scratchpad_profile_set_perms")){
-      scratchpad_profile_set_perms();
-    }
-  }
   return array(
     '#finished' => TRUE
   );
@@ -1062,7 +958,7 @@ function scratchpadify_update_6142(){
 /**
  * FUCK, I've almost rolled out some shit before I should have done.
  */
-function scratchpadify_update_6143(){  
+function scratchpadify_update_6143(){
   // Clear ALL CACHE, AND SESSIONS  
   drupal_rebuild_theme_registry();
   node_types_rebuild();
@@ -1071,7 +967,7 @@ function scratchpadify_update_6143(){
   cache_clear_all('*', 'cache_views_data', TRUE);
   cache_clear_all('*', 'cache_menu', TRUE);
   drupal_clear_css_cache();
-  drupal_clear_js_cache();  
+  drupal_clear_js_cache();
   return array(
     '#finished' => TRUE
   );
@@ -1082,7 +978,7 @@ function scratchpadify_update_6143(){
  */
 function scratchpadify_update_6144(){
   variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
-  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');  
+  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');
   return array(
     '#finished' => TRUE
   );
