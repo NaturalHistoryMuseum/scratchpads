@@ -753,3 +753,13 @@ return array(
   content_clear_type_cache(TRUE);
   return $ret;
 }
+
+/**
+ * Change rank to not be required.
+ */
+function itis_term_update_6102(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE {content_node_field} SET required = 0 WHERE field_name = 'field_rank_name'");
+  content_clear_type_cache(TRUE);
+  return $ret;
+}

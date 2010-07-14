@@ -88,6 +88,8 @@ function itis_term_form_alter(&$form, &$form_state, $form_id){
     $form['group_scientificname']['field_unit_ind3']['#suffix'] = '</div>';
     $form['group_scientificname']['field_unit_ind4']['#prefix'] = '<div id="itis_term_unit_ind4" class="itis_term_unit">';
     $form['group_scientificname']['field_unit_ind4']['#suffix'] = '</div>';
+    $form['group_reference']['field_taxon_author']['#prefix'] = '<div id="itis_taxon_author">';
+    $form['group_reference']['field_taxon_author']['#suffix'] = '</div>';
     $form['group_usage']['field_usage']['#prefix'] = '<div id="itis_term_usage">';
     $form['group_usage']['field_usage']['#suffix'] = '</div>';
     $form['group_usage']['field_accepted_name']['#prefix'] = '<div id="itis_term_accepted_name">';
@@ -123,11 +125,6 @@ function itis_term_validate($form, &$form_state){
   if(isset($form_state['values']['field_usage'][0]['value'])){
     if(!$form_state['values']['field_usage'][0]['value']){
       form_set_error('field_usage', t('Please select a "Name usage".'));
-    }
-  }
-  if(isset($form_state['values']['field_rank_name'][0]['value'])){
-    if(!$form_state['values']['field_rank_name'][0]['value']){
-      form_set_error('field_rank_name', t('Please select a "Rank".'));
     }
   }
 }
