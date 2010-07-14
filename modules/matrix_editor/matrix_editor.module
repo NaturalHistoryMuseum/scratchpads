@@ -370,10 +370,8 @@ function matrix_editor_to_js($elements, $additional_function_names = array()){
         $js_string .= $inner_conjunction;
         if(in_array($element_name, $function_names) || is_numeric($element_value) || is_bool($element_value)){
           $js_string .= $element_name . ': ' . $element_value;
-        }elseif(is_array($element_value)){
-          $js_string .= $element_name . ': ' . drupal_to_js($element_value);
         }else{
-          $js_string .= $element_name . ': "' . $element_value . '"';
+          $js_string .= $element_name . ': ' . drupal_to_js($element_value);
         }
         $inner_conjunction = ', ';
       } // End of foreach($element)
