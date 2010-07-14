@@ -1308,7 +1308,7 @@ function scratchpadify_views_default_views(){
   ));
   $views[$view->name] = $view;
   // ---------------------- IMAGE GALLERY THUMBNAILS ---------------------------
-  /*$vid_of_image_gallery = variable_get('image_gallery_nav_vocabulary', 0);
+  $vid_of_image_gallery = variable_get('image_gallery_nav_vocabulary', 0);
   $view = new view();
   $view->name = 'image_thumbnails';
   $view->description = 'Image Gallery Thumbnails';
@@ -1377,7 +1377,7 @@ function scratchpadify_views_default_views(){
   $handler->override_option('path', 'image');
   $handler = $view->new_display('page', 'Page', 'page_2');
   $handler->override_option('path', 'image/tid');
-  $views[$view->name] = $view;*/
+  $views[$view->name] = $view;
   // ---------------------- BIBLIO SELECT VIEW ---------------------------------
   $view = new view();
   $view->name = 'biblio_nodes';

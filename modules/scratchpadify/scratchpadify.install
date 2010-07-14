@@ -323,6 +323,8 @@ function scratchpadify_install(){
  * 6142: Fix messaging modules
  * 6143: Clear all caches and other bits and bobs
  * 6144: OpenID URL and Image settings
+ * 6145: Upgrade image.module to imagefield.module
+ * 6146: Convert bio_image vocabularies
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -985,15 +987,15 @@ function scratchpadify_update_6144(){
 }
 /**
  * Upgrade from image module to imagecache etc.
-function scratchpadify_update_6143(){
+ */
+function scratchpadify_update_6145(){
   include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
   return migrate_image_to_imagefield();
 }
- */
 
 /**
  * Update bio_image vocabularies.
-function scratchpadify_update_6144(){
+ */
+function scratchpadify_update_6146(){
   update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
 }
- */

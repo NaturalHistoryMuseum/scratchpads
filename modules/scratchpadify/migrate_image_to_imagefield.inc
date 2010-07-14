@@ -22,13 +22,13 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   }
   // Set the variable for the Image gallery
   variable_set('image_gallery_vid', variable_get('image_gallery_nav_vocabulary', 0));
-  module_enable($modules);
   include_once './includes/install.inc';
   drupal_install_modules($modules);
   $ret[] = array(
     'success' => TRUE,
     'query' => t('Required modules installed.')
   );
+  module_enable($modules);
   // Clear caches (we'll do this again at the end).
   drupal_rebuild_theme_registry();
   node_types_rebuild();
@@ -227,6 +227,20 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       );
     }
   }
+  // Finally, put all nodes into the Library image gallery.
+  $library_tid = variable_get('imagex_gallery_tid', FALSE);
+  if(!$library_tid){
+    // Try and get the Library tid
+  }
+  if($library_tid){
+    // First delete current
+    $ret[] = update_sql("DELETE FROM {term_node} WHERE vid IN (SELECT vid FROM {content_$field_name})");
+    // Next do insert
+    $ret[] = update_sql("INSERT INTO {term_node} (nid, vid, tid) SELECT nid, vid, $library_tid FROM {content_$field_name}");
+  }
+  // Change the vocabulary to "scratchpadify"
+  $ret[] = update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'image_gallery'");  
+  
   // Clear ALL CACHE, AND SESSIONS  
   drupal_rebuild_theme_registry();
   node_types_rebuild();
