@@ -269,6 +269,9 @@ function scratchpadify_install(){
     // Add the field
     content_field_instance_create($field);
   }
+  // Set OpenID for Biblio
+  variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
+  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');
 }
 
 function scratchpadify_update_6101(){
@@ -1074,6 +1077,16 @@ function scratchpadify_update_6143(){
   );
 }
 
+/**
+ * Set OpenID for Biblio
+ */
+function scratchpadify_update_6144(){
+  variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
+  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');  
+  return array(
+    '#finished' => TRUE
+  );
+}
 /**
  * Upgrade from image module to imagecache etc.
 function scratchpadify_update_6143(){
