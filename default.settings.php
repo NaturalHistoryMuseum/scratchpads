@@ -3,6 +3,21 @@
 $conf = array(
   'file_directory_temp' => '/tmp',  
   'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files',
+  'cache_inc' => './sites/all/modules/memcache/memcache.inc',
+  'memcache_bins' => array(
+    'cache' => 'default',
+    'cache_filter' => 'filter',
+    'cache_menu' => 'menu',
+    'cache_page' => 'page',
+    'cache_block' => 'block',
+    'cache_content' => 'content',
+    'cache_form' => 'form',
+    'cache_location' => 'location',
+    'cache_mollom' => 'mollom',
+    'cache_term' => 'term',
+    'cache_views' => 'views',
+    'cache_views_data' => 'views_data'
+  )
 );
 
 // Automatic DB, user, password configuration
@@ -23,6 +38,9 @@ if(!isset($user_password[$database])){
   header('Location: http://scratchpads.eu/');
   exit;
 }
+
+// Memcache unique key
+$conf['memcache_key_prefix'] = $database;
 
 $db_url = 'mysqli://' . $user_password[$database]['user'] . ':'. $user_password[$database]['password'] . '@localhost/'. $database;
 $db_prefix = '';
