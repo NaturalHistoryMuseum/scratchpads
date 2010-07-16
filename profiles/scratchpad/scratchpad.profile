@@ -353,6 +353,8 @@ function scratchpad_profile_tasks_2(){
   foreach($openids as $openid){
     db_query("INSERT INTO {authmap} (uid,authname,module) VALUES (1,'%s','openid')", $openid);
   }
+  // Set page cache to "Normal"
+  variable_set('cache', 1);
   // Delete the filter HTML filter, and update Full to be the default
   db_query("DELETE FROM {filters} WHERE format = 1");
   db_query("DELETE FROM {filter_formats} WHERE format = 1");
