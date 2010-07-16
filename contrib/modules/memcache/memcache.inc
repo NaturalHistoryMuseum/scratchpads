@@ -258,10 +258,6 @@ function cache_clear_all($cid = NULL, $table = NULL, $wildcard = FALSE) {
 
       // Increment the prefix clearing counter.
       $counter_key = dmemcache_key('.prefix.' . $cid, $table);
-if(!is_object($mc)){
-print_r($mc);
-echo "HERE";exit;
-}
       $memcached_counters[$table][$cid] = $mc->increment($counter_key);      
     }
   }
