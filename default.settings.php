@@ -2,8 +2,7 @@
 
 $conf = array(
   'file_directory_temp' => '/tmp',  
-  'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files',
-  'cache_inc' => './sites/all/modules/memcache/memcache.inc',
+  'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files'
 );
 
 // Automatic DB, user, password configuration
@@ -14,8 +13,8 @@ if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'd6'){
 if((array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'dev' || array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'www') && $_SERVER['HTTP_HOST'] != 'dev.scratchpads.eu'){
   $database = substr($database, 3);
   $conf['file_directory_path'] = 'sites/'.substr($_SERVER['HTTP_HOST'], 4).'/files';
-  $conf['preprocess_css'] = 0;
-  $conf['preprocess_js'] = 0;
+  $conf['preprocess_css'] = 1;
+  $conf['preprocess_js'] = 1;
 }
 
 $user_password = parse_ini_file("/etc/drupal/6/drupal_db_passwords",true);
@@ -24,9 +23,6 @@ if(!isset($user_password[$database])){
   header('Location: http://scratchpads.eu/');
   exit;
 }
-
-// Memcache unique key
-$conf['memcache_key_prefix'] = $database;
 
 $db_url = 'mysqli://' . $user_password[$database]['user'] . ':'. $user_password[$database]['password'] . '@localhost/'. $database;
 $db_prefix = '';
