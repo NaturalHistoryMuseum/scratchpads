@@ -145,7 +145,7 @@ function scratchpad_profile_modules(){
     'mado',
     'ncbi',
     'node_term_edit',
-    'autotag',
+    //'autotag', // Removed temporarily whilst the module is re-written.
     'nbnmap',
     'foundation',
     'content_taxonomy',
