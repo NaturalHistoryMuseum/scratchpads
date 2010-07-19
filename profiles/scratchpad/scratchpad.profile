@@ -915,7 +915,6 @@ function scratchpad_profile_set_perms(){
       "access site-wide contact form",
       "access user profiles",
       "create citations",
-      "create forum topics",
       "create spm", // FIXME!
       "download original image",
       "fotonotes view notes",
@@ -941,6 +940,7 @@ function scratchpad_profile_set_perms(){
     );
     $authenticated_perms = array_merge($anonymous_perms, array(
       "access own webform submissions",
+      "create forum topics",
       "edit own forum topics",
       "maintain own subscriptions",
       "post by femail",
