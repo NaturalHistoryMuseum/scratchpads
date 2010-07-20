@@ -1,61 +1,74 @@
 <?php
+
 /**
  * implementation of hook_ispecies
  */
-function bhl_ispecies() {
-  return array (
-    'bhl' => array (
-      'title' => t('Biodiversity Heritage Library'), 
+function bhl_ispecies(){
+  return array(
+    'bhl' => array(
+      'title' => t('Biodiversity Heritage Library'),
       'description' => t('Some info about BHL'),
       'callback' => 'bhl_ajax_callback',
-      'type' => 'list'));
+      'type' => 'list'
+    )
+  );
 }
 
-function bhl_menu() {
-  $items = array ();
-  $items ['bhl_viewer'] = array (
-    'page callback' => 'ispecies_bhl_viewer', 
-    'access arguments' => array (
-      'access content' ), 
-    'title' => 'Biodiversity Heritage Library', 
-    'type' => MENU_CALLBACK );
+function bhl_menu(){
+  $items = array();
+  $items['bhl_viewer'] = array(
+    'page callback' => 'ispecies_bhl_viewer',
+    'access arguments' => array(
+      'access content'
+    ),
+    'title' => 'Biodiversity Heritage Library',
+    'type' => MENU_CALLBACK
+  );
   return $items;
 }
 
 function bhl_init(){
-  drupal_add_css(drupal_get_path('module','bhl').'/bhl.css');
+  drupal_add_css(drupal_get_path('module', 'bhl') . '/bhl.css');
 }
 
-function _bhl_get_namebank_titles($term_name) {
-  $titles = array ();
-  $request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameSearch&name=' . $term_name );
-  $namebank_ids_xml = file_get_contents ( $request );
-  if ($namebank_ids_xml) {
-    $namebank_ids = new SimpleXMLElement ( $namebank_ids_xml );
-    foreach ( $namebank_ids->Result->Name as $data ) {
-      if (strtolower ( $data->NameConfirmed ) == str_replace ( "+", " ", strtolower ( $term_name ) )) {
-        $detail_request = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameGetDetail&nameBankID=' . $data->NameBankID . '&format=xml' );
-        $namebank_details_xml = file_get_contents ( $detail_request );
-        $namebank_details = new SimpleXMLElement ( $namebank_details_xml );
-        foreach ( $namebank_details->Result->Titles->Title as $title ) {
+function _bhl_get_namebank_titles($term_name){
+  $titles = array();
+  $request = 'http://fencedine.myspecies.info/?url=' . urlencode('http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameSearch&name=' . $term_name);
+  $namebank_ids_xml = file_get_contents($request);
+  if($namebank_ids_xml){
+    $namebank_ids = new SimpleXMLElement($namebank_ids_xml);
+    foreach($namebank_ids->Result->Name as $data){
+      if(strtolower($data->NameConfirmed) == str_replace("+", " ", strtolower($term_name))){
+        $detail_request = 'http://fencedine.myspecies.info/?url=' . urlencode('http://www.biodiversitylibrary.org/services/name/NameService.ashx?op=NameGetDetail&nameBankID=' . $data->NameBankID . '&format=xml');
+        $namebank_details_xml = file_get_contents($detail_request);
+        try{
+          $namebank_details = new SimpleXMLElement($namebank_details_xml);
+        }
+        catch(Exception $e){
+          // Not valid XML
+          return array();
+        }
+        foreach($namebank_details->Result->Titles->Title as $title){
           // no content so don't add
-          if (! $title->Items->Item) {
+          if(!$title->Items->Item){
             continue;
           }
           //convert the titleID to numeric
-          $title_id = intval ( $title->TitleID );
+          $title_id = intval($title->TitleID);
           // if the publication has already been added, just add the items
-          if ($titles [$title_id]) {
-            $titles [$title_id] ['items'] [] = $title->Items;
-          } else { //else add some publication details - expand here for more publication data if nec.
+          if($titles[$title_id]){
+            $titles[$title_id]['items'][] = $title->Items;
+          }else{ //else add some publication details - expand here for more publication data if nec.
             // convert to an array - numerical key causing error
-            $title_array = ( array ) $title->PublicationTitle;
-            $title_url = ( array ) $title->TitleUrl;
-            $titles [$title_id] = array (
-              'title' => $title_array [0], 
-              'items' => array (
-                $title->Items ), 
-              'title_url' => $title_url [0] );
+            $title_array = (array)$title->PublicationTitle;
+            $title_url = (array)$title->TitleUrl;
+            $titles[$title_id] = array(
+              'title' => $title_array[0],
+              'items' => array(
+                $title->Items
+              ),
+              'title_url' => $title_url[0]
+            );
           }
         }
       }
@@ -65,71 +78,76 @@ function _bhl_get_namebank_titles($term_name) {
 }
 
 function bhl_ajax_callback($term_name, $limit, $offset = 0, $urls = array()){
-  $items = array ();
+  $items = array();
   $titles = _bhl_get_namebank_titles($term_name);
   $urls = array();
   // loop through all the titles   
   $counter = 0;
-  foreach ( $titles as $title ) {
-    if ($counter >= $limit) {
+  foreach($titles as $title){
+    if($counter >= $limit){
       break;
     }
-    $publication_title = $title ['title'];
-    $pages = array ();
-    if (count ( $title ['items'] ) > 1) { // there is more than one items for the publication
+    $publication_title = $title['title'];
+    $pages = array();
+    if(count($title['items']) > 1){ // there is more than one items for the publication
       $page_counter = 0;
       // loop through all the items
-      foreach ( $title ['items'] as $title_item ) {
-        foreach ( $title_item->Item->Pages->Page as $page ) {
-          $item_id = intval ( $title_item->ItemID );
-          $page_number = intval ( $page->Number );
-          (intval ( $item->Item->VolumeInfo ) ? $volume_info = 'Vol. ' . $title_item->Item->VolumeInfo : $volume_info = $title_item->Item->VolumeInfo);
-          $viewer_url = str_replace ( 'http://', '/bhl_viewer/', $page->ImageUrl );
-          $pages [$page_number] = sprintf ( '<li><a class="thickbox" href="%s&width=380&height=420" title="%s %s of %s">%s %s%s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number, (strlen ( $volume_info ) > 0 ? ' (' . $volume_info . ')' : '') );
-          $page_counter ++;
+      foreach($title['items'] as $title_item){
+        foreach($title_item->Item->Pages->Page as $page){
+          $item_id = intval($title_item->ItemID);
+          $page_number = intval($page->Number);
+          (intval($item->Item->VolumeInfo) ? $volume_info = 'Vol. ' . $title_item->Item->VolumeInfo : $volume_info = $title_item->Item->VolumeInfo);
+          $viewer_url = str_replace('http://', '/bhl_viewer/', $page->ImageUrl);
+          $pages[$page_number] = sprintf('<li><a class="thickbox" href="%s&width=380&height=420" title="%s %s of %s">%s %s%s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number, (strlen($volume_info) > 0 ? ' (' . $volume_info . ')' : ''));
+          $page_counter++;
         }
-        ksort ( $pages );
-        $title_items [$item_id] = implode ( '', $pages );
+        ksort($pages);
+        $title_items[$item_id] = implode('', $pages);
       }
-      ksort ( $title_items );
-      $page_output = implode ( '', $title_items );
-    } else {
-      foreach ( $title ['items'] [0]->Item->Pages->Page as $page ) {
-        $viewer_url = str_replace ( 'http://', '/bhl_viewer/', $page->ImageUrl );
-        $pages [intval ( $page->Number )] = sprintf ( '<li><a class="thickbox" href="%s&width=810&height=620" title="%s %s of %s">%s %s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number );
+      ksort($title_items);
+      $page_output = implode('', $title_items);
+    }else{
+      foreach($title['items'][0]->Item->Pages->Page as $page){
+        $viewer_url = str_replace('http://', '/bhl_viewer/', $page->ImageUrl);
+        $pages[intval($page->Number)] = sprintf('<li><a class="thickbox" href="%s&width=810&height=620" title="%s %s of %s">%s %s</a> </li>', $viewer_url, $page->Prefix, $page->Number, $publication_title, $page->Prefix, $page->Number);
       }
-      $page_counter = count ( $pages );
-      ksort ( $pages );
-      $page_output = implode ( '', $pages );
+      $page_counter = count($pages);
+      ksort($pages);
+      $page_output = implode('', $pages);
     }
-    $number_of_pages = format_plural ( $page_counter, '@count page', '@count pages' );
-    if ($number_of_pages) {
+    $number_of_pages = format_plural($page_counter, '@count page', '@count pages');
+    if($number_of_pages){
       $item = array(
-        'body' => "<li>" . sprintf ( '<a href="%s" title="%s" onclick="$(this).next().toggle(); return false">%s (%s)</a>', $title ['title_url'], $publication_title, $publication_title, $number_of_pages ).'<ul class="bhl-pages">' . $page_output . '</ul></li>',
-        'page_url' => $title ['title_url']
+        'body' => "<li>" . sprintf('<a href="%s" title="%s" onclick="$(this).next().toggle(); return false">%s (%s)</a>', $title['title_url'], $publication_title, $publication_title, $number_of_pages) . '<ul class="bhl-pages">' . $page_output . '</ul></li>',
+        'page_url' => $title['title_url']
       );
       $urls = $item['page_url'];
       $items[] = $item;
     }
-    $counter ++;
+    $counter++;
     if($counter > $limit){
       break;
     }
   }
-  $urls = array('name' => 'BHL', 'url'=>'http://biodiversitylibrary.org/name/'.$term_name, 'urls' => $urls);
+  $urls = array(
+    'name' => 'BHL',
+    'url' => 'http://biodiversitylibrary.org/name/' . $term_name,
+    'urls' => $urls
+  );
   $items['citation'] = theme('citation_url', $urls);
   $items['urls'] = $urls;
   return $items;
 }
+
 /**
  * Thickbox display breaks bhl view layout - but not if we use an inline iframe 
  */
-function ispecies_bhl_viewer() {
-  $url = str_replace ( '/bhl_viewer/', 'http://', request_uri () );
-  $url_parts = parse_url ( $url );
-  parse_str ( $url_parts ['query'] );
-  $url = "http://" . $url_parts ['host'] . $url_parts ['path'] . "?imageURL=$imageURL&imageDetailURL=$imageDetailURL";
-  $link_url = l ( $url, $url );
+function ispecies_bhl_viewer(){
+  $url = str_replace('/bhl_viewer/', 'http://', request_uri());
+  $url_parts = parse_url($url);
+  parse_str($url_parts['query']);
+  $url = "http://" . $url_parts['host'] . $url_parts['path'] . "?imageURL=$imageURL&imageDetailURL=$imageDetailURL";
+  $link_url = l($url, $url);
   print '<iframe hspace="0" frameborder="0" id="TB_iframeContent" style="width: 800px; height: 600px;" align="center" src="' . $url . '">' . $link_url . '</iframe>';
-  exit ();
+  exit();
 }

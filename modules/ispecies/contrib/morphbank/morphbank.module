@@ -1,41 +1,56 @@
 <?php
+
 /**
  * implementation of hook_ispecies
  */
-function morphbank_ispecies() {
-  return array (
-    'morphbank' => array (
-      'title' => t('Morphbank Images'), 
+function morphbank_ispecies(){
+  return array(
+    'morphbank' => array(
+      'title' => t('Morphbank Images'),
       'description' => t('Morphbank FSU'),
-      'callback' => 'morphbank_ajax_callback'));
+      'callback' => 'morphbank_ajax_callback'
+    )
+  );
 }
 
 function morphbank_init(){
-  drupal_add_css(drupal_get_path('module','morphbank').'/morphbank.css');
+  drupal_add_css(drupal_get_path('module', 'morphbank') . '/morphbank.css');
 }
 
 function morphbank_ajax_callback($term_name, $limit = 20, $offset = 0, $urls = array()){
-  $items = array ();
+  $items = array();
   $urls = array();
-  $url = 'http://fencedine.myspecies.info/?url=' . urlencode ("http://services.morphbank.net/mb/request?method=taxon&objecttype=Image&limit=$limit&taxonName=$term_name&format=id");
+  $url = 'http://fencedine.myspecies.info/?url=' . urlencode("http://services.morphbank.net/mb/request?method=taxon&objecttype=Image&limit=$limit&taxonName=$term_name&format=id");
   $xml = file_get_contents($url);
-  $morphbank = new SimpleXMLElement($xml);
+  try{
+    $morphbank = new SimpleXMLElement($xml);
+  }
+  catch(Exception $e){
+    // Not XML return empty results
+    return array();
+  }
   if($morphbank->numResults > 0){
     if($morphbank->numResults == 1){
-      $results = array($morphbank->id); 
-    } else {
+      $results = array(
+        $morphbank->id
+      );
+    }else{
       $results = $morphbank->id;
     }
     foreach($results as $result){
       $item = array(
-        'body' => '<div><a class="lightbox" rel="lightbox[morphbank]" href="http://www.morphbank.net/?id='.$result.'&imgType=jpeg"><img src="http://www.morphbank.net/?id='.$result.'&imgType=thumbs" width="75" height="75" alt="Thumbnail"/></a></div>',
-        'page_url' => 'http://www.morphbank.net/Show/?id='.$result
+        'body' => '<div><a class="lightbox" rel="lightbox[morphbank]" href="http://www.morphbank.net/?id=' . $result . '&imgType=jpeg"><img src="http://www.morphbank.net/?id=' . $result . '&imgType=thumbs" width="75" height="75" alt="Thumbnail"/></a></div>',
+        'page_url' => 'http://www.morphbank.net/Show/?id=' . $result
       );
-      $items [$item['page_url']] = $item;
+      $items[$item['page_url']] = $item;
       $urls[] = $item['page_url'];
     }
   }
-  $urls = array('name'=> 'Morphbank', 'url' => 'http://www.morphbank.net', 'urls' => $urls);
+  $urls = array(
+    'name' => 'Morphbank',
+    'url' => 'http://www.morphbank.net',
+    'urls' => $urls
+  );
   $items['urls'] = $urls;
   $items['citation'] = theme('citation_url', $urls);
   return $items;
