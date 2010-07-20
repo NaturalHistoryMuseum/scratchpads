@@ -113,7 +113,7 @@ function scratchpad_list_scratchpads_thumbs(){
   foreach($scratchpad_statistics as $site => $site_statistics){
     // If we're on the same server as screenshots.scratchpads.eu, we can 
     // check to see if the thumbnails exist, and if they don't skip this entry.
-    if($_SERVER['SERVER_ADDR'] == gethostbyname('screenshots.scratchpads.eu')){
+    if(gethostbyname($_SERVER['SERVER_NAME']) == gethostbyname('screenshots.scratchpads.eu')){
       // We're on the same server, lets check for the files
       if(!file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.png') || !file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.annotated.png')){
         continue;
