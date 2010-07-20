@@ -1,0 +1,147 @@
+<!doctype HTML public "-//W3C//DTD HTML 4.0 Frameset//EN">
+
+<html>
+
+<head>
+<title>Pruning the feature tree - The Prune Redundants function</title>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<meta name="generator" content="RoboHelp by eHelp Corporation www.ehelp.com">
+<link rel="stylesheet" href="default_ns.css"><script type="text/javascript" language="JavaScript" title="WebHelpSplitCss">
+<!--
+if (navigator.appName !="Netscape")
+{   document.write("<link rel='stylesheet' href='default.css'>");}
+//-->
+</script>
+<style type="text/css">
+<!--
+div.whs1 { width:100%; }
+img_whs2 { width:548px; height:45px; margin-left:0px; margin-right:0px; margin-top:0px; margin-bottom:0px; border-left-style:none; border-top-style:none; border-right-style:none; border-bottom-style:none; float:none; }
+img_whs3 { border:none; border-style:none; width:25px; height:25px; float:none; }
+-->
+</style><script type="text/javascript" language="JavaScript">
+<!--
+if ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) == 4))
+{
+  var strNSS = "<style type='text/css'>";
+  strNSS += "img_whs2 {margin-left:1pt;margin-right:1pt;margin-top:1pt;margin-bottom:1pt; }";
+  strNSS +="</style>";
+  document.write(strNSS);
+}
+//-->
+</script>
+<script type="text/javascript" language="JavaScript" title="WebHelpInlineScript">
+<!--
+function reDo() {
+  if (innerWidth != origWidth || innerHeight != origHeight)
+     location.reload();
+}
+if ((parseInt(navigator.appVersion) == 4) && (navigator.appName == "Netscape")) {
+	origWidth = innerWidth;
+	origHeight = innerHeight;
+	onresize = reDo;
+}
+onerror = null; 
+//-->
+</script>
+<style type="text/css">
+<!--
+div.WebHelpPopupMenu { position:absolute; left:0px; top:0px; z-index:4; visibility:hidden; }
+-->
+</style><script type="text/javascript" language="javascript1.2" src="whmsg.js"></script>
+<script type="text/javascript" language="javascript" src="whver.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whproxy.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whutils.js"></script>
+<script type="text/javascript" language="javascript1.2" src="whtopic.js"></script>
+</head>
+<body><script type="text/javascript" language="javascript1.2">
+<!--
+if (window.gbWhTopic)
+{
+	if (window.addTocInfo)
+	{
+	addTocInfo("Using the Lucid3 Player\nPruning the feature tree - The Prune Redundants function");
+addAvenueInfo("Using the Lucid3 Player","best.htm","shortcuts_to_an_answer_-_the_shortcut_function.htm");
+addButton("show",BTN_TEXT,"Show","","","","",0,0,"","","");
+
+	}
+	if (window.writeBtnStyle)
+		writeBtnStyle();
+
+	if (window.writeIntopicBar)
+		writeIntopicBar(1);
+
+	if (window.setRelStartPage)
+	{
+	setRelStartPage("default.htm");
+
+		autoSync(0);
+		sendSyncInfo();
+		sendAveInfoOut();
+	}
+}
+else
+	if (window.gbIE4)
+		document.location.reload();
+//-->
+</script>
+<div placeholder id="header" class="whs1"><script type="text/javascript" language="JavaScript"><!--
+if ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) <= 4)) 
+{  if (parseInt(navigator.appVersion) != 2) document.write("<img src='page_header_player.jpg' x-maintain-ratio='TRUE' width='548px' height='45px' border='0' class='img_whs2'>");}
+else
+{   document.write("<img src='page_header_player.jpg' x-maintain-ratio='TRUE' style='margin-left:0px;margin-right:0px;margin-top:0px;margin-bottom:0px;border-left-style:none;border-top-style:none;border-right-style:none;border-bottom-style:none;' width='548px' height='45px' border='0' class='img_whs2'>");}
+//--></script><noscript><img src='page_header_player.jpg' x-maintain-ratio='TRUE' style='margin-left:0px;margin-right:0px;margin-top:0px;margin-bottom:0px;border-left-style:none;border-top-style:none;border-right-style:none;border-bottom-style:none;' width='548px' height='45px' border='0' class='img_whs2'></noscript>
+</div>
+<div id=content>
+<h1>Pruning 
+ the feature tree - The Prune Redundants function</h1>
+
+<p>After a number of features have been chosen and the <span style="font-style: italic;"><I>Entities 
+ Remaining</I></span> list has been substantially reduced, some features and 
+ states may be redundant for the identification.</p>
+
+<p>A state is considered redundant if it applies to none of the entities 
+ remaining, or to all of the entities remaining (choosing such a state 
+ will either leave no entities or remove no entities, so it is useless 
+ to answer). A feature is redundant if all of its states are redundant.</p>
+
+<p>The <span style="font-style: italic;"><I>Prune Redundants</I></span> function 
+ will scan the features in <span style="font-style: italic;"><I>Features Available</I></span> 
+ and remove any redundant features and/or states for the remaining entities. 
+ This may be useful to “clean up” the list of features, to make it less 
+ likely that a choice will be useless. &nbsp;</p>
+
+<p class=note><span style="font-weight: bold;"><B>Note</B></span> that there is 
+ one circumstance in which apparently redundant states may be left in after 
+ pruning. Consider a 2-state feature, one state of which would remove some 
+ remaining taxa, the other of which would remove none. The state that removes 
+ no taxa is not logically redundant in this case, and would not be removed 
+ since removing it would leave a character with only one state.<span style="font-weight: bold;"> 
+ <B></B></span></p>
+
+<p>To activate the <span style="font-style: italic;"><I>Prune Redundants</I></span> 
+ function, choose <span style="font-style: italic;"><I>Prune Redundants</I></span> 
+ from the <span style="font-style: italic;"><I>Features</I></span> menu, or click 
+ the <span style="font-style: italic;"><I>Prune</I></span> button <img src="images/prune_redundants.gif" x-maintain-ratio="TRUE" width="25px" height="25px" border="0" class="img_whs3"> on the toolbar.</p>
+
+<p><span style="font-style: italic;"><I>Prune Redundants</I></span> can be automated, 
+ so that it is recalculated after each feature is addressed. Choose the 
+ option <span style="font-style: italic;"><I>Automate</I></span>&gt;<span style="font-style: italic;"><I>AutoPrune</I></span> 
+ from the <span style="font-style: italic;"><I>Features</I></span> menu. If you 
+ need to choose several states from one feature when <span style="font-style: italic;"><I>AutoPrune</I></span> 
+ is on, hold down the <span style="font-style: italic;"><I>Control</I></span> 
+ key when choosing the states – <span style="font-style: italic;"><I>AutoPrune</I></span> 
+ will be paused until the <span style="font-style: italic;"><I>Control</I></span> 
+ key is released.</p>
+</div>
+
+<div placeholder id="footer" class="whs1">
+ <p>&nbsp;</p>
+</div>
+<script type="text/javascript" language="javascript1.2">
+<!--
+if (window.writeIntopicBar)
+	writeIntopicBar(0);
+//-->
+</script>
+</body>
+</html>
