@@ -1,5 +1,10 @@
 <?php
 
+// Increase the timelimit, as this profile is SSSSLLLLOOOOWWWWW!
+// Note, this is done outside any functions, to ensure that it is executed when
+// the profile is loaded.
+set_time_limit(300);
+  
 /**
  * The Scratchpad profile.  This will replace the default profile so that all
  * sites installed will become Scratchpads.
@@ -200,8 +205,6 @@ function scratchpad_profile_task_list(){
  * scratchpad_training module can reuse them.
  */
 function scratchpad_profile_tasks_1(){
-  // Increase the timelimit, as this profile is SSSSLLLLOOOOWWWWW!
-  set_time_limit(300);
   // Insert default user-defined node types into the database. For a complete
   // list of available node type attributes, refer to the node type API
   // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
