@@ -200,6 +200,8 @@ function scratchpad_profile_task_list(){
  * scratchpad_training module can reuse them.
  */
 function scratchpad_profile_tasks_1(){
+  // Increase the timelimit, as this profile is SSSSLLLLOOOOWWWWW!
+  set_time_limit(300);
   // Insert default user-defined node types into the database. For a complete
   // list of available node type attributes, refer to the node type API
   // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
