@@ -323,8 +323,9 @@ function scratchpadify_install(){
  * 6142: Fix messaging modules
  * 6143: Clear all caches and other bits and bobs
  * 6144: OpenID URL and Image settings
- * 6145: Upgrade image.module to imagefield.module
- * 6146: Convert bio_image vocabularies
+ * 6145: Update permissions
+ * 6146: Upgrade image.module to imagefield.module
+ * 6147: Convert bio_image vocabularies
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -985,17 +986,32 @@ function scratchpadify_update_6144(){
     '#finished' => TRUE
   );
 }
+
 /**
- * Upgrade from image module to imagecache etc.
+ * Set permissions
  */
-function scratchpadify_update_6145(){
-  include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
-  return migrate_image_to_imagefield();
+function scratchpadify_update_6145(){  
+  // Update permissions
+  require_once ("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
- * Update bio_image vocabularies.
- */
+ * Upgrade from image module to imagecache etc.
 function scratchpadify_update_6146(){
+  include_once (drupal_get_path('module', 'scratchpadify') . '/migrate_image_to_imagefield.inc');
+  return migrate_image_to_imagefield();
+}
+ */
+
+/**
+ * Update bio_image vocabularies.
+function scratchpadify_update_6147(){
   update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
 }
+ */
