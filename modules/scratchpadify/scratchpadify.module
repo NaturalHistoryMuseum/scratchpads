@@ -18,7 +18,7 @@ function scratchpadify_views_api(){
  */
 function scratchpadify_term_path($term){
   if($term->vid == variable_get('image_gallery_vid', 0)){
-    return 'image/tid/'.$term->tid;
+    return 'image/tid/' . $term->tid;
   }else{
     return FALSE;
   }
@@ -29,10 +29,13 @@ function scratchpadify_term_path($term){
  */
 function scratchpadify_views_pre_render(&$view){
   if($view->name == 'image_thumbnails'){
-    // We need to tweak the breadcrumb here too.
-    $breadcrumbs = drupal_get_breadcrumb();
-    $breadcrumbs[0] = l(t('Image Galleries'), 'image');
-    drupal_set_breadcrumb($breadcrumbs);
+    // We need to tweak the breadcrumb here too, although only if actually
+    // viewing an Image Gallery (fix for Mado).
+    if(arg(0) == 'image'){
+      $breadcrumbs = drupal_get_breadcrumb();
+      $breadcrumbs[0] = l(t('Image Galleries'), 'image');
+      drupal_set_breadcrumb($breadcrumbs);
+    }
     // Add the subgalleries
     // NOTE, I tried to do this with views, but found it wasn't possible
     // without defining handlers and plugins and various other bits 'n'
@@ -89,7 +92,9 @@ function theme_scratchpadify_subgallery($term){
   // Create HTML
   return '<div class="scratchpadify-subgallery">
   <div class="scratchpadify-subgallery-image">
-    ' . l(theme('imagecache', 'thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']), taxonomy_term_path($term), array('html' => TRUE)) . '
+    ' . l(theme('imagecache', 'thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']), taxonomy_term_path($term), array(
+    'html' => TRUE
+  )) . '
   </div>
   <div class="scratchpadify-subgallery-details">
     <h3>' . l(check_plain($term->name), taxonomy_term_path($term)) . '</h3>
