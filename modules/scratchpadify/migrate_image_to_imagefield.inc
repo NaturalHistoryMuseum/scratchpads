@@ -149,6 +149,8 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
       );
     }
   }
+  // Set the field to use with plupload
+  variable_set('plupload_import_field_type', 'image:::'.$field_name);
   // We need to set this field to use the thumbnail and preview imagecache 
   // presets that we're created using the scratchpadify module.
   // All node types
@@ -240,8 +242,7 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
     $ret[] = update_sql("INSERT INTO {term_node} (nid, vid, tid) SELECT nid, vid, $library_tid FROM {content_$field_name}");
   }
   // Change the vocabulary to "scratchpadify"
-  $ret[] = update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'image_gallery'");  
-  
+  $ret[] = update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'image_gallery'");
   // Clear ALL CACHE, AND SESSIONS  
   drupal_rebuild_theme_registry();
   node_types_rebuild();
