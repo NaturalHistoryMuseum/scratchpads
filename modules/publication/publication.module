@@ -974,7 +974,7 @@ function publication_js($node){
 }
 
 function publication_ahah_form($reset_messages = true){
-  include_once 'modules/node/node.pages.inc';
+  module_load_include('pages.inc', 'node');
   $form_state = array(
     'storage' => NULL, 
     'submitted' => FALSE, 
