@@ -505,7 +505,7 @@ function scratchpadify_footer($main = 0){
        </script>';
     }
   }
-  if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.'){
+  if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.' && $_SERVER['SERVER_NAME'] != 'dev.scratchapds.eu'){
     $dev_server_message = '<h1 style="position:absolute;top:0;left:0;background-color:white;color:red;padding:10px;border:solid 1px black;margin:10px;z-index:10000;font-weight:900">DEVELOPMENT SERVER</h1>';
   }
   return $uservoice . $dev_server_message . '<div id="scratchpadify-footer" align="center" style="padding: 20px"><p><a 
