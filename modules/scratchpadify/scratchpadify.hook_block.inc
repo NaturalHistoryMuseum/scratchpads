@@ -32,7 +32,7 @@ function _scratchpadify_block($op, $delta, $edit){
             'image' => array(
               'view' => 'image',
               'import' => array(
-                array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'imagex/imagex', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
+                array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'file-plupload', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
               )
             ),
             'publication' => array('import' => FALSE),
