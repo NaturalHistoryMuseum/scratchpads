@@ -53,6 +53,8 @@ function scratchpad_training_profile_tasks(&$task, $url){
     variable_set('site_mission','This site has been created for the <a href="http://scratchpads.eu/training">Scratchpad Training Courses</a>');
   
     scratchpad_profile_tasks_2();
+    // Change the cache back to "disabled"
+    variable_set('cache', 0);
     
     // N.B. The following is normally executed by tasks_3, but we don't want an
     // automatic password, nor do we want the mail message being sent.
