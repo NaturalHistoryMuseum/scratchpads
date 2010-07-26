@@ -227,11 +227,11 @@ function classification_import_save_data($name, $parent, $data, $vid){
  * 
  */
 function classification_import_batch_import_finished($success, $results, $operations) {
-  // We delete the status messages, as there is likely to be far too many to
-  // display on the screen.
-  drupal_get_messages('status');
-  variable_del('eol_import_doing_import');
   if ($success) {
+    // We delete the status messages, as there is likely to be far too many to
+    // display on the screen.
+    drupal_get_messages('status');
+    variable_del('eol_import_doing_import');
     drupal_set_message(t('The import has been performed.'));
     // FIXME - Add redirect.
   }
