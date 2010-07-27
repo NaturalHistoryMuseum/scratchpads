@@ -27,17 +27,17 @@ function _scratchpadify_block($op, $delta, $edit){
           $links_override = array(
             'biblio' => array(
               'view' => variable_get('biblio_base','biblio'),
-              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager')))))
+              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>','biblio/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a bibliography from your reference manager')))))
             ),
             'image' => array(
               'view' => 'image',
               'import' => array(
-                array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'file-plupload', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
+                array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>', 'file-plupload', array('html' => TRUE, 'attributes' => array('title' => t('Upload multiple images'))))
               )
             ),
             'publication' => array('import' => FALSE),
             'nexus_project' => array(
-              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>','nexus/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a nexus file')))))),
+              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>','nexus/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a nexus file')))))),
             'forum' => array('view' => 'forum'),
             'blog' => array('view' => 'blog'),
             'group' => array('view' => 'og', 'import' => FALSE)
@@ -64,7 +64,7 @@ function _scratchpadify_block($op, $delta, $edit){
             $items[$row['name']] = l(t($row['name']), $link_path, array('attributes' => array('title' => t('View all "@node_type" nodes', array('@node_type' => $row['name'])), 'style' => (isset($links_override[$row['type']]['active']) && $links_override[$row['type']]['active']) ? 'text-decoration:underline;' : '')));
             $menu_item = menu_get_item('node/add/'.str_replace('_','-',$row['type']));
             if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
-              $items[$row['name']] .= ' '.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/add.gif" alt="Add"/>', 'node/add/'.str_replace("_","-",$row['type']), array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
+              $items[$row['name']] .= ' <div class="add-links">'.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/add.png" alt="Add"/>', 'node/add/'.str_replace("_","-",$row['type']), array('query' => $query, 'html' => TRUE, 'attributes' => array('title' => t('Add a "@node_type" node',array('@node_type' =>$row['name'])))));
               // We'll assume that a many permission won't exist when a single
               // doesn't.
               if(isset($links_override[$row['type']]['import']) && is_array($links_override[$row['type']]['import'])){
@@ -78,9 +78,13 @@ function _scratchpadify_block($op, $delta, $edit){
                 }
               } else {
                 if($can_access_import){
-                  $items[$row['name']] .= l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'admin/content/node_import/add', array('query' => array('type' => $row['type']), 'html' => TRUE, 'attributes' => array('title' => t('Import from CSV file'))));           
+                  $items[$row['name']] .= l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>', 'admin/content/node_import/add', array('query' => array('type' => $row['type']), 'html' => TRUE, 'attributes' => array('title' => t('Import from CSV file'))));           
                 }
               }
+              // Add link to matrix editor, we'll let the views module handle
+              // permissions for this.
+              $items[$row['name']] .= l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit.png" alt="Grid Editor"/>', 'matrix-editor/'.$row['type'], array('html' => TRUE, 'attributes' => array('title' => t('Edit @name nodes in a grid layout', array('@name' => $row['name'])))));
+              $items[$row['name']] .= '</div>';
             }
             if(in_array($row['type'],$viewing_group) && og_menu_access_picture(arg(1))){
               $items[$row['name']] .= '<br/><span style="font-size:80%">'.l(t('Members'),'og/users/'.arg(1).'/faces') . ' | '.l(t('My membership'), 'og/manage/'.arg(1)).'</span>';
@@ -89,7 +93,7 @@ function _scratchpadify_block($op, $delta, $edit){
           // Additional item for taxonomy
           $menu_item = menu_get_item('admin/content/taxonomy');
           if(call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']))){
-            $items['Taxonomy'] = l(t('Taxonomy'), 'admin/content/taxonomy', array('attributes' => array('title' => 'View your site\'s taxonomies'))).' '.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.gif" alt="Import"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification'))));
+            $items['Taxonomy'] = l(t('Taxonomy'), 'admin/content/taxonomy', array('attributes' => array('title' => 'View your site\'s taxonomies'))).' <div class="add-links">'.l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>', 'admin/content/taxonomy/classification/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a classification')))).'</div>';
           }
           uksort($items, "strnatcasecmp");
           return array('subject'=>'Content','content'=>theme('item_list', $items , NULL , 'ul' , array('class'=>'scratchpadify-block')));

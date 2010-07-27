@@ -41,8 +41,18 @@
  margin-bottom: 0 !important;
  padding-bottom: 0 !important;
 }
-.scratchpadify-block li img{
+.scratchpadify-block li .add-links{
  display:none;
+ position:absolute;
+ right:3px;
+ top:0;
+ z-index:1000;
+}
+.scratchpadify-block li .add-links img{
+ padding:0 2px;
+}
+.scratchpadify-block li{
+ position:relative;
 }
 .scratchpadify-block a.active{
  text-decoration:underline;
