@@ -1,13 +1,4 @@
 <?php 
-// $Id: plupload.module,v 1.1 2010/06/30 02:51:56 greggles Exp $ 
-
-/**
- * Implementation of hook_perm().
- */
-function plupload_perm() {
-  return array('bulk upload files with plupload', 'administer plupload bulk uploads');
-}
-
 /**
  * Implementation of hook_menu().
  */
@@ -15,26 +6,40 @@ function plupload_menu() {
   $items['plupload-pernode'] = array(
     'title' => 'Upload files',
     'page callback' => 'plupload_pernode',
-    'access callback' => 'user_access',
-    'access arguments' => array('upload files with plupload'),
-    'type' => MENU_CALLBACK,
+    'access callback' => 'plupload_user_access',
+    'type' => MENU_CALLBACK
   );
   $items['file-plupload'] = array(
     'page callback' => 'plupload_upload_page',
-    'access callback' => 'user_access',
-    'access arguments' => array('upload files with plupload'),
-    'type' => MENU_CALLBACK,
+    'access callback' => 'plupload_user_access',
+    'type' => MENU_CALLBACK
   );
   $items['admin/settings/plupload-bulk'] = array(
     'title' => 'Plupload integration settings',
     'description' => 'Configure the Plupload integration module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('plupload_admin_settings'),
-    'access callback' => 'user_access',
-    'access arguments' => array('administer bulk uploads'),
-    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM
   );
   return $items;
+}
+
+/**
+ * Function decides whether a user has permissions to access the Upload page, 
+ * and the callback page.
+ */
+function plupload_user_access($account = NULL){
+  if(is_null($account)){
+    global $user;
+    $account = $user;
+  }
+  $field = variable_get('plupload_import_field_type', FALSE);
+  if($field){
+    $node_type = array_shift(explode(":::", $field));       
+    $menu_item = menu_get_item('node/add/'.str_replace('_','-',$node_type));
+    return call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']));
+  }
 }
 
 /**
