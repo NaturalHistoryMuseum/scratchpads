@@ -106,6 +106,7 @@ function scratchpad_profile_modules(){
     'filefield',
     'imagefield',
     'lightbox2',
+    'plupload',
     // Location
     'location',
     'gmap',
