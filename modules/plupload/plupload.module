@@ -1,8 +1,9 @@
-<?php 
+<?php
+
 /**
  * Implementation of hook_menu().
  */
-function plupload_menu() {
+function plupload_menu(){
   $items['plupload-pernode'] = array(
     'title' => 'Upload files',
     'page callback' => 'plupload_pernode',
@@ -18,8 +19,12 @@ function plupload_menu() {
     'title' => 'Plupload integration settings',
     'description' => 'Configure the Plupload integration module.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('plupload_admin_settings'),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => array(
+      'plupload_admin_settings'
+    ),
+    'access arguments' => array(
+      'administer site configuration'
+    ),
     'type' => MENU_NORMAL_ITEM
   );
   return $items;
@@ -36,8 +41,8 @@ function plupload_user_access($account = NULL){
   }
   $field = variable_get('plupload_import_field_type', FALSE);
   if($field){
-    $node_type = array_shift(explode(":::", $field));       
-    $menu_item = menu_get_item('node/add/'.str_replace('_','-',$node_type));
+    $node_type = array_shift(explode(":::", $field));
+    $menu_item = menu_get_item('node/add/' . str_replace('_', '-', $node_type));
     return call_user_func_array($menu_item['access_callback'], unserialize($menu_item['access_arguments']));
   }
 }
@@ -45,47 +50,43 @@ function plupload_user_access($account = NULL){
 /**
  * Admin form.
  */
-function plupload_admin_settings() {
+function plupload_admin_settings(){
   // Figure out which content types have a filefield.
   $types = content_types();
-  foreach ($types as $key => $type) {
-    foreach ($type['fields'] as $field) {
-      if ($field['type'] == 'filefield') {
-        $available['matches'][$key .':::'. $field['field_name']] = $type['name'] .': '. $field['widget']['label'];
-        $available['keys'][] = $key .':::'. $field['field_name'];
+  foreach($types as $key => $type){
+    foreach($type['fields'] as $field){
+      if($field['type'] == 'filefield'){
+        $available['matches'][$key . ':::' . $field['field_name']] = $type['name'] . ': ' . $field['widget']['label'];
+        $available['keys'][] = $key . ':::' . $field['field_name'];
       }
     }
   }
-  
   // Show them a filefield-content-type to use or nag them to create one. 
-  if (!empty($available['matches'])) {
+  if(!empty($available['matches'])){
     $form['plupload_import_field_type'] = array(
       '#type' => 'select',
       '#title' => t('Target field'),
       '#description' => t('Select the specific filefield you want to import photos into. During import, nodes of your selected type will be created and the selected field will be populated with the imported image. The image name will be used for the title and all other fields will be blank.'),
       '#options' => $available['matches'],
-      '#default_value' => variable_get('plupload_import_field_type', $available['keys'][0]),
+      '#default_value' => variable_get('plupload_import_field_type', $available['keys'][0])
     );
-  }
-  else {
+  }else{
     $form['error_state'] = array(
-      '#value' => t('You must enable a filefield on a content type.'),
+      '#value' => t('You must enable a filefield on a content type.')
     );
   }
- 
   return system_settings_form($form);
 }
 
 /**
  * Page callback for the bulk uploader.
  */
-function plupload_upload_page() {
+function plupload_upload_page(){
   $path = drupal_get_path('module', 'plupload');
   drupal_add_js($path . '/plupload/src/javascript/plupload.js');
   drupal_add_js($path . '/plupload/src/javascript/plupload.html5.js');
   drupal_add_js($path . '/plupload/src/javascript/jquery.plupload.queue.js');
-  drupal_add_css($path .'/plupload/examples/css/plupload.queue.css');
-  
+  drupal_add_css($path . '/plupload/examples/css/plupload.queue.css');
   $script = <<<__RSD__
 // Convert divs to queue widgets when the DOM is ready
  $(function() {
@@ -105,87 +106,67 @@ function plupload_upload_page() {
    });
 });
 __RSD__;
-  
   drupal_add_js($script, 'inline');
-  
-  
   $output = '<div id="html5_uploader">You browser does not support native upload. Try Firefox 3 or Safari 4 or Chrome.</div>';
-
   return $output;
 }
 
-function plupload_pernode() {
+function plupload_pernode(){
   $temp_directory = file_directory_temp();
-
   // Chunk it?
   $chunk = isset($_REQUEST["chunk"]) ? $_REQUEST["chunk"] : 0;
-  
   // Get and clean the filename.
   $file_name = isset($_REQUEST["name"]) ? $_REQUEST["name"] : '';
-
   // Clean the fileName for security reasons
   $file_name = preg_replace('/[^\w\._]+/', '', $file_name);
-  
-  
   // Look for the content type header
-  if (isset($_SERVER["HTTP_CONTENT_TYPE"])) {
+  if(isset($_SERVER["HTTP_CONTENT_TYPE"])){
     $content_type = $_SERVER["HTTP_CONTENT_TYPE"];
   }
-  if (isset($_SERVER["CONTENT_TYPE"])) {
+  if(isset($_SERVER["CONTENT_TYPE"])){
     $content_type = $_SERVER["CONTENT_TYPE"];
   }
-
   // Is this a multipart upload?
-  if (strpos($content_type, "multipart") !== false) {
-    if (isset($_FILES['file']['tmp_name']) && is_uploaded_file($_FILES['file']['tmp_name'])) {
+  if(strpos($content_type, "multipart") !== false){
+    if(isset($_FILES['file']['tmp_name']) && is_uploaded_file($_FILES['file']['tmp_name'])){
       // Open temp file
       $out = fopen($targetDir . DIRECTORY_SEPARATOR . $file_name, $chunk == 0 ? "wb" : "ab");
-      if ($out) {
+      if($out){
         // Read binary input stream and append it to temp file
         $in = fopen($_FILES['file']['tmp_name'], "rb");
-
-        if ($in) {
-          while ($buff = fread($in, 4096))
+        if($in){
+          while($buff = fread($in, 4096))
             fwrite($out, $buff);
-        } else
+        }else
           die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
-
         fclose($out);
         unlink($_FILES['file']['tmp_name']);
-      } else
+      }else
         die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
-    } else
+    }else
       die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
-  }
-  else {
+  }else{
     // Open temp file
     $out = fopen($temp_directory . DIRECTORY_SEPARATOR . $file_name, $chunk == 0 ? "wb" : "ab");
-    if ($out) {
+    if($out){
       // Read binary input stream and append it to temp file
       $in = fopen("php://input", "rb");
-
-      if ($in) {
-        while ($buff = fread($in, 4096))
+      if($in){
+        while($buff = fread($in, 4096))
           fwrite($out, $buff);
-      } else
+      }else
         die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
-
       fclose($out);
-    } else
+    }else
       die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
   }
-
   // Move it to it's final home.
   $path = file_directory_path();
-
   $image_node = plupload_imagefield_create_node_from($temp_directory . DIRECTORY_SEPARATOR . $file_name, $file_name);
-
   // @todo check the $image_node and do some error handling.
-  
   // Return JSON-RPC response
   die('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
 }
-
 
 /**
  * Helper wrapper around the cck code to create a node of this type.
@@ -197,34 +178,32 @@ function plupload_pernode() {
  * @return $node
  *   a node object.
  */
-function plupload_imagefield_create_node_from($temp_filepath, $file_name) {
+function plupload_imagefield_create_node_from($temp_filepath, $file_name){
   // Only get files from Drupal's tmp directory.
   $directory = file_directory_temp();
-  if (file_check_location($temp_filepath, $directory)) {
+  if(file_check_location($temp_filepath, $directory)){
     // Only get files where we can get some image info.
-    if ($info = image_get_info($temp_filepath)) {
+    if($info = image_get_info($temp_filepath)){
       // Figure out which node and field to put this into.
       list($type, $field_name) = split(':::', variable_get('plupload_import_field_type', 'image:::field_imagefield'));
-  
       // Get the field and its validators.
       $field = content_fields($field_name, $type);
       $validators = imagefield_widget_upload_validators($field);
-  
       // make sure that the directory exists
       $directory = filefield_widget_file_path($field);
       field_file_check_directory($directory, FILE_CREATE_DIRECTORY);
-  
       // Create some defaults that imagefield expects.
       $form_state_values = array(
         'title' => $file_name,
         'body' => '',
-        'field_photo' => array(0 => array(
+        'field_photo' => array(
+          0 => array(
             'fid' => 0,
             'list' => '1',
             'data' => array(
               'description' => '',
               'alt' => '',
-              'title' => '',
+              'title' => ''
             ),
             'alt' => '',
             'title' => '',
@@ -234,33 +213,29 @@ function plupload_imagefield_create_node_from($temp_filepath, $file_name) {
             'filesize' => 0,
             'filefield_upload' => 'Upload',
             'filefield_remove' => 'Remove',
-            'upload' => 0,
+            'upload' => 0
           ),
-        'node_status' => NULL,
+          'node_status' => NULL
         )
       );
       // Save the file and create a node.
-      if ($file = field_file_save_file($temp_filepath, $validators, $directory)) {
+      if($file = field_file_save_file($temp_filepath, $validators, $directory)){
         $file['original_path'] = $temp_filepath;
         $node = _plupload_imagefield_import_create_node($field, $form_state_values, $file);
         file_delete($temp_filepath);
       }
     }
   }
-  
   return $node;
 }
-
 
 /**
  * Create a new node with an attached image file.
  * Largely copied from imagefield_import.
  */
-function _plupload_imagefield_import_create_node($field, $form_state_values, $file = NULL) {
+function _plupload_imagefield_import_create_node($field, $form_state_values, $file = NULL){
   global $user;
-
   module_load_include('inc', 'node', 'node.pages');
-
   // Create a basic node object.
   $node = new stdClass();
   $node->type = $field['type_name'];
@@ -268,36 +243,31 @@ function _plupload_imagefield_import_create_node($field, $form_state_values, $fi
   $node->name = $user->name;
   $node->title = $form_state_values['title'];
   $node->body = $form_state_values['body'];
-
   node_object_prepare($node);
-
   // Add the image to the node object.
   $field_name = $field['field_name'];
-  $node->$field_name = array($file);
-
+  $node->$field_name = array(
+    $file
+  );
   // Make it easy for other modules to add data to imported nodes using
   // hook_form_alter (@see http://drupal.org/node/714550).
-  foreach (array_keys($form_state_values) as $key) {
-    if (!isset($node->$key)) {
+  foreach(array_keys($form_state_values) as $key){
+    if(!isset($node->$key)){
       $node->$key = $form_state_values[$key];
     }
   }
-
   // Add any additional cck fields set during import.
   $type = content_types($field['type_name']);
-  if (!empty($type['fields'])) {
-    foreach ($type['fields'] as $name => $field) {
-      if ($field['type'] != 'filefield') {
+  if(!empty($type['fields'])){
+    foreach($type['fields'] as $name => $field){
+      if($field['type'] != 'filefield'){
         $node->$name = $form_state_values[$name];
       }
     }
   }
-
   // Pretend we're saving the node from a node form to please modules like filefield_paths.
-  $node->form_id = $node->type .'_node_form';
-
+  $node->form_id = $node->type . '_node_form';
   $node = node_submit($node);
   node_save($node);
-
   return $node;
 }
