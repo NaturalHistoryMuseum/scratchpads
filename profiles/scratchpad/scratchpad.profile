@@ -400,6 +400,7 @@ function scratchpad_profile_tasks_2(){
   variable_set('lightbox2_trigger_image_size', array(
     'thumbnail' => 'thumbnail'
   ));
+  variable_set('plupload_import_field_type', 'image:::field_imagefield');
   variable_set('lightbox2_disable_nested_galleries', 1);
   variable_set('lightbox2_lite', FALSE);
   variable_set('lightbox2_image_node', 2);
