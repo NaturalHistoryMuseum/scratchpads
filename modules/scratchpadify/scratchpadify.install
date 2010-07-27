@@ -326,6 +326,7 @@ function scratchpadify_install(){
  * 6145: Update permissions
  * 6146: Upgrade image.module to imagefield.module
  * 6147: Convert bio_image vocabularies
+ * 6148: Recreate the image type on a few sites that have been "parped"
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1013,5 +1014,34 @@ function scratchpadify_update_6146(){
  * Update bio_image vocabularies.
  */
 function scratchpadify_update_6147(){
-  update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
+  $ret = array();
+  $ret[] = update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE module = 'bio_image'");
+  return $ret;
+}
+
+/**
+ * Add image type to sites that don't appear to have it
+ */
+function scratchpadify_update_6148(){
+  if(!db_result(db_query("SELECT COUNT(*) FROM {node_type} WHERE type = 'image';"))){
+    if(db_result(db_query("SELECT schema_version FROM {system} WHERE name = 'image'"))){
+      // Create a content type "image"
+      $type = new stdClass();
+      $type->type = 'image';
+      $type->name = t('Image');
+      $type->description = t('An image (with thumbnail). This is ideal for publishing photographs or screenshots.');
+      $type->custom = 1;
+      $type->custom = 1;
+      $type->locked = 1;
+      $type->body_label = t('Notes');
+      $type->title_label = t('Title');
+      $type->has_title = 1;
+      $type->has_body = 1;
+      $type->module = 'node';
+      node_type_save($type);
+    }
+  }
+  return array(
+    '#finished' => TRUE
+  );
 }
