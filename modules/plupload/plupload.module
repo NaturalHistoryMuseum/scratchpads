@@ -204,7 +204,7 @@ function plupload_imagefield_create_node_from($temp_filepath, $file_name) {
     // Only get files where we can get some image info.
     if ($info = image_get_info($temp_filepath)) {
       // Figure out which node and field to put this into.
-      list($type, $field_name) = split(':::', variable_get('plupload_import_field_type', 'photo:::field_photo'));
+      list($type, $field_name) = split(':::', variable_get('plupload_import_field_type', 'image:::field_imagefield'));
   
       // Get the field and its validators.
       $field = content_fields($field_name, $type);
