@@ -107,7 +107,7 @@ function plupload_upload_page(){
 });
 __RSD__;
   drupal_add_js($script, 'inline');
-  $output = '<div id="html5_uploader">You browser does not support native upload. Try Firefox 3 or Safari 4 or Chrome.</div>';
+  $output = '<div id="html5_uploader">You browser does not support native upload. Try Firefox 3 or Safari 4 or Chrome.</div><h1 class="plupload_container">'.l('Edit uploaded images', 'matrix-editor/image').'</h1>';
   return $output;
 }
 
@@ -229,6 +229,12 @@ function plupload_imagefield_create_node_from($temp_filepath, $file_name){
   return $node;
 }
 
+function plupload_nodeapi(&$node, $op){
+  if($op == 'view'){
+    //print_r($node);
+  }
+}
+
 /**
  * Create a new node with an attached image file.
  * Largely copied from imagefield_import.
@@ -264,6 +270,13 @@ function _plupload_imagefield_import_create_node($field, $form_state_values, $fi
         $node->$name = $form_state_values[$name];
       }
     }
+  }
+  // Add the tid of the Library
+  $term = taxonomy_get_term_by_name('Library');
+  if(count($term)){
+    // Should be the first.
+    $term = array_pop($term);
+    $node->taxonomy[$term->tid] = $term;
   }
   // Pretend we're saving the node from a node form to please modules like filefield_paths.
   $node->form_id = $node->type . '_node_form';
