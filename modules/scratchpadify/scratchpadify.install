@@ -991,7 +991,7 @@ function scratchpadify_update_6144(){
 /**
  * Set permissions
  */
-function scratchpadify_update_6145(){  
+function scratchpadify_update_6145(){
   // Update permissions
   require_once ("profiles/scratchpad/scratchpad.profile");
   if(function_exists("scratchpad_profile_set_perms")){
@@ -1040,6 +1040,12 @@ function scratchpadify_update_6148(){
       $type->module = 'node';
       node_type_save($type);
     }
+    return array(
+      array(
+        'success' => TRUE,
+        'query' => t('Recreated image content type')
+      )
+    );
   }
   return array(
     '#finished' => TRUE
