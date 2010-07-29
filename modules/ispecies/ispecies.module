@@ -93,7 +93,7 @@ function ispecies_get_data($module, $tid){
     if(!$count){
       $count = 50;
     }
-    $results = call_user_func($ispecies_views[$module]['callback'], $term_name, $count, 0, $urls);
+    $results = $ispecies_views[$module]['callback']($term_name, $count, 0, $urls);
   } else {
     watchdog("ispecies", "Function doesn't exist: " . $ispecies_views[$module]['callback']);
     return false;
