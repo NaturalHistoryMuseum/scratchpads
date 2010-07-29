@@ -384,13 +384,16 @@ var MatrixCellEditor = function($container, columnDef, value, dataContext) {
             valid: true,
             msg: null
         };
-    }    
-    this.init();    
+    }
+    
+    this.init();
+    
 }
+
 
 $(document).ready(function(){
   $('#matrix-editor-toggle-advanced-options').click(function() {
-	  var el = $('.view-filters, .attachment-before', '.view-matrix-editor-page');
+	  var el = $('.view-filters, .attachment-before', '.matrix-editor-view');
 		if(el.is(':visible')){
 		  el.hide('fast');
 			$(this).removeClass('me-collapsed');
