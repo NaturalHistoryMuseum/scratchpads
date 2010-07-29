@@ -327,6 +327,7 @@ function scratchpadify_install(){
  * 6146: Upgrade image.module to imagefield.module
  * 6147: Convert bio_image vocabularies
  * 6148: Recreate the image type on a few sites that have been "parped"
+ * 6149: Set the 'image_gallery_nav_vocabulary' variable.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1050,4 +1051,36 @@ function scratchpadify_update_6148(){
   return array(
     '#finished' => TRUE
   );
+}
+
+/**
+ * Set the image_gallery_nav_vocabulary variable.
+ */
+function scratchpadify_update_6149(){
+  if(variable_get('image_gallery_nav_vocabulary', FALSE)){
+    return array(
+      array(
+        'success' => TRUE,
+        'query' => t('Variable is already set.')
+      )
+    );
+  }else{
+    $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE name LIKE 'Image Galleries'"));
+    if($vid){
+      variable_set('image_gallery_nav_vocabulary', $vid);
+      return array(
+        array(
+          'success' => TRUE,
+          'query' => t('Variable has been set.')
+        )
+      );
+    }else{
+      return array(
+        '#abort' => array(
+          'success' => FALSE,
+          'query' => 'No vocabulary like "Image Galleries"'
+        )
+      );
+    }
+  }
 }
