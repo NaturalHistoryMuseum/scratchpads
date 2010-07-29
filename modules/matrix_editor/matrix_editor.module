@@ -223,7 +223,7 @@ function matrix_editor_theme(){
 
 function matrix_editor_preprocess_views_view(&$vars){
   if($vars['view']->tag == 'matrix_editor'){
-    $vars['header'] .= '<a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
+    $vars['header'] .= '<p>The Matrix Editor is currently in Alpha testing.  Please <a href="mailto:scratchpad@nhm.ac.uk">email</a> us any feedback.<p><a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
   }
 }
 
