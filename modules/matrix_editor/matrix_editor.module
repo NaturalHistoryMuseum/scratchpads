@@ -31,14 +31,14 @@ function matrix_editor_preprocess_views_view_matrix(&$vars){
     }
     ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
     $column = array(
-      'id' => $field, 
-      'name' => $name, 
-      'field' => $field, 
-      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 100), 
-      'cssClass' => 'cell-title', 
-      'resizable' => ($options['enableColumnResize'] ? 1 : 0), 
-      'formatter' => 'selectorCellFormatter', 
-      'editor' => 'MatrixCellEditor', 
+      'id' => $field,
+      'name' => $name,
+      'field' => $field,
+      'width' => ($options['columns'][$field]['width'] ? $options['columns'][$field]['width'] : 100),
+      'cssClass' => 'cell-title',
+      'resizable' => ($options['enableColumnResize'] ? 1 : 0),
+      'formatter' => 'selectorCellFormatter',
+      'editor' => 'MatrixCellEditor',
       'args' => ''
     );
     if((isset($first_field) && $first_field == $field)){
@@ -75,8 +75,8 @@ function matrix_editor_preprocess_views_view_matrix(&$vars){
   $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
   $path = drupal_get_path('module', 'matrix_editor');
   $form['save_changes'] = array(
-    '#type' => 'image_button', 
-    '#src' => $path . '/images/save_changes.gif', 
+    '#type' => 'image_button',
+    '#src' => $path . '/images/save_changes.gif',
     '#value' => t('Save note')
   );
   $vars['matrix'] .= '<div id="matrix-editor-panel"><form entype="multipart/form-data">';
@@ -106,7 +106,7 @@ function theme_matrix_editor($options, $columns, $data, $filter = null){
   drupal_add_js('var data = []; data = ' . drupal_to_js($data), 'inline');
   if($filter){
     drupal_add_js('var filter = ' . $filter, 'inline');
-  }  
+  }
   drupal_add_js('var columns = ' . matrix_editor_to_js($columns) . ';', 'inline');
   $output = '<div id="resizableWrapper">
   <div id="myGrid" style="width:100%;height:' . $options['viewportHeight'] . 'px;" class="hideCols hideRows ' . ($options['editable'] ? 'editable' : '') . '">
@@ -121,7 +121,7 @@ function theme_matrix_editor($options, $columns, $data, $filter = null){
 function theme_matrix_editor_views_plugin_table($form){
   $output = drupal_render($form['description_markup']);
   $header = array(
-    t('Field'), 
+    t('Field'),
     t('Width')
   );
   $rows = array();
@@ -151,15 +151,15 @@ function matrix_editor_views_query_alter(&$view, &$query){
 function matrix_editor_menu(){
   // Menu callbacks
   $items['matrix_editor/callback/%/%'] = array(
-    'access callback' => 'matrix_editor_access', 
+    'access callback' => 'matrix_editor_access',
     'access arguments' => array(
       2
-    ), 
-    'page callback' => 'matrix_editor_callback', 
+    ),
+    'page callback' => 'matrix_editor_callback',
     'page arguments' => array(
       3
-    ), 
-    'type' => MENU_CALLBACK, 
+    ),
+    'type' => MENU_CALLBACK,
     'file' => 'matrix_editor.callbacks.inc'
   );
   return $items;
@@ -211,10 +211,10 @@ function matrix_editor_theme(){
     // Display the matrix editor
     'matrix_editor' => array(
       'arguments' => array()
-    ), 
+    ),
     'matrix_editor_fields_form' => array(
       'arguments' => array()
-    ), 
+    ),
     'matrix_editor_views_plugin_table' => array(
       'arguments' => array()
     )
@@ -222,11 +222,9 @@ function matrix_editor_theme(){
 }
 
 function matrix_editor_preprocess_views_view(&$vars){
-	
-	if($vars['view']->tag == 'matrix_editor'){
-	$vars['header'] .= '<a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
-	}
-	
+  if($vars['view']->tag == 'matrix_editor'){
+    $vars['header'] .= '<a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
+  }
 }
 
 /**
@@ -236,11 +234,11 @@ function matrix_editor_get_jquery_replacements(){
   $path = drupal_get_path('module', 'matrix_editor') . '/js/lib';
   $replacements = array(
     'module' => array(
-      'misc/farbtastic/farbtastic.js' => $path . '/jquery/farbtastic.js', 
-      'misc/teaser.js' => $path . '/jquery/teaser.js', 
-      'misc/ahah.js' => $path . '/jquery/ahah.js', 
+      'misc/farbtastic/farbtastic.js' => $path . '/jquery/farbtastic.js',
+      'misc/teaser.js' => $path . '/jquery/teaser.js',
+      'misc/ahah.js' => $path . '/jquery/ahah.js',
       'misc/jquery.form.js' => $path . '/jquery/jquery.form.js'
-    ), 
+    ),
     'core' => array(
       'misc/tabledrag.js' => $path . '/jquery/tabledrag.js'
     )
@@ -248,15 +246,15 @@ function matrix_editor_get_jquery_replacements(){
   // Replace jquery
   if(jquery_ui_get_version() != '1.7'){
     $jquery_ui = array(
-      'ui.core.js', 
-      'ui.resizable.js', 
-      'ui.draggable.js', 
-      'ui.droppable.js', 
-      'ui.sortable.js', 
-      'ui.slider.js', 
-      'ui.datepicker.js', 
-      'ui.tabs.js', 
-      'effects.core.js', 
+      'ui.core.js',
+      'ui.resizable.js',
+      'ui.draggable.js',
+      'ui.droppable.js',
+      'ui.sortable.js',
+      'ui.slider.js',
+      'ui.datepicker.js',
+      'ui.tabs.js',
+      'effects.core.js',
       'effects.highlight.js'
     );
     foreach($jquery_ui as $ui){
@@ -320,12 +318,12 @@ function _matrix_editor_add_files(){
   $path = drupal_get_path('module', 'matrix_editor');
   matrix_editor_alternate_js(true);
   jquery_ui_add(array(
-    'ui.resizable', 
-    'ui.draggable', 
-    'ui.droppable', 
-    'ui.sortable', 
-    'ui.slider', 
-    'ui.datepicker', 
+    'ui.resizable',
+    'ui.draggable',
+    'ui.droppable',
+    'ui.sortable',
+    'ui.slider',
+    'ui.datepicker',
     'effects.highlight'
   ), 'none');
   drupal_add_js($path . '/js/lib/slickgrid/slick.globaleditorlock.js');
@@ -353,10 +351,10 @@ function _matrix_editor_add_files(){
  */
 function matrix_editor_to_js($elements, $additional_function_names = array()){
   $function_names = array(
-    'formatter', 
-    'validator', 
-    'editor', 
-    'setValueHandler', 
+    'formatter',
+    'validator',
+    'editor',
+    'setValueHandler',
     'resizable'
   );
   if(count($additional_function_names)){
@@ -390,15 +388,15 @@ function matrix_editor_to_js($elements, $additional_function_names = array()){
 function matrix_editor_imagecache_default_presets(){
   return array(
     'matrix_editor_thumbnail' => array(
-      'presetname' => 'matrix_editor_thumbnail', 
+      'presetname' => 'matrix_editor_thumbnail',
       'actions' => array(
         array(
-          'weight' => '0', 
-          'module' => 'imagecache', 
-          'action' => 'imagecache_scale', 
+          'weight' => '0',
+          'module' => 'imagecache',
+          'action' => 'imagecache_scale',
           'data' => array(
-            'width' => '100', 
-            'height' => '100', 
+            'width' => '100',
+            'height' => '100',
             'upscale' => 0
           )
         )
@@ -464,28 +462,28 @@ function matrix_editor_views_pre_view(&$view, $display_id){
 function matrix_editor_fields_form($form_state, $view, $field_options, $field_settings = null){
   $form = array();
   $form['fields'] = array(
-    '#type' => 'select', 
-    '#title' => t('Fields to display'), 
-    '#multiple' => true, 
-    '#default_value' => ($field_settings ? $field_settings : array_keys($field_options)), 
+    '#type' => 'select',
+    '#title' => t('Fields to display'),
+    '#multiple' => true,
+    '#default_value' => ($field_settings ? $field_settings : array_keys($field_options)),
     '#options' => $field_options
   );
   $form['view'] = array(
-    '#type' => 'hidden', 
+    '#type' => 'hidden',
     '#value' => $view->name
   );
   $form['submit'] = array(
-    '#type' => 'submit', 
+    '#type' => 'submit',
     '#value' => t('Update fields')
   );
   return $form;
 }
 
 function theme_matrix_editor_fields_form($form){
-	$output = '<div class="clearfix">';
-	$output .= drupal_render($form);
-	$output .= '</div>';
-	return $output;
+  $output = '<div class="clearfix">';
+  $output .= drupal_render($form);
+  $output .= '</div>';
+  return $output;
 }
 
 function matrix_editor_fields_form_submit($form, $form_state){
@@ -500,7 +498,7 @@ function matrix_editor_set_settings($view_name, $name, $value){
     $record->view_name = $view_name;
     if($record->settings = matrix_editor_get_settings($user->uid, $view_name)){
       $update = array(
-        'uid', 
+        'uid',
         'view_name'
       );
     }else{
