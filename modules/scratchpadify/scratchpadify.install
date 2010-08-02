@@ -328,6 +328,7 @@ function scratchpadify_install(){
  * 6147: Convert bio_image vocabularies
  * 6148: Recreate the image type on a few sites that have been "parped"
  * 6149: Set the 'image_gallery_nav_vocabulary' variable.
+ * 6150: Ensure the publication content type is a group.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1083,4 +1084,17 @@ function scratchpadify_update_6149(){
       );
     }
   }
+}
+
+/**
+ * Ensure the publication content type is a group.
+ */
+function scratchpadify_update_6150(){
+  variable_set('og_content_type_usage_publication', 'group');
+  return array(
+    array(
+      'success' => TRUE,
+      'query' => t('Variable has been set.')
+    )
+  );
 }
