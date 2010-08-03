@@ -5,6 +5,16 @@
   else
  */
 function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
+  // Lets add a small message to the top of the node/add/image form to point to the 
+  // multiple add image page
+  if($form_id == 'image_node_form'){
+    $form['imagex'] = array(
+      '#weight' => -100, // make sure it is at the top
+      '#value' => '<div class="messages"><p>' . t('You can add multiple images quickly to the site from the <a href="@uploadpage">multiple upload page</a>', array(
+        '@uploadpage' => url('file-plupload')
+      )) . '</p></div>'
+    );
+  }
   if(isset($form['og_nodeapi'])){
     $form['og_nodeapi']['#type'] = 'fieldset';
     $form['og_nodeapi']['#title'] = t('Access');
@@ -107,7 +117,7 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     }
     unset($form['accounts']['#options'][1]);
   }// Prevent editing admin user
-  else if($form_id == 'user_profile_form'){
+else if($form_id == 'user_profile_form'){
     if($form['#uid'] == 1){
       drupal_set_message(t('You can not edit the admin user'), 'error');
       if(isset($_GET['destination'])){
