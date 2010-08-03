@@ -97,7 +97,9 @@ function theme_scratchpadify_subgallery($term){
   )) . '
   </div>
   <div class="scratchpadify-subgallery-details">
-    <h3>' . l(check_plain($term->name), taxonomy_term_path($term)) . '</h3>
+    <h3>' . l(check_plain($term->name), taxonomy_term_path($term), array(
+    'html' => TRUE
+  )) . '</h3>
     <ul>
       <li>' . t('There !num_images in this gallery.', array(
     '!num_images' => $count_and_created['total_count'] ? format_plural($count_and_created['total_count'], 'is 1 image', 'are @count images') : 'no images'
