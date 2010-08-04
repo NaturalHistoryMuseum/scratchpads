@@ -330,6 +330,7 @@ function scratchpadify_install(){
  * 6149: Set the 'image_gallery_nav_vocabulary' variable.
  * 6150: Ensure the publication content type is a group.
  * 6151: Recreate the image type on a few sites that have been "parped"
+ * 6152: Rename files with "&" in them.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1095,4 +1096,27 @@ function scratchpadify_update_6151(){
   return array(
     '#finished' => TRUE
   );
+}
+
+/**
+ * Rename files with "&" in them
+ */
+function scratchpadify_update_6152(){
+  // Move files with "+" in them (remove the +).
+  $ret = array();
+  $results = db_query("SELECT * FROM {files} WHERE filepath LIKE '%%&%%'");
+  while($row = db_fetch_array($results)){
+    if(rename($row['filepath'], str_replace('&', '', $row['filepath']))){
+      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '+', ''), filepath = REPLACE(filepath, '+', '') WHERE fid = " . $row['fid']);
+    }else{
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => t('Failed to rename !image_filename with FID !fid', array(
+          '!image_filename' => $row['filename'],
+          '!fid' => $row['fid']
+        ))
+      );
+    }
+  }
+  return $ret;
 }
