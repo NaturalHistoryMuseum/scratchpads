@@ -1108,7 +1108,7 @@ function scratchpadify_update_6153(){
   $results = db_query("SELECT * FROM {files} WHERE filepath LIKE '%%&%%'");
   while($row = db_fetch_array($results)){
     if(rename($row['filepath'], str_replace('&', '', $row['filepath']))){
-      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '+', ''), filepath = REPLACE(filepath, '+', '') WHERE fid = " . $row['fid']);
+      $ret[] = update_sql("UPDATE {files} SET filename = REPLACE(filename, '&', ''), filepath = REPLACE(filepath, '&', '') WHERE fid = " . $row['fid']);
     }else{
       $ret[] = array(
         'success' => FALSE,
