@@ -1,11 +1,14 @@
 <?php
 // Automatic DB, user, password configuration
 $database = preg_replace("/[-\.]/", "", $_SERVER['HTTP_HOST']);
+if(array_shift(explode(".", $_SERVER['HTTP_HOST'])) == 'dev'){
+  $database = substr($database, 3);
+}
 $conf = array(
   'file_directory_temp' => '/tmp',
   'file_directory_path' => 'sites/' . $_SERVER['HTTP_HOST'] . '/files',
-  'preprocess_css' => 1,
-  'preprocess_js' => 1
+  'preprocess_css' => 0,
+  'preprocess_js' => 0
 );
 $user_password = parse_ini_file("/etc/drupal/6/drupal_db_passwords", true);
 if(!isset($user_password[$database])){
