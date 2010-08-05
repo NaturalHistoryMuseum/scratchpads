@@ -183,6 +183,10 @@ function mado_get_blocks($all_views = FALSE){
  * vocabulary should use the standard layout.
  */
 function mado_get_theme($vid, $tid = false){
+  $mado_theme_cache = cache_get("mado-$vid-$tid");
+  if($mado_theme_cache){
+    return $mado_theme_cache->data;
+  }
   // Check if this vocabulary is set to use Mado
   $mado_vocabularies = variable_get('mado_vocabularies', array());
   if(!isset($mado_vocabularies[$vid]) || !$mado_vocabularies[$vid]){return FALSE;}
@@ -201,6 +205,8 @@ function mado_get_theme($vid, $tid = false){
       $blocks[$key]['#hidden'] = TRUE;
     }
   }
+  // Cache the data for at least a day.
+  cache_set("mado-$vid-$tid", $blocks, 'cache', time()+86400);
   return $blocks;
 }
 
