@@ -799,7 +799,11 @@ function template_preprocess_views_view_row_node(&$vars) {
   $vars['node'] = '';
   $vars['comments'] = '';
 
-  $nid = $vars['row']->{$vars['field_alias']};
+  if(isset($vars['field_alias'])) {
+    $nid = $vars['row']->{$vars['field_alias']};
+  } else {
+    $nid = $vars['row']->nid;
+  }
   if (!is_numeric($nid)) {
     return;
   }
