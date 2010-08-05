@@ -326,7 +326,7 @@ function scratchpadify_views_default_views(){
     'default' => '-1'
   ));
   $handler->override_option('title', 'Bibliography');
-  $handler->override_option('items_per_page', 0);
+  $handler->override_option('items_per_page', 100);
   $views[$view->name] = $view;
   // ---------------------- VOCABULARIES ---------------------------------------
   $view = new view();
