@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * hook_init
+ *
+ * Simply include the Javascript file.  It's safe to include this on all pages,
+ * as the load is pretty minimal.
+ */
+function twitterscript_init(){
+  drupal_add_js(drupal_get_path('module', 'twitterscript') . '/twitterscript.js');
+  drupal_add_css(drupal_get_path('module', 'twitterscript') . '/twitterscript.css');
+}
