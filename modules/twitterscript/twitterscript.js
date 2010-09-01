@@ -6,13 +6,12 @@ Drupal.twitterscript.init = function(context){
   $('.twitterscript', context).each(function(){
     var twitterscript = this;
     $.getJSON('http://search.twitter.com/search.json?rpp=5&q=' + $(this).html() + '&callback=?', function(data){
-      var html_to_embed = '<ul>';
-      console.log(data);
+      var html_to_embed = '<ul class="twitterscript-list">';
       $.each(data.results, function(){
-        html_to_embed += '<li><img width="24px" height="24px" src="'+this.profile_image_url+'"/>'+ autolink(this.text) +'</li>';
+        html_to_embed += '<li><a href="http://twitter.com/'+this.from_user+'"><img src="'+this.profile_image_url+'"/></a>'+ autolink(this.text) +'</li>';
       });
       html_to_embed += '</ul>';
-      $(twitterscript).html(html_to_embed);
+      $(twitterscript).replaceWith(html_to_embed);
     });
   });
 }
