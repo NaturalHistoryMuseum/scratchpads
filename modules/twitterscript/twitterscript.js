@@ -7,9 +7,14 @@ Drupal.twitterscript.init = function(context){
     var twitterscript = this;
     $.getJSON('http://search.twitter.com/search.json?rpp=5&q=' + escape($(this).html()) + '&callback=?', function(data){
       var html_to_embed = '<ul class="twitterscript-list">';
+      var no_results = true;
       $.each(data.results, function(){
+        no_results = false;
         html_to_embed += '<li><a href="http://twitter.com/'+this.from_user+'"><img src="'+this.profile_image_url+'"/></a>'+ autolink(this.text) +'</li>';
       });
+      if(no_results){
+        html_to_embed += '<li>There are no results for '+$(this).html()+'</li>';
+      }
       html_to_embed += '</ul>';
       $(twitterscript).replaceWith(html_to_embed);
     });
