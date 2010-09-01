@@ -132,6 +132,10 @@ function _femail_post_forum_topic($msg, $user, $status){
 }
 
 function femail_drush_callback(){
+  // Femail must be installed, so lets make sure it is, else we exit.
+  if(!module_exists('femail')){
+    return;
+  }
   $msg = _femail_get_msg();
   
   // Check to see this isn't a message that we've just sent out
