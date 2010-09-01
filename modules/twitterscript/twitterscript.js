@@ -13,7 +13,7 @@ Drupal.twitterscript.init = function(context){
         html_to_embed += '<li><a href="http://twitter.com/'+this.from_user+'"><img src="'+this.profile_image_url+'"/></a>'+ autolink(this.text) +'</li>';
       });
       if(no_results){
-        html_to_embed += '<li>There are no results for '+$(this).html()+'</li>';
+        html_to_embed += '<li>There are no results for '+$(twitterscript).html()+'</li>';
       }
       html_to_embed += '</ul>';
       $(twitterscript).replaceWith(html_to_embed);
