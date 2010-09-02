@@ -18,7 +18,7 @@ function mado_uninstall(){
 function mado_schema(){
   $tables['mado'] = array(
     'fields' => array(
-      'identifier' => array('type' => 'varchar', 'length' => '256', 'not null' => true),
+      'identifier' => array('type' => 'varchar', 'length' => '255', 'not null' => true),
       'blocks' => array('type' => 'text', 'not null' => true)),
     'primary key' => array('identifier'));
   return $tables;
