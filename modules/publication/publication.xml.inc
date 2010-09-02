@@ -162,7 +162,7 @@ function _publication_get_fig_xml(&$node){
       <caption>' . trim(_filter_autop($caption_node->body)) . '</caption>
       <graphic xlink:href="' . url('/', array(
         'absolute' => TRUE
-      )) . $image_node->images['_original'] . '"></graphic>
+      )) . $image_node->field_imagefield[0]['filepath'] . '"></graphic>
     </fig>';
     }
     $fig_id++;
