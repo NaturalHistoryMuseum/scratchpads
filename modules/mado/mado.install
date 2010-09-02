@@ -1,12 +1,10 @@
 <?php
 
 function mado_install(){
-  
   // We'll increase the weight so that it is executed _AFTER_ the taxonomy
   // module.  
   $taxonomy_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy'")));
-  db_query("UPDATE {system} SET weight=%d WHERE name='mado'", $taxonomy_weight+10);
-  
+  db_query("UPDATE {system} SET weight=%d WHERE name='mado'", $taxonomy_weight + 10);
   // Install the mado schema so that we can save page layouts
   drupal_install_schema('mado');
 }
@@ -18,9 +16,20 @@ function mado_uninstall(){
 function mado_schema(){
   $tables['mado'] = array(
     'fields' => array(
-      'identifier' => array('type' => 'varchar', 'length' => '255', 'not null' => true),
-      'blocks' => array('type' => 'text', 'not null' => true)),
-    'primary key' => array('identifier'));
+      'identifier' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => true
+      ),
+      'blocks' => array(
+        'type' => 'text',
+        'not null' => true
+      )
+    ),
+    'primary key' => array(
+      'identifier'
+    )
+  );
   return $tables;
 }
 
@@ -35,7 +44,9 @@ function mado_update_6101(){
   db_query_temporary('SELECT MAX(mid) mid FROM {mado} GROUP BY identifier', 'mado_dont_delete');
   $ret[] = update_sql("DELETE FROM {mado} WHERE mid NOT IN (SELECT mid FROM mado_dont_delete)");
   db_drop_field($ret, 'mado', 'mid');
-  db_add_primary_key($ret, 'mado', array('identifier'));
+  db_add_primary_key($ret, 'mado', array(
+    'identifier'
+  ));
   return $ret;
 }
 
@@ -53,5 +64,23 @@ function mado_update_6102(){
     unset($row['blocks']['view-matrix_page']);
     db_query("UPDATE {mado} SET blocks = '%s' WHERE identifier = '%s'", serialize($row['blocks']), $row['identifier']);
   }
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Gah, due to me putting 256, and not 255 (What a twit, I know it's 255) a few
+ * sites may be missing the mado table, so here we'll add it again (this will 
+ * error if already present, but hey, who cares).
+ */
+function mado_update_6103(){
+  drupal_uninstall_schema('mado');
+  // Assume the install has worked!
+  return array(
+    array(
+      'success' => TRUE,
+      'query' => t('Created the table "mado"')
+    )
+  );
 }
