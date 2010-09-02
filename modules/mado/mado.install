@@ -74,8 +74,8 @@ function mado_update_6102(){
  * sites may be missing the mado table, so here we'll add it again (this will 
  * error if already present, but hey, who cares).
  */
-function mado_update_6103(){
-  drupal_uninstall_schema('mado');
+function mado_update_6104(){
+  drupal_install_schema('mado');
   // Assume the install has worked!
   return array(
     array(
