@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * hook_field_formatter_info
+ */
+function nodereferencethumb_field_formatter_info(){
+  $formatters = array();
+  $presets = imagecache_presets();
+  foreach($presets as $preset){
+    $formatters['imagefield_' . $preset['presetname']] = array(
+      'label' => 'Imagefield image (' . $preset['presetname'] . ')',
+      'field types' => array(
+        'nodereference'
+      )
+    );
+  }
+  return $formatters;
+}
+
+/**
+ * hook_theme
+ */
+function nodereferencethumb_theme(){
+  $presets = imagecache_presets();
+  $themes = array();
+  foreach($presets as $preset){
+    $themes['nodereferencethumb_formatter_imagefield_' . $preset['presetname']] = array(
+      'arguments' => array(
+        'element' => NULL
+      ),
+      'function' => 'theme_nodereferencethumb_formatter_imagefield'
+    );
+  }
+  return $themes;
+}
+
+/**
+ * Theme function for 'plain' nodereference field formatter.
+ */
+function theme_nodereferencethumb_formatter_imagefield($element){
+  $presets = imagecache_presets();
+  $preset_name = substr($element['#formatter'], 11);
+  $image_node = node_load(array(
+    'nid' => $element['#item']['nid']
+  ));
+  // Hard coded name of the image field - not ideal, but hey!
+  return l('<img src="'.imagecache_create_url($preset_name, $image_node->field_imagefield[0]['filepath']).'"/>', 'node/'.$element['#item']['nid'], array('html' => TRUE));
+}
