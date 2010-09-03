@@ -332,6 +332,7 @@ function scratchpadify_install(){
  * 6151: Recreate the image type on a few sites that have been "parped"
  * 6152: Rename files with "&" in them. *
  * 6153: Rename files with "&" in them. Previous failed due to file permissions.
+ * 6154: Remove forum tags from all none forum nodes
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1119,5 +1120,15 @@ function scratchpadify_update_6153(){
       );
     }
   }
+  return $ret;
+}
+
+/**
+ * Remove forum vocabulary tags from none forum nodes.
+ */
+function scratchpadify_update_6154(){
+  $ret = array();
+  $forum_vid = variable_get('forum_nav_vocabulary', 0);
+  $ret[] = update_sql("DELETE FROM {term_node} WHERE nid IN (SELECT nid FROM node WHERE type != 'forum') AND tid IN (SELECT tid FROM term_data WHERE vid = $forum_vid)");
   return $ret;
 }
