@@ -182,6 +182,7 @@ function scratchpad_profile_modules(){
     'classification_import',
     'csv_import',
     'publication',
+    'nodereferencethumb',
     // Classification (Temporary)
     'classification',
     'classification_scratchpads',
