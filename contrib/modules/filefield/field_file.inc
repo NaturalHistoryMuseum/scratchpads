@@ -1,5 +1,5 @@
 <?php
-// $Id: field_file.inc,v 1.32 2009/04/12 21:22:17 quicksketch Exp $
+// $Id: field_file.inc,v 1.37 2010/06/29 19:14:16 quicksketch Exp $
 
 /**
  * @file
@@ -38,11 +38,11 @@ function field_file_load($fid, $reset = NULL) {
     }
 
     if (!$file) {
-      $file = array('fid' => 0, 'filepath' => '', 'filename' => '', 'filemime' => '', 'filesize' => 0);
+      $file = (object) array('fid' => 0, 'filepath' => '', 'filename' => '', 'filemime' => '', 'filesize' => 0);
     }
 
     foreach (module_implements('file_load') as $module) {
-      $function =  $module .'_file_load';
+      $function = $module .'_file_load';
       $function($file);
     }
 
@@ -52,7 +52,7 @@ function field_file_load($fid, $reset = NULL) {
 
   // Cast to an array for the field storage.
   // Contrary to fields, hook_file() and core file functions expect objects.
-  return (array)$files[$fid];
+  return isset($files[$fid]) ? (array) $files[$fid] : FALSE;
 }
 
 /**
@@ -85,7 +85,7 @@ function field_file_save_upload($source, $validators = array(), $dest = FALSE) {
     return 0;
   }
   if (!@chmod($file->filepath, 0664)) {
-    watchdog('filefield', 'Could not set permissons on destination file: %file', array('%file' => $file->filepath));
+    watchdog('filefield', 'Could not set permissions on destination file: %file', array('%file' => $file->filepath));
   }
 
   // Let modules add additional properties to the yet barebone file object.
@@ -100,6 +100,12 @@ function field_file_save_upload($source, $validators = array(), $dest = FALSE) {
 /**
  * Save a file into a file node after running all the associated validators.
  *
+ * This function is usually used to move a file from the temporary file
+ * directory to a permanent location. It may be used by import scripts or other
+ * modules that want to save an existing file into the database.
+ *
+ * @param $filepath
+ *   The local file path of the file to be saved.
  * @param $validators
  *   An optional, associative array of callback functions used to validate the
  *   file. The keys are function names and the values arrays of callback
@@ -110,26 +116,22 @@ function field_file_save_upload($source, $validators = array(), $dest = FALSE) {
  * @param $dest
  *   A string containing the directory $source should be copied to. If this is
  *   not provided or is not writable, the temporary directory will be used.
+ * @param $account
+ *   The user account object that should associated with the uploaded file.
  * @return
  *   An array containing the file information, or 0 in the event of an error.
  */
-function field_file_save_file($filepath, $validators = array(), $dest = FALSE) {
-  global $user;
+function field_file_save_file($filepath, $validators = array(), $dest = FALSE, $account = NULL) {
+  if (!isset($account)) {
+    $account = $GLOBALS['user'];
+  }
 
   // Add in our check of the the file name length.
   $validators['file_validate_name_length'] = array();
 
-  // Build the list of non-munged extensions.
-  // @todo: this should not be here. we need to figure out the right place.
-  $extensions = '';
-  foreach ($user->roles as $rid => $name) {
-    $extensions .= ' '. variable_get("upload_extensions_$rid",
-    variable_get('upload_extensions_default', 'jpg jpeg gif png txt html doc xls pdf ppt pps odt ods odp'));
-  }
-
   // Begin building file object.
   $file = new stdClass();
-  $file->uid = $user->uid;
+  $file->uid = $account->uid;
   $file->filename = basename($filepath);
   $file->filepath = $filepath;
   $file->filemime = module_exists('mimedetect') ? mimedetect_mime($file) : file_get_mimetype($file->filename);

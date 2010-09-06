@@ -1,4 +1,4 @@
-// $Id: filefield.js,v 1.19 2009/04/08 20:01:06 quicksketch Exp $
+// $Id: filefield.js,v 1.25 2010/04/24 02:47:49 quicksketch Exp $
 
 /**
  * Auto-attach standard client side file input validation.
@@ -15,7 +15,7 @@ Drupal.behaviors.filefieldValidateAutoAttach = function(context) {
     if (accept.length > 1 && this.value.length > 0) {
       var v = new RegExp('\\.(' + accept + ')$', 'gi');
       if (!v.test(this.value)) {
-        var error = Drupal.t("The selected file %filename cannot not be uploaded. Only files with the following extensions are allowed: %extensions.",
+        var error = Drupal.t("The selected file %filename cannot be uploaded. Only files with the following extensions are allowed: %extensions.",
           { '%filename' : this.value, '%extensions' : accept.replace(/\|/g, ', ') }
         );
         // What do I prepend this to?
@@ -37,10 +37,16 @@ Drupal.behaviors.filefieldValidateAutoAttach = function(context) {
  * Prevent FileField uploads when using buttons not intended to upload.
  */
 Drupal.behaviors.filefieldButtons = function(context) {
-  $('input.form-submit')
-    .bind('mousedown', Drupal.filefield.disableFields)
-    .bind('mousedown', Drupal.filefield.progressBar);
+  $('input.form-submit', context).bind('mousedown', Drupal.filefield.disableFields);
+  $('div.filefield-element input.form-submit', context).bind('mousedown', Drupal.filefield.progressBar);
 };
+
+/**
+ * Open links to files within the node form in a new window.
+ */
+Drupal.behaviors.filefieldPreviewLinks = function(context) {
+  $('div.filefield-element div.widget-preview a', context).click(Drupal.filefield.openInNewWindow).attr('target', '_blank');
+}
 
 /**
  * Admin enhancement: only show the "Files listed by default" when needed.
@@ -77,7 +83,7 @@ Drupal.filefield = {
     // Check if we're working with an "Upload" button.
     var $enabledFields = [];
     if ($(this).parents('div.filefield-element').size() > 0) {
-      $enabledFields = $(this).parent().parent().find('input.form-file');
+      $enabledFields = $(this).parents('div.filefield-element').find('input.form-file');
     }
     // Otherwise we're probably dealing with CCK's "Add another item" button.
     else if ($(this).parents('div.content-add-more').size() > 0) {
@@ -117,5 +123,9 @@ Drupal.filefield = {
       }, 500);
 
     }
+  },
+  openInNewWindow: function(event) {
+    window.open(this.href, 'filefieldPreview', 'toolbar=0,scrollbars=1,location=1,statusbar=1,menubar=0,resizable=1,width=500,height=550');
+    return false;
   }
 };
