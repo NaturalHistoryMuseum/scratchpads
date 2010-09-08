@@ -37,7 +37,8 @@ function _scratchpadify_block($op, $delta, $edit){
             ),
             'publication' => array('import' => FALSE),
             'nexus_project' => array(
-              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>','nexus/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a nexus file')))))),
+              'import' => array(array('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/import.png" alt="Import"/>','nexus/import', array('html' => TRUE, 'attributes' => array('title' => t('Import a nexus file'))))),
+              'matrix' => array()),
             'forum' => array('view' => 'forum'),
             'blog' => array('view' => 'blog'),
             'group' => array('view' => 'og', 'import' => FALSE)
@@ -83,7 +84,12 @@ function _scratchpadify_block($op, $delta, $edit){
               }
               // Add link to matrix editor, we'll let the views module handle
               // permissions for this.
-              $items[$row['name']] .= l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit.png" alt="Grid Editor"/>', 'matrix-editor/'.$row['type'], array('html' => TRUE, 'attributes' => array('title' => t('Edit @name nodes in a grid layout', array('@name' => $row['name'])))));
+              if(isset($links_override[$row['type']]['matrix']) && is_array($links_override[$row['type']]['matrix'])){
+                // Nothing here, as no menu item actually needs this, we're only
+                // using this to prevent a link
+              } else {
+                $items[$row['name']] .= l('<img src="'.base_path().drupal_get_path('module','scratchpadify').'/images/edit.png" alt="Grid Editor"/>', 'matrix-editor/'.$row['type'], array('html' => TRUE, 'attributes' => array('title' => t('Edit @name nodes in a grid layout', array('@name' => $row['name'])))));
+              }
               $items[$row['name']] .= '</div>';
             }
             if(in_array($row['type'],$viewing_group) && og_menu_access_picture(arg(1))){
