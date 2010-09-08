@@ -1,13 +1,21 @@
 <?php
+
 function sandbox_block($op = 'list', $delta = 0, $edit = array()){
-  switch ($op){
+  switch($op){
     case 'list':
-      return array(array('info' => t('Sandbox timer')));
+      return array(
+        array(
+          'info' => t('Sandbox timer')
+        )
+      );
     case 'view':
-      $time_passed = time() - variable_get('sandbox_site_created',time());
+      $time_passed = time() - variable_get('sandbox_site_created', time());
       $time_left = format_interval(21600 - $time_passed);
       $time_passed = format_interval($time_passed);
-      return array('subject' => '', 'content' => "<p>The Sandbox was last updated $time_passed ago. You have approximately $time_left before the site is wiped.</p>");
+      return array(
+        'subject' => '',
+        'content' => "<p>The Sandbox was last updated $time_passed ago. You have approximately $time_left before the site is wiped.</p>"
+      );
   }
 }
 
@@ -18,23 +26,40 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
  * are installed automatically, with no user input.
  */
 function sandbox_form_alter(&$form, $form_state, $form_id){
-  if($form_id == 'install_configure_form'){
-    $form_state = array (
-      'storage' => NULL, 
-      'submitted' => TRUE, 
-      'values' => array (
-        'site_name' => 'Scratchpad Sandbox', 
-        'site_mail' => 'scratchpad@nhm.ac.uk', 
-        'account' => array(
-          'name' => 'test',
-          'mail' => 'scratchpad@nhm.ac.uk', 
-          'pass' => 'pass'), 
-        'date_default_timezone' => '3600', 
-        'clean_url' => '1',
-        'update_status_module' => array (1 => 0), 
-        'op' => 'Save and continue', 
-        'submit' => 'Save and continue', 
-        'form_id' => 'install_configure_form'));
-    scratchpadify_install_configure_form_submit($form, $form_state);
+  switch($form_id){
+    case 'install_configure_form':
+      $form_state = array(
+        'storage' => NULL,
+        'submitted' => TRUE,
+        'values' => array(
+          'site_name' => 'Scratchpad Sandbox',
+          'site_mail' => 'scratchpad@nhm.ac.uk',
+          'account' => array(
+            'name' => 'test',
+            'mail' => 'scratchpad@nhm.ac.uk',
+            'pass' => 'pass'
+          ),
+          'date_default_timezone' => '3600',
+          'clean_url' => '1',
+          'update_status_module' => array(
+            1 => 0
+          ),
+          'op' => 'Save and continue',
+          'submit' => 'Save and continue',
+          'form_id' => 'install_configure_form'
+        )
+      );
+      scratchpadify_install_configure_form_submit($form, $form_state);
+      break;
+    case 'user_profile_form':
+      if($form['#uid'] == 2){
+        drupal_set_message(t('You can not edit the "test" user'), 'error');
+        if(isset($_GET['destination'])){
+          drupal_goto($_GET['destination']);
+        }else{
+          drupal_goto(referer_uri());
+        }
+        break;
+      }
   }
 }
