@@ -31,6 +31,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   }
   drupal_add_css(drupal_get_path('theme','scratchy').'/print.css','theme','print',FALSE);
   drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
+  drupal_add_css(drupal_get_path('theme','scratchy').'/'.$_SERVER['HTTP_HOST'].'.screen.css','theme','screen',FALSE);
   if(function_exists('jquery_ui_add')){
     jquery_ui_add();    
   }
@@ -42,7 +43,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
 <![endif]-->
 </head>
   <body>
-    <div class="header">';
+    <div id="header">';
   if ($logo = theme_get_setting('logo')) {
     $output .= '<a href="'.base_path().'" title="'.t('Home').'"><img src="'.$logo.'" alt="'.t('Home').'"/></a>';
   }else{
