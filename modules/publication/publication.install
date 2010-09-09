@@ -242,3 +242,11 @@ function publication_uninstall_fields(){
   }
 }
 
+/**
+ * Update to scrub the menu - Only required due to a change in function name in 
+ * the node_clone module
+ */
+function publication_update_6101(){  
+  menu_rebuild();
+  return array('#finished' => TRUE);
+}
