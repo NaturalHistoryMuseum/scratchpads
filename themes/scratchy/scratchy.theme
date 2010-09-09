@@ -108,7 +108,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
 <!-- end content -->
 </div>';
   if ($show_blocks && !empty($blocks_right)) {
-    $output .='<div id="sidebar-right'.(!drupal_is_front_page() ? '' : ' scratchy-padding').'"><div>
+    $output .='<div id="sidebar-right"'.(drupal_is_front_page() ? '' : ' class="scratchy-padding"').'><div>
 '.$blocks_right.'</div></div>';
   }
   $output .='<div class="mainfull"></div><div id="footer"><div align="center" style="padding: 20px"><a 
