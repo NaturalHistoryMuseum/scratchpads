@@ -93,7 +93,7 @@ function _scratchpadify_block($op, $delta, $edit){
               $items[$row['name']] .= '</div>';
             }
             if(in_array($row['type'],$viewing_group) && og_menu_access_picture(arg(1))){
-              $items[$row['name']] .= '<br/><span style="font-size:80%">'.l(t('Members'),'og/users/'.arg(1).'/faces') . ' | '.l(t('My membership'), 'og/manage/'.arg(1)).'</span>';
+              $items[$row['name']] .= '<br/><span style="font-size:80%">'.l(t('Members'),'og/users/'.arg(1)) . ' | '.l(t('My membership'), 'og/manage/'.arg(1)).'</span>';
             }
           }
           // Additional item for taxonomy
