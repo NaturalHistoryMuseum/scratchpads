@@ -1,5 +1,5 @@
 <?php
-// $Id: noderelationships.module,v 1.1.2.24 2010/01/03 20:45:10 markuspetrux Exp $
+// $Id: noderelationships.module,v 1.1.2.27 2010/05/16 18:26:01 markuspetrux Exp $
 
 /**
  * @file
@@ -296,9 +296,7 @@ function noderelationships_content_fieldapi($op, $field) {
 
     if ($op == 'delete instance') {
       // Delete relations related to this field instance.
-      $args = array($field['type_name'], $field['field_name']);
-      noderelationships_settings_delete("relation_type = 'noderef' AND type_name = '%s' AND field_name = '%s'", $args);
-      noderelationships_settings_delete("relation_type = 'backref' AND related_type = '%s' AND field_name = '%s'", $args);
+      noderelationships_settings_delete_nodereference($field['type_name'], $field['field_name']);
     }
 
     // Clear cached information about relationships (all operations).
@@ -423,6 +421,10 @@ function noderelationships_form_alter(&$form, $form_state, $form_id) {
       module_load_include('inc', 'noderelationships', 'noderelationships.pages');
       _noderelationships_child_node_form_alter($form, $_GET['noderelationships_referrer_type'], $_GET['noderelationships_field_name']);
     }
+    elseif (!empty($_GET['noderelationships_edit'])) {
+      module_load_include('inc', 'noderelationships', 'noderelationships.pages');
+      _noderelationships_child_edit_form_alter($form);
+    }
     return;
   }
 }
@@ -434,7 +436,7 @@ function noderelationships_form_alter(&$form, $form_state, $form_id) {
  */
 function noderelationships_init() {
   // Enable the Modal Frame API for the child window.
-  if (!empty($_GET['noderelationships_referrer_type']) && !empty($_GET['noderelationships_field_name'])) {
+  if ((!empty($_GET['noderelationships_referrer_type']) && !empty($_GET['noderelationships_field_name'])) || !empty($_GET['noderelationships_edit'])) {
     modalframe_child_js();
   }
 }
@@ -451,12 +453,19 @@ function _noderelationships_parent_node_form_scanner_proxy($form) {
 }
 
 /**
- * Proxy function to invoke node form after_build and pre_render callbacks,
- * because the file where the real handler is implemented might not be included
- * yet when the form is processed and invokes the callback.
+ * Proxy function to invoke the pre_render callback for the child node form.
  */
 function _noderelationships_child_node_form_pre_render_proxy($form) {
   module_load_include('inc', 'noderelationships');
   module_load_include('inc', 'noderelationships', 'noderelationships.pages');
   return _noderelationships_child_node_form_pre_render($form);
+}
+
+/**
+ * Proxy function to invoke the submit handler for the child node form.
+ */
+function _noderelationships_child_node_form_submit_proxy($form, &$form_state) {
+  module_load_include('inc', 'noderelationships');
+  module_load_include('inc', 'noderelationships', 'noderelationships.pages');
+  _noderelationships_child_node_form_submit($form, $form_state);
 }

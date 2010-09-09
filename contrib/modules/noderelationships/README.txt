@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Node Relationships
-;; $Id: README.txt,v 1.1.2.11 2009/11/01 19:43:21 markuspetrux Exp $
+;; $Id: README.txt,v 1.1.2.12 2010/05/14 04:23:29 markuspetrux Exp $
 ;;
 ;; Original author: markus_petrux (http://drupal.org/user/39593)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -55,7 +55,7 @@ REQUIREMENTS
 - Modal Frame API.
   http://drupal.org/project/modalframe
 
-- jQuery UI (works with 1.6.x or 1.7.x).
+- jQuery UI module (with jQuery UI library 1.7.x).
   http://drupal.org/project/jquery_ui
 
 

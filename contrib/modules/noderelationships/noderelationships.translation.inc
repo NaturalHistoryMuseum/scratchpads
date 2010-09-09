@@ -1,5 +1,5 @@
 <?php
-// $Id: noderelationships.translation.inc,v 1.1.2.2 2009/08/23 21:39:28 markuspetrux Exp $
+// $Id: noderelationships.translation.inc,v 1.1.2.3 2010/03/07 19:08:17 markuspetrux Exp $
 
 /**
  * @file
@@ -189,9 +189,11 @@ function _noderelationships_parent_node_form_build_translation_settings(&$node, 
 
       // Provide a link to "Translate and reference" when possible.
       if ($reference['translate_and_reference']['translation_supported']) {
+        $language_list = language_list();
+        $language = (isset($_GET['language']) && isset($language_list[$_GET['language']]) ? $_GET['language'] : $GLOBALS['language']->language);
         $field_settings[$field_name]['missingTranslations'][$delta] .= ' '. t('You can !translate now.', array(
           '!translate' => l(t('translate and reference'), 'noderelationships/create/'. $node->type .'/'. $field_name, array(
-            'query' => 'translation='. $reference_source->nid .'&language='. $GLOBALS['language']->language,
+            'query' => 'translation='. $reference_source->nid .'&language='. $language,
             'attributes' => array(
               'class' => 'noderelationships-translate',
               'title' => t('Click here to translate and reference @title [nid: @nid] now.', array(

@@ -1,5 +1,5 @@
 <?php
-// $Id: noderelationships.admin.inc,v 1.1.2.17 2009/09/20 18:08:53 markuspetrux Exp $
+// $Id: noderelationships.admin.inc,v 1.1.2.20 2010/05/16 18:26:01 markuspetrux Exp $
 
 /**
  * @file
@@ -240,6 +240,16 @@ These extra options are available only to node reference fields configured to us
   $form['search_and_reference_view'] = array(
     '#tree' => TRUE,
   );
+  $form['view_in_new_window'] = array(
+    '#type' => 'checkboxes',
+    '#default_value' => $noderef_settings['view_in_new_window'],
+    '#options' => array(),
+  );
+  $form['edit_reference'] = array(
+    '#type' => 'checkboxes',
+    '#default_value' => $noderef_settings['edit_reference'],
+    '#options' => array(),
+  );
   $form['create_and_reference'] = array(
     '#type' => 'checkboxes',
     '#default_value' => $noderef_settings['create_and_reference'],
@@ -265,24 +275,19 @@ These extra options are available only to node reference fields configured to us
     );
 
     if ($field['widget']['type'] == 'nodereference_autocomplete') {
-      $form['create_and_reference']['#options'][$field_name] = '';
+      $form['view_in_new_window']['#options'][$field_name] = t('View reference in new window');
+      $form['edit_reference']['#options'][$field_name] = t('Edit reference');
+      $form['create_and_reference']['#options'][$field_name] = t('Create and reference');
       if (isset($form['translate_and_reference'])) {
-        $form['translate_and_reference']['#options'][$field_name] = '';
+        $form['translate_and_reference']['#options'][$field_name] = t('Translate and reference');
       }
       $form['search_and_reference_view'][$field_name] = array(
         '#type' => 'select',
+        '#title' => t('Search and reference view'),
         '#default_value' => (!empty($noderef_settings['search_and_reference_view'][$field_name]) ? $noderef_settings['search_and_reference_view'][$field_name] : ''),
         '#options' => $options_search_and_reference_view,
       );
     }
-  }
-
-  // Enable checkall feature if more than one option is available.
-  if (count(element_children($form['create_and_reference']['#options'])) > 1) {
-    $form['create_and_reference']['#checkall'] = 'noderelationships-checkall-settings-create';
-  }
-  if (isset($form['translate_and_reference']) && count(element_children($form['translate_and_reference']['#options'])) > 1) {
-    $form['translate_and_reference']['#checkall'] = 'noderelationships-checkall-settings-translate';
   }
 
   $form['submit'] = array(
@@ -302,10 +307,11 @@ function noderelationships_admin_settings_noderef_submit($form, &$form_state) {
   // Move form values to settings array.
   $settings['noderef'] = array(
     'search_and_reference_view' => array_filter($form_values['search_and_reference_view']),
+    'view_in_new_window' => array_filter($form_values['view_in_new_window']),
+    'edit_reference' => array_filter($form_values['edit_reference']),
     'create_and_reference' => array_filter($form_values['create_and_reference']),
     'translate_and_reference' => (isset($form_values['translate_and_reference']) ? array_filter($form_values['translate_and_reference']) : array()),
   );
-
 
   // Update settings and clear caches if changes exist.
   if (noderelationships_settings_save($form['#noderelationships-type'], $settings)) {
@@ -339,14 +345,9 @@ function theme_noderelationships_admin_settings_noderef($form) {
     array('data' => t('Referred types')),
     array('data' => t('Required'), 'class' => 'noderelationships-cell-center'),
     array('data' => t('Cardinality'), 'class' => 'noderelationships-cell-center'),
-    array('data' => t('Search and reference view')),
-    array('data' => t('Create and reference'), 'class' => 'noderelationships-cell-center noderelationships-checkall-settings-create'),
+    array('data' => t('Extra node reference widget features')),
   );
-  $options_colspan = 2;
   if (isset($form['translate_and_reference'])) {
-    $headers[] = array('data' => t('Translate and reference'), 'class' => 'noderelationships-cell-center noderelationships-checkall-settings-translate');
-    $options_colspan++;
-
     // Display a warning if i18n module is not enabled, or not configured
     // for the "Translate and reference" feature to work properly.
     if (!module_exists('i18n')) {
@@ -411,32 +412,33 @@ function theme_noderelationships_admin_settings_noderef($form) {
 
     // Extra settings for node reference fields are available only for the
     // nodereference_autocomplete widget.
+    $extra_features = array();
     if (isset($form['search_and_reference_view'][$field_name])) {
+
       // Search and reference view.
-      $cells[] = array(
-        'data' => drupal_render($form['search_and_reference_view'][$field_name]),
-        'class' => 'noderelationships-cell-options',
-      );
+      $extra_features[] = drupal_render($form['search_and_reference_view'][$field_name]);
+
+      // View reference in new window.
+      $extra_features[] = drupal_render($form['view_in_new_window'][$field_name]);
+
+      // Edit reference.
+      $extra_features[] = drupal_render($form['edit_reference'][$field_name]);
+
       // Create and reference.
-      $cells[] = array(
-        'data' => drupal_render($form['create_and_reference'][$field_name]),
-        'class' => 'noderelationships-cell-center',
-      );
+      $extra_features[] = drupal_render($form['create_and_reference'][$field_name]);
+
       // Translate and reference.
       if (isset($form['translate_and_reference'])) {
-        $cells[] = array(
-          'data' => drupal_render($form['translate_and_reference'][$field_name]),
-          'class' => 'noderelationships-cell-center',
-        );
+        $extra_features[] = drupal_render($form['translate_and_reference'][$field_name]);
       }
     }
-    else {
-      $cells[] = array(
-        'data' => t('These options are available only for node reference autocomplete widgets.'),
-        'class' => 'noderelationships-cell-options',
-        'colspan' => $options_colspan,
-      );
+    if (empty($extra_features)) {
+      $extra_features[] = t('These options are available only for node reference autocomplete widgets.');
     }
+    $cells[] = array(
+      'data' => implode('', $extra_features),
+      'class' => 'noderelationships-cell-options',
+    );
 
     $rows[] = array('data' => $cells);
   }

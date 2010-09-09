@@ -1,5 +1,5 @@
 <?php
-// $Id: noderelationships.inc,v 1.1.2.25 2009/12/27 11:17:19 markuspetrux Exp $
+// $Id: noderelationships.inc,v 1.1.2.30 2010/05/16 18:26:01 markuspetrux Exp $
 
 /**
  * @file
@@ -58,6 +58,8 @@ function noderelationships_settings_load($nodetype, $settings_group = 'all') {
   $settings = array(
     'noderef' => array(
       'search_and_reference_view' => array(),
+      'view_in_new_window' => array(),
+      'edit_reference' => array(),
       'create_and_reference' => array(),
       'translate_and_reference' => array(),
     ),
@@ -74,6 +76,12 @@ function noderelationships_settings_load($nodetype, $settings_group = 'all') {
     if ($row->relation_type == 'noderef') {
       if (!empty($row->settings['search_and_reference_view'])) {
         $settings['noderef']['search_and_reference_view'][$row->field_name] = $row->settings['search_and_reference_view'];
+      }
+      if (!empty($row->settings['view_in_new_window'])) {
+        $settings['noderef']['view_in_new_window'][$row->field_name] = $row->field_name;
+      }
+      if (!empty($row->settings['edit_reference'])) {
+        $settings['noderef']['edit_reference'][$row->field_name] = $row->field_name;
       }
       if (!empty($row->settings['create_and_reference'])) {
         $settings['noderef']['create_and_reference'][$row->field_name] = $row->field_name;
@@ -185,6 +193,33 @@ function noderelationships_settings_delete($where) {
     $args = $args[0];
   }
   db_query('DELETE FROM {noderelationships_settings} WHERE '. $where, $args);
+}
+
+/**
+ * Delete relationship settings when a nodereference field has been deleted.
+ */
+function noderelationships_settings_delete_nodereference($nodetype, $field_name) {
+  // Prepare data to delete relations related to a CCK field instance.
+  $args = array($nodetype, $field_name);
+  $noderef_conditions = "relation_type = 'noderef' AND type_name = '%s' AND field_name = '%s'";
+  $backref_conditions = "relation_type = 'backref' AND related_type = '%s' AND field_name = '%s'";
+
+  // Delete node reference extras settings.
+  noderelationships_settings_delete($noderef_conditions, $args);
+
+  // Scan all back reference settings affected by this instance.
+  $types_to_sync = array();
+  foreach (noderelationships_settings_list($backref_conditions, $args) as $row) {
+    if (!isset($types_to_sync[$row->type_name])) {
+      $types_to_sync[$row->type_name] = $row->type_name;
+    }
+  }
+
+  // Delete back reference related settings.
+  noderelationships_settings_delete($backref_conditions, $args);
+
+  // Synchronize back reference settings with back reference fields.
+  noderelationships_cck_backref_sync_fields($types_to_sync);
 }
 
 /**
@@ -702,9 +737,7 @@ function noderelationships_get_views($relation_type) {
     }
     // Let's look at all displays defined for the view.
     $view_displays = array();
-
     foreach ($view->display as $display_id => $display_info) {
-    
       if ($relation_type == 'backref') {
         // For backref views we are interested only in default display.
         if ($display_info->display_plugin != 'default') {
@@ -718,7 +751,6 @@ function noderelationships_get_views($relation_type) {
         }
         // For the moment, we can only guarantee support for the following
         // style pulgins:
-        
         $supported_style_plugins = array('table', 'grid', 'fluid_grid');
         $view->set_display($display_id);
         if (!in_array($view->display_handler->get_option('style_plugin'), $supported_style_plugins)) {
@@ -1175,19 +1207,19 @@ function noderelationships_customize_noderef_view(&$view, $display_id, &$view_ar
  */
 function noderelationships_get_localized_content_type($nodetype) {
   $type = node_get_types('type', $nodetype);
-  if ($type && module_exists('i18ncontent')) {
-    $type->name = tt("nodetype:type:$nodetype:name", $type->name);
+  if ($type && ($i18nstrings = noderelationships_get_i18nstrings())) {
+    $type->name = $i18nstrings("nodetype:type:$nodetype:name", $type->name);
     if (!empty($type->description)) {
-      $type->description = tt("nodetype:type:$nodetype:description", $type->description);
+      $type->description = $i18nstrings("nodetype:type:$nodetype:description", $type->description);
     }
     if (!empty($type->title_label)) {
-      $type->title_label = tt("nodetype:type:$nodetype:title", $type->title_label);
+      $type->title_label = $i18nstrings("nodetype:type:$nodetype:title", $type->title_label);
     }
     if (!empty($type->body_label)) {
-      $type->body_label = tt("nodetype:type:$nodetype:body", $type->body_label);
+      $type->body_label = $i18nstrings("nodetype:type:$nodetype:body", $type->body_label);
     }
     if (!empty($type->help)) {
-      $type->help = tt("nodetype:type:$nodetype:help", $type->help);
+      $type->help = $i18nstrings("nodetype:type:$nodetype:help", $type->help);
     }
   }
   return $type;
@@ -1198,10 +1230,26 @@ function noderelationships_get_localized_content_type($nodetype) {
  */
 function noderelationships_get_localized_content_type_name($nodetype) {
   $name = node_get_types('name', $nodetype);
-  if (module_exists('i18ncontent')) {
-    $name = tt("nodetype:type:$nodetype:name", $name);
+  if ($i18nstrings = noderelationships_get_i18nstrings()) {
+    $name = $i18nstrings("nodetype:type:$nodetype:name", $name);
   }
   return $name;
+}
+
+/**
+ * Get the name of the i18nstrings() function, it was tt().
+ *
+ * @todo Remove when this issue is stable in i18n module.
+ * @link http://drupal.org/node/358839 Fatal error: Call to undefined function tt() @endlink
+ */
+function noderelationships_get_i18nstrings() {
+  if (function_exists('i18nstrings')) {
+    return 'i18nstrings';
+  }
+  if (function_exists('tt')) {
+    return 'tt';
+  }
+  return FALSE;
 }
 
 /**

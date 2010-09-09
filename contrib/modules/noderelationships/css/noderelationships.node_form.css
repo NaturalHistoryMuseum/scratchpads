@@ -1,4 +1,4 @@
-/* $Id: noderelationships.node_form.css,v 1.1.2.1 2009/09/20 18:08:53 markuspetrux Exp $ */
+/* $Id: noderelationships.node_form.css,v 1.1.2.2 2010/05/16 17:03:20 markuspetrux Exp $ */
 
 /**
  * Search/Create and reference buttons.
@@ -17,6 +17,8 @@
 }
 .noderelationships-nodereference-view-button,
 .noderelationships-nodereference-view-disabled,
+.noderelationships-nodereference-edit-button,
+.noderelationships-nodereference-edit-disabled,
 .noderelationships-nodereference-search-button,
 .noderelationships-nodereference-create-button,
 .noderelationships-nodereference-multi-button {
@@ -36,6 +38,12 @@
 .noderelationships-nodereference-view-disabled {
   background-position: -20px 0;
 }
+.noderelationships-nodereference-edit-button {
+  background-position: 0 -20px;
+}
+.noderelationships-nodereference-edit-disabled {
+  background-position: -20px -20px;
+}
 .noderelationships-nodereference-search-button {
   background-position: -40px 0;
 }
@@ -47,13 +55,16 @@
   background-position: -80px 0;
 }
 .noderelationships-nodereference-view-button:hover,
+.noderelationships-nodereference-edit-button:hover,
 .noderelationships-nodereference-search-button:hover,
 .noderelationships-nodereference-create-button:hover,
 .noderelationships-nodereference-multi-button:hover {
   background-color: #ffffff;
 }
 .noderelationships-nodereference-view-disabled,
-.noderelationships-nodereference-view-disabled:hover {
+.noderelationships-nodereference-view-disabled:hover,
+.noderelationships-nodereference-edit-disabled,
+.noderelationships-nodereference-edit-disabled:hover {
   cursor: default;
   border-color: #606060 #cecece #cecece #606060;
   background-color: #e0e0e0;
