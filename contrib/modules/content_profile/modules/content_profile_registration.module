@@ -1,5 +1,5 @@
 <?php
-// $Id: content_profile_registration.module,v 1.1.2.35 2009/09/15 14:27:01 fago Exp $
+// $Id: content_profile_registration.module,v 1.1.2.36 2010/03/26 16:32:28 fago Exp $
 
 /**
  * @file
@@ -212,7 +212,7 @@ function content_profile_registration_user_register_validate($form, &$form_state
     unset($node->name);
 
     if (!in_array('other', content_profile_get_settings($type, 'registration_hide'))) {
-      node_validate($node);
+      node_validate($node, $form);
     }
     elseif (module_exists('content')) {
       content_validate($node);
