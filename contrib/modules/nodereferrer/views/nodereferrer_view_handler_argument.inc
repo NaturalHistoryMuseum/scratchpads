@@ -1,5 +1,5 @@
 <?php
-// $Id: nodereferrer_view_handler_argument.inc,v 1.1.2.1 2009/09/22 11:15:35 andypost Exp $
+// $Id: nodereferrer_view_handler_argument.inc,v 1.1.2.3 2009/12/28 09:15:55 andypost Exp $
 /**
  * @file
  * nodereferrer.module Views integration
@@ -53,7 +53,7 @@ class nodereferrer_view_handler_argument extends views_handler_argument {
       }
       $form['multilingual']['referrers_of_translations'] = array(
         '#type'  => 'checkbox',
-        '#title' => t('Include refererrers of translations'),
+        '#title' => t('Include referrers of translations'),
         '#description' => t('If this is checked, will also include nodes that refer to translations of the given node'),
         '#default_value' => $default,
       );
@@ -92,6 +92,10 @@ class nodereferrer_view_handler_argument extends views_handler_argument {
     }
     else {
       $in = '(' . implode(', ', $list) . ')';
+
+      if (!$this->options['operator']) {
+        $this->options['operator'] = 'in';
+      }
 
       $this->query->add_where(
         $this->options['group'],

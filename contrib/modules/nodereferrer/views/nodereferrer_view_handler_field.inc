@@ -1,5 +1,5 @@
 <?php
-// $Id: nodereferrer_view_handler_field.inc,v 1.1.2.1 2009/09/22 11:15:35 andypost Exp $
+// $Id: nodereferrer_view_handler_field.inc,v 1.1.2.4 2010/02/11 23:13:30 andypost Exp $
 /**
  * @file
  * nodereferrer.module Views integration
@@ -38,6 +38,22 @@ class nodereferrer_view_handler_field extends views_handler_field {
       '#default_value' => empty($this->options['list']) ? 'list' : $this->options['list'],
     );
 
+    $form['limit'] = array(
+      '#type' => 'select',
+      '#multiple' => FALSE,
+      '#title' => t('Limit'),
+      '#options' => array(0 => t('Unlimited')) + drupal_map_assoc(range(1, 10)),
+      '#description' => t('Select how many referencing nodes will be displayed'),
+      '#default_value' => empty($this->options['limit']) ? 0 : $this->options['limit']
+    );
+
+    $form['randomize'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Randomize'),
+      '#description' => t('Check this box if you want the referrers to be displayed in random order'),
+      '#default_value' => empty($this->options['randomize']) ? FALSE : $this->options['randomize']
+    );
+
     $form['fields'] = array(
       '#type' => 'checkboxes',
       '#multiple' => TRUE,
@@ -61,7 +77,7 @@ class nodereferrer_view_handler_field extends views_handler_field {
       }
       $form['multilingual']['referrers_of_translations'] = array(
         '#type'  => 'checkbox',
-        '#title' => t('Include refererrers of translations'),
+        '#title' => t('Include referrers of translations'),
         '#description' => t('If this is checked, will also include nodes that refer to translations of the given node'),
         '#default_value' => $default,
       );
@@ -104,6 +120,15 @@ class nodereferrer_view_handler_field extends views_handler_field {
    */
   function render($values) {
     $list = $this->get_item_list($values->nid);
+    if ($this->options['formatter'] == 'count') {
+      return (string)count($list);
+    }
+    if ($this->options['randomize']) {
+      shuffle($list);
+    }
+    if ($this->options['limit']) {
+      $list = array_slice($list, 0, $this->options['limit']);
+    }
     foreach ($list as $k => $v) {
       $list[$k] = theme('nodereferrer_field_' . $this->options['formatter'], $v);
     }

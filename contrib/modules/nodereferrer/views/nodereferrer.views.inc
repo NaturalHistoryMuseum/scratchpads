@@ -1,5 +1,5 @@
 <?php
-// $Id: nodereferrer.views.inc,v 1.1.2.2 2009/09/22 11:15:35 andypost Exp $
+// $Id: nodereferrer.views.inc,v 1.1.2.3 2009/10/28 00:58:24 andypost Exp $
 
 /**
  * @file
@@ -117,7 +117,7 @@ function nodereferrer_referrers_with_translations($nid, $fields, $types, $ref_of
                     AND
                     node.tnid > 0
     ";
-    $query = db_rewrite_sql($query);
+    $query = db_rewrite_sql($query, 'node');
     $result = db_query($query);
     while ($value = db_fetch_array($result)) {
       $ref[$value['nid']] = $value;
