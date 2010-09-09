@@ -307,7 +307,7 @@ function scratchy_block($block) {
 	<div class="bc ctr"></div>
 	<div class="bc ctl"></div>
 </div>
-<div class="boxcontent">'.$block->content.'</div>
+<div class="boxcontent'.(!drupal_is_front_page() ? '' : ' scratchy-padding').'">'.$block->content.'</div>
 <div class="boxbtm">
 	<div class="bc cbr"></div>
 	<div class="bc cbl"></div>
