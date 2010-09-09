@@ -31,7 +31,9 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   }
   drupal_add_css(drupal_get_path('theme','scratchy').'/print.css','theme','print',FALSE);
   drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
-  jquery_ui_add();
+  if(function_exists('jquery_ui_add')){
+    jquery_ui_add();    
+  }
   $output .= drupal_get_html_head();
   $output .= drupal_get_css();
   $output .= drupal_get_js();
