@@ -3,15 +3,17 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: node_clone 5.x\n"
-"POT-Creation-Date: 2008-08-12 22:18+0200\n"
-"PO-Revision-Date: 2008-08-12 22:19+0100\n"
-"Last-Translator: Alexander Hass\n"
+"Project-Id-Version: node_clone 6.x\n"
+"POT-Creation-Date: 2008-10-22 19:43+0200\n"
+"PO-Revision-Date: 2008-10-22 19:59+0100\n"
+"Last-Translator: Alexander Haß\n"
 "Language-Team: Alexander Hass\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Country: GERMANY\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Poedit-Language: German\n"
 
 #: clone.pages.inc:12
 msgid "General settings"
@@ -43,15 +45,15 @@ msgstr "Bestätigung umgehen"
 
 #: clone.pages.inc:25
 msgid "A new node may be saved immediately upon clicking the \"clone\" tab when viewing a node, bypassing the normal confirmation form."
-msgstr "Ein neuer Beitrag kann sofort beim Klicken des „Duplizieren“-Tabulator in der Beitragsansicht gespeichert werden und das normale Bestätigungsformular umgehen."
+msgstr "Ein neuer Beitrag kann sofort beim Klicken des „Duplizieren“-Reiters in der Beitragsansicht gespeichert werden und damit das normale Bestätigungsformular umgehen."
 
 #: clone.pages.inc:30
 msgid "Should the publishing options ( e.g. published, promoted, etc) be reset to the defaults?"
-msgstr "Sollen die Veröffentlichungseinstellungen (z.b. Veröffentlicht, Startseite, etc.) auf die Standardeinstellungen zurückgesetzt werden?"
+msgstr "Sollen die Veröffentlichungseinstellungen (z.b. Veröffentlicht, Auf der Startseite, etc.) auf die Standardeinstellungen zurückgesetzt werden?"
 
 #: clone.pages.inc:37
 msgid "@s: reset publishing options when cloned"
-msgstr "@s: Veröffentlichungseinstellungen beim Duplizieren zurücksetzten"
+msgstr "@s: Veröffentlichungseinstellungen beim Duplizieren zurücksetzen"
 
 #: clone.pages.inc:44
 msgid "Content types that are not to be cloned - omitted due to incompatibility"
@@ -70,7 +72,7 @@ msgid "Are you sure you want to clone %title?"
 msgstr "Soll %titel wirklich dupliziert werden?"
 
 #: clone.pages.inc:90
-msgid "This action will create a new node. You willl then be redirected to the edit page for the new node."
+msgid "This action will create a new node. You will then be redirected to the edit page for the new node."
 msgstr "Diese Aktion erstellt einen neuen Beitrag und leitet danach zur „Bearbeiten“-Seite des neuen Beitrages um."
 
 #: clone.pages.inc:91
@@ -92,7 +94,7 @@ msgstr "Das „Duplizieren“-Modul erlaubt es Benutzern eine Kopie eines vorhan
 
 #: clone.module:12
 msgid "Users with the \"clone node\" permission can utilize this functionality. A new tab will appear on node pages with the word \"Clone\"."
-msgstr "Benutzer mit der Berechtigung „Beitrag duplizieren“ können diese Funktionalität verwenden. Ein neuer „Duplizieren“-Tabulator wird auf den Beitragseiten erscheinen."
+msgstr "Benutzer mit der Berechtigung „Beitrag duplizieren“ können diese Funktionalität verwenden. Ein neuer „Duplizieren“-Reiter wird auf den Beitragseiten erscheinen."
 
 #: clone.module:17
 msgid "This clone will not be saved to the database until you submit."
@@ -114,9 +116,18 @@ msgstr "Duplizieren-Modul"
 #: clone.module:39
 #: clone.info:0
 msgid "Allows users to clone (copy then edit) an existing node."
-msgstr "Erlaubt Benutzern einen vorhanden Beitrag zu duplizieren (Kopieren und Bearbeiten)."
+msgstr "Erlaubt Benutzern einen vorhanden Beitrag zu duplizieren (Kopieren und dann Bearbeiten)."
 
 #: clone.module:0
+#: views/views_handler_field_node_link_clone.inc:29
 msgid "clone"
 msgstr "Duplizieren"
+
+#: views/clone.views.inc:26
+msgid "Clone link"
+msgstr "‚Duplizieren‘-Link"
+
+#: views/clone.views.inc:27
+msgid "Provide a simple link to clone the node."
+msgstr "Bietet einen einfachen Link zum Duplizieren des Beitrags."
 

@@ -1,6 +1,5 @@
 <?php
-// $Id: clone.module,v 1.23 2008/10/15 18:39:44 pwolanin Exp $
-// $Name: DRUPAL-6--1-0 $
+// $Id: clone.module,v 1.23.4.4 2010/07/28 22:39:18 pwolanin Exp $
 
 /**
  * Implementation of hook_help().
@@ -39,7 +38,7 @@ function clone_menu() {
     'description' => 'Allows users to clone (copy then edit) an existing node.',
   );
   $items['node/%node/clone'] = array(
-    'access callback' => 'clone_access',
+    'access callback' => 'clone_access_cloning',
     'access arguments' => array(1),
     'page callback' => 'clone_node_check',
     'page arguments' => array(1),
@@ -51,14 +50,14 @@ function clone_menu() {
   return $items;
 }
 
-function clone_access($node) {
+function clone_access_cloning($node) {
   global $user;
   // Check basic permissions first.
-  $access = (user_access('clone node') || ($user->uid && ($node->uid == $user->uid) && user_access('clone own nodes')));
+  $access = clone_is_permitted($node->type) && (user_access('clone node') || ($user->uid && ($node->uid == $user->uid) && user_access('clone own nodes')));
+  // Check additional conditions
+  $access = $access && (filter_access($node->format) && node_access('create', $node->type));
   // Make sure the user can view the original node content.
   $access = $access && node_access('view', $node);
-  // Check additional conditions
-  $access = $access && (clone_is_permitted($node->type) && filter_access($node->format) && node_access('create', $node->type));
   // Let other modules alter this - for exmple to only allow some users
   // to clone specific nodes or types.
   drupal_alter("clone_access", $access, $node);
@@ -98,5 +97,20 @@ function clone_views_api() {
     'api' => 2,
     'path' => drupal_get_path('module', 'clone') .'/views',
   );
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function clone_init() {
+  // Support admin theme setting, based on system_init().
+  // Only affect the menu path created by this module, and only if the node admin theme checkbox is set.
+  if (variable_get('node_admin_theme', '0') && arg(0) == 'node' && arg(2) == 'clone') {
+    global $custom_theme;
+    // Use the chosen theme ID, or the front-end theme if one hasn't been selected.
+    $custom_theme = variable_get('admin_theme', '0');
+    // From system.module, this css file is required in the admin view.
+    drupal_add_css(drupal_get_path('module', 'system') .'/admin.css', 'module');
+  }
 }
 

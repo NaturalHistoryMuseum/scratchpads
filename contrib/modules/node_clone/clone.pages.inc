@@ -1,6 +1,5 @@
 <?php
-// $Id: clone.pages.inc,v 1.3 2008/05/07 02:28:58 pwolanin Exp $
-// $Name: DRUPAL-6--1-0 $
+// $Id: clone.pages.inc,v 1.3.4.5 2010/07/28 22:22:16 pwolanin Exp $
 
 /**
  * Menu callback to configure module settings.
@@ -24,7 +23,14 @@ function clone_settings() {
     '#options' => array(t('Require confirmation (recommended)'), t('Bypass confirmation')),
     '#description' => t('A new node may be saved immediately upon clicking the "clone" tab when viewing a node, bypassing the normal confirmation form.'),
   );
-  
+  $form['basic']['clone_menu_links'] = array(
+    '#type' => 'radios',
+    '#title' => t('Clone menu links'),
+    '#options' => array(0 => t('No'), 1 => t('Yes')),
+    '#default_value' => (int) variable_get('clone_menu_links', 0),
+    '#description' => t('Should any menu link for a node also be cloned?'),
+  ); 
+
   $form['publishing'] = array(
     '#type' => 'fieldset',
     '#title' => t('Should the publishing options ( e.g. published, promoted, etc) be reset to the defaults?'),
@@ -38,6 +44,7 @@ function clone_settings() {
       '#default_value' => variable_get('clone_reset_'. $type, FALSE),
     );
   }
+
   // Need the variable default key to be something that's never a valid node type.
   $form['omit'] = array(
     '#type' => 'fieldset',
@@ -73,7 +80,6 @@ function clone_node_check($node) {
       break;
     case 'prepopulate':
     default:
-      include_once(drupal_get_path('module', 'node') .'/node.pages.inc');
       return clone_node_prepopulate($node);
       break;
   }
@@ -87,7 +93,7 @@ function clone_node_confirm($form_state, $node) {
     $form['nid'] = array('#type' => 'value', '#value' => $node->nid);
     return confirm_form($form,
       t('Are you sure you want to clone %title?', array('%title' =>  $node->title)),
-      'node/'. $node->nid, '<p>'. t('This action will create a new node. You willl then be redirected to the edit page for the new node.') .'</p>',
+      'node/'. $node->nid, '<p>'. t('This action will create a new node. You will then be redirected to the edit page for the new node.') .'</p>',
       t('Clone'), t('Cancel'));
 }
 
@@ -103,6 +109,27 @@ function clone_node_confirm_submit($form, &$form_state) {
 
 
 /**
+ * Create a new menu link cloned from another node.
+ *
+ * Returns NULL if no existing link, or links are not to be cloned.
+ */
+function clone_node_clone_menu_link($node) {
+  if (variable_get('clone_menu_links', FALSE)) {
+    // This will fetch the existing menu link if the node had one.
+    node_invoke_nodeapi($node, 'prepare');
+    if (!empty($node->menu['mlid'])) {
+      $old_link = $node->menu;
+      $link['link_title'] = t('Clone of !title', array('!title' => $old_link['link_title']));
+      $link['plid'] = $old_link['plid'];
+      $link['menu_name'] = $old_link['menu_name'];
+      $link['weight'] = $old_link['weight'];
+      return $link;
+    }
+  }
+  return NULL;
+}
+
+/**
  *  Clones a node - prepopulate a node editing form
  */
 function clone_node_prepopulate($original_node) {
@@ -114,16 +141,19 @@ function clone_node_prepopulate($original_node) {
 
       $node->nid = NULL;
       $node->vid = NULL;
+      $node->tnid = NULL;
       $node->name = $user->name;
       $node->uid = $user->uid;
       $node->created = NULL;
-      $node->menu = NULL;
+      $node->menu = clone_node_clone_menu_link($original_node);
       if (isset($node->book['mlid'])) {
         $node->book['mlid'] = NULL;
       }
       $node->path = NULL;
       $node->files = array();
       $node->title = t('Clone of !title', array('!title' => $node->title));
+      // Add an extra property as a flag.
+      $node->clone_from_original_nid = $original_node->nid;
       drupal_set_title(check_plain($node->title));
 
       if (variable_get('clone_reset_'. $node->type, FALSE)) {
@@ -137,7 +167,8 @@ function clone_node_prepopulate($original_node) {
       // The function signature is: hook_clone_node_alter(&$node, $original_node, $method)
       // Where $method is either 'prepopulate' or 'save-edit'.
       drupal_alter("clone_node", $node, $original_node, "prepopulate");
-
+      // Make sure the file defining the node form is loaded.
+      module_load_include('inc', 'node', 'node.pages');
       return drupal_get_form($node->type .'_node_form', $node);
     }
   }
@@ -156,14 +187,17 @@ function clone_node_save($nid) {
 
       $node->nid = NULL;
       $node->vid = NULL;
+      $node->tnid = NULL;
       $node->name = $user->name;
       $node->uid = $user->uid;
       $node->created = NULL;
-      $node->menu = NULL;
+      $node->menu = clone_node_clone_menu_link($original_node);
       $node->book['mlid'] = NULL;
       $node->path = NULL;
       $node->files = array();
       $node->title = t('Clone of !title', array('!title' => $node->title));
+      // Add an extra property as a flag.
+      $node->clone_from_original_nid = $original_node->nid;
 
       if (variable_get('clone_reset_'. $node->type, FALSE)) {
         $node_options = variable_get('node_options_'. $node->type, array('status', 'promote'));
