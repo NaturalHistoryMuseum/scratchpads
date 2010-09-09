@@ -1,18 +1,17 @@
-# $Id: sv.po,v 1.1.2.1 2008/04/18 13:38:41 nancyw Exp $
+# $Id$
 #
 # Swedish translation of Drupal (quote)
-# Copyright 2008 Magnus Gunnarsson <seals@passagen.se>
 # Generated from files:
-#  quote.admin.inc,v 1.1.2.1 2008/03/28 22:59:59 karthik
-#  quote.module,v 1.29.2.10.2.1 2008/03/28 22:59:59 karthik
+#  quote.admin.inc,v 1.1.2.2 2008/05/13 06:20:53 karthik
+#  quote.module,v 1.29.2.10.2.9 2009/02/24 15:00:50 karthik
 #  quote.info,v 1.2.2.2.2.1 2008/03/28 22:59:59 karthik
-#  quote.install,v 1.1.2.1 2007/08/11 09:34:53 karthik
+#  quote.install,v 1.1.2.1.2.1 2008/03/30 06:15:10 karthik
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Quote 6.x\n"
-"POT-Creation-Date: 2008-04-05 13:33+0200\n"
-"PO-Revision-Date: 2008-05-11 05:27+0100\n"
+"POT-Creation-Date: 2009-10-17 02:46+0200\n"
+"PO-Revision-Date: 2009-10-17 03:07+0100\n"
 "Last-Translator: Magnus Gunnarsson <seals@passagen.se>\n"
 "Language-Team: drupalsverige.se\n"
 "MIME-Version: 1.0\n"
@@ -63,84 +62,56 @@ msgstr "Gör kommentarers rubrikfält till ett obligatoriskt fält."
 msgid "Making the comment subject field a required field will ensure that unsightly [quote] tags are not displayed."
 msgstr "Genom att fordra att rubrikfältet till en kommentar har en rubrik kommer oförsedda [quote]- taggar inte att visas."
 
-#: quote.module:44;17
+#: quote.module:58;17
 #: quote.info:0
 msgid "Quote"
 msgstr "Citera"
 
-#: quote.module:45
+#: quote.module:59
 msgid "Quote this post in your reply."
 msgstr "Citera detta inlägg i ditt svar."
 
-#: quote.module:56;0
+#: quote.module:70
 msgid "quote"
 msgstr "citera"
 
-#: quote.module:118
+#: quote.module:132
 msgid "Quote filter"
 msgstr "Citeringsfilter"
 
-#: quote.module:120
-msgid "Converts [quote] tags into &lt;div&gt; tags. Must apply after HTML filters."
-msgstr "Konverterar [quote]-taggar till  &lt;div&gt;. Måste appliceras efter HTML-filter."
+#: quote.module:134
+msgid "Converts [quote] tags into &lt;div&gt; tags. Must usually apply after HTML filters unless an exception is made for &lt;div&gt; tags."
+msgstr "Konverterar taggar av typen [quote] till taggar av typen  &lt;div&gt;. Måste vanligtvis läggas till efter HTML-filter såvida inte ett undantag har gjorts för taggar av typen &lt;div&gt;."
 
-#: quote.module:133
+#: quote.module:156
 msgid ""
-"\n"
-"      <p>Quoted content can be placed between [quote] tags in order to be displayed as an indented quote. Every [quote] tag <em>must</em> have a corresponding [/quote] tag. For example:\n"
-"      <pre>[quote]This is a simple quote.[/quote]</pre> is displayed as:</p>\n"
-"      <div class=\"quote-msg\"><div class=\"quote-author\">Quote:</div>This is a simple quote.</div>\n"
-"      <p>Additionally, there is an optional attribute which allows quotes to specify the original author.\n"
-"      <pre>[quote=Mr. Drupal]This is a quote with an attribution line.[/quote]\n"
-"      </pre> is displayed as:</p>\n"
-"      <div class=\"quote-msg\"><div class=\"quote-author\">Mr. Drupal wrote:</div>This is a quote with an attribution line.</div>\n"
-"      <p>Finally, multiple [quote] tags can be nested within one another. Just remember that every [quote] tag <strong>must</strong> have a corresponding [/quote] tag.\n"
-"      <pre>\n"
-"      [quote]I think she says it best...\n"
-"      [quote=Ms. Quotation]This is a quote nested within another quote.[/quote]\n"
-"      but you can't argue with\n"
-"      [quote=Ms. Reply]The more quotes, the merrier.\n"
-"      Just don't get too carried away.[/quote]\n"
-"      And I have nothing more to say.[/quote]</pre> is displayed as:</p>\n"
-"      <div class=\"quote-msg\"><div class=\"quote-author\">Quote:</div>I think she says it best...\n"
-"      <div class=\"quote-msg\"><div class=\"quote-author\">Ms. Quotation wrote:</div>This is a quote nested within another quote.</div>\n"
-"      but you can't argue with\n"
-"      <div class=\"quote-msg\"><div class=\"quote-author\">Ms. Reply wrote:</div>The more quotes, the merrier. Just don't get too carried away.</div>\n"
-"      And I have nothing more to say.</div>\n"
-"    "
-msgstr ""
-"\n"
-"<p>Citerat inlägg kan placeras mellan taggarna [quote] för att kunna visas som ett avsett citat. Varje [quote]-tagg <em>måste</em> ha en motsvarande [/quote]-tagg. Till exempel:\n"
-"<pre>[quote]Det här är ett vanligt citat.[/quote]</pre>visas som:</p>\n"
-"<div class=\"quote-msg\"><div class=\"quote-author\">Citat:</div>Det här är ett vanligt citat.</div>\n"
-"<p>Det finns ytterligare ett valfritt attribut som låter citat specificera källförfattaren.\n"
-"<pre>[quote=Herr Svensson]Det här är ett citat med ett tillskrivande led.[/quote]</pre>\n"
-" visas som:</p>\n"
-"<div class=\"quote-msg\"><div class=\"quote-author\">Herr Svensson skrev:</div>Det här är ett citat med ett tillskrivande led</div>\n"
-"<p>Slutligen, flera [quote]-taggar kan bäddas in i varandra. Glöm bara inte att varje [quote]-tagg <strong>måste</strong> ha en motsvarande [/quote]-tagg.\n"
-"<pre>[quote]Jag tycker att hon utrycker det bäst...\n"
-"[quote=Fröken Citat]Det här är ett citat inbäddat inom ett annat citat.[/quote]\n"
-"men du kan inte argumentera med det\n"
-"[quote=Fröken Svar]Ju fler citat, desto bättre.\n"
-"Men låt dig inte vilseledas.[/quote]\n"
-"Och jag har inget mer att säga.[/quote]</pre> visas som:</p>\n"
-"<div class=\"quote-msg\"><div class=\"quote-author\">Citat:</div>Jag tycker att hon utrycker det bäst...\n"
-"<div class=\"quote-msg\"><div class=\"quote-author\">Fröken Citat skrev:</div>Det här är ett citat inbäddad inom ett annat citat.</div>\n"
-"men du kan inte argumentera med det\n"
-"<div class=\"quote-msg\"><div class=\"quote-author\">Fröken Svar skrev:</div>Ju fler citat, desto bättre. Men låt dig inte vilseledas.</div>\n"
-"Och jag har inget mer att säga</div>\n"
+"<p>Quoted content can be placed between [quote] tags in order to\n"
+"      be displayed as an indented quote. Every [quote] tag <em>must</em> have a\n"
+"      corresponding [/quote] tag. For example:\n"
+"      <pre>!simple-quote</pre> is displayed as:</p>\n"
+"      !simple-quote-processed\n"
+"      <p>Additionally, there is an optional attribute which allows quotes to\n"
+"      specify the original author.\n"
+"      <pre>!attributed-quote</pre> is displayed as:</p>\n"
+"      !attributed-quote-processed\n"
+"      <p>Finally, multiple [quote] tags can be nested within one another. Just\n"
+"      remember that every [quote] tag <strong>must</strong> have a corresponding\n"
+"      [/quote] tag.\n"
+"      <pre>!nested-quote</pre> is displayed as:</p>\n"
+"      !nested-quote-processed"
+msgstr "<p>Citerat innehåll kan placeras mellan taggarna [quote] för att kunna visas som ett indraget citat. Varje tag [quote] <em>måste</em> ha en tillhörande tag [/quote]. Till exempel:<pre>!simple-quote</pre>visas som</p>!simple-quote-processed<p>Dessutom finns det ett varlfritt attribut som låter citat ange dess ursprungliga författare.</p>!attributed-quote-processed<p>Slutligen så kan flera taggar av typen [quote] nästlas in i varandra. Men kom ihåg att varje tag [quote] <strong>måste</strong> ha en tillhörande tag [/quote].<pre>!nested-quote</pre> visas som</p>!nested-quote-processed"
 
-#: quote.module:157
+#: quote.module:180
 msgid "You may quote other posts using [quote] tags."
 msgstr "Du kan citera andra inlägg genom att använda taggarna [quote]."
 
-#: quote.module:201
-msgid "Quote:"
-msgstr "Citat:"
-
-#: quote.module:203
+#: quote.module:277
 msgid "%name wrote:"
 msgstr "%name skrev:"
+
+#: quote.module:280
+msgid "Quote:"
+msgstr "Citat:"
 
 #: quote.module:18
 msgid "Configure the behaviour of the quote module."
@@ -149,6 +120,10 @@ msgstr "Konfigurera beteendet för citeringsmodulen."
 #: quote.install:10
 msgid "The quote module has been installed successfully."
 msgstr "Modulen Quote har installerats utan problem."
+
+#: quote.install:40
+msgid "The quote module has been uninstalled successfully."
+msgstr "Modulen Quote har avinstallerats utan problem."
 
 #: quote.info:0
 msgid "Allows users to quote posts or comments."
