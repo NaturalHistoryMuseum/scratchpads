@@ -1,5 +1,5 @@
 <?php
-// $Id: porterstemmer.test,v 1.1.2.6 2009/12/07 18:05:01 jhodgdon Exp $
+// $Id: porterstemmer.test,v 1.1.2.8 2010/08/13 16:12:52 jhodgdon Exp $
 
 /**
  * @file
@@ -734,6 +734,40 @@ class PorterStemmerInternalsUnitTest extends DrupalWebTestCase {
 
     $this->assertEqual( $worda, 'ie', "Step1a should be ie, was $worda", 'Stemmer steps' );
     $this->assertEqual( $wordb, 'ie', "Step1a should be ie, was $wordb", 'Stemmer steps' );
+  }
+
+  /**
+   * Tests the excerpt function porterstemmer_sbp_excerpt_match().
+   */
+  function testExcerpts() {
+    // Test with simple stemmed match.
+    $key = 'walking';
+    $text = 'I walked to the Grand Walks yesterday.';
+    $offset = 0;
+    $boundary = '[ ]+';
+    $result1 = porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary);
+    $this->assertEqual($result1['where'], 2, 'Found match 1 in right place', 'Excerpt');
+    $this->assertEqual($result1['keyword'], 'walked', 'Found right keyword for match 1', 'Excerpt');
+
+    // Test with upper-case in the keyword.
+    $result1b = porterstemmer_sbp_excerpt_match('waLk', $text, $offset, $boundary);
+    $this->assertEqual($result1b['where'], 2, 'Found match 1b in right place', 'Excerpt');
+    $this->assertEqual($result1b['keyword'], 'walked', 'Found right keyword for match 1b', 'Excerpt');
+
+    // Test with upper-case in the text.
+    $offset = 12;
+    $result2 = porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary);
+    $this->assertEqual($result2['where'], 22, 'Found match 2 in right place', 'Excerpt');
+    $this->assertEqual($result2['keyword'], 'Walks', 'Found right keyword for match 2', 'Excerpt');
+
+    // Test with a false match followed by a real match.
+    $text = 'I walknotawordhere to walk to school.';
+    $offset = 0;
+    $result3 = porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary);
+    $this->assertEqual($result3['where'], 22, 'Found match 3 in right place', 'Excerpt');
+    $this->assertEqual($result3['keyword'], 'walk', 'Found right keyword for match 3', 'Excerpt');
+
+
   }
 }
 

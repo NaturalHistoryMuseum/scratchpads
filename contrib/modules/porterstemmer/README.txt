@@ -1,4 +1,4 @@
-// $Id: README.txt,v 1.3.2.1 2009/10/21 23:39:54 jhodgdon Exp $
+// $Id: README.txt,v 1.3.2.2 2010/03/06 16:06:25 jhodgdon Exp $
 
 GENERAL INFORMATION
 -------------------
@@ -13,8 +13,9 @@ Stemming reduces a word to its basic root or stem (e.g. 'blogging' to
 'blog') are considered equivalent when searching. This generally
 results in more relevant results.
 
-Note that the Porter Stemmer algorithm is specific to American
-English, so some British spellings will not be stemmed correctly.
+Note that a few parts of the Porter Stemmer algorithm work better for American
+English than British English, so some British spellings will not be stemmed
+correctly.
 
 This module will use the PECL "stem" library's implementation of the Porter
 Stemmer algorithm, if it is installed on your server. If the PECL "stem"

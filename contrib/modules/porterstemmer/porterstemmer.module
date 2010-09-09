@@ -1,5 +1,5 @@
 <?php
-// $Id: porterstemmer.module,v 1.2.2.7 2009/12/07 18:04:08 jhodgdon Exp $
+// $Id: porterstemmer.module,v 1.2.2.10 2010/08/13 00:47:47 jhodgdon Exp $
 
 /**
  * @file
@@ -47,12 +47,14 @@ function porterstemmer_search_preprocess($text) {
 }
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
-function porterstemmer_help($section = 'admin/help#search') {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('Implements the Porter-Stemmer version 2 algorithm to improve English searching.');
+function porterstemmer_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#porterstemmer':
+      $output = '';
+      $output .= '<p>' . t('The Porter Stemmer module implements version 2 of the <a href="@algorithm">Porter Stemmer algorithm</a>, to improve American English-language searching with the core <a href="@search-help">Search module</a>. Stemming reduces a word to its basic root or stem (e.g. "blogging" to "blog") so that variations on a word ("blogs", "blogged", "blogging", "blog") are considered equivalent when searching. This generally results in more relevant results.', array('@search-help' => url('admin/help/search'), '@algorithm' => 'http://snowball.tartarus.org/algorithms/english/stemmer.html')) . '</p>';
+      return $output;
   }
 }
 
@@ -62,52 +64,56 @@ function porterstemmer_help($section = 'admin/help#search') {
  * Allows Porter Stemmer to display better search excerpts with the
  * Search by page module.
  */
-function porterstemmer_sbp_excerpt_match( $key, $text, $offset, $boundary ) {
+function porterstemmer_sbp_excerpt_match($key, $text, $offset, $boundary) {
   // Stem the keyword down to its root form.
-  $key = porterstemmer_stem( $key );
+  $key = porterstemmer_stem($key);
 
   // In many cases, the root word is a substring of the full word, but not
   // all. The cases where it is not, the root ends in e, i, or y, and if this
   // last letter is removed, the root is a substring of the full word.
   // So remove these letters at the end of the root.
-
   $didit = FALSE;
-  porterstemmer_suffix( $key, 'i', '', $didit, NULL, 2 ) OR
-    porterstemmer_suffix( $key, 'e', '', $didit, NULL, 2 ) OR
-    porterstemmer_suffix( $key, 'y', '', $didit, NULL, 2 );
+  porterstemmer_suffix($key, 'i', '', $didit, NULL, 2) OR
+    porterstemmer_suffix($key, 'e', '', $didit, NULL, 2) OR
+    porterstemmer_suffix($key, 'y', '', $didit, NULL, 2);
 
   // Look for this modified key at the start of a word.
-
   $match = array();
-  if (!preg_match('/'. $boundary . $key . '/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset )) {
-    // didn't match our modified key.
+  if (!preg_match('/'. $boundary . '(' . $key . ')/iu', $text, $match, PREG_OFFSET_CAPTURE, $offset)) {
+    // Didn't match our modified key.
     return FALSE;
   }
 
-  // If we get here, we have a potential match. Find the end of the word we
-  // actually matched, so it can be highlighted (making sure it's a real match
-  // for our key).
+  // If we get here, we have a potential match. Find the beginning and end of
+  // the word we actually matched, so it can be highlighted (making sure it's a
+  // real match for our key).
   $newmatch = array();
-  foreach ( $match as $item ) {
-    $pos = $match[0][1];
-    // Note: Do not use drupal_strlen/drupal_substr here! Need the real PHP
-    // string lengths/pos.
-    if (preg_match('/' . $boundary . '/iu', $text, $newmatch,
-        PREG_OFFSET_CAPTURE, $pos + strlen($key))) {
-      $keyfound = substr($text, $pos, $newmatch[0][1] - $pos);
-      $foundstem = porterstemmer_stem( $keyfound );
-      porterstemmer_suffix( $foundstem, 'i', '', $didit, NULL, 2 ) OR
-        porterstemmer_suffix( $foundstem, 'e', '', $didit, NULL, 2 ) OR
-        porterstemmer_suffix( $foundstem, 'y', '', $didit, NULL, 2 );
-
-      if ($foundstem == $key) {
-        return array('where' => $pos, 'keyword' => $keyfound);
-      }
-    }
+  $pos = $match[1][1];
+  // Note: Do not use drupal_strlen/drupal_substr here! Need the real PHP
+  // string lengths/pos.
+  if (preg_match('/' . $boundary . '/iu', $text, $newmatch,
+      PREG_OFFSET_CAPTURE, $pos + strlen($key))) {
+    $keyfound = substr($text, $pos, $newmatch[0][1] - $pos);
+  }
+  else {
+    // Assume we're going to the end of the string.
+    $keyfound = substr($text, $pos);
   }
 
-  // If we get here, none of the potential matches worked out.
-  return FALSE;
+  $foundstem = porterstemmer_stem($keyfound);
+  $didit = FALSE;
+  porterstemmer_suffix($foundstem, 'i', '', $didit, NULL, 2) OR
+    porterstemmer_suffix($foundstem, 'e', '', $didit, NULL, 2) OR
+    porterstemmer_suffix($foundstem, 'y', '', $didit, NULL, 2);
+
+  // Both $foundstem and $key may contain upper case.
+  if (drupal_strtolower($foundstem) == drupal_strtolower($key)) {
+    return array('where' => $pos, 'keyword' => $keyfound);
+  }
+
+  // If we get here, then it was a false match, and we should probably
+  // search again later in the string.
+  return porterstemmer_sbp_excerpt_match($key, $text, $pos + strlen($keyfound), $boundary);
 }
 
 /**
@@ -131,34 +137,34 @@ function _porterstemmer_pecl_loaded() {
 }
 
 /**
- * Regular expression defining a vowel for Porter Stemmer purposes.
+ * Regular expression defining a vowel for Porter Stemmer.
  */
 define('PORTERSTEMMER_VOWEL', '[aeiouy]');
 
 /**
- * Regular expression defining not-a-vowel for Porter Stemmer purposes.
+ * Regular expression defining not a vowel for Porter Stemmer.
  */
 define('PORTERSTEMMER_NOT_VOWEL', '[^aeiouy]');
 
 /**
- * Regular expression defining not-a-vowel and not w, x, Y,
- * for Porter Stemmer purposes.
+ * Regular expression defining not a vowel, w, x, or Y, for Porter Stemmer.
  */
 define('PORTERSTEMMER_NOT_VOWEL_WXY', '[^aeiouywxY]');
 
 /**
- * Regular expression defining a double consonant for Porter Stemmer purposes.
+ * Regular expression defining a double consonant for Porter Stemmer.
  */
 define('PORTERSTEMMER_DOUBLE', '(bb|dd|ff|gg|mm|nn|pp|rr|tt)');
 
 /**
- * Regular expression defining an li-ending for Porter Stemmer purposes.
+ * Regular expression defining an li-ending for Porter Stemmer.
  */
 define('PORTERSTEMMER_LI_END', '[cdeghkmnrt]');
 
 /**
- * Regular expression defining a word boundary for Porter Stemmer purposes
- * (anything not a letter or an apostrophe).
+ * Regular expression defining a word boundary for Porter Stemmer.
+ *
+ * A word boundary is anything not a letter or an apostrophe.
  */
 define('PORTERSTEMMER_BOUNDARY', "[^a-zA-Z']+");
 
