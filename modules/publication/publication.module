@@ -685,7 +685,7 @@ function publication_menu_alter(&$items){
   $items['node/%node/clone']['access arguments'] = array(
     1, 
     1, 
-    'clone_access'
+    'clone_access_cloning'
   );
   $items['node/%node/broadcast']['access callback'] = 'publication_tab_access';
   $items['node/%node/broadcast']['access arguments'] = array(
