@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * hook_menu
+ */
+function uwho_site_menu(){
+  return array(
+    'admin/settings/uwho-site' => array(
+      'title' => 'UWho - Site settings',
+      'description' => 'Alter the settings that allow other sites to automatically log users into this site',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array(
+        'uwho_site_settings'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
+      'file' => 'uwho_site.settings.inc'
+    ),
+    'uwho' => array(
+      'title' => 'UWho callback',
+      'page callback' => 'uwho_site_callback',
+      'page arguments' => array(
+        1
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
+      'file' => 'uwho_site.callback.inc'
+    )
+  );
+}

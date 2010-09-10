@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * hook_menu
+ */
+function uwho_client_menu(){
+  return array(
+    'admin/settings/uwho-client' => array(
+      'title' => 'UWho - Client settings',
+      'description' => 'Add the key for the remote site that you\'re providing a link to',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array(
+        'uwho_client_settings'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
+      'file' => 'uwho_client.settings.inc'
+    )
+  );
+}
+
+/**
+ * hook_block
+ */
+function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
+  switch($op){
+    case 'list':
+      return array(
+        array(
+          'info' => t('UWho Login Block'),
+          'weight' => 1000,
+          'status' => 1,
+          'region' => 'left'
+        )
+      );
+    case 'configure':
+      return array();
+    case 'save':
+      return;
+    case 'view':
+      switch($delta){
+        case 0:
+          return array(
+            'subject' => t('UWho Login Block'),
+            'content' => uwho_client_block_content()
+          );
+      }
+  }
+}
+
+/**
+ * helper function for above which returns the block content
+ */
+function uwho_client_block_content(){
+  // First, we need to get the key that has been set, if no key is set, we 
+  // return the empty string.
+  global $user;
+  $key = variable_get('uwho_client_key', FALSE);
+  $url = variable_get('uwho_client_url', FALSE);
+  // If one of the essential settings hasn't been set, or we're not logged in!
+  if(!($key && $url && $user->uid)){return '';}
+  // Load the class file
+  module_load_include('inc', 'uwho_site', 'uwho.cryptastic');
+  $cryptastic = new cryptastic();
+  $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32) or die("Failed to generate secret key.");
+  $encrypted = $cryptastic->encrypt(array(
+    'site_url' => url(),
+    'user' => $user
+  ), $key);
+  $encrypted = $cryptastic->encrypt('MESSAGE FROM SIMON', $key);
+  if(!$encrypted){
+    watchdog('uwho', 'Encryption failed');
+    return '';
+  }
+  return '<a href="' . $url . (strpos($url, '?') ? '&' : '?') . 'uwhodata='.urlencode($encrypted) . '">L I N K</a>';
+}
