@@ -23,7 +23,9 @@ function uwho_site_settings(){
         '#title' => t('UWho URL'),
         '#collapsible' => FALSE,
         'uwho_site_url' => array(
-          '#value' => '<h2>' . url('uwho', array('absolute' => TRUE)) . '</h2>'
+          '#value' => '<h2>' . url('uwho', array(
+            'absolute' => TRUE
+          )) . '</h2>'
         )
       )
     )

@@ -22,10 +22,7 @@ function uwho_site_callback(){
   module_load_include('inc', 'uwho_site', 'uwho.cryptastic');
   $cryptastic = new cryptastic();
   $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32);
-  $decrypted = $cryptastic->decrypt(urldecode($_GET['uwhodata']), $key);
-  if(!$decrypted){
-    
-    return $_GET['uwhodata'];
-  }
-  return $decrypted;
+  $decrypted = $cryptastic->decrypt($_GET['uwhodata'], $key);
+  if(!$decrypted){return $_GET['uwhodata'];}
+  return print_r($decrypted, 1);
 }

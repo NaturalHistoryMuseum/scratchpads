@@ -4,7 +4,7 @@
  * hook_install
  */
 function uwho_site_install(){
-  variable_set('uwho_site_key', md5(url().time()));
+  variable_set('uwho_site_key', md5(url() . time()));
 }
 
 /**

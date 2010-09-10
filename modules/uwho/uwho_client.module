@@ -65,13 +65,14 @@ function uwho_client_block_content(){
   $cryptastic = new cryptastic();
   $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32) or die("Failed to generate secret key.");
   $encrypted = $cryptastic->encrypt(array(
-    'site_url' => url(),
+    'site_url' => url('/', array(
+      'absolute' => TRUE
+    )),
     'user' => $user
   ), $key);
-  $encrypted = $cryptastic->encrypt('MESSAGE FROM SIMON', $key);
   if(!$encrypted){
     watchdog('uwho', 'Encryption failed');
     return '';
   }
-  return '<a href="' . $url . (strpos($url, '?') ? '&' : '?') . 'uwhodata='.urlencode($encrypted) . '">L I N K</a>';
+  return '<a href="' . $url . (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) . '">L I N K</a>';
 }
