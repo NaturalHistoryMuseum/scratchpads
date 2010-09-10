@@ -334,6 +334,7 @@ function scratchpadify_install(){
  * 6153: Rename files with "&" in them. Previous failed due to file permissions.
  * 6154: Remove forum tags from all none forum nodes
  * 6155: Fix an issue with the imagefield field possibly caused by Publication.
+ * 6156: Rename UID 1 to "Scratchpad Team"
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1150,4 +1151,11 @@ function scratchpadify_update_6155(){
       'query' => check_plain($sql)
     )
   );
+}
+
+/**
+ * Rename UID 1 to "Scratchpad Team"
+ */
+function scratchpadify_update_6156(){
+  return array(update_sql("UPDATE {users} SET name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin'"));
 }
