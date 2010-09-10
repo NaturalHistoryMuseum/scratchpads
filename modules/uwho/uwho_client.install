@@ -14,11 +14,16 @@ function uwho_client_requirements($phase){
         )
       );
     case 'runtime':
+      $key = variable_get('uwho_client_key', FALSE);
+      $url = variable_get('uwho_client_url', FALSE);
       return array(
         'uwho_client_key' => array(
           'title' => 'UWho Client Key and URL',
-          'description' => 
-          
+          'value' => ($key && $url) ? "Key: $key<br/>URL: $url" : '',
+          'description' => ($key && $url) ? '' : t('Please ensure that both the UWho Key and URL are set on the <a href="!url">settings page</a>', array(
+            '!url' => url('admin/settings/uwho-client')
+          )),
+          'severity' => ($key && $url) ? REQUIREMENT_OK : REQUIREMENT_WARNING
         )
       );
   }

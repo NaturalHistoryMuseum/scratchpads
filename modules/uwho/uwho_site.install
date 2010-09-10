@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * hook_install
+ */
+function uwho_site_install(){
+  variable_set('uwho_site_key', md5(url().time()));
+}
+
+/**
+ * hook_requirements
+ */
+function uwho_site_requirements($phase){
+  switch($phase){
+    case 'install':
+      return array(
+        'mcrypt' => array(
+          'title' => 'PHP Mcrypt',
+          'description' => 'PHP MCrypt module (<a href="http://www.php.net/manual/en/book.mcrypt.php">http://www.php.net/manual/en/book.mcrypt.php</a>) installation status',
+          'severity' => function_exists('mcrypt_module_open') ? REQUIREMENT_OK : REQUIREMENT_ERROR
+        )
+      );
+    case 'runtime':
+      $key = variable_get('uwho_site_key', FALSE);
+      return array(
+        'uwho_site_key' => array(
+          'title' => 'UWho Site Key',
+          'value' => $key ? "Key: $key" : '',
+          'description' => $key ? '' : t('Please reinstall this module.'),
+          'severity' => $key ? REQUIREMENT_OK : REQUIREMENT_WARNING
+        )
+      );
+  }
+}
