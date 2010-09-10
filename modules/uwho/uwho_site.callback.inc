@@ -23,6 +23,20 @@ function uwho_site_callback(){
   $cryptastic = new cryptastic();
   $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32);
   $decrypted = $cryptastic->decrypt($_GET['uwhodata'], $key);
-  if(!$decrypted){return $_GET['uwhodata'];}
-  return print_r($decrypted, 1);
+  if(!$decrypted){
+    // We've failed to decrypt the stuff, doh!  Error, and redirect to the front
+    // page.
+    drupal_set_message('Failed to decrypt your data.  Please inform a maintainer', 'error');
+    watchdog('uwho', 'Decryption failed');
+    drupal_goto();
+  }
+  // FIXME - Keep a record of users created this way.
+  $new_user = new stdClass();
+  $new_user->name = $decrypted['user']['name'] . 'uwho';
+  $new_user->pass = md5(rand());
+  $new_user->mail = $decrypted['user']['mail'];
+  $new_user->status = 1;
+  global $user;
+  $user = user_save($new_user, (array)$new_user);
+  drupal_goto(variable_get('uwho_site_redirect_path', ''));
 }

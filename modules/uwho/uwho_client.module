@@ -63,12 +63,22 @@ function uwho_client_block_content(){
   // Load the class file
   module_load_include('inc', 'uwho_site', 'uwho.cryptastic');
   $cryptastic = new cryptastic();
-  $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32) or die("Failed to generate secret key.");
+  $key = $cryptastic->pbkdf2($key, $key . $url, 1000, 32);
+  $site_url = url('', array(
+    'absolute' => TRUE
+  ));
+  $url_parts = parse_url($site_url);
   $encrypted = $cryptastic->encrypt(array(
-    'site_url' => url('/', array(
-      'absolute' => TRUE
-    )),
-    'user' => $user
+    'site_url' => $site_url,
+    'guid' => $url_parts['host'] . ':' . (strlen($url_parts['path']) > 1 ? $url_parts['path'] . ':' : '') . $user->uid,
+    'user' => array(
+      'url' => url('user/' . $user->uid, array(
+        'absolute' => TRUE
+      )),
+      'name' => $user->name,
+      'mail' => $user->mail,
+      'drupal_user_object' => $user
+    )
   ), $key);
   if(!$encrypted){
     watchdog('uwho', 'Encryption failed');

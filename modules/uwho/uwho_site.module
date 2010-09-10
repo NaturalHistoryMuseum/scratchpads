@@ -18,6 +18,7 @@ function uwho_site_menu(){
       'file' => 'uwho_site.settings.inc'
     ),
     'uwho' => array(
+      'type' => MENU_CALLBACK,
       'title' => 'UWho callback',
       'page callback' => 'uwho_site_callback',
       'page arguments' => array(
