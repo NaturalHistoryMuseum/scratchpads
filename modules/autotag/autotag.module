@@ -43,12 +43,17 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     );
     // Get the default state for the checkbox
     $checkboxes = variable_get('autotag_save_checkbox', array());
+    if($form_state['submitted'] && $form_state['clicked_button']['#submit'][0] == 'node_form_build_preview'){
+      $checkbox_default_value = $form_state['values']['taxonomyautotagcheckbox'];
+    } else {
+      $checkbox_default_value = isset($checkboxes[$form['type']['#value']]) ? $checkboxes[$form['type']['#value']] : 0;
+    }
     $form['taxonomy']['autotag']['taxonomyautotagcheckbox'] = array(
       '#tree' => FALSE,
       '#type' => 'checkbox',
       '#title' => t('Autotag on save'),
       '#description' => t('If checked, after clicking "Save", the node will be associated with all relevant terms - you will not be given the option to review these.'),
-      '#default_value' => (isset($checkboxes[$form['type']['#value']]) ? $checkboxes[$form['type']['#value']] : 0)
+      '#default_value' => $checkbox_default_value 
     );
     // Add the CSS file to style the checkbox and button
     drupal_add_css(drupal_get_path('module', 'autotag') . '/autotag.css');
