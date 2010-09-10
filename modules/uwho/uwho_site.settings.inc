@@ -3,21 +3,29 @@
 /**
  * Settings page callback
  */
-function uwho_client_settings(){
-  return system_settings_form(
-    array(
-      'uwho_client_key' => array(
-        '#title' => t('UWho Client Key'),
-        '#description' => t('Enter the key from the site you\'d like to enable your users to login to.'),
-        '#type' => 'textfield',
-        '#default_value' => variable_get('uwho_client_key', '')
+function uwho_site_settings(){
+  return system_settings_form(array(
+    'container' => array(
+      '#type' => 'fieldset',
+      '#title' => '',
+      '#description' => t('Enter the following URL and Key into your UWho client on any other site.'),
+      '#collapsible' => FALSE,
+      'uwho_site_key_fieldset' => array(
+        '#type' => 'fieldset',
+        '#title' => t('UWho Key'),
+        '#collapsible' => FALSE,
+        'uwho_site_key' => array(
+          '#value' => '<h2>' . variable_get('uwho_site_key', '') . '</h2>'
+        )
       ),
-      'uwho_client_url' => array(
-        '#title' => t('UWho Client URL'),
-        '#description' => t('Enter the URL of the site you\'d like to enable your users to login to.  This must be EXACTLY as provided by the other site.'),
-        '#type' => 'textfield',
-        '#default_value' => variable_get('uwho_client_url', '')
+      'uwho_site_url_fieldset' => array(
+        '#type' => 'fieldset',
+        '#title' => t('UWho URL'),
+        '#collapsible' => FALSE,
+        'uwho_site_url' => array(
+          '#value' => '<h2>' . url('uwho', array('absolute' => TRUE)) . '</h2>'
+        )
       )
     )
-  );
+  ));
 }
