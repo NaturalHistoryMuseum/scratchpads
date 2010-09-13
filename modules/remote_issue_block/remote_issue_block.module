@@ -36,10 +36,31 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
               )
             ))
           ))
+        ),
+        'uwho_client_key' => array(
+          '#title' => t('UWho Client Key'),
+          '#description' => t('Enter the key from the site you\'d like to enable your users to login to.'),
+          '#type' => 'textfield',
+          '#default_value' => variable_get('remote_issue_block_uwho_key', '')
+        ),
+        'uwho_client_url' => array(
+          '#title' => t('UWho Client URL'),
+          '#description' => t('Enter the URL of the site you\'d like to enable your users to login to.  This must be EXACTLY as provided by the other site.'),
+          '#type' => 'textfield',
+          '#default_value' => variable_get('remote_issue_block_uwho_url', '')
+        ),
+        'uwho_client_redirect_path' => array(
+          '#title' => t('UWho Redirect PATH'),
+          '#description' => t('Enter the path of the page on the remote site that you\'d like users to be redirected to (leave blank to use the default)'),
+          '#type' => 'textfield',
+          '#default_value' => variable_get('remote_issue_block_redirect_path', '')
         )
       );
     case 'save':
       variable_set('remote_issue_block_feed', $edit['remote_issue_block_feed']);
+      variable_set('remote_issue_block_uwho_url', $edit['uwho_client_url']);
+      variable_set('remote_issue_block_uwho_key', $edit['uwho_client_key']);
+      variable_set('remote_issue_block_redirect_path', $edit['uwho_client_redirect_path']);
       return;
     case 'view':
       drupal_add_css(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.css');
@@ -81,7 +102,15 @@ function remote_issue_block_content(){
     // Note, including fid in the SQL should be safe here, as we've ensured that
     // fid is an integer above.
     $items = aggregator_feed_items_load('SELECT * FROM {aggregator_item} WHERE fid = ' . $fid . ' ORDER BY timestamp DESC, iid DESC', $fid);
-    return theme('remote_issue_block_feed_items', $items);
+    $key = variable_get('remote_issue_block_uwho_key', FALSE);
+    $url = variable_get('remote_issue_block_uwho_url', FALSE);
+    $content = '';
+    if($key && $url){
+      $content = '<div class="new-items">
+  ' . uwho_client_block_content($key, $url, variable_get('remote_issue_block_redirect_path', FALSE), t('Post New Issue')) . '
+</div>';
+    }
+    return $content . theme('remote_issue_block_feed_items', $items);
   }else{
     return '';
   }
@@ -92,14 +121,18 @@ function remote_issue_block_content(){
  */
 function theme_remote_issue_block_feed_items($items = NULL){
   // We only want 10 items, so we'll count
-  $item_count = 0;
   $content = '';
-  foreach($items as $item){
-    if($item_count == 10){
-      break;
+  if(count($items)){
+    $item_count = 0;
+    $content = '<div class="items"><h1>Recent Issues:</h1>';
+    foreach($items as $item){
+      if($item_count == 10){
+        break;
+      }
+      $content .= theme('remote_issue_block_feed_item', $item, $item_count % 2);
+      $item_count++;
     }
-    $content .= theme('remote_issue_block_feed_item', $item);
-    $item_count++;
+    $content .= '</div>';
   }
   return $content;
 }
@@ -107,6 +140,6 @@ function theme_remote_issue_block_feed_items($items = NULL){
 /**
  * theme function for items
  */
-function theme_remote_issue_block_feed_item($item = NULL){
-  return '<h3><a href="' . $item->link . '">' . $item->title . '</a></h3><p>' . truncate_utf8($item->description, 128, TRUE, TRUE) . '</p>';
+function theme_remote_issue_block_feed_item($item = NULL, $odd = FALSE){
+  return '<div class="item ' . ($odd ? 'odd' : 'even') . '"><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . truncate_utf8($item->description, 128, TRUE, TRUE) . '</p></div>';
 }

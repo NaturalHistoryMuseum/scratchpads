@@ -1,20 +1,39 @@
 #block-remote_issue_block-0{
  position:fixed;
  top:10px;
- right:-390px;
+ right:-375px;
  width:400px;
- background-color:white;
- border:solid 1px black;
- border-right:none;
- padding:0;
+ background-color:transparent;
+ padding:0 !important;
+ background-image:url('issues.gif');
+ background-repeat:no-repeat;
 }
 #block-remote_issue_block-0 > h2{
  display:none;
 }
 #block-remote_issue_block-0 .content{
- border-left:solid 1px black;
+ border:solid 1px black;
+ border-right:none;
+ border-left:none;
  margin:0 !important;
  margin-left:20px !important;
+ background-color:white;
+ padding:10px;
+ padding-right:none;
+}
+#block-remote_issue_block-0 .content .items h1{
+ color:white;
+ background-color:#555;
+ padding:5px;
+}
+#block-remote_issue_block-0 .content .items{
+ font-size:80%;
+}
+#block-remote_issue_block-0 .content .items .item{
+ padding:4px;
+}
+#block-remote_issue_block-0 .content .items .item.even{
+ background-color:#f5f5f5;
 }
 #block-remote_issue_block-0 .content p{
  padding:0;
