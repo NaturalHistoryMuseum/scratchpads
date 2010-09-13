@@ -66,5 +66,8 @@ function uwho_site_callback(){
     $user = user_save($new_user, (array)$new_user);
     db_query("INSERT INTO {uwho} (guid, uid, data) VALUES ('%s', %d, '%s')", $decrypted['guid'], $user->uid, serialize($decrypted));
   }
+  if(isset($decrypted['redirect']) && $decrypted['redirect']){
+    drupal_goto($decrypted['redirect']);
+  }
   drupal_goto(variable_get('uwho_site_redirect_path', ''));
 }
