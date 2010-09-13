@@ -138,15 +138,15 @@ function theme_remote_issue_block_feed_items($items = NULL){
   $content = '';
   if(count($items)){
     $item_count = 0;
-    $content = '<div class="items"><h1>Recent Issues:</h1>';
+    $content = '<div class="items"><h1>Recent Issues:</h1><ul>';
     foreach($items as $item){
       if($item_count == 10){
         break;
       }
-      $content .= theme('remote_issue_block_feed_item', $item, $item_count % 2);
+      $content .= theme('remote_issue_block_feed_item', $item, $item_count);
       $item_count++;
     }
-    $content .= '</div>';
+    $content .= '</ul></div>';
   }
   return $content;
 }
@@ -154,6 +154,6 @@ function theme_remote_issue_block_feed_items($items = NULL){
 /**
  * theme function for items
  */
-function theme_remote_issue_block_feed_item($item = NULL, $odd = FALSE){
-  return '<div class="item ' . ($odd ? 'odd' : 'even') . '"><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div>';
+function theme_remote_issue_block_feed_item($item = NULL, $item_count){
+  return '<li class="' . ($item_count%2 ? 'odd' : 'even') . ($item_count ? '' : ' first').'"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
 }

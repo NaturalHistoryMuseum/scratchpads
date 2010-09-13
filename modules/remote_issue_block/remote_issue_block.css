@@ -5,6 +5,15 @@
  width:400px;
  background-color:transparent;
  padding:0 !important;
+ font-family:arial,sans-serif;
+}
+#block-remote_issue_block-0 li{
+ background:none !important;
+ padding:0.2em !important;
+ border-top: 1px dotted #CCCCCC
+}
+#block-remote_issue_block-0 li.first{
+ border-top: none;
 }
 .primary-links{
  z-index:0 !important;
@@ -59,9 +68,11 @@
  padding-right:0;
 }
 #block-remote_issue_block-0 .content .items h1{
- color:white;
- background-color:#555;
- padding:5px;
+color:#333333;
+font-size:160%;
+font-weight:bold;
+letter-spacing:-1px;
+margin-bottom:5px;
 }
 #block-remote_issue_block-0 .content .items{
  font-size:80%;
@@ -69,7 +80,7 @@
 #block-remote_issue_block-0 .content .items .item{
  padding:4px;
 }
-#block-remote_issue_block-0 .content .items .item p{
+#block-remote_issue_block-0 .content li p{
  display:none;
 }
 #block-remote_issue_block-0 .content .items .item.even{
