@@ -5,6 +5,16 @@
  */
 function uwho_site_install(){
   variable_set('uwho_site_key', md5(url() . time()));
+  drupal_install_schema('uwho_site');
+}
+
+/**
+ * hook_uninstall
+ */
+function uwho_site_uninstall(){
+  variable_del('uwho_site_key');
+  drupal_set_message('Note, if reinstalling the UWho Site module, you\'ll have a new UWho Site key');
+  drupal_uninstall_schema('uwho_site');
 }
 
 /**
@@ -31,4 +41,37 @@ function uwho_site_requirements($phase){
         )
       );
   }
+}
+
+/**
+ * hook_schema
+ */
+function uwho_site_schema(){
+  return array(
+    'uwho' => array(
+      'fields' => array(
+        'guid' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => true
+        ),
+        'uid' => array(
+          'type' => 'int',
+          'not null' => true
+        ),
+        'data' => array(
+          'type' => 'text',
+          'size' => 'medium'
+        )
+      ),
+      'primary key' => array(
+        'uid'
+      ),
+      'indexes' => array(
+        'uwho_guid_index' => array(
+          'guid'
+        )
+      )
+    )
+  );
 }

@@ -31,7 +31,8 @@ function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
           'info' => t('UWho Login Block'),
           'weight' => 1000,
           'status' => 1,
-          'region' => 'left'
+          'region' => 'left',
+          'cache' => BLOCK_NO_CACHE
         )
       );
     case 'configure':
@@ -41,6 +42,7 @@ function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
     case 'view':
       switch($delta){
         case 0:
+          drupal_add_css(drupal_get_path('module', 'uwho_client') . '/uwho_client.css');
           return array(
             'subject' => t('UWho Login Block'),
             'content' => uwho_client_block_content()
@@ -84,5 +86,13 @@ function uwho_client_block_content(){
     watchdog('uwho', 'Encryption failed');
     return '';
   }
-  return '<a href="' . $url . (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) . '">L I N K</a>';
+  // We need to ensure that jquery.js is added to the page
+  drupal_add_js('', '');
+  // Note, we only include the data in the URL, if the length of the data and 
+  // URL is less than 1800 characters.  This helps to ensure we don't go over 
+  // apache's URL length limit.
+  return '<form action="' . $url . '" accept-charset="UTF-8" method="post" id="uwho-client-form">
+  <input type="text" name="uwhodata" value="' . urlencode($encrypted) . '" style="display:none"/>'.
+  '<a href="' . $url . ((strlen(urlencode($encrypted))+strlen($url))<1800 ? (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) : '') . '" onclick="$(\'#uwho-client-form\').trigger(\'submit\'); return false;">L I N K</a>
+ </form>';
 }
