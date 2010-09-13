@@ -15,7 +15,7 @@ function uwho_site_callback(){
   //echo substr($_GET['q'], 5);exit;
   // If one of the essential settings hasn't been set, or we're not logged in!
   if(!$key){
-    drupal_set_message('No key is set, you can not login.  Please contact this site\'s maintainer');
+    drupal_set_message('No key has been set, you can not login.  Please contact this site\'s maintainer');
     drupal_goto();
   }
   // Load the class file
@@ -36,6 +36,7 @@ function uwho_site_callback(){
   $new_user->pass = md5(rand());
   $new_user->mail = $decrypted['user']['mail'];
   $new_user->status = 1;
+  $new_user->url = $decrypted['user']['url'];
   global $user;
   $user = user_save($new_user, (array)$new_user);
   drupal_goto(variable_get('uwho_site_redirect_path', ''));
