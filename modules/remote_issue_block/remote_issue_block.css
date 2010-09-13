@@ -12,6 +12,15 @@
 #block-remote_issue_block-0 > h2{
  display:none;
 }
+#open-close, #block-remote_issue_block-0 .subcontent{
+ -moz-border-radius-topleft:5px;
+ -webkit-border-top-left-radius:5px;
+ -moz-border-radius-bottomleft:5px;
+ -webkit-border-bottom-left-radius:5px;
+ -moz-box-shadow: -3px 3px 3px #bbb;
+ -webkit-box-shadow: -3px 3px 3px #bbb;
+ box-shadow: -3px 3px 3px #bbb;
+}
 #open-close{
  top:30px;
  position:absolute;
