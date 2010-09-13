@@ -36,8 +36,18 @@ function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
         )
       );
     case 'configure':
-      return array();
+      return array(
+        'link_text' => array(
+          '#type' => 'textfield',
+          '#title' => t('Link text'),
+          '#description' => t('Override the default linktext ("Login to remote site").'),
+          '#default_value' => variable_get('uwho_client_link_text', '')
+        )
+      );
     case 'save':
+      if($edit['link_text']){
+        variable_set('uwho_client_link_text', $edit['link_text']);
+      }
       return;
     case 'view':
       switch($delta){
@@ -45,7 +55,7 @@ function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
           drupal_add_css(drupal_get_path('module', 'uwho_client') . '/uwho_client.css');
           return array(
             'subject' => t('UWho Login Block'),
-            'content' => uwho_client_block_content()
+            'content' => uwho_client_block_content(variable_get('uwho_client_link_text', FALSE))
           );
       }
   }
@@ -54,7 +64,10 @@ function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
 /**
  * helper function for above which returns the block content
  */
-function uwho_client_block_content(){
+function uwho_client_block_content($text = FALSE){
+  if(!$text){
+    $text = t('Login to remote site');
+  }
   // First, we need to get the key that has been set, if no key is set, we 
   // return the empty string.
   global $user;
@@ -88,11 +101,16 @@ function uwho_client_block_content(){
   }
   // We need to ensure that jquery.js is added to the page
   drupal_add_js('', '');
+  if(count($_COOKIE) && (isset($_COOKIE['has_js']) && ($_COOKIE['has_js']))){
+    $link_or_button = '<a href="' . $url . ((strlen(urlencode($encrypted))+strlen($url))<1800 ? (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) : '') . '" onclick="$(\'#uwho-client-form\').trigger(\'submit\'); return false;">'.$text.'</a>';
+  } else {
+    $link_or_button = '<input type="submit" value="'.$text.'"/>';
+  }
   // Note, we only include the data in the URL, if the length of the data and 
   // URL is less than 1800 characters.  This helps to ensure we don't go over 
   // apache's URL length limit.
   return '<form action="' . $url . '" accept-charset="UTF-8" method="post" id="uwho-client-form">
-  <input type="text" name="uwhodata" value="' . urlencode($encrypted) . '" style="display:none"/>'.
-  '<a href="' . $url . ((strlen(urlencode($encrypted))+strlen($url))<1800 ? (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) : '') . '" onclick="$(\'#uwho-client-form\').trigger(\'submit\'); return false;">L I N K</a>
+  <input type="text" name="uwhodata" value="' . urlencode($encrypted) . '" style="display:none"/>
+  '.$link_or_button.'
  </form>';
 }
