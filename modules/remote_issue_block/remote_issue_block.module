@@ -37,6 +37,11 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
             ))
           ))
         ),
+        'remote_issue_block_tab_title' => array(
+          '#title' => t('Tab title'),
+          '#type' => 'textfield',
+          '#default_value' => variable_get('remote_issue_block_tab_title', '')
+        ),
         'uwho_client_key' => array(
           '#title' => t('UWho Client Key'),
           '#description' => t('Enter the key from the site you\'d like to enable your users to login to.'),
@@ -61,6 +66,11 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
       variable_set('remote_issue_block_uwho_url', $edit['uwho_client_url']);
       variable_set('remote_issue_block_uwho_key', $edit['uwho_client_key']);
       variable_set('remote_issue_block_redirect_path', $edit['uwho_client_redirect_path']);
+      if($edit['remote_issue_block_tab_title'] == ''){
+        variable_del('remote_issue_block_tab_title');
+      }else{
+        variable_set('remote_issue_block_tab_title', $edit['remote_issue_block_tab_title']);
+      }
       return;
     case 'view':
       drupal_add_css(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.css');
@@ -104,13 +114,13 @@ function remote_issue_block_content(){
     $items = aggregator_feed_items_load('SELECT * FROM {aggregator_item} WHERE fid = ' . $fid . ' ORDER BY timestamp DESC, iid DESC', $fid);
     $key = variable_get('remote_issue_block_uwho_key', FALSE);
     $url = variable_get('remote_issue_block_uwho_url', FALSE);
-    $content = '';
+    $content = '<div id="open-close"><p>' . variable_get('remote_issue_block_tab_title', t('Issues') . '...') . '</p></div>';
     if($key && $url){
-      $content = '<div class="new-items">
+      $content .= '<div class="subcontent"><div class="new-items">
   ' . uwho_client_block_content($key, $url, variable_get('remote_issue_block_redirect_path', FALSE), t('Post New Issue')) . '
 </div>';
     }
-    return $content . theme('remote_issue_block_feed_items', $items);
+    return $content . theme('remote_issue_block_feed_items', $items) . '</div>';
   }else{
     return '';
   }
@@ -141,5 +151,5 @@ function theme_remote_issue_block_feed_items($items = NULL){
  * theme function for items
  */
 function theme_remote_issue_block_feed_item($item = NULL, $odd = FALSE){
-  return '<div class="item ' . ($odd ? 'odd' : 'even') . '"><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . truncate_utf8($item->description, 128, TRUE, TRUE) . '</p></div>';
+  return '<div class="item ' . ($odd ? 'odd' : 'even') . '"><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div>';
 }

@@ -5,21 +5,45 @@
  width:400px;
  background-color:transparent;
  padding:0 !important;
- background-image:url('issues.gif');
- background-repeat:no-repeat;
 }
 #block-remote_issue_block-0 > h2{
  display:none;
 }
-#block-remote_issue_block-0 .content{
+#open-close{
+ top:30px;
+ position:absolute;
+ height:100px;
+ width:20px;
  border:solid 1px black;
- border-right:none;
- border-left:none;
- margin:0 !important;
- margin-left:20px !important;
+ border-right: solid 1px white;
+ float:left;
  background-color:white;
- padding:10px;
- padding-right:none;
+ padding:10px 0 10px 0;
+ overflow:hidden;
+}
+#open-close p{
+ color:#333;
+ border:0px solid red;
+ writing-mode:tb-rl;
+ -webkit-transform:rotate(90deg);
+ -moz-transform:rotate(90deg);
+ -o-transform: rotate(90deg);
+ white-space:nowrap;
+ display:block;
+ bottom:0;
+ font-size:120%;
+}
+#block-remote_issue_block-0 .subcontent{
+ background-color:white;
+ float:right;
+ width:368px;
+ border: solid 1px black;
+ border-right:none;
+ padding:5px;
+}
+#block-remote_issue_block-0 .content{
+ margin:0 !important;
+ padding-right:0;
 }
 #block-remote_issue_block-0 .content .items h1{
  color:white;
