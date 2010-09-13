@@ -11,7 +11,8 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
           'info' => t('Remote Issue Block'),
           'weight' => 1000,
           'status' => 1,
-          'region' => 'left'
+          'region' => 'left',
+          'cache' => BLOCK_CACHE_PER_USER
         )
       );
       return $blocks;
@@ -73,12 +74,15 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
       }
       return;
     case 'view':
-      drupal_add_css(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.css');
-      drupal_add_js(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.js');
-      return array(
-        'subject' => t('Remote Issue Block'),
-        'content' => remote_issue_block_content()
-      );
+      global $user;
+      if($user->uid){
+        drupal_add_css(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.css');
+        drupal_add_js(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.js');
+        return array(
+          'subject' => t('Remote Issue Block'),
+          'content' => remote_issue_block_content()
+        );
+      }
   }
 }
 
