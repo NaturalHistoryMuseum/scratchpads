@@ -46,7 +46,7 @@ function uwho_site_callback(){
     $user = user_load(array('uid' => $uid));
   } else {
     $new_user = new stdClass();
-    $new_user->name = $decrypted['user']['name'] . 'uwho';
+    $new_user->name = $decrypted['user']['name'];
     $new_user->pass = md5(rand());
     $new_user->mail = $decrypted['user']['mail'];
     $new_user->status = 1;
