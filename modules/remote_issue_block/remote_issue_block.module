@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * hook_block
+ */
+function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
+  switch($op){
+    case 'list':
+      return array(
+        array(
+          'info' => t('Remote Issue Block'),
+          'weight' => 1000,
+          'status' => 1,
+          'region' => 'left'
+        )
+      );
+      return $blocks;
+    case 'configure':
+      $feeds = array(
+        t('-- Not Set --')
+      );
+      $results = db_query('SELECT fid, title, url FROM {aggregator_feed}');
+      while($row = db_fetch_array($results)){
+        $feeds[$row['fid']] = $row['title'] . ' (' . $row['url'] . ')';
+      }
+      return array(
+        'remote_issue_block_feed' => array(
+          '#title' => t('Please select the feed to be used by the Remote Issue Block'),
+          '#type' => 'select',
+          '#options' => $feeds,
+          '#default_value' => variable_get('remote_issue_block_feed', 0),
+          '#description' => t('Select the RSS Feed (A new RSS feed can be added using the <a href="!agg_url">Aggregator interface</a>, after which you will be redirected here.)', array(
+            '!agg_url' => url('admin/content/aggregator/add/feed', array(
+              'query' => array(
+                'destination' => 'admin/build/block/configure/remote_issue_block/0'
+              )
+            ))
+          ))
+        )
+      );
+    case 'save':
+      variable_set('remote_issue_block_feed', $edit['remote_issue_block_feed']);
+      return;
+    case 'view':
+      drupal_add_css(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.css');
+      drupal_add_js(drupal_get_path('module', 'remote_issue_block') . '/remote_issue_block.js');
+      return array(
+        'subject' => t('Remote Issue Block'),
+        'content' => remote_issue_block_content()
+      );
+  }
+}
+
+/**
+ * hook_theme
+ */
+function remote_issue_block_theme($existing, $type, $theme, $path){
+  return array(
+    'remote_issue_block_feed_items' => array(
+      'arguments' => array(
+        'items' => NULL
+      )
+    ),
+    'remote_issue_block_feed_item' => array(
+      'arguments' => array(
+        'item' => NULL
+      )
+    )
+  );
+}
+
+/**
+ * helper for hook_block
+ */
+function remote_issue_block_content(){
+  $fid = (integer)variable_get('remote_issue_block_feed', 0);
+  if($fid && is_integer($fid)){
+    // Load the required file
+    module_load_include('pages.inc', 'aggregator');
+    // This defaults to 20, which is more than enough for us!
+    // Note, including fid in the SQL should be safe here, as we've ensured that
+    // fid is an integer above.
+    $items = aggregator_feed_items_load('SELECT * FROM {aggregator_item} WHERE fid = ' . $fid . ' ORDER BY timestamp DESC, iid DESC', $fid);
+    return theme('remote_issue_block_feed_items', $items);
+  }else{
+    return '';
+  }
+}
+
+/**
+ * theme function for items
+ */
+function theme_remote_issue_block_feed_items($items = NULL){
+  // We only want 10 items, so we'll count
+  $item_count = 0;
+  $content = '';
+  foreach($items as $item){
+    if($item_count == 10){
+      break;
+    }
+    $content .= theme('remote_issue_block_feed_item', $item);
+    $item_count++;
+  }
+  return $content;
+}
+
+/**
+ * theme function for items
+ */
+function theme_remote_issue_block_feed_item($item = NULL){
+  return '<h3><a href="' . $item->link . '">' . $item->title . '</a></h3><p>' . truncate_utf8($item->description, 128, TRUE, TRUE) . '</p>';
+}
