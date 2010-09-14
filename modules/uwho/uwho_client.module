@@ -64,7 +64,10 @@ function uwho_client_block_content($key, $url, $redirect = FALSE, $text = FALSE)
   // return the empty string.
   global $user;
   // If one of the essential settings hasn't been set, or we're not logged in!
-  if(!($key && $url && $user->uid)){return t('Please set the Key and URL on the <a href="!settings_page">settings page</a>', array('!settings_page' => url('admin/build/block/configure/uwho_client/0')));}
+  if(!$user->uid){
+    return '';
+  }
+  if(!($key && $url)){return t('Please set the Key and URL on the <a href="!settings_page">settings page</a>', array('!settings_page' => url('admin/build/block/configure/uwho_client/0')));}
   // Load the class file
   module_load_include('inc', 'uwho_site', 'uwho.cryptastic');
   $cryptastic = new cryptastic();
