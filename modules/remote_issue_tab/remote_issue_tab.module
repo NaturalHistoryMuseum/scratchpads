@@ -113,5 +113,4 @@ function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
  */
 function theme_remote_issue_tab_feed_item($item = NULL, $item_count, $key, $url){
   return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>'.uwho_client_block_content($key, $url, $item->link, $item->title).'</h3><p>' . $item->description . '</p></div></li>';
-  //return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
 }
