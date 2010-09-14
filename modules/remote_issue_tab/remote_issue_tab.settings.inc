@@ -30,19 +30,19 @@ function remote_issue_tab_admin_page(){
       '#type' => 'textfield',
       '#default_value' => variable_get('remote_issue_tab_tab_title', t('Issues') . '...')
     ),
-    'uwho_client_key' => array(
+    'remote_issue_tab_uwho_client_key' => array(
       '#title' => t('UWho Client Key'),
       '#description' => t('Enter the key from the site you\'d like to enable your users to login to.'),
       '#type' => 'textfield',
-      '#default_value' => variable_get('remote_issue_tab_uwho_key', '')
+      '#default_value' => variable_get('remote_issue_tab_uwho_client_key', '')
     ),
-    'uwho_client_url' => array(
+    'remote_issue_tab_uwho_url' => array(
       '#title' => t('UWho Client URL'),
       '#description' => t('Enter the URL of the site you\'d like to enable your users to login to.  This must be EXACTLY as provided by the other site.'),
       '#type' => 'textfield',
       '#default_value' => variable_get('remote_issue_tab_uwho_url', '')
     ),
-    'uwho_client_redirect_path' => array(
+    'remote_issue_tab_redirect_path' => array(
       '#title' => t('UWho Redirect PATH'),
       '#description' => t('Enter the path of the page on the remote site that you\'d like users to be redirected to (leave blank to use the default)'),
       '#type' => 'textfield',

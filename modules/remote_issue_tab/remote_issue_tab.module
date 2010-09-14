@@ -6,8 +6,8 @@
 function remote_issue_tab_menu(){
   return array(
     'admin/settings/remote-issue-tab' => array(
-      'title' => 'UWho - Site settings',
-      'description' => 'Alter the settings that allow other sites to automatically log users into this site',
+      'title' => 'Remote Issue Tab',
+      'description' => 'Alter the settings for the remote issues tab',
       'page callback' => 'drupal_get_form',
       'page arguments' => array(
         'remote_issue_tab_admin_page'
@@ -48,7 +48,7 @@ function remote_issue_tab_footer($main = 0){
   ' . uwho_client_block_content($key, $url, variable_get('remote_issue_tab_redirect_path', FALSE), t('Post New Issue')) . '
 </div>';
     }
-    return $content . theme('remote_issue_tab_feed_items', $items) . '<div class="footer">' . variable_get('remote_issue_tab_footer', '') . '</div></div>';
+    return '<div id="remote-issue-tab"><div class="content">'.$content . theme('remote_issue_tab_feed_items', $items) . '<div class="footer">' . variable_get('remote_issue_tab_footer', '') . '</div></div></div></div>';
   }else{
     return '';
   }
