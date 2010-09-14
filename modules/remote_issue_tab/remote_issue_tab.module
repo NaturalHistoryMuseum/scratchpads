@@ -32,6 +32,9 @@ function remote_issue_tab_init(){
  * hook_footer
  */
 function remote_issue_tab_footer($main = 0){
+  global $user;
+  // Do nothing if not logged in.
+  if(!$user->uid){return;}
   $fid = (integer)variable_get('remote_issue_tab_feed', 0);
   $key = variable_get('remote_issue_tab_uwho_client_key', FALSE);
   $url = variable_get('remote_issue_tab_uwho_url', FALSE);
@@ -104,8 +107,10 @@ function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
       $item_count++;
     }
     $content .= '</ul>';
-  } else {
-    return t('There are no issues to display.  You may need to <a href="!agg_url">update</a> the issue feed.', array('!agg_url' => url('admin/content/aggregator/update/'.variable_get('remote_issue_tab_feed', 0))));
+  }else{
+    return t('There are no issues to display.  You may need to <a href="!agg_url">update</a> the issue feed.', array(
+      '!agg_url' => url('admin/content/aggregator/update/' . variable_get('remote_issue_tab_feed', 0))
+    ));
   }
   return $content;
 }
@@ -114,5 +119,5 @@ function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
  * theme function for items
  */
 function theme_remote_issue_tab_feed_item($item = NULL, $item_count, $key, $url){
-  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>'.uwho_client_block_content($key, $url, $item->link, $item->title).'</h3><p>' . $item->description . '</p></div></li>';
+  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>' . uwho_client_block_content($key, $url, $item->link, $item->title) . '</h3><p>' . $item->description . '</p></div></li>';
 }
