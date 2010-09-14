@@ -60,6 +60,12 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
           '#description' => t('Enter the path of the page on the remote site that you\'d like users to be redirected to (leave blank to use the default)'),
           '#type' => 'textfield',
           '#default_value' => variable_get('remote_issue_block_redirect_path', '')
+        ),
+        'remote_issue_block_footer' => array(
+          '#title' => t('Footer'),
+          '#type' => 'textarea',
+          '#default_value' => variable_get('remote_issue_block_footer', ''),
+          '#description' => t('Enter text to be displayed below the Recent Issues.')
         )
       );
     case 'save':
@@ -67,6 +73,7 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
       variable_set('remote_issue_block_uwho_url', $edit['uwho_client_url']);
       variable_set('remote_issue_block_uwho_key', $edit['uwho_client_key']);
       variable_set('remote_issue_block_redirect_path', $edit['uwho_client_redirect_path']);
+      variable_set('remote_issue_block_footer', $edit['remote_issue_block_footer']);
       if($edit['remote_issue_block_tab_title'] == ''){
         variable_del('remote_issue_block_tab_title');
       }else{
@@ -84,6 +91,13 @@ function remote_issue_block_block($op = 'list', $delta = 0, $edit = array()){
         );
       }
   }
+}
+
+/**
+ * hook_footer
+ */
+function remote_issue_block_footer($main = 0){
+  return remote_issue_block_content();
 }
 
 /**
@@ -124,7 +138,7 @@ function remote_issue_block_content(){
   ' . uwho_client_block_content($key, $url, variable_get('remote_issue_block_redirect_path', FALSE), t('Post New Issue')) . '
 </div>';
     }
-    return $content . theme('remote_issue_block_feed_items', $items) . '</div>';
+    return $content . theme('remote_issue_block_feed_items', $items) . '<div class="footer">'.variable_get('remote_issue_block_footer', '').'</div></div>';
   }else{
     return '';
   }
@@ -155,5 +169,5 @@ function theme_remote_issue_block_feed_items($items = NULL){
  * theme function for items
  */
 function theme_remote_issue_block_feed_item($item = NULL, $item_count){
-  return '<li class="' . ($item_count%2 ? 'odd' : 'even') . ($item_count ? '' : ' first').'"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
+  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
 }

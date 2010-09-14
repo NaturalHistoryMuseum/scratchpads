@@ -1,3 +1,12 @@
+/* Stop other things from being displayed above us. */
+.primary-links{
+ /*z-index:0 !important;*/
+}
+
+#block-remote_issue_block-0 *{
+ z-index:50 !important;
+}
+/* Main block */
 #block-remote_issue_block-0{
  position:fixed;
  top:10px;
@@ -6,20 +15,6 @@
  background-color:transparent;
  padding:0 !important;
  font-family:arial,sans-serif;
-}
-#block-remote_issue_block-0 li{
- background:none !important;
- padding:0.2em !important;
- border-top: 1px dotted #CCCCCC
-}
-#block-remote_issue_block-0 li.first{
- border-top: none;
-}
-.primary-links{
- z-index:0 !important;
-}
-#block-remote_issue_block-0 > h2{
- display:none;
 }
 #open-close, #block-remote_issue_block-0 .subcontent{
  -moz-border-radius-topleft:5px;
@@ -30,7 +25,23 @@
  -webkit-box-shadow: -3px 3px 3px #bbb;
  box-shadow: -3px 3px 3px #bbb;
 }
+
+/* List elements */
+#block-remote_issue_block-0 li{
+ background:none !important;
+ padding:0.2em !important;
+ border-top: 1px dotted #CCCCCC
+}
+#block-remote_issue_block-0 li.first{
+ border-top: none;
+}
+
+/* Don't display the block title in the sidebar */
+#block-remote_issue_block-0 > h2{
+ display:none;
+}
 #open-close{
+ font-size:120% !important;
  top:30px;
  position:absolute;
  height:100px;
@@ -41,6 +52,9 @@
  background-color:white;
  padding:10px 0 10px 0;
  overflow:hidden;
+}
+#open-close:hover{
+ cursor:pointer;
 }
 #open-close p{
  color:#333;
@@ -67,14 +81,14 @@
  margin:0 !important;
  padding-right:0;
 }
-#block-remote_issue_block-0 .content .items h1{
+#block-remote_issue_block-0 .content h1{
 color:#333333;
 font-size:160%;
 font-weight:bold;
 letter-spacing:-1px;
 margin-bottom:5px;
 }
-#block-remote_issue_block-0 .content .items{
+#block-remote_issue_block-0 .content{
  font-size:80%;
 }
 #block-remote_issue_block-0 .content .items .item{
