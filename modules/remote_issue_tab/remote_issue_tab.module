@@ -33,24 +33,34 @@ function remote_issue_tab_init(){
  */
 function remote_issue_tab_footer($main = 0){
   $fid = (integer)variable_get('remote_issue_tab_feed', 0);
-  if($fid && is_integer($fid)){
+  $key = variable_get('remote_issue_tab_uwho_client_key', FALSE);
+  $url = variable_get('remote_issue_tab_uwho_url', FALSE);
+  if($fid && is_integer($fid) && $key && $url){
     // Load the required file
     module_load_include('pages.inc', 'aggregator');
     // This defaults to 20, which is more than enough for us!
     // Note, including fid in the SQL should be safe here, as we've ensured that
     // fid is an integer above.
     $items = aggregator_feed_items_load('SELECT * FROM {aggregator_item} WHERE fid = ' . $fid . ' ORDER BY timestamp DESC, iid DESC', $fid);
-    $key = variable_get('remote_issue_tab_uwho_key', FALSE);
-    $url = variable_get('remote_issue_tab_uwho_url', FALSE);
-    $content = '<div id="open-close"><p>' . variable_get('remote_issue_tab_tab_title', t('Issues') . '...') . '</p></div>';
-    if($key && $url){
-      $content .= '<div class="subcontent"><div class="new-items">
-  ' . uwho_client_block_content($key, $url, variable_get('remote_issue_tab_redirect_path', FALSE), t('Post New Issue')) . '
+    if(!$key && !$url){return '';}
+    return '<div id="remote-issue-tab">
+  <div class="content">
+    <div id="open-close">
+      <p>' . variable_get('remote_issue_tab_tab_title', t('Issues') . '...') . '</p>
+    </div>
+    <div class="subcontent">
+      <div class="new-items">
+        <h1>' . uwho_client_block_content($key, $url, variable_get('remote_issue_tab_redirect_path', FALSE), t('Search/Report a new issue')) . '</h1>
+      </div>
+      <div class="items">
+        ' . theme('remote_issue_tab_feed_items', $items, $key, $url) . '
+      </div>
+      <div class="footer">
+        ' . variable_get('remote_issue_tab_footer', '') . '
+      </div>
+    </div>
+  </div>
 </div>';
-    }
-    return '<div id="remote-issue-tab"><div class="content">'.$content . theme('remote_issue_tab_feed_items', $items) . '<div class="footer">' . variable_get('remote_issue_tab_footer', '') . '</div></div></div></div>';
-  }else{
-    return '';
   }
 }
 
@@ -61,12 +71,17 @@ function remote_issue_tab_theme($existing, $type, $theme, $path){
   return array(
     'remote_issue_tab_feed_items' => array(
       'arguments' => array(
-        'items' => NULL
+        'items' => NULL,
+        'key' => NULL,
+        'url' => NULL
       )
     ),
     'remote_issue_tab_feed_item' => array(
       'arguments' => array(
-        'item' => NULL
+        'item' => NULL,
+        'item_count' => NULL,
+        'key' => NULL,
+        'url' => NULL
       )
     )
   );
@@ -75,20 +90,20 @@ function remote_issue_tab_theme($existing, $type, $theme, $path){
 /**
  * theme function for items
  */
-function theme_remote_issue_tab_feed_items($items = NULL){
+function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
   // We only want 10 items, so we'll count
   $content = '';
   if(count($items)){
     $item_count = 0;
-    $content = '<div class="items"><h1>Recent Issues:</h1><ul>';
+    $content = '<h1>Recent Issues:</h1><ul>';
     foreach($items as $item){
       if($item_count == 10){
         break;
       }
-      $content .= theme('remote_issue_tab_feed_item', $item, $item_count);
+      $content .= theme('remote_issue_tab_feed_item', $item, $item_count, $key, $url);
       $item_count++;
     }
-    $content .= '</ul></div>';
+    $content .= '</ul>';
   }
   return $content;
 }
@@ -96,6 +111,7 @@ function theme_remote_issue_tab_feed_items($items = NULL){
 /**
  * theme function for items
  */
-function theme_remote_issue_tab_feed_item($item = NULL, $item_count){
-  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
+function theme_remote_issue_tab_feed_item($item = NULL, $item_count, $key, $url){
+  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>'.uwho_client_block_content($key, $url, $item->link, $item->title).'</h3><p>' . $item->description . '</p></div></li>';
+  //return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3><a href="' . $item->link . '" target="_blank">' . $item->title . '</a></h3><p>' . $item->description . '</p></div></li>';
 }
