@@ -1,26 +1,6 @@
 <?php
 
 /**
- * hook_menu
- */
-function uwho_client_menu(){
-  return array(
-    'admin/settings/uwho-client' => array(
-      'title' => 'UWho - Client settings',
-      'description' => 'Add the key for the remote site that you\'re providing a link to',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array(
-        'uwho_client_settings'
-      ),
-      'access arguments' => array(
-        'administer site configuration'
-      ),
-      'file' => 'uwho_client.settings.inc'
-    )
-  );
-}
-
-/**
  * hook_block
  */
 function uwho_client_block($op = 'list', $delta = 0, $edit = array()){
