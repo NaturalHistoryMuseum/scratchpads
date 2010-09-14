@@ -104,6 +104,8 @@ function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
       $item_count++;
     }
     $content .= '</ul>';
+  } else {
+    return t('There are no issues to display.  You may need to <a href="!agg_url">update</a> the issue feed.', array('!agg_url' => url('admin/content/aggregator/update/'.variable_get('remote_issue_tab_feed', 0))));
   }
   return $content;
 }
