@@ -9,7 +9,7 @@ function remote_issue_tab_admin_page(){
   );
   $results = db_query('SELECT fid, title, url FROM {aggregator_feed}');
   while($row = db_fetch_array($results)){
-    $feeds[$row['fid']] = $row['title'] . ' (' . $row['url'] . ')';
+    $feeds[$row['fid']] = check_plain($row['title'] . ' (' . $row['url'] . ')');
   }
   return system_settings_form(array(
     'remote_issue_tab_feed' => array(
