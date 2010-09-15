@@ -335,6 +335,7 @@ function scratchpadify_install(){
  * 6154: Remove forum tags from all none forum nodes
  * 6155: Fix an issue with the imagefield field possibly caused by Publication.
  * 6156: Rename UID 1 to "Scratchpad Team"
+ * 6157: Install the remote issues tab - set the settings here.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1157,5 +1158,74 @@ function scratchpadify_update_6155(){
  * Rename UID 1 to "Scratchpad Team"
  */
 function scratchpadify_update_6156(){
-  return array(update_sql("UPDATE {users} SET name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin'"));
+  return array(
+    update_sql("UPDATE {users} SET name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin'")
+  );
+}
+
+/**
+ * Install the remote issues tab - set the settings here.
+ */
+function scratchpadify_update_6157(){
+  $ret = array();
+  // Ensure that the following modules are enabled
+  module_rebuild_cache();
+  $modules = array(
+    'aggregator',
+    'uwho_client',
+    'remote_issue_tab'
+  );
+  foreach($modules as $module){
+    if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
+      $ret['#abort'] = array(
+        'success' => FALSE,
+        'query' => t('A required module is missing.')
+      );
+      return $ret;
+    }
+  }
+  include_once './includes/install.inc';
+  drupal_install_modules($modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Required modules installed.')
+  );
+  module_enable($modules);
+  // Clear caches
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
+  menu_rebuild();
+  cache_clear_all('schema', 'cache');
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  // We need to add a feed for the Scratchpad issues.
+  $feed = array(
+    'title' => 'Scratchpads Issue Queue',
+    'url' => 'http://dev.scratchpads.eu/project/issues/rss',
+    'refresh' => 900
+  );
+  aggregator_save_feed($feed);
+  // Set the variables
+  // Note, $feed is not passed by reference to aggregator_save_feed (Possible 
+  // bug with the Drupal code there), so we have to use db_last_insert_id.
+  $fid = db_last_insert_id('aggregator_feed', 'fid');
+  variable_set('remote_issue_tab_feed', $fid);
+  variable_set('remote_issue_tab_uwho_client_key', '58d972f86f9d963837bebcd8d4b46d39');
+  variable_set('remote_issue_tab_uwho_url', 'http://dev.scratchpads.eu/uwho');
+  variable_set('remote_issue_tab_footer', '<h1>Help</h1><h3>Not sure what you are doing, try the <a href="http://scratchpads.eu/help">Scratchpad Help Page</a>.</h3>');
+  variable_set('remote_issues_tab_roles', array(
+    5
+  ));
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Variables set.')
+  );
+  // Finally, we feed the feed so the Issues tab isn't empty.
+  $feed = aggregator_feed_load($fid);
+  aggregator_refresh($feed);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Feed refreshed.')
+  );
+  return $ret;
 }
