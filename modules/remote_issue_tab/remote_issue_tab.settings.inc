@@ -75,6 +75,8 @@ function remote_issue_tab_admin_page(){
       '#default_value' => variable_get('remote_issues_tab_cache_time', 900),
       '#description' => t('Select the length of time for which the Remote Issues Tab should be cached.')
     ),
+    // Note, we use our own settings interface here, as we want users to be able
+    // to edit this setting, and not just admins.
     'remote_issues_tab_roles' => array(
       '#title' => t('Roles'),
       '#type' => 'checkboxes',

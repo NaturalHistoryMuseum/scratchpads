@@ -44,7 +44,7 @@ function remote_issue_tab_footer($main = 0){
       break;
     }
   }
-  if(!$show_tab){return;}
+  if(!$show_tab && $user->uid === 1){return;}
   // As creating the tab is very processor heavy (due to the number of 
   // encryptions were performing), we'll cache the footer, by user, for 15 mins
   // Note, we cache by user due to the fact that the user details are embeded in
