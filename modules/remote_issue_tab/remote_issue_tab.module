@@ -53,7 +53,7 @@ function remote_issue_tab_footer($main = 0){
     </div>
     <div class="subcontent">
       <div class="new-items">
-        <h1>' . uwho_client_block_content($key, $url, variable_get('remote_issue_tab_redirect_path', FALSE), t('Search/Report a new issue')) . '</h1>
+        <h1>' . uwho_client_block_content($key, $url, variable_get('remote_issue_tab_redirect_path', FALSE), t('Search for/Report an issue')) . '</h1>
       </div>
       <div class="items">
         ' . theme('remote_issue_tab_feed_items', $items, $key, $url) . '
