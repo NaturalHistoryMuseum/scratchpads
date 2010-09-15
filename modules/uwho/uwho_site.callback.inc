@@ -64,9 +64,9 @@ function uwho_site_callback(){
     }
     // Assume we're fine here (the odds are low that we've failed.
     $user = user_save($new_user, (array)$new_user);
-    drupal_set_message(t('You have been logged in as "!user_name"', array('!user_name' => $user->name)));
     db_query("INSERT INTO {uwho} (guid, uid, data) VALUES ('%s', %d, '%s')", $decrypted['guid'], $user->uid, serialize($decrypted));
   }
+  drupal_set_message(t('You have been logged in as "!user_name"', array('!user_name' => $user->name)));
   if(isset($decrypted['redirect']) && $decrypted['redirect']){
     drupal_goto($decrypted['redirect']);
   }
