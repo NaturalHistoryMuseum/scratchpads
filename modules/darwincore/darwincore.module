@@ -697,6 +697,12 @@ function darwincore_access($op, $node, $account){
   }
   return false;
 }
+/**
+ * hook_access (sort of)
+ */
+function darwincorelocation_access($op, $node, $account){
+  return darwincore_access($op, $node, $account);
+}
 
 /**
  * Implementation of hook_validate()
