@@ -1229,3 +1229,14 @@ function scratchpadify_update_6157(){
   );
   return $ret;
 }
+
+/**
+ * Fix a possible issue with some sites having broken users tables.  Note, this
+ * also needs fixing in the profile.
+ */
+function scratchpadify_update_6158(){
+  $ret = array();
+  $new_auto_increment_value = db_result(db_query('SELECT (MAX(uid)+1) FROM {users}'));
+  $ret[] = update_sql('ALTER TABLE {users} AUTO_INCREMENT = '.$new_auto_increment_value);
+  return $ret;
+}
