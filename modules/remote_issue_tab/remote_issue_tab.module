@@ -33,8 +33,24 @@ function remote_issue_tab_init(){
  */
 function remote_issue_tab_footer($main = 0){
   global $user;
-  // Do nothing if not logged in.
+  // Do nothing if not logged in, or the current role isn't allowed to see the
+  // tab
   if(!$user->uid){return;}
+  $roles = variable_get('remote_issues_tab_roles', array_keys(user_roles(TRUE)));
+  foreach($roles as $rid){
+    if(isset($user->roles[$rid])){
+      // Allowed to see the it
+      $show_tab = TRUE;
+      break;
+    }
+  }
+  if(!$show_tab){return;}
+  // As creating the tab is very processor heavy (due to the number of 
+  // encryptions were performing), we'll cache the footer, by user, for 15 mins
+  // Note, we cache by user due to the fact that the user details are embeded in
+  // each of the links.
+  $cache = cache_get('remote_issue_tab_footer_' . $user->uid);
+  if($cache && $cache->expire < time()){return $cache->data;}
   $fid = (integer)variable_get('remote_issue_tab_feed', 0);
   $key = variable_get('remote_issue_tab_uwho_client_key', FALSE);
   $url = variable_get('remote_issue_tab_uwho_url', FALSE);
@@ -46,7 +62,7 @@ function remote_issue_tab_footer($main = 0){
     // fid is an integer above.
     $items = aggregator_feed_items_load('SELECT * FROM {aggregator_item} WHERE fid = ' . $fid . ' ORDER BY timestamp DESC, iid DESC', $fid);
     if(!$key && !$url){return '';}
-    return '<div id="remote-issue-tab">
+    $data = '<div id="remote-issue-tab">
   <div class="content">
     <div id="open-close">
       <p>' . variable_get('remote_issue_tab_tab_title', t('Issues') . '...') . '</p>
@@ -64,6 +80,8 @@ function remote_issue_tab_footer($main = 0){
     </div>
   </div>
 </div>';
+    cache_set('remote_issue_tab_footer_' . $user->uid, $data, 'cache', time() + variable_get('remote_issues_tab_cache_time', 900));
+    return $data;
   }
 }
 
