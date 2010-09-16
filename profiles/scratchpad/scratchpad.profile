@@ -117,6 +117,7 @@ function scratchpad_profile_modules(){
     'notifications',
     'notifications_lite',
     'notifications_content',
+    'notifications_autosubscribe',
     'messaging_mail',
     // Organic Groups
     'og',
@@ -150,7 +151,7 @@ function scratchpad_profile_modules(){
     'mado',
     'ncbi',
     'node_term_edit',
-    //'autotag', // Removed temporarily whilst the module is re-written.
+    'autotag',
     'nbnmap',
     'foundation',
     'content_taxonomy',
