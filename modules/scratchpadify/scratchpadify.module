@@ -256,6 +256,12 @@ function scratchpadify_menu_alter(&$items){
   $items['admin/settings/clone']['access arguments'] = array(
     'SCRATCHPADIFY'
   );
+  $items['admin/settings/ie6update']['access arguments'] = array(
+    'SCRATCHPADIFY'
+  );
+  $items['admin/settings/remote-issue-tab']['access arguments'] = array(
+    'SCRATCHPADIFY'
+  );
   $items['admin/settings/error-reporting']['access arguments'] = array(
     'SCRATCHPADIFY'
   );
