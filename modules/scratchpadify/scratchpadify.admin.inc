@@ -33,19 +33,6 @@ function scratchpadify_notification_message_form(){
   return system_settings_form($form);
 }
 
-/**
- * Admin form for disabling uservoice
- */
-function scratchpadify_disable_uservoice_form(){
-  $form['uservoice_enabled'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Uservoice enabled'),
-    '#default_value' => variable_get('uservoice_enabled', 1),
-    '#description' => t('Uncheck the box to disable uservoice')
-  );
-  return system_settings_form($form);
-}
-
 function scratchpadify_notification_message(){
   drupal_set_header('Content-type: text/html');
   echo variable_get('scratchpadify_notification_message', '');
@@ -109,7 +96,7 @@ function scratchpadify_taskguide(){
   </div>  
     <div style="clear:both;">
     <p style="text-align:right">*Only site maintainers can change these settings.</p>
-    <p>For more help check out the Scratchpad resources ('.l('Help','http://scratchpads.eu/help').', '.l('UserVoice','http://biodiversityinformatics.uservoice.com/forums/25435-scratchpads').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
+    <p>For more help check out the Scratchpad resources ('.l('Help','http://scratchpads.eu/help').', and the '.l('sandbox','http://sandbox.scratchpads.eu/').') on the '.l('Scratchpad project website','http://scratchpads.eu').'. If you are still stuck, '.l('contact us','http://scratchpads.eu/contact').' and we will get back to you as soon as possible.</p>
   </div>
 </div>';
 }
