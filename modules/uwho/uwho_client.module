@@ -103,7 +103,7 @@ function uwho_client_block_content($key, $url, $redirect = FALSE, $text = FALSE)
   // Note, we only include the data in the URL, if the length of the data and 
   // URL is less than 1800 characters.  This helps to ensure we don't go over 
   // apache's URL length limit.
-  return '<form action="' . $url . '" accept-charset="UTF-8" method="post">
+  return '<form action="' . $url . '" accept-charset="UTF-8" method="post" target="_blank">
   <input type="text" name="uwhodata" value="' . urlencode($encrypted) . '" style="display:none"/>
   ' . $link_or_button . '
  </form>';
