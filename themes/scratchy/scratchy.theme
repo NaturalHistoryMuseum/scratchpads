@@ -60,7 +60,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   }
   global $user;
   if($user->uid){
-    $output .= '<div id="loggedinas">'.(isset($user->uwho['user']['url']) ? '<a href="'.$user->uwho['user']['url'].'">'.$user->name.'</a>' : $user->name).' | '.l(t('Logout'), 'logout').'</div>';
+    $output .= '<div id="loggedinas">'.(isset($user->url) ? '<a href="'.$user->url.'">'.$user->name.'</a>' : $user->name).' | '.l(t('Logout'), 'logout').'</div>';
   }
   $output .='</div>';
   $primary_links = scratchy_primarylinks(menu_primary_links(), array('class' => 'links'));
