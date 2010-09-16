@@ -35,9 +35,19 @@ function uwho_site_settings(){
       '#title' => t('Settings'),
       '#type' => 'fieldset',
       '#collaspsible' => FALSE,
+      'uwho_site_always_switch_user' => array(
+        '#type' => 'radios',
+        '#title' => t('Switch user when accessing the site via a UWho link'),
+        '#default_value' => variable_get('uwho_site_always_switch_user', 1),
+        '#options' => array(
+          0 => t('No'),
+          1 => 'Yes'
+        ),
+        '#description' => t('If a user is already logged into this site, should UWho change the user account that the user is logged in as?')
+      ),
       'uwho_site_roles' => array(
         '#type' => 'checkboxes',
-        '#description' => t('Select the roles you would like users created by UWho to have.  All users will of course be "authenticated users"'),
+        '#description' => t('Select the roles you would like users created by UWho to have.  All users will of course be "authenticated users"') . (count($roles) ? '' : '<br/><strong>This site currently has no roles defined.</strong>'),
         '#title' => t('Roles'),
         '#default_value' => variable_get('uwho_site_roles', array()),
         '#options' => $roles
