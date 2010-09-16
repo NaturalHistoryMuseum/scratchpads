@@ -137,5 +137,7 @@ function theme_remote_issue_tab_feed_items($items = NULL, $key, $url){
  * theme function for items
  */
 function theme_remote_issue_tab_feed_item($item = NULL, $item_count, $key, $url){
-  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>' . uwho_client_block_content($key, $url, $item->link, $item->title) . '</h3><p>' . $item->description . '</p></div></li>';
+  // Note, we remove the "read more" link, as it could prevent users being
+  // logged in by uwho.
+  return '<li class="' . ($item_count % 2 ? 'odd' : 'even') . ($item_count ? '' : ' first') . '"><div><h3>' . uwho_client_block_content($key, $url, $item->link, $item->title) . '</h3><p>' . preg_replace('/<a href[^>]*>read more<\/a>/', '', $item->description) . '</p></div></li>';
 }

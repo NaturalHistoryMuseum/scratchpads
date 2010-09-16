@@ -10,4 +10,10 @@ Drupal.behaviors.remote_issues_block = function(context){
       remote_issues_block_hidden = true;      
     }
   });
+  $('.items li').bind('mouseenter', function(){
+    $(this).children().children('p').fadeIn();
+  });
+  $('.items li').bind('mouseleave', function(){
+    $(this).children().children('p').slideUp(2000);
+  });
 };
