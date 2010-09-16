@@ -33,7 +33,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   drupal_add_css(drupal_get_path('theme','scratchy').'/screen.css','theme','screen',FALSE);
   drupal_add_css(drupal_get_path('theme','scratchy').'/'.$_SERVER['HTTP_HOST'].'.screen.css','theme','screen',FALSE);
   if(function_exists('jquery_ui_add')){
-    jquery_ui_add();    
+    jquery_ui_add();  
   }
   $output .= drupal_get_html_head();
   $output .= drupal_get_css();
@@ -60,7 +60,7 @@ function scratchy_page($content, $show_blocks = TRUE, $show_messages = TRUE) {
   }
   global $user;
   if($user->uid){
-    $output .= '<div id="loggedinas">'.$user->name.' | '.l(t('Logout'), 'logout').'</div>';
+    $output .= '<div id="loggedinas">'.(isset($user->uwho['user']['url']) ? '<a href="'.$user->uwho['user']['url'].'">'.$user->name.'</a>' : $user->name).' | '.l(t('Logout'), 'logout').'</div>';
   }
   $output .='</div>';
   $primary_links = scratchy_primarylinks(menu_primary_links(), array('class' => 'links'));
