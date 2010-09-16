@@ -31,3 +31,15 @@ function uwho_site_menu(){
     )
   );
 }
+
+/**
+ * hook_user
+ */
+function uwho_site_user($op, &$edit, &$account, $category = NULL){
+  if($op == 'load'){
+    $data = db_result(db_query('SELECT data FROM {uwho} WHERE uid = %d', $account->uid));
+    if($data){
+      $account->uwho = unserialize($data);
+    } 
+  }
+}

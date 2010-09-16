@@ -65,7 +65,7 @@ function uwho_site_schema(){
         )
       ),
       'primary key' => array(
-        'uid'
+        'guid'
       ),
       'indexes' => array(
         'uwho_guid_index' => array(
@@ -74,4 +74,13 @@ function uwho_site_schema(){
       )
     )
   );
+}
+
+/**
+ * Update the primary key to be the guid, so that a single user can be
+ * associated with many users from other sites.
+ */
+function uwho_site_update_6101(){
+  // Change the primary key
+  return array(update_sql('ALTER TABLE {uwho} DROP PRIMARY KEY , ADD PRIMARY KEY (guid)'));
 }
