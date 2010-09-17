@@ -336,6 +336,8 @@ function scratchpadify_install(){
  * 6155: Fix an issue with the imagefield field possibly caused by Publication.
  * 6156: Rename UID 1 to "Scratchpad Team"
  * 6157: Install the remote issues tab - set the settings here.
+ * 6158: Fix a possible issue with some sites having broken users tables.
+ * 6159: Fix node_import.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1239,4 +1241,18 @@ function scratchpadify_update_6158(){
   $new_auto_increment_value = db_result(db_query('SELECT (MAX(uid)+1) FROM {users}'));
   $ret[] = update_sql('ALTER TABLE {users} AUTO_INCREMENT = '.$new_auto_increment_value);
   return $ret;
+}
+
+/**
+ * Fix node_import
+ */
+function scratchpadify_update_6159(){
+  if(module_exists('node_import')){
+    module_load_inclue('install', 'node_import');
+    node_import_uninstall();
+    node_import_install();
+  }  
+  return array(
+    '#finished' => TRUE
+  );
 }
