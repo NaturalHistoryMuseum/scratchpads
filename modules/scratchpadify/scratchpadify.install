@@ -1248,7 +1248,7 @@ function scratchpadify_update_6158(){
  */
 function scratchpadify_update_6159(){
   if(module_exists('node_import')){
-    module_load_inclue('install', 'node_import');
+    module_load_include('install', 'node_import');
     node_import_uninstall();
     node_import_install();
   }  
