@@ -1,0 +1,22 @@
+<?php
+
+function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
+  global $user;
+  if($form_id == 'project_issue_node_form' && $user->uid !== 1){
+    unset($form['issue_info']['category']['#options']['support']);
+    unset($form['issue_info']['category']['#options']['task']);
+    $form['project_info']['rid']['#value'] = 48;
+    $form['project_info']['rid']['#type'] = 'hidden';
+    $form['project_info']['#type'] = 'hidden';
+    $form['issue_info']['assigned']['#type'] = 'hidden';
+    $form['attachments']['#collapsed'] = TRUE;
+  }
+}
+
+function devscratchpadseu_user($op, &$edit, &$account, $category = NULL){
+  switch($op){
+    case 'insert':
+      $edit['notifications_auto'] = 1;
+      break;
+  }
+}
