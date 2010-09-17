@@ -338,6 +338,7 @@ function scratchpadify_install(){
  * 6157: Install the remote issues tab - set the settings here.
  * 6158: Fix a possible issue with some sites having broken users tables.
  * 6159: Fix node_import.
+ * 6160: Fix node permissions.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1252,6 +1253,20 @@ function scratchpadify_update_6159(){
     node_import_uninstall();
     node_import_install();
   }  
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+
+
+/**
+ * Fix node permissions.
+ */
+function scratchpadify_update_6160(){
+  // Ensure access is properly set (why the fuck wouldn't it be I hear you ask,
+  // well, I don't bloody know).  
+  node_access_rebuild();
   return array(
     '#finished' => TRUE
   );

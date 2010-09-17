@@ -904,6 +904,9 @@ if(!function_exists('quoted_printable_encode')){
 }
 
 function scratchpad_profile_tasks_4(){
+  // Ensure access is properly set (why the fuck wouldn't it be I hear you ask,
+  // well, I don't bloody know).  
+  node_access_rebuild();
   // Update the menu router information.
   drupal_rebuild_theme_registry();
   node_types_rebuild();
