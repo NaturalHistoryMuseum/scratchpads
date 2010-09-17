@@ -22,6 +22,8 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['original_issue']['#collapsed'] = 1;
       $form['original_issue']['#weight'] = 1;
       $form['attachments']['#collapsed'] = 1;
+      $form['notify_settings']['notify']['#type'] = 'hidden';
+      $form['notify_settings']['notify_type']['#type'] = 'hidden';
     }
   }
 }
