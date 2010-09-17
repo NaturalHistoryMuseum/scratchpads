@@ -2,7 +2,7 @@
 
 function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
   global $user;
-  if($form_id == 'project_issue_node_form' && $user->uid !== 1){
+  if($form_id == 'project_issue_node_form' && $user->uid != 1){
     unset($form['issue_info']['category']['#options']['support']);
     unset($form['issue_info']['category']['#options']['task']);
     $form['project_info']['rid']['#value'] = 48;
