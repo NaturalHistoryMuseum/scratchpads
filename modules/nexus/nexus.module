@@ -1330,7 +1330,7 @@ function nexus_export_form($form_state, $node, $matrix_data){
     '#title' => 'SDD', 
     '#return_value' => 'sdd', 
     '#name' => 'format', 
-    '#description' => t('AND / OR characters will be output as SDD multi-states. Only non-molecular controlled charcters (DNA) will be exported.' ), 
+    '#description' => t('AND / OR characters will be output as SDD multi-states. Only non-molecular controlled characters (DNA) will be exported.' ), 
     '#default_value' => 'sdd', 
     '#prefix' => '<div id="format-options"><label class="output-format">Output format:</label>'
   );
