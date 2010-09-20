@@ -14,6 +14,10 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         '@uploadpage' => url('file-plupload')
       )) . '</p></div>'
     );
+  } else if($form_id == 'biblio_node_form'){
+    if(isset($form['taxonomy']['copy_to_biblio'])){
+      $form['taxonomy']['copy_to_biblio']['#type'] = 'hidden';
+    }
   }
   if(isset($form['og_nodeapi'])){
     $form['og_nodeapi']['#type'] = 'fieldset';
