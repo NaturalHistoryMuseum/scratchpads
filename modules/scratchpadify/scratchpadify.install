@@ -339,6 +339,7 @@ function scratchpadify_install(){
  * 6158: Fix a possible issue with some sites having broken users tables.
  * 6159: Fix node_import.
  * 6160: Fix node permissions.
+ * 6161: Ensure Image content type is associated with the Image gallery taxonomy
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1270,4 +1271,18 @@ function scratchpadify_update_6160(){
   return array(
     '#finished' => TRUE
   );
+}
+
+/**
+ * Ensure Image content type is associated with the Image gallery taxonomy
+ */
+function scratchpadify_update_6161(){
+  $ret = array();
+  // Get the image gallery vid, and associate it with the Image content type
+  $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
+  if($vid && is_numeric($vid)){
+    $ret[] = update_sql("INSERT INTO {vocabulary_node_types} (vid, type) VALUES ( $vid , 'image')");
+  }
+  // Repair the specimen field which may not have been repaired previously.
+  return array_merge($ret, scratchpadify_update_6141());
 }
