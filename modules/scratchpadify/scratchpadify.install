@@ -1241,7 +1241,7 @@ function scratchpadify_update_6157(){
 function scratchpadify_update_6158(){
   $ret = array();
   $new_auto_increment_value = db_result(db_query('SELECT (MAX(uid)+1) FROM {users}'));
-  $ret[] = update_sql('ALTER TABLE {users} AUTO_INCREMENT = '.$new_auto_increment_value);
+  $ret[] = update_sql('ALTER TABLE {users} AUTO_INCREMENT = ' . $new_auto_increment_value);
   return $ret;
 }
 
@@ -1253,13 +1253,11 @@ function scratchpadify_update_6159(){
     module_load_include('install', 'node_import');
     node_import_uninstall();
     node_import_install();
-  }  
+  }
   return array(
     '#finished' => TRUE
   );
 }
-
-
 
 /**
  * Fix node permissions.
@@ -1284,5 +1282,24 @@ function scratchpadify_update_6161(){
     $ret[] = update_sql("INSERT INTO {vocabulary_node_types} (vid, type) VALUES ( $vid , 'image')");
   }
   // Repair the specimen field which may not have been repaired previously.
-  return array_merge($ret, scratchpadify_update_6141());
+  $ret = array_merge($ret, scratchpadify_update_6141());
+  // Also, tweak the storage and other bits.
+  // First, update bio_image_biblio
+  $sql = "UPDATE {content_node_field} SET global_settings = '%s', db_columns = '%s' WHERE field_name = 'bio_image_darwincore'";
+  $result = db_query($sql, 'a:3:{s:19:"referenceable_types";a:22:{s:10:"darwincore";s:10:"darwincore";s:3:"bio";i:0;s:4:"blog";i:0;s:13:"nexus_project";i:0;s:12:"countriesmap";i:0;s:5:"forum";i:0;s:5:"group";i:0;s:9:"itis_term";i:0;s:5:"image";i:0;s:18:"darwincorelocation";i:0;s:10:"simplenews";i:0;s:22:"nexus_controlled_state";i:0;s:16:"nexus_free_state";i:0;s:10:"nexus_note";i:0;s:4:"page";i:0;s:4:"tree";i:0;s:4:"poll";i:0;s:7:"profile";i:0;s:3:"spm";i:0;s:7:"webform";i:0;s:6:"biblio";i:0;s:8:"ispecies";i:0;}s:13:"advanced_view";s:2:"--";s:18:"advanced_view_args";s:0:"";}', 'a:1:{s:3:"nid";a:4:{s:4:"type";s:3:"int";s:8:"unsigned";b:1;s:8:"not null";b:0;s:5:"index";b:1;}}');
+  $ret[] = array(
+    'success' => $result !== FALSE,
+    'query' => check_plain($sql)
+  );
+  // Next update bio_image_specimen
+  $sql = "UPDATE {content_node_field_instance} SET widget_settings = '%s', description = '%s' WHERE field_name = 'bio_image_darwincore'";
+  $result = db_query($sql, 'a:4:{s:18:"autocomplete_match";s:8:"contains";s:4:"size";i:60;s:13:"default_value";a:2:{i:0;a:1:{i:0;s:0:"";}s:0:"";a:1:{i:0;a:1:{s:0:"";s:0:"";}}}s:17:"default_value_php";N;}', 'Select a specimen that the image represents');
+  $ret[] = array(
+    'success' => $result !== FALSE,
+    'query' => check_plain($sql)
+  );
+  // Finally, clear caches
+  cache_clear_all('*', 'cache_content', TRUE);
+  cache_clear_all('*', 'cache', TRUE);
+  return $ret;
 }
