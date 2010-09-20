@@ -1303,3 +1303,17 @@ function scratchpadify_update_6161(){
   cache_clear_all('*', 'cache', TRUE);
   return $ret;
 }
+
+/**
+ * Ensure the image vocabulary is a multiple select one
+ */
+function scratchpadify_update_6162(){  
+  $ret = array();
+  // Get the image gallery vid, and associate it with the Image content type
+  $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
+  if($vid && is_numeric($vid)){
+    $ret[] = update_sql('UPDATE {vocabulary} SET multiple = 1');
+  }
+  $ret['#finished'] = TRUE;
+  return $ret;
+}
