@@ -72,4 +72,6 @@ function mado_save_layout(){
       db_query ( "INSERT INTO {mado} (identifier, blocks) VALUES ('%s', '%s')", $_GET ['identifier'], serialize ( $blocks ) );
     }
   }
+  // Clear the cache as we've started saving the mado theme to the cache!
+  cache_clear_all('mado', 'cache', TRUE);
 }
