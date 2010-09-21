@@ -67,6 +67,11 @@ function uwho_site_callback(){
     db_query("INSERT INTO {uwho} (guid, uid, data) VALUES ('%s', %d, '%s')", $decrypted['guid'], $user->uid, serialize($decrypted));
   }
   drupal_set_message(t('You have been logged in as "!user_name"', array('!user_name' => $user->name)));
+  // If we're using Boost, we should run init again, as we've cheated a little
+  // here, and we're now logged in.
+  if(function_exists('boost_init')){
+    boost_init();
+  }
   if(isset($decrypted['redirect']) && $decrypted['redirect']){
     drupal_goto($decrypted['redirect']);
   }
