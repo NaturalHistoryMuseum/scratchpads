@@ -12,7 +12,7 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['issue_info']['assigned']['#type'] = 'hidden';
       $form['issue_details']['format']['#type'] = 'hidden';
       $form['attachments']['#collapsed'] = TRUE;
-    } else if ($form_id == 'comment_form'){
+    }else if($form_id == 'comment_form'){
       if(isset($form['comment_filter']['format'])){
         $form['comment_filter']['format']['#type'] = 'hidden';
       }
@@ -24,6 +24,29 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['attachments']['#collapsed'] = 1;
       $form['notify_settings']['notify']['#type'] = 'hidden';
       $form['notify_settings']['notify_type']['#type'] = 'hidden';
+    }
+  }else{
+    // Maintainers
+    if($form_id == 'project_issue_node_form'){
+      $form['menu']['#type'] = 'hidden';
+      $form['notifications']['#type'] = 'hidden';
+      $form['revision_information']['#type'] = 'hidden';
+      $form['comment_settings']['#type'] = 'hidden';
+      $form['author']['#type'] = 'hidden';
+      $form['options']['#type'] = 'hidden';
+      $default_value = 0;
+      foreach($form['project_info']['rid']['#options'] as $key => $option){
+        if($key){
+          $default_value = $key;
+          break;
+        }
+      }
+      $form['project_info']['rid']['#default_value'] = $default_value;
+    }else if($form_id == 'comment_form'){
+      $form['notifications']['#collapsed'] = 1;
+      $form['notifications']['notify_settings'] = $form['notify_settings'];
+      unset($form['notify_settings']);
+      $form['attachments']['#collapsed'] = 1;
     }
   }
 }
