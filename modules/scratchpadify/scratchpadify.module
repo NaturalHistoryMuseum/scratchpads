@@ -238,6 +238,9 @@ function scratchpadify_node_import_fields_alter(&$fields, $type){
 }
 
 function scratchpadify_menu_alter(&$items){
+  $items['node/%node/track']['access arguments'] = array(
+    'SCRATCHPADIFY'
+  );
   $items['admin/settings/uploads']['access arguments'] = array(
     'SCRATCHPADIFY'
   );
