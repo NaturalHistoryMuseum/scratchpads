@@ -4,6 +4,9 @@
 # Simply comment out the following lines (like this one) to
 # stop the sandbox wipe process.
 
+# Delete ALL the files from the sandbox dir
+rm -rf /var/lib/drupal6/sandbox.scratchpads.eu/files/*
+
 # Move the sandbox.html file into place
 mv /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden /var/lib/drupal6/all/modules/sandbox/sandbox.html
 
