@@ -1,15 +1,8 @@
 <?php
 
 function theme_publication_node_add_form($form){
-  $output .= drupal_render($form['title']);
-  $output .= drupal_render($form['group_publication_metadata']['field_publication_title']);
-  $output .= drupal_render($form['og_selective']);
-  $output .= drupal_render($form['og_private']);
-  $output .= drupal_render($form['og_register']);
-  $output .= drupal_render($form['og_directory']);
-  $output .= drupal_render($form['options']);
-  $output .= theme('publication_node_form_base_elements', $form);
-  return $output;
+  return '<div class="messages error" style="padding:1em;"><h1><a href="http://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha" target="_blank">Alpha software</a> warning</h1><p>Users should be aware that the Publication module is provided as is.  It is still a work in progress, and has only been tested under very specific conditions.  If you\'re still keen to try to create a "Publication", then please provide feedback in the usual way.</p></div>' . 
+  drupal_render($form['title']) . drupal_render($form['group_publication_metadata']['field_publication_title']) . drupal_render($form['og_selective']) . drupal_render($form['og_private']) . drupal_render($form['og_register']) . drupal_render($form['og_directory']) . drupal_render($form['options']) . theme('publication_node_form_base_elements', $form);
 }
 
 function theme_publication_node_edit_form($form){
@@ -163,29 +156,28 @@ function theme_publication_field_publication_authors($nids = array(), $publicati
 
 function theme_publication_field_publication_section($element){
   drupal_add_tabledrag('publication-draggable-section', 'match', 'parent', 'section-parent', 'section-parent', 'section-id');
-
   $output = '<div id="publication-section"><div class="status-messages"></div>';
   if(count(element_children($element))){
     $header = array(
-      'Title', 
-      'Weight', 
+      'Title',
+      'Weight',
       'Operations'
     );
     $rows = array();
     foreach(element_children($element) as $key){
       $row = array();
       $row[] = array(
-        'data' => theme('indentation', $element[$key]['#depth']) . drupal_render($element[$key]['title']), 
+        'data' => theme('indentation', $element[$key]['#depth']) . drupal_render($element[$key]['title']),
         'class' => 'section-title'
       );
-      $nid = $element[$key]['nid']['#value'];      
+      $nid = $element[$key]['nid']['#value'];
       $row[] = array(
-        'data' => drupal_render($element[$key]['section_id']) . drupal_render($element[$key]['nid'])  . drupal_render($element[$key]['section_parent']), 
+        'data' => drupal_render($element[$key]['section_id']) . drupal_render($element[$key]['nid']) . drupal_render($element[$key]['section_parent']),
         'class' => 'section-data'
       );
       $row[] = drupal_render($element[$key]['ops']);
       $rows[$nid] = array(
-        'data' => $row, 
+        'data' => $row,
         'class' => $element[$key]['#attributes']['class']
       );
     }
