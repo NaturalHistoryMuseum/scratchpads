@@ -86,7 +86,7 @@ function plupload_upload_page(){
   drupal_add_js($path . '/plupload/src/javascript/plupload.js');
   drupal_add_js($path . '/plupload/src/javascript/plupload.html5.js');
   drupal_add_js($path . '/plupload/src/javascript/jquery.plupload.queue.js');
-  drupal_add_css($path . '/plupload/examples/css/plupload.queue.css');
+  drupal_add_css($path . '/plupload.queue.css');
   $script = <<<__RSD__
 // Convert divs to queue widgets when the DOM is ready
  $(function() {
