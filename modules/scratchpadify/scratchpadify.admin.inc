@@ -229,5 +229,5 @@ function scratchpadify_admin_page(){
       )
     )
   );
-  return theme('admin_page', $blocks);
+  return '<div style="float:right">'.l(t('Advanced admin'), 'admin').'</div>'.theme('admin_page', $blocks);
 }
