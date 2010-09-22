@@ -37,6 +37,7 @@ function remote_issue_tab_footer($main = 0){
   // tab
   if(!$user->uid){return;}
   $roles = variable_get('remote_issues_tab_roles', array_keys(user_roles(TRUE)));
+  $show_tab = FALSE;
   foreach($roles as $rid){
     if(isset($user->roles[$rid])){
       // Allowed to see the it
@@ -44,7 +45,7 @@ function remote_issue_tab_footer($main = 0){
       break;
     }
   }
-  if(!$show_tab && $user->uid === 1){return;}
+  if(!$show_tab || $user->uid == 1){return;}
   // As creating the tab is very processor heavy (due to the number of 
   // encryptions were performing), we'll cache the footer, by user, for 15 mins
   // Note, we cache by user due to the fact that the user details are embeded in
