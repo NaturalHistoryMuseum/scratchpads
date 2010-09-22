@@ -5,28 +5,26 @@
  */
 function spm_node_info(){
   return array(
-    'spm' => array('name' => t('Taxon Description'), 
-      'module' => 'spm', 
-      'description' => t('A Taxon Description based upon the EOL&trade; SPM'), 
-      'has_title' => TRUE, 'has_body' => FALSE));
+    'spm' => array(
+      'name' => t('Taxon Description'),
+      'module' => 'spm',
+      'description' => t('A Taxon Description based upon the EOL&trade; SPM'),
+      'has_title' => TRUE,
+      'has_body' => FALSE
+    )
+  );
 }
 
 /**
  * Implementation of hook_access
  */
 function spm_access($op, $node, $account){
-  if($op == 'create'){
-    return user_access('create spm content', $account);
-  }
+  if($op == 'create'){return user_access('create spm content', $account);}
   if($op == 'update'){
-    if(user_access('edit any spm content', $account) || (user_access('edit own spm content', $account) && ($account->uid == $node->uid))){
-      return TRUE;
-    }
+    if(user_access('edit any spm content', $account) || (user_access('edit own spm content', $account) && ($account->uid == $node->uid))){return TRUE;}
   }
   if($op == 'delete'){
-    if(user_access('delete any spm content', $account) || (user_access('delete own spm content', $account) && ($account->uid == $node->uid))){
-      return TRUE;
-    }
+    if(user_access('delete any spm content', $account) || (user_access('delete own spm content', $account) && ($account->uid == $node->uid))){return TRUE;}
   }
 }
 
@@ -34,9 +32,13 @@ function spm_access($op, $node, $account){
  * Implementation of hook_perm
  */
 function spm_perm(){
-  return array('create spm content', 'delete own spm content', 
-    'delete any spm content', 'edit own spm content', 
-    'edit any spm content');
+  return array(
+    'create spm content',
+    'delete own spm content',
+    'delete any spm content',
+    'edit own spm content',
+    'edit any spm content'
+  );
 }
 
 /**
@@ -45,25 +47,33 @@ function spm_perm(){
 function spm_menu(){
   return array(
     'spm/autocomplete' => array(
-      'title' => 'Autocomplete darwincore thingumy', 
+      'title' => 'Autocomplete darwincore thingumy',
       'page callback' => 'spm_autocomplete',
       'file' => 'spm.autocomplete.inc',
-      'access arguments' => array('create spm content'), 
+      'access arguments' => array(
+        'create spm content'
+      ),
       'type' => MENU_CALLBACK
     ),
     'spm/export.xml' => array(
       'title' => 'Live SPM Export',
       'page callback' => 'spm_export',
       'file' => 'spm.export.inc',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK
     ),
     'admin/settings/spm' => array(
       'title' => 'Taxon Page Export',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('spm_settings'),
+      'page arguments' => array(
+        'spm_settings'
+      ),
       'file' => 'spm.export.inc',
-      'access arguments' => array('administer site configuration')
+      'access arguments' => array(
+        'administer site configuration'
+      )
     )
   );
 }
@@ -71,19 +81,35 @@ function spm_menu(){
 function spm_theme($existing, $type, $theme, $path){
   return array(
     'spm_node_form' => array(
-      'arguments' => array('form' => array())), 
+      'arguments' => array(
+        'form' => array()
+      )
+    ),
     'spm_view_field' => array(
-      'arguments' => array('node' => NULL, 
-        'field' => NULL)));
+      'arguments' => array(
+        'node' => NULL,
+        'field' => NULL
+      )
+    )
+  );
 }
 
 function spm_view($node, $teaser = FALSE, $page = FALSE){
   $node = node_prepare($node, $teaser);
   $spm_fields = variable_get('spm_fields', array());
+  // Sort the fields, with "Overview" first.
+  ksort($spm_fields);
+  $overview = $spm_fields['Overview'];
+  unset($spm_fields['Overview']);
+  array_unshift($spm_fields, $overview);
+  $i = 1;
   foreach($spm_fields as $header => $fields){
     foreach($fields as $key => $field){
       $node->content[$key] = array(
-        '#value' => theme('spm_view_field', $node->$key, $field));
+        '#value' => theme('spm_view_field', $node->$key, $field),
+        '#weight' => $i
+      );
+      $i ++;
     }
   }
   drupal_add_css(drupal_get_path('module', 'spm') . '/spm.css');
@@ -103,35 +129,45 @@ function spm_form(&$node){
     $prefix .= '<li><a href="#fragment-' . $header_id . '"><span>' . $header_details['name'] . '</span></a></li>';
   }
   $prefix .= '</ul>';
-  $form['title'] = array('#type' => 'textfield', 
-    '#title' => t('Taxon name'), 
-    '#default_value' => $node->title, 
-    '#description' => t("Enter the taxon name that this description is about.  This field will confirm whether or not your name matches one from EOL."), 
-    '#autocomplete_path' => 'spm/autocomplete');
-  $form['tabs'] = array('#prefix' => $prefix, '#suffix' => '</div>');
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Taxon name'),
+    '#default_value' => $node->title,
+    '#description' => t("Enter the taxon name that this description is about.  This field will confirm whether or not your name matches one from EOL."),
+    '#autocomplete_path' => 'spm/autocomplete'
+  );
+  $form['tabs'] = array(
+    '#prefix' => $prefix,
+    '#suffix' => '</div>'
+  );
   foreach($spm_headers as $header_id => $header_details){
     $form['tabs'][$header_id] = array(
-      '#prefix' => '<div id="fragment-' . $header_id . '">', 
-      '#suffix' => '</div>');
+      '#prefix' => '<div id="fragment-' . $header_id . '">',
+      '#suffix' => '</div>'
+    );
     foreach($spm_fields[$header_id] as $field_id => $field){
-      $form['tabs'][$header_id][$field_id.'_wrapper'] = array(
+      $form['tabs'][$header_id][$field_id . '_wrapper'] = array(
         $field_id => array(
-          '#type' => 'textarea', 
-          '#default_value' => $node->$field_id, 
-          '#description' => t($field['description']), 
+          '#type' => 'textarea',
+          '#default_value' => $node->$field_id,
+          '#description' => t($field['description']),
           '#title' => t($field['name']),
           '#prefix' => '<div class="body-field-wrapper">',
           '#suffix' => '</div>'
         ),
-        'format' => filter_form(FILTER_FORMAT_DEFAULT, NULL, array($field_id))
+        'format' => filter_form(FILTER_FORMAT_DEFAULT, NULL, array(
+          $field_id
+        ))
       );
     }
   }
-  $form['#pre_render'] = array('spm_pre_render_node_form');
+  $form['#pre_render'] = array(
+    'spm_pre_render_node_form'
+  );
   return $form;
 }
 
-function spm_pre_render_node_form(&$form) {
+function spm_pre_render_node_form(&$form){
   foreach(element_children($form) as $key){
     $element = &$form[$key];
     if(array_key_exists('format', $element)){
@@ -144,14 +180,15 @@ function spm_pre_render_node_form(&$form) {
       $class = 'wysiwyg wysiwyg-format-1 wysiwyg-editor-tinymce wysiwyg-field-' . $id . ' wysiwyg-status-1';
       $name = $element['format'][$profile->format]['#name'];
       $element['format'] = array(
-        '#type' => 'hidden', 
-        '#value' => 1, 
+        '#type' => 'hidden',
+        '#value' => 1,
         '#attributes' => array(
-          'checked' => 'checked', 
+          'checked' => 'checked',
           'class' => $class
-        ), '#name' => $name
+        ),
+        '#name' => $name
       );
-    } else {
+    }else{
       spm_pre_render_node_form($element);
     }
   }
@@ -170,13 +207,12 @@ function spm_wysiwyg_editor_settings_alter(&$settings, $context){
     if($node->type == 'spm'){
       $tweak = TRUE;
     }
-  } else if(arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'spm'){
+  }else if(arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'spm'){
     $tweak = TRUE;
   }
   if($tweak){
     $settings['theme_advanced_buttons1'] = 'bold,italic';
   }
-
 }
 
 function spm_load($node){
@@ -189,7 +225,7 @@ function spm_delete($node){
 
 function spm_nodeapi(&$node, $op, $teaser, $page){
   switch($op){
-    case 'delete revision' :
+    case 'delete revision':
       // Notice that we're matching a single revision based on the node's vid.
       db_query('DELETE FROM {spm} WHERE vid = %d', $node->vid);
       break;
@@ -232,9 +268,7 @@ function spm_update($node){
 }
 
 function theme_spm_view_field($value, $field){
-  if(trim($value) != ''){
-    return '<h1 class="spm">' . $field['name'] . '</h1><div class="spm">' . _filter_autop($value) . '</div>';
-  }
+  if(trim($value) != ''){return '<h1 class="spm">' . $field['name'] . '</h1><div class="spm">' . _filter_autop($value) . '</div>';}
 }
 
 function theme_spm_node_form($form){
