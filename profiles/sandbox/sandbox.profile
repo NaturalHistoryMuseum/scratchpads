@@ -1625,22 +1625,7 @@ function sandbox_profile_tasks(&$task, $url){
     db_query("TRUNCATE {term_lowername}");
     db_query("INSERT INTO {term_lowername} (tid, lowername) SELECT tid, LOWER(name) FROM {term_data}");
     
-    db_query("INSERT INTO `vocabulary_node_types` (`vid`, `type`) VALUES
-      (13, 'biblio'),
-      (13, 'blog'),
-      (13, 'nexus_project'),
-      (13, 'countriesmap'),
-      (13, 'node_example'),
-      (13, 'forum'),
-      (13, 'group'),
-      (13, 'image'),
-      (13, 'simplenews'),
-      (13, 'nexus_controlled_state'),
-      (13, 'nexus_free_state'),
-      (13, 'nexus_note'),
-      (13, 'page'),
-      (13, 'tree'),
-      (13, 'poll');");
+    db_query("INSERT INTO `vocabulary_node_types` (`vid`, `type`) VALUES (13, '".implode("'),(13, '", array_keys(node_get_types()))."');");
     
     variable_set('mado_vocabularies', array(13=>1));
     variable_set('classification_scratchpads', array(13=>13));
