@@ -90,9 +90,11 @@ function view_sort_views_pre_render(&$view){
     )) && (
         isset($view->display['page_1']->display_options['sorts']['weight']) || 
         isset($view->display['default']->display_options['sorts']['weight'])
-    ) && (
-      user_access('view sort sort')    
-    ))
+    ) && 
+      user_access('view sort sort')
+      &&
+      arg(0) != 'content'    
+    )
   {      
     $view->attachment_before = '<ul class="view_sort-links"><li>'.l(t("Sort"), "views-sort/popup/".$view->name."/".urlencode(json_encode($view->args)), array('attributes' => array('class'=>'thickbox'), 'query'=>array('height'=>'600','width'=>'600')))."</li>";    
     if(isset($view->display['default']->display_options['filters']['type']['value']) && count($view->display['default']->display_options['filters']['type']['value'])==1){
