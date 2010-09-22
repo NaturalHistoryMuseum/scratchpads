@@ -1,0 +1,33 @@
+Index: imageapi_imagemagick.module
+===================================================================
+--- imageapi_imagemagick.module	(revision 3354)
++++ imageapi_imagemagick.module	(working copy)
+@@ -143,18 +143,26 @@
+ 
+ /**
+  * Calls the convert executable with the specified filter.
++ * 
++ * The following has been tweaked by SDRycroft to enable it to work with the 
++ * "convert_to" action defined by the scratchpadify module.
+  */
+ function _imageapi_imagemagick_convert($source, $dest, $args) {
++  if(isset($args['convert_to'])){
++    $original_dest = $dest;
++    $dest = $args['convert_to'].':'.$dest;
++    unset($args['convert_to']);
++  }
+   $args['quality'] = '-quality '. escapeshellarg(variable_get('imageapi_imagemagick_quality', 75));
+   // To make use of ImageMagick 6's parenthetical command grouping we need to make
+   // the $source image the first parameter and $dest the last.
+   // See http://www.imagemagick.org/Usage/basics/#cmdline for more info.
+   $command = escapeshellarg($source) .' '. implode(' ', $args) .' '. escapeshellarg($dest);
+-
++  
+   if (0 != _imageapi_imagemagick_convert_exec($command, $output, $errors)) {
+     return FALSE;
+   }
+-  return file_exists($dest);
++  return file_exists($original_dest);
+ }
+ 
+ function _imageapi_imagemagick_check_path($path) {
