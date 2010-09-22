@@ -344,6 +344,7 @@ function scratchpadify_install(){
  * 6162: Ensure the image vocabulary is a multiple select one
  * 6163: Set the 'image_gallery_nav_vocabulary' variable.
  * 6164: Rebuild the theme registry just to tweak the node info string
+ * 6165: Allow editors to see the remote issues tab.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1327,6 +1328,19 @@ function scratchpadify_update_6163(){
  */
 function scratchpadify_update_6164(){
   drupal_rebuild_theme_registry();
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Allow editors to see the remote issues tab
+ */
+function scratchpadify_update_6165(){
+  variable_set('remote_issues_tab_roles', array(
+    5,
+    4
+  ));
   return array(
     '#finished' => TRUE
   );
