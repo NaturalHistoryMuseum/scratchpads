@@ -14,7 +14,18 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         '@uploadpage' => url('file-plupload')
       )) . '</p></div>'
     );
-  } else if($form_id == 'biblio_node_form'){
+  }else if($form_id == 'og_user_roles_page_form'){
+    foreach($form['user_roles'] as $uid => $form_part){
+      if(is_numeric($uid) && isset($form_part['roles'])){
+        $account = user_load(array('uid' => $uid));
+        foreach($account->roles as $rid => $role_name){
+          if(isset($form['user_roles'][$uid]['roles']['#options'][$rid])){
+            $form['user_roles'][$uid]['roles']['#default_value'][$rid] = $rid;
+          }
+        }
+      }
+    }
+  }else if($form_id == 'biblio_node_form'){
     if(isset($form['taxonomy']['copy_to_biblio'])){
       $form['taxonomy']['copy_to_biblio']['#type'] = 'hidden';
     }
