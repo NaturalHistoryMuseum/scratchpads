@@ -145,6 +145,23 @@ function scratchpadify_theme_registry_alter(&$theme_registry){
     unset($theme_registry[$theme]['theme paths']);
     $theme_registry[$theme]['function'] = 'scratchpadify_filter_tips';
   }
+  unset($theme_registry['node_submitted']['file']);
+  unset($theme_registry['node_submitted']['theme path']);
+  unset($theme_registry['node_submitted']['theme paths']);
+  $theme_registry['node_submitted']['function'] = 'scratchpadify_node_submitted';
+}
+
+/**
+ * Format the "Submitted by username on date/time" for each node
+ *
+ * @ingroup themeable
+ */
+function scratchpadify_node_submitted($node){
+  return t('!submitted_or_changed by !username on @datetime', array(
+    '!submitted_or_changed' => $node->changed > $node->created ? 'Edited' : 'Submitted',
+    '!username' => theme('username', $node),
+    '@datetime' => $node->changed > $node->created ? format_date($node->changed) : format_date($node->created)
+  ));
 }
 
 /*

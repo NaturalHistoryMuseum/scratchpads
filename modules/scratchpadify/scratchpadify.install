@@ -343,6 +343,7 @@ function scratchpadify_install(){
  * 6161: Ensure Image content type is associated with the Image gallery taxonomy
  * 6162: Ensure the image vocabulary is a multiple select one
  * 6163: Set the 'image_gallery_nav_vocabulary' variable.
+ * 6164: Rebuild the theme registry just to tweak the node info string
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1319,4 +1320,14 @@ function scratchpadify_update_6163(){
       );
     }
   }
+}
+
+/**
+ * Rebuild the theme registry just to tweak the node info string
+ */
+function scratchpadify_update_6164(){
+  drupal_rebuild_theme_registry();
+  return array(
+    '#finished' => TRUE
+  );
 }
