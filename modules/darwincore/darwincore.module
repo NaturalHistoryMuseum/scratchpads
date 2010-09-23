@@ -849,8 +849,8 @@ function darwincore_insert($node){
   }
   // Change the taxonomic name to an ID (this should be valid as we've checked it already).
   $node->taxonomicname = _darwincore_get_taxonomicname($node->taxonomicname);
-  //print_r($node);
-  //exit();
+  // Unset locations, as it will later be saved by nodeapi
+  unset($node->locations);
   // FIXME - Make this associative array - this is FUCKING HORRIBLE.
   $values = array($node->nid, $node->vid, $node->institutioncode, $node->collectioncode, $node->cataloguenumbertext, $node->identificationqualifier, $node->identifiedby, $node->dateidentifiedyear, $node->dateidentifiedmonth, $node->dateidentifiedday, $node->collectornumber, $node->fieldnumber, $node->collector, $node->earliestdatecollected, $node->latestdatecollected, $node->fieldnotes, $node->count, $node->genbanknum, $node->remarks, $node->lifestage, $node->basisofrecord, $node->sex, $node->taxonomicname, $node->typestatus, $node->othercataloguenum, $node->locationnode);
   $earliestdatecollected_place_holder = "'%s'"; 
