@@ -1637,5 +1637,8 @@ function sandbox_profile_tasks(&$task, $url){
     
     scratchpad_profile_tasks_4();
     $task = 'profile-finished';
+    // Finally, truncate the authmap table to ensure we can't login as the admin
+    // user
+    db_query('TRUNCATE {authmap}');
   }
 }
