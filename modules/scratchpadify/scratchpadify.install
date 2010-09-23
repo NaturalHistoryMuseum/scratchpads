@@ -346,6 +346,7 @@ function scratchpadify_install(){
  * 6164: Rebuild the theme registry just to tweak the node info string
  * 6165: Allow editors to see the remote issues tab.
  * 6166: Update permissions
+ * 6167: Unset "Promoted to front page" for darwincorelocation content type
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1342,6 +1343,16 @@ function scratchpadify_update_6166(){
   if(function_exists("scratchpad_profile_set_perms")){
     scratchpad_profile_set_perms();
   }
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Unset "Promoted to front page" for darwincorelocation content type
+ */
+function scratchpadify_update_6167(){
+  variable_set('node_options_darwincorelocation', array('status'));
   return array(
     '#finished' => TRUE
   );
