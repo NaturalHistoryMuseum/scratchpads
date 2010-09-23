@@ -324,7 +324,7 @@ function scratchpadify_install(){
  * 6142: Fix messaging modules
  * 6143: Clear all caches and other bits and bobs
  * 6144: OpenID URL and Image settings
- * 6145: Update permissions
+ * 6145: Update permissions *
  * 6146: Upgrade image.module to imagefield.module
  * 6147: Convert bio_image vocabularies
  * 6148: Recreate the image type on a few sites that have been "parped" *
@@ -345,6 +345,7 @@ function scratchpadify_install(){
  * 6163: Set the 'image_gallery_nav_vocabulary' variable.
  * 6164: Rebuild the theme registry just to tweak the node info string
  * 6165: Allow editors to see the remote issues tab.
+ * 6166: Update permissions
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1007,20 +1008,6 @@ function scratchpadify_update_6144(){
 }
 
 /**
- * Set permissions
- */
-function scratchpadify_update_6145(){
-  // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
-  }
-  return array(
-    '#finished' => TRUE
-  );
-}
-
-/**
  * Upgrade from image module to imagecache etc.
  */
 function scratchpadify_update_6146(){
@@ -1341,6 +1328,20 @@ function scratchpadify_update_6165(){
     5,
     4
   ));
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Set permissions
+ */
+function scratchpadify_update_6166(){
+  // Update permissions
+  require_once ("profiles/scratchpad/scratchpad.profile");
+  if(function_exists("scratchpad_profile_set_perms")){
+    scratchpad_profile_set_perms();
+  }
   return array(
     '#finished' => TRUE
   );
