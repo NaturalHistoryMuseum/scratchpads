@@ -13,8 +13,7 @@ function itis_term_install(){
     $group['settings'] = $settings;
     fieldgroup_save_group('itis_term', $group);
   }
-  
-  $fields = _itis_term_get_fields();  
+  $fields = _itis_term_get_fields();
   module_load_include('inc', 'content', 'includes/content.crud');
   $weight = 0;
   foreach($fields as $field){
@@ -23,22 +22,26 @@ function itis_term_install(){
     $field['locked'] = TRUE;
     $field['weight'] = $weight++;
     content_field_instance_create($field);
-    fieldgroup_update_fields(array('field_name' => $field['field_name'], 'group' => $field['group'], 'type_name' => 'itis_term'));
+    fieldgroup_update_fields(array(
+      'field_name' => $field['field_name'],
+      'group' => $field['group'],
+      'type_name' => 'itis_term'
+    ));
   }
   // Heavier than term_node!
   $taxonomy_or_cck_weight = array_pop(db_fetch_array(db_query("SELECT weight FROM {system} WHERE name='taxonomy' or name='content' ORDER BY weight DESC LIMIT 1")));
-  db_query("UPDATE {system} SET weight=%d WHERE name='itis_term'", $taxonomy_or_cck_weight+12);
+  db_query("UPDATE {system} SET weight=%d WHERE name='itis_term'", $taxonomy_or_cck_weight + 12);
 }
 
 function itis_term_uninstall(){
-  $fields = _itis_term_get_fields();  
+  $fields = _itis_term_get_fields();
   module_load_include('inc', 'content', 'includes/content.crud');
   foreach($fields as $field){
     content_field_instance_delete($field['field_name'], 'itis_term', FALSE);
   }
   $groups = _itis_term_get_groups();
   foreach($groups as $group){
-    fieldgroup_delete('itis_term', $group['group_name']);    
+    fieldgroup_delete('itis_term', $group['group_name']);
   }
   content_clear_type_cache(TRUE);
   menu_rebuild();
@@ -49,8 +52,8 @@ function itis_term_uninstall(){
  * modules in the correct order
  */
 function itis_term_requirements($phase){
-  if($phase == 'install' && substr($_SERVER['SCRIPT_NAME'], -11) != 'install.php'){    
-    $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__,".")).'.info');
+  if($phase == 'install' && substr($_SERVER['SCRIPT_NAME'], -11) != 'install.php'){
+    $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__, ".")) . '.info');
     $module_not_found = FALSE;
     foreach($info_file['dependencies'] as $required_module){
       if(!module_exists($required_module)){
@@ -59,11 +62,13 @@ function itis_term_requirements($phase){
     }
     if($module_not_found){
       $t = get_t();
-      drupal_set_message($t('The module %module has not been installed because a dependency needed installing first, please try again', array('%module' => $info_file['name'])), 'error');
+      drupal_set_message($t('The module %module has not been installed because a dependency needed installing first, please try again', array(
+        '%module' => $info_file['name']
+      )), 'error');
       return array(
         basename(__FILE__) => array(
-          'title' => 'Failed module requiredment in '.basename(__FILE__),
-          'severity' => REQUIREMENT_ERROR          
+          'title' => 'Failed module requiredment in ' . basename(__FILE__),
+          'severity' => REQUIREMENT_ERROR
         )
       );
     }
@@ -73,9 +78,9 @@ function itis_term_requirements($phase){
 /**
  * Fields
  */
-function _itis_term_get_fields(){  
+function _itis_term_get_fields(){
   return array(
-    array (
+    array(
       'label' => 'Rank',
       'field_name' => 'field_rank_name',
       'type' => 'text',
@@ -160,7 +165,7 @@ return array(
   )
 );"
     ),
-    array (
+    array(
       'label' => 'Unit Name 1',
       'field_name' => 'field_unit_name1',
       'type' => 'text',
@@ -171,7 +176,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Unit Name 2',
       'field_name' => 'field_unit_name2',
       'type' => 'text',
@@ -181,7 +186,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Unit Name 3',
       'field_name' => 'field_unit_name3',
       'type' => 'text',
@@ -191,7 +196,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Unit Name 4',
       'field_name' => 'field_unit_name4',
       'type' => 'text',
@@ -201,7 +206,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Unit Indicator 1',
       'field_name' => 'field_unit_ind1',
       'type' => 'text',
@@ -215,7 +220,7 @@ return array(
   'x' => 'x'
 );"
     ),
-    array (
+    array(
       'label' => 'Unit Indicator 2',
       'field_name' => 'field_unit_ind2',
       'type' => 'text',
@@ -229,7 +234,7 @@ return array(
   'x' => 'x'
 );"
     ),
-    array (
+    array(
       'label' => 'Unit Indicator 3',
       'field_name' => 'field_unit_ind3',
       'type' => 'text',
@@ -249,7 +254,7 @@ return array(
   'x' => 'x'
 );"
     ),
-    array (
+    array(
       'label' => 'Unit Indicator 4',
       'field_name' => 'field_unit_ind4',
       'type' => 'text',
@@ -268,7 +273,7 @@ return array(
   'subf.' => 'subf.'
 );"
     ),
-    array (
+    array(
       'label' => 'Usage',
       'field_name' => 'field_usage',
       'type' => 'text',
@@ -291,7 +296,7 @@ return array(
   )
 );"
     ),
-    array (
+    array(
       'label' => 'Associated Accepted Name',
       'field_name' => 'field_accepted_name',
       'type' => 'content_taxonomy',
@@ -302,7 +307,7 @@ return array(
       'module' => 'content_taxonomy',
       'widget_module' => 'content_taxonomy_autocomplete'
     ),
-    array (
+    array(
       'label' => 'Unacceptability Reason',
       'field_name' => 'field_unacceptability_reason',
       'type' => 'text',
@@ -349,7 +354,7 @@ return array(
   )
 );"
     ),
-    array (
+    array(
       'label' => 'Authors',
       'field_name' => 'field_taxon_author',
       'type' => 'text',
@@ -359,7 +364,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Reference',
       'field_name' => 'field_reference',
       'type' => 'nodereference',
@@ -370,7 +375,7 @@ return array(
       'module' => 'nodereference',
       'widget_module' => 'nodereference'
     ),
-    array (
+    array(
       'label' => 'Page number',
       'field_name' => 'field_page_number',
       'type' => 'text',
@@ -380,7 +385,7 @@ return array(
       'module' => 'text',
       'widget_module' => 'text'
     ),
-    array (
+    array(
       'label' => 'Vernacular Names',
       'field_name' => 'field_vernacular_name',
       'type' => 'text',
@@ -390,8 +395,8 @@ return array(
       'module' => 'text',
       'widget_module' => 'text',
       'multiple' => 1
-    ),
-  );  
+    )
+  );
 }
 
 /**
@@ -613,7 +618,10 @@ return array(
   foreach($fields as $field => $values){
     $sql = "UPDATE {content_node_field} SET global_settings = '%s', db_columns = '%s' WHERE field_name = '%s'";
     $result = db_query($sql, $values['global_settings'], $values['db_columns'], $field);
-    $ret[] = array('success' => $result, 'query' => check_plain($sql));
+    $ret[] = array(
+      'success' => $result,
+      'query' => check_plain($sql)
+    );
   }
   // Update the data:
   $data_to_update = array(
@@ -681,7 +689,7 @@ return array(
       61 => 'Genus',
       62 => 'Subgenus',
       63 => 'Species',
-      64 => 'Subspecies'  
+      64 => 'Subspecies'
     ),
     'field_unit_ind1_value' => array(
       1 => 'x'
@@ -696,7 +704,7 @@ return array(
       4 => 'subvar.',
       5 => 'f.',
       6 => 'subf.',
-      7 => 'x'    
+      7 => 'x'
     ),
     'field_unit_ind4_value' => array(
       1 => 'ssp. (Plants and Fungi)',
@@ -704,24 +712,24 @@ return array(
       3 => 'var.',
       4 => 'subvar.',
       5 => 'f.',
-      6 => 'subf.'    
+      6 => 'subf.'
     ),
-    'field_usage_value' => array(    
+    'field_usage_value' => array(
       1 => 'accepted',
       2 => 'not accepted',
       3 => 'valid',
       4 => 'invalid'
     ),
-    'field_unacceptability_reason_value' => array(    
-       1 => 'junior synonym',
-       2 => 'original name/combination',
-       3 => 'subsequent name/combination',
-       4 => 'junior homonym',
-       5 => 'homonym & junior synonym',
-       6 => 'unavailable, database artifact',
-       7 => 'unavailable, literature misspelling',
-       8 => 'unavailable, incorrect original spelling',
-       9 => 'unavailable, suppressed by ruling',
+    'field_unacceptability_reason_value' => array(
+      1 => 'junior synonym',
+      2 => 'original name/combination',
+      3 => 'subsequent name/combination',
+      4 => 'junior homonym',
+      5 => 'homonym & junior synonym',
+      6 => 'unavailable, database artifact',
+      7 => 'unavailable, literature misspelling',
+      8 => 'unavailable, incorrect original spelling',
+      9 => 'unavailable, suppressed by ruling',
       10 => 'unavailable, nomen nudum',
       11 => 'unavailable, other',
       12 => 'unjustified emendation',
