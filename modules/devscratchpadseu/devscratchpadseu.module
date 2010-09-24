@@ -31,7 +31,6 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['notifications']['#type'] = 'hidden';
       $form['revision_information']['#type'] = 'hidden';
       $form['comment_settings']['#type'] = 'hidden';
-      $form['options']['#type'] = 'hidden';
       $default_value = 0;
       foreach($form['project_info']['rid']['#options'] as $key => $option){
         if($key){
