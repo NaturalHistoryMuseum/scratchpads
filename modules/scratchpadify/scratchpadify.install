@@ -347,6 +347,7 @@ function scratchpadify_install(){
  * 6165: Allow editors to see the remote issues tab.
  * 6166: Update permissions
  * 6167: Unset "Promoted to front page" for darwincorelocation content type
+ * 6168: Set the "Publication" and "Group" content types as og groups
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1353,6 +1354,17 @@ function scratchpadify_update_6166(){
  */
 function scratchpadify_update_6167(){
   variable_set('node_options_darwincorelocation', array('status'));
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Set the "Publication" and "Group" content types as og groups.
+ */
+function scratchpadify_update_6168(){
+  variable_set('og_content_type_usage_publication', 'group');
+  variable_set('og_content_type_usage_group', 'group');
   return array(
     '#finished' => TRUE
   );
