@@ -844,6 +844,13 @@ function darwincore_insert($node){
     $location_node->locations = array(
       $location_node->locations
     );
+    $location_node->sticky=0;
+    $location_node->status=1;
+    $location_node->promote=0;
+    $node_options_darwincorelocation = variable_get('node_options_darwincorelocation', array());
+    foreach($node_options_darwincorelocation as $node_option){
+      $location_node->$node_option = 1;
+    }
     node_save($location_node);
     $node->locationnode = $location_node->nid;
   }
