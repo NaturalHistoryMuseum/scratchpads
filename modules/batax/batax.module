@@ -112,6 +112,11 @@ function batax_form_alter(&$form, &$form_state, $form_id){
             $default_terms[$term->tid] = $term;
           }
         }
+        if($vocabulary->help){
+          $help = filter_xss_admin($vocabulary->help);
+        }else{
+          $help = t('A comma-separated list of terms describing this content.<br/><strong>Note, please enure you select the term from the autocomplete drop down box, as an essential ID is added to the field.</strong>');
+        }
         $form['taxonomy'][$vocabulary->vid] = array(
           '#type' => 'textfield',
           '#title' => $vocabulary->name,
@@ -120,6 +125,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
           '#element_validate' => array(
             'batax_element_validate'
           ),
+          '#description' => $help,
           '#maxlength' => 1000000
         );
         if($use_batax === 'AUTOTAG'){
