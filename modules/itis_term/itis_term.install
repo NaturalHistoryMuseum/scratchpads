@@ -170,7 +170,7 @@ return array(
       'field_name' => 'field_unit_name1',
       'type' => 'text',
       'widget_type' => 'text_textfield',
-      'description' => '',
+      'description' => 'Uninomial name, e.g. family or genus name',
       'group' => 'group_scientificname',
       'required' => 1,
       'module' => 'text',
@@ -181,7 +181,7 @@ return array(
       'field_name' => 'field_unit_name2',
       'type' => 'text',
       'widget_type' => 'text_textfield',
-      'description' => '',
+      'description' => 'Species epithet',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'text'
@@ -191,7 +191,7 @@ return array(
       'field_name' => 'field_unit_name3',
       'type' => 'text',
       'widget_type' => 'text_textfield',
-      'description' => '',
+      'description' => 'Third portion of polynomial name, e.g. subspecies name or variety',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'text'
@@ -201,7 +201,7 @@ return array(
       'field_name' => 'field_unit_name4',
       'type' => 'text',
       'widget_type' => 'text_textfield',
-      'description' => '',
+      'description' => 'Fourth portion of polynomial name',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'text'
@@ -211,7 +211,7 @@ return array(
       'field_name' => 'field_unit_ind1',
       'type' => 'text',
       'widget_type' => 'optionwidgets_select',
-      'description' => '',
+      'description' => 'Indicator for a plant hybrid at generic level',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'optionwidgets',
@@ -225,7 +225,7 @@ return array(
       'field_name' => 'field_unit_ind2',
       'type' => 'text',
       'widget_type' => 'optionwidgets_select',
-      'description' => '',
+      'description' => 'Indicator positioned between first and second part of name',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'optionwidgets',
@@ -239,7 +239,7 @@ return array(
       'field_name' => 'field_unit_ind3',
       'type' => 'text',
       'widget_type' => 'optionwidgets_select',
-      'description' => '',
+      'description' => 'Indicator positioned between second and third part of name, e.g. "spp." or "var."',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'optionwidgets',
@@ -259,7 +259,7 @@ return array(
       'field_name' => 'field_unit_ind4',
       'type' => 'text',
       'widget_type' => 'optionwidgets_select',
-      'description' => '',
+      'description' => 'Indicator positioned between third and fourth part of name',
       'group' => 'group_scientificname',
       'module' => 'text',
       'widget_module' => 'optionwidgets',
@@ -278,7 +278,7 @@ return array(
       'field_name' => 'field_usage',
       'type' => 'text',
       'widget_type' => 'optionwidgets_select',
-      'description' => '',
+      'description' => 'Current standing of name',
       'group' => 'group_usage',
       'module' => 'text',
       'widget_module' => 'text',
@@ -359,7 +359,7 @@ return array(
       'field_name' => 'field_taxon_author',
       'type' => 'text',
       'widget_type' => 'text_textfield',
-      'description' => '',
+      'description' => 'With or without year and brackets',
       'group' => 'group_reference',
       'module' => 'text',
       'widget_module' => 'text'
@@ -769,5 +769,23 @@ function itis_term_update_6102(){
   $ret = array();
   $ret[] = update_sql("UPDATE {content_node_field} SET required = 0 WHERE field_name = 'field_rank_name'");
   content_clear_type_cache(TRUE);
+  return $ret;
+}
+
+/**
+ * Add descriptions to fields
+ */
+function itis_term_update_6103(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Uninomial name, e.g. family or genus name' WHERE field_name = 'field_unit_name1'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Species epithet' WHERE field_name = 'field_unit_name2'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Third portion of polynomial name, e.g. subspecies name or variety' WHERE field_name = 'field_unit_name3'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Fourth portion of polynomial name' WHERE field_name = 'field_unit_name4'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Indicator for a plant hybrid at generic level' WHERE field_name = 'field_unit_ind1'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Indicator positioned between first and second part of name' WHERE field_name = 'field_unit_ind2'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Indicator positioned between second and third part of name, e.g. \"spp.\" or \"var.\"' WHERE field_name = 'field_unit_ind3'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Indicator positioned between third and fourth part of name' WHERE field_name = 'field_unit_ind4'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'With or without year and brackets' WHERE field_name = 'field_taxon_author'");
+  $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Current standing of name' WHERE field_name = 'field_usage'");
   return $ret;
 }
