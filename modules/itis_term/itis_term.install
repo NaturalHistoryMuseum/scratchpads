@@ -787,5 +787,6 @@ function itis_term_update_6103(){
   $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Indicator positioned between third and fourth part of name' WHERE field_name = 'field_unit_ind4'");
   $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'With or without year and brackets' WHERE field_name = 'field_taxon_author'");
   $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Current standing of name' WHERE field_name = 'field_usage'");
+  cache_clear_all('*', 'cache_content', TRUE);
   return $ret;
 }
