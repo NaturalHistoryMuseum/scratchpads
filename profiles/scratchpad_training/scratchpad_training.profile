@@ -60,6 +60,10 @@ function scratchpad_training_profile_tasks(&$task, $url){
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('password') , status = 1 WHERE uid = 2");
     
+    // Add the special training site block
+    // Note, this should probably get added automatically, but something
+    // is screwy about the site.
+    db_query("INSERT INTO {blocks} (module, delta, theme, status, weight, region, cache) VALUES ('scratchpad_training', 'pointless_string', 'garland', 1, -100, 'left', 8)");
     scratchpad_profile_tasks_4();
     $task = 'profile-finished';
   }
