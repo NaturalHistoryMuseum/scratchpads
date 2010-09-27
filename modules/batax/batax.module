@@ -115,7 +115,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
         if($vocabulary->help){
           $help = filter_xss_admin($vocabulary->help);
         }else{
-          $help = t('A comma-separated list of terms describing this content.<br/><strong>Note, please enure you select the term from the autocomplete drop down box, as an essential ID is added to the field.</strong>');
+          $help = t('A comma-separated list of terms describing this content.<br/><strong>Note, please ensure you select the term from the autocomplete drop down box, as an essential ID is added to the field.</strong>');
         }
         $form['taxonomy'][$vocabulary->vid] = array(
           '#type' => 'textfield',
