@@ -425,9 +425,10 @@ function pathauto_taxonomy($op, $type, $object = NULL) {
           }
 
           // For all children generate new alias (important if [catpath] used)
-          foreach (taxonomy_get_tree($term->vid, $term->tid) as $subcategory) {
+          // Removed by SDRycroft for performance reasons
+          /*foreach (taxonomy_get_tree($term->vid, $term->tid) as $subcategory) {
             $count = _taxonomy_pathauto_alias($subcategory, $op);
-          }
+          }*/
 
           break;
         case 'delete':
