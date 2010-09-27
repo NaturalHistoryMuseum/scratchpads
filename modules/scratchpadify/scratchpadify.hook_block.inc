@@ -221,9 +221,12 @@ function _scratchpadify_block($op, $delta, $edit){
           ));
           return array(
             'subject' => 'About this site',
-            'content' => '<p>This site is moderated by <span style="text-decoration:underline">' . l(str_replace(" ", "&nbsp;", $maintainer->name), "user/" . $maintainer->uid, array(
-              'html' => 1
-            )) . '</span> on behalf of the  contributors who retain copyright.</p><p>Content can be used in accordance with a <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Licence</a>.</p><p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu/">Scratchpad</a> team at the <a href="http://www.nhm.ac.uk/">Natural History Museum</a>, London.</p>'
+            'content' => t(variable_get('scratchpadify-about-this-site-block', '<p>This site is moderated by <span style="text-decoration:underline"><a href="!maintainer_link">!maintainer_username</a></span> on behalf of the  contributors who retain copyright.</p>
+<p>Content can be used in accordance with a <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Licence</a>.</p>
+<p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu/">Scratchpad</a> team at the <a href="http://www.nhm.ac.uk/">Natural History Museum</a>, London.</p>'), array(
+              '!maintainer_username' => $maintainer->name,
+              '!maintainer_link' => url('user/' . $maintainer->uid)
+            ))
           );
         case 3:
           drupal_add_js('var sadtrombone_width = 180;', 'inline');
@@ -286,6 +289,21 @@ function _scratchpadify_block($op, $delta, $edit){
               '#default_value' => variable_get('scratchpadify-stats-block-text', '')
             )
           );
+        case 2:
+          return array(
+            'alt_text' => array(
+              '#title' => t('Text'),
+              '#type' => 'textarea',
+              '#weight' => -9,
+              '#default_value' => variable_get('scratchpadify-about-this-site-block', '<p>This site is moderated by <span style="text-decoration:underline"><a href="!maintainer_link">!maintainer_username</a></span> on behalf of the  contributors who retain copyright.</p>
+<p>Content can be used in accordance with a <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Licence</a>.</p>
+<p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu/">Scratchpad</a> team at the <a href="http://www.nhm.ac.uk/">Natural History Museum</a>, London.</p>'),
+              '#description' => t('Replacement patterns include:') . theme('item_list', array(
+                '"!maintainer_username" = The username of the first administrator created on the site',
+                '"!maintainer_link" = The URL for the above administrator\'s account page'
+              ))
+            )
+          );
         case 5:
           return array(
             'recent_count' => array(
@@ -313,10 +331,15 @@ function _scratchpadify_block($op, $delta, $edit){
           );
       }
     case 'save':
-      if($delta == 0){
-        variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
-      }elseif($delta == 5){
-        variable_set('scratchpadify_recent_edits_count', $edit['recent_count']);
+      switch($delta){
+        case 0:
+          variable_set('scratchpadify-stats-block-text', $edit['additional_text']);
+          break;
+        case 2:
+          variable_set('scratchpadify-about-this-site-block', $edit['alt_text']);
+        case 5:
+          variable_set('scratchpadify_recent_edits_count', $edit['recent_count']);
+          break;
       }
       break;
   }
