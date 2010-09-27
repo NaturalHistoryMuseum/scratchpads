@@ -6,25 +6,52 @@
  * Following alters the install form, skipping it alltogether so that the sites
  * are installed automatically, with no user input.
  */
-
 function scratchpad_training_form_alter(&$form, $form_state, $form_id){
   if($form_id == 'install_configure_form'){
-    $form_state = array (
-      'storage' => NULL, 
-      'submitted' => TRUE, 
-      'values' => array (
-        'site_name' => 'Scratchpad Training', 
-        'site_mail' => 'scratchpad@nhm.ac.uk', 
+    $form_state = array(
+      'storage' => NULL,
+      'submitted' => TRUE,
+      'values' => array(
+        'site_name' => 'Scratchpad Training',
+        'site_mail' => 'scratchpad@nhm.ac.uk',
         'account' => array(
           'name' => 'username',
-          'mail' => 'scratchpad@nhm.ac.uk', 
-          'pass' => 'password'), 
-        'date_default_timezone' => '3600', 
+          'mail' => 'scratchpad@nhm.ac.uk',
+          'pass' => 'password'
+        ),
+        'date_default_timezone' => '3600',
         'clean_url' => '1',
-        'update_status_module' => array (1 => 0), 
-        'op' => 'Save and continue', 
-        'submit' => 'Save and continue', 
-        'form_id' => 'install_configure_form'));
+        'update_status_module' => array(
+          1 => 0
+        ),
+        'op' => 'Save and continue',
+        'submit' => 'Save and continue',
+        'form_id' => 'install_configure_form'
+      )
+    );
     scratchpadify_install_configure_form_submit($form, $form_state);
+  }
+}
+
+/**
+ * Implementation of hook_block
+ */
+function scratchpad_training_block($op, $delta, $edit){
+  switch($op){
+    case 'list':
+      return array(
+        'pointless_string' => array(
+          'info' => 'Scratchpad training block',
+          'status' => 1,
+          'region' => 'left',
+          'cache' => BLOCK_CACHE_GLOBAL,
+          'weight' => -100
+        )
+      );
+    case 'view':
+      return array(
+        'subject' => t(''),
+        'content' => t('Once you have complete the training course, we would appreciate it if you could provide us with feedback using the <a href="http://scratchpads.eu/feedback-form-training-courses">form</a> on the Scratchpads site.')
+      );
   }
 }
