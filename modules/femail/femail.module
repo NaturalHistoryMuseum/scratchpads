@@ -8,28 +8,42 @@ function femail_menu(){
     'user/%user/femail' => array(
       'title' => 'Forum/E-mail integration',
       'page callback' => 'femail_user_settings',
-      'page arguments' => array(1),
+      'page arguments' => array(
+        1
+      ),
       'access callback' => 'user_edit_access',
-      'access arguments' => array(1),
+      'access arguments' => array(
+        1
+      ),
       'type' => MENU_LOCAL_TASK,
-      'file' => 'femail.pages.inc',
+      'file' => 'femail.pages.inc'
     ),
     'femail/verify/%/%' => array(
       'title' => 'Forum/E-mail integration',
       'page callback' => 'femail_email_verify',
-      'page arguments' => array(2, 3),
-      'access arguments' => array('access content'),
+      'page arguments' => array(
+        2,
+        3
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK,
-      'file' => 'femail.pages.inc'    
+      'file' => 'femail.pages.inc'
     ),
     'femail/remove/%user/%' => array(
       'title' => 'Forum/E-mail integration',
       'page callback' => 'femail_email_remove',
-      'page arguments' => array(2, 3),
+      'page arguments' => array(
+        2,
+        3
+      ),
       'access callback' => 'user_edit_access',
-      'access arguments' => array(2),
+      'access arguments' => array(
+        2
+      ),
       'type' => MENU_CALLBACK,
-      'file' => 'femail.pages.inc'    
+      'file' => 'femail.pages.inc'
     )
   );
 }
@@ -41,7 +55,7 @@ function femail_form_alter($form, $form_state, $form_id){
   if($form_id == 'forum_node_form' || $form_id == 'comment_form'){
     if($form_id == 'forum_node_form'){
       $part = 'body_field';
-    } else {
+    }else{
       $part = 'comment_filter';
     }
     $format = variable_get('femail_input_format', 4);
@@ -53,7 +67,6 @@ function femail_form_alter($form, $form_state, $form_id){
   }
 }
 
-
 /**
  * Implementation of hook_mail
  */
@@ -61,10 +74,14 @@ function femail_mail($key, &$message, $params){
   $language = $message['language'];
   switch($key){
     case 'verify':
-      $message['subject'] = t('!site requests verification', array('!site' => variable_get('site_name', 'Drupal')), $language->language);
-      $message['body']  = t('Please click on the following link to verify your email address');
+      $message['subject'] = t('!site requests verification', array(
+        '!site' => variable_get('site_name', 'Drupal')
+      ), $language->language);
+      $message['body'] = t('Please click on the following link to verify your email address');
       $message['body'] .= "\n\n";
-      $message['body'] .= url('femail/verify/'.$params.'/'.md5($params . variable_get('femail_install_time', 'INSTALLTIME')), array('absolute' => TRUE));
+      $message['body'] .= url('femail/verify/' . $params . '/' . md5($params . variable_get('femail_install_time', 'INSTALLTIME')), array(
+        'absolute' => TRUE
+      ));
       break;
   }
 }
@@ -72,7 +89,7 @@ function femail_mail($key, &$message, $params){
 /**
  * Implementation of hook_filter
  */
-function femail_filter($op, $delta=0, $format=-1, $text=''){
+function femail_filter($op, $delta = 0, $format = -1, $text = ''){
   switch($op){
     case 'list':
       return array(
@@ -99,7 +116,7 @@ function femail_filter($op, $delta=0, $format=-1, $text=''){
           return femail_filter_remove_signature($text);
         case 1:
           return femail_filter_blockquote($text);
-      }     
+      }
     default:
       return $text;
   }
@@ -112,8 +129,8 @@ function femail_filter($op, $delta=0, $format=-1, $text=''){
  * seem to be any other location (due to caching) where I can add them.
  */
 function femail_init(){
-  drupal_add_js(drupal_get_path('module','femail').'/femail.js');
-  drupal_add_css(drupal_get_path('module','femail').'/femail.css');  
+  drupal_add_js(drupal_get_path('module', 'femail') . '/femail.js');
+  drupal_add_css(drupal_get_path('module', 'femail') . '/femail.css');
 }
 
 /**
@@ -122,13 +139,13 @@ function femail_init(){
 function femail_filter_remove_signature($text){
   // Split by lines, and look for a line that starts with "--".  Anything after
   // this line is the signature
-  $lines = preg_split('/[\n\r]+/',$text);
+  $lines = preg_split('/[\n\r]+/', $text);
   $return_text = '';
   $started_sig = FALSE;
   foreach($lines as $line){
-    if((substr($line, 0, 2)=='--' || substr($line, 0, 5)=='<p>--') && !$started_sig){
+    if((substr($line, 0, 2) == '--' || substr($line, 0, 5) == '<p>--') && !$started_sig){
       $return_text .= '<div class="femail-signature"><p>--</p><div>';
-      $line = substr($line, strpos($line, '--')+2);
+      $line = substr($line, strpos($line, '--') + 2);
       $started_sig = TRUE;
     }
     $return_text .= $line . "\n";
@@ -143,33 +160,29 @@ function femail_filter_remove_signature($text){
  * helper function for femail_filter
  */
 function femail_filter_blockquote($text){
-  $lines = preg_split('/[\n\r]+/',$text);
+  $lines = preg_split('/[\n\r]+/', $text);
   $return_text = '';
   $started_block = FALSE;
   foreach($lines as $line){
-    if( substr($line, 0, 1)=='>' || 
-        substr($line, 0, 5)=='&#62;' || 
-        substr($line, 0, 4)=='&gt;' || 
-        substr($line, 0, 8)=='<p>&#62;' || 
-        substr($line, 0, 7)=='<p>&gt;'){
+    if(substr($line, 0, 1) == '>' || substr($line, 0, 5) == '&#62;' || substr($line, 0, 4) == '&gt;' || substr($line, 0, 8) == '<p>&#62;' || substr($line, 0, 7) == '<p>&gt;'){
       if(!$started_block){
         $return_text .= '<blockquote>';
       }
       // We'll remove the ">" if it isn't encoded, then we'll replace the first
       // instance of an html entity encoded ">"
-      if(substr($line, 0, 1)=='>'){
+      if(substr($line, 0, 1) == '>'){
         $line = substr($line, 1);
       }
       // replace entity encoded ">"
-      $line = preg_replace("/(&#62;|&gt;)/","", $line, 1);
-      $return_text .= $line."\n";
+      $line = preg_replace("/(&#62;|&gt;)/", "", $line, 1);
+      $return_text .= $line . "\n";
       $started_block = TRUE;
-    } else {
+    }else{
       if($started_block){
         $return_text .= '</blockquote>';
         $started_block = FALSE;
       }
-      $return_text .= $line ."\n";
+      $return_text .= $line . "\n";
     }
   }
   return $return_text;
@@ -179,13 +192,18 @@ function femail_filter_blockquote($text){
  * Implementation of hook_perm
  */
 function femail_perm(){
-  return array('post by femail');
+  return array(
+    'post by femail'
+  );
 }
+
 /**
  * Implementation of hook_theme_registry_alter
  */
 function femail_theme_registry_alter(&$theme_registry){
-  $theme_registry['forums']['preprocess functions'] = array_merge($theme_registry['forums']['preprocess functions'], array('template_preprocess_femail_forums'));
+  $theme_registry['forums']['preprocess functions'] = array_merge($theme_registry['forums']['preprocess functions'], array(
+    'template_preprocess_femail_forums'
+  ));
 }
 
 /**
@@ -200,14 +218,17 @@ function template_preprocess_femail_forums(&$variables){
       if(isset($emails[$variables['tid']])){
         if(user_access('post by femail')){
           $variables['links']['femail'] = array(
-            'title' => t('Or post by email:') .' '. $emails[$variables['tid']],
-            'href' => 'mailto:'.$emails[$variables['tid']],
+            'title' => t('Or post by email:') . ' ' . $emails[$variables['tid']],
+            'href' => 'mailto:' . $emails[$variables['tid']],
             'absolute' => TRUE
           );
         }
-      } else {
+      }else{
         // This should be set, we need to warn the admin
-        watchdog('femail', 'Femail address not set %term_id', array('%term_id', $variables['tid']));
+        watchdog('femail', 'Femail address not set %term_id', array(
+          '%term_id',
+          $variables['tid']
+        ));
       }
     }
   }
@@ -221,26 +242,26 @@ function femail_taxonomy($op, $type, $array = NULL){
     $emails = variable_get('femail_emails', array());
     if($op == 'delete'){
       unset($emails[$array['tid']]);
-      variable_set('femail_emails', $emails);      
-    } else {
+      variable_set('femail_emails', $emails);
+    }else{
       // Check if this is a term from the forum vocab
       if($array['vid'] == variable_get('forum_nav_vocabulary', 0)){
         unset($emails[$array['tid']]);
         global $base_url;
         $parts = parse_url($base_url);
-        $email = preg_replace("/[^0-9a-z-]/","",strtolower(str_replace(" ", "-", $array['name'])));
+        $email = preg_replace("/[^0-9a-z-]/", "", strtolower(str_replace(" ", "-", $array['name'])));
         // Make sure this email isn't already in use.
         if(array_search($email . '@' . $parts['host'], $emails)){
           $i = 2;
-          while(array_search($email."_".$i.'@'.$parts['host'], $emails)){
+          while(array_search($email . "_" . $i . '@' . $parts['host'], $emails)){
             $i++;
           }
-          $email = $email."_".$i;
+          $email = $email . "_" . $i;
         }
         // Set it and save it
         $emails[$array['tid']] = $email . '@' . $parts['host'];
-        variable_set('femail_emails', $emails);      
-      }      
+        variable_set('femail_emails', $emails);
+      }
     }
   }
 }
@@ -252,17 +273,17 @@ function femail_comment($comment, $op){
   if($op == 'publish'){
     $comment = @(array)$comment;
     $node = node_load($comment['nid']);
-    if(isset($node->forum_tid) && $node->forum_tid){    
+    if(isset($node->forum_tid) && $node->forum_tid){
       // Get the parent msgid so that we can set the "In-reply-to" header, Note,
       // this may not be set if there are no users subscribed to the forum, OR
       // if the only user subscribed posted the comment.  We'll still caryy on
       // trying to send the message though.
-      $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $comment['pid']?$comment['pid']:0));
+      $row = db_fetch_array(db_query("SELECT msgid FROM {femail_msgs} WHERE nid = %d AND cid = %d", $node->nid, $comment['pid'] ? $comment['pid'] : 0));
       // Include file
-      module_load_include('mail.inc','femail');
+      module_load_include('mail.inc', 'femail');
       if(is_array($row)){
-        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid'], array_pop($row));        
-      } else {
+        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid'], array_pop($row));
+      }else{
         _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid']);
       }
     }
@@ -278,7 +299,7 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     // First, we'll get the forum that this has been posted to.
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
     if($forum_tid){
-      module_load_include('mail.inc','femail');
+      module_load_include('mail.inc', 'femail');
       _femail_send_message($forum_tid, $node->title, $node->body, $node->nid);
     }
   }
