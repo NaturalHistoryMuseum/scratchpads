@@ -57,6 +57,16 @@ function _femail_get_msg(){
           } else {
             $msg['body'] = quoted_printable_decode(substr($msg['body'], $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']));
           }
+          // Lets get the charset, for those shite bloody email clients that
+          // don't use UTF-8.  WTF I hear you cry, yes, that's right, why isn't 
+          // everybody just using UTF-8 nowadays? GRRRRR!
+          $charset_array = preg_split('/charset=/i', $part_data['headers']['content-type']);
+          if(count($charset_array)){
+            // We've got a specific charset, we'll need to convert the encoding
+            // to UTF-8
+            $charset = array_pop($charset_array);
+            $msg['body'] = iconv($charset, 'utf-8', $msg['body']);
+          }
           $body_is_set = TRUE;
         }
       }
