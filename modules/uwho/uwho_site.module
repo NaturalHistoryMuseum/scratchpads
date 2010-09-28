@@ -53,17 +53,17 @@ function uwho_site_user($op, &$edit, &$account, $category = NULL){
           'site' => array(
             '#type' => 'user_profile_item',
             '#title' => t('Site'),
-            '#value' => '<a href="'.$data['site_url'].'">'.$data['site_url'].'</a>'
+            '#value' => '<a href="' . $data['site_url'] . '">' . $data['site_url'] . '</a>'
           ),
           'user_account' => array(
             '#type' => 'user_profile_item',
             '#title' => t('User account'),
-            '#value' => '<a href="'.$data['user']['url'].'">'.$data['user']['url'].'</a>'
+            '#value' => '<a href="' . $data['user']['url'] . '">' . $data['user']['url'] . '</a>'
           ),
           'name' => array(
             '#type' => 'user_profile_item',
             '#title' => t('Account name'),
-            '#value' => $data['user']['name']      
+            '#value' => $data['user']['name']
           )
         );
       }
