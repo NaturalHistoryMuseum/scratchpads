@@ -1,0 +1,45 @@
+; $Id: fusion_starter.info,v 1.1.2.1 2009/09/29 05:18:50 sociotech Exp $
+
+name = Fusion Starter
+description = Fusion Starter sub-theme for Drupal 6.
+base theme = fusion_core
+core = 6.x
+engine = phptemplate
+
+stylesheets[all][] = css/fusion-starter-style.css
+
+regions[sidebar_first] = sidebar first
+regions[sidebar_last] = sidebar last
+regions[header_top] = header top
+regions[header] = header
+regions[preface_top] = preface top
+regions[preface_bottom] = preface bottom
+regions[content_top] = content top
+regions[content] = content
+regions[content_bottom] = content bottom
+regions[postscript_top] = postscript top
+regions[postscript_bottom] = postscript bottom
+regions[footer] = footer
+regions[node_bottom] = node bottom
+
+; Default theme settings
+settings[base-font-size] = font-size-12
+settings[sidebar-first-width] = 3
+settings[sidebar-last-width] = 3
+
+; Inherit Skinr styles from fusion core
+skinr[options][inherit_skins] = true
+
+; Starter styles
+skinr[starter-general-styles][title] = Starter - General Styles
+skinr[starter-general-styles][type] = checkboxes
+skinr[starter-general-styles][features][] = block
+skinr[starter-general-styles][features][] = panel-pane
+skinr[starter-general-styles][options][1][label] = List with bottom border
+skinr[starter-general-styles][options][1][class] = list-bottom-border
+; Information added by drupal.org packaging script on 2009-09-29
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "fusion"
+datestamp = "1254226474"
+
