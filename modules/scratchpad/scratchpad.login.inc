@@ -37,6 +37,9 @@ function scratchpad_do_openid_login($uid){
   if($result['status']){
     global $user;
     $user = user_load(array('uid' => $uid));
+    if(function_exists('boost_init')){
+      boost_init();
+    }
   } else {
     drupal_set_message('Login failed', 'error');
   }
