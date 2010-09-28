@@ -63,8 +63,13 @@ function _femail_get_msg(){
           $charset_array = preg_split('/charset=/i', $part_data['headers']['content-type']);
           if(count($charset_array)){
             // We've got a specific charset, we'll need to convert the encoding
-            // to UTF-8
+            // to UTF-8            
             $charset = array_pop($charset_array);
+            // We also need to ensure that we haven't got other spazzy rubbish on
+            // the end of this charset string
+            if(strpos($charset, ';')){
+              $charset = substr($charset, 0, strpos($charset, ';'));
+            }
             $msg['body'] = iconv($charset, 'utf-8', $msg['body']);
           }
           $body_is_set = TRUE;
