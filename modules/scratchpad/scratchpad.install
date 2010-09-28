@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Update to ensure the menu is correctly set.
+ */
+function scratchpad_update_6101(){  
+  menu_rebuild();
+  return array('#finished' => TRUE);
+}
