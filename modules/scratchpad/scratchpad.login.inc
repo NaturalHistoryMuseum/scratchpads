@@ -1,7 +1,7 @@
 <?php
 
 function scratchpad_logins(){
-  $result = db_query('SELECT uid, name FROM {users} WHERE uid > 0 AND status = 1 AND ORDER BY uid ASC');
+  $result = db_query('SELECT uid, name FROM {users} WHERE uid > 0 AND status = 1 ORDER BY uid ASC');
   while($row = db_fetch_array($result)){
     $users[$row['uid']] = $row['name'] . " [" . $row['uid'] . "]";
   }
