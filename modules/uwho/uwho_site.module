@@ -38,7 +38,35 @@ function uwho_site_menu(){
  * - We need to delete the entry from uwho if a user is deleted
  */
 function uwho_site_user($op, &$edit, &$account, $category = NULL){
-  if($op == 'delete'){
-    db_query('DELETE FROM {uwho} WHERE uid = %d', $account->uid);
+  switch($op){
+    case 'delete':
+      db_query('DELETE FROM {uwho} WHERE uid = %d', $account->uid);
+      break;
+    case 'view':
+      $data = db_result(db_query('SELECT data FROM {uwho} WHERE uid = %d', $account->uid));
+      if($data){
+        $data = unserialize($data);
+        $account->content['uwho_site'] = array(
+          '#title' => 'UWho Original Details',
+          '#type' => 'user_profile_category',
+          '#weight' => 0,
+          'site' => array(
+            '#type' => 'user_profile_item',
+            '#title' => t('Site'),
+            '#value' => '<a href="'.$data['site_url'].'">'.$data['site_url'].'</a>'
+          ),
+          'user_account' => array(
+            '#type' => 'user_profile_item',
+            '#title' => t('User account'),
+            '#value' => '<a href="'.$data['user']['url'].'">'.$data['user']['url'].'</a>'
+          ),
+          'name' => array(
+            '#type' => 'user_profile_item',
+            '#title' => t('Account name'),
+            '#value' => $data['user']['name']      
+          )
+        );
+      }
+      break;
   }
 }
