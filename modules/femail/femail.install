@@ -9,35 +9,33 @@ function femail_install(){
   $forum_containers = variable_get('forum_containers', array());
   if($forum_containers){
     $container_sql = 'AND tid NOT IN (' . implode(",", $forum_containers) . ')';
-  } 
-  $results = db_query("SELECT * FROM {term_data} WHERE vid = %d $container_sql", variable_get('forum_nav_vocabulary',0));
+  }
+  $results = db_query("SELECT * FROM {term_data} WHERE vid = %d $container_sql", variable_get('forum_nav_vocabulary', 0));
   $emails = array();
   global $base_url;
   $parts = parse_url($base_url);
   while($row = db_fetch_array($results)){
-    $email = preg_replace("/[^0-9a-z\-]/","",strtolower(str_replace(" ", "-", $row['name'])));
+    $email = preg_replace("/[^0-9a-z\-]/", "", strtolower(str_replace(" ", "-", $row['name'])));
     if(array_search($email, $emails)){
       $i = 2;
-      while(array_search($email."_".$i, $emails)){
+      while(array_search($email . "_" . $i, $emails)){
         $i++;
       }
-      $email = $email."_".$i;
+      $email = $email . "_" . $i;
     }
     $emails[$row['tid']] = $email . '@' . $parts['host'];
   }
   variable_set('femail_emails', $emails);
-  
   // Set the install time for use in hashes
   variable_set('femail_install_time', time());
-  
   // Add the femail table (which simply stores message IDs
   drupal_install_schema('femail');
-  
   // Set a message to tell users to go and set the permission.
-  drupal_set_message(t('You must now <a href="!url">enable roles</a> to post to this website by email (post by femail)', array('!url' => url(''))));
-  
+  drupal_set_message(t('You must now <a href="!url">enable roles</a> to post to this website by email (post by femail)', array(
+    '!url' => url('')
+  )));
   // Add a new input format specifically for Forum posts sent by email.
-  module_load_include('admin.inc','filter');
+  module_load_include('admin.inc', 'filter');
   $roles = user_roles(TRUE);
   $form_state = array(
     'values' => array(
@@ -53,30 +51,33 @@ function femail_install(){
     )
   );
   filter_admin_format_form_submit(NULL, $form_state);
-  
   // Update the allowed tags for this format
   $format = db_result(db_query("SELECT MAX(format) AS format FROM {filter_formats}"));
-  variable_set('allowed_html_'.$format,'');
-  
+  variable_set('allowed_html_' . $format, '');
   // Finally set a variable so that we know what the id is of this format
   variable_set('femail_input_format', $format);
-  
+  // Set the order, so that the line break thingy is after the html thingy
+  // and also set a few variables.
+  variable_set('allowed_html_' . $format, '');
+  variable_set('filter_html_' . $format, '2');
+  variable_set('filter_html_help_' . $format, 1);
+  variable_set('filter_html_nofollow_' . $format, 0);
+  variable_set('filter_url_length_' . $format, '72');
   // Set the order, so that the line break thingy is after the html thingy
   $form_state = array(
     'values' => array(
       'weights' => array(
-        'femail/0' => -8,
-        'femail/1' => -7,
         'filter/0' => -10,
-        'filter/1' => -6,
-        'filter/2' => -9
+        'filter/1' => -9,
+        'filter/2' => -8,
+        'femail/0' => -7,
+        'femail/1' => -6
       ),
       'format' => $format
     )
   );
   filter_admin_order_submit(NULL, $form_state);
 }
-
 
 /**
  * Implementation of hook_schema
@@ -85,23 +86,60 @@ function femail_schema(){
   return array(
     'femail_msgs' => array(
       'fields' => array(
-        'nid' => array('type' => 'int', 'not null' => true),
-        'cid' => array('type' => 'int', 'not null' => true),
-        'msgid' => array('type' => 'varchar', 'length' => 255)),
-      'primary key' => array('nid', 'msgid', 'cid')
+        'nid' => array(
+          'type' => 'int',
+          'not null' => true
+        ),
+        'cid' => array(
+          'type' => 'int',
+          'not null' => true
+        ),
+        'msgid' => array(
+          'type' => 'varchar',
+          'length' => 255
+        )
+      ),
+      'primary key' => array(
+        'nid',
+        'msgid',
+        'cid'
+      )
     ),
     'femail_user_emails' => array(
       'fields' => array(
-        'uid' => array('type' => 'int', 'not null' => true),
-        'email' => array('type' => 'varchar', 'length' => 255),
-        'status' => array('type' => 'int', 'not null' => true)),
-      'primary key' => array('uid', 'email')
+        'uid' => array(
+          'type' => 'int',
+          'not null' => true
+        ),
+        'email' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'status' => array(
+          'type' => 'int',
+          'not null' => true
+        )
+      ),
+      'primary key' => array(
+        'uid',
+        'email'
+      )
     ),
     'femail_user_subscriptions' => array(
       'fields' => array(
-        'uid' => array('type' => 'int', 'not null' => true),
-        'tid' => array('type' => 'int', 'not null' => true)),
-      'primary key' => array('uid', 'tid')
+        'uid' => array(
+          'type' => 'int',
+          'not null' => true
+        ),
+        'tid' => array(
+          'type' => 'int',
+          'not null' => true
+        )
+      ),
+      'primary key' => array(
+        'uid',
+        'tid'
+      )
     )
   );
 }
@@ -133,57 +171,57 @@ function femail_requirements($phase){
     if($phase == 'runtime'){
       $requirements['femail_mailparse']['value'] = $t('Not installed');
     }
-  } else {
+  }else{
     $requirements['femail_mailparse']['severity'] = REQUIREMENT_OK;
     if($phase == 'runtime'){
       $requirements['femail_mailparse']['value'] = $t('Installed');
     }
   }
-  
   // Check that there are no MX records set for the domain, and if there are,
   // that they're pointing at the right place (this server).
   global $base_url;
   $parts = parse_url($base_url);
   $mx_records = array();
   if(getmxrr($parts['host'], $mx_records)){
-    if(count($mx_records)>1){
+    if(count($mx_records) > 1){
       $requirements['femail_mx']['severity'] = REQUIREMENT_WARNING;
       if($phase == 'runtime'){
         $requirements['femail_mx']['value'] = $t('You have more than one MX record for this domain.  It is likely that not all mail will be sent to this server.');
-      }      
-    } else {
+      }
+    }else{
       // Check to see if the mx record points at this server
       if(gethostbyname(array_pop($mx_records)) == gethostbyname($parts['host'])){
         $requirements['femail_mx']['severity'] = REQUIREMENT_OK;
         if($phase == 'runtime'){
           $requirements['femail_mx']['value'] = $t('Your MX record points at this server');
-        } 
-      } else {
+        }
+      }else{
         $requirements['femail_mx']['severity'] = REQUIREMENT_WARNING;
         if($phase == 'runtime'){
           $requirements['femail_mx']['value'] = $t('Your MX record DOES NOT point at this server');
-        }          
+        }
       }
     }
-  } else {
+  }else{
     // Must be zero (or less!)
     $requirements['femail_mx']['severity'] = REQUIREMENT_OK;
     if($phase == 'runtime'){
       $requirements['femail_mx']['value'] = $t('No MX Records found');
-    }    
+    }
   }
   return $requirements;
 }
 
 function femail_update_6101(){
   // Empty just to update the theme/menu shit!  Thanks David.
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 function femail_update_6102(){
-  
   // Add a new input format specifically for Forum posts sent by email.
-  module_load_include('admin.inc','filter');
+  module_load_include('admin.inc', 'filter');
   $roles = user_roles(TRUE);
   $form_state = array(
     'values' => array(
@@ -199,14 +237,11 @@ function femail_update_6102(){
     )
   );
   filter_admin_format_form_submit(NULL, $form_state);
-  
   // Update the allowed tags for this format
   $format = db_result(db_query("SELECT MAX(format) AS format FROM {filter_formats}"));
-  variable_set('allowed_html_'.$format,'');
-  
+  variable_set('allowed_html_' . $format, '');
   // Finally set a variable so that we know what the id is of this format
   variable_set('femail_input_format', $format);
-  
   // Set the order, so that the line break thingy is after the html thingy
   $form_state = array(
     'values' => array(
@@ -221,6 +256,52 @@ function femail_update_6102(){
     )
   );
   filter_admin_order_submit(NULL, $form_state);
-  
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Update the order of the filter and set a few variables.
+ */
+function femail_update_6103(){
+  $ret = array();
+  $format = variable_set('femail_input_format', FALSE);
+  if(!$format){
+    // The variable isn't set, which is quite possible (screwy code - doh). 
+    // We'll hunt it out instead.
+    $format = db_result(db_query("SELECT format FROM {filter_formats} WHERE name = '%s' OR name = '%s'", 'Femail mail message', t('Femail mail message'))); // Not sure if the name gets translated.
+    variable_set('femail_input_format', $format);
+  }
+  if($format){
+    variable_set('allowed_html_' . $format, '');
+    variable_set('filter_html_' . $format, '2');
+    variable_set('filter_html_help_' . $format, 1);
+    variable_set('filter_html_nofollow_' . $format, 0);
+    variable_set('filter_url_length_' . $format, '72');
+    // Set the order, so that the line break thingy is after the html thingy
+    $form_state = array(
+      'values' => array(
+        'weights' => array(
+          'filter/0' => -10,
+          'filter/1' => -9,
+          'filter/2' => -8,
+          'femail/0' => -7,
+          'femail/1' => -6
+        ),
+        'format' => $format
+      )
+    );
+    filter_admin_order_submit(NULL, $form_state);
+    $ret[] = array(
+      'success' => TRUE,
+      'query' => t('Variables and filter order set.')
+    );
+  }else{
+    $ret['#abort'] = array(
+      'success' => FALSE,
+      'query' => 'Femail input format has been lost/deleted.  Femail must be uninstalled and installed.'
+    );
+  }
+  return $ret;
 }
