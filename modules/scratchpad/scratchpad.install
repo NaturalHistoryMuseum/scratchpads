@@ -3,7 +3,10 @@
 /**
  * Update to ensure the menu is correctly set.
  */
-function scratchpad_update_6101(){  
+function scratchpad_update_6101(){
+  $ret = array();
+  $ret[] = update_sql("DELETE FROM authmap WHERE module='openid' AND uid = 1");
+  $ret[] = update_sql("DELETE FROM authmap WHERE module='openid' AND authname IN ('http://vsmith.info/', 'http://simon.rycroft.name/', 'http://postlet.com/', 'http://scratchpads.eu/')");
   menu_rebuild();
-  return array('#finished' => TRUE);
+  return $ret;
 }
