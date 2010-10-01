@@ -43,6 +43,6 @@ function term_node_update_6102(){
  * Clear the cache table
  */
 function term_node_update_6103(){
-  clear_cache_all('*', 'term_node', TRUE);
+  cache_clear_all('*', 'term_node', TRUE);
   return array('#finished' => TRUE);  
 }
