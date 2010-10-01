@@ -36,6 +36,7 @@ function uwho_site_menu(){
  * hook_user
  * 
  * - We need to delete the entry from uwho if a user is deleted
+ * - Also add some pretty info to the view page.
  */
 function uwho_site_user($op, &$edit, &$account, $category = NULL){
   switch($op){
