@@ -38,3 +38,11 @@ function term_node_update_6102(){
   drupal_install_schema('term_node');
   return array('#finished' => TRUE);  
 }
+
+/**
+ * Clear the cache table
+ */
+function term_node_update_6102(){
+  clear_cache_all('*', 'term_node', TRUE);
+  return array('#finished' => TRUE);  
+}
