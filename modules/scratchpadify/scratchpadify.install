@@ -135,7 +135,21 @@ function scratchpadify_install(){
       }
     }
   }
-  $fields = array(
+  $fields = _scratchpadify_install_image_fields();
+  module_load_include('crud.inc', 'content', 'includes/content');
+  foreach($fields as $field){
+    // Add the field
+    content_field_instance_create($field);
+  }
+  // Set OpenID for Biblio
+  variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
+  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');
+  // Count content views  
+  variable_set('statistics_count_content_views', 1);
+}
+
+function _scratchpadify_install_image_fields(){
+  return array(
     array(
       'label' => 'Image',
       'field_name' => 'field_imagefield',
@@ -265,18 +279,7 @@ function scratchpadify_install(){
       )
     )
   );
-  module_load_include('crud.inc', 'content', 'includes/content');
-  foreach($fields as $field){
-    // Add the field
-    content_field_instance_create($field);
-  }
-  // Set OpenID for Biblio
-  variable_set('biblio_baseopenurl', 'http://bioguid.info/openurl.php');
-  variable_set('biblio_openurlimage', '/sites/all/images/openurl.jpg');
-  // Count content views  
-  variable_set('statistics_count_content_views', 1);
 }
-
 /**
  * -------------- UPDATES ------------------------------------------------------
  * 
@@ -348,6 +351,7 @@ function scratchpadify_install(){
  * 6166: Update permissions
  * 6167: Unset "Promoted to front page" for darwincorelocation content type
  * 6168: Set the "Publication" and "Group" content types as og groups
+ * 6169: Update image fields
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1353,7 +1357,9 @@ function scratchpadify_update_6166(){
  * Unset "Promoted to front page" for darwincorelocation content type
  */
 function scratchpadify_update_6167(){
-  variable_set('node_options_darwincorelocation', array('status'));
+  variable_set('node_options_darwincorelocation', array(
+    'status'
+  ));
   return array(
     '#finished' => TRUE
   );
@@ -1368,4 +1374,39 @@ function scratchpadify_update_6168(){
   return array(
     '#finished' => TRUE
   );
+}
+
+/**
+ * Ensure that all sites have the correct fields, and that the old
+ * bio_image_darwincore_nid and bio_image_publication_nid fields are removed.
+ * This just requires me ensuring that the correct vocabularies are associated
+ * with the image content type, and perhaps creating a couple of fields.
+ */
+function scratchpadify_update_6169(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE {vocabulary} SET module = 'scratchpadify' WHERE name IN ('Preparation Technique','Keywords','Imaging Technique') AND module NOT IN ('taxonomy','scratchpadify')");
+  $fields = _scratchpadify_install_image_fields();
+  $ret[] = update_sql("REPLACE INTO vocabulary_node_types SELECT vid, 'image' FROM vocabulary WHERE name IN ('Preparation Technique','Keywords','Imaging Technique')");
+  module_load_include('inc', 'content', 'includes/content.crud');
+  foreach($fields as $field){
+    // This time, before we add the field, we check to see if it exists.
+    $field_exists = db_result(db_query("SELECT COUNT(*) FROM content_node_field WHERE field_name = '%s'", $field['field_name']));
+    if(!$field_exists){
+      // Add the field as it doesn't exist.
+      content_field_instance_create($field);
+      // Message
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => t('Created field !field_name', array(
+          '!field_name' => $field['field_name']
+        ))
+      );
+    }
+  }
+  // Update the database to move data between fields.
+  $ret[] = update_sql('UPDATE content_type_image SET image_specimen_nid = bio_image_darwincore_nid');
+  $ret[] = update_sql('UPDATE content_type_image SET image_publication_nid = bio_image_biblio_nid');
+  content_field_instance_delete('bio_image_biblio', 'image', FALSE);
+  content_field_instance_delete('bio_image_darwincore', 'image', TRUE);
+  return $ret;
 }

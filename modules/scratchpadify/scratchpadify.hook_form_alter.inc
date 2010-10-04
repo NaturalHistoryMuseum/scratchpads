@@ -3,7 +3,7 @@
 /**
  * 
   else
- */
+ */  
 function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
   // Lets add a small message to the top of the node/add/image form to point to the 
   // multiple add image page
@@ -46,10 +46,11 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
     }
   }
   if($form_id == 'image_node_form'){
-    $form['taxonomy']['#title'] = t('Annotations');
     // FIXME - This should be done on an update, and not here.    
     $form['image_publication']['#weight'] = -1;
-    $form['image_specimen']['#weight'] = -1;
+    $form['image_specimen']['#weight'] = -1;    
+    $form['taxonomy']['#title'] = t('Annotations');
+    $form['body_field']['body']['#title'] = t('Notes');
   }
   if($form_id == 'node_import_add_form' && isset($_GET['type']) && !$form_state['submitted']){
     $form_state = array(
