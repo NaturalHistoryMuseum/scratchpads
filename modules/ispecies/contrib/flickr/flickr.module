@@ -15,7 +15,6 @@ function flickr_init(){
 }
 
 function flickr_ajax_callback($term_name, $limit = 50, $offset = 0, $cached_urls = array()){
-  //print_r($cached_urls);
   $items = array ();
   $urls = array();
   $url = 'http://fencedine.myspecies.info/?url=' . urlencode ( 'http://www.flickr.com/services/rest/?method=flickr.photos.search&per_page=' . $limit . '&tag_mode=all&format=php_serial&api_key=a5bd2c06652c7b38852c7d6ef691252e&safe_search=2&text=' . $term_name );
@@ -29,7 +28,7 @@ function flickr_ajax_callback($term_name, $limit = 50, $offset = 0, $cached_urls
         continue;
       }
       $item = array(
-        'body' => '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>',
+        'body' => '<div><a class="lightbox" rel="lightbox[flickr]" href="' . $photo_url . '.jpg" title="'.$photo['title'].'<br/>Original Flickr page: <a href=\'http://www.flickr.com/photos/'.$photo['owner'].'/'.$photo['id'].'\'>http://www.flickr.com/photos/'.$photo['owner'].'/'.$photo['id'].'</a>"><img src="' . $photo_url . '_t.jpg" width="75" height="75" alt="Thumbnail"/></a></div>',
         'page_url' => 'http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']
       );
       $items ['http://www.flickr.com/photos/' . $photo ['owner'] . '/' . $photo ['id']] = $item;
