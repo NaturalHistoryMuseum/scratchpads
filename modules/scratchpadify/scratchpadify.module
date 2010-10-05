@@ -497,6 +497,7 @@ function scratchpadify_footer($main = 0){
     exit();
   }
   if(function_exists('_publication_node_form_is_modal') && _publication_node_form_is_modal()){return;}
+  if(arg(0)=='help'){return;}
   // Add the following HTML to the footer of ALL pages]
   $dev_server_message = '';
   if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.' && $_SERVER['SERVER_NAME'] != 'dev.scratchpads.eu'){
