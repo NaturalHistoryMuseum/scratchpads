@@ -747,6 +747,8 @@ function scratchpad_profile_tasks_2(){
       'pid' => 0
     )
   ));
+  // Create the profile pictures directory
+  file_create_path(variable_get('user_picture_path', 'pictures'));
   // Set the og node type for all content types
   $node_types = array_keys(array_map('check_plain', node_get_types('names')));
   foreach($node_types as $node_type){
