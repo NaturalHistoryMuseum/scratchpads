@@ -31,6 +31,9 @@ function backup_menu() {
  ***********************************************************************************/
 function backup_form() {  
   $form = array();
+  $form['help'] = array(
+  '#value' => theme('advanced_help_topic', 'backup', 'backup')
+  );
   $form["backup"] = array(
     '#type' => 'submit',
     '#value' => t('Backup this site'),
