@@ -44,7 +44,7 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
     );
     // Message to define the dagger
     $form['taxonomy']['autotag']['dagger'] = array(
-      '#value' => '<p style="margin:0"><small>&dagger; '.t('Only the marked vocabularies will use Autotag (Not those marked as "Required", or those NOT marked as "Multiple").').'</small></p>'
+      '#value' => '<p style="margin:0"><small>&dagger; '.t('Only the marked vocabularies will use Autotag').'</small>'.theme('advanced_help_topic', 'autotag', 'autotag').'</p>'
     );
     foreach($autotag_vids as $vid){
       $form['taxonomy'][$vid]['#title'] .= ' &dagger;';
