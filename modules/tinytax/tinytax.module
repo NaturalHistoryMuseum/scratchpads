@@ -204,8 +204,7 @@ function tinytax_js($tid){
   }
   $parents = array_reverse($parents);
   // Now we build the HTML, and output it.
-  print drupal_to_js(array(
-    
+  print drupal_to_js(array(    
     'html' => theme('tinytax_term_list', $parents, $children, $vid), 
     'vid' => $vid
   ));
@@ -261,7 +260,8 @@ function theme_tinytax_view_blocks($delta){
   $children = array();
   $parents = array();
   if(arg(0) == "taxonomy" && arg(1) == "term" && arg(2) !== 0){
-    $tid = arg(2);
+    //$tid = arg(2);
+    $tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
     $term = tinytax_taxonomy_get_term($tid);
     if($term->vid == $delta){
       $parents = tinytax_taxonomy_get_parents_all($tid);
@@ -319,6 +319,7 @@ function _tinytax_first_term_with_many_children($vid){
  * Theme taxonomy_block_item_list
  */
 function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
+  $viewing_tid = FALSE;
   $num_parents = count($parents);
   $num_children = count($children);
   $return_string = '';
@@ -360,10 +361,34 @@ function theme_tinytax_term_list($parents = array(), $children = array(), $vid){
 }
 
 function _theme_tinytax_term_list_link($term, $vid){
+  // First, we'll decide which tid is the active term.
+  static $active_tid = FALSE;
+  if($active_tid === FALSE){
+    if(arg(0) == 'tinytax' && arg(1) == 'get'){
+      // We've been called by ajax, lets get the referrer and use that for the
+      // active tid
+      $string_pos = strpos(referer_uri(), 'taxonomy/term/');
+      if($string_pos){
+        $active_tid = substr(referer_uri(), $string_pos + 14);
+      }
+      if(!is_numeric($active_tid)){
+        $active_tid = 0;
+      }
+    } else {
+      $active_tid = 0;
+    }
+  }
   // if this term has a child which is used!
   if(function_exists('leftandright_descendant_used')){
     if(leftandright_descendant_used($term->tid)){
       $class = 'tinytaxused';
+    }
+  }
+  if($term->tid == $active_tid){
+    if(strlen($class)){
+      $class .= ' active';
+    } else {
+      $class = 'active';
     }
   }
   if(substr($term->tid, 0, 3) != 'vid'){
