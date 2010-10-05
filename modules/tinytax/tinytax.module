@@ -9,12 +9,14 @@
  * Implementation of hook_theme
  */
 function tinytax_theme(){
-  return array(    
-    'tinytax_term_list' => array(      
+  return array(
+    'tinytax_term_list' => array(
       'arguments' => array(
-        'parents', 'children', 'vid'
+        'parents',
+        'children',
+        'vid'
       )
-    ), 
+    ),
     'tinytax_view_blocks' => array(
       'arguments' => array(
         'delta'
@@ -28,13 +30,13 @@ function tinytax_theme(){
  */
 function tinytax_block($op = 'list', $delta = 0, $edit = array()){
   switch($op){
-    case 'list' :
+    case 'list':
       return _tinytax_list_blocks();
-    case 'configure' : // No need to add any extra configuration - Open to suggestions.
+    case 'configure': // No need to add any extra configuration - Open to suggestions.
       return _tinytax_configure($delta);
-    case 'view' :
+    case 'view':
       return theme('tinytax_view_blocks', $delta);
-    case 'save' :
+    case 'save':
       _tinytax_save($delta, $edit);
       break;
   }
@@ -46,13 +48,17 @@ function tinytax_block($op = 'list', $delta = 0, $edit = array()){
 function tinytax_menu(){
   return array(
     'tinytax/get' => array(
-      'title' => 'tinytax', 
-      'access arguments' => array('access content'),
+      'title' => 'tinytax',
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK,
       'page callback' => 'tinytax_js'
     ),
     'tinytax/autocomplete' => array(
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'title' => 'Tinytax callback',
       'page callback' => 'tinytax_autocomplete',
       'type' => MENU_CALLBACK
@@ -65,19 +71,22 @@ function tinytax_menu(){
  */
 function _tinytax_configure($delta){
   $form = array(
-    'open_to_tid' => array(      
-      '#description' => t('Enter the term (e.g. Taxon Name) to which the taxonomy will be exposed to by default.  THIS FIELD WILL AUTOCOMPLETE'), 
-      '#title' => t('Term'), 
-      '#autocomplete_path' => 'tinytax/autocomplete', 
+    'open_to_tid' => array(
+      '#description' => t('Enter the term (e.g. Taxon Name) to which the taxonomy will be exposed to by default.  THIS FIELD WILL AUTOCOMPLETE'),
+      '#title' => t('Term'),
+      '#autocomplete_path' => 'tinytax/autocomplete',
       '#type' => 'textfield',
-      '#weight' => -9, 
+      '#weight' => -9,
       '#default_value' => variable_get($delta, '')
     ),
     'show_child_numbers' => array(
-      '#description' => t('Show the number of child terms for each term in the Tinytax block'), 
+      '#description' => t('Show the number of child terms for each term in the Tinytax block'),
       '#title' => t('Show Child Number'),
-      '#type' => 'radios', 
-      '#options' => array(0 => t('No'), 1 => t('Yes')), 
+      '#type' => 'radios',
+      '#options' => array(
+        0 => t('No'),
+        1 => t('Yes')
+      ),
       '#default_value' => variable_get($delta . '-showchildren', 1)
     )
   );
@@ -85,9 +94,13 @@ function _tinytax_configure($delta){
     $form['hide_invalid'] = array(
       '#title' => t('Hide invalid terms'),
       '#description' => t('You can choose to hide terms within your Taxonomy.  This uses the "usage" field, which should be set to either "invalid" or "not accepted" for a term to be hidden'),
-      '#type' => 'radios', 
-      '#options' => array(0 => t('Show'), 1 => t('Hide'), 2 => t('Highlight')), 
-      '#default_value' => variable_get('tinytax_hide_invalid-'.$delta, 0)
+      '#type' => 'radios',
+      '#options' => array(
+        0 => t('Show'),
+        1 => t('Hide'),
+        2 => t('Highlight')
+      ),
+      '#default_value' => variable_get('tinytax_hide_invalid-' . $delta, 0)
     );
   }
   return $form;
@@ -99,7 +112,7 @@ function _tinytax_configure($delta){
 function _tinytax_save($delta, $edit){
   variable_set($delta, $edit['open_to_tid']);
   variable_set($delta . '-showchildren', $edit['show_child_numbers']);
-  variable_set('tinytax_hide_invalid-'.$delta, $edit['hide_invalid']);
+  variable_set('tinytax_hide_invalid-' . $delta, $edit['hide_invalid']);
 }
 
 /**
@@ -133,7 +146,7 @@ function _tinytax_get_vocabulary_name($vid){
 function tinytax_taxonomy_get_children($tid, $vid = 0){
   $children = taxonomy_get_children($tid, $vid);
   _tinytax_module_invoke_all_by_reference('taxonomy_term_load', $children);
-  if(variable_get('tinytax_hide_invalid-tinytax-'.$vid, FALSE) == 1){
+  if(variable_get('tinytax_hide_invalid-tinytax-' . $vid, FALSE) == 1){
     foreach($children as $tid => $child){
       if(isset($child->usage) && (strtolower($child->usage) == 'invalid' || strtolower($child->usage) == 'not accepted')){
         unset($children[$tid]);
@@ -150,8 +163,8 @@ function tinytax_taxonomy_get_children($tid, $vid = 0){
 function _tinytax_module_invoke_all_by_reference($hook, &$args){
   $modules = module_list();
   foreach($modules as $module => $values){
-    if(function_exists($module.'_'.$hook)){
-      $function = $module.'_'.$hook;
+    if(function_exists($module . '_' . $hook)){
+      $function = $module . '_' . $hook;
       $function($args);
     }
   }
@@ -170,7 +183,9 @@ function tinytax_taxonomy_get_parents_all($tid){
  * And again, but for get term
  */
 function tinytax_taxonomy_get_term($tid){
-  $terms = array($tid => taxonomy_get_term($tid));
+  $terms = array(
+    $tid => taxonomy_get_term($tid)
+  );
   _tinytax_module_invoke_all_by_reference('taxonomy_term_load', $terms);
   return array_pop($terms);
 }
@@ -204,8 +219,8 @@ function tinytax_js($tid){
   }
   $parents = array_reverse($parents);
   // Now we build the HTML, and output it.
-  print drupal_to_js(array(    
-    'html' => theme('tinytax_term_list', $parents, $children, $vid), 
+  print drupal_to_js(array(
+    'html' => theme('tinytax_term_list', $parents, $children, $vid),
     'vid' => $vid
   ));
   exit();
@@ -222,7 +237,6 @@ function _tinytax_list_blocks(){
   foreach($vocabularies as $vocabulary){
     if($vocabulary->module == 'taxonomy'){
       $blocks['tinytax-' . $vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array(
-        
         '@vocabulary' => check_plain($vocabulary->name)
       ));
     }
@@ -374,7 +388,7 @@ function _theme_tinytax_term_list_link($term, $vid){
       if(!is_numeric($active_tid)){
         $active_tid = 0;
       }
-    } else {
+    }else{
       $active_tid = 0;
     }
   }
@@ -387,40 +401,38 @@ function _theme_tinytax_term_list_link($term, $vid){
   if($term->tid == $active_tid){
     if(strlen($class)){
       $class .= ' active';
-    } else {
+    }else{
       $class = 'active';
     }
   }
   if(substr($term->tid, 0, 3) != 'vid'){
     $return_string .= l('<img src="' . base_path() . drupal_get_path('module', 'tinytax') . '/images/plus.gif" alt="Expand"/>', 'taxonomy/term/' . $term->tid, array(
-      
       'attributes' => array(
-        
-        'title' => t('Click to see the descendants of this name'), 
+        'title' => t('Click to see the descendants of this name'),
         'onclick' => "tinytaxalterroot('" . url('tinytax/get/' . $term->tid) . "');return false;"
-      ), 'html' => true
+      ),
+      'html' => true
     ));
   }else{
     $return_string .= l('<img src="' . base_path() . drupal_get_path('module', 'tinytax') . '/images/plus.gif" alt="Expand"/>', '', array(
-      
       'attributes' => array(
-        
-        'title' => t('Click to see the descendants of this name'), 
+        'title' => t('Click to see the descendants of this name'),
         'onclick' => "tinytaxalterroot('" . url('tinytax/get/' . $term->tid) . "');return false;"
-      ), 'html' => true
+      ),
+      'html' => true
     ));
   }
   $return_string .= ' ';
   if(substr($term->tid, 0, 3) != 'vid'){
-    if(variable_get('tinytax_hide_invalid-tinytax-'.$term->vid, 0) == 2 && isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
+    if(variable_get('tinytax_hide_invalid-tinytax-' . $term->vid, 0) == 2 && isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
       $link_text = '<span style="color:red;">' . $term->name . '</span>';
     }else{
       $link_text = $term->name;
     }
     $return_string .= l($link_text, 'taxonomy/term/' . $term->tid, array(
-      'html' => TRUE, 
+      'html' => TRUE,
       'attributes' => array(
-        'class' => $class, 
+        'class' => $class,
         'title' => t('Click to see all content tagged with this name')
       )
     ));
