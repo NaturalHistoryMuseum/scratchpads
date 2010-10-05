@@ -1344,6 +1344,22 @@ function scratchpadify_views_default_views(){
       'relationship' => 'none'
     )
   ));
+  $handler->override_option('sorts', array(
+    'weight' => array(
+      'order' => 'ASC',
+      'id' => 'weight',
+      'table' => 'node_weight',
+      'field' => 'weight',
+      'relationship' => 'none'
+    ),
+    'title' => array(
+      'order' => 'ASC',
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none'
+    )
+  ));
   $handler->override_option('arguments', array(
     'tid' => array(
       'default_action' => 'empty',
