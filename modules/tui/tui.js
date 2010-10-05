@@ -1,7 +1,15 @@
 Drupal.tui = new Object;
 
 Drupal.tui.init = function(context) {
-  $('.tui-term', context).click(function (){$('.tui-added-original').removeClass('tui-added-original');Drupal.tui.display_form(this);});
+  $('.tui-term', context).click(function (){
+    $('.tui-added-original').removeClass('tui-added-original');
+    if(!Drupal.tui.form_changed){
+      Drupal.tui.display_form(this);
+    }else{
+      Drupal.tui.form_changed = false;
+      $('#tabs').before('<div class="message error" style="margin-bottom:5px">'+Drupal.t('You may have unsaved data, please save it first.')+'</p></div>');
+    }
+  });
   $('#tabs > ul', context).tabs();
   $('#tabs > ul > li, #tui-tree-links img', context).bt({positions: 'top',fill: 'rgba(0, 0, 0, .7)',cssStyles: {color: 'white', 'font-size': '14px', width: 'auto'},closeWhenOthersOpen: true,spikeLength: 10,strokeWidth: 0});
   $('.tui-node-closed', context).click(function(){Drupal.tui.click_closed($(this).parent().parent().attr('id'));});
@@ -10,6 +18,9 @@ Drupal.tui.init = function(context) {
   $(window).resize(function(){Drupal.tui.resize_frame();$('#tui-form').width($('#tui').width()-$('#tui-tree').width()-2);});
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
   $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());},minWidth:250});
+  $('#taxonomy-form-term *', context).change(function(){Drupal.tui.form_changed = true;});
+  $('#taxonomy-form-term *', context).keypress(function(){Drupal.tui.form_changed = true;});
+  Drupal.tui.form_changed = false;
   Drupal.tui.resize_frame();
 }
 
@@ -107,8 +118,13 @@ Drupal.tui.click_buttonclick = function(img_clicked){
       break;
     case 'tui-next':
     case 'tui-previous':
-      Drupal.tui.selected_tab = $('.ui-tabs-selected > a').attr('href');
-      $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!$('#'+Drupal.tui.term_id).length){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.show_form_after_tree_rebuild = true;Drupal.tui.reload_tree();}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
+      if(!Drupal.tui.form_changed){
+        Drupal.tui.selected_tab = $('.ui-tabs-selected > a').attr('href');
+        $.ajax({cache:false,url:Drupal.settings.tui.callbacks.nextorprevious+"/"+img_clicked+"/"+Drupal.settings.tui.vocabulary+"/"+Drupal.tui.term_id,success:function(data){Drupal.tui.term_id = "tid-"+data;if(!$('#'+Drupal.tui.term_id).length){Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.show_form_after_tree_rebuild = true;Drupal.tui.reload_tree();}else{Drupal.tui.display_form($('#' + Drupal.tui.term_id));Drupal.tui.scrollto($('#' + Drupal.tui.term_id));}}});
+      }else{
+        Drupal.tui.form_changed = false;
+        $('#tabs').before('<div class="message error" style="margin-bottom:5px">'+Drupal.t('You may have unsaved data, please save it first.')+'</p></div>');
+      }
       break;
     case 'tui-undo':
       $.ajax({cache:false,url:Drupal.settings.tui.callbacks.undo+"/"+Drupal.settings.tui.vocabulary,success:function(data){if(data){Drupal.tui.searchtids=[data];Drupal.tui.term_id = "tid-"+data;Drupal.settings.tui.opentids[data] = data;Drupal.tui.update_link();Drupal.tui.reload_tree();}}});
