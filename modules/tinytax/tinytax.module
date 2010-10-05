@@ -378,17 +378,31 @@ function _theme_tinytax_term_list_link($term, $vid){
   // First, we'll decide which tid is the active term.
   static $active_tid = FALSE;
   if($active_tid === FALSE){
+    $referer = referer_uri();
     if(arg(0) == 'tinytax' && arg(1) == 'get'){
       // We've been called by ajax, lets get the referrer and use that for the
       // active tid
-      $string_pos = strpos(referer_uri(), 'taxonomy/term/');
+      // Note, this will break if someone has set an alias as 
+      // "taxonomy/term/[something other than JUST tid]" - Is that possible 
+      // though?
+      $string_pos = strpos($referer, 'taxonomy/term/');
       if($string_pos){
-        $active_tid = substr(referer_uri(), $string_pos + 14);
-      }
-      if(!is_numeric($active_tid)){
-        $active_tid = 0;
+        $active_tid = substr($referer, $string_pos + 14);
+        if(!is_numeric($active_tid)){
+          $active_tid = 0;
+        }
+      }else{
+        // Most likely that we're using aliases, lets translate it.
+        $src = db_result(db_query("SELECT src FROM {url_alias} WHERE dst = '%s'", substr($referer, strpos($referer, '/', 9) + 1)));
+        if(substr($src, 0, 14) == 'taxonomy/term/' && is_numeric(substr($src, 14))){
+          $active_tid = substr($src, 14);
+        }else{
+          $active_tid = 0;
+        }
       }
     }else{
+      // Set this as 0 if we're not here via AJAX.  This is fine, as Drupal 
+      // handles active URLs all by itself (Clever Drupal).
       $active_tid = 0;
     }
   }
