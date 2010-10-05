@@ -4,7 +4,8 @@
  * hook_form_alter
  */
 function autotag_form_alter(&$form, &$form_state, $form_id){
-  if($form['#id'] == 'node-form' && isset($form['taxonomy']) && count(_autotag_get_vids_for_type($form['type']['#value']))){
+  $autotag_vids = _autotag_get_vids_for_type($form['type']['#value']);
+  if($form['#id'] == 'node-form' && isset($form['taxonomy']) && count($autotag_vids)){
     // Always make the taxonomy section a fieldset, as it groups the button with
     // the autocomplete section.
     $form['taxonomy'] += array(
@@ -41,6 +42,13 @@ function autotag_form_alter(&$form, &$form_state, $form_id){
         )
       )
     );
+    // Message to define the dagger
+    $form['taxonomy']['autotag']['dagger'] = array(
+      '#value' => '<p style="margin:0"><small>&dagger; '.t('Only the marked vocabularies will use Autotag (Not those marked as "Required", or those NOT marked as "Multiple").').'</small></p>'
+    );
+    foreach($autotag_vids as $vid){
+      $form['taxonomy'][$vid]['#title'] .= ' &dagger;';
+    }
     // Get the default state for the checkbox
     $checkboxes = variable_get('autotag_save_checkbox', array());
     if($form_state['submitted'] && $form_state['clicked_button']['#submit'][0] == 'node_form_build_preview'){
