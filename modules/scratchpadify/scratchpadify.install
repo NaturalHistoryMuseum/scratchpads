@@ -356,6 +356,7 @@ function _scratchpadify_install_image_fields(){
  * 6170: Possible PHP Bug (or more likely I don't understand the complexities of
  *       "foreach") caused issues with the install and setting of
  *       image_gallery_* variable.  This fixes it.
+ * 6171: Add all images to the Library.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1440,5 +1441,32 @@ function scratchpadify_update_6170(){
   // view
   cache_clear_all('*', 'cache_views', TRUE);
   cache_clear_all('*', 'cache_views_data', TRUE);
+  return $ret;
+}
+
+/**
+ * Add all images to the Library.
+ */
+function scratchpadify_update_6171(){
+  $ret = array();
+  $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
+  if($vid){
+    $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE vid = %d AND name LIKE 'Library'", $vid));
+    if($tid){
+      // Note, the following is perfectly safe, as $tid is the result of a DB
+      // query.
+      $ret = update_sql("REPLACE INTO {term_node} (nid, vid, tid) SELECT nid, vid, $tid FROM node WHERE type = 'image'");
+    }else{
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => t('There does not appear to be a Library term')
+      );
+    }
+  }else{
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => t('image_gallery_nav_vocabulary variable has not been set.')
+    );
+  }
   return $ret;
 }

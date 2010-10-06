@@ -545,6 +545,20 @@ function scratchpadify_nodeapi(&$node, $op, $arg = 0){
     case 'load':
       $node->title = scratchpadify_square_tags_to_html($node->title);
       break;
+    case 'presave':
+      // If we're adding an image, we'll add it to the Library image gallery
+      if($node->type == 'image'){
+        // Get the vid
+        $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
+        if($vid){
+          $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE vid = %d AND name LIKE 'Library'", $vid));
+          if($tid){
+            if(is_array($node->taxonomy[$vid])){
+              $node->taxonomy[$vid][$tid] = $tid;
+            }
+          }
+        }
+      }
   }
 }
 
