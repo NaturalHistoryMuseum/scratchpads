@@ -7,7 +7,9 @@ function autotag_submitextra(form_values, element, options){
   $.each(Drupal.wysiwyg.instances, function(index, value){
     if(value.status != undefined && value.status == 1){
       var editor = tinyMCE.get(value.field);
-      editor.save();
+      if(editor){
+        editor.save();
+      }
       $.each(form_values, function(i, m){
         if(m.name == $('#'+value.field).attr('name')){
           form_values[i]['value'] = $('#'+value.field).val();
