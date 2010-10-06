@@ -347,7 +347,9 @@ function batax_use_batax($vid, $type = FALSE){
   }*/
   $vids = variable_get('batax_disable_vids', array());
   if(isset($vids[$vid]) && $vids[$vid]){return false;}
-  $num_terms = array_pop(db_fetch_array(db_query(db_rewrite_sql("SELECT COUNT(tid) FROM {term_data} t WHERE vid = %d", 't', 'tid'), $vid)));
+  // db_rewrite_sql was removed from the following query for being shit.  This
+  // isn't too much of an issue, as the count isn't returned to the users.
+  $num_terms = array_pop(db_fetch_array(db_query("SELECT COUNT(tid) FROM {term_data} t WHERE vid = %d", $vid)));
   $minimum_to_use_batax = variable_get('batax_max_options', 10);
   return $num_terms > $minimum_to_use_batax;
 }
