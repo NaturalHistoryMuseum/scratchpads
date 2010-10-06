@@ -43,7 +43,7 @@ function scratchpadify_install(){
         )
       )
     ),
-    array(
+    'image_technique' => array(
       array(
         'name' => 'Imaging Technique',
         'help' => 'Select the imaging technique that was used to produce the images.',
@@ -85,7 +85,7 @@ function scratchpadify_install(){
         )
       )
     ),
-    array(
+    'preparation_technique' => array(
       array(
         'name' => 'Preparation Technique',
         'help' => 'Describe how the specimen was prepared for imaging (Leave blank if your image isn\'t a specimen)',
@@ -98,7 +98,7 @@ function scratchpadify_install(){
       ),
       array()
     ),
-    array(
+    'keywords' => array(
       array(
         'name' => 'Keywords',
         'help' => 'Comma-separated keywords describing the image Parts, sex, form, developmental stage, view angle, people, building etc. Enclose phrases in "quotation marks". Examples: Antenna, Head, Juvenile, "First instar", conference, museum, specimen.',
@@ -280,6 +280,7 @@ function _scratchpadify_install_image_fields(){
     )
   );
 }
+
 /**
  * -------------- UPDATES ------------------------------------------------------
  * 
@@ -352,6 +353,9 @@ function _scratchpadify_install_image_fields(){
  * 6167: Unset "Promoted to front page" for darwincorelocation content type
  * 6168: Set the "Publication" and "Group" content types as og groups
  * 6169: Update image fields
+ * 6170: Possible PHP Bug (or more likely I don't understand the complexities of
+ *       "foreach") caused issues with the install and setting of
+ *       image_gallery_* variable.  This fixes it.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1408,5 +1412,33 @@ function scratchpadify_update_6169(){
   $ret[] = update_sql('UPDATE content_type_image SET image_publication_nid = bio_image_biblio_nid');
   content_field_instance_delete('bio_image_biblio', 'image', FALSE);
   content_field_instance_delete('bio_image_darwincore', 'image', TRUE);
+  return $ret;
+}
+
+/**
+ * Possible PHP Bug (or more likely I don't understand the complexities of 
+ * "foreach") caused issues with the install and setting of image_gallery_*
+ * variable.  This fixes it.
+ */
+function scratchpadify_update_6170(){
+  $ret = array();
+  $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE name = 'Image Galleries'"));
+  if($vid){
+    variable_set('image_gallery_vid', $vid);
+    variable_set('image_gallery_nav_vocabulary', $vid);
+    $ret[] = array(
+      'success' => TRUE,
+      'query' => t('Variables set')
+    );
+  }else{
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => t('Image Galleries vocabulary does not exist.')
+    );
+  }
+  // Clear the views cache as the variable above is used in the image gallery
+  // view
+  cache_clear_all('*', 'cache_views', TRUE);
+  cache_clear_all('*', 'cache_views_data', TRUE);
   return $ret;
 }
