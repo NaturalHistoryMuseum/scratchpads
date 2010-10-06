@@ -456,6 +456,13 @@ function _glossary_filter_process($format, $text) {
   if ($user->glossary_disable_indicator && variable_get('glossary_disable_indicator', FALSE)) {
     return $text;
   }
+  
+  // Lets see if we have the text cached already
+  $cid = md5($text);
+  $cache = cache_get($cid, 'cache_glossary');
+  if($cache){
+    return $cache->data;
+  }
 
   if (variable_get("glossary_vids_$format", 0)) {
     $text = ' '. $text .' ';
@@ -639,7 +646,9 @@ function _glossary_filter_process($format, $text) {
         'ins_after' => decode_entities($ins_after, array('"')),
         );
     }
-    return _glossary_insertlink($format, $text, $terms_replace);
+    $cache_text = _glossary_insertlink($format, $text, $terms_replace);
+    cache_set($cid, $cache_text, 'cache_glossary');
+    return $cache_text;
   }
   return $text;
 }
