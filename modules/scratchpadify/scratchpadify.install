@@ -1455,7 +1455,7 @@ function scratchpadify_update_6171(){
     if($tid){
       // Note, the following is perfectly safe, as $tid is the result of a DB
       // query.
-      $ret = update_sql("REPLACE INTO {term_node} (nid, vid, tid) SELECT nid, vid, $tid FROM node WHERE type = 'image'");
+      $ret[] = update_sql("REPLACE INTO {term_node} (nid, vid, tid) SELECT nid, vid, $tid FROM node WHERE type = 'image'");
     }else{
       $ret[] = array(
         'success' => FALSE,
