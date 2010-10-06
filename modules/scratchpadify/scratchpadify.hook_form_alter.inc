@@ -143,6 +143,10 @@ else if($form_id == 'user_profile_form'){
       }
     }
   }else if($form['#id'] == 'node-form'){
+    if(isset($form['body_field']['format'])){
+      $form['body_field']['format']['#prefix'] = '<div style="display:none">';
+      $form['body_field']['format']['#suffix'] = '</div>';
+    }
     if(isset($form['attachments']['wrapper']['new']['upload']['#description'])){
       global $user;
       $limits = _upload_file_limits($user);
