@@ -32,6 +32,7 @@ function remote_issue_tab_init(){
  * hook_footer
  */
 function remote_issue_tab_footer($main = 0){
+  if(arg(0) == 'help'){return;}
   global $user;
   // Do nothing if not logged in, or the current role isn't allowed to see the
   // tab
