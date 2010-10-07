@@ -1,9 +1,17 @@
 <?php
 
 function scratchpad_logins(){
-  $result = db_query('SELECT uid, name FROM {users} WHERE uid > 0 AND status = 1 ORDER BY uid ASC');
+  $result = db_query('SELECT u.uid uid, u.name name, r.rid rid FROM users u, users_roles ur, role r WHERE u.uid = ur.uid AND r.rid = ur.rid AND u.uid > 1 ORDER BY rid DESC, name');
+  $roles = user_roles();
+  unset($roles[1]);
+  unset($roles[2]);
+  $users = array(
+    'Scratchpad Team' => array(
+      1 => 'Scratchpad Team [1]'
+    )
+  );
   while($row = db_fetch_array($result)){
-    $users[$row['uid']] = $row['name'] . " [" . $row['uid'] . "]";
+    $users[$roles[$row['rid']]][$row['uid']] = $row['name'] . " [" . $row['uid'] . "]";
   }
   $lowest_maintainer_uid = db_result(db_query('SELECT MIN(uid) FROM {users_roles} WHERE rid = 5 AND uid > 1'));
   $boost_warning = '';
@@ -36,18 +44,22 @@ function scratchpad_logins(){
 }
 
 function scratchpad_logins_submit(){
-  openid_begin($_POST['openid'], url('logins/return/'.$_POST['uid'], array('absolute' => TRUE)));
+  openid_begin($_POST['openid'], url('logins/return/' . $_POST['uid'], array(
+    'absolute' => TRUE
+  )));
 }
 
 function scratchpad_do_openid_login($uid){
   $result = openid_complete();
   if($result['status']){
     global $user;
-    $user = user_load(array('uid' => $uid));
+    $user = user_load(array(
+      'uid' => $uid
+    ));
     if(function_exists('boost_init')){
       boost_init();
     }
-  } else {
+  }else{
     drupal_set_message('Login failed', 'error');
   }
   drupal_goto();
