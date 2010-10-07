@@ -33,9 +33,12 @@ function spm_settings(){
     '#title' => t('Select the Taxon Pages you would like to export'),
     '#default_value' => variable_get('spm_nodes', array()),
     '#options' => $options,
-    '#description' => '<p>'.t('Select each of the Taxon Pages that you would like to be made available as an export to EOL.  By not checking any Taxon Page, all will be exported.').'</p><p>'.
-                      t('If you\'d like your Taxon Pages to be made available to EOL, you must also <a href="!eol_url">register</a> this site\'s endpoint <b>( !endpoint_url )</b> with the Encyclopædia of Life.',
-                      array('!eol_url' => 'https://www.eol.org/content_partner/register?method=get', '!endpoint_url' => url('spm/export', array('absolute' => TRUE)))).'</p>'
+    '#description' => '<p>' . t('Select each of the Taxon Pages that you would like to be made available as an export to EOL.  By not checking any Taxon Page, all will be exported.') . '</p><p>' . t('If you\'d like your Taxon Pages to be made available to EOL, you must also <a href="!eol_url">register</a> this site\'s endpoint <b>( !endpoint_url )</b> with the Encyclopædia of Life.', array(
+      '!eol_url' => 'https://www.eol.org/content_partner/register?method=get',
+      '!endpoint_url' => url('spm/export', array(
+        'absolute' => TRUE
+      ))
+    )) . '</p>'
   );
   return system_settings_form($form);
 }
@@ -50,7 +53,7 @@ function spm_export_nodes($nids = FALSE){
     while($vid = db_result($results)){
       $vids[] = $vid;
     }
-  } else {
+  }else{
     // We need to convert  the array of nids to an array of vids
     $results = db_query('SELECT vid FROM {node} WHERE nid IN (%s)', implode(",", $nids));
     while($vid = db_result($results)){
@@ -63,11 +66,15 @@ function spm_export_nodes($nids = FALSE){
     $fields = variable_get('spm_fields', array());
     foreach($vids as $vid){
       $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
-      $node = node_load(array('vid' => $vid));
+      $node = node_load(array(
+        'vid' => $vid
+      ));
       $xml_array_child = array(
         'element_name' => 'taxon',
-        'dc:identifier' => 'scratchpad:nid:'.$node->nid,
-        'dc:source' => url('node/'.$node->nid, array('absolute' => TRUE)),
+        'dc:identifier' => 'scratchpad:nid:' . $node->nid,
+        'dc:source' => url('node/' . $node->nid, array(
+          'absolute' => TRUE
+        )),
         'dwc:ScientificName' => $node->title
       );
       unset($spm_array['nid']);
@@ -79,7 +86,7 @@ function spm_export_nodes($nids = FALSE){
             foreach($fields[$header_key] as $field_key => $field_value){
               if($field_key == $key){
                 $field_info = $field_value;
-                break(2);
+                break (2);
               }
             }
           }
@@ -87,27 +94,35 @@ function spm_export_nodes($nids = FALSE){
             'element_name' => 'dataObject',
             'dataType' => 'http://purl.org/dc/dcmitype/Text',
             'agent' => array(
-              'attributes' => array('role' => 'author'),
-              url('user/'.$node->uid, array('absolute' => TRUE))
+              'attributes' => array(
+                'role' => 'author'
+              ),
+              url('user/' . $node->uid, array(
+                'absolute' => TRUE
+              ))
             ),
             'dcterms:created' => $node->created,
             'dcterms:modified' => $node->changed,
             'dc:title' => $field_info['name'],
             'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
-            'dc:source' => url('node/'.$node->nid, array('absolute' => TRUE)),
+            'dc:source' => url('node/' . $node->nid, array(
+              'absolute' => TRUE
+            )),
             'subject' => 'http://rs.tdwg.org/ontology/voc/SPMInfoItems#' . $key,
             'dc:description' => array(
-              'attributes' => array('xml:lang' => 'en'),
+              'attributes' => array(
+                'xml:lang' => 'en'
+              ),
               htmlentities($value)
             )
           );
         }
-      }      
+      }
       $xml_array[] = $xml_array_child;
     }
-    module_load_include('xml.class.php','spm');
+    module_load_include('xml.class.php', 'spm');
     $xml = new EOLXML();
     $xml->fromArray($xml_array);
-    $xml->output();    
+    $xml->output();
   }
 }
