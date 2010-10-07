@@ -73,7 +73,8 @@ function spm_menu(){
       'file' => 'spm.export.inc',
       'access arguments' => array(
         'administer site configuration'
-      )
+      ),
+      'description' => t('Choose the content you would like to export to EOL')
     )
   );
 }

@@ -35,7 +35,7 @@ function spm_settings(){
     '#options' => $options,
     '#description' => '<p>' . t('Select each of the Taxon Pages that you would like to be made available as an export to EOL.  By not checking any Taxon Page, all will be exported.') . '</p><p>' . t('If you\'d like your Taxon Pages to be made available to EOL, you must also <a href="!eol_url">register</a> this site\'s endpoint <b>( !endpoint_url )</b> with the Encyclopædia of Life.', array(
       '!eol_url' => 'https://www.eol.org/content_partner/register?method=get',
-      '!endpoint_url' => url('spm/export', array(
+      '!endpoint_url' => url('spm/export.xml', array(
         'absolute' => TRUE
       ))
     )) . '</p>'
