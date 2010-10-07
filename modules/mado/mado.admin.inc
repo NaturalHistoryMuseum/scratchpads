@@ -4,15 +4,28 @@
  * Save the theme for all, or just the one page
  */
 function mado_apply_to_all(){
-  $row = db_fetch_array(db_query("SELECT * FROM {mado} WHERE identifier = '%s'", $_GET['ident']));
+  // I'm using this funciton to also delete the ident for a page so that it can
+  // use the default.
   $ident_parts = explode("/", $_GET['ident']);
-  if($row){
-    db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
-    db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $row['blocks']);
-    // Also delete the shit for this ident, as then we can update it from any
-    // other page.
+  if(arg(2) == 'deletethis'){
     db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['ident']);
+  } else {
+    $row = db_fetch_array(db_query("SELECT * FROM {mado} WHERE identifier = '%s'", $_GET['ident']));
+    if($row){
+      db_query("DELETE FROM {mado} WHERE identifier = '%s'", $ident_parts[0]);
+      db_query("INSERT INTO {mado} (identifier, blocks) VALUES ('%s','%s')", $ident_parts[0], $row['blocks']);
+      // Also delete the shit for this ident, as then we can update it from any
+      // other page.
+      db_query("DELETE FROM {mado} WHERE identifier = '%s'", $_GET['ident']);
+      // Finally, if we've got override all set, then we want to delete all other
+      // set pages.
+      if(arg(2) == 'override'){
+        db_query("DELETE FROM {mado} WHERE identifier LIKE '%s%%'", $ident_parts[0].'/');
+      }
+    }
   }
+  // Clear the cache when saving for all.
+  cache_clear_all('mado-'.$ident_parts[0].'-', 'cache', TRUE);
   drupal_goto('taxonomy/term/'.$ident_parts[1]);
 }
 

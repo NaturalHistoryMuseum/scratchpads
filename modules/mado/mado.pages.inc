@@ -45,12 +45,6 @@ function mado_front_page(){
     $output .= theme('mado_block', $block, $id, $before_divider);
   }      
   $output .= '</div>';
-  if(user_access('mado sort')){
-    $output .= '<div id="mado_apply">
-        <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
-        <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
-      </div>';
-  }
   // Blank title
   drupal_set_title('');
   return $output;  
@@ -135,6 +129,8 @@ function mado_term_page($str_tids = '', $depth = 0, $op = 'page') {
         $output .= '<div id="mado_apply">
             <p>'.l('Apply to all unset pages','mado/applytoall',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
             <p>'.l('Apply to just this page','taxonomy/term/'.$tids[0]).'</p>
+            <p>'.l('Apply to all (Delete individual set pages)','mado/applytoall/override',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
+            <p>'.l('Use default for this page','mado/applytoall/deletethis',array('query' => array('ident' => $vids[0].'/'.$tids[0]))).'</p>
           </div>';
       }
       return $output;
