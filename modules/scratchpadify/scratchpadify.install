@@ -357,6 +357,7 @@ function _scratchpadify_install_image_fields(){
  *       "foreach") caused issues with the install and setting of
  *       image_gallery_* variable.  This fixes it.
  * 6171: Add all images to the Library.
+ * 6172: Add creativecommons_lite back to the image content type
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1469,4 +1470,12 @@ function scratchpadify_update_6171(){
     );
   }
   return $ret;
+}
+
+/**
+ * Add creativecommons_lite back to the image content type
+ */
+function scratchpadify_update_6172(){
+  variable_set('creativecommons_lite_image', 1);  
+  return array('#finished' => TRUE);
 }
