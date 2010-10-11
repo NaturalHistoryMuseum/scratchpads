@@ -18,7 +18,7 @@ function femail_drush_help($section){
 
 function _femail_get_msg(){
   $msg = array(
-    'body' => fread(STDIN, 1000000)
+    'body' => fread(STDIN, 20000000)
   );
   $mailparse = mailparse_msg_create();
   mailparse_msg_parse($mailparse, $msg['body']);
