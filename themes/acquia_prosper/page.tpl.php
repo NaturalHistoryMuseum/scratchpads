@@ -24,6 +24,13 @@
 
       <!-- header-group row: width = grid_width -->
       <div id="header-group-wrapper" class="header-group-wrapper full-width">
+        <div id="euro-logos">
+          <p>
+          <?php echo l('<img src="/files/fp7.png">', 'http://cordis.europa.eu/fp7/home_en.html', array('html' => 1))?>
+          <?php echo l('<img src="/files/europe.png">', 'http://europa.eu/index_en.htm', array('html' => 1))?><br/>
+          <?php echo l('<img src="/files/e-infra.png">', 'http://cordis.europa.eu/fp7/ict/e-infrastructure/home_en.html', array('html' => 1))?>
+          </p>
+        </div>
         <div id="header-group" class="header-group row <?php print $grid_width; ?>">
           <div id="header-group-inner" class="header-group-inner inner">
             <?php if ($logo || $site_name || $site_slogan): ?>
