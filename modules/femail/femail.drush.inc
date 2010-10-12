@@ -86,6 +86,9 @@ function _femail_get_msg(){
       $pathinfo = pathinfo($part_data['disposition-filename']);
       if(in_array(strtolower($pathinfo['extension']), $allowed_extensions)){
         // Write the data to a file
+        watchdog('femail', 'Saving file to "&file"', array(
+          '@file' => base_path() . '/' . file_directory_path() . '/' . $part_data['disposition-filename']
+        ));
         $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), base_path() . '/' . file_directory_path() . '/' . $part_data['disposition-filename']);
         // The file is now saved, we should now add an entry to the files table.
         $pathinfo = pathinfo($filename);
