@@ -84,32 +84,31 @@ function _femail_get_msg(){
       // to
       $allowed_extensions = explode(" ", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
       $pathinfo = pathinfo($part_data['disposition-filename']);
-      if(in_array(strtolower($pathinfo['extension']), $allowed_extensions)){
-        // Write the data to a file
-        // As we're using Drush, we need the server root.        
-        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), drush_get_context('DRUSH_DRUPAL_ROOT') . '/' . file_directory_path() . '/' . $part_data['disposition-filename']);
-        // The file is now saved, we should now add an entry to the files table.
-        $pathinfo = pathinfo($filename);
-        $file = new stdClass();
-        $file->filename = $pathinfo['filename'];
-        $file->filepath = file_directory_path().'/'.$pathinfo['basename'];
-        $file->filemime = $part_data['content-type'];
-        $file->source = 'femail';
-        $file->filesize = filesize($filename);
-        $file->uid = 0; // FIXME - This will need to be updated.  Do we know the UID here?
-        $file->status = 0;
-        $file->new = 1;
-        $file->list = 1;
-        $file->description = $pathinfo['filename'];
-        $file->weight = 0;
-        $file->timestamp = time();
-        drupal_write_record('files', $file);
-        $msg['files'][$file->fid] = $file;
+      if(substr(strtolower($pathinfo['extension']), 0, 3) == 'php'){ // Covers php, php3, phps, php4, php5, etc
+        // We NEVER allow the upload of PHP files, as potentially messages could
+        // have their "From" address spoofed, resulting in a potential route of
+        // attack.
+        watchdog('femail', 'Femail refuses to allow the upload of PHP files. Somebody just posted "@file"', array(
+          '@file' => $pathinfo['basename']
+        ), WATCHDOG_NOTICE);
       }else{
-        // Not allowed to upload files of this type.
-        watchdog('femail', 'Posting of files with extension "@extension" is not allowed.', array(
-          '@extension' => $pathinfo['extension']
-        ));
+        if(in_array(strtolower($pathinfo['extension']), $allowed_extensions)){
+          // Write the data to a tmp file, which will be moved later if the 
+          // message was from a legitimate user.
+          // As we're using Drush, we need the server root.
+          $temp_name = tempnam(file_directory_temp(), 'fem');
+          file_put_contents($temp_name, base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])));
+          $msg['files'][] = array(
+            'temp_name' => $temp_name,
+            'mime' => $part_data['content-type'],
+            'original_name' => $part_data['disposition-filename']
+          );
+        }else{
+          // Not allowed to upload files of this type.
+          watchdog('femail', 'Posting of files with extension "@extension" is not allowed.', array(
+            '@extension' => $pathinfo['extension']
+          ));
+        }
       }
     }
     // Get the msgid
@@ -221,6 +220,34 @@ function femail_drush_callback(){
       $user = user_load(array(
         'uid' => 0
       ));
+    }
+  }
+  // Now that we have a UID, we can upload the files.  We'll check for the 
+  // upload permissions too (we need both)
+  $temp_files = $msg['files'];
+  unset($msg['files']);
+  if(user_access('upload files') && user_access('upload files to comments')){
+    foreach($temp_files as $tmpfile){
+      $filename = $tmpfile['temp_name'];
+      if(file_move($filename, drush_get_context('DRUSH_DRUPAL_ROOT') . '/' . file_directory_path() . '/' . $tmpfile['original_name'])){
+        // The file is now saved, we should now add an entry to the files table.
+        $pathinfo = pathinfo($filename);
+        $file = new stdClass();
+        $file->filename = $pathinfo['basename'];
+        $file->filepath = file_directory_path() . '/' . $pathinfo['basename'];
+        $file->filemime = $tmpfile['mime'];
+        $file->source = 'femail';
+        $file->filesize = filesize($filename);
+        $file->uid = $user->uid;
+        $file->status = 0;
+        $file->new = 1;
+        $file->list = 1;
+        $file->description = $pathinfo['filename'];
+        $file->weight = 0;
+        $file->timestamp = time();
+        drupal_write_record('files', $file);
+        $msg['files'][$file->fid] = $file;
+      }
     }
   }
   // We should update the uid of the files that have been uploaded (if any)
