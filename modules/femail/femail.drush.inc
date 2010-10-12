@@ -16,6 +16,17 @@ function femail_drush_help($section){
   }
 }
 
+function _femail_decode_text($text){
+  if(strtolower(substr($text, 0, 8)) == '=?utf-8?'){
+    if(strtolower(substr($text, 0, 9)) == '=?utf-8?q'){
+      $text = quoted_printable_decode(substr($text, 10, strpos($text, '?=')-10));
+    } elseif(strtolower(substr($text, 0, 9)) == '=?utf-8?b'){
+      $text = base64_decode(substr($text, 10, strpos($text, '?=')-10));
+    }
+  }
+  return $text;
+}
+
 function _femail_get_msg(){
   $filename = fread(STDIN, 200);
   $original_message = file_get_contents($filename);
@@ -31,7 +42,7 @@ function _femail_get_msg(){
     $part = mailparse_msg_get_part($mailparse, $s);
     $part_data = mailparse_msg_get_part_data($part);
     if(isset($part_data['headers']['subject'])){
-      $msg['title'] = $part_data['headers']['subject'];
+      $msg['title'] = _femail_decode_text($part_data['headers']['subject']);
     }
     // Get the From: header, which will be used to work out which user to
     // attribute this node/comment to
@@ -83,6 +94,7 @@ function _femail_get_msg(){
       // First we check the file extension, and only continue if we're allowed 
       // to
       $allowed_extensions = explode(" ", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
+      $part_data['disposition-filename'] = _femail_decode_text($part_data['disposition-filename']);
       $pathinfo = pathinfo($part_data['disposition-filename']);
       if(substr(strtolower($pathinfo['extension']), 0, 3) == 'php'){ // Covers php, php3, phps, php4, php5, etc
         // We NEVER allow the upload of PHP files, as potentially messages could
