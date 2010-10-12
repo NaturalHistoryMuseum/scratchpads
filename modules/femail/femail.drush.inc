@@ -84,9 +84,9 @@ function _femail_get_msg(){
       // to
       $allowed_extensions = explode(" ", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
       $pathinfo = pathinfo($part_data['disposition-filename']);
-      if(in_array($pathinfo['extension'], $allowed_extensions)){
+      if(in_array(strtolower($pathinfo['extension']), $allowed_extensions)){
         // Write the data to a file
-        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), file_directory_path() . '/' . $part_data['disposition-filename']);
+        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), base_path() . '/' . file_directory_path() . '/' . $part_data['disposition-filename']);
         // The file is now saved, we should now add an entry to the files table.
         $pathinfo = pathinfo($filename);
         $file = new stdClass();
