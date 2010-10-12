@@ -67,7 +67,7 @@ function femail_og($op, $gid, $uid, $args){
   switch($op){
     case 'user insert':
       // Add the subscription if we're using og_forum
-      if(module_exists('og_forum')){      
+      if(module_exists('og_forum')){
         $tid = db_result(db_query('SELECT tid FROM {og_term} WHERE nid = %d', $gid));
         if($tid && $uid){
           // Use replace, incase they've already subscribed.

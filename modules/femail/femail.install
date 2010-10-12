@@ -223,13 +223,13 @@ function femail_requirements($phase){
       if($phase == 'runtime'){
         $requirements['femail_forum_comment_upload']['value'] = $t('Comment Upload module enabled and correctly setup.');
       }
-    } else {
+    }else{
       $requirements['femail_forum_comment_upload']['severity'] = REQUIREMENT_WARNING;
       if($phase == 'runtime'){
         $requirements['femail_forum_comment_upload']['value'] = $t('Comment Upload module enabled but incorrectly setup.  Please enable uploads for comments on the Forum content type');
       }
-    }    
-  } else {
+    }
+  }else{
     // Give a polite message that this module "ROCKS" when the comment_upload 
     // module is also enabled.
     $requirements['femail_forum_comment_upload']['severity'] = REQUIREMENT_WARNING;
@@ -251,8 +251,8 @@ function femail_requirements($phase){
       // User has permission, we need to check whether they also have
       if(!(in_array('post comments', $perms) && in_array('upload files to comments', $perms) && in_array('create forum topics', $perms) && in_array('upload files', $perms))){
         if($phase == 'runtime'){
-          $requirements['femail_permissions']['value'] .= '<li>'.$roles[$row['rid']].'</li>';
-        } 
+          $requirements['femail_permissions']['value'] .= '<li>' . $roles[$row['rid']] . '</li>';
+        }
         $requirements['femail_permissions']['severity'] = REQUIREMENT_WARNING;
       }
     }
@@ -260,7 +260,7 @@ function femail_requirements($phase){
   if($phase == 'runtime'){
     if($requirements['femail_permissions']['severity'] == REQUIREMENT_OK){
       $requirements['femail_permissions']['value'] = $t('All roles with the permission "post by femail" have the other required permissions "post comments"; "upload files to comments"; "create forum topics"; "upload files"');
-    } else {
+    }else{
       $requirements['femail_permissions']['value'] .= '</ul></p>';
     }
   }

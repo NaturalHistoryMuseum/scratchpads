@@ -86,7 +86,7 @@ function _femail_get_msg(){
       $pathinfo = pathinfo($part_data['disposition-filename']);
       if(in_array($pathinfo['extension'], $allowed_extensions)){
         // Write the data to a file
-        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), file_directory_path().'/'.$part_data['disposition-filename']);
+        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), file_directory_path() . '/' . $part_data['disposition-filename']);
         // The file is now saved, we should now add an entry to the files table.
         $pathinfo = pathinfo($filename);
         $file = new stdClass();
@@ -104,9 +104,11 @@ function _femail_get_msg(){
         $file->timestamp = time();
         drupal_write_record('files', $file);
         $msg['files'][$file->fid] = $file;
-      } else {
+      }else{
         // Not allowed to upload files of this type.
-        watchdog('femail', 'Posting of files with extension "@extension" is not allowed.', array('@extension' => $pathinfo['extension']));
+        watchdog('femail', 'Posting of files with extension "@extension" is not allowed.', array(
+          '@extension' => $pathinfo['extension']
+        ));
       }
     }
     // Get the msgid
@@ -222,7 +224,7 @@ function femail_drush_callback(){
   }
   // We should update the uid of the files that have been uploaded (if any)
   if($user->uid && count($msg['files'])){
-    db_query('UPDATE {files} SET uid = %d WHERE fid IN ('.implode(',', array_keys($msg['files'])).')', $user->uid);
+    db_query('UPDATE {files} SET uid = %d WHERE fid IN (' . implode(',', array_keys($msg['files'])) . ')', $user->uid);
   }
   if(!user_access('post by femail')){
     // Add a message to the logs so that we know we received a message and that
