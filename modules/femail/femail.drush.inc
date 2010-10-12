@@ -17,8 +17,10 @@ function femail_drush_help($section){
 }
 
 function _femail_get_msg(){
+  $filename = fread(STDIN, 200);
+  $original_message = file_get_contents($filename);
   $msg = array(
-    'body' => fread(STDIN, 20000000)
+    'body' => $original_message
   );
   $mailparse = mailparse_msg_create();
   mailparse_msg_parse($mailparse, $msg['body']);
@@ -76,6 +78,37 @@ function _femail_get_msg(){
         }
       }
     }
+    // We'll attempt to save the attachments
+    if(isset($part_data['content-disposition']) && $part_data['content-disposition'] == 'attachment'){
+      // First we check the file extension, and only continue if we're allowed 
+      // to
+      $allowed_extensions = explode(" ", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
+      $pathinfo = pathinfo($part_data['disposition-filename']);
+      if(in_array($pathinfo['extension'], $allowed_extensions)){
+        // Write the data to a file
+        $filename = file_save_data(base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])), file_directory_path().'/'.$part_data['disposition-filename']);
+        // The file is now saved, we should now add an entry to the files table.
+        $pathinfo = pathinfo($filename);
+        $file = new stdClass();
+        $file->filename = $pathinfo['filename'];
+        $file->filepath = $filename;
+        $file->filemime = $part_data['content-type'];
+        $file->source = 'femail';
+        $file->filesize = filesize($filename);
+        $file->uid = 0; // FIXME - This will need to be updated.  Do we know the UID here?
+        $file->status = 0;
+        $file->new = 1;
+        $file->list = 1;
+        $file->description = $pathinfo['filename'];
+        $file->weight = 0;
+        $file->timestamp = time();
+        drupal_write_record('files', $file);
+        $msg['files'][$file->fid] = $file;
+      } else {
+        // Not allowed to upload files of this type.
+        watchdog('femail', 'Posting of files with extension "@extension" is not allowed.', array('@extension' => $pathinfo['extension']));
+      }
+    }
     // Get the msgid
     if(isset($part_data['headers']['message-id'])){
       $msg['msgid'] = $part_data['headers']['message-id'];
@@ -103,7 +136,12 @@ function _femail_post_comment($msg, $user, $status){
   if($row){
     // Check we have permission to post a forum post.
     if(user_access('post comments')){
-      // Get the tid of the forum that this post will go into
+      // FFS, the comment_upload module doesn't accept files as objects. Ah well
+      // we'll convert them here.
+      $ffs_fussy_cu = array();
+      foreach($msg['files'] as $fid => $file_tmp){
+        $ffs_fussy_cu[$fid] = (array)$file_tmp;
+      }
       $edit = array(
         'author' => $user->name,
         'subject' => $msg['title'],
@@ -115,7 +153,8 @@ function _femail_post_comment($msg, $user, $status){
         'date' => 'now',
         'name' => $user->name,
         'status' => $status,
-        'format' => variable_get('femail_input_format', NULL)
+        'format' => variable_get('femail_input_format', NULL),
+        'files' => $ffs_fussy_cu
       );
       $cid = comment_save($edit);
       watchdog('femail', 'Posted forum comment: ' . l($msg['title'], 'node/' . $row['nid'], array(
@@ -150,6 +189,7 @@ function _femail_post_forum_topic($msg, $user, $status){
   );
   $node->status = $status;
   $node->format = variable_get('femail_input_format', NULL);
+  $node->files = $msg['files'];
   node_save($node);
   watchdog('femail', 'Posted forum topic: ' . l($node->title, 'node/' . $node->nid), array(), WATCHDOG_INFO);
 }
@@ -179,6 +219,10 @@ function femail_drush_callback(){
         'uid' => 0
       ));
     }
+  }
+  // We should update the uid of the files that have been uploaded (if any)
+  if($user->uid && count($msg['files'])){
+    db_query('UPDATE {files} SET uid = %d WHERE fid IN ('.implode(',', array_keys($msg['files'])).')', $user->uid);
   }
   if(!user_access('post by femail')){
     // Add a message to the logs so that we know we received a message and that

@@ -12,6 +12,4 @@ cat <&0 > $TMPFILE
 # Find the domain name
 DOMAIN=`cat $TMPFILE | grep ^To | head -n1 | sed -r "s/.*@//;s/([a-zA-Z0-9\-\.]*).*/\1/"`
 # Execute Drush
-cat $TMPFILE | drush -l http://$DOMAIN femail
-# Delete the temp file
-rm $TMPFILE
+echo -n $TMPFILE | drush -l http://$DOMAIN femail
