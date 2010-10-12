@@ -92,7 +92,7 @@ function _femail_get_msg(){
         $pathinfo = pathinfo($filename);
         $file = new stdClass();
         $file->filename = $pathinfo['filename'];
-        $file->filepath = file_directory_path().'/'.$pathinfo['filename'];
+        $file->filepath = file_directory_path().'/'.$pathinfo['basename'];
         $file->filemime = $part_data['content-type'];
         $file->source = 'femail';
         $file->filesize = filesize($filename);
