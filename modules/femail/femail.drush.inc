@@ -79,7 +79,7 @@ function _femail_get_msg(){
       }
     }
     // We'll attempt to save the attachments
-    if(isset($part_data['content-disposition']) && $part_data['content-disposition'] == 'attachment'){
+    if(isset($part_data['content-disposition']) && $part_data['content-disposition'] == 'attachment' || $part_data['content-disposition'] == 'inline'){
       // First we check the file extension, and only continue if we're allowed 
       // to
       $allowed_extensions = explode(" ", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
