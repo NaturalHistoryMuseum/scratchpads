@@ -250,9 +250,14 @@ function femail_drush_callback(){
       }
     }
   }
-  // We should update the uid of the files that have been uploaded (if any)
-  if($user->uid && count($msg['files'])){
-    db_query('UPDATE {files} SET uid = %d WHERE fid IN (' . implode(',', array_keys($msg['files'])) . ')', $user->uid);
+  if(count($msg['files'])){
+    $additional_text = "Files:\n";
+    foreach($msg['files'] as $file){
+      $additional_text .= url('', array(
+        'absolute' => TRUE
+      )) . $file->filepath . "\n";
+    }
+    $msg['body'] = $additional_text . "\n" . $msg['body'];
   }
   if(!user_access('post by femail')){
     // Add a message to the logs so that we know we received a message and that
