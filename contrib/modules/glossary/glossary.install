@@ -110,7 +110,7 @@ function glossary_install(){
   drupal_set_message(t('The Glossary module has been installed with default settings. To change the settings, <a href="!settings_uri">click here</a>.', array(
     '!settings_uri' => url('admin/settings/glossary')
   )));
-  drupal_install_schema('term_node');
+  drupal_install_schema('glossary');
 }
 
 /* Implementation of hook_uninstall.
