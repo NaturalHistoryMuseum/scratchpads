@@ -32,9 +32,10 @@ function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $ci
     if(count($files)){
       $additional_text = "Files:\n";
       foreach($files as $file){
+        $file = (array)$file;
         $additional_text .= url('', array(
           'absolute' => TRUE
-        )) . $file->filepath . "\n";
+        )) . $file['filepath'] . "\n";
       }
       $body = $additional_text . "\n" . $body;
     }
