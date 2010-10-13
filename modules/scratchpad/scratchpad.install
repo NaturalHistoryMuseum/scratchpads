@@ -49,6 +49,11 @@ function scratchpad_requirements($phase) {
         $first_project = reset($data);
         $requirements['update_contrib'] = _update_requirement_check($first_project, 'contrib');
       }
+      $requirements['update_contrib']['title'] = 'Scratchpad: '.$requirements['update_contrib']['title'];
+      $requirements['update_contrib']['description'] = '<strong>All Scratchpad module updates are handled by the Scratchpad Team, unless you are running your own Scratchpad server, please disregard the following message</strong>: '.$requirements['update_contrib']['description'];  
+      if($requirements['update_contrib']['severity']){
+        $requirements['update_contrib']['severity'] = 1;
+      }
     }
     else {
       $requirements['update_core']['title'] = t('Drupal core update status');
