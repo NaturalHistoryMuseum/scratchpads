@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * hook_install
+ */
+function scratchpad_install(){
+  drupal_install_schema('update');  
+}
+
+/**
  * Update to ensure the menu is correctly set, and to delete other openids.
  */
 function scratchpad_update_6101(){
@@ -9,4 +16,47 @@ function scratchpad_update_6101(){
   $ret[] = update_sql("DELETE FROM authmap WHERE module='openid' AND authname IN ('http://vsmith.info/', 'http://simon.rycroft.name/', 'http://postlet.com/', 'http://scratchpads.eu/')");
   menu_rebuild();
   return $ret;
+}
+
+/**
+ * Install the update schema
+ */
+function scratchpad_update_6102(){
+  drupal_install_schema('update');
+}
+
+/**
+ * Implementation of hook_requirements().
+ *
+ * This is all stolen from the update module, with a couple of minor changes.
+ */
+function scratchpad_requirements($phase) {
+  module_load_include('module', 'update');
+  if ($phase == 'runtime') {
+    if ($available = update_get_available(FALSE)) {
+      module_load_include('inc', 'update', 'update.compare');
+      $data = update_calculate_project_data($available);
+      // First, populate the requirements for core:
+      //$requirements['update_core'] = _update_requirement_check($data['drupal'], 'core');
+      // We don't want to check drupal a second time.
+      unset($data['drupal']);
+      if (!empty($data)) {
+        // Now, sort our $data array based on each project's status. The
+        // status constants are numbered in the right order of precedence, so
+        // we just need to make sure the projects are sorted in ascending
+        // order of status, and we can look at the first project we find.
+        uasort($data, '_update_project_status_sort');
+        $first_project = reset($data);
+        $requirements['update_contrib'] = _update_requirement_check($first_project, 'contrib');
+      }
+    }
+    else {
+      $requirements['update_core']['title'] = t('Drupal core update status');
+      $requirements['update_core']['value'] = t('No update data available');
+      $requirements['update_core']['severity'] = REQUIREMENT_WARNING;
+      $requirements['update_core']['reason'] = UPDATE_UNKNOWN;
+      $requirements['update_core']['description'] = _update_no_data();
+    }
+    return $requirements;
+  }
 }

@@ -35,6 +35,13 @@ function scratchpad_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'scratchpad.login.inc'
     ),
+    'admin/reports/updates/check' => array(
+      'title' => 'Manual update check',
+      'page callback' => 'update_manual_status',
+      'access arguments' => array('administer site configuration'),
+      'file' => 'update.fetch.inc',
+      'type' => MENU_CALLBACK,
+    ),
     'report_scratchpad' => array(
       'title' => '',
       'page callback' => 'scratchpad_report_site',
@@ -100,6 +107,13 @@ function scratchpad_menu(){
 function scratchpad_cron(){
   module_load_include('cron.inc','scratchpad');
   _scratchpad_cron();
+  // Cron should check for updates if there is no update data cached or if the
+  // configured update interval has elapsed.
+  module_load_include('module', 'update');
+  if (!_update_cache_get('update_available_releases') || ((time() - variable_get('update_last_check', 0)) > 604800)) { // Seconds in a week
+    update_refresh();
+    // Perhaps notify scratchpad@nhm.ac.uk of update status here.
+  }
 }
 
 /**
