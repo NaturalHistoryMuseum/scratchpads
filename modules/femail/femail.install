@@ -156,6 +156,9 @@ function femail_uninstall(){
  * Implementation of hook_requirements
  */
 function femail_requirements($phase){
+  // Check that the function user_roles exists, else we're probably installing
+  // from scratch
+  if(!function_exists('user_roles')){return;}
   // Check that we have the mailparse functions installed
   $t = get_t();
   $requirements = array(
