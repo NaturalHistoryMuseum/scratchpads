@@ -186,6 +186,7 @@ function scratchpad_profile_modules(){
     'aggregator',
     'uwho_client',
     'remote_issue_tab',
+    'comment_upload',
     // Classification (Temporary)
     'classification',
     'classification_scratchpads',
@@ -335,6 +336,8 @@ function scratchpad_profile_install_profile(){
 }
 
 function scratchpad_profile_tasks_2(){
+  // Comment upload module - enable for forums
+  variable_set('comment_upload_forum', 1);
   // Remote Issues Tab
   $feed = array(
     'title' => 'Scratchpads Issue Queue',
@@ -995,6 +998,8 @@ function scratchpad_profile_set_perms(){
       "submit form without hashcash",
       "subscribe to content in groups",
       "subscribe to newsletters",
+      "upload files",
+      "upload files to comments",
       "view own user location",
       "view revisions"
     ));
@@ -1036,7 +1041,6 @@ function scratchpad_profile_set_perms(){
       "submit latitude/longitude",
       "translate content",
       "translate interface",
-      "upload files",
       "view advanced help index",
       "view advanced help popup",
       "view advanced help topic"
