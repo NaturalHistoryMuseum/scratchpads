@@ -329,9 +329,9 @@ function femail_comment($comment, $op){
       // Include file
       module_load_include('mail.inc', 'femail');
       if(is_array($row)){
-        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid'], array_pop($row));
+        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['files'], $comment['cid'], array_pop($row));
       }else{
-        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['cid']);
+        _femail_send_message($node->forum_tid, $comment['subject'], $comment['comment'], $node->nid, $comment['files'], $comment['cid']);
       }
     }
   }
@@ -347,7 +347,7 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
     if($forum_tid){
       module_load_include('mail.inc', 'femail');
-      _femail_send_message($forum_tid, $node->title, $node->body, $node->nid);
+      _femail_send_message($forum_tid, $node->title, $node->body, $node->nid, $node->files);
     }
   }
 }
