@@ -314,6 +314,15 @@ function femail_taxonomy($op, $type, $array = NULL){
 }
 
 /**
+ * Implementation of hook_user
+ */
+function femail_user($op, &$edit, &$account, $category = NULL){
+  if($op == 'delete'){
+    db_query('DELETE FROM {femail_user_subscriptions} WHERE uid = %d', $account->uid);
+  }
+}
+
+/**
  * Implementation of hook_comment
  */
 function femail_comment($comment, $op){
