@@ -15,7 +15,7 @@ function _femail_get_emails($tid, $account){
   return $emails;
 }
 
-function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto = FALSE){
+function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $cid = 0, $inreplyto = FALSE){
   global $user;
   $emails = _femail_get_emails($tid, $user);
   $forum_term = taxonomy_get_term($tid);
@@ -28,7 +28,16 @@ function _femail_send_message($tid, $subject, $body, $nid, $cid = 0, $inreplyto 
     $node = node_load(array(
       'nid' => $nid
     ));
-    db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);
+    db_query("INSERT INTO {femail_msgs} (nid, cid, msgid) VALUES (%d, %d, '%s')", $nid, $cid, $msgid);  
+    if(count($files)){
+      $additional_text = "Files:\n";
+      foreach($files as $file){
+        $additional_text .= url('', array(
+          'absolute' => TRUE
+        )) . $file->filepath . "\n";
+      }
+      $body = $additional_text . "\n" . $body;
+    }
     $message = array(
       'id' => 'femail_message',
       'from' => $from,
