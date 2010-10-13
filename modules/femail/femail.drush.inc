@@ -109,7 +109,12 @@ function _femail_get_msg(){
           // message was from a legitimate user.
           // As we're using Drush, we need the server root.
           $temp_name = tempnam(file_directory_temp(), 'fem');
-          file_put_contents($temp_name, base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])));
+          if($part_data['transfer-encoding'] == 'base64'){
+            file_put_contents($temp_name, base64_decode(substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body'])));            
+          }else{
+            // Default to no decoding.
+            file_put_contents($temp_name, substr($original_message, $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']));
+          }
           $msg['files'][] = array(
             'temp_name' => $temp_name,
             'mime' => $part_data['content-type'],
@@ -236,40 +241,42 @@ function femail_drush_callback(){
   }
   // Now that we have a UID, we can upload the files.  We'll check for the 
   // upload permissions too (we need both)
-  $temp_files = $msg['files'];
-  unset($msg['files']);
-  if(user_access('upload files') && user_access('upload files to comments')){
-    foreach($temp_files as $tmpfile){
-      $filename = $tmpfile['temp_name'];
-      if(file_move($filename, drush_get_context('DRUSH_DRUPAL_ROOT') . '/' . file_directory_path() . '/' . $tmpfile['original_name'])){
-        // The file is now saved, we should now add an entry to the files table.
-        $pathinfo = pathinfo($filename);
-        $file = new stdClass();
-        $file->filename = $pathinfo['basename'];
-        $file->filepath = file_directory_path() . '/' . $pathinfo['basename'];
-        $file->filemime = $tmpfile['mime'];
-        $file->source = 'femail';
-        $file->filesize = filesize($filename);
-        $file->uid = $user->uid;
-        $file->status = 0;
-        $file->new = 1;
-        $file->list = 1;
-        $file->description = $pathinfo['filename'];
-        $file->weight = 0;
-        $file->timestamp = time();
-        drupal_write_record('files', $file);
-        $msg['files'][$file->fid] = $file;
+  if(isset($msg['files']) && count($msg['files'])){
+    $temp_files = $msg['files'];
+    unset($msg['files']);
+    if(user_access('upload files') && user_access('upload files to comments')){
+      foreach($temp_files as $tmpfile){
+        $filename = $tmpfile['temp_name'];
+        if(file_move($filename, drush_get_context('DRUSH_DRUPAL_ROOT') . '/' . file_directory_path() . '/' . $tmpfile['original_name'])){
+          // The file is now saved, we should now add an entry to the files table.
+          $pathinfo = pathinfo($filename);
+          $file = new stdClass();
+          $file->filename = $pathinfo['basename'];
+          $file->filepath = file_directory_path() . '/' . $pathinfo['basename'];
+          $file->filemime = $tmpfile['mime'];
+          $file->source = 'femail';
+          $file->filesize = filesize($filename);
+          $file->uid = $user->uid;
+          $file->status = 0;
+          $file->new = 1;
+          $file->list = 1;
+          $file->description = $pathinfo['filename'];
+          $file->weight = 0;
+          $file->timestamp = time();
+          drupal_write_record('files', $file);
+          $msg['files'][$file->fid] = $file;
+        }
       }
     }
-  }
-  if(count($msg['files'])){
-    $additional_text = "Files:\n";
-    foreach($msg['files'] as $file){
-      $additional_text .= url('', array(
-        'absolute' => TRUE
-      )) . $file->filepath . "\n";
+    if(count($msg['files'])){
+      $additional_text = "Files:\n";
+      foreach($msg['files'] as $file){
+        $additional_text .= url('', array(
+          'absolute' => TRUE
+        )) . $file->filepath . "\n";
+      }
+      $msg['body'] = $additional_text . "\n" . $msg['body'];
     }
-    $msg['body'] = $additional_text . "\n" . $msg['body'];
   }
   if(!user_access('post by femail')){
     // Add a message to the logs so that we know we received a message and that
