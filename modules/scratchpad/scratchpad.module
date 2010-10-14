@@ -115,6 +115,14 @@ function scratchpad_menu(){
 }
 
 /**
+ * Implementation of hook_theme
+ */
+function scratchpad_theme(){
+  module_load_include('module', 'update');
+  return update_theme();
+}
+
+/**
  * Implementation of hook_cron
  * 
  * Cron function reports this Scratchpad to central server(s).
