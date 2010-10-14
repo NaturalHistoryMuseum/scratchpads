@@ -7,9 +7,14 @@
 function nexus_install(){
   drupal_install_schema('nexus');
   module_load_include('module', 'nexus', 'nexus');
-  $character_vocabulary = array('name' => 'Character vocabulary', 
-    'hierarchy' => 1, 'module' => 'nexus', 'nodes' => array(), 
-    'required' => 1, 'multiple' => 1);
+  $character_vocabulary = array(
+    'name' => 'Character vocabulary',
+    'hierarchy' => 1,
+    'module' => 'nexus',
+    'nodes' => array(),
+    'required' => 1,
+    'multiple' => 1
+  );
   $nexus_node_info = nexus_node_info();
   // Ensure all out nexus node types are allowed for the vocabulary
   foreach($nexus_node_info as $nexus_node_type => $nexus_node){
@@ -17,24 +22,38 @@ function nexus_install(){
   }
   taxonomy_save_vocabulary($character_vocabulary);
   variable_set('autotag_broken_node_types', array_merge(variable_get('autotag_broken_node_types', array(
-    'webform', 'biblio', 'image')), array('nexus_project')));
+    'webform',
+    'biblio',
+    'image'
+  )), array(
+    'nexus_project'
+  )));
   // Controlled states need to be ordered by weight
   module_load_include('inc', 'weight', 'weight.admin');
   weight_old_nodes(array(
-    'nexus_controlled_state' => 'nexus_controlled_state'));
+    'nexus_controlled_state' => 'nexus_controlled_state'
+  ));
   nexus_update_6101();
 }
 
 function nexus_update_6101(){
   if(function_exists('autotag_nodeapi')){
-    variable_set('autotag_broken_node_types', array_unique(array_merge(
-      variable_get('autotag_broken_node_types', array('webform', 'biblio', 'image')),
-      array('nexus_project', 'nexus_controlled_state', 'nexus_free_state', 'nexus_note')
-    )));
-    variable_set('autotag_totally_borked', array_unique(array_merge(
-      variable_get('autotag_totally_borked', array()), 
-      array('nexus_project', 'nexus_controlled_state', 'nexus_free_state', 'nexus_note')
-    )));
+    variable_set('autotag_broken_node_types', array_unique(array_merge(variable_get('autotag_broken_node_types', array(
+      'webform',
+      'biblio',
+      'image'
+    )), array(
+      'nexus_project',
+      'nexus_controlled_state',
+      'nexus_free_state',
+      'nexus_note'
+    ))));
+    variable_set('autotag_totally_borked', array_unique(array_merge(variable_get('autotag_totally_borked', array()), array(
+      'nexus_project',
+      'nexus_controlled_state',
+      'nexus_free_state',
+      'nexus_note'
+    ))));
   }
 }
 
@@ -70,62 +89,126 @@ function _nexus_delete_nodes(){
  */
 function nexus_schema(){
   $schema['nexus_projects'] = array(
-    'description' => t("A Nexus Data Editor Project."), 
+    'description' => t("A Nexus Data Editor Project."),
     'fields' => array(
-      'nid' => array('type' => 'int', 'unsigned' => TRUE, 
-        'not null' => TRUE, 'default' => 0, 
-        'description' => 'The {node}.nid of the node.'), 
-      'vid' => array('type' => 'int', 'unsigned' => TRUE, 
-        'not null' => TRUE, 'default' => 0, 
-        'description' => 'Primary Key: The {node}.vid of the node.'), 
-      'taxa_vid' => array('type' => 'int', 
-        'unsigned' => TRUE, 'not null' => TRUE, 
-        'default' => 0, 
-        'description' => 'The {vocabulary}.vid of the project vocabulary assigned to the node.'), 
-      'character_root_tid' => array('type' => 'int', 
-        'unsigned' => TRUE, 'not null' => TRUE, 
-        'default' => 0, 
-        'description' => 'The {vocabulary}.tid of the root character term assigned to the node.'), 
-      'settings' => array('type' => 'text', 
-        'not null' => FALSE, 'size' => 'big', 
-        'description' => 'A serialized array of name value pairs for project settings.')), 
-    'indexes' => array('nid' => array('nid'), 
-      'taxa_vid' => array('taxa_vid'), 
-      'character_root_tid' => array('character_root_tid')), 
-    'primary key' => array('vid'));
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {node}.nid of the node.'
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Primary Key: The {node}.vid of the node.'
+      ),
+      'taxa_vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {vocabulary}.vid of the project vocabulary assigned to the node.'
+      ),
+      'character_root_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {vocabulary}.tid of the root character term assigned to the node.'
+      ),
+      'settings' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of name value pairs for project settings.'
+      )
+    ),
+    'indexes' => array(
+      'nid' => array(
+        'nid'
+      ),
+      'taxa_vid' => array(
+        'taxa_vid'
+      ),
+      'character_root_tid' => array(
+        'character_root_tid'
+      )
+    ),
+    'primary key' => array(
+      'vid'
+    )
+  );
   $schema['nexus_relationships'] = array(
-    'description' => t("Define extra information about the relationship between term intersection - can be OR (/), N/A(-) or Unknown(?)."), 
+    'description' => t("Define extra information about the relationship between term intersection - can be OR (/), N/A(-) or Unknown(?)."),
     'fields' => array(
-      'taxa_tid' => array('type' => 'int', 
-        'unsigned' => TRUE, 'not null' => TRUE, 
-        'default' => 0, 
-        'description' => 'The taxa term.tid.'), 
-      'character_tid' => array('type' => 'int', 
-        'unsigned' => TRUE, 'not null' => TRUE, 
-        'default' => 0, 
-        'description' => 'The character term.tid.'), 
-      'operator' => array('type' => 'varchar', 
-        'length' => 1, 'not null' => TRUE, 
-        'default' => '', 
-        'description' => 'The relationship operator / or - or ?')), 
-    'indexes' => array('taxa_tid' => array('taxa_tid'), 
-      'character_tid' => array('character_tid')));
+      'taxa_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The taxa term.tid.'
+      ),
+      'character_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The character term.tid.'
+      ),
+      'operator' => array(
+        'type' => 'varchar',
+        'length' => 1,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The relationship operator / or - or ?'
+      )
+    ),
+    'indexes' => array(
+      'taxa_tid' => array(
+        'taxa_tid'
+      ),
+      'character_tid' => array(
+        'character_tid'
+      )
+    )
+  );
   $schema['nexus_term_settings'] = array(
-    'description' => t("Taxonomy settings - is a Taxa collapsed or width of columns."), 
+    'description' => t("Taxonomy settings - is a Taxa collapsed or width of columns."),
     'fields' => array(
-      'tid' => array('type' => 'int', 'unsigned' => TRUE, 
-        'not null' => TRUE, 'default' => 0, 
-        'description' => 'The term.tid.'), 
-      'value' => array('type' => 'int', 
-        'unsigned' => TRUE, 'not null' => TRUE, 
-        'default' => 1, 
-        'description' => 'The value setting - integer denoting width or collapsed / numeric is true.'), 
-      'setting_type' => array('type' => 'varchar', 
-        'length' => 32, 'not null' => TRUE, 
-        'default' => '', 
-        'description' => 'Type of setting - either width, numeric or collapsed')), 
-    'indexes' => array('setting_type' => array('setting_type')), 
-    'primary key' => array('tid'));
+      'tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The term.tid.'
+      ),
+      'value' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'The value setting - integer denoting width or collapsed / numeric is true.'
+      ),
+      'setting_type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Type of setting - either width, numeric or collapsed'
+      )
+    ),
+    'indexes' => array(
+      'setting_type' => array(
+        'setting_type'
+      )
+    ),
+    'primary key' => array(
+      'tid'
+    )
+  );
   return $schema;
 }
 
@@ -134,5 +217,7 @@ function nexus_schema(){
  */
 function nexus_update_6102(){
   menu_rebuild();
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
