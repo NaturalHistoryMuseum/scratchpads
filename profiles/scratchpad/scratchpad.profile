@@ -385,14 +385,6 @@ function scratchpad_profile_tasks_2(){
   db_query('ALTER TABLE {users} AUTO_INCREMENT = 3');
   db_query("INSERT INTO {users_roles} (uid,rid) VALUES (2,5)"); // Tsk, adding role when none exist!
   db_query("UPDATE {url_alias} SET src = 'user/2' WHERE src = 'user/1'");
-  $openids = array(
-    'http://simon.rycroft.name/',
-    'http://vsmith.info/',
-    'http://scratchpads.eu/'
-  );
-  foreach($openids as $openid){
-    db_query("INSERT INTO {authmap} (uid,authname,module) VALUES (1,'%s','openid')", $openid);
-  }
   // Set page cache to "Normal"
   variable_set('cache', 1);
   // Delete the filter HTML filter, and update Full to be the default
