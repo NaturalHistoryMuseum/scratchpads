@@ -4,6 +4,8 @@
  * hook_install
  */
 function scratchpad_install(){
+  // This assumes we don't have the update module installed.  Not a problem, as
+  // we'll just get an error if it is.
   drupal_install_schema('update');  
 }
 
@@ -22,7 +24,10 @@ function scratchpad_update_6101(){
  * Install the update schema
  */
 function scratchpad_update_6102(){
+  // This assumes we don't have the update module installed.  Not a problem, as
+  // we'll just get an error if it is.
   drupal_install_schema('update');
+  return array('#finished' => TRUE);
 }
 
 /**
