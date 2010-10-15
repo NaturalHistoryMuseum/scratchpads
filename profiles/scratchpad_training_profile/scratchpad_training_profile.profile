@@ -9,7 +9,7 @@
 /**
  * Details about this module
  */
-function scratchpad_training_profile_details(){
+function scratchpad_training_profile_profile_details(){
   return array(
     'name' => 'Scratchpad Training',
     'description' => 'This profile automatically installs everything, no user input is required.'
@@ -19,18 +19,18 @@ function scratchpad_training_profile_details(){
 /**
  * Modules that this profile would like installing
  */
-function scratchpad_training_profile_modules(){
-  require_once("./profiles/scratchpad/scratchpad.profile");
-  return array_merge(scratchpad_profile_modules(), array('scratchpad_training'));
+function scratchpad_training_profile_profile_modules(){
+  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
+  return array_merge(scratchpad_profile_profile_modules(), array('scratchpad_training'));
 }
 
 /**
  * Code for the tasks
  */
-function scratchpad_training_profile_tasks(&$task, $url){
-  require_once("./profiles/scratchpad/scratchpad.profile");
+function scratchpad_training_profile_profile_tasks(&$task, $url){
+  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
   if($task == 'profile'){
-    scratchpad_profile_tasks_1();
+    scratchpad_profile_profile_tasks_1();
 
     // Set the last reported variable, so that this site doesn't
     // get included in the sites list.
@@ -52,7 +52,7 @@ function scratchpad_training_profile_tasks(&$task, $url){
         
     variable_set('site_mission','This site has been created for the <a href="http://scratchpads.eu/training">Scratchpad Training Courses</a>');
   
-    scratchpad_profile_tasks_2();
+    scratchpad_profile_profile_tasks_2();
     // Change the cache back to "disabled"
     variable_set('cache', 0);
     
@@ -64,7 +64,7 @@ function scratchpad_training_profile_tasks(&$task, $url){
     // Note, this should probably get added automatically, but something
     // is screwy about the site.
     db_query("INSERT INTO {blocks} (module, delta, theme, status, weight, region, cache) VALUES ('scratchpad_training', 'pointless_string', 'garland', 1, -100, 'left', 8)");
-    scratchpad_profile_tasks_4();
+    scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
   }
 }

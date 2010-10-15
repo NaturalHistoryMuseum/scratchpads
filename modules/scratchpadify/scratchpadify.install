@@ -374,9 +374,9 @@ function scratchpadify_update_6105(){
     // Convert profile.module to content_profile.module
     variable_del('scratchpad_profile_fields');
     // Install the profile
-    require_once ("profiles/scratchpad/scratchpad.profile");
-    if(function_exists("scratchpad_profile_install_profile")){
-      scratchpad_profile_install_profile();
+    require_once ("profiles/scratchpad_profile/scratchpad_profile.profile");
+    if(function_exists("scratchpad_profile_profile_install_profile")){
+      scratchpad_profile_profile_install_profile();
     }
     // Convert the current profile stuff to the new node type
     $results = db_query("SELECT uid FROM {users} WHERE uid > 1");
@@ -642,9 +642,9 @@ function scratchpadify_update_6130(){
     variable_set('og_content_type_usage_' . $node_type, $usage);
   }
   // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
+  require_once ("profiles/scratchpad_profile/scratchpad_profile.profile");
+  if(function_exists("scratchpad_profile_profile_set_perms")){
+    scratchpad_profile_profile_set_perms();
   }
   return array(
     '#finished' => TRUE
@@ -1350,9 +1350,9 @@ function scratchpadify_update_6165(){
  */
 function scratchpadify_update_6166(){
   // Update permissions
-  require_once ("profiles/scratchpad/scratchpad.profile");
-  if(function_exists("scratchpad_profile_set_perms")){
-    scratchpad_profile_set_perms();
+  require_once ("profiles/scratchpad_profile/scratchpad_profile.profile");
+  if(function_exists("scratchpad_profile_profile_set_perms")){
+    scratchpad_profile_profile_set_perms();
   }
   return array(
     '#finished' => TRUE

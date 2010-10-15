@@ -11,7 +11,7 @@ set_time_limit(300);
 /**
  * Details about this module
  */
-function scratchpad_profile_details(){
+function scratchpad_profile_profile_details(){
   return array(
     'name' => 'Scratchpad',
     'description' => 'Select this profile to enable a whole suite of modules to make entering biodiversity and taxonomic information on to your site easier.'
@@ -21,7 +21,7 @@ function scratchpad_profile_details(){
 /**
  * Modules that this profile would like installing
  */
-function scratchpad_profile_modules(){
+function scratchpad_profile_profile_modules(){
   return array(
     // -------------------------------------------------------------------------
     // 
@@ -197,7 +197,7 @@ function scratchpad_profile_modules(){
 /**
  * Additional taks
  */
-function scratchpad_profile_task_list(){
+function scratchpad_profile_profile_task_list(){
   return array(
     'personal' => st('Personal information'),
     'gmapkey' => st('Google Maps API Key'),
@@ -210,7 +210,7 @@ function scratchpad_profile_task_list(){
  * Pull out all the functions into the following numbered functions so that the
  * scratchpad_training module can reuse them.
  */
-function scratchpad_profile_tasks_1(){
+function scratchpad_profile_profile_tasks_1(){
   // Insert default user-defined node types into the database. For a complete
   // list of available node type attributes, refer to the node type API
   // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
@@ -245,7 +245,7 @@ function scratchpad_profile_tasks_1(){
   // Set the "group" type, to be a group
   variable_set('og_content_type_usage_group', 'group');
   // Add the default profile fields to the content type profile
-  scratchpad_profile_install_profile();
+  scratchpad_profile_profile_install_profile();
   /*
   db_query("INSERT INTO {profile_fields} (title, name, category, type, weight, required, register, visibility,autocomplete) VALUES 
     ('".st('Title')."','profile_title','".st('Personal information')."','textfield',0,1,1,3,1),
@@ -256,7 +256,7 @@ function scratchpad_profile_tasks_1(){
   */
 }
 
-function scratchpad_profile_install_profile(){
+function scratchpad_profile_profile_install_profile(){
   // Load the file for doing the stuff!
   module_load_include('inc', 'content', 'includes/content.crud');
   fieldgroup_save_group('profile', array(
@@ -335,7 +335,7 @@ function scratchpad_profile_install_profile(){
   ));
 }
 
-function scratchpad_profile_tasks_2(){
+function scratchpad_profile_profile_tasks_2(){
   // Comment upload module - enable for forums
   variable_set('comment_upload_forum', 1);
   // Remote Issues Tab
@@ -562,7 +562,7 @@ function scratchpad_profile_tasks_2(){
     'link_title' => 'Help'
   );
   menu_link_save($link);
-  scratchpad_profile_set_perms();
+  scratchpad_profile_profile_set_perms();
   // Role assign settings
   variable_set('roleassign_roles', array(
     3 => 3,
@@ -767,7 +767,7 @@ function scratchpad_profile_tasks_2(){
   session_destroy();
 }
 
-function scratchpad_profile_tasks_3(){
+function scratchpad_profile_profile_tasks_3(){
   // Email the user to say the site has been setup
   $maintainer = user_load(array(
     'uid' => 2
@@ -900,7 +900,7 @@ if(!function_exists('quoted_printable_encode')){
   }
 }
 
-function scratchpad_profile_tasks_4(){
+function scratchpad_profile_profile_tasks_4(){
   // Ensure access is properly set (why the fuck wouldn't it be I hear you ask,
   // well, I don't bloody know).  
   node_access_rebuild();
@@ -928,7 +928,7 @@ function scratchpad_profile_tasks_4(){
  * future (make changes to the code below, and then execute this function on all
  * the sites).
  */
-function scratchpad_profile_set_perms(){
+function scratchpad_profile_profile_set_perms(){
   // Add roles and permissions
   db_query("DELETE FROM {role} WHERE name IN ('contributor','editor','maintainer')");
   db_query("INSERT INTO {role} (rid, name) VALUES (3, 'contributor'),(4, 'editor'),(5, 'maintainer')");
@@ -1114,10 +1114,10 @@ function scratchpad_profile_set_perms(){
 /**
  * Code for the tasks
  */
-function scratchpad_profile_tasks(&$task, $url){
+function scratchpad_profile_profile_tasks(&$task, $url){
   if($task == 'profile'){
     $task = 'personal';
-    scratchpad_profile_tasks_1();
+    scratchpad_profile_profile_tasks_1();
   }
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
@@ -1166,9 +1166,9 @@ function scratchpad_profile_tasks(&$task, $url){
     }
   }
   if($task == 'scratchpadcleanup'){
-    scratchpad_profile_tasks_2();
-    scratchpad_profile_tasks_3();
-    scratchpad_profile_tasks_4();
+    scratchpad_profile_profile_tasks_2();
+    scratchpad_profile_profile_tasks_3();
+    scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
   }
 }

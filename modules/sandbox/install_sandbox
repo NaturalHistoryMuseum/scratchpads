@@ -14,7 +14,7 @@ mv /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden /var/lib/drupal6/all
 echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;" | mysql -uroot_with_drop -pOecey9cheehiphohngeiwi8lahH1ohNi
 
 Xvfb :3 -screen 0 800x600x16 -fbdir /tmp -nolisten inet6 &>/dev/null &
-DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox &>/dev/null &
+DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox_sandbox &>/dev/null &
 sleep 240
 killall -9 firefox firefox-bin Xvfb &>/dev/null
 

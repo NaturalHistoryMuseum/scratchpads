@@ -9,7 +9,7 @@
 /**
  * Details about this module
  */
-function sandbox_profile_details(){
+function sandbox_profile_profile_details(){
   return array(
     'name' => 'Scratchpad Sandbox',
     'description' => 'Provides the Scratchpad Sandbox.'
@@ -19,9 +19,9 @@ function sandbox_profile_details(){
 /**
  * Modules that this profile would like installing
  */
-function sandbox_profile_modules(){
-  require_once("./profiles/scratchpad/scratchpad.profile");
-  $modules = array_merge(scratchpad_profile_modules(), array('sandbox'));
+function sandbox_profile_profile_modules(){
+  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
+  $modules = array_merge(scratchpad_profile_profile_modules(), array('sandbox'));
   unset($modules[array_search('boost',$modules)]);
   return $modules;
 }
@@ -29,10 +29,10 @@ function sandbox_profile_modules(){
 /**
  * Code for the tasks
  */
-function sandbox_profile_tasks(&$task, $url){
-  require_once("./profiles/scratchpad/scratchpad.profile");
+function sandbox_profile_profile_tasks(&$task, $url){
+  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
   if($task == 'profile'){
-    scratchpad_profile_tasks_1();
+    scratchpad_profile_profile_tasks_1();
 
     // Set the last reported variable, so that this site doesn't
     // get included in the sites list.
@@ -53,7 +53,7 @@ function sandbox_profile_tasks(&$task, $url){
         
     variable_set('site_mission',"<p>The purpose of this site is to allow Scratchpad maintainers and users a chance to practice what they daren't do on their own site.  The site is automatically updated every six hours, wiping clean any of the changes that have been made to it.  For that reason, there is no need to worry about making any changes that will break this site, that is what it is here for.  We have provided a default password for this site, please login, and try out the features of the site.</p><h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>");
   
-    scratchpad_profile_tasks_2();
+    scratchpad_profile_profile_tasks_2();
     // Change the cache back to "disabled"
     variable_set('cache', 0);
     
@@ -1637,7 +1637,7 @@ function sandbox_profile_tasks(&$task, $url){
     $region = system_default_region(variable_get('theme_default', 'garland'));
     db_query("UPDATE {blocks} SET status = 1, weight = -100, theme = 'garland', region = '%s' WHERE delta = 'tinytax-13'", $region);
     
-    scratchpad_profile_tasks_4();
+    scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
     // Finally, truncate the authmap table to ensure we can't login as the admin
     // user
