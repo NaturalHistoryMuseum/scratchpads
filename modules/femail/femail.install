@@ -158,7 +158,7 @@ function femail_uninstall(){
 function femail_requirements($phase){
   // Check that the function user_roles exists, else we're probably installing
   // from scratch
-  if(!function_exists('user_roles')){return;}
+  if(!function_exists('user_roles')){return array();}
   // Check that we have the mailparse functions installed
   $t = get_t();
   $requirements = array(

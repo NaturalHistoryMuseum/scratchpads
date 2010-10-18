@@ -73,6 +73,8 @@ function itis_term_requirements($phase){
       );
     }
   }
+  // Return an empty array to prevent warnings during install from a profile.
+  return array();
 }
 
 /**
