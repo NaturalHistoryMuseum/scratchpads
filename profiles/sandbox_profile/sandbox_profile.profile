@@ -30,7 +30,8 @@ function sandbox_profile_profile_details(){
  */
 function sandbox_profile_profile_modules(){
   require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
-  $modules = array_merge(scratchpad_profile_profile_modules(), array('sandbox'));
+  // FIXME: Remove scratchapdify_help once it is added to the scratchpad module.
+  $modules = array_merge(scratchpad_profile_profile_modules(), array('sandbox', 'scratchpadify_help'));
   unset($modules[array_search('boost',$modules)]);
   return $modules;
 }
