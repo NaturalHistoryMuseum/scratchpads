@@ -1,0 +1,117 @@
+<?php
+function scratchpadify_help_help($path) {
+  switch ($path) {
+    case 'admin/build/block':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Blocks');
+    case 'admin/build/menu':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Menus');
+    case 'admin/build/themes':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Themes');
+    case 'admin/build/views/add':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Views');
+    case 'admin/content/forum':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Forums');
+    case 'admin/settings/language':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Multiple-languages');
+    case 'node/add/biblio':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Biblio');
+    case 'node/add/blog':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Blog');
+    case 'node/add/countriesmap':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Countries-map');
+    case 'node/add/darwincore':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Specimen');
+    case 'node/add/darwincorelocation':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Location');
+    case 'node/add/forum':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Forum-topic');
+    case 'node/add/group':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Groups');
+    case 'node/add/image':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Image');
+    case 'node/add/nexus-project':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Character-project');
+    case 'node/add/page':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Page');
+    case 'node/add/poll':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Poll');
+    case 'node/add/publication':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Publication-module');
+    case 'node/add/spm':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Taxon-description');
+    case 'node/add/tree':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Phylogenetic-tree');
+    case 'taxonomy/term/56':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Taxon-pages');
+  }
+}
+
+function scratchpadify_help_step_form(&$element, $form_id, $callback) {
+    foreach (element_children($element) as $child) {
+      scratchpadify_help_step_form($element[$child], $form_id . ':' . $child, $callback);
+    }
+    $callback($element, $form_id);
+}
+
+function scratchpadify_help_form_alter(&$form, $form_state, $form_id) {
+  scratchpadify_help_step_form($form, $form_id, 'scratchpadify_help_help_link');
+  $form['#description'] = isset($form['#description']) ? scratchpadify_help_get_from_key('form', $form_id) . ' ' . $form['#description'] : scratchpadify_help_get_from_key('form', $form_id);
+}
+
+function scratchpadify_help_get_from_key($key) {
+  static $helpkeys = array(
+    '*:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'countriesmap_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
+    'countriesmap_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
+    'countriesmap_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'countriesmap_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
+    'countriesmap_node_form:revision_information' => array('module' => 'scratchpadify_help', 'file' => 'Revision-information'),
+    'countriesmap_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Vocabularies'),
+    'countriesmap_node_form:weight_form' => array('module' => 'scratchpadify_help', 'file' => 'Node-Weight'),
+    'darwincorelocation_node_form:locations:0' => array('module' => 'scratchpadify_help', 'file' => 'Location-map'),
+    'darwincorelocation_node_form:title' => array('module' => 'scratchpadify_help', 'file' => 'Location-title'),
+    'group_node_form:og_register' => array('module' => 'scratchpadify_help', 'file' => 'Registration-form'),
+    'group_node_form:title' => array('module' => 'scratchpadify_help', 'file' => 'Group-title'),
+    'image_node_form:field_imagefield:0' => array('module' => 'scratchpadify_help', 'file' => 'Upload-single-image'),
+    'image_node_form:image_publication' => array('module' => 'scratchpadify_help', 'file' => 'Link-to-a-bibliographic-citation'),
+    'image_node_form:image_specimen' => array('module' => 'scratchpadify_help', 'file' => 'Link-to-a-specimen'),
+    'image_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Vocabularies'),
+    'image_node_form:taxonomy:7' => array('module' => 'scratchpadify_help', 'file' => 'Image-galleries'),
+    'nexus_character_form:group:character_group' => array('module' => 'scratchpadify_help', 'file' => 'Character-group'),
+    'nexus_character_form:name' => array('module' => 'scratchpadify_help', 'file' => 'Character-title'),
+    'nexus_export_form:nex' => array('module' => 'scratchpadify_help', 'file' => 'Nexus'),
+    'nexus_export_form:sdd' => array('module' => 'scratchpadify_help', 'file' => 'SDD--Structured-Descriptive-Data-'),
+    'nexus_project_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Select-taxa'),
+    'page_node_form:attachments' => array('module' => 'scratchpadify_help', 'file' => 'File-attachments'),
+    'page_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
+    'page_node_form:body_field:body' => array('module' => 'scratchpadify_help', 'file' => 'Rich-text-editor'),
+    'page_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
+    'page_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'page_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
+    'page_node_form:path' => array('module' => 'scratchpadify_help', 'file' => 'URL-path-settings'),
+    'page_node_form:print' => array('module' => 'scratchpadify_help', 'file' => 'Printer--e-mail-and-PDF-versions'),
+    'page_node_form:revision_information' => array('module' => 'scratchpadify_help', 'file' => 'Revision-information'),
+    'page_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Vocabularies'),
+    'page_node_form:weight_form' => array('module' => 'scratchpadify_help', 'file' => 'Node-Weight'),
+    'search_block_form:search_block_form' => array('module' => 'scratchpadify_help', 'file' => 'Search'),
+    'system_site_information_settings:site_frontpage' => array('module' => 'scratchpadify_help', 'file' => 'Front-page'),
+    'system_site_information_settings:site_mission' => array('module' => 'scratchpadify_help', 'file' => 'Mission-statement'),
+    'system_site_information_settings:site_name' => array('module' => 'scratchpadify_help', 'file' => 'Site-name'),
+    'tree_node_form:tree' => array('module' => 'scratchpadify_help', 'file' => 'Nexus-or-Newick-data'),
+  );
+  return isset($helpkeys[$key]) ? $helpkeys[$key] : FALSE;
+}
+
+function scratchpadify_help_help_link(&$element, $form_id) {
+  if (isset($element['#type']) && !in_array($element['#type'], array('button', 'image_button', 'submit', 'markup', 'token', 'hidden', 'form', 'value', 'weight'))) {
+    if ($result = scratchpadify_help_get_from_key($form_id)) {
+      $link = theme('advanced_help_topic', $result['module'], $result['file']);
+      if ($element['#type'] == 'fieldset') {
+        drupal_add_css(drupal_get_path('module', 'scratchpadify_help') . '/scratchpadify_help.css');
+        $link = preg_replace('/class="(.+?)"/', 'class="\1 scratchpadify_help-nofloat"', $link);
+      }
+      $element['#description'] = isset($element['#description']) ? $link . ' ' . $element['#description'] : $link;
+    }
+  }
+}
+
