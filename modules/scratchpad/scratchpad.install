@@ -36,7 +36,7 @@ function scratchpad_update_6102(){
  * This is all stolen from the update module, with a couple of minor changes.
  */
 function scratchpad_requirements($phase) {
-  if($phase == 'runtime' && substr($_SERVER['SCRIPT_NAME'], -9) == 'index.php'){
+  if($phase == 'runtime' && substr($_SERVER['SCRIPT_FILENAME'], -9) == 'index.php'){
     module_load_include('module', 'update');
     if ($phase == 'runtime') {
       if ($available = update_get_available(FALSE)) {

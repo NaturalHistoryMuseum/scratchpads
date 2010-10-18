@@ -65,7 +65,7 @@ function publication_enable(){
  * INSTALLED before attempting to install this one.
  */
 function publication_requirements($phase){
-  if($phase == 'install' && substr($_SERVER['SCRIPT_NAME'], -9) == 'index.php'){
+  if($phase == 'install' && substr($_SERVER['SCRIPT_FILENAME'], -9) == 'index.php'){
     $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__, ".")) . '.info');
     $module_not_found = FALSE;
     foreach($info_file['dependencies'] as $required_module){
