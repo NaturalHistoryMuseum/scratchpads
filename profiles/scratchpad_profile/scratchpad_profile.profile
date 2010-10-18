@@ -7,9 +7,16 @@ set_time_limit(300);
 /**
  * The Scratchpad profile.  This will replace the default profile so that all
  * sites installed will become Scratchpads.
+ * 
+ * Profile name: "scratchpad_profile".
+ * 
+ * Note, this profile was renamed to avoid a conflict with the module of the
+ * same name.
  */
 /**
  * Details about this module
+ * 
+ * Implementation of hook_profile_details
  */
 function scratchpad_profile_profile_details(){
   return array(
@@ -20,6 +27,8 @@ function scratchpad_profile_profile_details(){
 
 /**
  * Modules that this profile would like installing
+ * 
+ * Implementation of hook_profile_modules
  */
 function scratchpad_profile_profile_modules(){
   return array(
@@ -196,6 +205,8 @@ function scratchpad_profile_profile_modules(){
 
 /**
  * Additional taks
+ * 
+ * Implementation of hook_profile_task_list
  */
 function scratchpad_profile_profile_task_list(){
   return array(
@@ -256,6 +267,9 @@ function scratchpad_profile_profile_tasks_1(){
   */
 }
 
+/**
+ * Install the profile.
+ */
 function scratchpad_profile_profile_install_profile(){
   // Load the file for doing the stuff!
   module_load_include('inc', 'content', 'includes/content.crud');
@@ -1113,6 +1127,8 @@ function scratchpad_profile_profile_set_perms(){
 
 /**
  * Code for the tasks
+ * 
+ * Implementation of hook_profile_tasks
  */
 function scratchpad_profile_profile_tasks(&$task, $url){
   if($task == 'profile'){

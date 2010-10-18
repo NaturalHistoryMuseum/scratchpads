@@ -4,10 +4,17 @@
 /**
  * The Scratchpad profile.  This will replace the default profile so that all
  * sites installed will become Scratchpads.
+ *
+ * Profile name: "sandbox_profile".
+ * 
+ * Note, this profile was renamed to avoid a conflict with the module of the
+ * same name.
  */
 
 /**
  * Details about this module
+ * 
+ * hook_profile_details
  */
 function sandbox_profile_profile_details(){
   return array(
@@ -18,6 +25,8 @@ function sandbox_profile_profile_details(){
 
 /**
  * Modules that this profile would like installing
+ * 
+ * hook_profile_modules
  */
 function sandbox_profile_profile_modules(){
   require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
@@ -28,6 +37,8 @@ function sandbox_profile_profile_modules(){
 
 /**
  * Code for the tasks
+ * 
+ * hook_profile_tasks
  */
 function sandbox_profile_profile_tasks(&$task, $url){
   require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
