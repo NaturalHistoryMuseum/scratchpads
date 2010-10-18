@@ -983,6 +983,9 @@ function scratchpad_profile_profile_set_perms(){
       "use advanced search",
       "use share this",
       "user locations",
+      "view advanced help index",
+      "view advanced help popup",
+      "view advanced help topic",
       "view all user locations",
       "view full text",
       "view original images",
@@ -1046,10 +1049,7 @@ function scratchpad_profile_profile_set_perms(){
       "set user location",
       "submit latitude/longitude",
       "translate content",
-      "translate interface",
-      "view advanced help index",
-      "view advanced help popup",
-      "view advanced help topic"
+      "translate interface"
     ));
     $editor_perms = array_merge($editor_perms, $contributor_perms, array(
       "administer comments",
