@@ -1,0 +1,39 @@
+<?php
+/**
+ * This module currently supplies a simple webservice for getting the details 
+ * from the application form for a new Scratchpad.  This module may also become
+ * the form for the application process (integrating with the admin site to 
+ * automatically create the Scratchpad).
+ * 
+ * As the details are going to be submitted automatically, we'll also need 
+ * additional checks on the data during the application
+ */
+
+/**
+ * Implementation of hook_menu
+ */
+function scratchpad_apply_menu(){
+  return array(
+    'scratchpad/apply/result/%' => array(
+      'title' => 'Scratchpad Application Service',
+      'page arguments' => array(3),
+      'access arguments' => array('access content'),
+      'page callback' => 'scratchpad_apply_service'
+    )
+  );
+}
+
+/**
+ * Callback which outputs a simple JSON string of the submission
+ */
+function scratchpad_apply_service($domain){
+  // First we need to get the submission ID from the domain name.
+  $sid = db_result(db_query("SELECT sid FROM {webform_submitted_data} WHERE data = '%s' AND cid = 10 AND nid = 1190", $domain));
+  $result = db_query("SELECT data, form_key FROM webform_submitted_data d, webform_component c WHERE sid = %d AND c.cid = d.cid AND c.nid = 1190 AND d.nid = 1190", $sid);
+  $output_array = array();
+  while($row = db_fetch_array($result)){
+    $output_array[$row['form_key']] = $row['data'];
+  }
+  echo json_encode($output_array);
+  exit;
+}
