@@ -1314,13 +1314,13 @@ function classification_term_count_media($tid) {
  * Implementation of hook_nodeapi('update_index').
  */
 function classification_node_update_index(&$node) {
-  $output = array();
+/*  $output = array();
   foreach ($node->classification as $term) {
     $output[] = $term->name;
   }
   if (count($output)) {
     return '<strong>('. implode(' | ', $output) .')</strong>';
-  }
+  }*/
 }
 
 function _classification_update_lists($fid,$title,$list) {
