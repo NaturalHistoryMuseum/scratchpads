@@ -63,7 +63,7 @@ function _taxtab_tabs($taxonomy=false){
   else {$value .= '<b>';}
   $value .= l("Taxonomy", 'taxtab/taxonomy', array('attributes' => array('class'=>'taxtablink')));
   if (!$taxonomy){$value .= '</b>';}
-  $value .= '</div>';
+  $value .= theme('advanced_help_topic', 'taxtab', 'taxtab').'</div>';
   return array(
     '#value' => $value,
     '#weight' => -10000
