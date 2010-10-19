@@ -1135,6 +1135,11 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     $task = 'personal';
     scratchpad_profile_profile_tasks_1();
   }
+  // Attempt to load the data from the Scratchpad Application form, if we fail,
+  // we'll continue as normal, if we succeed, then we'll skip the following
+  // steps
+  phpinfo();
+  exit;
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
     if(!variable_get('personal_submitted', FALSE)){
