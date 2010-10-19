@@ -35,5 +35,7 @@ function scratchpad_apply_service($domain){
     $output_array[$row['form_key']] = $row['data'];
   }
   echo json_encode($output_array);
+  // Prevent boost from caching this page and messing up the JSON decode.
+  $GLOBALS['_boost_cache_this'] = FALSE;
   exit;
 }
