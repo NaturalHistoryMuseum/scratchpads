@@ -1138,8 +1138,37 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
-  phpinfo();
-  exit;
+  $data = (array)json_decode(file_get_contents('http://scratchpads.eu/scratchpad/apply/result/'.$url));
+  if(is_array($data) && count($data)){
+    $names = explode(" ", $data['fullname']);
+    $familyname = array_pop($names);
+    $givennames = implode(" ", $names);
+    // Submit the forms
+    $form_state = array(
+      'values' => array(
+        'title' => $data['title'],
+        'given' => $givennames,
+        'family' => $familyname,
+        'institution' => $data['institution'],
+        'expertise' => $data['taxonomicscope'],
+        'gmap_key' => $data['googleapi'],
+        'clustrmap' => $data['clustrmaphtml'],
+        'mission' => $data['missionstatement']
+      )
+    );
+    scratchpad_personal_submit(NULL, $form_state);
+    scratchpad_gmapkey_submit(NULL, $form_state);
+    scratchpad_clustrmap_submit(NULL, $form_state);
+    scratchpad_mission_submit(NULL, $form_state);
+    // Delete variables
+    variable_del('personal_submitted');
+    variable_del('clustrmap_submitted');
+    variable_del('mission_submitted');
+    $task = 'scratchpadcleanup';
+    // We need to update UID 2, as it will have been set incorrectly.
+    
+    // And the site title and email address
+  }
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
     if(!variable_get('personal_submitted', FALSE)){
