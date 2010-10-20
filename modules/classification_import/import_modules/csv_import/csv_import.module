@@ -138,6 +138,12 @@ function _csv_import_explode($line){
   } elseif(strpos($line, "|")){
     $delimiter = "|";
   }
+  // Set the locale, as str_getcsv isn't multibyte safe.  Thanks go to Brock
+  // Batsell and his answer on 
+  // http://stackoverflow.com/questions/2238971/php-fgetcsv-ignores-special-characters-when-they-are-at-the-beginning-of-line
+  // Not sure if blindly setting the locale to en_GB will cause issues,
+  // hopefully it shouldn't as we're only setting for the taxonomy import.
+  setlocale(LC_ALL, 'en_GB.UTF-8');
   return str_getcsv($line, $delimiter);
 }
 
