@@ -1164,10 +1164,12 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     variable_del('personal_submitted');
     variable_del('clustrmap_submitted');
     variable_del('mission_submitted');
-    $task = 'scratchpadcleanup';
-    // We need to update UID 2, as it will have been set incorrectly.
+    $task = 'scratchpadcleanup';    
+    // Add the site title and email address
+    variable_set('site_name', $data['sitetitle']);
+    variable_set('site_mail', $data['email']);
+    // Update the user.
     
-    // And the site title and email address
   }
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
@@ -1220,6 +1222,10 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     scratchpad_profile_profile_tasks_3();
     scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
+  }
+  if(count($data)){    
+    // We need to update UID 2, as it will have been set incorrectly.
+    
   }
 }
 
