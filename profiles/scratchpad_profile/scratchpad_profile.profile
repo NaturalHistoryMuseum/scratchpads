@@ -1219,13 +1219,15 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   }
   if($task == 'scratchpadcleanup'){
     scratchpad_profile_profile_tasks_2();
+    // The above function moves the UID 1 to UID 2.  Now we can update that user
+    // if we're installing user Aegir.  This means the next funciton will email
+    // the right person! WOOT!
+    if(is_array($data) && count($data)){
+      db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['email'], $data['fullname']);
+    }
     scratchpad_profile_profile_tasks_3();
     scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
-  }
-  if(count($data)){    
-    // We need to update UID 2, as it will have been set incorrectly.
-    
   }
 }
 
