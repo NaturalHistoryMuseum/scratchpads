@@ -47,6 +47,10 @@ function scratchpad_training_profile_profile_tasks(&$task, $url){
     // get included in the sites list.
     variable_set('scratchpad_last_reported',10000000000000000000);
 
+    // Set the title of the site.
+    $profile_details = scratchpad_training_profile_profile_details();
+    variable_set('site_name', $profile_details['name']);
+
     $node = new stdClass();
     $node->type = 'profile';
     $node->uid = 2;
