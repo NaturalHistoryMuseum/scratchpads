@@ -183,6 +183,9 @@ function scratchpadify_cron(){
   }
   // Clean up sessions older than a week.
   db_query("DELETE FROM {sessions} WHERE timestamp < %d", time() - 604800);
+  // Ensure the User with UID 1 is set as "Scratchpad Team".  Note, this has
+  // been added as a result of Aegir, and may not be necessary in the future.
+  db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', pass = 'no-direct-login', name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin' and mail = 's.rycroft@nhm.ac.uk'");
 }
 
 /**
