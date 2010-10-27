@@ -1,0 +1,36 @@
+<div id="node-219" class="node">
+
+
+
+  
+  <div class="content clear-block">
+    <ul>
+<li>Go to 'Administer' &gt; 'Views' and click on 'Add'. </li>
+<li>Enter the name (Citation2) and description (Table view of citations) for the view. </li>
+<li>The view type is 'Node'. </li>
+<li>Click on 'Next'. </li>
+<li>Under the Basic settings' click on 'Title: None', enter the the title (Citation2) in the box that opens below and update. You will get a warning message for the Life preview, but you can ignore this for now. </li>
+<li>Under 'Filters' click on the plus icon to add a new filter. In the box that opens below choose 'Node' in the drop down menu under 'Groups'. Scroll down, check 'Node: Type' and click on 'Add'. Select the ‘Citation’ node type and click on 'Update'. Click on 'Save'. This means that only content from the ‘Citation’ content type is shown in this view. Click on the question marks for explanations of the respective view parts.</li>
+<li>Under 'Fields' click on the plus icon to add a field. In the box that opens below choose 'Node' in the drop down menu. Scroll down, check 'Node: Title' and click on 'Add'. Enter “Taxon name as cited” as label and check 'Link this field to its node'. Update. Add another field for the citation keywords. If you added the keywords as a simple field, it can be found under 'Groups' &gt; 'Content'. If you added a new taxonomy you will find it under ‘Groups’ &gt; ‘Taxonomy’, click on ‘Taxonomy: All terms’, click ‘Add’ and change the label to “Keywords”. Select ‘Limit terms by vocabulary’ and than the ‘Citation keywords’ and click on ‘Update’.  Save. </li>
+</ul>
+<p>Now we want to add the biblio field which we need to link bibliographic citations with our citation content type. Because 'Bibliography' is a different content type from ‘Citations’ we need to first establish a relationship between these content types. </p>
+<ul>
+<li>Under ‘Relationships’ click on the plus icon, select “Content: Bibliography (field_biblio)” and ‘Add’. Click on 'Update' and save. </li>
+<li>Now add a new field “Biblio: Biblio Citation” and choose the relationship “Bibliography”. Add the label (Reference), select “Trim this field to a maximum length”, enter a maximum length of “300” and select “Add an ellipsis”. Choose your preferred style, e.g. CSE, and save. Note: Currently 'Biblio Citation' is not showing correctly and we are waiting for the Drupal community to fix this. So instead add the biblio fields "Authors" and "Year of Publication" and add the field "Node: Title" with the relationship "Bibliography" and a link to the node. </li>
+<li>Next add the page field (Content: Page) and save. </li>
+<li>We want to create a taxon page view (panel view), so under 'Arguments' click on the plus icon to add a new argument. In the box that opens below choose 'Taxonomy' in the drop down menu, check 'Taxonomy: Term ID' and click on 'Add'. Under 'Action to take if argument is not present select 'Hide view / Page not found'. Click on 'Update' and 'Save'. You can also sort the panel by adding a sort criterion, for example 'Weight: Weight'. </li>
+<li>Under 'Basic settings' click on Style: 'Unformatted' and change the view style to table. Click on 'Update'. Then, click on ‘Items to display’ and set the number of items to display to “0”, which means 'unlimited'. Otherwise you will only see the set number of items without knowing that there may be more items. Save. </li>
+</ul>
+<p>To view you new 'Citation2' widget you need to go back to a taxon page which actually has citation tagged to it (Carnus hemapterus), and drag the new widget into the active section.
+</p>
+
+
+  </div>
+
+  <div class="clear-block">
+    <div class="meta">
+        </div>
+
+      </div>
+
+</div>

@@ -37,12 +37,18 @@ function scratchpadify_help_help($path) {
       return theme('advanced_help_topic', 'scratchpadify_help', 'Poll');
     case 'node/add/publication':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Publication-module');
+    case 'node/add/simplenews':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Newsletters');
     case 'node/add/spm':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Taxon-description');
     case 'node/add/tree':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Phylogenetic-tree');
+    case 'node/add/webform':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Webform');
     case 'taxonomy/term/56':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Taxon-pages');
+    case 'user/%/femail':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Forum-and-email-integration');
   }
 }
 
@@ -81,7 +87,7 @@ function scratchpadify_help_get_from_key($key) {
     'nexus_character_form:name' => array('module' => 'scratchpadify_help', 'file' => 'Character-title'),
     'nexus_export_form:nex' => array('module' => 'scratchpadify_help', 'file' => 'Nexus'),
     'nexus_export_form:sdd' => array('module' => 'scratchpadify_help', 'file' => 'SDD-Structured-Descriptive-Data'),
-    'nexus_project_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Select-taxa'),
+    'nexus_project_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Vocabularies'),
     'page_node_form:attachments' => array('module' => 'scratchpadify_help', 'file' => 'File-attachments'),
     'page_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
     'page_node_form:body_field:body' => array('module' => 'scratchpadify_help', 'file' => 'Rich-text-editor'),
