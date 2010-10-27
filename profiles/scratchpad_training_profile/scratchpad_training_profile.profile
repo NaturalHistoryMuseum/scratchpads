@@ -75,6 +75,11 @@ function scratchpad_training_profile_profile_tasks(&$task, $url){
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('password') , status = 1 WHERE uid = 2");
     
+    // Update for Aegir to ensure the UID 2 is correct, and site name/email.
+    variable_set('site_name', 'Scratchpad Training');
+    variable_set('site_mail', 'scratchpad@nhm.ac.uk');
+    db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', name = 'username', password = MD5('password') WHERE uid = 2");
+    
     // Add the special training site block
     // Note, this should probably get added automatically, but something
     // is screwy about the site.

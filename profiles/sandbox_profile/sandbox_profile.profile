@@ -76,6 +76,12 @@ function sandbox_profile_profile_tasks(&$task, $url){
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('pass') , status = 1 WHERE uid = 2");
     
+    // Following is for Aegir.  Note, this is set in the sandbox module, so if
+    // changed here, it should be changed there too.
+    variable_set('site_name', 'Scratchpad Sandbox');
+    variable_set('site_mail', 'scratchpad@mailinator.com');
+    db_query("UPDATE {users} SET mail = 'scratchpad@mailinator.com', name = 'test', password = MD5('pass') WHERE uid = 2");
+    
     // Accept the legal form (otherwise causes issues)
     db_query("INSERT INTO {legal_accepted} (legal_id, uid, tc_id, accepted) VALUES (1, 2, 1, NOW())");
     
