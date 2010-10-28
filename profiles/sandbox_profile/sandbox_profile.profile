@@ -80,7 +80,7 @@ function sandbox_profile_profile_tasks(&$task, $url){
     // changed here, it should be changed there too.
     variable_set('site_name', 'Scratchpad Sandbox');
     variable_set('site_mail', 'scratchpad@mailinator.com');
-    db_query("UPDATE {users} SET mail = 'scratchpad@mailinator.com', name = 'test', password = MD5('pass') WHERE uid = 2");
+    db_query("UPDATE {users} SET mail = 'scratchpad@mailinator.com', name = 'test', pass = MD5('pass') WHERE uid = 2");
     
     // Accept the legal form (otherwise causes issues)
     db_query("INSERT INTO {legal_accepted} (legal_id, uid, tc_id, accepted) VALUES (1, 2, 1, NOW())");
