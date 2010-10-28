@@ -27,8 +27,13 @@ function scratchpad_apply_menu(){
  * Callback which outputs a simple JSON string of the submission
  */
 function scratchpad_apply_service($domain){
+  // Clean the domain name, removing .myspecies.info if present
+  if(strpos($domain, '.myspecies.info')){
+    $domain = str_ireplace('.myspecies.info', '', $domain);
+  }
+  $domain = trim(strtolower($domain));
   // First we need to get the submission ID from the domain name.
-  $sid = db_result(db_query("SELECT sid FROM {webform_submitted_data} WHERE data = '%s' AND cid = 10 AND nid = 1190", $domain));
+  $sid = db_result(db_query("SELECT sid FROM {webform_submitted_data} WHERE TRIM(data) LIKE '%s' AND cid = 10 AND nid = 1190", $domain));
   $result = db_query("SELECT data, form_key FROM webform_submitted_data d, webform_component c WHERE sid = %d AND c.cid = d.cid AND c.nid = 1190 AND d.nid = 1190", $sid);
   $output_array = array();
   while($row = db_fetch_array($result)){
