@@ -2,6 +2,11 @@
 
 function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
   global $user;
+  if($form_id == 'user_login'){
+    $form['no_login_warning'] = array(
+      '#value' => '<h1>Direct login to this site has been disabled, please login by clicking on "Search for/Report an issue" from the Issues tab on your Scratchpad.</h1>'
+    );
+  }
   if(!isset($user->roles[5])){
     if($form_id == 'project_issue_node_form'){
       unset($form['issue_info']['category']['#options']['task']);
