@@ -277,6 +277,11 @@ else if($form_id == 'user_profile_form'){
         'scratchpadify_node_type_form_submit'
       );
     }
+    // Set the default for a new content type to not have any location
+    $settings = variable_get('location_settings_node_'. $form['#node_type']->type, FALSE);
+    if(!$settings){
+      $form['location_settings']['multiple']['max']['#default_value'] = 0;
+    }
   }else if($form_id == 'system_theme_settings'){
     $form['node_info']['#collapsed'] = TRUE;
     $form['node_info']['#collapsible'] = TRUE;
