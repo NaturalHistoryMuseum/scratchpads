@@ -359,6 +359,7 @@ function _scratchpadify_install_image_fields(){
  * 6171: Add all images to the Library.
  * 6172: Add creativecommons_lite back to the image content type
  * 6173: Run 6140 again, just for mhp.myspecies.info
+ * 6174: Add "zip" to list of allowed extensions
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -852,7 +853,11 @@ function scratchpadify_update_6140(){
       $results = db_query("SELECT tid, value FROM {taxonomy_enhancer_value_text} WHERE fid = 'field_rank' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
       while($row = db_fetch_array($results)){
         $term = taxonomy_get_term($row['tid']);
-        $term->field_rank_name = array(array('value' => $row['value']));
+        $term->field_rank_name = array(
+          array(
+            'value' => $row['value']
+          )
+        );
         $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
         $term = (array)$term;
         $saved = taxonomy_save_term($term);
@@ -1473,4 +1478,17 @@ function scratchpadify_update_6173(){
       '#finished' => TRUE
     );
   }
+}
+
+/**
+ * Add zip to list of allowed extensions
+ */
+function scratchpadify_update_6174(){
+  variable_set('upload_extensions_default', variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp') . ' zip');
+  return array(
+    array(
+      'success' => FALSE,
+      'query' => t('Added zip to list of extensions')
+    )
+  );
 }
