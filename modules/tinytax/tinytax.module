@@ -145,7 +145,7 @@ function _tinytax_get_vocabulary_name($vid){
  */
 function tinytax_taxonomy_get_children($tid, $vid = 0){
   $children = taxonomy_get_children($tid, $vid);
-  _tinytax_module_invoke_all_by_reference('taxonomy_term_load', $children);
+  module_invoke_all_by_reference('taxonomy_term_load', $children);
   if(variable_get('tinytax_hide_invalid-tinytax-' . $vid, FALSE) == 1){
     foreach($children as $tid => $child){
       if(isset($child->usage) && (strtolower($child->usage) == 'invalid' || strtolower($child->usage) == 'not accepted')){
@@ -160,12 +160,14 @@ function tinytax_taxonomy_get_children($tid, $vid = 0){
  * Invoke all pass by reference.  This doesn't belong here, but here it is for
  * now.
  */
-function _tinytax_module_invoke_all_by_reference($hook, &$args){
-  $modules = module_list();
-  foreach($modules as $module => $values){
-    if(function_exists($module . '_' . $hook)){
-      $function = $module . '_' . $hook;
-      $function($args);
+if(!function_exists('module_invoke_all_by_reference')){
+  function module_invoke_all_by_reference($hook, &$args){
+    $modules = module_list();
+    foreach($modules as $module => $values){
+      if(function_exists($module . '_' . $hook)){
+        $function = $module . '_' . $hook;
+        $function($args);
+      }
     }
   }
 }
@@ -175,7 +177,7 @@ function _tinytax_module_invoke_all_by_reference($hook, &$args){
  */
 function tinytax_taxonomy_get_parents_all($tid){
   $parents = taxonomy_get_parents_all($tid);
-  _tinytax_module_invoke_all_by_reference('taxonomy_term_load', $parents);
+  module_invoke_all_by_reference('taxonomy_term_load', $parents);
   return $parents;
 }
 
@@ -186,7 +188,7 @@ function tinytax_taxonomy_get_term($tid){
   $terms = array(
     $tid => taxonomy_get_term($tid)
   );
-  _tinytax_module_invoke_all_by_reference('taxonomy_term_load', $terms);
+  module_invoke_all_by_reference('taxonomy_term_load', $terms);
   return array_pop($terms);
 }
 

@@ -13,7 +13,7 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
     $terms = array(
       $term->tid => $term
     );
-    _tui_module_invoke_all_by_reference('taxonomy_term_load', $terms);
+    module_invoke_all_by_reference('taxonomy_term_load', $terms);
     $term = array_pop($terms);
     $term_has_children = FALSE;
     if(!is_array($branch) || !count($branch)){
@@ -48,12 +48,14 @@ function theme_tui_tree($taxonomy_tree, $active = FALSE){
  * Invoke all pass by reference.  This doesn't belong here, but here it is for
  * now.
  */
-function _tui_module_invoke_all_by_reference($hook, &$args){
-  $modules = module_list();
-  foreach($modules as $module => $values){
-    if(function_exists($module.'_'.$hook)){
-      $function = $module.'_'.$hook;
-      $function($args);
+if(!function_exists('module_invoke_all_by_reference')){
+  function module_invoke_all_by_reference($hook, &$args){
+    $modules = module_list();
+    foreach($modules as $module => $values){
+      if(function_exists($module . '_' . $hook)){
+        $function = $module . '_' . $hook;
+        $function($args);
+      }
     }
   }
 }

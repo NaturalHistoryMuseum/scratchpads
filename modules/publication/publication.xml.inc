@@ -250,7 +250,7 @@ function _publication_get_treatment_sections(&$node, $section_node, $vid, $tid){
  * to use the ITIS content type.
  */
 function _publication_get_treatment_xml($section_node, &$node, $vid){
-  module_invoke_all('taxonomy_term_load', $section_node->taxonomy);
+  module_invoke_all_by_reference('taxonomy_term_load', $section_node->taxonomy);
   foreach($section_node->taxonomy as $value){
     $term = $value;
     break;
@@ -305,6 +305,22 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
       ' . _publication_get_sections_xml($node, $vid, $section_node, 'tp:treatment-sec', 'title') . '
     </tp:taxon-treatment>';
   return $treatment_xml;
+}
+
+/**
+ * Invoke all pass by reference.  This doesn't belong here, but here it is for
+ * now.
+ */
+if(!function_exists('module_invoke_all_by_reference')){
+  function module_invoke_all_by_reference($hook, &$args){
+    $modules = module_list();
+    foreach($modules as $module => $values){
+      if(function_exists($module . '_' . $hook)){
+        $function = $module . '_' . $hook;
+        $function($args);
+      }
+    }
+  }
 }
 
 /**
