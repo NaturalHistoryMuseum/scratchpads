@@ -197,7 +197,12 @@ else if($form_id == 'user_profile_form'){
       )), 'error');
       drupal_goto('admin/content/taxonomy');
     }
-  }else if($form_id == 'install_configure_form'){
+  }
+  /**
+   * Following has been removed as Aegir handles all database settings and so on
+   * This means that other users installing from this profile will find the 
+   * install much simpler.
+  else if($form_id == 'install_configure_form'){
     $form['server_settings']['#collapsed'] = TRUE;
     $form['server_settings']['#collapsible'] = TRUE;
     $form['admin_account']['account']['pass'] = array(
@@ -207,7 +212,9 @@ else if($form_id == 'user_profile_form'){
     $form['#submit'] = array(
       'scratchpadify_install_configure_form_submit'
     );
-  }else if($form_id == 'node_type_form'){
+  }
+   */
+  else if($form_id == 'node_type_form'){
     // Add vocabulary options to the node type form
     // We're going to reorder the form, and not by weight
     foreach($form as $key => $value){
