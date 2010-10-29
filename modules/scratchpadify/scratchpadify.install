@@ -1487,7 +1487,7 @@ function scratchpadify_update_6174(){
   variable_set('upload_extensions_default', variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp') . ' zip');
   return array(
     array(
-      'success' => FALSE,
+      'success' => TRUE,
       'query' => t('Added zip to list of extensions')
     )
   );
