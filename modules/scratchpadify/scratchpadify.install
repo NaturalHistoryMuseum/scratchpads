@@ -358,6 +358,7 @@ function _scratchpadify_install_image_fields(){
  *       image_gallery_* variable.  This fixes it.
  * 6171: Add all images to the Library.
  * 6172: Add creativecommons_lite back to the image content type
+ * 6173: Run 6140 again, just for mhp.myspecies.info
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -848,48 +849,20 @@ function scratchpadify_update_6140(){
           ))
         );
       }
-      // Save the ranks from the taxonomy enhancer table
-      // We'll use the ranks from the animal kingdom, as we have far more animal
-      // Scratchpads than botanical ones.
-      $ranks = array(
-        'kingdom' => 23,
-        'subkingdom' => 24,
-        'phylum' => 25,
-        'subphylum' => 26,
-        'superclass' => 27,
-        'class' => 28,
-        'subclass' => 29,
-        'infraclass' => 30,
-        'superorder' => 31,
-        'order' => 32,
-        'suborder' => 33,
-        'infraorder' => 34,
-        'superfamily' => 35,
-        'family' => 36,
-        'subfamily' => 37,
-        'tribe' => 38,
-        'subtribe' => 39,
-        'genus' => 40,
-        'subgenus' => 41,
-        'species' => 42,
-        'subspecies' => 43
-      );
       $results = db_query("SELECT tid, value FROM {taxonomy_enhancer_value_text} WHERE fid = 'field_rank' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
       while($row = db_fetch_array($results)){
-        if(isset($ranks[strtolower($row['value'])])){
-          $term = taxonomy_get_term($row['tid']);
-          $term->field_rank_name = $ranks[strtolower($row['value'])];
-          $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
-          $term = (array)$term;
-          $saved = taxonomy_save_term($term);
-          $ret[] = array(
-            'success' => $saved,
-            'query' => t('Saving rank "@rank" for @term', array(
-              '@term' => $term['name'],
-              '@rank' => $row['value']
-            ))
-          );
-        }
+        $term = taxonomy_get_term($row['tid']);
+        $term->field_rank_name = array(array('value' => $row['value']));
+        $term->parent = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', $term->tid));
+        $term = (array)$term;
+        $saved = taxonomy_save_term($term);
+        $ret[] = array(
+          'success' => $saved,
+          'query' => t('Saving rank "@rank" for @term', array(
+            '@term' => $term['name'],
+            '@rank' => $row['value']
+          ))
+        );
       }
       // Save the Biblio link from the taxonomy enhancer table.
       $results = db_query("SELECT tid, nid FROM {taxonomy_enhancer_value_nodereference} WHERE nid > 0 AND fid = 'field_biblio_citation_original' AND tid IN (SELECT tid FROM {term_data} WHERE vid = %d)", $vocabulary->vid);
@@ -1476,6 +1449,28 @@ function scratchpadify_update_6171(){
  * Add creativecommons_lite back to the image content type
  */
 function scratchpadify_update_6172(){
-  variable_set('creativecommons_lite_image', 1);  
-  return array('#finished' => TRUE);
+  variable_set('creativecommons_lite_image', 1);
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Run 6140 (ITIS update) just for mhp.myspecies.info
+ */
+function scratchpadify_update_6173(){
+  if($_SERVER['db_name'] == 'mhpmyspeciesinfo'){
+    // Delete the association between vocabulary and content type.
+    variable_del('term_node_vocabularies-contenttypes');
+    // Set the usage field to not be required, as it will screw up the update
+    db_query("UPDATE {content_node_field} SET required = 0 WHERE field_name = 'field_usage'");
+    $ret = scratchpadify_update_6140();
+    // Set it back to requried.
+    db_query("UPDATE {content_node_field} SET required = 1 WHERE field_name = 'field_usage'");
+    return $ret;
+  }else{
+    return array(
+      '#finished' => TRUE
+    );
+  }
 }
