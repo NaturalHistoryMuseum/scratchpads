@@ -17,6 +17,7 @@ Drupal.hostmaster_tweak.do_search = function(copy){
 }
 
 Drupal.behaviors.hostmaster_tweak = function(context){
+  $('#edit-profile-691', context).attr('checked', 'checked');
   $('#edit-title', context).keyup(function(){
     Drupal.hostmaster_tweak.do_search(false);
     return false;
