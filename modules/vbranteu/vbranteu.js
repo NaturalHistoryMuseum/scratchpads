@@ -29,5 +29,6 @@ $(document).ready(function(){
     } else {
       $(fadein_id).fadeIn('500');
     }
+    return false;
   });
 });
