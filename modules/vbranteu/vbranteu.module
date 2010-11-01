@@ -1,0 +1,342 @@
+<?php
+
+/**
+ * Currently provides the ViBRANT partners page
+ */
+/**
+ * hook_menu
+ */
+function vbranteu_menu(){
+  return array(
+    'partners' => array(
+      'title' => 'ViBRANT Partners',
+      'description' => 'Map displaying all the ViBRANT partners',
+      'page callback' => 'vbranteu_partners_page',
+      'access arguments' => array(
+        'access content'
+      )
+    )
+  );
+}
+
+/**
+ * hook_theme
+ */
+function vbranteu_theme(){
+  return array(
+    'vbranteu_partners_page' => array(
+      'arguments' => array()
+    )
+  );
+}
+
+/**
+ * Callback function 
+ */
+function vbranteu_partners_page(){
+  return theme('vbranteu_partners_page');
+}
+
+/**
+ * Theme function
+ */
+function theme_vbranteu_partners_page(){
+  drupal_add_js(drupal_get_path('module', 'vbranteu') . '/vbranteu.js');
+  drupal_add_css(drupal_get_path('module', 'vbranteu') . '/lib/bt/jquery.bt.css');
+  drupal_add_css(drupal_get_path('module', 'vbranteu') . '/vbrant.css');
+  drupal_add_js(drupal_get_path('module', 'vbranteu') . '/lib/bt/jquery.bt.js');
+  drupal_set_html_head('<!--[if IE]><script type="text/javascript" src="' . base_path() . drupal_get_path('module', 'vbranteu') . '/lib/explorercanvas/excanvas.js"></script><![endif]-->');
+  drupal_add_js(drupal_get_path('module', 'vbranteu') . '/lib/explorercanvas/excanvas.js');
+  $locations = array(
+    array(
+      332,
+      353
+    ),
+    array(
+      582,
+      34
+    ),
+    array(
+      345,
+      304
+    ),
+    array(
+      321,
+      361
+    ),
+    array(
+      327,
+      298
+    ),
+    array(
+      308,
+      222
+    ),
+    array(
+      316,
+      352
+    ),
+    array(
+      376,
+      263
+    ),
+    array(
+      506,
+      418
+    ),
+    array(
+      467,
+      80
+    ),
+    array(
+      372,
+      328
+    ),
+    array(
+      273,
+      223
+    ),
+    array(
+      160,
+      11
+    ),
+    array(
+      430,
+      208
+    )
+  );
+  $institutions = array(
+    array(
+      'name' => 'The Natural History Museum, London (NHM)',
+      'information' => 'Scratchpad VRE development & management',
+      'workpackages' => array(
+        1,
+        2,
+        3,
+        6,
+        7
+      ),
+      'location' => 1
+    ),
+    array(
+      'name' => 'Hellenic Center for Marine Research, Crete (HCMR)',
+      'information' => 'Extension into ecol., con. & citizen science. esp. marine biodiversity',
+      'workpackages' => array(
+        1,
+        8
+      ),
+      'location' => 2
+    ),
+    array(
+      'name' => 'Royal Belgian Institute of Natural Sciences (RBINS)',
+      'information' => 'Training, outreach & community support',
+      'workpackages' => array(
+        1,
+        3
+      ),
+      'location' => 3
+    ),
+    array(
+      'name' => 'Oxford e-Research Centre (UOXF.E9)',
+      'information' => 'Mol. ID tools, services and data analysis',
+      'workpackages' => array(
+        1,
+        5
+      ),
+      'location' => 4
+    ),
+    array(
+      'name' => 'Vrije Universiteit Amsterdam (VU)',
+      'information' => 'User studies (sociological studies of user practices)',
+      'workpackages' => array(
+        3
+      ),
+      'location' => 5
+    ),
+    array(
+      'name' => 'Julius Kühn-Institute (JKI)',
+      'information' => 'Data integration via controlled vocabularies & ontologies',
+      'workpackages' => array(
+        4,
+        5
+      ),
+      'location' => 6
+    ),
+    array(
+      'name' => 'Museum für Naturkunde, Berlin (MFN)',
+      'information' => 'Biodiversity inventorying & monitoring (mobile devices)',
+      'workpackages' => array(
+        8
+      ),
+      'location' => 6
+    ),
+    array(
+      'name' => 'University of Amsterdam (UvA)',
+      'information' => 'Standards development (LifeWatch)',
+      'workpackages' => array(
+        1,
+        4
+      ),
+      'location' => 5
+    ),
+    array(
+      'name' => 'The Open University (OU)',
+      'information' => 'Data mining and bibliographies (BHL)',
+      'workpackages' => array(
+        1,
+        7
+      ),
+      'location' => 7
+    ),
+    array(
+      'name' => 'Karlsruher Institut für Technologie (KIT)',
+      'information' => 'Document Markup & natural language text processing',
+      'workpackages' => array(
+        7
+      ),
+      'location' => 8
+    ),
+    array(
+      'name' => 'Vizzuality (Vizz)',
+      'information' => 'Data visualisation & analysis (data layers)',
+      'workpackages' => array(
+        5,
+        8
+      ),
+      'location' => 9
+    ),
+    array(
+      'name' => 'Pensoft Publishers (PENSOFT)',
+      'information' => 'Push-button manuscript submission from the Scratchpad VRE',
+      'workpackages' => array(
+        1,
+        4,
+        6,
+        7,
+        8
+      ),
+      'location' => 10
+    ),
+    array(
+      'name' => 'Université Pierre et Marie Curie-Paris 6 (UPMC)',
+      'information' => 'Morphological identification keys and services (Xper2)',
+      'workpackages' => array(
+        5
+      ),
+      'location' => 11
+    ),
+    array(
+      'name' => 'Global Biodiversity Information Facility (GBIF)',
+      'information' => 'Controlled vocab dev. & userbase expansion via GBIF nodes',
+      'workpackages' => array(
+        4,
+        8
+      ),
+      'location' => 12
+    ),
+    array(
+      'name' => 'Freie Universität Berlin (BGBM)',
+      'information' => 'Data aggregation portal via CDM',
+      'workpackages' => array(
+        2,
+        4
+      ),
+      'location' => 6
+    ),
+    array(
+      'name' => 'Université de la Réunion (UdIR)',
+      'information' => 'Knowledge Engineering & Human Computer Interaction',
+      'workpackages' => array(
+        5
+      ),
+      'location' => 13
+    ),
+    array(
+      'name' => 'University of Trieste',
+      'information' => 'Key2Nature integration & outreach',
+      'workpackages' => array(
+        3
+      ),
+      'location' => 14
+    )
+  );
+  drupal_add_js(array(
+    'vbrant' => array(
+      'institutions' => $institutions
+    )
+  ), 'setting');
+  $output = '<div id="vbrantpartnersroot">
+  <div id="partnerswps">
+    <ul>
+      <li id="partnersmapinstitution" style="background-color:black"><a href="#" style="color:white;">All</a></li>';
+  $wps = array();
+  foreach($institutions as $institution){
+    foreach ($institution['workpackages'] as $wp){
+      $wps[$wp] = $wp;
+    }
+  }
+  ksort($wps);
+  foreach($wps as $wp){
+    $output .= '<li id="wp'.$wp.'"><a href="#">WP'.$wp.'</a></li>';
+  }
+  $output .= '
+    </ul>
+  </div>
+  <div id="partnersinfo">';
+  $i = 1;
+  foreach($locations as $location){
+    $output .= '<div id="partnersmap'.$i.'_info" class="hidden">';
+    foreach($institutions as $institution){
+      if($institution['location'] == $i){
+        $output .= '<h3>'.$institution['name'].'</h3><ul><li>'.$institution['information'].'</li></ul>';
+      }
+    }    
+    $output .= '</div>';
+    $i ++;
+  }
+  $output .= '<div id="partnersmapinstitution_info"><ul>';
+  foreach($institutions as $institution){
+    $output .= '<li>'.$institution['name'].'</li>';
+  }
+  $output .= '</ul></div>';
+  foreach($wps as $wp){
+    $output .= '<div id="wp'.$wp.'_info" class="hidden"><div class="partners"></div><ul>';
+    foreach($institutions as $institution){
+      if(in_array($wp, $institution['workpackages'])){
+        $output .= '<li>'.$institution['name'].'</li>';
+      }
+    }
+    $output .= "</ul></div>\n";
+  }
+  $output .='    
+  </div>
+  <div id="partnersimgdiv">
+    <img id="partnersimg" src="' . base_path() . drupal_get_path('module', 'vbranteu') . '/partners.png" alt="Partners" usemap="#partnersmap"/>
+  </div>';
+  $i = 1;
+  foreach($locations as $location){
+    $output .= '<div  style="top:'.$location[0].'px; right:'.$location[1].'px" id="partnersmap'.$i.'" class="partnersmapinstitution';
+    // WPS
+    $wps = array();
+    foreach($institutions as $institution){
+      if($institution['location'] == $i){
+        foreach($institution['workpackages'] as $wp){
+          $wps[$wp] = $wp;
+        }
+      }
+    }
+    foreach($wps as $wp){
+      $output .= ' wp'. $wp;
+    }
+    $output .= '" title="<ul>';
+    // Institutions
+    foreach($institutions as $institution){
+      if($institution['location'] == $i){
+        $output .= '<li>'. $institution['name'].'</li>';
+      }
+    }
+    $output .= '</ul>"></div>';
+    $i ++;
+  }
+  return $output;
+}
