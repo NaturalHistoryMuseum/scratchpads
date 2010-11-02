@@ -57,8 +57,8 @@ function _femail_get_msg(){
     }
     // Get the To: header, which will be used to work out which forum this 
     // message wants to go into
-    if(isset($part_data['headers']['to'])){
-      $to = mailparse_rfc822_parse_addresses($part_data['headers']['to']);
+    if(isset($part_data['headers']['envelope-to'])){
+      $to = mailparse_rfc822_parse_addresses($part_data['headers']['envelope-to']);
       $msg['to'] = $to[0]['address'];
     }
     // Get the body for the node/comment body
