@@ -360,6 +360,7 @@ function _scratchpadify_install_image_fields(){
  * 6172: Add creativecommons_lite back to the image content type
  * 6173: Run 6140 again, just for mhp.myspecies.info
  * 6174: Add "zip" to list of allowed extensions
+ * 6175: Fix multiple attached images
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1489,6 +1490,34 @@ function scratchpadify_update_6174(){
     array(
       'success' => TRUE,
       'query' => t('Added zip to list of extensions')
+    )
+  );
+}
+
+/**
+ * Upgrade from image.module to imagecache/imagefield hasn't associated multiple
+ * images with nodes correctly.  This is an attempt to fix that.
+ */
+function scratchpadify_update_6175(){
+  $num_images = 0;
+  // First, we'll get the images and file IDs that need to be added.
+  $results = db_query('SELECT n.vid, i.nid, i.iid as original_image_nid, field_imagefield_fid FROM {node} n, {image_attach} i, {content_field_imagefield} c WHERE n.nid = i.nid AND iid = c.nid AND field_imagefield_fid NOT IN (SELECT field_imagefield_fid FROM {content_field_imagefield} WHERE i.nid = nid)');
+  while($row = db_fetch_array($results)){
+    // Lets get the row as it should be, and do the insert
+    $da = db_fetch_array(db_query('SELECT * FROM {content_field_imagefield} WHERE nid = %d AND field_imagefield_fid = %d', $row['original_image_nid'], $row['field_imagefield_fid']));
+    $da['nid'] = $row['nid'];
+    $da['vid'] = $row['vid'];
+    // Also need the max delta
+    $da['delta'] = db_result(db_query('SELECT MAX(delta)+1 FROM content_field_imagefield WHERE vid = %d', $da['vid']));
+    db_query("INSERT INTO {content_field_imagefield} (vid, nid, delta, field_imagefield_fid, field_imagefield_list, field_imagefield_data) VALUES (%d, %d, %d, %d, %d, '%s')", $da);
+    $num_images ++;
+  }
+  return array(
+    array(
+      'success' => TRUE,
+      'query' => t('Updated @number_of_images nodes', array(
+        '@number_of_images' => $num_images
+      ))
     )
   );
 }
