@@ -96,9 +96,9 @@ function _tinytax_configure($delta){
       '#description' => t('You can choose to hide terms within your Taxonomy.  This uses the "usage" field, which should be set to either "invalid" or "not accepted" for a term to be hidden'),
       '#type' => 'radios',
       '#options' => array(
-        0 => t('Show'),
+        0 => t('Highlight'),
         1 => t('Hide'),
-        2 => t('Highlight')
+        2 => t('Show, no highlight')
       ),
       '#default_value' => variable_get('tinytax_hide_invalid-' . $delta, 0)
     );
