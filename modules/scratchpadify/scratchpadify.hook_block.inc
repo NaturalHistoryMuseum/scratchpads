@@ -177,7 +177,7 @@ function _scratchpadify_block($op, $delta, $edit){
                 // Nothing here, as no menu item actually needs this, we're only
               // using this to prevent a link
               }else{
-                $items[$row['name']] .= l('<img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/edit.png" alt="Grid Editor"/>', 'matrix-editor/' . $row['type'], array(
+                $items[$row['name']] .= l('<img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/edit.png" alt="Grid Editor"/>', 'matrix-editor/' . str_replace('_', '-', $row['type']), array(
                   'html' => TRUE,
                   'attributes' => array(
                     'title' => t('Edit @name nodes in a grid layout', array(
