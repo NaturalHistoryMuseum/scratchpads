@@ -4,6 +4,26 @@
  * @file manual site migrate system
  */
 function drush_provision_hostmaster_migrate_validate($site, $platform) {
+  // XXX: this doesn't actually document the pre alpha9 upgrade path
+  drush_print('
+This command will operate the following changes in your system:
+
+1. verify the server and the hostmaster site (provision-verify)
+2. verify the new platform (which will download it if missing)
+3. stop the Aegir frontend (hostmaster-pause)
+4. remove the cronjob (crontab -r)
+5. attempt a migration to the new platform (provision-migrate)
+6. start the Aegir frontend again (hostmaster-resume)
+
+We are making the following assumptions:
+ * you have read UPGRADE.txt
+ * you are executing this script as your "aegir" user
+');
+
+  if (!drush_confirm("Do you really want to proceed with the upgrade?")) {
+    return drush_set_error('PROVISION_CANCEL_MIGRATE', 'Upgrade canceled by user');
+  }
+
   $data = drush_get_merged_options();
 
   $alias_file = drush_server_home() . '/.drush/server_master.alias.drushrc.php';
@@ -30,7 +50,7 @@ function drush_provision_hostmaster_migrate_validate($site, $platform) {
       'server' => '@server_master',
       'web_server' => '@server_master',
       'root' => $platform,
-      'makefile' => dirname(__FILE__) . '/aegir.make',
+      'makefile' => drush_get_option('makefile', dirname(__FILE__) . '/aegir.make'),
     ));
     provision_backend_invoke($new_platform, 'provision-verify');
     drush_set_option('new_platform', $new_platform);
@@ -86,7 +106,7 @@ function drush_provision_hostmaster_migrate_validate($site, $platform) {
       'server' => $server,
       'web_server' => $server,
       'root' => $platform,
-      'makefile' => dirname(__FILE__) . '/aegir.make',
+      'makefile' => drush_get_option('makefile', dirname(__FILE__) . '/aegir.make'),
     ));
     provision_backend_invoke($new_platform, 'provision-verify');
     drush_set_option('new_platform', $new_platform);
@@ -115,9 +135,6 @@ function drush_provision_hostmaster_migrate_validate($site, $platform) {
 
 
 function drush_provision_pre_hostmaster_migrate($site, $platform) {
-  if (!drush_confirm("This command will replace your crontab entry. continue?")) {
-    return drush_set_error('PROVISION_CANCEL_MIGRATE', 'Cancelling');
-  }
   // wipe out cron entry
   exec('crontab -r');
 

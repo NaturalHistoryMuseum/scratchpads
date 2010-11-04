@@ -34,8 +34,8 @@ considered the canonical source of information.
 
 Also note that those instructions setup a complete Aegir system. If you want
 to only setup a new server, it should be sufficient to install requirement
-(step 1) and configure them (step 2). You will just need the -b flag to
-avoid installing the frontend on the server.
+(step 1) and configure them (step 2). You will just need the --backend-only flag
+to avoid installing the frontend on the server.
 
 1. Install software requirements
 ================================
@@ -90,7 +90,7 @@ email". Additional messages will show that site has been removed because of
 this problem. To remedy the situation simply install an MTA like sendmail,
 postfix, or exim and do the minimal configuration.
 
-Other utilities: sudo, git and unzip
+Other utilities: sudo, rsync, git and unzip
 ------------------------------
 
 Aegir installs itself via a drush_make file that downloads via git if you want
@@ -100,7 +100,7 @@ will need to install it on the server.
 
 The jQueryUI library is used in the Aegir UI, unzip is required to extract it.
 Sudo is required to allow the aegir user the limited privilege to restart the
-webserver when required.
+webserver when required.  Rsync is used to sync files to remote servers.
 
 Summary
 -------
@@ -110,8 +110,8 @@ can install all those packages using the following.
 
 Shell commands::
 
- apt-get install apache2 php5 php5-cli php5-mysql mysql-server postfix
- apt-get install sudo git-core unzip
+ apt-get install apache2 php5 php5-cli php5-gd php5-mysql mysql-server \
+   postfix sudo rsync git-core unzip
 
 
 2. Configure system requirements
@@ -174,6 +174,27 @@ Shell commands::
  adduser aegir www-data    #make aegir a user of group www-data
 
 
+PHP Configuration
+-----------------
+
+Some complex installation profiles or distributions require a PHP memory limit 
+that is higher than the default. To avoid common errors when installing sites on
+some distributions, the PHP command line tool should be configured to use 192Mb 
+of RAM.
+
+Change the memory_limit directive in /etc/php5/cli/php.ini to read::
+
+ memory_limit = 192M      ; Maximum amount of memory a script may consume (192MB)
+ 
+Most modern Drupal sites require around 96M or even 128M of RAM for certain
+operations. This is far more than what is provided by the default PHP configuration.
+
+Change the memory_limit directive in /etc/php5/apache2/php.ini to read::
+
+ memory_limit = 128M      ; Maximum amount of memory a script may consume (128MB)
+
+
+
 Apache configuration
 --------------------
 
@@ -194,6 +215,11 @@ Shell commands as root::
  a2enmod rewrite
  ln -s /var/aegir/config/apache.conf /etc/apache2/conf.d/aegir.conf
 
+**Do not reload/restart Apache if prompted to after running these commands, 
+it will fail.**
+The installer script creates the configuration file referenced by the newly 
+created symlink.
+
 The aegir user needs to have sudo access. Add the relevant line to your sudoers
 file.
 
@@ -206,12 +232,14 @@ Remote web servers
 Any number of remote web servers may be configured. They need an aegir user and
 Apache configuration as above, with the same user name and directory paths. SSH
 public/private keys should be set up so hostmaster's Aegir user can access
-remote web Aegir users with no passwords.
+remote web Aegir users with no passwords. The above apache configuration needs
+to be performed too.
 
-They will also need a login shell, which can be modified using the `chsh` command.
+They will also need a login shell, which can be modified using the ``chsh`` command.
 
 Shell command as root::
   chsh -s /bin/sh aegir
+  apt-get install rsync apache2 php5 php5-cli php5-mysql
 
 Database configuration
 ----------------------
@@ -228,9 +256,9 @@ Now you need to restart mysql, to clear any caches.
 Shell command as root::
   /etc/init.d/mysql restart
 
-The installer will prompt you for your MySQL root user password. It will
-not store this information, but instead use it to generate a new super
-user account for the aegir system.
+The installer will prompt you for your MySQL root user password. The root
+user will be used to make administrative tasks such as creating new databases,
+and granting and revoking access to those databases for sites.
 
 Even though MySQL is now listening on all IP's, it will not allow invalid users
 to connect to the databases, without the correct user accounts configured.
@@ -242,7 +270,12 @@ This is outside the scope of this document however.
 3. Run the install script
 =========================
 
-This section deals with the actual installation of Aegir.
+This section deals with the actual installation of Aegir. You can
+install aegir in one of two ways: one assumes you have already
+downloaded drush and provision, while the other will do that for you.
+
+3.1 Installing aegir with only the install.sh script
+----------------------------------------------------
 
 There is an install script that takes care of installing the right packages and 
 preparing the backend and frontend install for you. That script needs to be run 
@@ -250,7 +283,7 @@ as the aegir user created above.  This file is available in Provision or can be
 downloaded through the web with this command::
 
 Shell commands::
- wget -O install.sh.txt 'http://git.aegirproject.org/?p=provision.git;a=blob_plain;f=install.sh.txt;hb=HEAD'
+ wget -O /tmp/install.sh 'http://git.aegirproject.org/?p=provision.git;a=blob_plain;f=install.sh.txt;hb=HEAD'
 
 By default, the install script will install the "correct" version of Aegir
 (ie. if it was downloaded through git, it will install the version from the
@@ -259,11 +292,34 @@ the official release.). You can modify which version to install by editing the
 AEGIR_VERSION variable in the script.
 
 Shell commands::
- su -s /bin/sh aegir -c "sh install.sh.txt aegir.example.com"
+ su -s /bin/sh aegir -c "sh /tmp/install.sh"
 
 Note you must run the above command as root or prefix with sudo.
 
-Be sure to change 'aegir.example.com' to match the URI of your site.
+You will be prompted for the information necessary to complete the
+installation.
+
+Once you have run install.sh once, drush and provision should be
+installed and you can use the more powerful hostmaster-install command
+to retry the install if it failed the first time.
+
+3.2 Installing aegir with drush and provision installed
+-------------------------------------------------------
+
+If you have already downloaded drush and provision, you can just install
+provision in the commands directory of Drush (either ~aegir/.drush or
+/usr/share/drush/commands), if that's not already done. Once provision
+is properly installed, you can install all other aegir components using
+the hostmaster-install command.
+
+Shell commands::
+
+ drush hostmaster-install
+
+You will be prompted for the required information if not provided on the
+commandline. See the inline help for the available options::
+
+ drush help hostmaster-install
 
 You can append '--client_email=you@example.com' to keep from being prompted for
 an e-mail address during install. The traditional Drupal 'Welcome' e-mail will
@@ -272,7 +328,7 @@ address will also be used as the default e-mail address of the first user and
 client in Aegir, but can be changed later.
 
 Checkpoint / Finished!
------------
+----------------------
 
 At this point, you have checked out all the code and setup your basic Drupal
 system (Drupal core, hosting, hostmaster and eldir) that will be the Aegir
