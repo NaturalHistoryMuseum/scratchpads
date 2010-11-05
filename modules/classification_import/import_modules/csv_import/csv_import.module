@@ -181,7 +181,24 @@ function _csv_import_batch_parse_lines_get_lines($filename, &$file_position = 0)
       break;
     }
   }
+  foreach($lines as $line_number => $text){  
+    if(!drupal_validate_utf8($text)){
+      $lines[$line_number] = utf8_encode($text);
+    }else{
+      $lines[$line_number] = rmBOM($text);
+    }
+  }
   return $lines;
+}
+
+/**
+ * Thanks to http://blog.philipp-michels.de/?p=32
+ */
+function rmBOM($string) { 
+  if(substr($string, 0,3) == pack('CCC',0xef,0xbb,0xbf)) { 
+    $string=substr($string, 3); 
+  } 
+  return $string; 
 }
 
 /**
