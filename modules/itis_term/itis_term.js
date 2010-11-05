@@ -11,6 +11,11 @@ Drupal.itis_term.init = function(context) {
   $('.itis_term_unit input', context).keydown(function(){
     Drupal.itis_term.showorhide_unit_fields(context);
   });
+  $('.itis_term_unit input', context).bind('paste', function(){
+    // Timeout here, as otherwise the val of the field was not set to what
+    // had been pasted into the box.
+    setTimeout('Drupal.itis_term.showorhide_unit_fields();', 100);
+  });
   $('.itis_term_unit input', context).keyup(function(){
     Drupal.itis_term.showorhide_unit_fields(context);
   });
