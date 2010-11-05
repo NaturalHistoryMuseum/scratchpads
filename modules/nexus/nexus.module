@@ -855,13 +855,29 @@ function nexus_form_alter(&$form, $form_state, $form_id){
     case 'taxonomy_tree_admin_settings_form':
       $form['#after_build'][] = 'taxonomy_tree_admin_settings_form_after_build';
       break;
+    case 'taxonomy_overview_vocabularies':
+      //print_r($form);exit;
+      foreach($form as $key => $value){
+        if(is_numeric($key) && isset($value['#vocabulary']['module']) && $value['#vocabulary']['module'] == 'nexus'){
+          unset($form[$key]);
+        }
+      }
+      break;
     case 'taxonomy_form_vocabulary':
+      if($form['module']['#value'] == 'nexus'){
+        $vocabulary = check_plain($form['identification']['name']['#default_value']);
+        drupal_set_message(t('The %vocabulary vocabulary can not be edited', array(
+          '%vocabulary' => $vocabulary
+        )), 'error');
+        drupal_goto('admin/content/taxonomy');
+      }
       $nexus_node_types = nexus_node_info();
       unset($nexus_node_types['nexus_project']);
       foreach($nexus_node_types as $node_type => $node_info){
         unset($form['content_types']['nodes']['#options'][$node_type]);
       }
       break;
+      echo $form_id;
   }
 }
 
