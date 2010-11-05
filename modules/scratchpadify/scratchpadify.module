@@ -84,11 +84,21 @@ function theme_scratchpadify_subgallery($term){
   foreach($branch as $temp_term){
     $tids[] = $temp_term->tid;
   }
-  // Now join the term_node, content_field_imagefield, and node table together.
-  $count_and_created = db_fetch_array(db_query(db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n INNER JOIN {term_node} t ON t.nid = n.nid INNER JOIN {content_field_imagefield} c ON c.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ')')));
-  // Top image
-  $thumbnail_nid = db_result(db_query(db_rewrite_sql('SELECT n.nid FROM {node} n INNER JOIN {content_field_imagefield} c ON c.nid = n.nid INNER JOIN {term_node} t ON t.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created')));
-  $thumbnail_node = node_load($thumbnail_nid);
+  // Check content_field_imagefield exists
+  if(db_table_exists('content_field_imagefield')){
+    // Now join the term_node, content_field_imagefield, and node table together.
+    $count_and_created = db_fetch_array(db_query(db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n INNER JOIN {term_node} t ON t.nid = n.nid INNER JOIN {content_field_imagefield} c ON c.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ')')));
+    // Top image
+    $thumbnail_nid = db_result(db_query(db_rewrite_sql('SELECT n.nid FROM {node} n INNER JOIN {content_field_imagefield} c ON c.nid = n.nid INNER JOIN {term_node} t ON t.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created')));
+    $thumbnail_node = node_load($thumbnail_nid);
+  }else{
+    // Table doesn't exist - ODD!
+    // Now join the term_node, content_field_imagefield, and node table together.
+    $count_and_created = db_fetch_array(db_query(db_rewrite_sql('SELECT COUNT(DISTINCT(n.nid)) AS total_count, MAX(created) AS max_created FROM {node} n INNER JOIN {term_node} t ON t.nid = n.nid INNER JOIN {content_type_image} c ON c.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ')')));
+    // Top image
+    $thumbnail_nid = db_result(db_query(db_rewrite_sql('SELECT n.nid FROM {node} n INNER JOIN {content_type_image} c ON c.nid = n.nid INNER JOIN {term_node} t ON t.nid = n.nid WHERE tid IN (' . implode(',', $tids) . ') ORDER BY sticky DESC, created')));
+    $thumbnail_node = node_load($thumbnail_nid);
+  }
   // Create HTML
   return '<div class="scratchpadify-subgallery">
   <div class="scratchpadify-subgallery-image">
