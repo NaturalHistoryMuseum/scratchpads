@@ -19,7 +19,7 @@ Drupal.tui.init = function(context) {
   $('#tui-tree-links img', context).mouseup(function(){Drupal.tui.click_buttonclick($(this).attr('id'));});
   $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());},minWidth:250});
   $('#taxonomy-form-term *', context).change(function(){Drupal.tui.form_changed = true;});
-  $('#taxonomy-form-term *', context).keypress(function(){Drupal.tui.form_changed = true;});
+  $('#taxonomy-form-term *', context).keypress(function(){Drupal.tui.form_changed = true;return event.keyCode!=13;});
   Drupal.tui.form_changed = false;
   Drupal.tui.resize_frame();
 }
