@@ -69,7 +69,7 @@ function og_menu() {
     'title' => 'Leave group',
   );
 
-  $items['og/approve/%node/%user/%'] = array(
+  $items['og/approve/%node/%user'] = array(
     'type' => MENU_CALLBACK,
     'page callback' => 'og_approve',
     'page arguments' => array(2, 3, 4),
@@ -742,7 +742,14 @@ function og_delete_subscription($gid, $uid, $args = array()){
   module_invoke_all('og', 'user delete', $gid, $uid, $args);
 }
 
-function og_approve($node, $account, $token) {
+function og_approve($node, $account, $token = null) {
+  if(empty($token)) {
+    $token = og_get_token($node->nid, $account->uid);
+    $message = t("Are you sure you want to approve the membership of %user in the group %group?",array('%user' => $account->name,'%group' => $node->title));
+    $link = l(t("Yes, I Approve"),"og/approve/$node->nid/$account->uid/$token");
+    return "<p>$message</p>" . $link;
+  }
+
   if (!og_check_token($token, $node->nid)) {
     drupal_set_message(t('Bad token. You seem to have followed an invalid link.'), 'error');
     drupal_access_denied();
