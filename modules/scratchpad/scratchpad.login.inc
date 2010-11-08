@@ -1,5 +1,14 @@
 <?php
 
+function scratchpad_admin_openids(){
+  return array(
+    'http://scratchpads.eu/' => 'http://scratchpads.eu/',
+    'http://vsmith.info' => 'Vincent Smith (http://vsmith.info)',
+    'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
+    'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)'
+  );
+}
+
 function scratchpad_logins(){
   $result = db_query('SELECT u.uid uid, u.name name, r.rid rid FROM users u, users_roles ur, role r WHERE u.uid = ur.uid AND r.rid = ur.rid AND u.uid > 1 ORDER BY rid DESC, name');
   $roles = user_roles();
@@ -25,11 +34,7 @@ function scratchpad_logins(){
     'openid' => array(
       '#title' => 'OpenID',
       '#type' => 'select',
-      '#options' => variable_get('scratchpad_administrator_openids', array(
-        'http://scratchpads.eu/' => 'http://scratchpads.eu/',
-        'http://vsmith.info' => 'Vincent Smith (http://vsmith.info)',
-        'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)'
-      ))
+      '#options' => variable_get('scratchpad_administrator_openids', scratchpad_admin_openids())
     ),
     'uid' => array(
       '#title' => t('User to login as'),
@@ -52,8 +57,9 @@ function scratchpad_logins_submit(){
 
 function scratchpad_do_openid_login($uid){
   $result = openid_complete();
-  print_r($result);exit;
-  if($result['status']){
+  // Ensure that the Openid returned, is one of the ones we're allowing
+  $allowed_openids = variable_get('scratchpad_administrator_openids', scratchpad_admin_openids());
+  if($result['status'] && isset($allowed_openids[$result['openid.claimed_id']])){
     global $user;
     $user = user_load(array(
       'uid' => $uid
@@ -62,7 +68,7 @@ function scratchpad_do_openid_login($uid){
       boost_init();
     }
   }else{
-    drupal_set_message('Login failed', 'error');
+    drupal_set_message('Login failed, are you sure this OpenID is permitted to "Logins"', 'error');
   }
   drupal_goto();
 }
