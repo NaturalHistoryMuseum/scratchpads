@@ -206,7 +206,7 @@ function scratchpadify_cron(){
     // Add
     $perms[] = 'post comments';
     db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
-  } else if (in_array('post comments', $perms) && !$anon_comments_perm) {
+  }else if(in_array('post comments', $perms) && !$anon_comments_perm){
     // Remove
     $perms = drupal_map_assoc($perms);
     unset($perms['post comments']);
@@ -222,10 +222,14 @@ function scratchpadify_menu(){
     'admin/content/comment/settings' => array(
       'title' => 'Comment settings',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('scratchpadify_comment_settings'),
-      'access arguments' => array('administer comments'),
+      'page arguments' => array(
+        'scratchpadify_comment_settings'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'type' => MENU_LOCAL_TASK,
-      'file' => 'scratchpadify.comments.admin.inc',
+      'file' => 'scratchpadify.comments.admin.inc'
     ),
     'admin/settings/scratchpadmessage' => array(
       'title' => 'Scratchpad Notification Message',
@@ -534,7 +538,7 @@ function scratchpadify_footer($main = 0){
     exit();
   }
   if(function_exists('_publication_node_form_is_modal') && _publication_node_form_is_modal()){return;}
-  if(arg(0)=='help'){return;}
+  if(arg(0) == 'help'){return;}
   // Add the following HTML to the footer of ALL pages]
   $dev_server_message = '';
   if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.' && $_SERVER['SERVER_NAME'] != 'dev.scratchpads.eu'){
