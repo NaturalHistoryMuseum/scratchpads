@@ -27,9 +27,9 @@ function scratchpad_logins(){
       '#type' => 'select',
       '#options' => variable_get('scratchpad_administrator_openids', array(
         'http://scratchpads.eu/' => 'http://scratchpads.eu/',
-        'http://vsmith.info' => 'http://vsmith.info',
-        'http://edwbaker.myopenid.com' => 'http://edwbaker.myopenid.com',
-        'https://me.yahoo.com/milichia#2260b' => 'https://me.yahoo.com/milichia#2260b'
+        'http://vsmith.info' => 'Vincent Smith (http://vsmith.info)',
+        'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)',
+        'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)'
       ))
     ),
     'uid' => array(
