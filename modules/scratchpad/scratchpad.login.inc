@@ -28,8 +28,7 @@ function scratchpad_logins(){
       '#options' => variable_get('scratchpad_administrator_openids', array(
         'http://scratchpads.eu/' => 'http://scratchpads.eu/',
         'http://vsmith.info' => 'Vincent Smith (http://vsmith.info)',
-        'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)',
-        'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)'
+        'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)'
       ))
     ),
     'uid' => array(
@@ -53,6 +52,7 @@ function scratchpad_logins_submit(){
 
 function scratchpad_do_openid_login($uid){
   $result = openid_complete();
+  print_r($result);exit;
   if($result['status']){
     global $user;
     $user = user_load(array(
