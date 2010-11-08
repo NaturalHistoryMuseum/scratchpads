@@ -196,6 +196,22 @@ function scratchpadify_cron(){
   // Ensure the User with UID 1 is set as "Scratchpad Team".  Note, this has
   // been added as a result of Aegir, and may not be necessary in the future.
   db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', pass = 'no-direct-login', name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin' and mail = 's.rycroft@nhm.ac.uk'");
+  // Set the value for anonymous commenting - Note, we're setting this here, so
+  // that if permissions are updated by a scratchpadify_update_N hook, then this
+  // will correct the value at the subsequent cron run.
+  $anon_comments_perm = variable_get('scratchpadify_allow_anonymous_comments', 0);
+  $perm = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 1'));
+  $perms = explode(", ", $perm);
+  if(!in_array('post comments', $perms) && $anon_comments_perm){
+    // Add
+    $perms[] = 'post comments';
+    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
+  } else if (in_array('post comments', $perms) && !$anon_comments_perm) {
+    // Remove
+    $perms = drupal_map_assoc($perms);
+    unset($perms['post comments']);
+    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
+  }
 }
 
 /**
@@ -203,6 +219,14 @@ function scratchpadify_cron(){
  */
 function scratchpadify_menu(){
   return array(
+    'admin/content/comment/settings' => array(
+      'title' => 'Comment settings',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('scratchpadify_comment_settings'),
+      'access arguments' => array('administer comments'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'scratchpadify.comments.admin.inc',
+    ),
     'admin/settings/scratchpadmessage' => array(
       'title' => 'Scratchpad Notification Message',
       'description' => 'Change the default autotag settings.',
