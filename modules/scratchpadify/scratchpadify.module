@@ -199,19 +199,23 @@ function scratchpadify_cron(){
   // Set the value for anonymous commenting - Note, we're setting this here, so
   // that if permissions are updated by a scratchpadify_update_N hook, then this
   // will correct the value at the subsequent cron run.
-  $anon_comments_perm = variable_get('scratchpadify_allow_anonymous_comments', 0);
+  scratchpadify_cron_perm_helper('post comments', variable_get('scratchpadify_allow_anonymous_comments', 0));
+  scratchpadify_cron_perm_helper('view revisions', variable_get('scratchpadify_allow_anonymous_access_revisions', 0));
+}
+
+function scratchpadify_cron_perm_helper($newperm, $enable){
   $perm = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 1'));
   $perms = explode(", ", $perm);
-  if(!in_array('post comments', $perms) && $anon_comments_perm){
+  if(!in_array($newperm, $perms) && $enable){
     // Add
-    $perms[] = 'post comments';
+    $perms[] = $newperm;
     db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
-  }else if(in_array('post comments', $perms) && !$anon_comments_perm){
+  }else if(in_array($newperm, $perms) && !$enable){
     // Remove
     $perms = drupal_map_assoc($perms);
-    unset($perms['post comments']);
+    unset($perms[$newperm]);
     db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
-  }
+  }  
 }
 
 /**
@@ -241,6 +245,19 @@ function scratchpadify_menu(){
       'access arguments' => array(
         'SCRATCHPADIFY'
       ), // Only for UID 1
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'scratchpadify.admin.inc'
+    ),
+    'admin/settings/additionalpermissions' => array(
+      'title' => 'Additional permissions',
+      'description' => 'Enable/disable permissions for anonymous users',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array(
+        'scratchpadify_anonymous_permissions'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'type' => MENU_NORMAL_ITEM,
       'file' => 'scratchpadify.admin.inc'
     ),
