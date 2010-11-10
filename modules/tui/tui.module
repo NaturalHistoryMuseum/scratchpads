@@ -144,6 +144,18 @@ function tui_menu(){
       ),
       'type' => MENU_CALLBACK,
       'file' => 'tui.admin.inc'
+    ),
+    'tui/restoresort/%' => array(
+      'title' => 'Restore sort',
+      'page callback' => 'tui_restore_sort',
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
+      'type' => MENU_CALLBACK,
+      'file' => 'tui.admin.inc'
     )
   );
 }

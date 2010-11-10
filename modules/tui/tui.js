@@ -116,6 +116,13 @@ Drupal.tui.click_buttonclick = function(img_clicked){
         $('#tui-link-box').unbind('focus');
       }
       break;
+    case 'tui-resort':
+      if(Drupal.tui.form_being_displayed){
+        $.ajax({cache:false,url:Drupal.settings.tui.callbacks.restoresort+"/"+Drupal.tui.form_being_displayed,success:function(data){Drupal.tui.reload_tree();}});
+      } else {
+        alert(Drupal.t('Please click on a term first'));
+      }
+      break;
     case 'tui-next':
     case 'tui-previous':
       if(!Drupal.tui.form_changed){

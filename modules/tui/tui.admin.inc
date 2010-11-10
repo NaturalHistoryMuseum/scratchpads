@@ -68,6 +68,9 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
         )),
         'undo' => url('tui/undo', array(
           'absolute' => TRUE
+        )),
+        'restoresort' => url('tui/restoresort', array(
+          'absolute' => TRUE
         ))
       ),
       'dialog' => array(
@@ -103,6 +106,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
           <img id="tui-previous" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/previous.png" alt="' . t('Previous') . '" title="' . t('Previous') . '"/>
           <img id="tui-add" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/add.png" alt="' . t('Add term') . '" title="' . t('Add term') . '"/>
           <img id="tui-delete" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/delete.png" alt="' . t('Delete term') . '" title="' . t('Delete term') . '"/>
+          <img id="tui-resort" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/resort.png" alt="' . t('Sort&nbsp;children&nbsp; alphabetically') . '" title="' . t('Sort&nbsp;children&nbsp;alphabetically') . '"/>
           <img id="tui-undo" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/undo.png" alt="' . t('Undo move') . '" title="' . t('Undo move') . '"/>
           <img id="tui-import" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/import.png" alt="' . t('Import') . '" title="' . t('Import') . '"/>
           <img id="tui-link" src="' . base_path() . drupal_get_path('module', 'tui') . '/images/link.png" alt="' . t('Link to this page') . '" title="' . t('Link to this page') . '"/>
@@ -167,6 +171,22 @@ function tui_search_form(&$form_statge, $vid){
   );
 }
 
+/**
+ * Callback to restore the sort
+ * 
+ * FIXME - The following should probably have some sort of token, to ensure that
+ * it has not been eroneously called.  This isn't too much of an issue though, 
+ * as reordering of terms is unlikely to be a cracker's first target.
+ */
+function tui_restore_sort($tid_id){
+  // Get the id from the tid HTML id
+  $tid = array_pop(explode("-", $tid_id));
+  if(is_numeric($tid)){
+    db_query('UPDATE {term_data} SET weight = 0 WHERE tid IN (SELECT tid FROM {term_hierarchy} WHERE parent = %d)', $tid);
+  }
+  drupal_json(array());
+  exit;
+}
 /**
  * Autocomplete for above form
  */
