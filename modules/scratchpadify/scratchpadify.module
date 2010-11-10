@@ -199,8 +199,10 @@ function scratchpadify_cron(){
   // Set the value for anonymous commenting - Note, we're setting this here, so
   // that if permissions are updated by a scratchpadify_update_N hook, then this
   // will correct the value at the subsequent cron run.
-  scratchpadify_cron_perm_helper('post comments', variable_get('scratchpadify_allow_anonymous_comments', 0));
-  scratchpadify_cron_perm_helper('view revisions', variable_get('scratchpadify_allow_anonymous_access_revisions', 0));
+  $permissions = variable_get('scratchpadify_anon_perms', array());
+  foreach($permissions as $permission => $enable){
+    scratchpadify_cron_perm_helper($permission, $enable);
+  }
 }
 
 function scratchpadify_cron_perm_helper($newperm, $enable){

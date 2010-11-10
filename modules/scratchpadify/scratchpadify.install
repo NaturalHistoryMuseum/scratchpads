@@ -361,6 +361,7 @@ function _scratchpadify_install_image_fields(){
  * 6173: Run 6140 again, just for mhp.myspecies.info
  * 6174: Add "zip" to list of allowed extensions
  * 6175: Fix multiple attached images
+ * 6176: Update method of adding additional permissions to anonymous users.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1518,6 +1519,20 @@ function scratchpadify_update_6175(){
       'query' => t('Updated @number_of_images nodes', array(
         '@number_of_images' => $num_images
       ))
+    )
+  );
+}
+
+/**
+ * Update method of adding additional permissions to anonymous users.
+ */
+function scratchpadify_update_6176(){
+  variable_set('scratchpadify_anon_perms', array('post comments' => variable_get('scratchpadify_allow_anonymous_comments', 0)));
+  variable_del('scratchpadify_allow_anonymous_comments');
+  return array(
+    array(
+      'success' => TRUE,
+      'query' => t('Updated anonymous users\' permission variable.')
     )
   );
 }

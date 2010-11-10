@@ -46,25 +46,43 @@ function scratchpadify_notification_message(){
  * Allow maintainers to tweak specific anonymous user permissions
  */
 function scratchpadify_anonymous_permissions(){
+  $permissions = variable_get('scratchpadify_anon_perms', array());
   return system_settings_form(array(
-    'scratchpadify_allow_anonymous_comments' => array(
-      '#title' => 'Allow anonymous comments',
-      '#type' => 'checkbox',
-      '#default_value' => variable_get('scratchpadify_allow_anonymous_comments', 0),
-      '#description' => t('If checked, anonymous users will be able to post comments to your site.  Comments will not be visible without first being approved by an Editor or Maintainer.', array(
-        '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
-      ))
-    ),
-    'scratchpadify_allow_anonymous_access_revisions' => array(
-      '#title' => 'Allow anonymous users to access revisions',
-      '#type' => 'checkbox',
-      '#default_value' => variable_get('scratchpadify_allow_anonymous_access_revisions', 0),
-      '#description' => t('If checked, anonymous users will be able to view all revisions of all nodes on your site.)')
-    ),
-    'last_cron_run' => array(
-      '#value' => t('<p>Please note, these values will be changed on the next cron run (last cron run was "%last_cron_run" -> contact an administrator if this is more than one hour).</p>', array(
-        '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
-      ))
+    'scratchpadify_anon_perms' => array(
+      '#tree' => TRUE,
+      'post comments' => array(
+        '#title' => 'Allow anonymous comments',
+        '#type' => 'checkbox',
+        '#tree' => TRUE,
+        '#default_value' => isset($permissions['post comments']) ? $permissions['post comments'] : 0,
+        '#description' => t('If checked, anonymous users will be able to post comments to your site.  Comments will not be visible without first being approved by an Editor or Maintainer.', array(
+          '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
+        ))
+      ),
+      'view revisions' => array(
+        '#title' => 'Allow anonymous users to access revisions',
+        '#type' => 'checkbox',
+        '#tree' => TRUE,
+        '#default_value' => isset($permissions['view revisions']) ? $permissions['view revisions'] : 0,
+        '#description' => t('If checked, anonymous users will be able to view all revisions of all nodes on your site.')
+      ),
+      /**
+       * Example for adding an additional permission.  Only change the values in
+       * the square brackets (removing brackets as you do).
+       * 
+      '[permission]' => array(
+        '#title' => '[Title for permission]',
+        '#type' => 'checkbox',
+        '#tree' => TRUE,
+        '#default_value' => isset($permissions['[permission]']) ? $permissions['[permission]'] : 0, 
+        '#description' => t('[description of permission]')
+      ),
+       */
+      'last_cron_run' => array(
+        '#value' => t('<p>Please note, these values will be changed on the next cron run (last cron run was "%last_cron_run" -> contact an administrator if this is more than one hour).</p>', array(
+          '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
+        ))
+      )
     )
   ));
 }
