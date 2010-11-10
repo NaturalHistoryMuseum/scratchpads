@@ -418,3 +418,16 @@ function classification_update_6100() {
 
   return $ret;
 }
+
+/**
+ * Just pop this here!
+ */
+function classification_update_6101(){
+  drupal_rebuild_theme_registry();
+  return array(
+    array(
+      'success' => TRUE,
+      'query' => t('Theme rebuilt.')
+    )
+  );
+}
