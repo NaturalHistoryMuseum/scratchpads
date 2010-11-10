@@ -79,9 +79,9 @@ function scratchpadify_anonymous_permissions(){
       ),
        */
       'last_cron_run' => array(
-        '#value' => t('<p>Please note, these values will be changed on the next cron run (last cron run was "%last_cron_run" -> contact an administrator if this is more than one hour).</p>', array(
+        '#value' => '<p>'.t('For those of you who are familiar with Drupal, you can nominate an additional permission using the "Issues..." tab, and adding a support request.').'</p><p><strong>'.t('Please note, these values will be changed on the next cron run (last cron run was "%last_cron_run" -> contact an administrator if this is more than one hour).', array(
           '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
-        ))
+        )).'</strong></p>'
       )
     )
   ));
