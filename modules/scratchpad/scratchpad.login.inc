@@ -3,7 +3,7 @@
 function scratchpad_admin_openids(){
   return array(
     'http://scratchpads.eu/' => 'http://scratchpads.eu/',
-    'http://vsmith.info' => 'Vincent Smith (http://vsmith.info)',
+    'http://vsmithuk.myopenid.com' => 'Vincent Smith (http://vsmithuk.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
     'http://edwbaker.myopenid.com' => 'Edward Baker (http://edwbaker.myopenid.com)'
   );
