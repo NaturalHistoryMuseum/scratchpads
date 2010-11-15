@@ -68,7 +68,7 @@ function scratchpad_do_openid_login($uid){
       boost_init();
     }
   }else{
-    drupal_set_message('Login failed, are you sure this OpenID is permitted to "Logins"', 'error');
+    drupal_set_message(t('Login failed, are you sure the OpenID "%openid" is permitted to "Logins"', array('%openid' => $result['openid.claimed_id'])), 'error');
   }
   drupal_goto();
 }
