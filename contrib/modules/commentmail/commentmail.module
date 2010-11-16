@@ -1,0 +1,189 @@
+<?php
+// $Id: commentmail.module,v 1.19 2008/11/27 14:05:22 maartenvg Exp $
+
+/**
+ * @todo
+ *   - integrate with token module
+ *   - user comment_load from the menu system
+ *   - $comment in commentmail_comment() is already good
+ *   - use FAPI #redirect
+ */
+
+define('COMMENTMAIL_DEFAULT_APPROVE', "An unapproved comment has been posted on @site for the post '@node'. You need to publish this comment before it will appear on your site.
+
+approve/edit/delete/ban: @quick_approve
+
+Name: @user  | Email: @mail  | URL: @homepage  | IP: @host
+Comment:
+
+@subject
+
+@comment
+
+approve/edit/delete/ban: @quick_approve
+
+Comment administration: @admin_url");
+
+define('COMMENTMAIL_DEFAULT_NOTIFY', "A new comment has been posted on @site for the post '@node'.
+
+THIS COMMENT DOES NOT REQUIRE APPROVAL
+
+Name: @user  | Email: @mail  | URL: @homepage  | IP: @host
+Comment:
+
+@subject
+
+@comment
+
+edit/delete/ban: @quick_approve
+
+Comment administration: @admin_url");
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function commentmail_menu() {
+  $items = array();
+
+  $items['comment/qa/%'] = array(
+    'title' => 'Quick edit',
+    'page callback' => 'commentmail_quick_approve',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+    'file' => 'commentmail.actions.inc',
+  );
+
+  $items['comment/qa/%/%'] = array(
+    'title' => 'Quick edit',
+    'page callback' => 'commentmail_quick_approve',
+    'page arguments' => array(2, 3),
+    'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+    'file' => 'commentmail.actions.inc',
+  );
+
+  $items['admin/settings/commentmail'] = array(
+    'title' => 'Comment mail',
+    'description' => 'Settings for the comment mail module.',
+    'access arguments' => array('administer comments'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commentmail_admin_settings'),
+    'file' => 'commentmail.admin.inc',
+  );
+
+  $items['comment/approve/%'] = array(
+    'title' => 'Approve comment',
+    'access arguments' => array('administer comments'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commentmail_approve', 2),
+    'type' => MENU_CALLBACK,
+    'file' => 'commentmail.actions.inc',
+  );
+
+  $items['comment/deleteban/%'] = array(
+    'title' => 'Delete comment and ban user',
+    'access arguments' => array('administer comments'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commentmail_deleteban', 2),
+    'type' => MENU_CALLBACK,
+    'file' => 'commentmail.actions.inc',
+  );
+
+  $items['comment/quickdelete/%'] = array(
+    'title' => 'Quick delete',
+    'access arguments' => array('administer comments'),
+    'page callback' => 'commentmail_quick_delete',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'commentmail.actions.inc',
+   );
+
+  $items['comment/quickdeleteban/%'] = array(
+    'title' => 'Quick delete and ban',
+    'access arguments' => array('administer comments'),
+    'page callback' => 'commentmail_quick_deleteban',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'commentmail.actions.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_comment().
+ */
+function commentmail_comment($comment, $op) {
+  global $language;
+
+  if ($op == 'insert') {
+    // Load the real comment object from the database.
+    $comment_obj = _comment_load($comment['cid']);
+
+    $mode = variable_get('commentmail_mode', 'approval');
+
+    // Only proceed if mail is sent always or the comment is not published yet.
+    if(!($mode == 'approval' && $comment_obj->status == COMMENT_PUBLISHED) && $mode != 'disable') {
+      $recipient = variable_get('commentmail_to', variable_get('site_mail', FALSE));
+
+      // Only send a mail if a recipient has been specified.
+      if ($recipient) {
+          $params['comment'] = $comment_obj;
+          drupal_mail('commentmail', $mode .'_mail', $recipient, $language, $params);
+
+      }
+      else {
+        watchdog('commentmail', 'Site mail address is not configured.', array(), WATCHDOG_ERROR);
+      }
+    }
+  }
+}
+
+
+/**
+ * Implementation of hook_mail().
+ */
+function commentmail_mail($key, &$message, $params) {
+  // Load the node to get the title.
+  $node = node_load($params['comment']->nid);
+
+  if ($key == 'approval_mail') {
+    $body = variable_get('commentmail_mail_approve', t(COMMENTMAIL_DEFAULT_APPROVE));
+  }
+  else  {
+    $body = variable_get('commentmail_mail_notify', t(COMMENTMAIL_DEFAULT_NOTIFY));
+  }
+
+  // Check if the user is logged in.
+  if ($params['comment']->uid) {
+    $account = user_load(array('uid' => $comment_obj->uid));
+    $params['comment']->mail = $account->mail;
+    $params['comment']->homepage = $account->homepage;
+  }
+
+  $options = array('absolute' => TRUE);
+
+  $variables = array(
+    '@site' => variable_get('site_name', 'Drupal'),
+    '@node' => $node->title,
+    '@quick_approve' => url('comment/qa/'. $params['comment']->cid, $options),
+    '@approval_url' => url('comment/approve/'. $params['comment']->cid, $options),
+    '@delete_url' => url('comment/delete/'. $params['comment']->cid, $options),
+    '@ban_url' => url('comment/deleteban/'. $params['comment']->cid, $options),
+    '@edit_url' => url('comment/edit/'. $params['comment']->cid, $options),
+    '@queue_url' => url('admin/content/comment/approval', $options),
+    '@view_url' => url('node/'. $node->nid, array('fragment' => 'comment-'. $params['comment']->cid, 'absolute' => TRUE)),
+    '@admin_url' => url('admin/content/comment', $options),
+    '@host' => $params['comment']->hostname,
+    '@user' => $params['comment']->name,
+    '@mail' => $params['comment']->mail,
+    '@homepage' => $params['comment']->homepage,
+    '@subject' => $params['comment']->subject,
+    '@comment' => $params['comment']->comment,
+  );
+
+  $message['subject'] = t('[!site] New Comment posted on "!title"', array('!title' => $node->title, '!site' => variable_get('site_name', 'Drupal')));
+  $message['body'][] = strtr($body, $variables);
+}

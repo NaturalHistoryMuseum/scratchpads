@@ -1,0 +1,25 @@
+<?php
+// $Id: commentmail.install,v 1.2 2008/06/22 15:56:23 add1sun Exp $
+
+/**
+ * Implementation of hook_update_N().
+ * Changing a variable name to _mode if the old _opt exists.
+ */
+function commentmail_update_1() {
+  $ret = array();
+
+  variable_set('commentmail_mode', variable_get('commentmail_opt', 'approval'));
+  variable_del('commentmail_opt');
+
+  return $ret;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function commentmail_uninstall() {
+  variable_del('commentmail_to');
+  variable_del('commentmail_mode');
+  variable_del('commentmail_mail_approve');
+  variable_del('commentmail_mail_notify');
+}
