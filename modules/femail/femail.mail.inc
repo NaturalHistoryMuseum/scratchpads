@@ -35,7 +35,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $ci
         $file = (array)$file;
         $additional_text .= url('', array(
           'absolute' => TRUE
-        )) . $file['filepath'] . "\n";
+        )) . drupal_urlencode($file['filepath']) . "\n";
       }
       $body = $additional_text . "\n" . $body;
     }
