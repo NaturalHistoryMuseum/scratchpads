@@ -1032,6 +1032,8 @@ function darwincore_form_alter(&$form, &$form_state, $form_id){
       $form['locations']['#collapsible'] = 0;
       $form['locations']['#weight'] = -100;
     }
+    // Remove preview button.
+    unset($form['buttons']['preview']);
   }/* First, we ensure the vocabulary called "Taxa" is not visible in the Drupal taxonomy listing because we don't want it to be deleted or modified */
   elseif($form_id == 'taxonomy_overview_vocabularies'){
     $vids = _darwincore_get_vids();
