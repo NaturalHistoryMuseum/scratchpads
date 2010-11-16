@@ -71,13 +71,13 @@ function theme_darwincore_full_page($node) {
   );
   if($node->earliestdatecollected && $node->earliestdatecollected != '0000-00-00'){
     if($node->latestdatecollected){
-      $collection[] = array("Earliest Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));
+      $collection[] = array("Earliest Date Collected",format_date(strtotime($node->earliestdatecollected)+7200, 'custom', 'j F Y'));
     } else {
-      $collection[] = array("Date Collected",format_date(strtotime($node->earliestdatecollected), 'custom', 'j F Y'));    
+      $collection[] = array("Date Collected",format_date(strtotime($node->earliestdatecollected)+7200, 'custom', 'j F Y'));    
     }
   }
   if($node->latestdatecollected)
-    $collection[] = array("Latest Date Collected",format_date(strtotime($node->latestdatecollected), 'custom', 'j F Y'));
+    $collection[] = array("Latest Date Collected",format_date(strtotime($node->latestdatecollected)+7200, 'custom', 'j F Y'));
   $collection[] = array("Count",$node->count);
   $collection[] = array("Field Notes",$node->fieldnotes);
   $misc = array(
