@@ -125,6 +125,7 @@ function batax_form_alter(&$form, &$form_state, $form_id){
           '#element_validate' => array(
             'batax_element_validate'
           ),
+          '#required' => $vocabulary->required,
           '#description' => $help,
           '#maxlength' => 1000000
         );
