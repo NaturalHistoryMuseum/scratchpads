@@ -94,7 +94,7 @@ function uwho_client_block_content($key, $url, $redirect = FALSE, $text = FALSE)
     return '';
   }
   // We need to ensure that jquery.js is added to the page
-  drupal_add_js('', '');
+  drupal_add_js(array(), 'setting');
   if(count($_COOKIE) && (isset($_COOKIE['has_js']) && ($_COOKIE['has_js']))){
     $link_or_button = '<a href="' . $url . ((strlen(urlencode($encrypted)) + strlen($url)) < 1800 ? (strpos($url, '?') ? '&' : '?') . 'uwhodata=' . urlencode($encrypted) : '') . '" onclick="$(this).parent().trigger(\'submit\'); return false;">' . $text . '</a>';
   }else{
