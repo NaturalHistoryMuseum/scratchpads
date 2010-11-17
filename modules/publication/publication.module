@@ -1027,6 +1027,7 @@ function publication_add_files(){
   // Parent modal files
   modalframe_parent_js();
   drupal_add_js($path . '/js/publication.modal.parent.js', 'module', 'footer');
+  
 }
 
 function _publication_node_get_image($nid, $publication_nid){
