@@ -27,7 +27,7 @@ function htdigest_update_user($account, $password){
       while($row_aliases = db_fetch_array($result_aliases)){
         if(db_result(db_query('SELECT COUNT(*) FROM {htdigest_user} WHERE rid = %d AND aid = %d', $row_realm['rid'], $row_aliases['aid']))){
           // Update
-          db_query("UPDATE {htdigest_user} SET pass = MD5('%s') WHERE rid = %d AND uid = %d", $row_realm['rid'], $account->uid);
+          db_query("UPDATE {htdigest_user} SET pass = '%s' WHERE rid = %d AND aid = %d",  md5($row_aliases['alias'] . ':' . $row_realm['realm'] . ':' . $password), $row_realm['rid'], $row_aliases['aid']);
         }else{
           // Insert
           db_query("INSERT INTO {htdigest_user} (aid, rid, pass) VALUES (%d, %d, '%s')", $row_aliases['aid'], $row_realm['rid'], md5($row_aliases['alias'] . ':' . $row_realm['realm'] . ':' . $password));
