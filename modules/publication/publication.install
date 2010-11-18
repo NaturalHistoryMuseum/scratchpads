@@ -54,7 +54,6 @@ function publication_enable(){
     $current_borked_types[] = $type;
     $autotag_broken_node_types[] = $type;
   }
-  variable_set('autotag_totally_borked', $current_borked_types);
   variable_set('autotag_broken_node_types', $autotag_broken_node_types);
   publication_install_create_groups();
   publication_install_add_fields_to_groups();
@@ -249,5 +248,21 @@ function publication_uninstall_fields(){
  */
 function publication_update_6101(){  
   menu_rebuild();
+  return array('#finished' => TRUE);
+}
+
+/**
+ * Set the autotag variable, so that we don't autotag the publication content
+ * type
+ */
+function publication_update_6102(){
+  $nodes = publication_node_info();
+  $autotag_broken_node_types = variable_get('autotag_broken_node_types', array());
+  foreach($nodes as $type => $node){
+    if(!in_array($type, $autotag_broken_node_types)){
+      $autotag_broken_node_types[] = $type;
+    }
+  }
+  variable_set('autotag_broken_node_types', $autotag_broken_node_types);
   return array('#finished' => TRUE);
 }
