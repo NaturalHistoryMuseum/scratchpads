@@ -512,7 +512,6 @@ function scratchpad_profile_profile_tasks_2(){
   variable_set('theme_settings', array(
     'toggle_search' => 0
   ));
-  db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
   // Remove the "Biblio" & "Taskguide" links from the navigation menu - they
   // look ugly.    
   $links = array(
@@ -916,6 +915,8 @@ if(!function_exists('quoted_printable_encode')){
 }
 
 function scratchpad_profile_profile_tasks_4(){
+  // Set garland as installed WTF???  
+  db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
   // Ensure access is properly set (why the fuck wouldn't it be I hear you ask,
   // well, I don't bloody know).  
   node_access_rebuild();
