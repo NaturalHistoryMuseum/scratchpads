@@ -100,7 +100,7 @@ function htdigest_user_settings_delete_alias(&$form_state, $account, $aids){
   $result = db_query('SELECT alias FROM {htdigest_alias} WHERE aid IN (%s) ORDER BY alias', $aids);
   $aliases = array();
   while($row = db_fetch_array($result)){
-    $aliases[] = $row['alias'];
+    $aliases[] = check_plain($row['alias']);
   }
   $form = array(
     'aids' => array(
@@ -160,7 +160,7 @@ function htdigest_user_settings(&$form_state, $account){
   $aliases = array();
   $result_aliases = db_query('SELECT alias, aid FROM htdigest_alias WHERE uid = %d AND alias IS NOT NULL ORDER BY alias', $account->uid);
   while($row = db_fetch_array($result_aliases)){
-    $aliases[$row['aid']] = $row['alias'];
+    $aliases[$row['aid']] = check_plain($row['alias']);
   }
   if(count($aliases)){
     $form['current_aliases_fieldset'] = array(
