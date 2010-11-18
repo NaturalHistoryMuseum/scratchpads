@@ -4,6 +4,7 @@
  * hook_form_alter
  */
 function autotag_form_alter(&$form, &$form_state, $form_id){
+  if(in_array($form['type']['#value'], variable_get('autotag_broken_node_types', array()))){return;}
   $autotag_vids = _autotag_get_vids_for_type($form['type']['#value']);
   if($form['#id'] == 'node-form' && isset($form['taxonomy']) && count($autotag_vids)){
     // Always make the taxonomy section a fieldset, as it groups the button with
