@@ -183,22 +183,28 @@ function nexusControlledStateValidator(value, columnDef, $container) {
 
 
 function nexusNumericStateValidator(value, columnDef, $container) {
-	
-  if (value.length && (value.toString().match(/^\d+\-\d+$|^\d+$|^\?$/) == null)){ 
-    
-    nexusErrorBeautyTip($container, 'Please enter a numeric value')
-    
-    valid = false;
-    
-  }else{
-    
-    valid = true;
-    
-  }
-  
-  return {valid:valid, msg:null};
-  
-  
+
+	if (value.length &! isNumeric(value)){ 
+
+		nexusErrorBeautyTip($container, 'Please enter a numeric value')
+
+		valid = false;
+
+	} else {
+
+		valid = true;
+
+	}
+
+	return {
+		valid : valid,
+		msg : null
+	};
+
+}
+
+function isNumeric(n) {
+	return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
 function nexusDNAStateValidator(value, columnDef, $container) {
