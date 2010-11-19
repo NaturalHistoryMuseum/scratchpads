@@ -613,7 +613,7 @@ function scratchpadify_nodeapi(&$node, $op, $arg = 0){
         if($vid){
           $tid = db_result(db_query("SELECT tid FROM {term_data} WHERE vid = %d AND name LIKE 'Library'", $vid));
           if($tid){
-            if(is_array($node->taxonomy[$vid])){
+            if(is_array($node->taxonomy[$vid]) || !isset($node->taxonomy[$vid]) || !isset($node->taxonomy) || $node->taxonomy[$vid] == ''){
               $node->taxonomy[$vid][$tid] = $tid;
             }
           }
