@@ -55,7 +55,7 @@ function sandbox_profile_profile_tasks(&$task, $url){
     $node->field_title = array(array('value'=>'Mr/Mrs/Miss'));
     $node->field_givennames = array(array('value'=>'Scratchpad'));
     $node->field_familyname = array(array('value'=>'Tester'));
-    $node->title = "{$form_state['values']['title']} {$form_state['values']['given']} {$form_state['values']['family']}";
+    $node->title = "Scratchpad Tester";
     $node->auto_nodetitle_applied = TRUE;  
     $node->field_institution = array(array('value'=>'My Institution'));
     $node->field_taxonomicinterest = array(array('value'=>'Life'));
