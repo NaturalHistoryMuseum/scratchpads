@@ -14,8 +14,9 @@
               $(this.element).addClass('progress-disabled').attr('disabled', true);
               
               // ADDITIONAL AHAH_ACTION CODE
-              if(Drupal.settings.ahah[this.selector.substring(1)].submitextra != undefined){
-                window[Drupal.settings.ahah[this.selector.substring(1)].submitextra](form_values, element, options);
+              var selectorName = this.selector.substring(1);                 
+              if(typeof Drupal.settings.ahah[selectorName] == 'object' && typeof window[Drupal.settings.ahah[selectorName]['submitextra']] == 'function'){
+                window[Drupal.settings.ahah[selectorName]['submitextra']](form_values, element, options);
               }
               // END ADDITIONAL AHAH_ACTION CODE
               
