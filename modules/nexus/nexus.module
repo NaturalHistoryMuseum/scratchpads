@@ -940,7 +940,9 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#title' => t('New group name'), 
     '#size' => 60, 
     '#maxlength' => 128, 
-    '#weight' => 1
+    '#weight' => 1,
+  	'#required' => true,
+  	'#default_value' => t('Default')
   );
   $character_group_options[0] = t('Add to new group');
   $character_groups = nexus_get_characters($character_root_tid);
