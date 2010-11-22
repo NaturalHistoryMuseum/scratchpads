@@ -235,9 +235,13 @@ function nexus_node_page_edit($node){
 }
 
 function nexus_project_node_page_edit($node){
-  //	Ensure projects always use taxonomy tree
+  // Ensure projects always use taxonomy tree
   global $conf;
   $conf['taxonomy_tree_node_types']['nexus_project'] = 'nexus_project';
+  
+  // Ensure BATAX is turned off - taxonomy tree needs to be passed TIDS, not a string containing the term
+  $conf['batax_disable_vids'][$node->taxa_vid] = $node->taxa_vid;
+  
   $path = drupal_get_path('module', 'nexus');
   $output = '<div id="nexus" class="editable">';
   module_load_include('inc', 'nexus', 'includes/nexus.matrix');
@@ -724,7 +728,7 @@ function nexus_form_alter(&$form, $form_state, $form_id){
         )
       );
       break;
-    case 'nexus_project_node_form':
+    case 'nexus_project_node_form':   	
       // Move the node title & body into a fieldset so it works with vertical tabs
       if(arg(0) == 'admin' || $form['#node']->nid){
         $form['#attributes']['class'] = 'nexus-edit-form';
