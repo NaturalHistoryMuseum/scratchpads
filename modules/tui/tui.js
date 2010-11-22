@@ -162,6 +162,7 @@ Drupal.tui.update_link = function(){
 }
 
 Drupal.tui.drag_start = function(event, ui){
+  document.onselectstart = function(){ return false; }
   $('.tui-term.active').removeClass('active');
   $('#tui-tree-subcontainer').css('height', 'auto');
   $('#tui-tree-subcontainer').css('overflow-y', 'visible');
@@ -171,6 +172,7 @@ Drupal.tui.drag_start = function(event, ui){
 }
 
 Drupal.tui.drop_deactivate = function(event, ui){
+  document.onselectstart = function(){ return true; }
   if(!Drupal.tui.waiting_for_reply){
     $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer p').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
