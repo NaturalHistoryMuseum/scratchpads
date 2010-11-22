@@ -11,6 +11,7 @@ function nexus() {
   var settings = [];
   var sorting;
   var gotTree;
+  
 
   return {//
     
