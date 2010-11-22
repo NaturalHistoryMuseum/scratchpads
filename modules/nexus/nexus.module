@@ -957,6 +957,7 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#type' => 'select', 
     '#title' => t('Character group'), 
     '#options' => $character_group_options, 
+  	'#required' => true,
     '#default_value' => ($character_tid ? key($term_parents) : $default_group_tid)
   );
   $form['type'] = array(
