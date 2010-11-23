@@ -24,13 +24,13 @@ function publication_enable(){
   $node_relationships_settings = array(
     'noderef' => array(
       'search_and_reference_view' => array(
-        'field_publication_images' => 'publication_noderefences:page_table',
-        'field_publication_biblio' => 'publication_noderefences:page_grid',
+        'field_publication_images' => 'publication_noderefences:page_table', 
+        'field_publication_biblio' => 'publication_noderefences:page_grid', 
         'field_publication_authors' => 'publication_noderefences:page_1'
-      ),
-      'create_and_reference' => array(),
+      ), 
+      'create_and_reference' => array(), 
       'translate_and_reference' => array()
-    ),
+    ), 
     'backref' => array(
       'regions' => array()
     )
@@ -42,7 +42,7 @@ function publication_enable(){
   $autotag_broken_node_types = variable_get('autotag_broken_node_types', array());
   foreach($nodes as $type => $node){
     variable_set('node_options_' . $type, array(
-      'status',
+      'status', 
       'revision'
     ));
     if($type != 'publication'){
@@ -79,7 +79,7 @@ function publication_requirements($phase){
       )), 'error');
       return array(
         basename(__FILE__) => array(
-          'title' => 'Failed module requiredment in ' . basename(__FILE__),
+          'title' => 'Failed module requiredment in ' . basename(__FILE__), 
           'severity' => REQUIREMENT_ERROR
         )
       );
@@ -102,82 +102,82 @@ function publication_uninstall(){
  */
 function publication_schema(){
   $schema['publication_node'] = array(
-    'description' => 'Stores publication field settings.',
+    'description' => 'Stores publication field settings.', 
     'fields' => array(
       'nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
         'description' => 'The {node}.nid of the node.'
-      ),
+      ), 
       'vid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
         'description' => 'Primary Key: The {node}.vid of the node.'
-      ),
+      ), 
       'vocabulary' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
         'description' => 'The vocabulary vid used by the node.'
-      ),
+      ), 
       'nomenclature_fields' => array(
-        'type' => 'text',
-        'not null' => FALSE,
-        'size' => 'big',
+        'type' => 'text', 
+        'not null' => FALSE, 
+        'size' => 'big', 
         'description' => 'A serialized array of name value pairs that denote which fields to display.'
-      ),
+      ), 
       'term_field_defaults' => array(
-        'type' => 'text',
-        'not null' => FALSE,
-        'size' => 'big',
+        'type' => 'text', 
+        'not null' => FALSE, 
+        'size' => 'big', 
         'description' => 'A serialized array of term field names.'
       )
-    ),
+    ), 
     'indexes' => array(
       'vid' => array(
         'vid'
       )
-    ),
+    ), 
     'primary key' => array(
-      'nid',
+      'nid', 
       'vid'
     )
   );
   $schema['publication_taxon_description_node'] = array(
     'fields' => array(
       'vid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
         'description' => 'Primary Key: The {node}.vid of the node.'
-      ),
+      ), 
       'nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
         'description' => 'The {node}.nid of the node.'
-      ),
+      ), 
       'term_fields' => array(
-        'type' => 'text',
-        'not null' => FALSE,
-        'size' => 'big',
+        'type' => 'text', 
+        'not null' => FALSE, 
+        'size' => 'big', 
         'description' => 'A serialized array of term field (SPM) names.'
       )
-    ),
+    ), 
     'indexes' => array(
       'vid' => array(
         'vid'
       )
-    ),
+    ), 
     'primary key' => array(
-      'nid',
+      'nid', 
       'vid'
     )
   );
@@ -220,8 +220,8 @@ function publication_install_add_fields_to_groups(){
   foreach($fields as $field){
     if(isset($field['group'])){
       fieldgroup_update_fields(array(
-        'field_name' => $field['field_name'],
-        'group' => $field['group'],
+        'field_name' => $field['field_name'], 
+        'group' => $field['group'], 
         'type_name' => $field['type_name']
       ));
     }
@@ -246,9 +246,11 @@ function publication_uninstall_fields(){
  * Update to scrub the menu - Only required due to a change in function name in 
  * the node_clone module
  */
-function publication_update_6101(){  
+function publication_update_6101(){
   menu_rebuild();
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
 
 /**
@@ -264,5 +266,30 @@ function publication_update_6102(){
     }
   }
   variable_set('autotag_broken_node_types', $autotag_broken_node_types);
-  return array('#finished' => TRUE);
+  return array(
+    '#finished' => TRUE
+  );
 }
+
+/**
+ * Install and enable the scratchpadify jquery update module
+ */
+function publication_update_6103(){
+  $ret = array();
+  include_once ('includes/install.inc');
+  drupal_install_modules(array(
+    'scratchpadify_jquery_update'
+  ));
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
+  menu_rebuild();
+  cache_clear_all('schema', 'cache');
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  $ret[] = array(
+    'success' => true, 
+    'query' => 'Installed Scratchpadify Jquery Update module and enabled it'
+  );
+  return $ret;
+}
+
