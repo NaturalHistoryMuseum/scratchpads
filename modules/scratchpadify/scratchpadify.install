@@ -349,7 +349,7 @@ function _scratchpadify_install_image_fields(){
  * 6163: Set the 'image_gallery_nav_vocabulary' variable.
  * 6164: Rebuild the theme registry just to tweak the node info string
  * 6165: Allow editors to see the remote issues tab.
- * 6166: Update permissions
+ * 6166: Update permissions - DO NOT USE
  * 6167: Unset "Promoted to front page" for darwincorelocation content type
  * 6168: Set the "Publication" and "Group" content types as og groups
  * 6169: Update image fields
@@ -1327,8 +1327,13 @@ function scratchpadify_update_6165(){
 
 /**
  * Set permissions
- */
+ * 
+ * This update must no longer be used for setting permissions.  This will 
+ * overwrite any permissions set for anon, and also permissions set by the 
+ * fixperms module.
+ * 
 function scratchpadify_update_6166(){
+  
   // Update permissions
   require_once ("profiles/scratchpad_profile/scratchpad_profile.profile");
   if(function_exists("scratchpad_profile_profile_set_perms")){
@@ -1338,6 +1343,7 @@ function scratchpadify_update_6166(){
     '#finished' => TRUE
   );
 }
+ */
 
 /**
  * Unset "Promoted to front page" for darwincorelocation content type
