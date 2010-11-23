@@ -174,7 +174,7 @@ function _publication_get_fig_xml(&$node){
  * Generate sections XML
  */
 function _publication_get_sections_xml(&$publication_node, $vid, $section_node = FALSE, $tag = 'sec', $title = 'title'){
-	if($section_node){
+  if($section_node){
     $this_node = $section_node;
   }else{
     $this_node = $publication_node;
@@ -190,7 +190,7 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
             $section_xml .= _publication_get_treatment_sections($publication_node, $child_node, $vid, $this_tid);
             break;
           }
-        }else if($child_node->type == 'publication_section'){
+        }else if($child_node->type == 'publication_taxon_section'){
           $section_xml .= '
       <' . $tag . ' sec-type="' . $child_node->title . '">
         <' . $title . '>' . $child_node->title . '</' . $title . '>' . trim(_filter_autop($child_node->body)) . _publication_get_sections_xml($publication_node, $vid, $child_node, $tag) . '
@@ -306,12 +306,12 @@ function _publication_get_treatment_xml($section_node, &$node, $vid){
     </tp:taxon-treatment>';
   return $treatment_xml;
 }
-
 /**
  * Invoke all pass by reference.  This doesn't belong here, but here it is for
  * now.
  */
 if(!function_exists('module_invoke_all_by_reference')){
+
   function module_invoke_all_by_reference($hook, &$args){
     $modules = module_list();
     foreach($modules as $module => $values){
