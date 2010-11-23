@@ -132,7 +132,7 @@ function matrix_editor_views_default_views(){
         'group' => '0',
         'exposed' => TRUE,
         'expose' => array(
-          'use_operator' => 0,
+          'use_operator' => 1,
           'operator' => 'title_op',
           'identifier' => 'title',
           'label' => 'Title',
