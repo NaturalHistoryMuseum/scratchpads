@@ -174,7 +174,7 @@ function _publication_get_fig_xml(&$node){
  * Generate sections XML
  */
 function _publication_get_sections_xml(&$publication_node, $vid, $section_node = FALSE, $tag = 'sec', $title = 'title'){
-  if($section_node){
+	if($section_node){
     $this_node = $section_node;
   }else{
     $this_node = $publication_node;
@@ -219,7 +219,7 @@ function _publication_get_treatment_sections(&$node, $section_node, $vid, $tid){
     }else{
       $nid = array_pop($nids);
     }
-    $term_fields = $node->default_term_fields;
+    $term_fields = $node->term_field_defaults;
     if($section_node->term_fields){
       $term_fields = $section_node->term_fields;
     }
