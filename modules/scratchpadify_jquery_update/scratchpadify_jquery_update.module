@@ -1,0 +1,66 @@
+<?php 
+/**
+ * The path to the jQuery files that need to be replaced.
+ */
+define('SCRATCHPADIFY_JQUERY_UPDATE_REPLACE_PATH', drupal_get_path('module', 'scratchpadify_jquery_update') . '/replace');
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ *
+ * Make jQuery Update's page preprocess function run *after* everything else's,
+ * so that a theme can't call drupal_get_js() and mess everything up.
+ */
+function scratchpadify_jquery_update_theme_registry_alter(&$theme_registry) {
+	  if (isset($theme_registry['page'])) {
+    // If jquery_update's preprocess function is there already, remove it.
+    if ($key = array_search('scratchpadify_jquery_update_preprocess_page', $theme_registry['page']['preprocess functions'])) {
+      unset($theme_registry['page']['preprocess functions'][$key]);
+    }
+    // Now tack it on at the end so it runs after everything else.
+    $theme_registry['page']['preprocess functions'][] = 'scratchpadify_jquery_update_preprocess_page';
+  } 
+}
+
+function scratchpadify_jquery_update_preprocess_page(&$variables) {
+
+	 if (!empty($variables['scripts']) &! scratchpadify_jquery_update_tabledrag_is_patched()) {
+
+	 	dd('adding');
+	 	
+	 	$replacements = scratchpadify_jquery_update_get_replacements();
+	 	
+    $variables['scripts'] = str_replace(array_keys($replacements), array_values($replacements), $variables['scripts']);
+    
+	 }
+	 
+}
+
+/**
+ * Array of jQuery files to replace if jQuery is loaded.
+ */
+function scratchpadify_jquery_update_get_replacements() {
+  return array(
+      'misc/tabledrag.js' => SCRATCHPADIFY_JQUERY_UPDATE_REPLACE_PATH . '/tabledrag.js',
+  );
+}
+
+function scratchpadify_jquery_update_tabledrag_is_patched(){
+
+  $tabledrag_file = 'misc/tabledrag.js';
+  
+  if (file_exists($tabledrag_file)) {
+  	$tabledrag_file_data = file_get_contents($tabledrag_file);  
+  	
+  	if(strpos($tabledrag_file_data, "sourceRow = $(this.table).find('tr.draggable:first').get(0);") !== false){
+  		return true;
+  	}
+     
+  }
+  
+  return false;
+ 
+}
+
+
+
+

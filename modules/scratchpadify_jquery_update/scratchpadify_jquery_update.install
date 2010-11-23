@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function scratchpadify_jquery_update_install(){
+  // Set the module's weight high so that it runs after jquery update module.
+  db_query("UPDATE {system} SET weight = 100 WHERE name = 'scratchpadify_jquery_update' and type = 'module'");
+}
+
+/**
+ * Implementation of hook_requirements
+ */
+function scratchpadify_jquery_update_requirements($phase){
+  switch($phase){
+    case 'runtime':
+      $requirements = array(
+        'scratchpadify_jquery_update' => array(
+          'title' => t('Scratchpadify jquery update')
+        )
+      );
+      if(scratchpadify_jquery_update_tabledrag_is_patched()){
+        $requirements['scratchpadify_jquery_update']['value'] = t('tabledrag.js has been patched - this module can now be uninstalled.');
+        $requirements['scratchpadify_jquery_update']['severity'] = REQUIREMENT_ERROR;
+      }else{
+        $requirements['scratchpadify_jquery_update']['value'] = t('tabledrag.js has not been patched - this module is required.');
+        $requirements['scratchpadify_jquery_update']['severity'] = REQUIREMENT_OK;
+      }
+      return $requirements;
+      break;
+  }
+}
+
+
