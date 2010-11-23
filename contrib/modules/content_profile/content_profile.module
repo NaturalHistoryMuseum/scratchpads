@@ -276,11 +276,21 @@ function content_profile_form_alter(&$form, $form_state, $form_id) {
     if (arg(0) == 'user' && is_numeric(arg(1)) && arg(2) == 'edit' || arg(2) == 'profile') {
       $form['buttons']['preview']['#access'] = FALSE;
       $form['buttons']['delete']['#access'] = FALSE;
-      $form['#redirect'] = arg(2) == 'profile' ? 'user/'. $form['#node']->uid : $_GET['q'];
+      // SDRycroft - We don't want to redirect - bloody stupid!
+      //$form['#redirect'] = arg(2) == 'profile' ? 'user/'. $form['#node']->uid : $_GET['q'];
     }
     // Set the author value - note that this works only for admins.
     if (!empty($_GET['uid']) && ($uid = intval($_GET['uid'])) && ($user = user_load($uid))) {
       $form['author']['name']['#default_value'] = $user->name;
+    }
+    // SDRycroft - If the user already has a profile, we set the authored by 
+    // field to '' and give a message.
+    global $user;
+    if(content_profile_profile_exists($form['#node'], $user->uid) && $form['author']['name']['#default_value'] != ''){
+      // Set the author to blank
+      $form['author']['name']['#default_value'] = '';
+      // Message
+      drupal_set_message(t('You already have a profile node - you must only create a new node for people who are NOT users of your site.  This node will appear to be authored by nobody.'));
     }
   }
 }
