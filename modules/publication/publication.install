@@ -274,8 +274,16 @@ function publication_update_6102(){
 /**
  * Install and enable the scratchpadify jquery update module
  */
-function publication_update_6103(){
+function publication_update_6104(){
   $ret = array();
+  module_rebuild_cache();
+  if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = 'scratchpadify_jquery_update'"))){
+    $ret['#abort'] = array(
+      'success' => FALSE,
+      'query' => t('A required module is missing.')
+    );
+    return $ret;
+  }
   include_once ('includes/install.inc');
   drupal_install_modules(array(
     'scratchpadify_jquery_update'
