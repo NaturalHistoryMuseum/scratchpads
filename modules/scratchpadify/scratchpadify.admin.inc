@@ -48,6 +48,9 @@ function scratchpadify_notification_message(){
 function scratchpadify_anonymous_permissions(){
   $permissions = variable_get('scratchpadify_anon_perms', array());
   return system_settings_form(array(
+    '#submit' => array(
+      'scratchpadify_anonymous_permissions_submit'
+    ),
     'scratchpadify_anon_perms' => array(
       '#tree' => TRUE,
       'post comments' => array(
@@ -65,11 +68,12 @@ function scratchpadify_anonymous_permissions(){
         '#tree' => TRUE,
         '#default_value' => isset($permissions['view revisions']) ? $permissions['view revisions'] : 0,
         '#description' => t('If checked, anonymous users will be able to view all revisions of all nodes on your site.')
-      ),
-      /**
-       * Example for adding an additional permission.  Only change the values in
-       * the square brackets (removing brackets as you do).
-       * 
+      )
+    )
+    /**
+     * Example for adding an additional permission.  Only change the values in
+     * the square brackets (removing brackets as you do).
+     * 
       '[permission]' => array(
         '#title' => '[Title for permission]',
         '#type' => 'checkbox',
@@ -77,14 +81,32 @@ function scratchpadify_anonymous_permissions(){
         '#default_value' => isset($permissions['[permission]']) ? $permissions['[permission]'] : 0, 
         '#description' => t('[description of permission]')
       ),
-       */
-      'last_cron_run' => array(
-        '#value' => '<p>'.t('For those of you who are familiar with Drupal, you can nominate an additional permission using the "Issues..." tab, and adding a support request.').'</p><p><strong>'.t('Please note, these values will be changed on the next cron run (last cron run was "%last_cron_run" -> contact an administrator if this is more than one hour).', array(
-          '%last_cron_run' => variable_get('cron_last', 0) ? format_interval(time() - variable_get('cron_last', 0)) . ' ago' : 'never'
-        )).'</strong></p>'
-      )
-    )
+     */    
   ));
+}
+
+/**
+ * Submit for above.
+ */
+function scratchpadify_anonymous_permissions_submit($form, &$form_state){
+  foreach($form_state['values']['scratchpadify_anon_perms'] as $permission => $enable){
+    scratchpadify_perm_helper($permission, $enable);
+  }
+}
+
+function scratchpadify_perm_helper($newperm, $enable){
+  $perm = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 1'));
+  $perms = explode(", ", $perm);
+  if(!in_array($newperm, $perms) && $enable){
+    // Add
+    $perms[] = $newperm;
+    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
+  }else if(in_array($newperm, $perms) && !$enable){
+    // Remove
+    $perms = drupal_map_assoc($perms);
+    unset($perms[$newperm]);
+    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
+  }
 }
 
 /**

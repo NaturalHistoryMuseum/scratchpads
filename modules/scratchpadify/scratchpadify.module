@@ -196,28 +196,6 @@ function scratchpadify_cron(){
   // Ensure the User with UID 1 is set as "Scratchpad Team".  Note, this has
   // been added as a result of Aegir, and may not be necessary in the future.
   db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', pass = 'no-direct-login', name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin' and mail = 's.rycroft@nhm.ac.uk'");
-  // Set the value for anonymous commenting - Note, we're setting this here, so
-  // that if permissions are updated by a scratchpadify_update_N hook, then this
-  // will correct the value at the subsequent cron run.
-  $permissions = variable_get('scratchpadify_anon_perms', array());
-  foreach($permissions as $permission => $enable){
-    scratchpadify_cron_perm_helper($permission, $enable);
-  }
-}
-
-function scratchpadify_cron_perm_helper($newperm, $enable){
-  $perm = db_result(db_query('SELECT perm FROM {permission} WHERE rid = 1'));
-  $perms = explode(", ", $perm);
-  if(!in_array($newperm, $perms) && $enable){
-    // Add
-    $perms[] = $newperm;
-    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
-  }else if(in_array($newperm, $perms) && !$enable){
-    // Remove
-    $perms = drupal_map_assoc($perms);
-    unset($perms[$newperm]);
-    db_query("UPDATE {permission} SET perm = '%s' WHERE rid = 1", implode(", ", $perms));
-  }  
 }
 
 /**
