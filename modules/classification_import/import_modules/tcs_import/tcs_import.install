@@ -3,7 +3,7 @@
 /**
  * Implementation of hook_install
  */
-function eol_import_install(){
+function tcs_import_install(){
   // We're just going to add an additional field to the 
   // classification_import_temp table.
   db_add_field($ret, 'classification_import_temp', 'ref', array('type' => 'text'));
