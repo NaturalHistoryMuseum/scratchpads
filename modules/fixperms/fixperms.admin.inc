@@ -124,8 +124,8 @@ function fixperms_admin_settings_submit($form, &$form_state) {
   foreach($rids as $rid){
     // Get the current settings.s
     $current_permission = drupal_map_assoc(explode(", ", db_result(db_query('SELECT perm FROM {permission} WHERE rid = %d', $rid))));
-    foreach($form_state['values']['default_'.$rid] as $permission){
-      if($permission){
+    foreach($form_state['values']['default_'.$rid] as $permission => $set_permission){
+      if($set_permission){
         // Add
         $current_permission[$permission] = $permission;
       } else {
@@ -139,7 +139,7 @@ function fixperms_admin_settings_submit($form, &$form_state) {
     // We're going to set all the content types exactly the same, yeah.  We need
     // to set the fixperms permissions, and then just run _fixperms_submit.
     variable_set('fixperms_override', 1);
-    _fixperms_submit();
+    _fixperms_submit($form, $form_state);
   } else {
     // Delete the override variable to ensure that any changes the user makes
     // won't get overridden later.
