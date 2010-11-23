@@ -131,6 +131,7 @@ function tree_form(&$node) {
     $options[$row['nid']] = $row['title'];
   }
   $form['publication'] = array(
+    '#title' => t('Bibliographic citation'),
     '#type' => 'select',
     '#default_value' => $node->publication,
     '#size' => 10,
