@@ -36,7 +36,7 @@ function scratchpad_training_form_alter(&$form, $form_state, $form_id){
 /**
  * Implementation of hook_block
  */
-function scratchpad_training_block($op, $delta, $edit){
+function scratchpad_training_block($op = 'list', $delta = 0, $edit = array()){
   switch($op){
     case 'list':
       return array(

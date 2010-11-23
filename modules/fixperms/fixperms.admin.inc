@@ -218,5 +218,5 @@ function _fixperms_submit($form, $form_state){
 
 function theme_fixperms_admin_settings($form){
   drupal_add_css(drupal_get_path('module','fixperms').'/fixperms.css');
-  return drupal_render_form($form);
+  return drupal_render_form('fixperms_admin_settings', $form);
 }
