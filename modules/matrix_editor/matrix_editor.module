@@ -223,6 +223,8 @@ function matrix_editor_theme(){
 
 function matrix_editor_preprocess_views_view(&$vars){
   if($vars['view']->tag == 'matrix_editor'){
+    $path = drupal_get_path('module', 'matrix_editor');
+    drupal_add_js($path . '/js/matrix_editor_views.js');
     $vars['header'] .= '<p>The Matrix Editor is currently in Alpha testing.  Please <a href="mailto:scratchpad@nhm.ac.uk">email</a> us any feedback.</p><a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
   }
 }
@@ -471,6 +473,10 @@ function matrix_editor_fields_form($form_state, $view, $field_options, $field_se
   $form['view'] = array(
     '#type' => 'hidden',
     '#value' => $view->name
+  );
+  $form['destination'] = array(
+    '#type' => 'hidden',
+    '#value' => request_uri()
   );
   $form['submit'] = array(
     '#type' => 'submit',
