@@ -601,8 +601,9 @@ function scratchpadify_nodeapi(&$node, $op, $arg = 0){
 }
 
 function scratchpadify_preprocess_page(&$variables){
-  $variables['title'] = htmlspecialchars_decode($variables['title']);
-  $variables['head_title'] = strip_tags(htmlspecialchars_decode($variables['head_title']));
+	$tags = implode('', array_values(scratchpadify_title_tags()));
+  $variables['title'] = strip_tags(htmlspecialchars_decode($variables['title']), $tags);
+  $variables['head_title'] = strip_tags(htmlspecialchars_decode($variables['head_title']), $tags);
 }
 
 function scratchpadify_preprocess_node(&$variables){
@@ -610,40 +611,28 @@ function scratchpadify_preprocess_node(&$variables){
   return $variables;
 }
 
+function scratchpadify_title_tags(){
+  return array(
+	  "[strong]" => '<strong>',
+    "[/strong]" => '</strong>',
+    "[b]" => '<b>',
+    "[/b]" => '</b>',
+    "[u]" => '<u>',
+    "[/u]" => '</u>',
+    "[i]" => '<i>',
+    "[/i]" => '</i>',
+    "[em]" => '<em>',
+    "[/em]" => '</em>',
+    "[sub]" => '<sub>',
+    "[/sub]" => '</sub>',
+    "[sup]" => '<sup>',
+    "[/sup]" => '</sup>',
+	);
+}
+
 function scratchpadify_square_tags_to_html($text){
-  $square_tags = array(
-    "[strong]",
-    "[/strong]",
-    "[b]",
-    "[/b]",
-    "[u]",
-    "[/u]",
-    "[i]",
-    "[/i]",
-    "[em]",
-    "[/em]",
-    "[sub]",
-    "[/sub]",
-    "[sup]",
-    "[/sup]"
-  );
-  $html_tags = array(
-    "<strong>",
-    "</strong>",
-    "<b>",
-    "</b>",
-    "<u>",
-    "</u>",
-    "<i>",
-    "</i>",
-    "<em>",
-    "</em>",
-    "<sub>",
-    "</sub>",
-    "<sup>",
-    "</sup>"
-  );
-  return str_replace($square_tags, $html_tags, $text);
+	$tags = scratchpadify_title_tags();
+  return str_replace(array_keys($tags), array_values($tags), $text);
 }
 
 /**
