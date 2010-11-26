@@ -89,13 +89,19 @@ $(document).ready(function(){
 });
 
 Drupal.behaviors.publications = function(context) {
-
   // Add the add more text
   $('a.noderelationships-nodereference-multi-button:not(.publication-processed)', context).addClass('publication-processed').each(function(){
     
     $(this).append($(this).siblings('input').val());
     
-  })
+  });
+  
+  $('a.noderelationships-noderef-multiselect-save:not(.publication-processed)', context).addClass('publication-processed').click(function(){
+	    
+	    alert('clicked');
+	    return;
+	    
+	  });
   
   $('ul div.edit-manuscript-name input', context).click(function(event){
     event.stopPropagation();
@@ -172,4 +178,58 @@ Drupal.nodeRelationshipsReferenceButtons.queryString = function() {
   
   return qs;
   
+};
+
+
+/**
+ * Operation to update a node reference widget with multiple values.
+ *
+ * Updating multiple values means triggering the AHAH request related to
+ * the "Add more items" button, but we need to tell how many items we
+ * need. Once we have the correct number of items in the form, we can update
+ * them with the new values coming from the modal frame dialog.
+ */
+Drupal.nodeRelationshipsReferenceButtons.updateMultipleValues = function(selectedItems, fieldOptions, $nodereference, $multiButton) {
+	
+  var self = this;
+
+  // Hide the multiple selection button while performing the AHAH request.
+  $multiButton.hide();
+
+  // Build the list of selected items. Note these values will be applied
+  // when the AHAH request triggers Drupal behaviors on the new content.
+  self.selectedItems = {};
+  self.selectedNids = [];
+  self.selectedItems[fieldOptions.fieldName] = [];
+  
+  for (var nid in selectedItems) {
+    self.selectedItems[fieldOptions.fieldName].push(selectedItems[nid]);
+    // Add nids to an array ready to be passed server side
+    self.selectedNids.push(nid);
+  }
+  
+  var selectedItemsCount = self.selectedItems[fieldOptions.fieldName].length;
+
+  // Perform the AHAH request to rebuild the items list.
+  var addMoreSettings = Drupal.settings.ahah[fieldOptions.addMoreBase];
+  addMoreSettings.url = fieldOptions.ahahSearchUrl +'/'+ selectedItemsCount;
+  addMoreSettings.element = fieldOptions.addMoreElement;
+  addMoreSettings.event = 'noderelationships.customClick';  
+  // We need to know the NIDS server side, so they can be theme nicely
+  addMoreSettings.button = {selectedItems: self.selectedNids};
+  var ahah = new Drupal.ahah(fieldOptions.addMoreBase, addMoreSettings);
+  ahah.oldSuccess = ahah.success
+  ahah.success = function(response, status) {
+    ahah.oldSuccess(response, status);
+    $(addMoreSettings.element).unbind(addMoreSettings.event);
+    $multiButton.show('fast');
+    delete ahah;
+  };
+  ahah.oldError = ahah.error;
+  ahah.error = function(response, uri) {
+    ahah.oldError(response, uri);
+    $(addMoreSettings.element).unbind(addMoreSettings.event);
+    delete ahah;
+  };
+  $(addMoreSettings.element).trigger(addMoreSettings.event);
 };

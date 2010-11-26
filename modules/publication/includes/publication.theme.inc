@@ -1,8 +1,7 @@
 <?php
 
 function theme_publication_node_add_form($form){
-  return '<div class="messages error" style="padding:1em;"><h1><a href="http://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha" target="_blank">Alpha software</a> warning</h1><p>Users should be aware that the Publication module is provided as is.  It is still a work in progress, and has only been tested under very specific conditions.  If you\'re still keen to try to create a "Publication", then please provide feedback in the usual way.</p></div>' . 
-  drupal_render($form['title']) . drupal_render($form['group_publication_metadata']['field_publication_title']) . drupal_render($form['og_selective']) . drupal_render($form['og_private']) . drupal_render($form['og_register']) . drupal_render($form['og_directory']) . drupal_render($form['options']) . theme('publication_node_form_base_elements', $form);
+  return '<div class="messages error" style="padding:1em;"><h1><a href="http://en.wikipedia.org/wiki/Software_release_life_cycle#Alpha" target="_blank">Alpha software</a> warning</h1><p>Users should be aware that the Publication module is provided as is.  It is still a work in progress, and has only been tested under very specific conditions.  If you\'re still keen to try to create a "Publication", then please provide feedback in the usual way.</p></div>' . drupal_render($form['title']) . drupal_render($form['group_publication_metadata']['field_publication_title']) . drupal_render($form['og_selective']) . drupal_render($form['og_private']) . drupal_render($form['og_register']) . drupal_render($form['og_directory']) . drupal_render($form['options']) . theme('publication_node_form_base_elements', $form);
 }
 
 function theme_publication_node_edit_form($form){
@@ -123,34 +122,20 @@ function theme_publication_node_form_base_elements($form){
 }
 
 // Individual field theming */
-function theme_publication_field_publication_images($nids = array(), $publication_nid){
-  $output = '<div id="publication-images" class="clearfix publication-field"><div class="status-messages"></div>';
-  foreach($nids as $nid){
-    if($nid){
-      $output .= _publication_node_get_image($nid, $publication_nid);
-    }
-  }
-  $output .= '</div>';
+function theme_publication_field_publication_images($element, $node){
+  $output = theme('imagecache', 'thumbnail', $node->field_imagefield[0]['filepath'], $node->title);
   return $output;
 }
 
-function theme_publication_field_publication_biblio($nids = array(), $publication_nid){
-  $output = '<div id="publication-biblio" class="clearfix">';
-  $nids = implode('+', array_filter($nids));
-  $output .= publication_get_view_output('publication_display', array(
-    $nids
-  ), 'page_1');
-  $output .= '</div>';
+function theme_publication_field_publication_biblio($element, $node){
+  $output = $node->title . ' <em>' . $node->biblio_year . '</em>';
   return $output;
 }
 
-function theme_publication_field_publication_authors($nids = array(), $publication_nid){
-  $output = '<div id="publication-contrib" class="clearfix">';
-  $nids = implode('+', array_filter($nids));
-  $output .= publication_get_view_output('publication_display', array(
-    $nids
-  ), 'page_2');
-  $output .= '</div>';
+function theme_publication_field_publication_authors($element, $node){
+  $output = $node->field_title[0]['value'];
+  $output .= ' ' . $node->field_givennames[0]['value'];
+  $output .= ' ' . $node->field_familyname[0]['value'];
   return $output;
 }
 
@@ -231,6 +216,85 @@ function theme_term_fields_list($fields){
   $output = '<div class="term-fields-list">';
   $output .= theme('item_list', $term_field_items);
   $output .= '</div>';
+  return $output;
+}
+
+/**
+ * BAsed on theme_content_multiple_values()
+ * Theme an individual form element.
+ *
+ * Combine multiple values into a table with drag-n-drop reordering.
+ * 
+ * Added: check there are items
+ */
+function theme_publication_content_multiple_values($element){
+  $field_name = $element['#field_name'];
+  $field = content_fields($field_name);
+  $output = '';
+  if($field['multiple'] >= 1){
+    $table_id = $element['#field_name'] . '_values';
+    $order_class = $element['#field_name'] . '-delta-order';
+    $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required.') . '">*</span>' : '';
+    $header = array(
+      array(
+        'data' => t('!title: !required', array(
+          '!title' => $element['#title'],
+          '!required' => $required
+        )),
+        'colspan' => 3
+      ),
+      t('Order')
+    );
+    $rows = array();
+    // Sort items according to '_weight' (needed when the form comes back after
+    // preview or failed validation)
+    $items = array();
+    foreach(element_children($element) as $key){
+      if($key !== $element['#field_name'] . '_add_more'){
+        $items[] = &$element[$key];
+      }
+    }
+    usort($items, '_content_sort_items_value_helper');
+    // Add the items as table rows.
+    foreach($items as $key => $item){
+      $item['_weight']['#attributes']['class'] = $order_class;
+      $delta_element = drupal_render($item['_weight']);
+      if($nid = (is_numeric($item['#default_value']['nid']) ? $item['#default_value']['nid'] : $_POST['selectedItems'][$key])){
+        $node = node_load($nid);
+      }
+      $cells = array(
+        array(
+          'data' => '',
+          'class' => 'content-multiple-drag'
+        ),
+        array(
+          'data' => drupal_render($item),
+          'class' => 'item'
+        ),
+        // Get some pretty content for the autocomplete field
+        theme('publication_' . $field['field_name'], $item, $node),
+        array(
+          'data' => $delta_element,
+          'class' => 'delta-order'
+        )
+      );
+      $rows[] = array(
+        'data' => $cells,
+        'class' => 'draggable ' . $item['#attributes']['class'] // Changed to allow class names
+      );
+    }
+    $output .= theme('table', $header, $rows, array(
+      'id' => $table_id,
+      'class' => 'content-multiple-table'
+    ));
+    $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
+    $output .= drupal_render($element[$element['#field_name'] . '_add_more']);
+    drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+  }else{
+    foreach(element_children($element) as $key){
+      $output .= drupal_render($element[$key]);
+    }
+  }
   return $output;
 }
 ?>

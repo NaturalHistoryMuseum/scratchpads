@@ -3,17 +3,17 @@
 function publication_form(&$node, $form_state){
   $type = node_get_types('type', $node);
   $form['title'] = array(
-    '#type' => 'textfield', 
-    '#title' => $type->title_label, 
-    '#required' => TRUE, 
-    '#default_value' => $node->title, 
+    '#type' => 'textfield',
+    '#title' => $type->title_label,
+    '#required' => TRUE,
+    '#default_value' => $node->title,
     '#weight' => -5
   );
   if($type->has_body){
     $form['body_field']['body'] = array(
-      '#type' => 'textarea', 
-      '#title' => $type->body_label, 
-      '#default_value' => $node->body, 
+      '#type' => 'textarea',
+      '#title' => $type->body_label,
+      '#default_value' => $node->body,
       '#required' => ($type->body_required ? TRUE : FALSE)
     );
     $form['body_field']['format'] = filter_form($node->format);
@@ -27,18 +27,18 @@ function publication_form(&$node, $form_state){
 
 function _publication_node_form(&$form, &$node){
   $form['vocabulary'] = array(
-    '#weight' => -1, 
-    '#type' => 'select', 
-    '#title' => t('Classification'), 
-    '#options' => publication_get_classification_vocabularies(), 
-    '#default_value' => $node->vocabulary, 
+    '#weight' => -1,
+    '#type' => 'select',
+    '#title' => t('Classification'),
+    '#options' => publication_get_classification_vocabularies(),
+    '#default_value' => $node->vocabulary,
     '#ahah' => array(
-      'path' => 'publication/js/' . $node->nid, 
-      'wrapper' => 'classification-names', 
-      'method' => 'replace', 
-      'effect' => 'fade', 
+      'path' => 'publication/js/' . $node->nid,
+      'wrapper' => 'classification-names',
+      'method' => 'replace',
+      'effect' => 'fade',
       'progress' => array(
-        'type' => 'bar', 
+        'type' => 'bar',
         'message' => t('Loading classification...')
       )
     )
@@ -55,12 +55,12 @@ function _publication_node_form(&$form, &$node){
           $options[$field['field_name']] = $field['widget']['label'];
         }
         $form['nomenclature_fields'] = array(
-          '#type' => 'checkboxes', 
-          '#default_value' => $node->nomenclature_fields, 
-          '#options' => $options, 
+          '#type' => 'checkboxes',
+          '#default_value' => $node->nomenclature_fields,
+          '#options' => $options,
           '#parents' => array(
             'nomenclature_fields'
-          ), 
+          ),
           '#default_value' => (isset($node->nomenclature_fields) ? $node->nomenclature_fields : array_keys($options))
         );
       }
@@ -91,9 +91,9 @@ function publication_node_form_term_fields_element($default_values){
       $options[$field_name] = $field['name'];
     }
     $element[$spm_group] = array(
-      '#type' => 'checkboxes', 
-      '#title' => $spm_headers[$spm_group]['name'], 
-      '#default_value' => array_values($default_values[$spm_group]), 
+      '#type' => 'checkboxes',
+      '#title' => $spm_headers[$spm_group]['name'],
+      '#default_value' => array_values($default_values[$spm_group]),
       '#options' => $options
     );
   }
@@ -107,7 +107,7 @@ function _publication_taxon_description_node_form(&$form, &$node){
   $publication_vid = $_GET['publication_vid'];
   $publication_node = node_load($publication_nid, $publication_vid);
   $form['term_field_defaults'] = array(
-    '#type' => 'value', 
+    '#type' => 'value',
     '#value' => $publication_node->term_field_defaults
   );
   if($node->term_fields){
@@ -125,8 +125,8 @@ function publication_taxon_description_node_form_reset($form, &$form_state){
     'vid' => $form_state['values']['vid']
   ));
   $args = array(
-    'type' => $form['#node']->type, 
-    'nid' => $form_state['values']['nid'], 
+    'type' => $form['#node']->type,
+    'nid' => $form_state['values']['nid'],
     'op' => 'Reset'
   );
   $form_state['rebuild'] = true;
@@ -142,16 +142,16 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $node = $form['#node'];
       if($node->nid){
         $form['publication_nid'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => $node->nid
         );
         $form['publication_vid'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => $node->vid
         );
         // #default_value so it can be changed by js
         $form['current_tab'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#default_value' => NULL
         );
         if(isset($form_state['values']['vocabulary'])){
@@ -183,8 +183,8 @@ function publication_form_alter(&$form, $form_state, $form_id){
           );
         }
         $form['vocabulary_auto_select'] = array(
-          '#type' => 'checkbox', 
-          '#title' => t('Auto-select terms from content attached to this publication?'), 
+          '#type' => 'checkbox',
+          '#title' => t('Auto-select terms from content attached to this publication?'),
           '#default_value' => 1
         );
         $fields = publication_field_info();
@@ -193,9 +193,9 @@ function publication_form_alter(&$form, $form_state, $form_id){
             $field_name = $field['field_name'];
             if($field['group']){
               $form[$field['group']]['#attributes']['class'] .= ' publication-noderef';
-              publication_field_publication_nodereference_alter($form[$field['group']][$field_name], $field, $node->nid);
+              publication_field_publication_nodereference_alter($form[$field['group']][$field_name], $field, $node->nid, $form_id);
             }else{
-              publication_field_publication_nodereference_alter($form[$field_name], $field, $node->nid);
+              publication_field_publication_nodereference_alter($form[$field_name], $field, $node->nid, $form_id);
             }
           }
         }
@@ -215,9 +215,9 @@ function publication_form_alter(&$form, $form_state, $form_id){
           $form['field_publication_section']['#theme'] = 'publication_field_publication_section';
         }
         $form['buttons']['make_public'] = array(
-          '#type' => 'submit', 
-          '#value' => t('Make public'), 
-          '#weight' => 10, 
+          '#type' => 'submit',
+          '#value' => t('Make public'),
+          '#weight' => 10,
           '#submit' => array(
             'publication_node_form_make_public_submit'
           )
@@ -228,7 +228,7 @@ function publication_form_alter(&$form, $form_state, $form_id){
         // Default organic group membership to "Invite only"
         $form['og_selective']['#default_value'] = 2;
         $form['og_description'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => NULL
         );
         $form['#theme'] = 'publication_node_add_form';
@@ -240,27 +240,10 @@ function publication_form_alter(&$form, $form_state, $form_id){
       unset($form['buttons']['preview']);
       break;
     case 'content_add_more_js': // Callback when new items are added to the form
-      $field_id = arg(4);
-      if(array_key_exists($field_id, $form)){
-        if(is_array($nids = @explode(',', $_POST['selectedItems']))){
-          $form[$field_id]['#suffix'] = theme('publication_' . $field_id, $nids, $_POST['publication_nid']);
-          $form[$field_id]['#publication_nid'] = $_POST['publication_nid'];
-          switch($field_id){
-            case 'field_publication_authors':
-              $form[$field_id]['#referenceable_types'] = 'profile';
-              break;
-            case 'field_publication_images':
-              $form[$field_id]['#referenceable_types'] = 'image';
-              break;
-            case 'field_publication_biblio':
-              $form[$field_id]['#referenceable_types'] = 'biblio';
-              break;
-          }
-          $form[$field_id]['#after_build'] = array(
-            'publication_field_nodereference_after_build'
-          );
-        }
-      }
+    	$_POST['selectedItems'] = explode(',', $_POST['selectedItems']);
+      $field_name = arg(4);
+      $field = publication_get_field_info($field_name);
+      publication_field_publication_nodereference_alter($form[$field_name], $field, $_POST['publication_nid'], $form_id);
       break;
     case 'publication_image_caption_node_form':
       if(!_publication_node_form_is_modal()){
@@ -271,7 +254,7 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $image_node = node_load(arg(2));
       $publication_node = node_load($publication_nid);
       $title = t('@op caption for image @image', array(
-        '@op' => (empty($form['#node']->nid) ? 'Add' : 'Edit'), 
+        '@op' => (empty($form['#node']->nid) ? 'Add' : 'Edit'),
         '@image' => $image_node->title
       ));
       drupal_set_title($title);
@@ -283,8 +266,8 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $form['#image_node_title'] = $image_node->title;
       unset($form['buttons']['preview']);
       $form['buttons']['cancel'] = array(
-        '#type' => 'submit', 
-        '#value' => t('Cancel'), 
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
         '#weight' => 10
       );
       $form['buttons']['delete']['#submit'] = array(
@@ -301,7 +284,7 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $node = $form['#node'];
       unset($form['buttons']['preview']);
       $form['publication_form_build_id'] = array(
-        '#type' => 'value', 
+        '#type' => 'value',
         '#value' => $_GET['publication_form_build_id']
       );
       $form['buttons']['delete']['#submit'] = array(
@@ -311,8 +294,8 @@ function publication_form_alter(&$form, $form_state, $form_id){
         'publication_section_modal_node_form_submit'
       );
       $form['buttons']['cancel'] = array(
-        '#type' => 'submit', 
-        '#value' => t('Cancel'), 
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
         '#weight' => 10
       );
       _publication_node_form_alter_base_elements($form);
@@ -323,16 +306,16 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $term = array_shift($node->taxonomy);
       $form['title']['#description'] = t('Enter the final published name for this taxon.');
       $form['taxonomy'][$term->vid] = array(
-        '#type' => 'value', 
+        '#type' => 'value',
         '#value' => $term->tid
       );
       $form['term'] = array(
-        '#type' => 'value', 
+        '#type' => 'value',
         '#value' => $term
       );
       if(isset($term->name) && $term->name != $node->title){
         $form['reset_manuscript_name'] = array(
-          '#type' => 'checkbox', 
+          '#type' => 'checkbox',
           '#title' => t('Reset manuscript name to %name', array(
             '%name' => $term->name
           ))
@@ -344,8 +327,8 @@ function publication_form_alter(&$form, $form_state, $form_id){
         'publication_taxon_section_modal_node_form_submit'
       );
       $form['buttons']['cancel'] = array(
-        '#type' => 'submit', 
-        '#value' => t('Cancel'), 
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
         '#weight' => 10
       );
       _publication_node_form_alter_base_elements($form);
@@ -360,19 +343,19 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $form['buttons']['submit']['#submit'][] = 'publication_taxon_description_modal_node_form_submit';
       if($form['term_fields']['#allow_reset']){
         $form['buttons']['reset'] = array(
-          '#type' => 'submit', 
-          '#weight' => 5, 
+          '#type' => 'submit',
+          '#weight' => 5,
           '#submit' => array(
             'publication_taxon_description_node_form_reset'
-          ), 
+          ),
           '#value' => t('Reset to publication defaults')
         );
       }
       unset($form['buttons']['delete']);
       unset($form['buttons']['preview']);
       $form['buttons']['cancel'] = array(
-        '#type' => 'submit', 
-        '#value' => t('Cancel'), 
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
         '#weight' => 10
       );
       _publication_node_form_alter_base_elements($form);
@@ -382,36 +365,36 @@ function publication_form_alter(&$form, $form_state, $form_id){
       if($view->name == _publication_get_nodereference_view_name()){
         // Ensure these values are available when user submits filter form
         $form['vocabulary'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => $_GET['vocabulary']
         );
         $form['vid'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => $_GET['vid']
         );
         // // Convert the group drop down to a checkbox
         $form['nid'] = array(
-          '#type' => 'hidden', 
+          '#type' => 'hidden',
           '#value' => $_GET['nid']
         );
         if(array_key_exists('group_nid', $form)){
           $form['group_nid'] = array(
-            '#type' => 'hidden', 
+            '#type' => 'hidden',
             '#value' => ($_GET['filter_by_group'] ? $_GET['nid'] : 'All')
           );
           $form['filter_by_group'] = array(
-            '#type' => 'checkbox', 
+            '#type' => 'checkbox',
             '#title' => $form['#info']['filter-group_nid']['label']
           );
           unset($form['#info']['filter-group_nid']);
         }
         if(array_key_exists('node_author_in_group', $form)){
           $form['node_author_in_group'] = array(
-            '#type' => 'hidden', 
+            '#type' => 'hidden',
             '#value' => ($_GET['filter_by_author'] ? $_GET['nid'] : NULL)
           );
           $form['filter_by_author'] = array(
-            '#type' => 'checkbox', 
+            '#type' => 'checkbox',
             '#title' => $form['#info']['filter-node_author_in_group']['label']
           );
         }
@@ -442,11 +425,11 @@ function publication_form_alter(&$form, $form_state, $form_id){
  */
 function _publication_node_form_alter_base_elements(&$form){
   $form['revision'] = array(
-    '#type' => 'value', 
+    '#type' => 'value',
     '#value' => $form['revision_information']['revision']['#default_value']
   );
   $form['status'] = array(
-    '#type' => 'value', 
+    '#type' => 'value',
     '#value' => $form['options']['status']['#default_value']
   );
   unset($form['author']['#type']);
@@ -454,23 +437,6 @@ function _publication_node_form_alter_base_elements(&$form){
     $form['author'][$key]['#type'] = 'value';
   }
   $form['#pre_render'][] = 'publication_pre_render_node_form';
-}
-
-function publication_field_publication_nodereference_alter(&$element, $field, $nid){
-  $nids = array();
-  // Get all the NIDs for this element
-  foreach(element_children($element) as $key){
-    if($element[$key]['#default_value']['nid']){
-      $nids[] = $element[$key]['#default_value']['nid'];
-    }
-  }
-  $element['#suffix'] = theme('publication_' . $field['field_name'], $nids, $nid) . '</div>';
-  // Set up some vauales to pass to after_build function
-  $element['#publication_nid'] = $nid;
-  $element['#referenceable_types'] = current($field['referenceable_types']);
-  $element['#after_build'] = array(
-    'publication_field_nodereference_after_build'
-  );
 }
 
 function publication_field_publication_section_alter(&$element, $nids, $parent = 0, $depth = 0){
@@ -522,31 +488,31 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
       $element[$nid] = array(
         'title' => array(
           '#value' => $title
-        ), 
+        ),
         'section_id' => array(
-          '#type' => 'hidden', 
-          '#value' => $nid, 
+          '#type' => 'hidden',
+          '#value' => $nid,
           '#attributes' => array(
             'class' => 'section-id'
           )
-        ), 
+        ),
         'nid' => array(
-          '#type' => 'hidden', 
-          '#value' => $nid, 
+          '#type' => 'hidden',
+          '#value' => $nid,
           '#name' => 'field_publication_section[nids][]'
-        ), 
-        '#depth' =>  $depth,
+        ),
+        '#depth' => $depth,
         'section_parent' => array(
-          '#type' => 'textfield', 
-          '#default_value' => $parent, 
-          '#name' => 'field_publication_section[' . $nid . '][section_parent]', 
+          '#type' => 'textfield',
+          '#default_value' => $parent,
+          '#name' => 'field_publication_section[' . $nid . '][section_parent]',
           '#attributes' => array(
             'class' => 'section-parent'
           )
-        ), 
+        ),
         'ops' => array(
           '#value' => $op
-        ), 
+        ),
         '#attributes' => array(
           'class' => $class
         )
@@ -558,29 +524,38 @@ function publication_field_publication_section_alter(&$element, $nids, $parent =
   }
 }
 
-function publication_field_nodereference_after_build($element){
+function publication_field_publication_nodereference_alter(&$element, $field, $nid, $form_id){
+  // Set up some values to pass to after_build function
+  $element['#publication_nid'] = $nid;
+  // Use own theme function for these elements 
+  $element['#theme'] = 'publication_content_multiple_values';
+  $element['#form_id'] = $form_id;
+  $element['#referenceable_types'] = current($field['referenceable_types']);
+  // Need to manipulate the form in after_build so the auto complete nids are populated
+  $element['#after_build'] = array(
+    'publication_field_nodereference_after_build'
+  );
+  return $element;
+}
+
+function publication_field_nodereference_after_build(&$element, &$form){
   $field_name = $element[0]['#field_name'];
+  // Make all the input readonly so they'll look just like a list
   foreach(element_children($element) as $key){
-    if($element['#field_name'] == 'field_publication_biblio'){
-      $nid = $element[$key]['#default_value'];
-      $node = node_load($nid);
-      $contributors = array_shift($node->biblio_contributors);
-      $value = '';
-      $conj = '';
-      if($element[$key]['nid']['nid']['#value']){
-        if(is_array($contributors)){
-          foreach($contributors as $contributor){
-            $value .= $conj . $contributor['lastname'] . ', ' . drupal_strtoupper(drupal_substr($contributor['firstname'], 0, 1));
-            $conj = ', ';
-          }
-        }
-        $element[$key]['nid']['nid']['#value'] = $value . ' - ' . $element[$key]['nid']['nid']['#value'];
+    if($element[$key]['#type'] == 'nodereference_autocomplete'){
+      // Don't show rows with nothing selected - add class to hide them
+      if($element['#form_id'] == 'content_add_more_js'){
+      	if(!$_POST['selectedItems'][$key]){
+      		        // If this is being added via nodereference, add hide class if key is greater than the number selected
+        $element[$key]['#attributes']['class'] = 'publication-empty-node-ref';
+      	}
+      }elseif(!$element[$key]['#default_value']['nid']){ // Node is loading so we have access to default values
+        $element[$key]['#attributes']['class'] = 'publication-empty-node-ref';
       }
+      $element[$key]['nid']['nid']['#attributes']['readonly'] = 'readonly';
     }
-    $element[$key]['nid']['#element_validate'] = array(
-      'publication_field_nodereference_element_validate'
-    );
   }
+  // Noderelationships module generates link text from add more button, so change it here
   $element[$field_name . '_add_more']['#value'] = t('Edit publication @label', array(
     '@label' => drupal_strtolower($element['#title'])
   ));
@@ -589,9 +564,9 @@ function publication_field_nodereference_after_build($element){
   )), 'node/add/' . $element['#referenceable_types'], array(
     'query' => array(
       'gids[]' => $element['#publication_nid']
-    ), 
+    ),
     'attributes' => array(
-      'target' => '_blank', 
+      'target' => '_blank',
       'class' => 'create-' . $field_name
     )
   ));
@@ -820,14 +795,14 @@ function publication_node_form_make_public_submit($form, &$form_state){
   }
   $node = $form['#node'];
   $form_state['redirect'] = array(
-    'publication/' . $node->nid . '/make-public', 
+    'publication/' . $node->nid . '/make-public',
     $destination
   );
 }
 
 function publication_node_confirm_make_public(&$form_state, $node){
   $form['node'] = array(
-    '#type' => 'value', 
+    '#type' => 'value',
     '#value' => $node
   );
   return confirm_form($form, t('Are you sure you want to make %title public?', array(

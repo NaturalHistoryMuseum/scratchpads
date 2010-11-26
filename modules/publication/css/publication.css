@@ -96,9 +96,19 @@
   font-weight: normal;
 }
 
-.publication-noderef table.content-multiple-table,
-.publication-noderef input.noderelationships-nodereference-add-more{
+.publication-noderef input.noderelationships-nodereference-add-more,
+.publication-noderef table thead,
+.publication-noderef table .noderelationships-nodereference-buttons-wrapper{
   display: none!important;
+}
+
+.publication-noderef table td.item,
+.publication-empty-noderef table{
+	display: none;
+}
+
+.publication-noderef table td.content-multiple-drag{
+	width: 50px
 }
 
 .publication-noderef .clearfix{
@@ -378,4 +388,7 @@ html[xmlns] .clearfix {
   display: none;
 }
 
+tr.publication-empty-node-ref{
+	display: none;
+}
 
