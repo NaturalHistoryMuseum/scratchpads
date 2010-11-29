@@ -14,6 +14,13 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         '@uploadpage' => url('file-plupload')
       )) . '</p></div>'
     );
+    unset($form['field_imagefield']['field_imagefield_add_more']);
+    $keys = element_children($form['field_imagefield']);
+    foreach($keys as $key){
+      if(is_numeric($key) && $key > 0 && !isset($form['field_imagefield'][$key]['#default_value']['filename'])){
+        unset($form['field_imagefield'][$key]);
+      }
+    }
   }else if($form_id == 'og_user_roles_page_form'){
     foreach($form['user_roles'] as $uid => $form_part){
       if(is_numeric($uid) && isset($form_part['roles'])){
