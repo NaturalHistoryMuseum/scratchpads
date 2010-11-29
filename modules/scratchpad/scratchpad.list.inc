@@ -4,17 +4,17 @@
  * Provides a page that lists all the Scratchpads.
  */
 function scratchpad_list_scratchpads(){
-  $sites = variable_get('scratchpad_sites_list',array());
+  $sites = variable_get('scratchpad_sites_list', array());
   $items = array();
   ksort($sites);
   foreach($sites as $data){
-    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://'.$data['site_url']) . '<br/><span style="font-size:80%">Users: '.$data['users']['total'].' | Nodes: '. ( is_array($data['nodes']) ? array_sum($data['nodes']) : 0 ) .' | Views: '.$data['views'].'</span>';
+    $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://' . $data['site_url']) . '<br/><span style="font-size:80%">Users: ' . $data['users']['total'] . ' | Nodes: ' . (is_array($data['nodes']) ? array_sum($data['nodes']) : 0) . ' | Views: ' . $data['views'] . '</span>';
     if(user_access('SCRATCHPADIFY')){
-      '<br/><span style="font-size:80%">Last login: '.$data['last_login_time'].' | Last Edited: '.$data['last_node_changed_time'].'</span>';
+      '<br/><span style="font-size:80%">Last login: ' . $data['last_login_time'] . ' | Last Edited: ' . $data['last_node_changed_time'] . '</span>';
     }
     $items[] = $output;
   }
-  return theme('item_list', $items, count($sites).' sites');
+  return theme('item_list', $items, count($sites) . ' sites');
 }
 
 function scratchpad_list_scratchpads_emails(){
@@ -25,19 +25,22 @@ function scratchpad_list_scratchpads_emails(){
       foreach($site_details['maintainer_emails'] as $mail){
         $mails[$mail] = $mail;
       }
-    } else {
-      $mails['not_found@'.$site] = 'not_found@'.$site;
+    }else{
+      $mails['not_found@' . $site] = 'not_found@' . $site;
     }
   }
   drupal_set_title('');
-  return theme('item_list', $mails, 'Emails for '.count($mails).' maintainers', 'ul', array('style' => 'font-size:80%; padding:50px')) . 
-    '<h1>'.l('Mail all the above users','mailto:scratchpad@nhm.ac.uk?bcc=<'.implode(">,<",$mails).'>', array('absolute' => TRUE)).'</h1>';
+  return theme('item_list', $mails, 'Emails for ' . count($mails) . ' maintainers', 'ul', array(
+    'style' => 'font-size:80%; padding:50px'
+  )) . '<h1>' . l('Mail all the above users', 'mailto:scratchpad@nhm.ac.uk?bcc=<' . implode(">,<", $mails) . '>', array(
+    'absolute' => TRUE
+  )) . '</h1>';
 }
 
 function scratchpad_list_scratchpads_serial(){
   // We'll output the list serialized
   drupal_set_header('Content-Type: text/plain');
-  $scratchpad_details = variable_get('scratchpad_sites_list',array());
+  $scratchpad_details = variable_get('scratchpad_sites_list', array());
   if(!user_access('SCRATCHPADIFY')){
     foreach($scratchpad_details as $site => $site_details){
       // Sod it, lets just hide the maintainer emails.
@@ -45,26 +48,40 @@ function scratchpad_list_scratchpads_serial(){
     }
   }
   echo serialize($scratchpad_details);
-  exit;
+  exit();
 }
 
 function scratchpad_list_scratchpads_table(){
-  $header = array('Site', 'Last&nbsp;Login','Last&nbsp;Edited','Users','Nodes','Views','Maintainer Emails');
-  $scratchpad_details = variable_get('scratchpad_sites_list',array());
-  foreach($scratchpad_details as $site=>$data){
+  $header = array(
+    'Site',
+    'Last&nbsp;Login',
+    'Last&nbsp;Edited',
+    'Date reported',
+    'Users',
+    'Nodes',
+    'Views',
+    'Maintainer Emails'
+  );
+  $scratchpad_details = variable_get('scratchpad_sites_list', array());
+  foreach($scratchpad_details as $site => $data){
     $rows[] = array(
-      l('http://'.$site, 'http://'. $site, array('absolute' => TRUE)),
-      '<span style="display:none;">'.$data['last_login_time'].'</span>'.date('j-F-Y', $data['last_login_time']),
-      '<span style="display:none;">'.$data['last_node_changed_time'].'</span>'.date('j-F-Y', $data['last_node_changed_time']),
+      l('http://' . $site, 'http://' . $site, array(
+        'absolute' => TRUE
+      )),
+      '<span style="display:none;">' . $data['last_login_time'] . '</span>' . date('j-F-Y', $data['last_login_time']),
+      '<span style="display:none;">' . $data['last_node_changed_time'] . '</span>' . date('j-F-Y', $data['last_node_changed_time']),
+      '<span style="display:none;">' . $data['last_reported'] . '</span>' . date('j-F-Y', $data['last_reported']),
       $data['users']['total'],
       is_array($data['nodes']) ? array_sum($data['nodes']) : 0,
       $data['views'],
       @implode(", ", $data['maintainer_emails'])
     );
   }
-  drupal_add_js (drupal_get_path('module', 'tablesorter') . '/tablesorter.js');
+  drupal_add_js(drupal_get_path('module', 'tablesorter') . '/tablesorter.js');
   drupal_add_css(drupal_get_path('module', 'tablesorter') . '/tablesorter.css');
-  return theme('table', $header, $rows, array('class' => 'views-table'));
+  return theme('table', $header, $rows, array(
+    'class' => 'views-table'
+  ));
 }
 
 /**
@@ -77,10 +94,10 @@ function scratchpad_report_site(){
   if(is_array($data) && isset($data['site_url'])){
     // Check for presence of the Scratchpad Google analytics code on the front
     // page of the reporting site, if it is there, then it's a Scratchpad.
-    $front_page = file_get_contents('http://'.$data['site_url']);
-    if(strpos($front_page,'UA-2428547-2')){
+    $front_page = file_get_contents('http://' . $data['site_url']);
+    if(strpos($front_page, 'UA-2428547-2')){
       $sites = variable_get('scratchpad_sites_list', array());
-      $data['last_reported'] = time(); 
+      $data['last_reported'] = time();
       $sites[$data['site_url']] = $data;
       // Loop through the sites, and delete the ones that haven't called
       // in, in over a month.
@@ -90,12 +107,12 @@ function scratchpad_report_site(){
           unset($sites[$site]);
         }
       }
-      variable_set('scratchpad_sites_list', $sites); 
+      variable_set('scratchpad_sites_list', $sites);
     }
   }
 }
 
-function scratchpad_list_scratchpads_thumbs(){  
+function scratchpad_list_scratchpads_thumbs(){
   $scratchpad_statistics = variable_get('scratchpad_sites_list', array());
   $items = array();
   $total_sites = count($scratchpad_statistics);
@@ -105,7 +122,7 @@ function scratchpad_list_scratchpads_thumbs(){
   $i = 0;
   foreach($scratchpad_statistics as $key => $value){
     $scratchpad_statistics[$key]['domain_sort'] = $total_sites - $i;
-    $i ++; 
+    $i++;
   }
   $i = 0;
   // Ensure the array is sorted by pages, cos it looks kewl!
@@ -115,17 +132,28 @@ function scratchpad_list_scratchpads_thumbs(){
     // check to see if the thumbnails exist, and if they don't skip this entry.
     if(gethostbyname($_SERVER['SERVER_NAME']) == gethostbyname('screenshots.scratchpads.eu')){
       // We're on the same server, lets check for the files
-      if(!file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.png') || !file_exists('/var/www/screenshots.scratchpads.eu/'.$site.'.small.drop.annotated.png')){
+      if(!file_exists('/var/www/screenshots.scratchpads.eu/' . $site . '.small.drop.png') || !file_exists('/var/www/screenshots.scratchpads.eu/' . $site . '.small.drop.annotated.png')){
         continue;
       }
     }
-    $items[] = l('<img src="http://screenshots.scratchpads.eu/'.$site.'.small.drop.png"/>', 'http://'.$site, array('absolute' => TRUE, 'html' => 1, 'attributes' => array('nodes' => is_array($site_statistics['nodes'])? array_sum($site_statistics['nodes']).".$i":"1.$i", 'domain' => $site_statistics['domain_sort'], 'views' => $site_statistics['views'].".$i", 'users' => $site_statistics['users']['total'].".$i")));
+    $items[] = l('<img src="http://screenshots.scratchpads.eu/' . $site . '.small.drop.png"/>', 'http://' . $site, array(
+      'absolute' => TRUE,
+      'html' => 1,
+      'attributes' => array(
+        'nodes' => is_array($site_statistics['nodes']) ? array_sum($site_statistics['nodes']) . ".$i" : "1.$i",
+        'domain' => $site_statistics['domain_sort'],
+        'views' => $site_statistics['views'] . ".$i",
+        'users' => $site_statistics['users']['total'] . ".$i"
+      )
+    ));
     $i++;
   }
   $output = '<div class="scratchpad_thumbs_header"><p>Sort by: <a href="#" id="domain">Domain</a> | <a href="#" id="nodes">Pages</a> | <a href="#" id="views">Views</a> | <a href="#" id="users">Users</a></p></div>';
-  $output .= theme('item_list', $items, NULL, 'ul', array('class' => 'scratchpad_thumbs'));
-  drupal_add_css(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.css');
-  drupal_add_js(drupal_get_path('module','scratchpad').'/scratchpad.thumbs.js');
+  $output .= theme('item_list', $items, NULL, 'ul', array(
+    'class' => 'scratchpad_thumbs'
+  ));
+  drupal_add_css(drupal_get_path('module', 'scratchpad') . '/scratchpad.thumbs.css');
+  drupal_add_js(drupal_get_path('module', 'scratchpad') . '/scratchpad.thumbs.js');
   print theme('page', $output, FALSE);
 }
 
@@ -141,46 +169,48 @@ function scratchpad_list_scratchpads_stats(){
   $total_users_month = 0;
   $total_sites_week = 0;
   $total_sites_month = 0;
-  $total_nodes = array('totaltotaltotal' => 0);
+  $total_nodes = array(
+    'totaltotaltotal' => 0
+  );
   foreach($scratchpad_statistics as $site => $site_statistics){
     $total_users += $site_statistics['users']['total'];
     $total_login_users += $site_statistics['users']['login'];
     $total_users_week += $site_statistics['users']['week'];
     $total_users_month += $site_statistics['users']['month'];
     if($site_statistics['last_login_time'] > time() - 604800){
-      $total_sites_week ++;
+      $total_sites_week++;
     }
     if($site_statistics['last_login_time'] > time() - 2592000){
-      $total_sites_month ++;
+      $total_sites_month++;
     }
     if(is_array($site_statistics['nodes'])){
       $total_nodes['totaltotaltotal'] += array_sum($site_statistics['nodes']);
       foreach($site_statistics['nodes'] as $type => $num){
         $total_nodes[$type] += $num;
       }
-    } else {
-      $sites_with_no_nodes[] = "http://".$site;
+    }else{
+      $sites_with_no_nodes[] = "http://" . $site;
     }
   }
   $output = '<pre style="font-family: mono, monospace">
-Users: '.$total_users.' (Total activated)
-Users: '.$total_login_users.' (Active and have logged in)
-Users: '.$total_users_week.' (Logged in, in last 7 days)
-Users: '.$total_users_month.' (Logged in, in last 30 days)
+Users: ' . $total_users . ' (Total activated)
+Users: ' . $total_login_users . ' (Active and have logged in)
+Users: ' . $total_users_week . ' (Logged in, in last 7 days)
+Users: ' . $total_users_month . ' (Logged in, in last 30 days)
 
-Sites: '.count($scratchpad_statistics).'
-Sites: '.$total_sites_week.' (With users logged in, in last 7 days)
-Sites: '.$total_sites_month.' (With users logged in, in last 30 days)
+Sites: ' . count($scratchpad_statistics) . '
+Sites: ' . $total_sites_week . ' (With users logged in, in last 7 days)
+Sites: ' . $total_sites_month . ' (With users logged in, in last 30 days)
 
-Nodes: '.$total_nodes['totaltotaltotal'].'
+Nodes: ' . $total_nodes['totaltotaltotal'] . '
 
 ';
   unset($total_nodes['totaltotaltotal']);
   arsort($total_nodes);
   foreach($total_nodes as $type => $count){
-    $output .= ' '.str_pad("$type:", 40, " ", STR_PAD_RIGHT)."$count\n";
+    $output .= ' ' . str_pad("$type:", 40, " ", STR_PAD_RIGHT) . "$count\n";
   }
-  return $output .'
+  return $output . '
   
-Sites with no nodes: '. implode(", ", $sites_with_no_nodes).'</pre>';
+Sites with no nodes: ' . implode(", ", $sites_with_no_nodes) . '</pre>';
 }
