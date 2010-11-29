@@ -124,6 +124,51 @@ function theme_scratchpadify_subgallery($term){
 }
 
 /**
+ * Copy of theme_form_element()
+ * Adds #label_prefix & #label_suffix 
+ */
+function theme_scratchpadify_form_element($element, $value){
+  // This is also used in the installer, pre-database setup.
+  $t = get_t();
+  $output = '<div class="form-item"';
+  if(!empty($element['#id'])){
+    $output .= ' id="' . $element['#id'] . '-wrapper"';
+  }
+  $output .= ">\n";
+  $required = !empty($element['#required']) ? '<span class="form-required" title="' . $t('This field is required.') . '">*</span>' : '';
+  if(!empty($element['#title'])){
+  if (!empty($element['#id'])) {
+      $output .= ' <label for="'. $element['#id'] .'">';
+      if(!empty($element['#label_prefix'])) {
+        $output .= $element['#label_prefix'];
+      }
+      $output .= $t('!title: !required', array('!title' => filter_xss_admin($element['#title']), '!required' => $required));
+      if(!empty($element['#label_suffix'])) {
+        $output .= $element['#label_suffix'];
+      }
+      $output .= "</label>\n";
+    }
+    else {
+      $output .= ' <label>';
+      if(!empty($element['#label_prefix'])) {
+        $output .= $element['#label_prefix'];
+      }
+      $output .= $t('!title: !required', array('!title' => filter_xss_admin($element['#title']), '!required' => $required));
+      if(!empty($element['#label_suffix'])) {
+        $output .= $element['#label_suffix'];
+      }
+      $output .="</label>\n";
+    }
+  }
+  $output .= " $value\n";
+  if(!empty($element['#description'])){
+    $output .= ' <div class="description">' . $element['#description'] . "</div>\n";
+  }
+  $output .= "</div>\n";
+  return $output;
+}
+
+/**
  * hook_theme
  */
 function scratchpadify_theme($existing, $type, $theme, $path){
@@ -138,6 +183,12 @@ function scratchpadify_theme($existing, $type, $theme, $path){
       'arguments' => array(
         'term' => NULL
       )
+    ),
+    'scratchpadify_form_element' => array(
+      'arguments' => array(
+        'element' => NULL,
+        'value' => NULL
+      )
     )
   );
 }
@@ -146,19 +197,21 @@ function scratchpadify_theme($existing, $type, $theme, $path){
  * hook_theme_registry_alter
  */
 function scratchpadify_theme_registry_alter(&$theme_registry){
-  foreach(array(
-    'filter_tips',
-    'filter_tips_more_info'
-  ) as $theme){
-    unset($theme_registry[$theme]['file']);
-    unset($theme_registry[$theme]['theme path']);
-    unset($theme_registry[$theme]['theme paths']);
-    $theme_registry[$theme]['function'] = 'scratchpadify_filter_tips';
+  // Array of theme functions to alter
+  // old_theme => new_theme
+  $theme_functions_to_alter = array(
+    'filter_tips' => 'scratchpadify_filter_tips',
+    'filter_tips_more_info' => 'scratchpadify_filter_tips',
+    'node_submitted' => 'scratchpadify_node_submitted',
+    'form_element' => 'theme_scratchpadify_form_element'
+  );
+  // Loop through all the old functions & replace them with our new ones
+  foreach($theme_functions_to_alter as $old_theme => $new_theme){
+    unset($theme_registry[$old_theme]['file']);
+    unset($theme_registry[$old_theme]['theme path']);
+    unset($theme_registry[$old_theme]['theme paths']);
+    $theme_registry[$old_theme]['function'] = $new_theme;
   }
-  unset($theme_registry['node_submitted']['file']);
-  unset($theme_registry['node_submitted']['theme path']);
-  unset($theme_registry['node_submitted']['theme paths']);
-  $theme_registry['node_submitted']['function'] = 'scratchpadify_node_submitted';
 }
 
 /**
@@ -601,7 +654,7 @@ function scratchpadify_nodeapi(&$node, $op, $arg = 0){
 }
 
 function scratchpadify_preprocess_page(&$variables){
-	$tags = implode('', array_values(scratchpadify_title_tags()));
+  $tags = implode('', array_values(scratchpadify_title_tags()));
   $variables['title'] = strip_tags(htmlspecialchars_decode($variables['title']), $tags);
   $variables['head_title'] = strip_tags(htmlspecialchars_decode($variables['head_title']), $tags);
 }
@@ -613,7 +666,7 @@ function scratchpadify_preprocess_node(&$variables){
 
 function scratchpadify_title_tags(){
   return array(
-	  "[strong]" => '<strong>',
+    "[strong]" => '<strong>',
     "[/strong]" => '</strong>',
     "[b]" => '<b>',
     "[/b]" => '</b>',
@@ -626,12 +679,12 @@ function scratchpadify_title_tags(){
     "[sub]" => '<sub>',
     "[/sub]" => '</sub>',
     "[sup]" => '<sup>',
-    "[/sup]" => '</sup>',
-	);
+    "[/sup]" => '</sup>'
+  );
 }
 
 function scratchpadify_square_tags_to_html($text){
-	$tags = scratchpadify_title_tags();
+  $tags = scratchpadify_title_tags();
   return str_replace(array_keys($tags), array_values($tags), $text);
 }
 
