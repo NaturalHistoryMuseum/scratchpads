@@ -947,7 +947,9 @@ function nexus_character_form(&$form_state, $project_nid = null, $character_tid 
     '#size' => 60, 
     '#maxlength' => 128, 
     '#weight' => 1,
-  	'#required' => true,
+    // This element is required if 'Add to new group' is selected so add a * to show people it's needed
+    // Can't just add #required as form will fail validation if character is being added to exisitng group
+  	'#label_suffix' => '<span class="form-required" title="' . t('This field is required.') . '">*</span>',
   	'#default_value' => t('Default')
   );
   $character_group_options[0] = t('Add to new group');
