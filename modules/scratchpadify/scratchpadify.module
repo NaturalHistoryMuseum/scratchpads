@@ -102,7 +102,7 @@ function theme_scratchpadify_subgallery($term){
   // Create HTML
   return '<div class="scratchpadify-subgallery">
   <div class="scratchpadify-subgallery-image">
-    ' . l(theme('imagecache', 'thumbnail_square', $thumbnail_node->field_imagefield[0]['filepath']), taxonomy_term_path($term), array(
+    ' . l(theme('imagecache', 'thumbnail', $thumbnail_node->field_imagefield[0]['filepath']), taxonomy_term_path($term), array(
     'html' => TRUE
   )) . '
   </div>
