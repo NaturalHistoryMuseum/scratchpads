@@ -101,7 +101,7 @@ function scratchpad_report_site(){
       $sites[$data['site_url']] = $data;
       // Loop through the sites, and delete the ones that haven't called
       // in, in over a month.
-      $too_old_time = time() - 2592000; // Seconds in a month
+      $too_old_time = time() - 1209600; // Seconds in two weeks
       foreach($sites as $site => $site_details){
         if($site_details['last_reported'] < $too_old_time){
           unset($sites[$site]);
