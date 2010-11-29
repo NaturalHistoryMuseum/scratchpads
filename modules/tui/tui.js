@@ -20,6 +20,8 @@ Drupal.tui.init = function(context) {
   $('#tui-tree').resizable({handles:'e',resize:function(){$('#tui-form').width($('#tui').width()-$('#tui-tree').width());},minWidth:250});
   $('#taxonomy-form-term *', context).change(function(){Drupal.tui.form_changed = true;});
   $('#taxonomy-form-term *', context).keypress(function(){Drupal.tui.form_changed = true;return event.keyCode!=13;});
+  $('#tui-tree-subcontainer').mouseover(function(){document.onselectstart = function(){ return false;}});
+  $('#tui-tree-subcontainer').mouseout(function(){document.onselectstart = function(){ return true;}});
   Drupal.tui.form_changed = false;
   Drupal.tui.resize_frame();
 }
@@ -162,7 +164,6 @@ Drupal.tui.update_link = function(){
 }
 
 Drupal.tui.drag_start = function(event, ui){
-  document.onselectstart = function(){ return false; }
   $('.tui-term.active').removeClass('active');
   $('#tui-tree-subcontainer').css('height', 'auto');
   $('#tui-tree-subcontainer').css('overflow-y', 'visible');
@@ -172,7 +173,6 @@ Drupal.tui.drag_start = function(event, ui){
 }
 
 Drupal.tui.drop_deactivate = function(event, ui){
-  document.onselectstart = function(){ return true; }
   if(!Drupal.tui.waiting_for_reply){
     $('#tui-tree-subcontainer .tui-nodeleaf, #tui-tree-subcontainer p').droppable("destroy");
     Drupal.tui.waiting_for_reply = true;
