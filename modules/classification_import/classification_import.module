@@ -9,8 +9,12 @@ function classification_import_menu(){
       'title' => 'Import',
       'description' => 'Import terms and metadata into a taxonomy',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('classification_import_form'),
-      'access arguments' => array('administer taxonomy'),
+      'page arguments' => array(
+        'classification_import_form'
+      ),
+      'access arguments' => array(
+        'administer taxonomy'
+      ),
       'file' => 'classification_import.form.inc',
       'type' => MENU_LOCAL_TASK
     )
@@ -27,21 +31,23 @@ function classification_import_help($path, $arg){
       $additional_help = module_invoke_all('classification_import_help');
       if($additional_help){
         if(!is_array($additional_help)){
-          $additional_help = array($additional_help);
+          $additional_help = array(
+            $additional_help
+          );
         }
         $additional_help = '<ul><li>' . implode("</li><li>", $additional_help) . '</li></ul>';
-      } else {
+      }else{
         $additional_help = '';
       }
       return '<p>' . t('There are a number of different options open to you for importing your taxonomy.  Additional import functions can also be installed.') . '</p>' . $additional_help;
-    } else {
+    }else{
       // We're viewing the select a vocab page, advise to select a vocab.
       $vocabs = taxonomy_get_vocabularies();
       $list_items = array();
       foreach($vocabs as $vid => $vocab){
         // FIXME - We're here, listing the vocabs for the overview page.
         // $list_items
-        $list_items[] = l($vocab->name, 'admin/content/taxonomy/import/'.$vid);
+        $list_items[] = l($vocab->name, 'admin/content/taxonomy/import/' . $vid);
       }
       return theme('item_list', $list_items, t('Click on the vocabulary into which you would like to import terms'));
     }
@@ -57,10 +63,14 @@ function classification_import_form_taxonomy_form_term_alter(&$form, &$form_stat
   // FIXME - Not sure if this is working with Batax - this needs checking.
   if(arg(0) == 'batch'){
     if(isset($form['advanced']['parent']['#type']) && $form['advanced']['parent']['#type'] == 'textfield'){
-      $form['advanced']['parent']['#element_validate'] = array('classification_import_element_validate');
+      $form['advanced']['parent']['#element_validate'] = array(
+        'classification_import_element_validate'
+      );
     }
     if(isset($form['advanced']['relations']['#type']) && $form['advanced']['relations']['#type'] == 'textfield'){
-      $form['advanced']['relations']['#element_validate'] = array('classification_import_element_validate');
+      $form['advanced']['relations']['#element_validate'] = array(
+        'classification_import_element_validate'
+      );
     }
   }
 }
@@ -85,8 +95,8 @@ function classification_import_load_terms($vid, &$context){
     $context['sandbox']['imported'] = 0;
     // First we'll get the root terms so that we know where to start from
     $result = db_query("SELECT id FROM {classification_import_temp} WHERE parent NOT IN (SELECT name FROM {classification_import_temp} WHERE vid = %d) AND vid = %d", $vid, $vid);
-    while($row = db_fetch_array($result)){      
-      $context['sandbox']['data'][] = $row['id']; 
+    while($row = db_fetch_array($result)){
+      $context['sandbox']['data'][] = $row['id'];
     }
     $context['sandbox']['timestarted'] = time();
   }
@@ -104,17 +114,19 @@ function classification_import_load_terms($vid, &$context){
       if(count($context['sandbox']['data']) == $context['sandbox']['failed_count']){
         // The count is the same as last time, we're in a loop, lets set some
         // error messages, and try and get out.
-        drupal_set_message(t('We were not able to import').' '.format_plural(count($context['sandbox']['data']), '1 term', '@count terms').'. '.t('This could be because the terms are involved in a cyclic link (e.g. A links to B, and B links to A), or the terms do not have valid parent names.'), 'error');
+        drupal_set_message(t('We were not able to import') . ' ' . format_plural(count($context['sandbox']['data']), '1 term', '@count terms') . '. ' . t('This could be because the terms are involved in a cyclic link (e.g. A links to B, and B links to A), or the terms do not have valid parent names.'), 'error');
         foreach($context['sandbox']['data'] as $id){
           $value = db_fetch_array(db_query('SELECT * FROM {classification_import_temp} WHERE id = %d', $id));
           $value = unserialize($value['data']);
-          drupal_set_message(t('Unable to import %term', array('%term' => $value['name'])), 'error');
+          drupal_set_message(t('Unable to import %term', array(
+            '%term' => $value['name']
+          )), 'error');
         }
         $we_are_in_a_loop = TRUE;
-      } else {
+      }else{
         $context['sandbox']['failed_count'] = count($context['sandbox']['data']);
       }
-    } else {
+    }else{
       $context['sandbox']['failed_count'] = count($context['sandbox']['data']);
     }
   }
@@ -128,15 +140,18 @@ function classification_import_load_terms($vid, &$context){
       // We'll also unset the error messages - we set our own later on, so don't
       // need the ones being set.
       drupal_get_messages('error');
-    } else {
-      $context['sandbox']['imported'] ++;
+    }else{
+      $context['sandbox']['imported']++;
     }
-    $context['sandbox']['progress'] = $context['sandbox']['imported']/$context['sandbox']['max'];
+    $context['sandbox']['progress'] = $context['sandbox']['imported'] / $context['sandbox']['max'];
     // Set the message
     $time_taken_so_far = time() - $context['sandbox']['timestarted'];
-    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress'])/$context['sandbox']['progress']);
-    $context['message'] = '<p><br/>'.t('Saved %numnames of %total_names names', array('%numnames' => $context['sandbox']['imported'], '%total_names' => $context['sandbox']['max'])).'</p><p>'.t('Approximate time remaining').': '. format_interval($approx_time_remaining) . $additional_message;
-  } else {
+    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']);
+    $context['message'] = '<p><br/>' . t('Saved %numnames of %total_names names', array(
+      '%numnames' => $context['sandbox']['imported'],
+      '%total_names' => $context['sandbox']['max']
+    )) . '</p><p>' . t('Approximate time remaining') . ': ' . format_interval($approx_time_remaining) . $additional_message;
+  }else{
     $context['sandbox']['progress'] = 1;
   }
   if($context['sandbox']['progress'] >= 1){
@@ -145,12 +160,12 @@ function classification_import_load_terms($vid, &$context){
     // function, as here we have the value of vid (don't want to rely on getting
     // it from the URL).
     db_query("DELETE FROM {classification_import_temp} WHERE vid = %d", $vid);
-  } else {
+  }else{
     $context['finished'] = $context['sandbox']['progress'];
   }
 }
 
-function classification_import_load_terms_help(&$data, $vid){  
+function classification_import_load_terms_help(&$data, $vid){
   // We'll import this name first, then pop it from the list to import, and add
   // its children 
   $id = array_shift($data);
@@ -160,53 +175,56 @@ function classification_import_load_terms_help(&$data, $vid){
     if(is_array($value)){
       $form_state['values'][$key] = $value[0];
     }
-    $form_state['values']['field_'.$key] = array(array('value' => $form_state['values'][$key]), 'value' => $form_state['values'][$key]);
+    $form_state['values']['field_' . $key] = array(
+      array(
+        'value' => $form_state['values'][$key]
+      ),
+      'value' => $form_state['values'][$key]
+    );
   }
   if(isset($form_state['values']['parent'])){
-    $form_state['values']['parent'] = array($form_state['values']['parent'] => $form_state['values']['parent']);
+    $form_state['values']['parent'] = array(
+      $form_state['values']['parent'] => $form_state['values']['parent']
+    );
   }
-/*
+  /*
   if($row['parent_tid']){
     $form_state['values']['parent'] = array($row['parent_tid'] => $row['parent_tid']);
   }
 */
   $vocabulary = taxonomy_vocabulary_load($vid);
-  
   // Give the import modules a chance to tweak the data being imported.  This
   // would also be a good place for the ITIS term module to tweak data, or for 
   // us to import biblio nodes associated with a term
   module_invoke_all_by_reference('classification_import_alter_data', $form_state);
-  
   // Druapl execute is currently BROKEN http://drupal.org/node/260934, so we
   // have our own work around for this.
-  module_load_include('drupal_execute.inc','classification_import');
+  module_load_include('drupal_execute.inc', 'classification_import');
   module_load_include('admin.inc', 'taxonomy');
   classification_import_drupal_execute('taxonomy_form_term', $form_state, $vocabulary);
-  
   // Check to see if the term has been entered, if so, we continue, if not, 
   // we add the data array to the end of the list, and we'll try again later
-  if(isset($form_state['tid'])){  
+  if(isset($form_state['tid'])){
     // Finally we need to add the the children of this term from the database to
     // the context/data array.
     $results = db_query("SELECT id, data FROM {classification_import_temp} WHERE parent = '%s' AND vid = %d", $row['name'], $vid);
     while($row = db_fetch_array($results)){
       $row['data'] = unserialize($row['data']);
-      $row['data']['parent'] = $form_state['values']['tid']; 
+      $row['data']['parent'] = $form_state['values']['tid'];
       db_query("UPDATE {classification_import_temp} SET data = '%s' WHERE id = %d AND vid = %d", serialize($row['data']), $row['id'], $vid);
       $data[] = $row['id'];
-    } 
+    }
     // We delete this entry from the table - progress could be counted from this
     db_query("DELETE FROM {classification_import_temp} WHERE id = %d", $id);
     // Delete the status message which get in the way.
     drupal_get_messages('status');
-    $additional_message = '<p>'.t('Imported').': '.$form_state['values']['name'].'</p>';
-  } else {
+    $additional_message = '<p>' . t('Imported') . ': ' . $form_state['values']['name'] . '</p>';
+  }else{
     // This didn't import, lets add this row to a special array of "failed"
     // terms
     $data['failed'] = $id;
-    $additional_message = '<p class="error">'.t('Failed to import, will retry').': '.$form_state['values']['name'].'</p>';
+    $additional_message = '<p class="error">' . t('Failed to import, will retry') . ': ' . $form_state['values']['name'] . '</p>';
   }
-
   // Why the fuck is this necesary, why?
   // usleep(1000000);
   // Turns out the above was necessary because of the time value that Drupal
@@ -221,12 +239,12 @@ function classification_import_load_terms_help(&$data, $vid){
   // Return the additional message
   return $additional_message;
 }
-
 /**
  * Invoke all pass by reference.  This doesn't belong here, but here it is for
  * now.
  */
 if(!function_exists('module_invoke_all_by_reference')){
+
   function module_invoke_all_by_reference($hook, &$args){
     $modules = module_list();
     foreach($modules as $module => $values){
@@ -244,19 +262,19 @@ if(!function_exists('module_invoke_all_by_reference')){
 function classification_import_save_data($name, $parent, $data, $vid){
   return db_query("INSERT INTO {classification_import_temp} (name, parent, data, vid) VALUES ('%s', '%s', '%s', %d)", $name, $parent, serialize($data), $vid);
 }
+
 /**
  * 
  */
-function classification_import_batch_import_finished($success, $results, $operations) {
-  if ($success) {
+function classification_import_batch_import_finished($success, $results, $operations){
+  if($success){
     // We delete the status messages, as there is likely to be far too many to
     // display on the screen.
     drupal_get_messages('status');
     variable_del('eol_import_doing_import');
     drupal_set_message(t('The import has been performed.'));
     // FIXME - Add redirect.
-  }
-  else {
+  }else{
     drupal_set_message(t('An error occurred and processing did not complete.'), 'error');
   }
 }
