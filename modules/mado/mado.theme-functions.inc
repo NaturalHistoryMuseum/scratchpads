@@ -147,7 +147,20 @@ function mado_get_blocks($all_views = FALSE){
   }
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', $default_to_ignore);
   foreach(views_get_all_views() as $view){
+    $add_view = FALSE;
     if((($view->display['default']->display_options['arguments']['tid'] || $view->display['default']->display_options['arguments']['term_node_tid_depth']) || $all_views) && !in_array($view->name, $views_blocks_to_ignore['views'])){
+      $add_view = TRUE;
+    } else {
+      if(isset($view->display['default']->display_options['arguments']) && is_array($view->display['default']->display_options['arguments'])){
+        foreach($view->display['default']->display_options['arguments'] as $arg_id => $arg){
+          if(isset($arg['validate_argument_type']) && $arg['validate_argument_type'] == 'tid'){
+            $add_view = TRUE;
+            break;
+          }
+        }
+      }
+    }
+    if($add_view){      
       $blocks_and_views['view-' . $view->name] = array(
         '#type' => 'view',
         '#name' => $view->name,
