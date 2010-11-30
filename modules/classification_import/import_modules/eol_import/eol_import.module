@@ -132,7 +132,7 @@ function eol_import_validate($form, &$form_state){
 function eol_import_submit($form, $form_state){
   $batch = array(
     'operations' => array(
-      array('tcs_import_batch_download_data', array(array(EOL_IMPORT_REQUEST_URL.$form_state['clicked_button']['#post']['eol-import-id']))),
+      array('tcs_import_batch_download_data', array(array(EOL_IMPORT_REQUEST_URL.$form_state['clicked_button']['#post']['eol-import-id']), arg(4))),
       array('classification_import_load_terms', array(arg(4)))
     ),
     'finished' => 'classification_import_batch_import_finished',
