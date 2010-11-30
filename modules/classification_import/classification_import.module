@@ -172,6 +172,11 @@ function classification_import_load_terms_help(&$data, $vid){
 */
   $vocabulary = taxonomy_vocabulary_load($vid);
   
+  // Give the import modules a chance to tweak the data being imported.  This
+  // would also be a good place for the ITIS term module to tweak data, or for 
+  // us to import biblio nodes associated with a term
+  module_invoke_all_by_reference('classification_import_alter_data', $form_state);
+  
   // Druapl execute is currently BROKEN http://drupal.org/node/260934, so we
   // have our own work around for this.
   module_load_include('drupal_execute.inc','classification_import');
@@ -218,10 +223,26 @@ function classification_import_load_terms_help(&$data, $vid){
 }
 
 /**
+ * Invoke all pass by reference.  This doesn't belong here, but here it is for
+ * now.
+ */
+if(!function_exists('module_invoke_all_by_reference')){
+  function module_invoke_all_by_reference($hook, &$args){
+    $modules = module_list();
+    foreach($modules as $module => $values){
+      if(function_exists($module . '_' . $hook)){
+        $function = $module . '_' . $hook;
+        $function($args);
+      }
+    }
+  }
+}
+
+/**
  * Save data for import later
  */
 function classification_import_save_data($name, $parent, $data, $vid){
-  db_query("INSERT INTO {classification_import_temp} (name, parent, data, vid) VALUES ('%s', '%s', '%s', %d)", $name, $parent, serialize($data), $vid);
+  return db_query("INSERT INTO {classification_import_temp} (name, parent, data, vid) VALUES ('%s', '%s', '%s', %d)", $name, $parent, serialize($data), $vid);
 }
 /**
  * 
