@@ -435,7 +435,7 @@ function og_forum_db_rewrite_sql($query, $primary_table = 'n', $primary_field = 
       }
     }
     if (arg(0) == 'node' && arg(1) == 'add' && arg(2) == 'forum') {
-	  if (isset($_GET['gids']) && is_array($_GET['gids']) && isset($_GET['gids'][0]) && is_numeric($_GET['gids'][0])) {
+	  if (isset($_GET['gids']) && is_array($_GET['gids']) && isset($_GET['gids'][0]) && is_numeric($_GET['gids'][0]) && is_array($user->og_groups)) {
 	    if (in_array($_GET['gids'][0], array_keys($user->og_groups))) {
 	      return;
 	    }
