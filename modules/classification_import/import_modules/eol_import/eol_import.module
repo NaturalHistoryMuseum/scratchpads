@@ -65,7 +65,7 @@ function eol_import_menu(){
  */
 function eol_import_autocomplete(){
   if(isset($_POST['eol-name'])){
-    $eol_xml = file_get_contents(EOL_IMPORT_QUERY_URL.urlencode($_POST['eol-name']));
+    $eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode (EOL_IMPORT_QUERY_URL.urlencode($_POST['eol-name'])));
     if($eol_xml){
       $eol_xml = new SimpleXMLElement($eol_xml);
       $num_results = count($eol_xml->value);
@@ -92,7 +92,7 @@ function eol_import_autocomplete(){
     drupal_json(array('status' => TRUE, 'data' => drupal_render($form)));  
     return;
   } elseif(arg(1)) {
-    $eol_xml = file_get_contents(EOL_IMPORT_QUERY_URL.urlencode(arg(1)));
+    $eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode (EOL_IMPORT_QUERY_URL.urlencode(arg(1))));
     if($eol_xml){
       $eol_xml = new SimpleXMLElement($eol_xml);
       $num_results = count($eol_xml->value);
@@ -106,6 +106,43 @@ function eol_import_autocomplete(){
     }
   }
   echo json_encode(array());
+}
+
+/**
+ * Implementation of hook_classification_import_alter_data
+ */
+function eol_import_classification_import_alter_data(&$tweak){
+  // We unfortunately have to hard code here information about the ITIS module.
+  // If this vocabulary is using the ITIS term content type, then we change the
+  // name, and set other fields.
+  // Check for one of the core itis_term functions.  If it exists, then we'll 
+  // start our tweaking.  Note, this may get moved from this module in the
+  // future.
+  if(function_exists('itis_term_form_alter') && function_exists('term_node_taxonomy')){
+    // Both itis_term and term_node modules are installed, lets check to see if
+    // this vocabulary is set to use itis_term
+    $type = _term_node_get_content_type_for_vid($tweak['vocabulary']->vid);
+    if($type == 'itis_term'){
+      // Get the name parts from the canonical name
+      $name_parts = explode(" ", $tweak['form_state']['values']['canonicalname']);
+      $i = 1;
+      foreach($name_parts as $name_part){
+        $tweak['form_state']['values']['unit_name'.$i] = $name_part;
+        $i ++;
+      }
+      // Set the Authority from the diff in canonical and name, and then set the
+      // name to the canonical
+      if(strlen($tweak['form_state']['values']['name']) > strlen($tweak['form_state']['values']['canonicalname'])){
+        $tweak['form_state']['values']['taxon_author'] = trim(substr($tweak['form_state']['values']['name'], strlen($tweak['form_state']['values']['canonicalname'])));
+        $tweak['form_state']['values']['name'] = $tweak['form_state']['values']['canonicalname'];
+      }
+      // Set the rank (ITIS uses rank_name)
+      $tweak['form_state']['values']['rank_name'] = $tweak['form_state']['values']['rank'];
+      // FIXME - The following will break synonyms, we need to alter this. 
+      // Assume that usage is 'valid'
+      $tweak['form_state']['values']['usage'] = 'valid';
+    }
+  }
 }
 
 /**
@@ -132,7 +169,7 @@ function eol_import_validate($form, &$form_state){
 function eol_import_submit($form, $form_state){
   $batch = array(
     'operations' => array(
-      array('tcs_import_batch_download_data', array(array(EOL_IMPORT_REQUEST_URL.$form_state['clicked_button']['#post']['eol-import-id']), arg(4))),
+      array('tcs_import_batch_download_data', array(array('http://fencedine.myspecies.info/?url=' . urlencode (EOL_IMPORT_REQUEST_URL.$form_state['clicked_button']['#post']['eol-import-id'])), arg(4))),
       array('classification_import_load_terms', array(arg(4)))
     ),
     'finished' => 'classification_import_batch_import_finished',
