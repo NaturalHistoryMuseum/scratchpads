@@ -185,7 +185,7 @@ function eol_import_submit($form, $form_state){
         'tcs_import_batch_download_data',
         array(
           array(
-            'http://fencedine.myspecies.info/?url=' . urlencode(EOL_IMPORT_REQUEST_URL . $form_state['clicked_button']['#post']['eol-import-id'])
+            EOL_IMPORT_REQUEST_URL . $form_state['clicked_button']['#post']['eol-import-id']
           ),
           arg(4)
         )
