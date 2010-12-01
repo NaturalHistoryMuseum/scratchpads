@@ -69,6 +69,8 @@ function scratchpad_do_openid_login($uid){
     }
     drupal_goto();
   }else{
+    watchdog('logins', print_r($result,1));
+    //db_query("DELETE FROM {openid_association} WHERE idp_endpoint_uri = '%s'")
     drupal_set_message(t('Login failed, are you sure the OpenID "%openid" is permitted to "Logins"', array('%openid' => $result['openid.claimed_id'])), 'error');
     drupal_goto('logins');
   }
