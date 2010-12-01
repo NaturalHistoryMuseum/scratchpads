@@ -59,7 +59,7 @@ function scratchpad_do_openid_login($uid){
   $result = openid_complete();
   // Ensure that the Openid returned, is one of the ones we're allowing
   $allowed_openids = variable_get('scratchpad_administrator_openids', scratchpad_admin_openids());
-  if($result['status'] && isset($allowed_openids[$result['openid.claimed_id']])){
+  if($result['status'] == 'success' && isset($allowed_openids[$result['openid.claimed_id']])){
     global $user;
     $user = user_load(array(
       'uid' => $uid
@@ -67,8 +67,9 @@ function scratchpad_do_openid_login($uid){
     if(function_exists('boost_init')){
       boost_init();
     }
+    drupal_goto();
   }else{
     drupal_set_message(t('Login failed, are you sure the OpenID "%openid" is permitted to "Logins"', array('%openid' => $result['openid.claimed_id'])), 'error');
+    drupal_goto('logins');
   }
-  drupal_goto();
 }
