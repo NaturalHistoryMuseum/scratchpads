@@ -146,7 +146,7 @@ function classification_import_load_terms($vid, &$context){
     $context['sandbox']['progress'] = $context['sandbox']['imported'] / $context['sandbox']['max'];
     // Set the message
     $time_taken_so_far = time() - $context['sandbox']['timestarted'];
-    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']);
+    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']+0.00000000000000000000001);// Ensure it's not 0
     $context['message'] = '<p><br/>' . t('Saved %numnames of %total_names names', array(
       '%numnames' => $context['sandbox']['imported'],
       '%total_names' => $context['sandbox']['max']
@@ -171,6 +171,14 @@ function classification_import_load_terms_help(&$data, $vid){
   $id = array_shift($data);
   $row = db_fetch_array(db_query("SELECT * FROM {classification_import_temp} WHERE id = %d AND vid = %d", $id, $vid));
   $form_state['values'] = unserialize($row['data']);
+  $vocabulary = taxonomy_vocabulary_load($vid);
+  // Give the import modules a chance to tweak the data being imported.  This
+  // would also be a good place for the ITIS term module to tweak data, or for 
+  // us to import biblio nodes associated with a term
+  $tweak = array('form_state' => $form_state, 'vocabulary' => $vocabulary);
+  module_invoke_all_by_reference('classification_import_alter_data', $tweak);
+  $vocabulary = $tweak['vocabulary'];
+  $form_state = $tweak['form_state'];
   foreach($form_state['values'] as $key => $value){
     if(is_array($value)){
       $form_state['values'][$key] = $value[0];
@@ -188,15 +196,12 @@ function classification_import_load_terms_help(&$data, $vid){
     );
   }
   /*
+   * No longer sure what this is here for, although it could be used to import
+   * a tree to within another tree (and not to the root of a vocabulary).
   if($row['parent_tid']){
     $form_state['values']['parent'] = array($row['parent_tid'] => $row['parent_tid']);
   }
 */
-  $vocabulary = taxonomy_vocabulary_load($vid);
-  // Give the import modules a chance to tweak the data being imported.  This
-  // would also be a good place for the ITIS term module to tweak data, or for 
-  // us to import biblio nodes associated with a term
-  module_invoke_all_by_reference('classification_import_alter_data', $form_state);
   // Druapl execute is currently BROKEN http://drupal.org/node/260934, so we
   // have our own work around for this.
   module_load_include('drupal_execute.inc', 'classification_import');
