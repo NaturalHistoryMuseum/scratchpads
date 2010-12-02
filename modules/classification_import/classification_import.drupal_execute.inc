@@ -19,6 +19,18 @@ function classification_import_drupal_process_form($form_id, &$form, &$form_stat
   $form_state['values'] = array();
 
   $form = form_builder($form_id, $form, $form_state);
+  // FIXME - This needs updating.
+  // Hack specifically for this module - minor change from the core Drupal code.  
+  if(count($form['#post']['field_vernacular_name']) > 1){
+    // We have more than one vernacular, lets copy the other fields, and
+    // try and magic some shit up!
+    $fields_to_add = count($form['#post']['field_vernacular_name']);
+    for($i = 1; $i < $fields_to_add; $i++){
+      $form_state['values']['field_vernacular_name'][$i] = $form_state['values']['field_vernacular_name'][0];
+      $form_state['values']['field_vernacular_name'][$i]['value'] = $form['#post']['field_vernacular_name'][$i]['value'];
+    }
+  }
+  // End of hack
   // Only process the form if it is programmed or the form_id coming
   // from the POST data is set and matches the current form_id.
   if ((!empty($form['#programmed'])) || (!empty($form['#post']) && (isset($form['#post']['form_id']) && ($form['#post']['form_id'] == $form_id)))) {
