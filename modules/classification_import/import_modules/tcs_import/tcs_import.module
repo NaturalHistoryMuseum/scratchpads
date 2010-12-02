@@ -172,48 +172,84 @@ function _tcs_import_import_concept_xml($xml){
   _tcs_import_walk_xml($xml, $data);
   $urls = _tcs_import_set_and_get_variable('urls');
   $data = _tcs_import_clean_xml($data);
-  if(isset($data['taxonrelationships']['taxonrelationship']['type'])){
-    // We only have one relationship (leaf or root), so we need to tweak this
-    // array
-    $data['taxonrelationships']['taxonrelationship'] = array($data['taxonrelationships']['taxonrelationship']);
-  }
-  if(is_array($data['taxonrelationships']['taxonrelationship'])){
-    foreach($data['taxonrelationships']['taxonrelationship'] as $relationship){
-      if(strtolower($relationship['type']) == 'is child taxon of'){
-        if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
-          // We've already got the parent in the database (WE SHOULD)!  Lets get 
-          // its ID and replace the $parent
-          $new_parent_name = db_result(db_query("SELECT name FROM {classification_import_temp} WHERE ref = '%s' OR url = '%s'", $relationship['totaxonconcept']['ref'], $relationship['totaxonconcept']['ref']));
-          if($new_parent_name){
-            $relationship['totaxonconcept']['ref'] = $new_parent_name;
-          } else {
-            // We may be importing from a file.  If so, then the id we want is the
-            // one whose ref is "filename"
-            $new_parent_name = db_result(db_query("SELECT id FROM {classification_import_temp} WHERE ref = '%s'", _tcs_import_set_and_get_variable('originalurl')));
+  if(isset($data['taxonrelationships'])){
+    if(isset($data['taxonrelationships']['taxonrelationship']['type'])){
+      // We only have one relationship (leaf or root), so we need to tweak this
+      // array
+      $data['taxonrelationships']['taxonrelationship'] = array($data['taxonrelationships']['taxonrelationship']);
+    }
+    if(is_array($data['taxonrelationships']['taxonrelationship'])){
+      foreach($data['taxonrelationships']['taxonrelationship'] as $relationship){
+        if(strtolower($relationship['type']) == 'is child taxon of'){
+          if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+            // We've already got the parent in the database (WE SHOULD)!  Lets get 
+            // its ID and replace the $parent
+            $new_parent_name = db_result(db_query("SELECT name FROM {classification_import_temp} WHERE ref = '%s' OR url = '%s'", $relationship['totaxonconcept']['ref'], $relationship['totaxonconcept']['ref']));
             if($new_parent_name){
               $relationship['totaxonconcept']['ref'] = $new_parent_name;
+            } else {
+              // We may be importing from a file.  If so, then the id we want is the
+              // one whose ref is "filename"
+              $new_parent_name = db_result(db_query("SELECT id FROM {classification_import_temp} WHERE ref = '%s'", _tcs_import_set_and_get_variable('originalurl')));
+              if($new_parent_name){
+                $relationship['totaxonconcept']['ref'] = $new_parent_name;
+              }
             }
           }
-        }
-        tcs_classification_import_save_data($data['name'], $new_parent_name, $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
-        // Also update any terms whose parent is set as
-      } elseif(strtolower($relationship['type']) == 'is parent taxon of'){
-        if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
-          // We've got an extra URL to download, add it to the list.
-          $urls[] = $relationship['totaxonconcept']['ref'];
-          _tcs_import_set_and_get_variable('urls', $urls);
-        }
-      } elseif(strtolower($relationship['type']) == 'has vernacular'){
-        // Handling vernaculars is a little tricky if the link is internal.  If 
-        // the link ex external, then we can just grab the file here, and be
-        // be done with it
-      } elseif(strtolower($relationship['type']) == 'has synonym'){
-        if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
-          // We've got an extra URL to download, add it to the list.
-          $urls[] = $relationship['totaxonconcept']['ref'];
-          _tcs_import_set_and_get_variable('urls', $urls);
+          tcs_classification_import_save_data($data['name'], $new_parent_name, $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
+          // Also update any terms whose parent is set as
+        } elseif(strtolower($relationship['type']) == 'is parent taxon of'){
+          if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+            // We've got an extra URL to download, add it to the list.
+            $urls[] = $relationship['totaxonconcept']['ref'];
+            _tcs_import_set_and_get_variable('urls', $urls);
+          }
+        } elseif(strtolower($relationship['type']) == 'has vernacular'){
+          // Handling vernaculars is a little tricky if the link is internal.  If 
+          // the link is external, then we can just grab the file here, and be
+          // be done with it
+          if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+            // Download and parse the URL
+            $urls[] = $relationship['totaxonconcept']['ref'];
+            _tcs_import_set_and_get_variable('urls', $urls);
+            // Also add this URL to a list of vernacular URLs
+            $vernacular_urls = _tcs_import_set_and_get_variable('vernacular_urls');
+            $vernacular_urls[$relationship['totaxonconcept']['ref']] = _tcs_import_set_and_get_variable('url');
+            _tcs_import_set_and_get_variable('vernacular_urls', $vernacular_urls);
+          } else {
+            // Looks like the link is internal.  Farp, we need to do something.
+            // Lets just log this for now, and promise that we'll handle this in 
+            // the near future.
+            watchdog('classification_import', 'Failed to import an internal vernacular name');
+          }        
+        } elseif(strtolower($relationship['type']) == 'has synonym'){
+          if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
+            // Download and parse the URL
+            $urls[] = $relationship['totaxonconcept']['ref'];
+            _tcs_import_set_and_get_variable('urls', $urls);
+          }
         }
       }
+    }
+  } else {
+    // We have here either a vernacular name, or a synonym.
+    // Lets get the list of vernacular names first, and check if this URL is in
+    // it
+    $vernacular_urls = _tcs_import_set_and_get_variable('vernacular_urls');
+    if(isset($vernacular_urls[_tcs_import_set_and_get_variable('url')])){
+      // We have a vernacular name.  We need to load the original term from the 
+      // import table, and add a vernacular name to it.
+      $other_data = unserialize(db_result(db_query("SELECT data FROM {classification_import_temp} WHERE url = '%s'", $vernacular_urls[_tcs_import_set_and_get_variable('url')])));
+      if(!isset($other_data['vernacular_name'])){
+        $other_data['vernacular_name'] = array();
+      }
+      $other_data['vernacular_name'][] = $data['name'];
+      db_query("UPDATE {classification_import_temp} SET data = '%s' WHERE url = '%s'", serialize($other_data), $vernacular_urls[_tcs_import_set_and_get_variable('url')]);
+      // Finally unset the URL from the vernacular_urls array
+      unset($vernacular_urls[_tcs_import_set_and_get_variable('url')]);
+      _tcs_import_set_and_get_variable('vernacular_urls', $vernacular_urls);
+    } else {
+      
     }
   }
 }
