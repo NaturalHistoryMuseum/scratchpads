@@ -10,8 +10,8 @@ function nexus_import_form($form_state){
   }
   if($form_state['storage']['import_file']){
     $form['title'] = array(
-      '#type' => 'textfield', 
-      '#title' => t('Title'), 
+      '#type' => 'textfield',
+      '#title' => t('Title'),
       '#required' => true
     );
     $import_file = $form_state['storage']['import_file']['data'];
@@ -24,22 +24,22 @@ function nexus_import_form($form_state){
       }
     }
     $form['taxonomy']['vid'] = array(
-      '#type' => 'select', 
-      '#title' => t('Vocabulary'), 
-      '#options' => nexus_get_vocabularies(), 
-      '#description' => t('Please select which vocabulary the taxa in the import file belong to.'), 
-      '#default_value' => $vid, 
-      '#required' => true, 
+      '#type' => 'select',
+      '#title' => t('Vocabulary'),
+      '#options' => nexus_get_vocabularies(),
+      '#description' => t('Please select which vocabulary the taxa in the import file belong to.'),
+      '#default_value' => $vid,
+      '#required' => true,
       '#ahah' => array(
-        'path' => 'nexus/callback/import', 
-        'wrapper' => 'nexus-taxa', 
-        'method' => 'replace', 
+        'path' => 'nexus/callback/import',
+        'wrapper' => 'nexus-taxa',
+        'method' => 'replace',
         'effect' => 'fade'
       )
     );
     $form['taxonomy']['taxa'] = array(
-      '#value' => '', 
-      '#prefix' => '<div id="nexus-taxa">', 
+      '#value' => '',
+      '#prefix' => '<div id="nexus-taxa">',
       '#suffix' => '</div>'
     );
     if($vid){
@@ -52,26 +52,26 @@ function nexus_import_form($form_state){
       foreach($import_file['taxa'] as $taxon){
         if(@array_key_exists($taxon, $tids)){
           $form['taxonomy']['taxa'][$taxon] = array(
-            '#type' => 'hidden', 
-            '#value' => $tids[$taxon], 
-            '#prefix' => '<p class="nexus-taxa-match">' . $taxon . '</p>', 
+            '#type' => 'hidden',
+            '#value' => $tids[$taxon],
+            '#prefix' => '<p class="nexus-taxa-match">' . $taxon . '</p>',
             '#parents' => array(
-              'taxonomy', 
+              'taxonomy',
               $taxon
             )
           );
         }else{
           $form['taxonomy']['taxa'][$taxon] = array(
-            '#type' => 'textfield', 
-            '#maxlength' => 100, 
-            '#autocomplete_path' => 'taxonomy/autocomplete/' . $vid, 
-            '#title' => $taxon, 
+            '#type' => 'textfield',
+            '#maxlength' => 100,
+            '#autocomplete_path' => 'taxonomy/autocomplete/' . $vid,
+            '#title' => $taxon,
             '#description' => t('A matching taxon for %taxon could not be found in vocabulary %vocabulary. If there is a matching term, please choose it now.', array(
-              '%taxon' => $taxon, 
+              '%taxon' => $taxon,
               '%vocabulary' => $form['taxonomy']['vid']['#options'][$vid]
-            )), 
+            )),
             '#parents' => array(
-              'taxonomy', 
+              'taxonomy',
               $taxon
             )
           );
@@ -79,35 +79,35 @@ function nexus_import_form($form_state){
       }
     }
     $form['previous'] = array(
-      '#type' => 'submit', 
-      '#value' => t('Previous'), 
+      '#type' => 'submit',
+      '#value' => t('Previous'),
       '#submit' => array(
         'nexus_import_form_previous_submit'
       )
     );
     $form['import'] = array(
-      '#type' => 'submit', 
-      '#value' => t('Import'), 
+      '#type' => 'submit',
+      '#value' => t('Import'),
       '#submit' => array(
         'nexus_import_form_import_submit'
       )
     );
     $form['datatype'] = array(
-      '#type' => 'hidden', 
+      '#type' => 'hidden',
       '#value' => $form_state['storage']['import_file']['datatype']
     );
   }else{
     $form['import_file'] = array(
-      '#type' => 'file', 
-      '#title' => t('File to import'), 
+      '#type' => 'file',
+      '#title' => t('File to import'),
       '#description' => t('Select the file you want to import.')
     );
     $form['submit'] = array(
-      '#type' => 'submit', 
-      '#value' => t('Upload'), 
+      '#type' => 'submit',
+      '#value' => t('Upload'),
       '#validate' => array(
         'nexus_import_form_upload_validate'
-      ), 
+      ),
       '#submit' => array(
         'nexus_import_form_upload_submit'
       )
@@ -116,22 +116,19 @@ function nexus_import_form($form_state){
   return $form;
 }
 
-function nexus_import_form_upload_validate(&$form, &$form_state){ //  global $user;
+function nexus_import_form_upload_validate(&$form, &$form_state){
   if($_FILES['files']['name']['import_file'] == ''){
     form_set_error('import_file', t('You didn\'t upload a file'));
   }
-  $limits = _upload_file_limits($user);
+  // Validate this is a .nex file
   $validators = array(
     'file_validate_extensions' => array(
       'nex'
-    ), 
-    'file_validate_size' => array(
-      $limits['file_size'], 
-      $limits['user_size']
     )
   );
   // Save new file uploads.
   if($file = file_save_upload('import_file', $validators, FALSE, FALSE)){
+  	dd($file);
     $file->list = variable_get('upload_list_default', 1);
     $file->description = $file->filename;
     $file->weight = 0;
@@ -154,15 +151,15 @@ function nexus_import_form_upload_submit(&$form, &$form_state){
     $batch = array(
       'operations' => array(
         array(
-          'nexus_import_batch_process_file', 
+          'nexus_import_batch_process_file',
           array(
             $lines
           )
         )
-      ), 
-      'finished' => 'nexus_import_batch_process_file_finished', 
-      'title' => t('Uploading file'), 
-      'error_message' => t('The upload process has encountered an error.'), 
+      ),
+      'finished' => 'nexus_import_batch_process_file_finished',
+      'title' => t('Uploading file'),
+      'error_message' => t('The upload process has encountered an error.'),
       'file' => drupal_get_path('module', 'nexus') . '/includes/nexus.import.inc'
     );
     batch_set($batch);
@@ -300,11 +297,9 @@ function nexus_import_batch_process_file_finished($success, $results, $operation
   if(!$results['error']){ // Results error can be set in batch process; if it isset there will already be an error message 
     if($success){
       if(!count($results['data']['taxa'])){
-      	
-      	foreach($results['data']['matrix'] as $matrix){
-      		$results['data']['taxa'][] = $matrix[0];
-      	}
-
+        foreach($results['data']['matrix'] as $matrix){
+          $results['data']['taxa'][] = $matrix[0];
+        }
       }elseif(!count($results['data']['chars']) && $results['datatype'] != 'dna'){
         drupal_set_message(t('There are no characters in this file to import.'), 'error');
         return;
@@ -329,18 +324,18 @@ function nexus_import_form_import_submit(&$form, &$form_state){
   $batch = array(
     'operations' => array(
       array(
-        'nexus_import_batch_process_import', 
+        'nexus_import_batch_process_import',
         array(
-          $form_state['storage']['import_file']['data'], 
-          $form_state['storage']['import_file']['base'], 
+          $form_state['storage']['import_file']['data'],
+          $form_state['storage']['import_file']['base'],
           $form_state['values']
         )
       )
-    ), 
-    'finished' => 'nexus_import_batch_process_import_finished', 
-    'title' => t('Importing'), 
-    'error_message' => t('Sorry, there was an error importing the file.'), 
-    'progressive' => TRUE, 
+    ),
+    'finished' => 'nexus_import_batch_process_import_finished',
+    'title' => t('Importing'),
+    'error_message' => t('Sorry, there was an error importing the file.'),
+    'progressive' => TRUE,
     'file' => drupal_get_path('module', 'nexus') . '/includes/nexus.import.inc'
   );
   batch_set($batch);
@@ -381,8 +376,8 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
     // Create groups
     $context['message'] = t('Creating characters');
     $group_term = array(
-      'vid' => $character_vid, 
-      'parent' => $context['results']['node']->character_root_tid, 
+      'vid' => $character_vid,
+      'parent' => $context['results']['node']->character_root_tid,
       'weight' => $context['sandbox']['progress']
     );
     $func = 'nexus_import_add_' . $form_values['datatype'] . '_character';
@@ -425,7 +420,7 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
     $taxonomy = array(
       $form_values['vid'] => array(
         $form_values['taxonomy'][$taxon]
-      ), 
+      ),
       $character_vid => array(
         $context['sandbox']['character_terms'][$attribute_comment[1]]['tid']
       )
@@ -440,10 +435,10 @@ function nexus_import_batch_process_import($import_file, $base, $form_values, &$
 
 function nexus_import_add_standard_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, &$context, &$form_values){
   $character_term = array(
-    'name' => $character_name,  // chars are indexed from 0 
-    'vid' => $character_vid, 
-    'parent' => $group_term['tid'], 
-    'weight' => $character_order, 
+    'name' => $character_name, // chars are indexed from 0 
+    'vid' => $character_vid,
+    'parent' => $group_term['tid'],
+    'weight' => $character_order,
     'description' => _nexus_import_get_char_description($import_file, $character)
   );
   taxonomy_save_term($character_term);
@@ -469,10 +464,10 @@ function nexus_import_add_standard_character($character, $character_name, $chara
 
 function nexus_import_add_dna_character($character, $character_name, $character_order, $character_vid, $group_term, $import_file, &$context, &$form_values){
   $character_term = array(
-    'name' => $character_name,  // chars are indexed from 0 
-    'vid' => $character_vid, 
-    'parent' => $group_term['tid'], 
-    'weight' => $character_order, 
+    'name' => $character_name, // chars are indexed from 0 
+    'vid' => $character_vid,
+    'parent' => $group_term['tid'],
+    'weight' => $character_order,
     'description' => _nexus_import_get_char_description($import_file, $character)
   );
   taxonomy_save_term($character_term);
@@ -512,7 +507,7 @@ function nexus_import_parse_matrix($matrix, $taxonomy, $datatype, $vid, $base = 
         if(!array_key_exists($matrix_data[0], $parsed_data)){
           $term = reset(nexus_get_term_by_name_and_vid($matrix_data[0], $vid));
           $parsed_data[$matrix_data[0]] = array(
-            'characters' => $matrix_data[1], 
+            'characters' => $matrix_data[1],
             'tid' => $term->tid
           );
         }else{
@@ -579,7 +574,7 @@ function _nexus_import_save_node($type, $title, $taxonomy = array(), $properties
 
 function nexus_get_term_by_name_and_vid($name, $vid){
   $db_result = db_query(db_rewrite_sql("SELECT t.tid, t.* FROM {term_data} t WHERE LOWER(t.name) = LOWER('%s') AND t.vid = %d", 't', 'tid'), array(
-    trim($name), 
+    trim($name),
     $vid
   ));
   $result = array();
@@ -595,7 +590,7 @@ function nexus_import_batch_process_import_finished($success, $results, $operati
     drupal_set_message(t('Character project %title has been created.', array(
       '%title' => $results['node']->title
     )));
-        drupal_goto('node/' . $results['node']->nid .'/edit');
+    drupal_goto('node/' . $results['node']->nid . '/edit');
   }else{
     drupal_set_message(t('An error occurred while importing the file'), 'error');
   }
