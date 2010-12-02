@@ -4,7 +4,8 @@ function taxonomy_tree_callback($nid = null){
 
   // If root = source, the tree should already be populated  
   if($_GET['root'] == 'source'){
-   return drupal_json(array());
+  // Return NULL to improve page load time
+   return NULL;
   }
   
   $exploded_root = explode('-', $_GET['root']);
