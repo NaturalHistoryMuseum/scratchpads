@@ -227,7 +227,16 @@ function _tcs_import_import_concept_xml($xml){
             // Download and parse the URL
             $urls[] = $relationship['totaxonconcept']['ref'];
             _tcs_import_set_and_get_variable('urls', $urls);
-          }
+            // Also add this URL to a list of synonym URLs
+            $synonym_urls = _tcs_import_set_and_get_variable('synonym_urls');
+            $synonym_urls[$relationship['totaxonconcept']['ref']] = _tcs_import_set_and_get_variable('url');
+            _tcs_import_set_and_get_variable('synonym_urls', $synonym_urls);
+          } else {
+            // Looks like the link is internal.  Farp, we need to do something.
+            // Lets just log this for now, and promise that we'll handle this in 
+            // the near future.
+            watchdog('classification_import', 'Failed to import an internal synonym');
+          } 
         }
       }
     }
@@ -236,6 +245,7 @@ function _tcs_import_import_concept_xml($xml){
     // Lets get the list of vernacular names first, and check if this URL is in
     // it
     $vernacular_urls = _tcs_import_set_and_get_variable('vernacular_urls');
+    $synonym_urls = _tcs_import_set_and_get_variable('synonym_urls');
     if(isset($vernacular_urls[_tcs_import_set_and_get_variable('url')])){
       // We have a vernacular name.  We need to load the original term from the 
       // import table, and add a vernacular name to it.
@@ -248,8 +258,18 @@ function _tcs_import_import_concept_xml($xml){
       // Finally unset the URL from the vernacular_urls array
       unset($vernacular_urls[_tcs_import_set_and_get_variable('url')]);
       _tcs_import_set_and_get_variable('vernacular_urls', $vernacular_urls);
-    } else {
-      
+    } else if(isset($synonym_urls[_tcs_import_set_and_get_variable('url')])){
+      // Finally unset the URL from the vernacular_urls array
+      $row = db_fetch_array(db_query("SELECT name, data FROM {classification_import_temp} WHERE url = '%s'", $synonym_urls[_tcs_import_set_and_get_variable('url')]));
+      // Append some of the data from the valid name, to the invalid one
+      $valid_data = unserialize($row['data']);
+      $data['rank'] = $valid_data['rank'];
+      $data['usage'] = 'invalid';
+      $data['accepted_name'] = $valid_data['canonicalname'];
+      tcs_classification_import_save_data($data['name'], $row['name'], $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
+      unset($synonym_urls[_tcs_import_set_and_get_variable('url')]);
+      _tcs_import_set_and_get_variable('synonym_urls', $synonym_urls);
+      drupal_debug($data);
     }
   }
 }

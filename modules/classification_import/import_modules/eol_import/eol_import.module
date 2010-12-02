@@ -152,7 +152,9 @@ function eol_import_classification_import_alter_data(&$tweak){
       $tweak['form_state']['values']['rank_name'] = $tweak['form_state']['values']['rank'];
       // FIXME - The following will break synonyms, we need to alter this. 
       // Assume that usage is 'valid'
-      $tweak['form_state']['values']['usage'] = 'valid';
+      if(!isset($tweak['form_state']['values']['usage'])){
+        $tweak['form_state']['values']['usage'] = 'valid';
+      }
     }
   }
 }
