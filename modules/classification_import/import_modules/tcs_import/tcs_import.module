@@ -269,7 +269,6 @@ function _tcs_import_import_concept_xml($xml){
       tcs_classification_import_save_data($data['name'], $row['name'], $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
       unset($synonym_urls[_tcs_import_set_and_get_variable('url')]);
       _tcs_import_set_and_get_variable('synonym_urls', $synonym_urls);
-      drupal_debug($data);
     }
   }
 }
