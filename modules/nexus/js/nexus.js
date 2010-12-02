@@ -76,6 +76,8 @@ function nexus() {
     },
     
     initTabs: function(){
+    	
+    	var characterTypesToShow = [];  
       
       // IE7 chokes if tabs are hidden before adding vertical tabs, so hide everthing here
       $('#matrix-editor-panels div.tab')
@@ -129,13 +131,18 @@ function nexus() {
       });
       
       $('input[name=format]').click(function(){
-    	      	  
+    	  
     	if($(this).val() == 'nex'){
     	if($('#edit-characters-to-export option.nexus-option-controlled').length || $('#edit-characters-to-export option.nexus-option-dna').length){
         	$('#nexus-character-types').show();
-        	self.exportCharactersFilter();    		
+        	characterTypesToShow = [$('input[name=character_type]:checked').val()];
+        	self.exportCharactersFilter(characterTypesToShow);    		
     	}
 
+    	}else if($(this).val() == 'lif3'){
+    		$('#nexus-character-types').hide();
+    		characterTypesToShow = ['controlled', 'quantitative'];
+    		self.exportCharactersFilter(characterTypesToShow);    	
     	}else{
     		$('#nexus-character-types').hide();
     		$('#edit-characters-to-export option').removeAttr('disabled').attr('selected', 'selected').show();
@@ -143,16 +150,22 @@ function nexus() {
       });
       
       $('input[name=character_type]').change(function(){
-    	  self.exportCharactersFilter();
+    	  characterTypesToShow = [$('input[name=character_type]:checked').val()];
+    	  self.exportCharactersFilter(characterTypesToShow);
       });
       
     },
     
-    exportCharactersFilter: function(){
+    exportCharactersFilter: function(characterTypesToShow){
     	
-    	var type = $('input[name=character_type]:checked').val();
-    	$('#edit-characters-to-export option:not(.nexus-option-'+type+')').removeAttr('selected').attr('disabled', 'disabled').hide(); // Add disabled for browsers than don't let you hide options
-    	$('#edit-characters-to-export option.nexus-option-'+type).removeAttr('disabled').attr('selected', 'selected').show();
+    	$('#edit-characters-to-export option').removeAttr('selected').attr('disabled', 'disabled').hide(); // Add disabled for browsers than don't let you hide options
+    	$.each(characterTypesToShow, function(i, characterType) { 
+    		
+
+        	$('#edit-characters-to-export option.nexus-option-'+characterType).removeAttr('disabled').attr('selected', 'selected').show();
+
+    		});
+    	
     	
     },
     
