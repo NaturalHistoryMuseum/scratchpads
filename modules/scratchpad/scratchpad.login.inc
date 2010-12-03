@@ -2,10 +2,11 @@
 
 function scratchpad_admin_openids(){
   return array(
-    'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
-    'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)',
+    'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
-    'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)'
+    'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
+    'http://vbrant.eu/user/57/identity' => 'Ben Scott (http://vbrant.eu/user/57/identity)',
+    'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)',
   );
 }
 
@@ -34,7 +35,8 @@ function scratchpad_logins(){
     'openid' => array(
       '#title' => 'OpenID',
       '#type' => 'select',
-      '#options' => variable_get('scratchpad_administrator_openids', scratchpad_admin_openids())
+      '#options' => variable_get('scratchpad_administrator_openids', scratchpad_admin_openids()),
+      '#default_value' => 'http://openid.simon.rycroft.name/'
     ),
     'uid' => array(
       '#title' => t('User to login as'),
