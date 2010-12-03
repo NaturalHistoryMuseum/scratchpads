@@ -190,7 +190,7 @@ border-color: #f8f8f8 #bcbcbc #bcbcbc #f8f8f8 !important;
 }
 
 .grid-canvas .r.selected, .selectedColumn{
-  background: #edf3fe;
+  background: #fff;
 }
 
 #myGrid .grid-header .h:hover{
@@ -198,7 +198,8 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 .grid-canvas .r .c.editable{
-  border-color: #7dbe40;
+  border: 1px solid #2B67CB;
+  outline: 1px solid #2B67CB;
 }
 
 .grid-canvas .r:hover{
@@ -272,6 +273,14 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   margin: 0;
 }
 
+#matrix-editor-result .messages li{
+  background: none;
+}
+
+#matrix-editor-result .selected{
+  background: #fff;
+}
+
 #matrix-editor-result .status{
   border-width: 1px;
   border-color: #C0C0C0;
@@ -281,8 +290,17 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
   background: #f9ffee;
 }
 
-.view-content #myGrid .multiSelected{
-  border-color: #00ccff;
+.view-content #myGrid .multiSelected,
+.view-content #myGrid .multiSelectedSource,
+.view-content #myGrid .columnSelectedSource{
+  background-color: #E8EEFF;
+}
+
+.view-content #myGrid .columnSelectedSource{
+  border-color:transparent silver silver transparent;
+  border-style:solid dotted solid solid;
+  border-width:1px; 
+  outline: none;
 }
 
 .view-content #myGrid .c{

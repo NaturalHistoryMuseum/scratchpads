@@ -5,10 +5,10 @@ $(document).ready(function() {
 	$('#matrix-editor-toggle-advanced-options').click(function() {
 		var el = $('.view-filters, .attachment-before', '.matrix-editor-view');
 		if (el.is(':visible')) {
-			el.hide('fast');
+			el.hide();
 			$(this).removeClass('me-collapsed');
 		} else {
-			el.show('fast');
+			el.show();
 			$(this).addClass('me-collapsed');
 		}
 		return false;

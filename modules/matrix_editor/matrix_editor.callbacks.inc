@@ -15,7 +15,6 @@ function matrix_editor_callback_column_resized(){
   $width = $_POST['width'];
   $field = $_POST['field'];
   matrix_editor_set_settings($view_name, $field . '_width', $width);
-
 }
 
 function matrix_editor_callback_viewport_resized(){
@@ -56,7 +55,11 @@ function matrix_editor_callback_get_form_field(){
       $output = drupal_render($form[$field]);
     }elseif(count($_POST['vids'])){
       foreach($_POST['vids'] as $vid){
-        $output .= drupal_render($form['taxonomy'][$vid]);
+        if($form['taxonomy'][$vid]){
+          $output .= drupal_render($form['taxonomy'][$vid]);
+        }elseif($form['taxonomy']['tags'][$vid]){
+          $output .= drupal_render($form['taxonomy']['tags'][$vid]);
+        }
       }
     }else{
       matrix_editor_get_form_element($field, $form, $form_element);
@@ -71,20 +74,20 @@ function matrix_editor_callback_get_form_field(){
     $output .= drupal_render($form['form_build_id']);
     $output .= drupal_render($form['form_id']);
     $form['fields']['view_field'] = array(
-      '#type' => 'hidden', 
-      '#value' => $view_field, 
-      '#id' => 'view_field', 
+      '#type' => 'hidden',
+      '#value' => $view_field,
+      '#id' => 'view_field',
       '#name' => 'view_field'
     );
     $form['fields']['field_name'] = array(
-      '#type' => 'hidden', 
-      '#value' => $field, 
-      '#id' => 'field_name', 
+      '#type' => 'hidden',
+      '#value' => $field,
+      '#id' => 'field_name',
       '#name' => 'field_name'
     );
     $output .= drupal_render($form['fields']);
     return array(
-      'status' => TRUE, 
+      'status' => TRUE,
       'data' => $output
     );
   }
@@ -96,7 +99,7 @@ function matrix_editor_callback_get_form_field(){
  */
 function matrix_editor_get_form($form_id){
   $form_state = array(
-    'storage' => NULL, 
+    'storage' => NULL,
     'submitted' => FALSE
   );
   $args = func_get_args();
@@ -170,7 +173,6 @@ function matrix_editor_get_form($form_id){
 }
 
 function matrix_editor_get_form_element($field, &$form, &$element){
-  static $count;
   if($element){return;}
   foreach(element_children($form) as $child_element){
     if($child_element === $field){
@@ -179,7 +181,6 @@ function matrix_editor_get_form_element($field, &$form, &$element){
         return;
       }
     }elseif(count(element_children($form[$child_element]))){
-      $count++;
       matrix_editor_get_form_element($field, $form[$child_element], $element);
     }
   }
@@ -201,6 +202,7 @@ function matrix_editor_callback_update_node(){
       //        node_save($node);
       //      }else{
       $_POST['nid'] = $nid;
+      $form_state['values']['nid'] = $nid;
       $_POST['op'] = t('Save');
       $form_state = array();
       $form_state['values'] = $_POST;
@@ -225,7 +227,7 @@ function matrix_editor_callback_update_node(){
       if(count($errors)){
         break;
       }
-      //      }
+       //      }
     }
     if(!count($errors)){
       // Get the new view field content to add to the matrix
@@ -241,7 +243,7 @@ function matrix_editor_callback_update_node(){
     }
   }
   return array(
-    'data' => $output, 
+    'data' => $output,
     'result' => theme('status_messages')
   );
 }
@@ -261,12 +263,7 @@ function matrix_editor_callback_set_option($view_name, $option, $value){
 }
 
 function matrix_editor_callback_reorder_columns(){
-
-  
-    $view_name = $_POST['view'];
-  
+  $view_name = $_POST['view'];
   matrix_editor_set_settings($view_name, 'column_order', $_POST['cols']);
 }
-
-
 ?>

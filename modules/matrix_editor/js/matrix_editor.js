@@ -114,6 +114,12 @@ function initMatrixEditor() {
 			if ($("#myGrid .c.selected").attr('cell') == $(this).attr('cell')) {
 
 				$(this).toggleClass('multiSelected');
+				
+				if($("#myGrid .c.multiSelected:not(.selected)").length > 0){
+				  $("#myGrid .c.selected").addClass('multiSelectedSource');
+				}else{
+				  $("#myGrid .c.selected").removeClass('multiSelectedSource');
+				}
 
 			}
 
@@ -124,6 +130,8 @@ function initMatrixEditor() {
 		} else {
 
 			$("#myGrid .c").removeClass('multiSelected');
+			$("#myGrid .multiSelectedSource").removeClass('multiSelectedSource');
+			$("#myGrid .columnSelectedSource").removeClass('columnSelectedSource');
 
 		}
 
@@ -158,6 +166,23 @@ function initMatrixEditor() {
 		$.post(Drupal.settings.matrixEditorCallbackPath + '/viewport_resized',
 				args);
 
+	};
+	
+	grid.onColumnHeaderClick = function(e, ui) {
+	  
+	  // Ensure no cells are selected
+	  $(".multiSelected").removeClass('multiSelected');
+	  $(".columnSelectedSource").removeClass('columnSelectedSource');
+	  
+	  var cellID = $('#'+e.id).attr('cell');
+	  
+	  grid.gotoCell(0, cellID);
+    $(".editable").addClass('columnSelectedSource');
+	  
+	  // Fake selecting the whole column - add multiSelected to all cells
+	  $("#myGrid .c"+cellID+":not(.selected, .h)").addClass('multiSelected');
+	  
+	  
 	};
 
 	grid.onColumnsReordered = function(e, ui) {
@@ -282,8 +307,9 @@ function initMatrixEditor() {
 
 					$('#myGrid .editor-text, #myGrid .multiSelected').each(
 							function() {
-
+              
 								var row = $(this).parents('div.r').attr('row');
+								
 								data[row][columnID] = response.data;
 								$(this).html(response.data);
 
@@ -317,13 +343,26 @@ var selectorCellFormatter = function(row, cell, value, columnDef, dataContext) {
 
 };
 
+
+var objHttpDataRequest = null;
+
 var MatrixCellEditor = function($container, columnDef, value, dataContext) {
 	var $input;
 	var defaultValue = value;
 	var scope = this;
+	
 
 	this.init = function() {
+    
+    // Check to see if there is an AJAX request already in
+    // progress that needs to be stopped.
+    if (objHttpDataRequest){
 
+    // Abort the AJAX request.
+    objHttpDataRequest.abort();
+
+    }
+    
 		$input = $("<div tabIndex='0' type=text class='editor-text' autocomplete='off' />");
 
 		if (value != null) {
@@ -338,7 +377,7 @@ var MatrixCellEditor = function($container, columnDef, value, dataContext) {
 				'<div class="progress"><div class="bar"><div class="filled"></div></div>'
 						+ '<div class="message">Loading form...</div></div>');
 
-		$.post(Drupal.settings.matrixEditorCallbackPath + '/get_form_field',
+		objHttpDataRequest = $.post(Drupal.settings.matrixEditorCallbackPath + '/get_form_field',
 				field_args, function(response) {
 
 					$('#matrix-editor-field').html($(response.data));
