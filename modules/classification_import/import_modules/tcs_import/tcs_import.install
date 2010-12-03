@@ -16,3 +16,12 @@ function tcs_import_install(){
 function tcs_import_uninstall(){
   // FIXME - Remove the ref column that we added.
 }
+
+function tcs_import_update_6101(){
+  // We're just going to add additional fields to the classification_import_temp
+  // table.
+  $ret = array();
+  db_add_field($ret, 'classification_import_temp', 'ref', array('type' => 'text'));
+  db_add_field($ret, 'classification_import_temp', 'url', array('type' => 'text'));
+  return $ret;
+}

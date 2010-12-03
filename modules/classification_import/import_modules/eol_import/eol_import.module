@@ -76,9 +76,9 @@ function eol_import_autocomplete(){
       $num_results = count($eol_xml->value);
       $options = array();
       for($i = 0; $i < $num_results; $i++){
-        $options[check_plain($eol_xml->value[$i]->id)] = check_plain($eol_xml->value[$i]->ancestry . '|' . $eol_xml->value[$i]->name) . " <br/>(" . l($eol_xml->value[$i]->metadata->title, $eol_xml->value[$i]->metadata->url, array(
+        $options[check_plain($eol_xml->value[$i]->id).'|'.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms)] = check_plain($eol_xml->value[$i]->ancestry . '|' . $eol_xml->value[$i]->name) . " <br/>(" . l($eol_xml->value[$i]->metadata->title, $eol_xml->value[$i]->metadata->url, array(
           'abosulte' => 1
-        )) . ')';
+        )) . ') ['.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms).']';
       }
     }
     $form['eol-import-id'] = array(
@@ -172,7 +172,7 @@ function eol_import_classification_import_help(){
 function eol_import_validate($form, &$form_state){
   // Lets just check that the eol-import-id is set in #post, and that it is
   // numeric (is this likely to change Patrick?).
-  if(!(isset($form_state['clicked_button']['#post']['eol-import-id']) && is_numeric($form_state['clicked_button']['#post']['eol-import-id']))){
+  if(!(isset($form_state['clicked_button']['#post']['eol-import-id']) && count(explode("|", $form_state['clicked_button']['#post']['eol-import-id'])) == 2)){
     form_set_error('eol-name', t('Please ensure you select a classification to import.  Press "Search" again, and select one from the list that should appear below.'));
   }
 }
@@ -181,14 +181,16 @@ function eol_import_validate($form, &$form_state){
  * Callback function when pressing "Import from EOL"
  */
 function eol_import_submit($form, $form_state){
+  $parts = explode("|", $form_state['clicked_button']['#post']['eol-import-id']);
   $batch = array(
     'operations' => array(
       array(
         'tcs_import_batch_download_data',
         array(
           array(
-            EOL_IMPORT_REQUEST_URL . $form_state['clicked_button']['#post']['eol-import-id']
+            EOL_IMPORT_REQUEST_URL . $parts[0]
           ),
+          $parts[1],
           arg(4)
         )
       ),

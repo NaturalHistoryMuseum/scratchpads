@@ -72,10 +72,10 @@ function tcs_import_submit($form, $form_state){
 /**
  * 
  */
-function tcs_import_batch_download_data($urls, $vid, &$context) {
+function tcs_import_batch_download_data($urls, $vid, $total = 1000000, &$context) {
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = 1000000; // FIXME - Aaargh, we need to be able to get the total count
+    $context['sandbox']['max'] = $total; // FIXME - Aaargh, we need to be able to get the total count
     $context['sandbox']['originalurl'] = $urls[0];
     $context['sandbox']['urls'] = $urls;
   }
