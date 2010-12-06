@@ -276,14 +276,14 @@ function classification_import_batch_import_finished($success, $results, $operat
     // We delete the status messages, as there is likely to be far too many to
     // display on the screen.
     drupal_get_messages('status');
-    variable_del('eol_import_doing_import');
     if(function_exists('tui_menu')){
       $batch = batch_get();
       if(isset($batch['form']['#parameters'][2])){
         drupal_goto('admin/content/taxonomy/edit/tui/'.$batch['form']['#parameters'][2]);
       }
     } else {
-      drupal_set_message(t('The import has been performed.'));      
+      drupal_set_message(t('The import has been performed.'));
+      drupal_goto('admin/content/taxonomy');
     }
   }else{
     drupal_set_message(t('An error occurred and processing did not complete.'), 'error');
