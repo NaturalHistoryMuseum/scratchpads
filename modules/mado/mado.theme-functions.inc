@@ -153,7 +153,7 @@ function mado_get_blocks($all_views = FALSE){
     } else {
       if(isset($view->display['default']->display_options['arguments']) && is_array($view->display['default']->display_options['arguments'])){
         foreach($view->display['default']->display_options['arguments'] as $arg_id => $arg){
-          if(isset($arg['validate_argument_type']) && $arg['validate_argument_type'] == 'tid'){
+          if($arg['validate_type'] == 'taxonomy_term' && $arg['validate_argument_type'] == 'tid'){
             $add_view = TRUE;
             break;
           }
