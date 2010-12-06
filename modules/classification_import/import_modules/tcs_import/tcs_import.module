@@ -98,15 +98,20 @@ function tcs_import_batch_download_data($urls, $vid, $total = 1000000, &$context
   @unlink($url_or_file);
     
   // Update our progress information.
-  $context['sandbox']['progress'] = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp}"));
+  $num_names_saved = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp} WHERE vid = %d", $vid));
+  $context['sandbox']['progress'] =  $num_names_saved / $context['sandbox']['max'];
   
   // Set the message
-  $context['message'] = t('Imported %numnames names', array('%numnames' => $context['sandbox']['progress']));
+  $context['message'] = t('Downloaded %numnames names of approximately %totalnames', array('%numnames' => $num_names_saved, '%totalnames' => $context['sandbox']['max']));
 
   // Inform the batch engine that we are not finished,
   // and provide an estimation of the completion level we reached.
   if (count($context['sandbox']['urls'])){
-    $context['finished'] = 0.1;
+    if($context['sandbox']['progress'] < 1){
+      $context['finished'] = $context['sandbox']['progress'];
+    }else{
+      $context['finished'] = 0.1;      
+    }
   } else {
     $context['finished'] = 1;
   }
