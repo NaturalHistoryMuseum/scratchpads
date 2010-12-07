@@ -219,7 +219,14 @@ function tui_form_taxonomy_form_term_alter(&$form, &$form_state){
     $form['advanced']['weight']['#type'] = 'hidden';
     $form['advanced']['parent']['#type'] = 'hidden';
     $form['advanced']['relations']['#type'] = 'hidden';
-    $form['advanced']['synonymns']['#type'] = 'hidden';
+    if(trim($form['advanced']['synonyms']['#default_value'])!=''){
+      $form['identification']['synonyms'] = $form['advanced']['synonyms'];
+      $form['identification']['synonyms']['#title'] = t('Alternative names');
+      $form['identification']['synonyms']['#description'] = t('Alternatives for this term, one per line.<br/><strong>Please note, this field should NOT be used for synonyms in a biological classification.</strong>');
+      unset($form['advanced']['synonyms']);
+    } else {
+      $form['advanced']['synonymns']['#type'] = 'hidden';
+    }
     // We need to set the parent if we're adding a new term (and the parent is
     // set).
     if(substr(arg(2), 0, 3) == 'new'){
