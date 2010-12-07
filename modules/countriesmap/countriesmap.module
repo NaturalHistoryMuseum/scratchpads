@@ -35,6 +35,17 @@ function countriesmap_node_info() {
 }
 
 /**
+ * Following two hooks are related to the node_import module.
+ */
+function countriesmap_node_import_fields($type){
+  if($type == 'node:countriesmap'){
+    return array('cm_import'=> array(
+      'title' => t('Countries Map Import Box'),
+      'group' => t('Countries Map field')
+    ));
+  }
+}
+/**
  * Implementation of hook_access
  */
 function countriesmap_access($op, $node, $account) {
@@ -88,6 +99,13 @@ function countriesmap_form(&$node) {
   $form['cm'] = array(
     '#prefix' => '<div class="countriesmap" style="border: solid 1px #999;padding: 10px;"><p style="font-size: 140%;">Check the checkboxes of the countries below that you would like to mark on the map.</p>',
     '#suffix' => '</div>'
+  );
+  $form['cm']['cm_import'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Import'),
+    '#default_value' => '',
+    '#rows' => '2',
+    '#description' => t('Instead of checking the boxes below, you may simply paste a comma delimited list of TDWG Level 4 region codes, or TDWG Level 4 region names (English), or ISO 3166 Two letter codes.<br/>e.g. "BGMLU, BGMBE"<br/>e.g. "Luxembourg, Belgium"<br/>e.g. "LU, BE"')
   );
   // Now we define the form elements specific to our node type.
   // Lets get the continents from the continents table - these will be used for
@@ -198,6 +216,15 @@ function countriesmap_validate(&$node) {
       return;
     }
   }
+  // No country has been ticked, we'd best test the import text
+  if(trim($node->cm_import)!=''){
+    $names_for_import = explode(",", $node->cm_import);
+    foreach($names_for_import as $name_for_import){
+      if(db_result(db_query("SELECT COUNT(*) FROM {countriesmap_tdwg} WHERE level4code = '%s' OR name LIKE '%s' OR isocode = '%s'", strtoupper($name_for_import), $name_for_import, strtoupper($name_for_import)))){
+        return;
+      }
+    }
+  }
   // No country has been selected, return a form error (set sadly to title,
   // as I don't know how to just set an error) FIXME
   form_set_error('title', t('You must select a country'));
@@ -210,6 +237,19 @@ function countriesmap_validate(&$node) {
  * database inserts.
  */
 function countriesmap_insert($node) {
+  // We need to split up cm_import, and then for each term, look for it in the
+  // database.
+  if(trim($node->cm_import)!=''){
+    $names_for_import = explode(",", $node->cm_import);
+    foreach($names_for_import as $name_for_import){
+      $name_for_import = trim($name_for_import);
+      $result = db_query("SELECT cmid FROM {countriesmap_tdwg} WHERE level4code = '%s' OR name LIKE '%s' OR isocode = '%s'", strtoupper($name_for_import), $name_for_import, strtoupper($name_for_import));
+      while($row = db_fetch_array($result)){
+        $fieldname = 'countriesmap_'.$row['cmid'];
+        $node->$fieldname = 1;
+      }
+    }
+  }
   db_query("DELETE FROM {countriesmap_nodes} WHERE vid = %d", $node->vid);
   foreach($node as $key => $value){
     if(substr($key, 0, 13) == 'countriesmap_' && $value){
