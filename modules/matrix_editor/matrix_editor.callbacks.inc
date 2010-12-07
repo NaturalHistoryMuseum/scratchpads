@@ -37,10 +37,15 @@ function array_diff_assoc2_deep($array1, $array2){
 }
 
 function matrix_editor_callback_get_form_field(){
+  global $conf;
   module_load_include('inc', 'node', 'node.pages');
   $nid = $_POST['nid'];
   $field = $_POST['field'];
   $view_field = $_POST['view_field'];
+  // batax breaks the matrix editor, so disable it for all vids before getting the form
+  foreach($_POST['vids'] as $vid){
+    $conf['batax_disable_vids'][$vid] = 1;
+  }
   if($nid){
     $node = node_load($nid);
     $form_id = $node->type . '_node_form';
