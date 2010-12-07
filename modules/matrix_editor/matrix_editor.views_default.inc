@@ -163,6 +163,30 @@ function matrix_editor_views_default_views(){
         'table' => 'node',
         'field' => 'uid_touch',
         'relationship' => 'none'
+      ),
+      'tid' => array(
+        'operator' => 'or',
+        'value' => '',
+        'group' => '0',
+        'exposed' => TRUE,
+        'expose' => array(
+          'use_operator' => 0,
+          'operator' => 'tid_op',
+          'identifier' => 'tid',
+          'label' => '',
+          'optional' => 1,
+          'single' => 1,
+          'remember' => 0
+        ),
+        'type' => 'textfield',
+        'limit' => TRUE,
+        'vid' => 0,
+        'id' => 'tid',
+        'table' => 'term_node',
+        'field' => 'tid',
+        'hierarchy' => 0,
+        'relationship' => 'none',
+        'reduce_duplicates' => 0
       )
     );
     if(module_exists('editor_views')){

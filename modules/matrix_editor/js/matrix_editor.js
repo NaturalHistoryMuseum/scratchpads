@@ -171,13 +171,14 @@ function initMatrixEditor() {
 	grid.onColumnHeaderClick = function(e, ui) {
 	  
 	  // Ensure no cells are selected
-	  $(".multiSelected").removeClass('multiSelected');
-	  $(".columnSelectedSource").removeClass('columnSelectedSource');
+	  $("#myGrid .multiSelected").removeClass('multiSelected');
+	  $("#myGrid .multiSelectedSource").removeClass('multiSelectedSource');
+	  $("#myGrid .columnSelectedSource").removeClass('columnSelectedSource');
 	  
 	  var cellID = $('#'+e.id).attr('cell');
 	  
 	  grid.gotoCell(0, cellID);
-    $(".editable").addClass('columnSelectedSource');
+    $("#myGrid .editable").addClass('columnSelectedSource');
 	  
 	  // Fake selecting the whole column - add multiSelected to all cells
 	  $("#myGrid .c"+cellID+":not(.selected, .h)").addClass('multiSelected');

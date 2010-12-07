@@ -75,9 +75,8 @@ function matrix_editor_preprocess_views_view_matrix(&$vars){
   $vars['matrix'] = theme('matrix_editor', $options, $columns, $data);
   $path = drupal_get_path('module', 'matrix_editor');
   $form['save_changes'] = array(
-    '#type' => 'image_button',
-    '#src' => $path . '/images/save_changes.gif',
-    '#value' => t('Save note')
+    '#type' => 'submit',
+    '#value' => t('Save changes')
   );
   $vars['matrix'] .= '<div id="matrix-editor-panel"><form entype="multipart/form-data">';
   $vars['matrix'] .= '<div id="matrix-editor-field"></div>';
@@ -210,13 +209,22 @@ function matrix_editor_theme(){
   return array(
     // Display the matrix editor
     'matrix_editor' => array(
-      'arguments' => array()
+      'arguments' => array(
+        'options' => array(),
+        'columns' => array(),
+        'data' => array(),
+        'filter' => NULL
+      )
     ),
     'matrix_editor_fields_form' => array(
-      'arguments' => array()
+      'arguments' => array(
+        'form' => array()
+      )
     ),
     'matrix_editor_views_plugin_table' => array(
-      'arguments' => array()
+      'arguments' => array(
+        'form' => array()
+      )
     )
   );
 }
@@ -225,7 +233,13 @@ function matrix_editor_preprocess_views_view(&$vars){
   if($vars['view']->tag == 'matrix_editor'){
     $path = drupal_get_path('module', 'matrix_editor');
     drupal_add_js($path . '/js/matrix_editor_views.js');
-    $vars['header'] .= '<p>The Matrix Editor is currently in Alpha testing.  Please <a href="mailto:scratchpad@nhm.ac.uk">email</a> us any feedback.</p><a href="#" id="matrix-editor-toggle-advanced-options">Advanced filters</a>';
+    $vars['alpha_warning'] .= '<p>' . t('The Matrix Editor is currently in Alpha testing.  Please <a href="mailto:scratchpad@nhm.ac.uk">email</a> us any feedback.') . '</p>';
+    $vars['option_links'] = '<a href="#exposed-filters-form" class="matrix-editor-toggle-advanced-options">Filter content</a><a href="#fields-form" class="matrix-editor-toggle-advanced-options">Select fields</a>';
+    $vars['fields_form'] = drupal_get_form('matrix_editor_fields_form', $vars['view']);
+    $vars['template_files'] = array(
+      'views-view--matrix-editor'
+    );
+    $vars['classes'] .= ' matrix-editor-view';
   }
 }
 
@@ -278,6 +292,10 @@ function matrix_editor_theme_registry_alter(&$theme_registry){
     // Now tack it on at the end so it runs after everything else.
     $theme_registry['page']['preprocess functions'][] = 'matrix_editor_preprocess_page';
   }
+  // Use our own template files for theming the view - add the module path to theme paths
+  $theme_registry['views_view']['theme paths'] = array(
+    drupal_get_path('module', 'matrix_editor')
+  );
 }
 
 /**
@@ -424,12 +442,13 @@ function matrix_editor_views_pre_view(&$view, $display_id){
         drupal_access_denied();
       }
     }
-    $settings = matrix_editor_get_settings($user->uid, $view->name);
+    $view->matrix_editor_settings = matrix_editor_get_settings($user->uid, $view->name);
     $fields = $view->get_items('field');
     $display = $view->display['default'];
     $options = $display->handler->options['style_options'];
-    if($settings['column_order']){
-      $field_names = array_merge($settings['column_order'], array_diff(array_keys($fields), $settings['column_order']));
+    $view->field_options = array();
+    if($view->matrix_editor_settings['column_order']){
+      $field_names = array_merge($view->matrix_editor_settings['column_order'], array_diff(array_keys($fields), $view->matrix_editor_settings['column_order']));
     }else{
       $field_names = array_keys($fields);
     }
@@ -439,13 +458,13 @@ function matrix_editor_views_pre_view(&$view, $display_id){
         continue;
       }
       // Set field width
-      if($settings[$field_name . '_width']){
-        $options['columns'][$field_name]['width'] = $settings[$field_name . '_width'];
+      if($view->matrix_editor_settings[$field_name . '_width']){
+        $options['columns'][$field_name]['width'] = $view->matrix_editor_settings[$field_name . '_width'];
       }
       // Hide fields
-      $field_options[$field_name] = $fields[$field_name]['label'];
-      if($settings['fields']){
-        if(!in_array($field_name, $settings['fields'])){
+      $view->field_options[$field_name] = $fields[$field_name]['label'];
+      if($view->matrix_editor_settings['fields']){
+        if(!in_array($field_name, $view->matrix_editor_settings['fields'])){
           continue;
         }
       }
@@ -453,15 +472,24 @@ function matrix_editor_views_pre_view(&$view, $display_id){
     }
     $display->handler->set_option('fields', $ordered_fields);
     // Viewport height
-    if($settings['viewportHeight']){
-      $options['viewportHeight'] = $settings['viewportHeight'];
+    if($view->matrix_editor_settings['viewportHeight']){
+      $options['viewportHeight'] = $view->matrix_editor_settings['viewportHeight'];
     }
     $display->handler->set_option('style_options', $options);
-    $view->attachment_before = drupal_get_form('matrix_editor_fields_form', $view, $field_options, $settings['fields']);
+    // Assume the vocabulary with the most terms if the main character vocabulary
+    if($_GET['vocabulary']){
+      $default_vid = $_GET['vocabulary'];
+    }else{
+      $default_vid = matrix_editor_get_vocabulary_with_most_terms($node_type);
+    }
+    // We need to overwrite the default value for the VID so if user changes it, the terms will still validate    
+    $view->set_item_option('default', 'filter', 'tid', 'vid', $default_vid);
   }
 }
 
-function matrix_editor_fields_form($form_state, $view, $field_options, $field_settings = null){
+function matrix_editor_fields_form($form_state, $view){
+  $field_options = $view->field_options;
+  $field_settings = $view->matrix_editor_settings['fields'];
   $form = array();
   $form['fields'] = array(
     '#type' => 'select',
@@ -494,6 +522,70 @@ function theme_matrix_editor_fields_form($form){
 
 function matrix_editor_fields_form_submit($form, $form_state){
   matrix_editor_set_settings($form_state['values']['view'], 'fields', $form_state['values']['fields']);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function matrix_editor_form_alter(&$form, $form_state, $form_id){
+  switch($form_id){
+    case 'views_exposed_form':
+      // Get the view
+      $view = $form['#parameters'][1]['view'];
+      if($view->tag == 'matrix_editor'){
+        unset($form['#parameters'][1]['view']);
+        // Need to know what node type this is view is for
+        $type_filter = $view->get_item('default', 'filter', 'type');
+        if(count($type_filter['value']) == 1){
+          $node_type = current($type_filter['value']);
+        }else{
+          $node_type = NULL;
+        }
+        // Need to get the VID we set in matrix_editor_views_pre_view();
+        $tid_filter = $view->get_item('default', 'filter', 'tid');
+        $vocabularies = taxonomy_get_vocabularies($node_type);
+        $form['vocabulary'] = array(
+          '#type' => 'select',
+          '#title' => t('Term'),
+          '#default_value' => $tid_filter['vid'],
+        );
+        
+        
+        foreach($vocabularies as $vocabulary){
+        	$form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
+        }
+        
+        $form['remove_filters'] = array(
+          '#type' => 'submit',
+          '#value' => t('Remove filters'),
+          '#submit' => array(
+            'matrix_editor_remove_filters_submit'
+          )
+        );
+        
+        // Make the vocabulary an operator for the taxonomy
+        $form['#info']['filter-tid']['operator'] = 'vocabulary';
+
+      }
+      break;
+  }
+}
+
+/**
+ * Returns the VID of the vocabulary with the most terms
+ */
+function matrix_editor_get_vocabulary_with_most_terms($node_type){
+  if($node_type){
+    $result = db_query("SELECT td.vid FROM {term_data} td INNER JOIN {vocabulary_node_types} vnt ON vnt.vid = td.vid WHERE vnt.type = '%s' GROUP BY td.vid ORDER BY COUNT( td.vid ) DESC LIMIT 1", $node_type);
+  }else{
+    $result = db_query("SELECT td.vid FROM {term_data} td GROUP BY td.vid ORDER BY COUNT( td.vid ) DESC LIMIT 1");
+  }
+  return db_result($result);
+}
+
+function matrix_editor_remove_filters_submit(&$form, &$form_state){
+  // Redirect form to the same page, so all the filters are lost
+  drupal_redirect_form($form, $_GET['q']);
 }
 
 function matrix_editor_set_settings($view_name, $name, $value){
@@ -552,5 +644,13 @@ function matrix_editor_delete_settings($params){
   }
   return db_query($sql, $sql_params);
 }
+
+function matrix_editor_preprocess_views_exposed_form(&$vars){
+
+	$vars['button'] = '<div class="buttons">' . $vars['button'] .'</div>';
+
+}
+
+
 
 

@@ -1,16 +1,53 @@
 /**
  * JS specifically for views - needs to display even when there is no content in the matrix editor
  */
-$(document).ready(function() {
-	$('#matrix-editor-toggle-advanced-options').click(function() {
-		var el = $('.view-filters, .attachment-before', '.matrix-editor-view');
-		if (el.is(':visible')) {
-			el.hide();
-			$(this).removeClass('me-collapsed');
-		} else {
-			el.show();
-			$(this).addClass('me-collapsed');
-		}
-		return false;
-	});
-});
+
+var acdb = [];
+
+/**
+  * Attaches the autocomplete behavior to all required fields
+  */
+Drupal.behaviors.matrix_editor_views = function(context) {
+    // Reattach the autocomplete behaviours, but add them to a globally accessible variable
+    $('input.autocomplete-processed:not(.matrix-editor-autocomplete-processed)', context).each(function() {
+        var uri = this.value;
+        if (!acdb[uri]) {
+            acdb[uri] = new Drupal.ACDB(uri);
+        }
+        var input = $('#' + this.id.substr(0, this.id.length - 13))
+        .unbind('keydown')
+        // Remove the event triggers for the old autocomplete
+        .unbind('keyup')
+        .unbind('blur')
+        .attr('autocomplete', 'OFF')[0];
+        $(input.form).submit(Drupal.autocompleteSubmit);
+        new Drupal.jsAC(input, acdb[uri]);
+        $(this).addClass('matrix-editor-autocomplete-processed');
+    });
+
+    $('.matrix-editor-toggle-advanced-options', context).click(function() {
+        var id = $(this).attr('href');
+        $('.matrix-editor-option:not(' + id + ')').hide();
+        $('a.matrix-editor-toggle-advanced-options').removeClass('expanded');
+        var $id = $(id);
+        $id.toggle();
+        if($id.is(':visible')){
+          $(this).addClass('expanded');
+        }else{
+          $(this).removeClass('expanded');
+        }
+        return false;
+    });
+
+
+    $('#edit-vocabulary', context).change(function() {
+        var uri = $('#edit-tid-autocomplete').val();
+        // Update the URI so it uses the selected vocabulary
+        acdb[uri]['uri'] = 'http://scratchpads/taxonomy/autocomplete/' + $(this).val();
+        // Clear the cache
+        acdb[uri]['cache'] = [];
+        // CLear any existing selected terms
+        $('#edit-tid').val(null);
+    });
+
+};

@@ -21,70 +21,71 @@
 	margin: 0 0 0 30px
 }
 
-.matrix-editor-view .view-header{
-	padding-top: 20px;
+/* menu items as the top */
+.option-links{
+  background: #D8D8D8;
 }
 
-.matrix-editor-view .view-filters,
-.matrix-editor-view .attachment-before
-{
-	display: none;
-	background: #F8F8F8;
-	padding: 5px 10px;
-	border-color:#C0C0C0;
-border-style:none solid none solid;
-border-width:1px;
+.option-links a.matrix-editor-toggle-advanced-options{
+  background: url("../images/888888_7x7_arrow_right.gif") no-repeat 7px 5px;
+  padding-left: 20px;
+  padding-right: 30px;
+  line-height: 30px;
+  outline: none;
 }
 
-.matrix-editor-view .view-filters{
-	border-top-style: solid;
-}
-
-.matrix-editor-view .attachment-before{
-	padding-bottom: 15px;
-}
-
-.matrix-editor-view .view-filters form,
-.matrix-editor-view .view-filters div.views-exposed-widgets,
-.matrix-editor-view .attachment-before form,
-.matrix-editor-view .view-filters .form-item,
-	.matrix-editor-view .attachment-before .form-item{
-	margin-bottom:0!important;
-	margin-top:0!important;
-}
-
- 
-
-
-
-#matrix-editor-toggle-advanced-options{
-background: #F8F8F8 url("../images/888888_7x7_arrow_right.gif") no-repeat 7px 7px;
-padding-left: 2em;
-line-height: 22px;
-border-color:#C0C0C0;
-border-style:solid solid none solid;
-border-width:1px;
-height:22px;
-padding-bottom: 2px;
-display: block;
-width: 11em;
-position: relative;
-top: 1px
-}
-
-#matrix-editor-toggle-advanced-options:hover{
-	background-image: url("../images/454545_7x7_arrow_right.gif")
-}
-
-a#matrix-editor-toggle-advanced-options.me-collapsed{
+.option-links a.matrix-editor-toggle-advanced-options.expanded{
 	background-image: url("../images/888888_7x7_arrow_down.gif")
 }
 
-a#matrix-editor-toggle-advanced-options.me-collapsed:hover{
-  background-image: url("../images/454545_7x7_arrow_down.gif")
+.matrix-editor-view .matrix-editor-option{
+  display: none;
+  padding: 10px;
+  background: #E6E6E6;
+	border-color:#A0A0A0;
+  border-style:solid solid none solid;
+  border-width:1px;
 }
 
+/* Exposed filter form */
+.matrix-editor-view .matrix-editor-option div.views-exposed-widget{
+  clear: both;
+  height: 45px;
+}
 
-a.me-collapsed{
-	border: 1px solid red;
+.matrix-editor-view div.views-exposed-widget label{
+  width: 120px;
+  display: block;
+  float: left;
+}
+
+.matrix-editor-view div.views-exposed-widget select{
+  width: 200px;
+  margin-right: 10px;
+}
+
+.matrix-editor-view div.views-exposed-widget div{
+  display: inline;
+}
+
+.matrix-editor-view div.views-exposed-widget div.description,
+.matrix-editor-view div.views-exposed-widget div.buttons{
+  display: block;
+  margin-left: 120px;
+}
+
+/* textfield widths */
+#edit-title,
+#edit-tid{
+  width: 300px;
+}
+
+#edit-uid-touch{
+  width: 516px;
+}
+
+/* Edit fields forms */
+
+.matrix-editor-view .matrix-editor-option #matrix-editor-fields-form{
+  margin: 0;
 }
