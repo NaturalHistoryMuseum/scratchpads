@@ -222,6 +222,8 @@ function countriesmap_validate(&$node) {
     foreach($names_for_import as $name_for_import){
       if(db_result(db_query("SELECT COUNT(*) FROM {countriesmap_tdwg} WHERE level4code = '%s' OR name LIKE '%s' OR isocode = '%s'", strtoupper($name_for_import), $name_for_import, strtoupper($name_for_import)))){
         return;
+      } else if(db_result(db_query("SELECT COUNT(*) FROM {countriesmap_iso3166} WHERE name LIKE '%s'", $name_for_import))){
+        return;
       }
     }
   }
@@ -244,6 +246,11 @@ function countriesmap_insert($node) {
     foreach($names_for_import as $name_for_import){
       $name_for_import = trim($name_for_import);
       $result = db_query("SELECT cmid FROM {countriesmap_tdwg} WHERE level4code = '%s' OR name LIKE '%s' OR isocode = '%s'", strtoupper($name_for_import), $name_for_import, strtoupper($name_for_import));
+      while($row = db_fetch_array($result)){
+        $fieldname = 'countriesmap_'.$row['cmid'];
+        $node->$fieldname = 1;
+      }
+      $result = db_query("SELECT cmid FROM {countriesmap_iso3166} i, {countriesmap_tdwg} t WHERE i.code = t.isocode AND i.name LIKE '%s'", $name_for_import);
       while($row = db_fetch_array($result)){
         $fieldname = 'countriesmap_'.$row['cmid'];
         $node->$fieldname = 1;
