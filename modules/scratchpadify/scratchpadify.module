@@ -518,8 +518,8 @@ function scratchpadify_filter($op, $delta = 0, $format = -1, $text = ''){
       return t('Strip ALL &lt;script&gt; tags from content');
     case 'prepare':
       // Given we're simply striping, and not replacing anything, it's fine to do it here
-      $text = preg_replace('@<[^>]*script[^>]*>.*<[^>]*script[^>]*>@sei', '', $text);
-      $text = preg_replace('@<[^>]*object[^>]*>.*<[^>]*object[^>]*>@sei', '', $text);
+      $text = preg_replace('@<script[^>]*>.*<script[^>]*>@sei', '', $text);
+      $text = preg_replace('@<object[^>]*>.*<object[^>]*>@sei', '', $text);
       return $text;
     case "process":
       return $text;
