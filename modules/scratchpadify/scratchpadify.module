@@ -25,6 +25,49 @@ function scratchpadify_term_path($term){
 }
 
 /**
+ * hook_user
+ */
+function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
+  if($op == 'login'){
+    // Modules implementing hook_scratchpad_updates should use the timestamps
+    // provided on "http://dev.scratchpads.eu/timestamp".
+    // Modules should return an array in the following structure:
+    // array(
+    //   '[MODULE NAME]' => array(
+    //     '[Most recent update message]',
+    //     '[Next most recent update message]',
+    //     ...
+    //   )
+    // )
+    // Descriptions and names of modules will be taken from the module's .info
+    // file.          
+    $messages = module_invoke_all('scratchpad_updates', $acc->access);
+    $output = '';
+    foreach($messages as $module => $module_messages){
+      // Load and parse the info file getting the name and description
+      $mod_info = drupal_parse_info_file(drupal_get_path('module', $module)."/$module.info");
+      $output .= theme_item_list($module_messages, '<h3>'.$mod_info['name'].' <span style="font-size:80%">'.$mod_info['description'].'</span></h3>');
+    }
+    if(strlen($output)){
+      $output = '<h2>The following modules have updates:</h1><div style="margin-left:20px">'.$output.'</div>';
+    }
+    drupal_set_message($output);
+  }
+}
+
+/**
+ * hook_scratchpad_update
+ */
+function scratchpadify_scratchpad_updates($timestamp, $max = 3){  
+  $messages = array();
+  if($timestamp < 1291921200){
+    // An update was made to the countriesmap.module to allow for import.
+    $messages[] = t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.');
+  }
+  return array('scratchpadify' => $messages);
+}
+
+/**
  * hook_views_pre_render
  */
 function scratchpadify_views_pre_render(&$view){
