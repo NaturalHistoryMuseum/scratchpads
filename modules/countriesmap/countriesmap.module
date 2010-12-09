@@ -35,6 +35,18 @@ function countriesmap_node_info() {
 }
 
 /**
+ * hook_scratchpad_update
+ */
+function countriesmap_scratchpad_updates($timestamp, $max = 3){  
+  $messages = array();
+  if($timestamp < 1291921200){
+    // An update was made to the countriesmap.module to allow for import.
+    $messages[] = t('The Countries Map module now supports import.  Please see the help pages for information on the import formats supported.');
+  }
+  return array('countriesmap' => $messages);
+}
+
+/**
  * Following two hooks are related to the node_import module.
  */
 function countriesmap_node_import_fields($type){
