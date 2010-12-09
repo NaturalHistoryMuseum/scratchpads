@@ -19,7 +19,7 @@ function csv_import_classification_import_form(){
     'file' => array(
       '#type' => 'fieldset',
       '#title' => 'CSV File',
-      '#description' => 'Import from a CSV, Tab separated or XLS file in a number of different formats.', // FIXME - Add link to template files.
+      '#description' => 'Import from a CSV, Tab separated or XLS file in a number of different formats.'.theme('advanced_help_topic', 'taxtab', 'taxtab'), // FIXME - Add link to template files.
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'csv-file' => array(
@@ -32,10 +32,9 @@ function csv_import_classification_import_form(){
         '#default_value' => 0,
         '#required' => TRUE,
         '#options' => array(
-          0 => t('-- Select file type --'), 
-          //1 => t('Full hierarchy'), 
-          2 => t('Tabbed hierarchy'), 
-          3 => t('ITIS Parent/Child')
+          0 => t('-- Select file type --'),
+          1 => t('Tabbed hierarchy'), 
+          2 => t('ITIS Parent/Child')
         ),
         '#description' => t('Please select which template was used to create your CSV file')
       ),
@@ -209,12 +208,7 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
     case 1: // Full hierarchy
       
       break;
-    case 2: // Tabbed hierarchy
-      // This is the trickiest to import, as we need the previous lines to know
-      // what the parent is of the line that we're currently importing.  As a 
-      // way to cheat this, we'll use the line number as the id.
-      break;
-    case 3: // Parent/Child
+    case 2: // Parent/Child
       // Easiest to import, all the data is here.
       // We need to know if we are importing ITIS, or our own format
       foreach($lines as $line){
@@ -264,7 +258,7 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
 function csv_import_validate($form, &$form_state){
   // FIXME: The following is temporary, until we have all the file import
   // formats working.
-  if($form_state['values']['csv-file-type'] != 3){
+  if($form_state['values']['csv-file-type'] != 2){
     form_set_error('csv-file-type', t('Only Parent/Child file format is currently working'));
   }
   # Lets ensure that there is a file, and that the file type is not 0.
