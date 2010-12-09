@@ -49,5 +49,30 @@ Drupal.behaviors.matrix_editor_views = function(context) {
         // CLear any existing selected terms
         $('#edit-tid').val(null);
     });
+    
+    // Date selection
+    $('#edit-date-options', context).change(function() {
+      $('.date-views-filter-wrapper').hide();  
+      if($(this).val().length){ 
+        if($(this).val().indexOf('T') !== -1){ // Is it a timestamp?
+          var dateTime = $(this).val().split('T');
+          $('#edit-date-filter-min-datepicker-popup-0').val(dateTime[0]);
+          $('#edit-date-filter-min-timeEntry-popup-1').val(dateTime[1]);
+        }else{ // User has selected to enter their own dates - clear the field
+          $('#edit-date-filter-min-datepicker-popup-0').val(null);
+          $('#edit-date-filter-min-timeEntry-popup-1').val(null);
+          $('.date-views-filter-wrapper').show();
+        }
+      }else{ // Remove dates if 'all' is selected
+        $('#edit-date-filter-min-datepicker-popup-0').val(null);
+        $('#edit-date-filter-min-timeEntry-popup-1').val(null);
+      }
+
+    });
+    
+    // On load show the date options if user has selected to enter own dates
+    if($('#edit-date-options').val() == 0){
+      $('.date-views-filter-wrapper').show();
+    }
 
 };

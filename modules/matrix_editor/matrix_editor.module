@@ -546,15 +546,11 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
         $vocabularies = taxonomy_get_vocabularies($node_type);
         $form['vocabulary'] = array(
           '#type' => 'select',
-          '#title' => t('Term'),
-          '#default_value' => $tid_filter['vid'],
+          '#default_value' => $tid_filter['vid']
         );
-        
-        
         foreach($vocabularies as $vocabulary){
-        	$form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
+          $form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
         }
-        
         $form['remove_filters'] = array(
           '#type' => 'submit',
           '#value' => t('Remove filters'),
@@ -563,9 +559,24 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
           )
         );
         
+        $min_date_format = $form['date_filter']['min']['#date_format'];
+        
+        $form['date_options'] = array(
+          '#type' => 'select',
+          '#options' => array(
+        		'' => t("Any"),
+        		date($min_date_format, strtotime('-1 hour')) => t('In the last hour'),
+            date($min_date_format, strtotime('today')) => t('Today'),
+            date($min_date_format, strtotime('yesterday')) => t('Since yesterday'),
+            date($min_date_format, strtotime('-1 week')) => t('In the past week'),
+            '0' => t('Enter exact dates')
+          )
+        );
+        
         // Make the vocabulary an operator for the taxonomy
         $form['#info']['filter-tid']['operator'] = 'vocabulary';
-
+        $form['#info']['filter-date_filter']['operator'] = 'date_options';
+        
       }
       break;
   }
@@ -646,9 +657,7 @@ function matrix_editor_delete_settings($params){
 }
 
 function matrix_editor_preprocess_views_exposed_form(&$vars){
-
-	$vars['button'] = '<div class="buttons">' . $vars['button'] .'</div>';
-
+  $vars['button'] = '<div class="buttons">' . $vars['button'] . '</div>';
 }
 
 
