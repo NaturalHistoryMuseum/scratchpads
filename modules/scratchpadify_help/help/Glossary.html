@@ -4,7 +4,7 @@
 
   
   <div class="content clear-block">
-    <p>A Scratchpad glossary is basically a <a title="Taxonomy" href="&topic:scratchpadify_help/taxonomy&" target="_blank">vocabulary</a>. The term names of this vocabulary will be highlighted on all normal pages and in all filtered text fields of custom content types. Clicking on a highlighted glossary term will link to the term page and hovering over the term will show the description of the term if this field has been filled in in the taxonomy module. If synonyms have been entered for a term, these will be highlighted, too, and linked to the page of the valid term as well as show the description of the valid term whilst hovering. A glossary term page consists of the term name and (optionally) the description. The general glossary page (.../glossary) shows an alphabetical list of terms either on one page or separated into pages for each letter.
+    <p>A Scratchpad glossary is basically a <a title="Taxonomy" href="&topic:scratchpadify_help/taxonomy&" >vocabulary</a>. The term names of this vocabulary will be highlighted on all normal pages and in all filtered text fields of custom content types. Clicking on a highlighted glossary term will link to the term page and hovering over the term will show the description of the term if this field has been filled in in the taxonomy module. If synonyms have been entered for a term, these will be highlighted, too, and linked to the page of the valid term as well as show the description of the valid term whilst hovering. A glossary term page consists of the term name and (optionally) the description. The general glossary page (.../glossary) shows an alphabetical list of terms either on one page or separated into pages for each letter.
 </p>
 <p>
 By adding parent terms a glossary can be made hierarchical and this hierarchy can be shown as a menu using the tinytax module. However a hierarchical glossary interferes with the alphabetical sorting on the general glossary page, because only the child terms for one parent term are sorted. If the glossary page is set so that one page is shown for each letter, terms starting with this letter will appear on the correct page, but within this page they will show in hierarchical order, not alphabetical order.
@@ -13,8 +13,29 @@ By adding parent terms a glossary can be made hierarchical and this hierarchy ca
 It is possible to connect a custom content type to a glossary in order show more information for the terms and attach images or files. In this case a glossary term page shows the data added to this content type in addition to the term name and the description.
 </p>
 <p>
-To create a glossary you need to first create the glossary vocabulary. If you want to add more information, you then need to create a new custom content type for your glossary. To set up the glossary you need to contact the site administrator because only administrators have access to the glossary module.
+To create a glossary you need to first create the glossary vocabulary.</p>
+<ul>
+<li>Click on 'Taxonomy' in the 'Content' menu and click on ‘<a title="Add vocabulary" href="/admin/content/taxonomy/add/vocabulary" >Add vocabulary</a>’.
+	</li>
+<li>
+	Enter a ‘Vocabulary name’ and ‘Description’.
+	</li>
+<li>
+	Under ‘Content types’ select only the content type that will be connected to the glossary. If you havn't created this content type, yet, you can edit the vocabulary later to add it.
+	</li>
+<li>
+	Save.
+	</li>
+<li>
+	If you want to import an existing glossary, click on the ‘Import classification’ tab and then on 'Import from text file’. Check out the link to the help page for information on the format. For the glossary the 'Full hierarchy' with several term (taxon) columns, description and synonyms is probably best.		</li>
+<li>To add terms manually you need to use the 'Editor' or the 'add terms' link. With the editor you can only add terms descriptions, not synonym terms. To add descriptions and synonyms, use the 'add terms' or 'list terms' links. The option to add synonyms is in the 'Advanced options' section.</li>
+<li>
+	Your new classification will automatically appear in the sidebar when you have added terms.
+	</li>
+</ul>
+<p> If you want to add more information, you then need to create a new custom content type for your glossary. To set up the glossary you need to contact the site administrator because only administrators have access to the glossary module.
 </p>
+<p>Tip: The glossary module works with complete words so "A.B.C." will not work, but "ABC" will.</p>
 <p><strong>Warning</strong>: The glossary module needs to be rewritten and has been put on hold. No new glossaries will be enabled until this is done!</p>
 
 
