@@ -173,6 +173,7 @@ function scratchpad_profile_profile_modules(){
     'wikipedia',
     'yahooimages',
     'scratchpadify',
+    'scratchpadify_help',
     'tablesorter',
     'nagger',
     //'bio_image',  DISABLED. REMOVE SOON
