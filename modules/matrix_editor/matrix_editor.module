@@ -168,7 +168,7 @@ function matrix_editor_menu(){
  * Implementation of hook_init(). 
  */
 function matrix_editor_init(){
-	global $user;
+  global $user;
   $path = drupal_get_path('module', 'matrix_editor');
   // Add special style sheet for the views preview
   drupal_add_css($path . '/css/matrix_editor.views.css');
@@ -179,8 +179,10 @@ function matrix_editor_init(){
       'start_time' => $_SESSION['matrix_editor_batch']['start_time'],
       'end_time' => time()
     );
-    user_save($user, array('matrix_editor_batch' => $unserialized_user_data['matrix_editor_batch']));
-	  $_SESSION['matrix_editor_batch'] = array();
+    user_save($user, array(
+      'matrix_editor_batch' => $unserialized_user_data['matrix_editor_batch']
+    ));
+    $_SESSION['matrix_editor_batch'] = array();
   }
 }
 
@@ -444,7 +446,7 @@ function matrix_editor_imagecache_default_presets(){
  * @author Ben Scott
  */
 function matrix_editor_views_pre_view(&$view, $display_id){
-	global $user;
+  global $user;
   if($view->tag == 'matrix_editor'){
     $display_id = $view->current_display;
     $filter = $view->get_item($display_id, 'filter', 'type');
@@ -493,8 +495,12 @@ function matrix_editor_views_pre_view(&$view, $display_id){
     }else{
       $default_vid = matrix_editor_get_vocabulary_with_most_terms($node_type);
     }
-    // We need to overwrite the default value for the VID so if user changes it, the terms will still validate    
-    $view->set_item_option('default', 'filter', 'tid', 'vid', $default_vid);
+    // We need to overwrite the default value for the VID so if user changes it, the terms will still validate  
+    if($default_vid){
+      $view->set_item_option('default', 'filter', 'tid', 'vid', $default_vid);
+    }else{
+      $view->set_item('default', 'filter', 'tid', NULL);
+    }
   }
 }
 
@@ -539,12 +545,12 @@ function matrix_editor_fields_form_submit($form, $form_state){
  * Implementation of hook_form_alter().
  */
 function matrix_editor_form_alter(&$form, $form_state, $form_id){
-	global $user;
+  global $user;
   switch($form_id){
     case 'views_exposed_form':
       // Get the view
       $view = $form['#parameters'][1]['view'];
-      if($view->tag == 'matrix_editor'){      	
+      if($view->tag == 'matrix_editor'){
         unset($form['#parameters'][1]['view']);
         // Need to know what node type this is view is for
         $type_filter = $view->get_item('default', 'filter', 'type');
@@ -554,14 +560,19 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
           $node_type = NULL;
         }
         // Need to get the VID we set in matrix_editor_views_pre_view();
-        $tid_filter = $view->get_item('default', 'filter', 'tid');
-        $vocabularies = taxonomy_get_vocabularies($node_type);
-        $form['vocabulary'] = array(
-          '#type' => 'select',
-          '#default_value' => $tid_filter['vid']
-        );
-        foreach($vocabularies as $vocabulary){
-          $form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
+        // if $tid_filter isn't found, the node doesn't have any taxonomy (removed in views_pre_view)
+        if($tid_filter = $view->get_item('default', 'filter', 'tid')){
+          $vocabularies = taxonomy_get_vocabularies($node_type);
+          $form['vocabulary'] = array(
+            '#type' => 'select',
+            '#default_value' => $tid_filter['vid']
+          );
+          foreach($vocabularies as $vocabulary){
+            $form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
+          }
+          
+                  // Make the vocabulary an operator for the taxonomy
+        $form['#info']['filter-tid']['operator'] = 'vocabulary';
         }
         $form['remove_filters'] = array(
           '#type' => 'submit',
@@ -581,17 +592,16 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
             'enter_dates' => t('Enter exact dates')
           )
         );
-        
         if($node_type){
-        	$unserialize_user_data = unserialize($user->data);
-        	if($unserialize_user_data['matrix_editor_batch'][$node_type]){
-        		$value = date($min_date_format, $unserialize_user_data['matrix_editor_batch'][$node_type]['start_time']) . '|' . date($max_date_format, $unserialize_user_data['matrix_editor_batch'][$node_type]['end_time']);
-        		$form['date_options']['#options'][$value] = t('Last batch (@date)', array('@date' => date('j/n/y H:i', $unserialize_user_data['matrix_editor_batch'][$node_type]['start_time'])));
-        	}
+          $unserialize_user_data = unserialize($user->data);
+          if($unserialize_user_data['matrix_editor_batch'][$node_type]){
+            $value = date($min_date_format, $unserialize_user_data['matrix_editor_batch'][$node_type]['start_time']) . '|' . date($max_date_format, $unserialize_user_data['matrix_editor_batch'][$node_type]['end_time']);
+            $form['date_options']['#options'][$value] = t('Last batch (@date)', array(
+              '@date' => date('j/n/y H:i', $unserialize_user_data['matrix_editor_batch'][$node_type]['start_time'])
+            ));
+          }
         }
-        
-        // Make the vocabulary an operator for the taxonomy
-        $form['#info']['filter-tid']['operator'] = 'vocabulary';
+
         $form['#info']['filter-date_filter']['operator'] = 'date_options';
       }
       break;
@@ -608,7 +618,6 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
  * We need to set a session as plupload doesn't allow us to get a handle on batch completion
  */
 function matrix_editor_nodeapi(&$node, $op){
-	
   if(arg(0) == 'plupload-pernode' || arg(0) == 'batch'){ // Are images being batch uploaded by plupload?
     switch($op){
       case 'insert':
@@ -704,13 +713,15 @@ function matrix_editor_preprocess_views_exposed_form(&$vars){
 /**
  * hook_scratchpad_update
  */
-function matrix_editor_scratchpad_updates($timestamp, $max = 3){  
+function matrix_editor_scratchpad_updates($timestamp, $max = 3){
   $messages = array();
   if($timestamp < 1292007600){
     // An update was made to the countriesmap.module to allow for import.
     $messages[] = t('Matrix Editor content filtering and field selection has been improved. You can now choose to edit content based on dates or terms. And if you have batch imported content, you can also choose to see all the nodes created in the last batch.');
   }
-  return array('matrix_editor' => $messages);
+  return array(
+    'matrix_editor' => $messages
+  );
 }
 
 
