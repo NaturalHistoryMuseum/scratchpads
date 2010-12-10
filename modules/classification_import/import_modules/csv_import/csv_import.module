@@ -19,7 +19,7 @@ function csv_import_classification_import_form(){
     'file' => array(
       '#type' => 'fieldset',
       '#title' => 'CSV File',
-      '#description' => 'Import from a CSV, Tab separated or XLS file in a number of different formats.'.theme('advanced_help_topic', 'taxtab', 'taxtab'), // FIXME - Add link to template files.
+      '#description' => 'Import from a CSV, Tab separated or XLS file in a number of different formats.'.theme('advanced_help_topic', 'csv_import', 'overview'), // FIXME - Add link to template files.
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'csv-file' => array(
@@ -36,7 +36,7 @@ function csv_import_classification_import_form(){
           1 => t('ITIS Parent/Child'),
           2 => t('Full hierarchy')
         ),
-        '#description' => t('Please select which template was used to create your CSV file')
+        '#description' => t('Please select which template was used to create your CSV file').theme('advanced_help_topic', 'csv_import', 'filetypes')
       ),
       'submit' => array(
         '#type' => 'submit',
