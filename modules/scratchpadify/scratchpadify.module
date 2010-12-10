@@ -28,7 +28,8 @@ function scratchpadify_term_path($term){
  * hook_user
  */
 function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
-  if($op == 'login'){
+  // Only show messages to users that have logged in before.
+  if($op == 'login' && $acc->access){
     // Modules implementing hook_scratchpad_updates should use the timestamps
     // provided on "http://dev.scratchpads.eu/timestamp".
     // Modules should return an array in the following structure:
@@ -40,7 +41,7 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
     //   )
     // )
     // Descriptions and names of modules will be taken from the module's .info
-    // file.          
+    // file.    
     $messages = module_invoke_all('scratchpad_updates', $acc->access);
     $output = '';
     foreach($messages as $module => $module_messages){
