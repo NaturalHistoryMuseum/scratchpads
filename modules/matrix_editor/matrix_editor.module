@@ -608,7 +608,8 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
  * We need to set a session as plupload doesn't allow us to get a handle on batch completion
  */
 function matrix_editor_nodeapi(&$node, $op){
-  if(arg(0) == 'plupload-pernode'){ // Are images being batch uploaded by plupload?
+	
+  if(arg(0) == 'plupload-pernode' || arg(0) == 'batch'){ // Are images being batch uploaded by plupload?
     switch($op){
       case 'insert':
         if(!$_SESSION['matrix_editor_batch']){
