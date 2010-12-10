@@ -197,11 +197,7 @@ function scratchpad_profile_profile_modules(){
     'uwho_client',
     'remote_issue_tab',
     'comment_upload',
-    'commentmail',
-    // Classification (Temporary)
-    'classification',
-    'classification_scratchpads',
-    'classification_biblio'
+    'commentmail'
   );
 }
 
