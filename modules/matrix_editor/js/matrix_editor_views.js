@@ -31,10 +31,10 @@ Drupal.behaviors.matrix_editor_views = function(context) {
         $('a.matrix-editor-toggle-advanced-options').removeClass('expanded');
         var $id = $(id);
         $id.toggle();
-        if($id.is(':visible')){
-          $(this).addClass('expanded');
-        }else{
-          $(this).removeClass('expanded');
+        if ($id.is(':visible')) {
+            $(this).addClass('expanded');
+        } else {
+            $(this).removeClass('expanded');
         }
         return false;
     });
@@ -49,30 +49,59 @@ Drupal.behaviors.matrix_editor_views = function(context) {
         // CLear any existing selected terms
         $('#edit-tid').val(null);
     });
-    
+
     // Date selection
     $('#edit-date-options', context).change(function() {
-      $('.date-views-filter-wrapper').hide();  
-      if($(this).val().length){ 
-        if($(this).val().indexOf('T') !== -1){ // Is it a timestamp?
-          var dateTime = $(this).val().split('T');
-          $('#edit-date-filter-min-datepicker-popup-0').val(dateTime[0]);
-          $('#edit-date-filter-min-timeEntry-popup-1').val(dateTime[1]);
-        }else{ // User has selected to enter their own dates - clear the field
-          $('#edit-date-filter-min-datepicker-popup-0').val(null);
-          $('#edit-date-filter-min-timeEntry-popup-1').val(null);
-          $('.date-views-filter-wrapper').show();
+        $('.date-views-filter-wrapper').hide();
+        matrixEditorClearDates();
+
+        if ($(this).val().length) {
+
+            if ($(this).val() == 'enter_dates') {
+
+                // User has selected to enter their own dates - show the fields
+                $('.date-views-filter-wrapper').show();
+
+            } else {
+                // There are timestamps that need to be added to the form
+                if ($(this).val().indexOf('|') !== -1) {
+                    // Does it have a start and end time?
+                    var timestamps = $(this).val().split('|');
+                } else {
+                    var timestamps = [$(this).val()];
+                }
+                $.each(timestamps,
+                function(index, value) {
+                    var dateTime = value.split('T');
+                    if (index == 0) {
+                        var range = 'min';
+                    } else {
+                        var range = 'max';
+                    }
+
+                    $('input[name="date_filter[' + range + '][date]"]').val(dateTime[0]);
+                    $('input[name="date_filter[' + range + '][time]"]').val(dateTime[1]);
+
+                });
+
+            }
+
         }
-      }else{ // Remove dates if 'all' is selected
-        $('#edit-date-filter-min-datepicker-popup-0').val(null);
-        $('#edit-date-filter-min-timeEntry-popup-1').val(null);
-      }
+
 
     });
-    
+
     // On load show the date options if user has selected to enter own dates
-    if($('#edit-date-options').val() == 0){
-      $('.date-views-filter-wrapper').show();
+    if ($('#edit-date-options').val() == 'enter_dates') {
+        $('.date-views-filter-wrapper').show();
     }
 
 };
+
+function matrixEditorClearDates() {
+    $.each(['min', 'max'],
+    function(index, range) {
+        $('input[name="date_filter[' + range + '][date]"]').val(null);
+        $('input[name="date_filter[' + range + '][time]"]').val(null);
+    })
+}

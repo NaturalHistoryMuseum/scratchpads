@@ -310,5 +310,35 @@ background-image: url('../images/header_cells_bg_hover.gif')!important;
 }
 
 
+/* Need to fix the date popup - ME is using different version of UI */
+
+.ui-datepicker-header{
+  top: -25px;
+  height: 20px;
+}
+
+
+.ui-datepicker-header select{
+  top: 2px!important;
+}
+
+.ui-datepicker-header select.ui-datepicker-month{
+  left: 25px;
+  width: 65px!important;
+}
+
+.ui-datepicker-header select.ui-datepicker-year{
+  width: 65px!important;
+}
+
+.ui-datepicker-header .ui-datepicker-next{
+  left: 160px;
+}
+
+.ui-datepicker-calendar{
+  position: relative;
+  top: -10px;
+}
+
 
 

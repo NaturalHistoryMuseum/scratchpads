@@ -173,7 +173,7 @@ function matrix_editor_views_default_views(){
           'use_operator' => 0,
           'operator' => 'tid_op',
           'identifier' => 'tid',
-          'label' => '',
+          'label' => 'Term',
           'optional' => 1,
           'single' => 1,
           'remember' => 0
@@ -187,7 +187,40 @@ function matrix_editor_views_default_views(){
         'hierarchy' => 0,
         'relationship' => 'none',
         'reduce_duplicates' => 0
-      )
+      ),
+       'date_filter' => array(
+   'operator' => 'between',
+   'value' => array(
+     'min' => NULL,
+     'max' => NULL,
+     'value' => NULL,
+     'default_date' => '',
+     'default_to_date' => '',
+   ),
+   'group' => '0',
+   'exposed' => TRUE,
+   'expose' => array(
+     'operator' => 'date_filter_op',
+     'label' => 'Created',
+     'use_operator' => 0,
+     'identifier' => 'date_filter',
+     'optional' => 1,
+     'remember' => 0,
+   ),
+   'date_fields' => array(
+     'node.created' => 'node.created',
+   ),
+   'date_method' => 'OR',
+   'granularity' => 'minute',
+   'form_type' => 'date_popup',
+   'default_date' => '',
+   'default_to_date' => '',
+   'year_range' => '-3:+3',
+   'id' => 'date_filter',
+   'table' => 'node',
+   'field' => 'date_filter',
+   'relationship' => 'none',
+ ),
     );
     if(module_exists('editor_views')){
       $filters['edit_delete'] = array(
