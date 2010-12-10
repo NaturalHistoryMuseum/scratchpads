@@ -44,9 +44,12 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
     $messages = module_invoke_all('scratchpad_updates', $acc->access);
     $output = '';
     foreach($messages as $module => $module_messages){
-      // Load and parse the info file getting the name and description
-      $mod_info = drupal_parse_info_file(drupal_get_path('module', $module)."/$module.info");
-      $output .= theme_item_list($module_messages, '<h3>'.$mod_info['name'].' <span style="font-size:80%">'.$mod_info['description'].'</span></h3>');
+      // Check the module has messages for this user
+      if(count($module_messages)){
+        // Load and parse the info file getting the name and description
+        $mod_info = drupal_parse_info_file(drupal_get_path('module', $module)."/$module.info");
+        $output .= theme('item_list', $module_messages, '<h3>'.$mod_info['name'].' '.(strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">('.$mod_info['description'].')</span></h3>' : ''), 'ul', array('class' => 'scratchpadify-updates'));        
+      }
     }
     if(strlen($output)){
       $output = '<h2>The following modules have updates:</h1><div style="margin-left:20px">'.$output.'</div>';
@@ -60,7 +63,7 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
  */
 function scratchpadify_scratchpad_updates($timestamp, $max = 3){  
   $messages = array();
-  if($timestamp < 1291921200){
+  if($timestamp < 1292007600){
     // An update was made to the countriesmap.module to allow for import.
     $messages[] = t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.');
   }

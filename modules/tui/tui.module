@@ -165,7 +165,7 @@ function tui_menu(){
  */
 function tui_scratchpad_updates($timestamp, $max=3){
   $messages = array();
-  if($timestamp < 1291921200){
+  if($timestamp < 1292007600){
     // An update was made to the countriesmap.module to allow for import.
     $messages[] = t('Enable the editing of the Drupal synonyms field (if it has been set already).');
   }
