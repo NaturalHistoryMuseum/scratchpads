@@ -701,6 +701,17 @@ function matrix_editor_preprocess_views_exposed_form(&$vars){
   $vars['button'] = '<div class="buttons">' . $vars['button'] . '</div>';
 }
 
+/**
+ * hook_scratchpad_update
+ */
+function matrix_editor_scratchpad_updates($timestamp, $max = 3){  
+  $messages = array();
+  if($timestamp < 1292007600){
+    // An update was made to the countriesmap.module to allow for import.
+    $messages[] = t('Matrix Editor content filtering and field selection has been improved. You can now choose to edit content based on dates or terms. And if you have batch imported content, you can also choose to see all the nodes created in the last batch.');
+  }
+  return array('matrix_editor' => $messages);
+}
 
 
 
