@@ -34,6 +34,13 @@
     <em><xsl:value-of select="."/></em>
   </xsl:template>
   
+    <!--  TEMPLATE FOR <strong> -->
+  <xsl:template match="strong">
+    <strong>
+      <xsl:value-of select="."/>
+    </strong>
+  </xsl:template>
+  
   <!-- TEMPLATE FOR ARTICLE TITLE -->
   <xsl:template match="article-title">
     <xsl:for-each select="node()">
@@ -68,12 +75,22 @@
   
   <!--  TEMPLATE FOR ACKNOWLEDGEMENTS -->
   <xsl:template match="ack">
+   <xsl:if test="p">
     <div class="section">
       <h1>Acknowledgements</h1>
       <xsl:for-each select="p">
+            <xsl:choose>
+      <xsl:when test="self::text()">
         <p><xsl:value-of select="."/></p>
+      </xsl:when>
+      <xsl:when test="self::*">
+        <xsl:apply-templates select="."/>
+      </xsl:when>
+      </xsl:choose>
+
       </xsl:for-each>
     </div>
+    </xsl:if>
   </xsl:template>
   
   <!-- TEMPLATE FOR TAXON-TREATMENT -->
@@ -95,6 +112,7 @@
   
   <!--  TEMPLATE FOR  REFERENCES-->
   <xsl:template match="ref-list">
+    <xsl:if test="ref">
     <div class="references section">
       <h3>References</h3>
       <ul>
@@ -113,14 +131,10 @@
 	      </xsl:for-each>
       </ul>
     </div>
+    </xsl:if>
   </xsl:template>
   
-  <!--  TEMPLATE FOR ITALICS -->
-  <xsl:template match="italic">
-    <em>
-      <xsl:value-of select="."/>
-    </em>
-  </xsl:template>
+
   <!--  TEMPLATE FOR FIG GROUP -->
   <xsl:template match="fig">
     <div class="image">
