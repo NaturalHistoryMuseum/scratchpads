@@ -191,6 +191,8 @@ function scratchpad_profile_profile_modules(){
     'tui',
     'classification_import',
     'csv_import',
+    'tcs_import',
+    'eol_import',
     'publication',
     'nodereferencethumb',
     'aggregator',
