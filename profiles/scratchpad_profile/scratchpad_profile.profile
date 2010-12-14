@@ -1152,7 +1152,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
         'family' => $familyname,
         'institution' => $data['institution'],
         'expertise' => $data['taxonomicscope'],
-        'gmap_key' => $data['googleapi'],
+        'gmapkey' => $data['googleapi'],
         'clustrmap' => $data['clustrmaphtml'],
         'mission' => $data['missionstatement']
       )
