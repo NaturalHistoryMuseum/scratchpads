@@ -146,9 +146,37 @@ function darwincore_views_data() {
           'handler' => 'views_handler_sort'
         )
       ),
-      'dateidentified' => array(
-        'title' => t('Date identified'),
-        'help' => t('The date-time in the Common Era calendar in which the object or observation was identified as being a member of the taxon given in the ScientificName.'),
+      'dateidentifiedyear' => array(
+        'title' => t('Date identified year'),
+        'help' => t('The year in which the object or observation was identified as being a member of the taxon given in the ScientificName.'),
+        'filter' => array(
+          'handler' => 'views_handler_filter_string'
+        ),
+        'field' => array(
+          'handler' => 'views_handler_field',
+          'click sortable' => TRUE
+        ),
+        'sort' => array(
+          'handler' => 'views_handler_sort'
+        )
+      ),
+      'dateidentifiedmonth' => array(
+        'title' => t('Date identified month'),
+        'help' => t('The month in which the object or observation was identified as being a member of the taxon given in the ScientificName.'),
+        'filter' => array(
+          'handler' => 'views_handler_filter_string'
+        ),
+        'field' => array(
+          'handler' => 'views_handler_field',
+          'click sortable' => TRUE
+        ),
+        'sort' => array(
+          'handler' => 'views_handler_sort'
+        )
+      ),
+      'dateidentifiedday' => array(
+        'title' => t('Date identified day'),
+        'help' => t('The day in which the object or observation was identified as being a member of the taxon given in the ScientificName.'),
         'filter' => array(
           'handler' => 'views_handler_filter_string'
         ),
