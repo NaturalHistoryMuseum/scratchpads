@@ -11,7 +11,7 @@ function eol_import_classification_import_form(){
     'eol' => array(
       '#type' => 'fieldset',
       '#title' => 'EOL',
-      '#description' => 'Import a classification directly from EOL',
+      '#description' => 'Import a classification directly from EOL'.theme('advanced_help_topic', 'eol_import', 'overview'),
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'eol-name' => array(

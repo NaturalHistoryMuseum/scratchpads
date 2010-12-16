@@ -8,7 +8,7 @@ function tcs_import_classification_import_form(){
     'tcs' => array(
       '#type' => 'fieldset',
       '#title' => 'TCS Import',
-      '#description' => 'Import a TCS file either uploaded, or supplied by a webservice', // FIXME - Add link to template files.
+      '#description' => 'Import a TCS file either uploaded, or supplied by a webservice'.theme('advanced_help_topic', 'tcs_import', 'overview'), // FIXME - Add link to template files.
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'tcs-file' => array(
