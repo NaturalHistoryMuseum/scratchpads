@@ -22,6 +22,18 @@ function classification_import_menu(){
 }
 
 /**
+ * hook_scratchpad_updates
+ */
+function classification_import_scratchpad_updates($timestamp, $max = 3){  
+  $messages = array();
+  if($timestamp < 1292612400){
+    // Added a few checks, and integrated the modules
+    $messages[] = t('The old EOL import module has now been removed.  All taxonomies are imported via the same interface.  We also now check to ensure that the EOL service is running, before attempting an import.');
+  }
+  return array('classification_import' => $messages);
+}
+
+/**
  * Implementation of hook_help
  */
 function classification_import_help($path, $arg){
