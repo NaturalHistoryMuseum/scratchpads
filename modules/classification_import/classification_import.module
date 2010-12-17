@@ -92,6 +92,11 @@ function classification_import_load_terms($vid, &$context){
     // First time call, we'll reset progress
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp} WHERE vid = %d", $vid));
+    if($context['sandbox']['max'] == 0){
+      $context['finished'] = 1;
+      $context['message'] = t('There has been an error downloading or parsing your data.  No terms have been imported.');
+      return;
+    }
     $context['sandbox']['imported'] = 0;
     // First we'll get the root terms so that we know where to start from
     $result = db_query("SELECT id FROM {classification_import_temp} WHERE parent NOT IN (SELECT name FROM {classification_import_temp} WHERE vid = %d) AND vid = %d", $vid, $vid);

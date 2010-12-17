@@ -7,11 +7,16 @@ define('EOL_IMPORT_REQUEST_URL', 'http://services.eol.org/lifedesk/service.php?f
  */
 function eol_import_classification_import_form(){
   drupal_add_css(drupal_get_path('module', 'eol_import') . '/eol_import.css');
+  $eol_service_status = strlen(file_get_contents('http://services.eol.org/lifedesk/service.php', 0, stream_context_create(array(
+    'http' => array(
+      'timeout' => 3
+    )
+  ))));
   return array(
     'eol' => array(
       '#type' => 'fieldset',
       '#title' => 'EOL',
-      '#description' => 'Import a classification directly from EOL'.theme('advanced_help_topic', 'eol_import', 'overview'),
+      '#description' => 'Import a classification directly from EOL' . theme('advanced_help_topic', 'eol_import', 'overview'),
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'eol-name' => array(
@@ -19,10 +24,16 @@ function eol_import_classification_import_form(){
         '#title' => t('Enter the root term of your classification, e.g. Phthiraptera, Insecta, Aves'),
         '#autocomplete_path' => 'eol_import'
       ),
+      'eol-status' => array(
+        '#weight' => -10,
+        '#type' => 'markup',
+        '#value' => $eol_service_status ? '<div class="message status"><p>The EOL classification service appears to be running.</p></div>' : '<div class="message error"><p>The EOL classification service does not appear to be running.  Please try again later.</p></div>'
+      ),
       'eol-search' => array(
         '#type' => 'button',
         '#value' => 'Search',
         '#title' => 'Search',
+        '#disabled' => $eol_service_status ? FALSE : TRUE,
         '#ahah' => array(
           'path' => 'eol_import',
           'event' => 'click',
@@ -35,6 +46,7 @@ function eol_import_classification_import_form(){
         '#value' => '&nbsp;'
       ),
       'submit' => array(
+        '#disabled' => $eol_service_status ? FALSE : TRUE,
         '#type' => 'submit',
         '#title' => t('Import from EOL'),
         '#value' => t('Import from EOL'),
@@ -76,9 +88,9 @@ function eol_import_autocomplete(){
       $num_results = count($eol_xml->value);
       $options = array();
       for($i = 0; $i < $num_results; $i++){
-        $options[check_plain($eol_xml->value[$i]->id).'|'.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms)] = check_plain($eol_xml->value[$i]->ancestry . '|' . $eol_xml->value[$i]->name) . " <br/>(" . l($eol_xml->value[$i]->metadata->title, $eol_xml->value[$i]->metadata->url, array(
+        $options[check_plain($eol_xml->value[$i]->id) . '|' . check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms)] = check_plain($eol_xml->value[$i]->ancestry . '|' . $eol_xml->value[$i]->name) . " <br/>(" . l($eol_xml->value[$i]->metadata->title, $eol_xml->value[$i]->metadata->url, array(
           'abosulte' => 1
-        )) . ') [approx. '.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms).' taxa]';
+        )) . ') [approx. ' . check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms) . ' taxa]';
       }
     }
     $form['eol-import-id'] = array(

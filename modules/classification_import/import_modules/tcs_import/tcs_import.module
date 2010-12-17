@@ -104,7 +104,7 @@ function tcs_import_submit($form, $form_state){
 function tcs_import_batch_download_data($urls, $vid, $total = 1000000, &$context){
   if(!isset($context['sandbox']['progress'])){
     $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = $total; // FIXME - Aaargh, we need to be able to get the total count
+    $context['sandbox']['max'] = $total;
     $context['sandbox']['originalurl'] = $urls[0];
     $context['sandbox']['urls'] = $urls;
   }
@@ -149,7 +149,7 @@ function tcs_import_batch_download_data($urls, $vid, $total = 1000000, &$context
 function _tcs_import_batch_import_process_helper($url){
   // Save the XML to a file
   $xml_filename = tempnam(file_directory_temp(), 'eol_import_');
-  /*if(substr($url, 0, 4) == 'http'){
+  if(substr($url, 0, 4) == 'http'){
     // Not sure why, but when I added the "&somethingelse" to the line below, it
     // helped fix the issue we were having where not all the names from a tree
     // were downloaded.
@@ -157,10 +157,13 @@ function _tcs_import_batch_import_process_helper($url){
   }else{
     $url_to_download = $url;
   }
-  file_put_contents($xml_filename, tcs_fgc($url_to_download));*/
-  file_put_contents($xml_filename, tcs_fgc($url));
-  _tcs_import_set_and_get_variable('url', $url);
-  tcs_import_parse_xml($xml_filename);
+  $tcs_xml = tcs_fgc($url_to_download);
+  if($tcs_xml){
+    file_put_contents($xml_filename, $tcs_xml);
+    //file_put_contents($xml_filename, tcs_fgc($url));
+    _tcs_import_set_and_get_variable('url', $url);
+    tcs_import_parse_xml($xml_filename);
+  }
 }
 
 /**
