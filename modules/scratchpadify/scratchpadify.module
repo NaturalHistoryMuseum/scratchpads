@@ -29,18 +29,24 @@ function scratchpadify_term_path($term){
  */
 function scratchpadify_updates(){
   $messages = module_invoke_all('scratchpad_updates', 0, 100);
-  $output = '';
+  $output = '<div style="padding:10px; margin:10px;">';
   foreach($messages as $module => $module_messages){
     // Check the module has messages for this user
     if(count($module_messages)){
+      $messages_with_stamps = array();
+      foreach($module_messages as $timestamp => $message){
+        $messages_with_stamps[$timestamp] = '<span style="font-size:90%">'.format_date($timestamp, 'custom', 'Y-m-d'). ':</span> '.$message;
+      }
+      // Sort with most recent first.
+      krsort($messages_with_stamps);
       // Load and parse the info file getting the name and description
       $mod_info = drupal_parse_info_file(drupal_get_path('module', $module) . "/$module.info");
-      $output .= theme('item_list', $module_messages, '<h3>' . $mod_info['name'] . ' ' . (strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">(' . $mod_info['description'] . ')</span></h3>' : ''), 'ul', array(
+      $output .= theme('item_list', $messages_with_stamps, '<h3 style="border-bottom:dotted 1px #bbb">' . $mod_info['name'] . ' ' . (strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">(' . $mod_info['description'] . ')</span></h3>' : ''), 'ul', array(
         'class' => 'scratchpadify-updates'
       ));
     }
   }
-  return $output;
+  return $output . '</div>';
 }
 
 /**
@@ -67,7 +73,7 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
       $messages_to_display = array();
       foreach($module_messages as $timestamp => $message){
         if($timestamp > $acc->access){
-          $messages_to_display = $message;
+          $messages_to_display[] = $message;
         }
       }
       // Check the module has messages for this user
@@ -92,7 +98,8 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
 function scratchpadify_scratchpad_updates(){
   return array(
     'scratchpadify' => array(
-      1292007600 => t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.')
+      1252007600 => t('Some other random pants.'),
+      1292007600 => t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.'),
     )
   );
 }
