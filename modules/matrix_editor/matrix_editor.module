@@ -570,9 +570,8 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
           foreach($vocabularies as $vocabulary){
             $form['vocabulary']['#options'][$vocabulary->vid] = $vocabulary->name;
           }
-          
-                  // Make the vocabulary an operator for the taxonomy
-        $form['#info']['filter-tid']['operator'] = 'vocabulary';
+          // Make the vocabulary an operator for the taxonomy
+          $form['#info']['filter-tid']['operator'] = 'vocabulary';
         }
         $form['remove_filters'] = array(
           '#type' => 'submit',
@@ -601,7 +600,6 @@ function matrix_editor_form_alter(&$form, $form_state, $form_id){
             ));
           }
         }
-
         $form['#info']['filter-date_filter']['operator'] = 'date_options';
       }
       break;
@@ -713,16 +711,10 @@ function matrix_editor_preprocess_views_exposed_form(&$vars){
 /**
  * hook_scratchpad_update
  */
-function matrix_editor_scratchpad_updates($timestamp, $max = 3){
-  $messages = array();
-  if($timestamp < 1292007600){
-    // An update was made to the countriesmap.module to allow for import.
-    $messages[] = t('Matrix Editor content filtering and field selection has been improved. You can now choose to edit content based on dates or terms. And if you have batch imported content, you can also choose to see all the nodes created in the last batch.');
-  }
+function matrix_editor_scratchpad_updates(){
   return array(
-    'matrix_editor' => $messages
+    'matrix_editor' => array(
+      1292007600 => t('Matrix Editor content filtering and field selection has been improved. You can now choose to edit content based on dates or terms. And if you have batch imported content, you can also choose to see all the nodes created in the last batch.')
+    )
   );
 }
-
-
-

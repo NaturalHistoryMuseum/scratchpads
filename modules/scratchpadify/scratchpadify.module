@@ -25,6 +25,25 @@ function scratchpadify_term_path($term){
 }
 
 /**
+ * Callback for "/updates"
+ */
+function scratchpadify_updates(){
+  $messages = module_invoke_all('scratchpad_updates', 0, 100);
+  $output = '';
+  foreach($messages as $module => $module_messages){
+    // Check the module has messages for this user
+    if(count($module_messages)){
+      // Load and parse the info file getting the name and description
+      $mod_info = drupal_parse_info_file(drupal_get_path('module', $module) . "/$module.info");
+      $output .= theme('item_list', $module_messages, '<h3>' . $mod_info['name'] . ' ' . (strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">(' . $mod_info['description'] . ')</span></h3>' : ''), 'ul', array(
+        'class' => 'scratchpadify-updates'
+      ));
+    }
+  }
+  return $output;
+}
+
+/**
  * hook_user
  */
 function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
@@ -35,25 +54,33 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
     // Modules should return an array in the following structure:
     // array(
     //   '[MODULE NAME]' => array(
-    //     '[Most recent update message]',
-    //     '[Next most recent update message]',
+    //     [timestamp of update] => '[Update message]',
+    //     [timestamp of update] => '[Update message]'
     //     ...
     //   )
     // )
     // Descriptions and names of modules will be taken from the module's .info
     // file.    
-    $messages = module_invoke_all('scratchpad_updates', $acc->access);
+    $messages = module_invoke_all('scratchpad_updates');
     $output = '';
     foreach($messages as $module => $module_messages){
+      $messages_to_display = array();
+      foreach($module_messages as $timestamp => $message){
+        if($timestamp > $acc->access){
+          $messages_to_display = $message;
+        }
+      }
       // Check the module has messages for this user
-      if(count($module_messages)){
+      if(count($messages_to_display)){
         // Load and parse the info file getting the name and description
-        $mod_info = drupal_parse_info_file(drupal_get_path('module', $module)."/$module.info");
-        $output .= theme('item_list', $module_messages, '<h3>'.$mod_info['name'].' '.(strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">('.$mod_info['description'].')</span></h3>' : ''), 'ul', array('class' => 'scratchpadify-updates'));        
+        $mod_info = drupal_parse_info_file(drupal_get_path('module', $module) . "/$module.info");
+        $output .= theme('item_list', $messages_to_display, '<h3>' . $mod_info['name'] . ' ' . (strlen($mod_info['description']) ? '<span style="font-size:70%;font-weight:400">(' . $mod_info['description'] . ')</span></h3>' : ''), 'ul', array(
+          'class' => 'scratchpadify-updates'
+        ));
       }
     }
     if(strlen($output)){
-      $output = '<h2>The following modules have updates:</h1><div style="margin-left:20px">'.$output.'</div>';
+      $output = '<h2>The following modules have updates:</h1><div style="margin-left:20px">' . $output . '</div>';
     }
     drupal_set_message($output);
   }
@@ -62,13 +89,12 @@ function scratchpadify_user($op, &$edit, &$acc, $cat = NULL){
 /**
  * hook_scratchpad_update
  */
-function scratchpadify_scratchpad_updates($timestamp, $max = 3){  
-  $messages = array();
-  if($timestamp < 1292007600){
-    // An update was made to the countriesmap.module to allow for import.
-    $messages[] = t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.');
-  }
-  return array('scratchpadify' => $messages);
+function scratchpadify_scratchpad_updates(){
+  return array(
+    'scratchpadify' => array(
+      1292007600 => t('Added a way of creating the update message that you are currently reading. This will help to keep you informed of all the new developments in the Scratchpad project.')
+    )
+  );
 }
 
 /**
@@ -184,27 +210,32 @@ function theme_scratchpadify_form_element($element, $value){
   $output .= ">\n";
   $required = !empty($element['#required']) ? '<span class="form-required" title="' . $t('This field is required.') . '">*</span>' : '';
   if(!empty($element['#title'])){
-  if (!empty($element['#id'])) {
-      $output .= ' <label for="'. $element['#id'] .'">';
-      if(!empty($element['#label_prefix'])) {
+    if(!empty($element['#id'])){
+      $output .= ' <label for="' . $element['#id'] . '">';
+      if(!empty($element['#label_prefix'])){
         $output .= $element['#label_prefix'];
       }
-      $output .= $t('!title: !required', array('!title' => filter_xss_admin($element['#title']), '!required' => $required));
-      if(!empty($element['#label_suffix'])) {
+      $output .= $t('!title: !required', array(
+        '!title' => filter_xss_admin($element['#title']),
+        '!required' => $required
+      ));
+      if(!empty($element['#label_suffix'])){
         $output .= $element['#label_suffix'];
       }
       $output .= "</label>\n";
-    }
-    else {
+    }else{
       $output .= ' <label>';
-      if(!empty($element['#label_prefix'])) {
+      if(!empty($element['#label_prefix'])){
         $output .= $element['#label_prefix'];
       }
-      $output .= $t('!title: !required', array('!title' => filter_xss_admin($element['#title']), '!required' => $required));
-      if(!empty($element['#label_suffix'])) {
+      $output .= $t('!title: !required', array(
+        '!title' => filter_xss_admin($element['#title']),
+        '!required' => $required
+      ));
+      if(!empty($element['#label_suffix'])){
         $output .= $element['#label_suffix'];
       }
-      $output .="</label>\n";
+      $output .= "</label>\n";
     }
   }
   $output .= " $value\n";
@@ -268,9 +299,13 @@ function scratchpadify_theme_registry_alter(&$theme_registry){
  */
 function scratchpadify_node_submitted($node){
   if($node->changed > $node->created){
-    $account = user_load(array('uid' => $node->revision_uid));
-  } else {
-    $account = user_load(array('uid' => $node->uid));
+    $account = user_load(array(
+      'uid' => $node->revision_uid
+    ));
+  }else{
+    $account = user_load(array(
+      'uid' => $node->uid
+    ));
   }
   return t('!submitted_or_changed by !username on @datetime', array(
     '!submitted_or_changed' => $node->changed > $node->created ? 'Edited' : 'Submitted',
@@ -308,6 +343,14 @@ function scratchpadify_cron(){
  */
 function scratchpadify_menu(){
   return array(
+    'updates' => array(
+      'title' => 'Scratchpad updates archive',
+      'page callback' => 'scratchpadify_updates',
+      'access arguments' => array(
+        'access content'
+      ),
+      'type' => MENU_NORMAL_ITEM
+    ),
     'admin/content/comment/settings' => array(
       'title' => 'Comment settings',
       'page callback' => 'drupal_get_form',

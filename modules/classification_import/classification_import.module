@@ -24,13 +24,12 @@ function classification_import_menu(){
 /**
  * hook_scratchpad_updates
  */
-function classification_import_scratchpad_updates($timestamp, $max = 3){  
-  $messages = array();
-  if($timestamp < 1292612400){
-    // Added a few checks, and integrated the modules
-    $messages[] = t('The old EOL import module has now been removed.  All taxonomies are imported via the same interface.  We also now check to ensure that the EOL service is running, before attempting an import.');
-  }
-  return array('classification_import' => $messages);
+function classification_import_scratchpad_updates(){
+  return array(
+    'classification_import' => array(
+      1292612400 => t('The old EOL import module has now been removed.  All taxonomies are imported via the same interface.  We also now check to ensure that the EOL service is running, before attempting an import.')
+    )
+  );
 }
 
 /**
@@ -163,7 +162,7 @@ function classification_import_load_terms($vid, &$context){
     $context['sandbox']['progress'] = $context['sandbox']['imported'] / $context['sandbox']['max'];
     // Set the message
     $time_taken_so_far = time() - $context['sandbox']['timestarted'];
-    $approx_time_remaining = $context['sandbox']['progress']==0? 'Too soon to guess':$time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']);
+    $approx_time_remaining = $context['sandbox']['progress'] == 0 ? 'Too soon to guess' : $time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']);
     $context['message'] = '<p><br/>' . t('Saved %numnames of %total_names names', array(
       '%numnames' => $context['sandbox']['imported'],
       '%total_names' => $context['sandbox']['max']
@@ -192,7 +191,10 @@ function classification_import_load_terms_help(&$data, $vid){
   // Give the import modules a chance to tweak the data being imported.  This
   // would also be a good place for the ITIS term module to tweak data, or for 
   // us to import biblio nodes associated with a term
-  $tweak = array('form_state' => $form_state, 'vocabulary' => $vocabulary);
+  $tweak = array(
+    'form_state' => $form_state,
+    'vocabulary' => $vocabulary
+  );
   module_invoke_all_by_reference('classification_import_alter_data', $tweak);
   $vocabulary = $tweak['vocabulary'];
   $form_state = $tweak['form_state'];
@@ -296,9 +298,9 @@ function classification_import_batch_import_finished($success, $results, $operat
     if(function_exists('tui_menu')){
       $batch = batch_get();
       if(isset($batch['form']['#parameters'][2])){
-        drupal_goto('admin/content/taxonomy/edit/tui/'.$batch['form']['#parameters'][2]);
+        drupal_goto('admin/content/taxonomy/edit/tui/' . $batch['form']['#parameters'][2]);
       }
-    } else {
+    }else{
       drupal_set_message(t('The import has been performed.'));
       drupal_goto('admin/content/taxonomy');
     }
