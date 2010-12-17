@@ -27,7 +27,7 @@ function eol_import_classification_import_form(){
       'eol-status' => array(
         '#weight' => -10,
         '#type' => 'markup',
-        '#value' => $eol_service_status ? '<div class="message status"><p>The EOL classification service appears to be running.</p></div>' : '<div class="message error"><p>The EOL classification service does not appear to be running.  Please try again later.</p></div>'
+        '#value' => $eol_service_status ? '<div class="message status"><p>The EOL classification service appears to be running.</p></div>' : '<div class="message error"><p>The EOL classification service (<a href="http://services.eol.org/lifedesk/service.php">http://services.eol.org/lifedesk/service.php</a>) does not appear to be running.  Please try again later.</p></div>'
       ),
       'eol-search' => array(
         '#type' => 'button',
