@@ -78,7 +78,7 @@ function eol_import_autocomplete(){
       for($i = 0; $i < $num_results; $i++){
         $options[check_plain($eol_xml->value[$i]->id).'|'.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms)] = check_plain($eol_xml->value[$i]->ancestry . '|' . $eol_xml->value[$i]->name) . " <br/>(" . l($eol_xml->value[$i]->metadata->title, $eol_xml->value[$i]->metadata->url, array(
           'abosulte' => 1
-        )) . ') ['.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms).']';
+        )) . ') [approx. '.check_plain($eol_xml->value[$i]->number_of_children + $eol_xml->value[$i]->number_of_children_synonyms).' taxa]';
       }
     }
     $form['eol-import-id'] = array(
@@ -134,7 +134,7 @@ function eol_import_classification_import_alter_data(&$tweak){
     // Both itis_term and term_node modules are installed, lets check to see if
     // this vocabulary is set to use itis_term
     $type = _term_node_get_content_type_for_vid($tweak['vocabulary']->vid);
-    if($type == 'itis_term'){
+    if($type == 'itis_term' && isset($tweak['form_state']['values']['canonicalname'])){
       // Get the name parts from the canonical name
       $name_parts = explode(" ", $tweak['form_state']['values']['canonicalname']);
       $i = 1;

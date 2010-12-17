@@ -146,7 +146,7 @@ function classification_import_load_terms($vid, &$context){
     $context['sandbox']['progress'] = $context['sandbox']['imported'] / $context['sandbox']['max'];
     // Set the message
     $time_taken_so_far = time() - $context['sandbox']['timestarted'];
-    $approx_time_remaining = $time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']+0.00000000000000000000001);// Ensure it's not 0
+    $approx_time_remaining = $context['sandbox']['progress']==0? 'Too soon to guess':$time_taken_so_far * ((1 - $context['sandbox']['progress']) / $context['sandbox']['progress']);
     $context['message'] = '<p><br/>' . t('Saved %numnames of %total_names names', array(
       '%numnames' => $context['sandbox']['imported'],
       '%total_names' => $context['sandbox']['max']
