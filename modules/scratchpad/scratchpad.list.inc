@@ -136,7 +136,7 @@ function scratchpad_list_scratchpads_thumbs(){
         continue;
       }
     }
-    $items[] = l('<img src="http://screenshots.scratchpads.eu/' . $site . '.small.drop.png"/>', 'http://' . $site, array(
+    $items[] = l('<img src="http://screenshots.scratchpads.eu/' . $site . '.small.drop.png" width="209px" height="158px"/>', 'http://' . $site, array(
       'absolute' => TRUE,
       'html' => 1,
       'attributes' => array(
