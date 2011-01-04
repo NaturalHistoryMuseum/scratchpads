@@ -253,7 +253,7 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
           // convert array to add keys
           foreach($line_parts as $key => $value){
             // Taxon is a special case
-            if(strtolower($headers[$key]) == 'name'){
+            if(strtolower($headers[$key]) == 'taxon'){
               // Ensure that we actually have a taxon name, and the field isn't
               // blank.
               if(strlen(trim($value))){
