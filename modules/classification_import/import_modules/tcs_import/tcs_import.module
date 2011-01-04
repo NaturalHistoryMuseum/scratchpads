@@ -154,6 +154,7 @@ function _tcs_import_batch_import_process_helper($url){
     // helped fix the issue we were having where not all the names from a tree
     // were downloaded.
     $url_to_download = 'http://fencedine.myspecies.info/?url=' . urlencode($url).'&somethingelse';
+    $url_to_download = $url; // Still having problems with Fencedine script.
   }else{
     $url_to_download = $url;
   }

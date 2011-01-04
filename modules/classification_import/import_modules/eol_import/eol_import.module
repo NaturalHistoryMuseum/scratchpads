@@ -82,7 +82,9 @@ function eol_import_menu(){
  */
 function eol_import_autocomplete(){
   if(isset($_POST['eol-name'])){
-    $eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode(EOL_IMPORT_QUERY_URL . urlencode($_POST['eol-name'])));
+    $url = EOL_IMPORT_QUERY_URL . urlencode($_POST['eol-name']);
+    //$eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
+    $eol_xml = file_get_contents($url);
     if($eol_xml){
       $eol_xml = new SimpleXMLElement($eol_xml);
       $num_results = count($eol_xml->value);
@@ -115,8 +117,10 @@ function eol_import_autocomplete(){
       'data' => drupal_render($form)
     ));
     return;
-  }elseif(arg(1)){
-    $eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode(EOL_IMPORT_QUERY_URL . urlencode(arg(1))));
+  }elseif(arg(1)){    
+    $url = EOL_IMPORT_QUERY_URL . urlencode(arg(1));
+    //$eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
+    $eol_xml = file_get_contents($url);
     if($eol_xml){
       $eol_xml = new SimpleXMLElement($eol_xml);
       $num_results = count($eol_xml->value);
