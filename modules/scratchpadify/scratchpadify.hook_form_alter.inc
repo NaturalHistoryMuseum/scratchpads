@@ -167,10 +167,10 @@ else if($form_id == 'user_profile_form'){
     }
     if($form['type']['#value'] == 'image'){
       $vid = variable_get('image_gallery_nav_vocabulary', 0);
-      if(is_array($form['taxonomy'][$vid]) && (!isset($form['taxonomy'][$vid]['#description']) || trim($form['taxonomy'][$vid]['#description']) == '')){
+      if(is_array($form['taxonomy'][$vid])){
         $vid = variable_get('image_gallery_nav_vocabulary', FALSE);
         if($vid){
-          $form['taxonomy'][$vid]['#description'] = l('Add a new image gallery', 'admin/content/taxonomy/' . $vid . '/add/term') . ".  (" . t('N.B. Any changes you have made on this page will be lost') . ")";
+          $form['taxonomy'][$vid]['#description'] .= '<br/>'.l('Add a new image gallery', 'admin/content/taxonomy/' . $vid . '/add/term') . ".  (" . t('N.B. Any changes you have made on this page will be lost') . ")";
         }
       }
     }else if($form['type']['#value'] == 'biblio'){
