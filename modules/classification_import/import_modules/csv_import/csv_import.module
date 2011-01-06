@@ -262,6 +262,18 @@ function _csv_import_batch_parse_lines_save($lines, &$linenumber, $filetype, $he
                   $line_parts['parent'] = $line_parts['name'];
                 }
                 $line_parts['name'] = $value;
+                // We will try to guess the unit_name[x] fields here also.
+                $unit_names = split(" ", $value);
+                $i = 1;
+                for($i = 1; $i<=4; $i++){
+                  unset($line_parts['unit_name'.$i]);
+                }
+                foreach($unit_names as $unit_name){
+                  if(trim($unit_name)){
+                    $line_parts['unit_name'.$i] = $unit_name;
+                    $i ++;
+                  }
+                }
               }
             } else {
               $line_parts[$headers[$key]] = $value;
