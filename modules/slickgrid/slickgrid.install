@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * Implementation of hook_install(). Installs the current version of the database schema.
+ */
+function slickgrid_install(){
+  // Set the module's weight high so that it runs after other modules.
+  db_query("UPDATE {system} SET weight = 100 WHERE name = 'slickgrid' and type = 'module'");
+  // Create tables.
+  drupal_install_schema('slickgrid');
+}
+
+function slickgrid_uninstall(){
+  drupal_uninstall_schema('slickgrid');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function slickgrid_schema(){
+  $schema['slickgrid'] = array(
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0, 
+        'description' => 'The users UID.'
+      ), 
+      'view_name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'default' => '',
+        'not null' => TRUE,
+        'description' => 'The unique name of the view. May only be alphanumeric characters plus underscores.',
+      ),
+      'settings' => array(
+        'type' => 'text', 
+        'not null' => FALSE, 
+        'size' => 'big', 
+        'description' => 'A serialized array of view settings.'
+      )
+    ), 
+    'primary key' => array(
+      'uid', 
+      'view_name'
+    )
+  );
+  return $schema;
+}
+
+
+

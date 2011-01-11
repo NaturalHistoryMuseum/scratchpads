@@ -1,0 +1,382 @@
+<?php
+/*********************************************************************************************
+ * 
+ * CONSTANTS
+ * 
+ ********************************************************************************************/
+define('SLICKGRID_CALLBACK_PATH', 'slickgrid/callback');
+
+/*********************************************************************************************
+ * 
+ * HOOKS
+ * 
+ ********************************************************************************************/
+/** 
+ * Implementation of hook_menu(). 
+ */
+function slickgrid_menu(){
+  // Menu callbacks
+  $items[SLICKGRID_CALLBACK_PATH . '/%'] = array(
+    'page callback' => 'slickgrid_callback',
+    'page arguments' => array(
+      2
+    ),
+    'access arguments' => array(
+      'access content'
+    ),
+    'type' => MENU_CALLBACK,
+    'file' => 'slickgrid.callbacks.inc'
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_views_api
+ */
+function slickgrid_views_api(){
+  return array(
+    'api' => 2
+  );
+}
+
+/**
+ * Implementation of hook_views_pre_view
+ * Slickgrid handles the paging internally so need to override 
+ * @param object $view 
+ * @return void
+ * @author Ben Scott
+ */
+function slickgrid_views_pre_view(&$view, $display_id){
+  // Is this view a slickgrid view
+  if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
+    // turn off views paging
+    $view->display_handler->set_option('use_pager', FALSE);
+    // Need to have all rows returned for slickgrid to work correctly, so turn off items per page
+    $view->display_handler->set_option('items_per_page', FALSE);
+    // let slickgrid know we want to use it's own paging system by setting it as a view style option		
+    $style_options = $view->display_handler->get_option('style_options');
+    $style_options['pager'] = TRUE;
+    $view->display_handler->set_option('style_options', $style_options);
+  }
+}
+
+/** 
+ * Implementation of hook_theme(). 
+ */
+function slickgrid_theme(){
+  return array(
+    // Display the matrix editor
+    'slickgrid' => array(
+      'arguments' => array(
+        'options' => array(),
+        'columns' => array(),
+        'data' => array(),
+        'filter' => NULL
+      )
+    ),
+    'slickgrid_views_plugin_table' => array(
+      'arguments' => array(
+        'form' => array()
+      )
+    )
+  );
+}
+
+/*********************************************************************************************
+ * 
+ * PREPROCESSOR FUNCTIONS
+ * 
+ ********************************************************************************************/
+/**
+ * Preprocessor for views-view-slickgrid.tpl.php
+ * Repurpose the views result for slickgrid
+ */
+function slickgrid_preprocess_views_view_slickgrid(&$vars){
+	
+	global $user;
+	
+  $view = $vars['view'];
+  // Add settings we'll need client side
+  drupal_add_js(array(
+    'slickgrid' => array(
+      'callback_uri' => url('matrix_editor/callback/' . $view->name),
+      'path' => drupal_get_path('module', 'slickgrid'),
+      'view_name' => $view->name
+    )
+  ));
+  // Get any view settings
+  $view->style_plugin->options['settings'] = slickgrid_get_settings($user->uid, $view->name);
+  
+  // Add some extra slickgrid options here
+  $view->style_plugin->options['enableCellNavigation'] = $view->style_plugin->options['editable'];
+  $view->style_plugin->options['enableAddRow'] = false;
+  $result = $vars['rows'];
+  $handler = $view->style_plugin;
+  $handlers = $view->style_plugin->display->handler->get_handlers('field');
+  $fields = &$view->field;
+  
+  $ordered_columns = array();
+  $unordered_columns = array();
+  
+  // Build the slickgrid columns  
+  foreach($handlers as $field => $handler){
+    if(!$name = $handler->label()){
+      $name = $handler->ui_name();
+    }
+    ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
+    $column = array(
+      'id' => $field,
+      'name' => $name,
+      'field' => $field,
+      'width' => ($view->style_plugin->options['columns'][$field]['width'] ? $view->style_plugin->options['columns'][$field]['width'] : 100),
+      'cssClass' => 'cell-title',
+      'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0),
+      'args' => '',
+    );
+    // Is this a CCK field?
+    if($handler->content_field['widget']['type']){
+      $column['id'] = $handler->content_field['field_name'];
+    }elseif(count($handler->options['vids'])){
+      foreach($handler->options['vids'] as $vid){
+        if($vid){
+          $column['args'] .= 'vids[]=' . $vid . '&';
+        }
+      }
+    }
+    // Is this field being filtered?
+    // If any fields require filtering, we need to set the slickgrid variable to display headers
+    if($view->style_plugin->options['columns'][$field]['filter']){
+      $view->style_plugin->options['showHeaderRow'] = TRUE;
+    }
+    // Is this field sortable?
+    // If any fields are sortable, set style option so we can access it in the js
+    if($view->style_plugin->options['columns'][$field]['sortable']){
+      $view->style_plugin->options['sortable_columns'] = TRUE;
+      $column['sortable'] = 1;
+    }
+    // We need to know the column label for the group by function in JS
+    // Add it to the views plugin options so we can access it efficiantly (otherwise I'll need to loop thru columns array)
+    $view->style_plugin->options['columns'][$field]['label'] = $name;
+    
+		if(is_array($view->style_plugin->options['settings']['ordered_columns']) && is_numeric($ordered_column_position = array_search($field, $view->style_plugin->options['settings']['ordered_columns']))){ // This is an ordered column
+			
+			$ordered_columns[$ordered_column_position] = $column;
+			
+		}else{ // There is no ordering for this column
+			
+			$unordered_columns[] = $column;
+			
+		}
+
+    
+  }
+  
+  ksort($ordered_columns);
+
+  // Merge ordered & unordered columns 
+  // Any unordered columns are added to the end to allow for new columns added through the view
+  $columns = array_merge($ordered_columns, $unordered_columns);
+  
+  // Construct the slickgrid data array	
+  $keys = array_keys($view->field);
+  $data = array();
+  foreach($result as $count => $row){
+    foreach($keys as $id){
+      $data[$count][$id] = $view->field[$id]->theme($row);
+    }
+    $data[$count]['id'] = $row->nid;
+  }
+  $vars['title'] = $view->get_title();
+  $vars['slickgrid'] = theme('slickgrid', $view->style_plugin->options, $columns, $data, $view->name);
+}
+
+/*********************************************************************************************
+ * 
+ * THEME FUNCTIONS
+ * 
+ ********************************************************************************************/
+/**
+ * The main theme function for the slickgrid
+ * @param array $options
+ * @param array $columns
+ * @param array $data
+ * @param array $filter
+ */
+function theme_slickgrid($options, $columns, $data, $name){
+  $output = '';
+  // Add all the CSS & JS
+  _slickgrid_add_files($options);
+  $js = array();
+  $js[] = 'var options = ' . drupal_to_js($options) . ';';
+  $js[] = 'var data = []; data = ' . drupal_to_js($data) . ';';
+  $js[] = 'var columns = ' . _slickgrid_drupal_to_js($columns) . ';';
+  $js[] = '$(function() { var gridObj = new Slickgrid("#slickgrid"); })';
+  drupal_add_js(implode("\n", $js), 'inline');
+  // Add callback path to drupal settings
+  drupal_add_js(array(
+    'Slickgrid' => array(
+    	'CallbackPath' => url(SLICKGRID_CALLBACK_PATH),
+  		'View' => $name
+  	)
+  ), 'setting');
+  // output a placeholder div for the slickgrid
+  $output .= '<div id="slickgrid" style="width:100%;height:' . $options['viewport_height'] . 'px;" class="hideCols hideRows ' . ($options['editable'] ? 'editable' : '') . '"></div>';
+  
+  $output .= '<div id="controls">';
+  if($options['pager']){
+    $output .= '<div id="pager"></div>';
+  }
+  $output .= '<div id="result"></div></div>';
+  if($options['row_delete']){
+    $output .= '<ul id="contextMenu" style="display:none;position:absolute"><li>Delete row</li></ul>';
+  }
+  return $output;
+}
+
+/**
+ * Theme the form for the matrix style plugin
+ */
+function theme_slickgrid_views_plugin_table($form){
+  $output = drupal_render($form['description_markup']);
+  $header = array(
+    t('Field'),
+    t('Width'),
+    t('Display header filter'),
+    t('Sortable')
+  );
+  $rows = array();
+  foreach(element_children($form['columns']) as $id){
+    $row = array();
+    $row[] = drupal_render($form['columns'][$id]['name']);
+    $row[] = drupal_render($form['columns'][$id]['width']);
+    $row[] = drupal_render($form['columns'][$id]['filter']);
+    $row[] = drupal_render($form['columns'][$id]['sortable']);
+    $rows[] = $row;
+  }
+  $output .= theme('table', $header, $rows);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/*********************************************************************************************
+ * 
+ * DAO GET / SETTERS
+ * 
+ ********************************************************************************************/
+
+function slickgrid_set_settings($view_name, $setting, $value){
+  global $user;
+  if($user->uid){
+    $record = new stdClass();
+    $record->uid = $user->uid;
+    $record->view_name = $view_name;
+    if($record->settings = slickgrid_get_settings($user->uid, $view_name)){
+      $update = array(
+        'uid',
+        'view_name'
+      );
+    }else{
+      $update = array();
+    }
+    $record->settings[$setting] = $value;
+    $record->settings = serialize($record->settings);
+    
+    drupal_write_record('slickgrid', $record, $update);
+  }
+}
+
+function slickgrid_get_settings($uid, $view_name, $setting = null){
+  $settings = unserialize(db_result(db_query("SELECT settings FROM {slickgrid} WHERE uid = %d AND view_name = '%s'", $uid, $view_name)));
+  if($setting){
+    return $settings[$setting];
+  }else{
+    return $settings;
+  }
+}
+
+
+/*********************************************************************************************
+ * 
+ * HELPER FUNCTIONS
+ * 
+ ********************************************************************************************/
+function _slickgrid_add_files($options){
+  $path = drupal_get_path('module', 'slickgrid');
+  drupal_add_js($path . '/js/slickgrid/lib/jquery-1.4.3.min.js');
+  // Add slickgrid dependencies
+  drupal_add_js($path . '/js/slickgrid/lib/firebugx.js');
+  drupal_add_js($path . '/js/slickgrid/lib/jquery.event.drag-2.0.min.js');
+  // Add the slickgrid files
+  drupal_add_js($path . '/js/slickgrid/slick.core.js');
+  drupal_add_js($path . '/js/slickgrid/slick.dataview.js');
+  drupal_add_js($path . '/js/slickgrid/slick.grid.js');
+  drupal_add_css($path . '/js/slickgrid/slick.grid.css');
+  // Add jQuery UI files
+  // Uses the UI files included in slickgrid to ensure compatibility 
+  // TODO Make this work with the jquery.ui module
+  drupal_add_js($path . '/js/slickgrid/lib/jquery-ui-1.8.5.custom.min.js');
+  drupal_add_css($path . '/js/slickgrid/css/smoothness/jquery-ui-1.8.5.custom.css');
+  // Depending on options slected for the view, enable slickgrid plugins
+  // Is check box select column enabled?
+  if($options['select_row_checkbox']){
+    drupal_add_js($path . '/js/slickgrid/plugins/slick.checkboxselectcolumn.js');
+    drupal_add_js($path . '/js/slickgrid/plugins/slick.rowselectionmodel.js');
+  }
+  // Depending on options selected, enable controls (pager, show / hide column headers)
+  if($options['pager']){
+    drupal_add_js($path . '/js/slickgrid/controls/slick.pager.js');
+    drupal_add_css($path . '/js/slickgrid/controls/slick.pager.css');
+  }
+  // Can user select which columns to display
+  if($options['select_columns']){
+    drupal_add_js($path . '/js/slickgrid/controls/slick.columnpicker.js');
+    drupal_add_css($path . '/js/slickgrid/controls/slick.columnpicker.css');
+  }
+  // Add groups UI js file - adds buttons to expand / collpase all
+  if($options['grouping_field']){
+    drupal_add_js($path . '/js/slick.groups-ui.js');
+  }
+  // Add bespoke slickgrid js/css
+  drupal_add_js($path . '/js/slickgrid.js');
+  drupal_add_css($path . '/css/slickgrid.css');
+  // TODO - remove
+  drupal_add_css($path . '/js/slickgrid/examples/examples.css');
+}
+
+/** 
+ * Amended version of drupal_to_js()
+ * Convert a php array into a js string, but allowing for function names (not wrapped in "")
+ */
+function _slickgrid_drupal_to_js($elements, $additional_function_names = array()){
+  $function_names = array(
+    'formatter',
+    'validator',
+    'editor',
+    'setValueHandler',
+    'resizable'
+  );
+  if(count($additional_function_names)){
+    $function_names += $additional_function_names;
+  }
+  if(count($elements)){
+    $js_string = '[';
+    foreach($elements as $element){
+      $js_string .= $outer_conjunction . '{';
+      foreach($element as $element_name => $element_value){
+        $js_string .= $inner_conjunction;
+        if(in_array($element_name, $function_names) || is_numeric($element_value) || is_bool($element_value)){
+          $js_string .= $element_name . ': ' . $element_value;
+        }else{
+          $js_string .= $element_name . ': ' . drupal_to_js($element_value);
+        }
+        $inner_conjunction = ', ';
+      } // End of foreach($element)
+      $js_string .= '}';
+      $inner_conjunction = ' ';
+      $outer_conjunction = ', ';
+    }
+    $js_string .= ']';
+    return $js_string;
+  }
+}
+
