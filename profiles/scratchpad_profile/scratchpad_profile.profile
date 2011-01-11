@@ -571,7 +571,7 @@ function scratchpad_profile_profile_tasks_2(){
   $link = array(
     'menu_name' => 'primary-links',
     'weight' => -100,
-    'link_path' => 'http://scratchpads.eu/help',
+    'link_path' => 'admin/advanced_help/scratchpadify_help',
     'link_title' => 'Help'
   );
   menu_link_save($link);
