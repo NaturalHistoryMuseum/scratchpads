@@ -12,23 +12,25 @@ function scratchpadify_jquery_update_install(){
  * Implementation of hook_requirements
  */
 function scratchpadify_jquery_update_requirements($phase){
+  $requirements = array();
+  $t = get_t();
   switch($phase){
     case 'runtime':
       $requirements = array(
         'scratchpadify_jquery_update' => array(
-          'title' => t('Scratchpadify jquery update')
+          'title' => $t('Scratchpadify jquery update')
         )
       );
       if(scratchpadify_jquery_update_tabledrag_is_patched()){
-        $requirements['scratchpadify_jquery_update']['value'] = t('tabledrag.js has been patched - this module can now be uninstalled.');
+        $requirements['scratchpadify_jquery_update']['value'] = $t('tabledrag.js has been patched - this module can now be uninstalled.');
         $requirements['scratchpadify_jquery_update']['severity'] = REQUIREMENT_ERROR;
       }else{
-        $requirements['scratchpadify_jquery_update']['value'] = t('tabledrag.js has not been patched - this module is required.');
+        $requirements['scratchpadify_jquery_update']['value'] = $t('tabledrag.js has not been patched - this module is required.');
         $requirements['scratchpadify_jquery_update']['severity'] = REQUIREMENT_OK;
       }
-      return $requirements;
       break;
   }
+  return $requirements;
 }
 
 
