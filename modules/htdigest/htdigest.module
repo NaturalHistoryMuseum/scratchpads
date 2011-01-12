@@ -4,8 +4,17 @@
  * Implementation of hook_user
  */
 function htdigest_user($op, &$edit, &$account, $category = NULL){
-  if($op == 'update' && $edit['pass']){
-    htdigest_update_user($account, $edit['pass']);
+  switch($op){
+    case 'insert':
+      // Add the blank entry to the htdigest_alias table.
+      db_query('INSERT INTO {htdigest_alias} (uid) VALUES (%d)', $account->uid);      
+    case 'update':
+    case 'login':
+      // Here we will ensure that htdigest_user entries are upto date.
+      if($edit['pass']){
+        htdigest_update_user($account, $edit['pass']);
+      }
+      break;
   }
 }
 
