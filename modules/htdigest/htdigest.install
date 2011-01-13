@@ -19,6 +19,20 @@ function htdigest_uninstall(){
 }
 
 /**
+ * Add the "Allow alias" field to the htdigest_realm table.
+ */
+function htdigest_update_6101(){
+  $ret = array();
+  db_add_field($ret, 'htdigest_realm', 'allow_alias', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'default' => 0
+  ));
+  $ret[] = update_sql('UPDATE {htdigest_realm} SET allow_alias = 1');
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema
  */
 function htdigest_schema(){
@@ -55,6 +69,11 @@ function htdigest_schema(){
           'type' => 'varchar',
           'not null' => TRUE,
           'length' => 255
+        ),
+        'allow_alias' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'default' => 0
         )
       ),
       'primary key' => array(
