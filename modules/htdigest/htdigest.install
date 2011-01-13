@@ -33,6 +33,15 @@ function htdigest_update_6101(){
 }
 
 /**
+ * The allow_alias field should prevent rows from being added to htdigest_user
+ */
+function htdigest_update_6102(){
+  $ret = array();
+  $ret[] = update_sql('DELETE FROM {htdigest_user} WHERE rid IN (SELECT rid FROM {htdigest_realm} WHERE allow_alias = 0) AND aid IN (SELECT aid FROM {htdigest_alias} WHERE alias IS NOT NULL)');
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema
  */
 function htdigest_schema(){

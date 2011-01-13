@@ -30,9 +30,14 @@ function htdigest_update_user($account, $password){
     // Does this account have permission to access this realm, if so, we save
     // the password
     if(user_access('access htdigest realm ' . $row_realm['realm'], $account)){
+      // We add a little extra SQL to the following query if the realm does not
+      // allow aliases
+      if(!$row_realm['allow_alias']){
+        $extra_sql = ' AND alias IS NULL';
+      }
       // We do, so we save (or update).
       // Get the list of names/aliases we need to save
-      $result_aliases = db_query('SELECT COALESCE(alias, name) AS alias, aid FROM users u, htdigest_alias h WHERE h.uid = u.uid AND u.uid = %d', $account->uid);
+      $result_aliases = db_query('SELECT COALESCE(alias, name) AS alias, aid FROM users u, htdigest_alias h WHERE h.uid = u.uid AND u.uid = %d'.$extra_sql, $account->uid);
       while($row_aliases = db_fetch_array($result_aliases)){
         if(db_result(db_query('SELECT COUNT(*) FROM {htdigest_user} WHERE rid = %d AND aid = %d', $row_realm['rid'], $row_aliases['aid']))){
           // Update
@@ -388,7 +393,7 @@ function htdigest_settings_delete_confirm_submit($form, &$form_state){
     db_query("UPDATE {permission} SET perm = REPLACE(perm, '%s', '')", 'access htdigest realm ' . $realm);
     // Delete the realm
     db_query('DELETE FROM {htdigest_realm} WHERE rid = %d', $rid);
-    db_query('DELETE FROM {htdigest_user} WHERE rid = $d', $rid);
+    db_query('DELETE FROM {htdigest_user} WHERE rid = %d', $rid);
   }
   drupal_goto('admin/settings/htdigest');
 }
