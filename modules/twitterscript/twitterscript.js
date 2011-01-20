@@ -1,6 +1,6 @@
 Drupal.twitterscript = new Object;
 Drupal.behaviors.twitterscript = function(context){
-  Drupal.twitterscript.init(context);
+  setInterval(Drupal.twitterscript.init(context), 5000);
 };
 Drupal.twitterscript.init = function(context){
   $('.twitterscript', context).each(function(){
