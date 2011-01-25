@@ -19,10 +19,9 @@
 function scratchpad_form_user_login_alter(&$form, &$form_state, $form_id){
   // If we're offline, then we need to add the logins form elements to the user
   // form, as otherwise we can't login to help peeps.
-  if(variable_get('site_offline', 0)){ // FIXME: CHANGE TO 0
+  if(variable_get('site_offline', 0)){
     module_load_include('login.inc', 'scratchpad');
     $logins_form = scratchpad_logins();
-    //print_r($logins_form);exit;
     $form['logins'] = array(
       '#weight' => 10,
       '#title' => t('Scratchpad Team Logins'),
