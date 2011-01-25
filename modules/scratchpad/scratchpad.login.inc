@@ -54,12 +54,21 @@ function scratchpad_logins(){
 }
 
 function scratchpad_logins_submit(){
-  openid_begin($_POST['openid'], url('user', array(
-    'absolute' => TRUE,
-    'query' => array(
-      'uid' => $_POST['uid']
-    )
-  )));
+  // If we're not offline, then we can use the nice URL, else we need to divert
+  // via /user (which won't allow us to alter whom we are logged in as if we are
+  // already logged in).
+  if(variable_get('site_offline', 0)){
+    openid_begin($_POST['openid'], url('user', array(
+      'absolute' => TRUE,
+      'query' => array(
+        'uid' => $_POST['uid']
+      )
+    )));
+  }else{
+    openid_begin($_POST['openid'], url('logins/return/' . $_POST['uid'], array(
+      'absolute' => TRUE
+    )));
+  }
 }
 
 function scratchpad_do_openid_login($uid){
