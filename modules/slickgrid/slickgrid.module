@@ -87,7 +87,14 @@ function slickgrid_views_pre_view(&$view, $display_id){
         'field' => 'tid'
       );
       $view->set_item($display_id, 'field', 'slickgrid_tid', $tid_field);
-      // TODO - At the moment this just works if no sorts are added. These need to be default sorts
+      
+      // The taxonomy sorts need to come first - so remove the exisitng sorts & re-add them after my own 
+      $existing_sorts = $view->get_items('sort');
+      // Unset all the existing sorts
+      foreach(array_keys($existing_sorts) as $existing_sort_id){
+      	$view->set_item($display_id, 'sort', $existing_sort_id);
+      }
+      
       // Add two sorts to the view - one for the parent term, one for the child
       foreach(array(
         'slickgrid_parent_relationship',
@@ -103,7 +110,12 @@ function slickgrid_views_pre_view(&$view, $display_id){
         );
         $view->set_item($display_id, 'sort', $id, $sort);
       }
-       //      dd($view->get_items('sort'));
+       // Re add the original sorts
+          // Unset all the existing sorts
+      foreach($existing_sorts as $existing_sort_id => $existing_sort){
+      	$view->set_item($display_id, 'sort', $existing_sort_id, $existing_sort);
+      } 
+      
     }
   }
 }
@@ -272,7 +284,8 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     }
     // Is this field sortable?
     // If any fields are sortable, set style option so we can access it in the js
-    if($view->style_plugin->options['columns'][$field]['sortable']){
+    // DO NOT turn on sortable columns if collapsible_taxonomy_field is set - they are not compatible
+    if($view->style_plugin->options['columns'][$field]['sortable'] &! $view->style_plugin->options['collapsible_taxonomy_field']){
       $view->style_plugin->options['sortable_columns'] = TRUE;
       $column['sortable'] = 1;
     }
@@ -309,7 +322,7 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     $data[$count]['id'] = $row->nid;
     // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
     // These are aliased in $row so get the field aliases
-    if($slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
+    if(property_exists($row, $view->field['slickgrid_tid']->field_alias) && $slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
       if($parent = $parents[$row->{$view->field['slickgrid_parent_tid']->field_alias}]){
         // If we can find a parent, set the parent nid & indentation++
         $data[$count]['indent'] = $parent['indent'] + 1;

@@ -46,6 +46,7 @@ var dataView;
             }
             
             // Are sortable columns enabled?
+            // Sortable columns won't work with collapsible taxonomy fields
             if (options['sortable_columns']) {
             
                 initSortableColumns();
