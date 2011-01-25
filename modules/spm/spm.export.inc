@@ -49,13 +49,13 @@ function spm_settings(){
 function spm_export_nodes($nids = FALSE){
   if(!$nids){
     // We need to get all the SPM nodes, so that we can export the data.
-    $results = db_query("SELECT vid FROM {node} WHERE type = 'spm'");
+    $results = db_query("SELECT vid FROM {node} WHERE type = 'spm' AND status > 0");
     while($vid = db_result($results)){
       $vids[] = $vid;
     }
   }else{
     // We need to convert  the array of nids to an array of vids
-    $results = db_query('SELECT vid FROM {node} WHERE nid IN (%s)', implode(",", $nids));
+    $results = db_query('SELECT vid FROM {node} WHERE nid IN (%s) AND status > 0', implode(",", $nids));
     while($vid = db_result($results)){
       $vids[] = $vid;
     }
@@ -68,15 +68,33 @@ function spm_export_nodes($nids = FALSE){
       $spm_array = db_fetch_array(db_query('SELECT * FROM {spm} WHERE vid = %d', $vid));
       $node = node_load(array(
         'vid' => $vid
-      ));
+      ));      
       $xml_array_child = array(
         'element_name' => 'taxon',
         'dc:identifier' => 'scratchpad:nid:' . $node->nid,
         'dc:source' => url('node/' . $node->nid, array(
           'absolute' => TRUE
         )),
-        'dwc:ScientificName' => $node->title
+        'dwc:ScientificName' => $node->title,        
       );
+      $references = array();
+      // Get the tids that this SPM node is tagged with - if there is more than
+      // one, then we can't do anything (not really).
+      if(db_result(db_query('SELECT COUNT(*) FROM {term_node} WHERE vid = %d', $vid)) == 1){
+        $tid = db_result(db_query('SELECT tid FROM {term_node} WHERE vid = %d', $vid));
+        // Get the biblio nodes associated with this taxon
+        $results = db_query("SELECT n.vid FROM {node} n, {term_node} t WHERE t.vid = n.vid AND type = 'biblio' AND tid = %d", $tid);
+        while($row = db_fetch_array($results)){
+          $biblio_node = node_load(array(
+            'vid' => $row['vid']
+          ));
+          $xml_array_child[] = array(
+            'element_name' => 'reference',
+            'attributes' => array('doi' => $biblio_node->biblio_doi),
+            $biblio_node->title
+          );
+        }
+      }
       unset($spm_array['nid']);
       unset($spm_array['vid']);
       foreach($spm_array as $key => $value){
@@ -116,6 +134,41 @@ function spm_export_nodes($nids = FALSE){
               htmlentities($value)
             )
           );
+        }
+      }
+      // Get the tids that this SPM node is tagged with - if there is more than
+      // one, then we can't do anything (not really).
+      if(db_result(db_query('SELECT COUNT(*) FROM {term_node} WHERE vid = %d', $vid)) == 1){
+        $tid = db_result(db_query('SELECT tid FROM {term_node} WHERE vid = %d', $vid));
+        // Do the image nodes first
+        $results = db_query("SELECT n.vid FROM {node} n, {term_node} t WHERE t.vid = n.vid AND type = 'image' AND tid = %d", $tid);
+        while($row = db_fetch_array($results)){
+          $node = node_load(array(
+            'vid' => $row['vid']
+          ));
+          foreach($node->field_imagefield as $image){
+            $xml_array_child[] = array(
+              'element_name' => 'dataObject',
+              'dataType' => 'http://purl.org/dc/dcmitype/StillImage',
+              'mediaURL' => url(NULL, array(
+                'absolute' => TRUE
+              )) . $image['filepath'],
+              'agent' => array(
+                'attributes' => array(
+                  'role' => 'author'
+                ),
+                url('user/' . $node->uid, array(
+                  'absolute' => TRUE
+                ))
+              ),
+              'dcterms:created' => $node->created,
+              'dcterms:modified' => $node->changed,
+              'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
+              'dc:source' => url('node/' . $node->nid, array(
+                'absolute' => TRUE
+              ))
+            );
+          }
         }
       }
       $xml_array[] = $xml_array_child;
