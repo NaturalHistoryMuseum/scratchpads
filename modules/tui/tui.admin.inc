@@ -97,7 +97,7 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
   module_load_include('admin.inc', 'taxonomy');
   drupal_set_title(t('Editing %vocabulary', array(
     '%vocabulary' => $vocabulary->name
-  )) . '<span id="tui-name-editing"></span>');
+  )));
   return '<div id="tui">
   <div id="tui-tree">
     <div id="tui-tree-container">
@@ -138,6 +138,9 @@ function theme_tui_page($taxonomy_tree, $vocabulary, $all_tids){
     </div> -->
   </div>
   <div id="tui-form">
+    <div>
+      <h2 id="tui-name-editing"></h2>
+    </div>
     <div id="tui-form-container">
       <div id="tui-form-noform">' . tui_help('admin/content/taxonomy/edit/tui', array()) . '</div>
       <div class="hidden">' . drupal_get_form('taxonomy_form_term', $vocabulary, array()) . '</div>
