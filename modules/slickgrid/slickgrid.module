@@ -47,6 +47,7 @@ function slickgrid_views_api(){
  * @author Ben Scott
  */
 function slickgrid_views_pre_view(&$view, $display_id){
+  //  dd($view);
   // Is this view a slickgrid view
   if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
     // turn off views paging
@@ -57,6 +58,53 @@ function slickgrid_views_pre_view(&$view, $display_id){
     $style_options = $view->display_handler->get_option('style_options');
     $style_options['pager'] = TRUE;
     $view->display_handler->set_option('style_options', $style_options);
+    // If this is using a collapsible taxonomy field, we need to ensure the nodes are in the right order, and the parent TID is available
+    // Much faster to do it now than in a preprocesser after the view data has been constructed
+    if($style_options['collapsible_taxonomy_field']){
+      // Define the parent relationship 
+      $parent_relationship = array(
+        'label' => t('Slickgrid parent'),
+        'required' => 0,
+        'id' => 'parent',
+        'table' => 'term_hierarchy',
+        'field' => 'parent'
+      );
+      $view->set_item($display_id, 'relationship', 'slickgrid_parent_relationship', $parent_relationship);
+      // Ensure the tid of the parent term is available but hidden from the view
+      $parent_tid_field = array(
+        'exclude' => 1,
+        'id' => 'slickgrid_parent_tid',
+        'table' => 'term_data',
+        'field' => 'tid',
+        'relationship' => 'slickgrid_parent_relationship'
+      );
+      $view->set_item($display_id, 'field', 'slickgrid_parent_tid', $parent_tid_field);
+      // Ensure the tid of the actual term is available but hidden from the view
+      $tid_field = array(
+        'exclude' => 1,
+        'id' => 'slickgrid_tid',
+        'table' => 'term_data',
+        'field' => 'tid'
+      );
+      $view->set_item($display_id, 'field', 'slickgrid_tid', $tid_field);
+      // TODO - At the moment this just works if no sorts are added. These need to be default sorts
+      // Add two sorts to the view - one for the parent term, one for the child
+      foreach(array(
+        'slickgrid_parent_relationship',
+        'none'
+      ) as $relationship){
+        $id = 'slickgrid_sort_' . $relationship;
+        $sort = array(
+          'order' => 'ASC',
+          'id' => $relationship,
+          'table' => 'term_data',
+          'field' => 'weight',
+          'relationship' => $relationship
+        );
+        $view->set_item($display_id, 'sort', $id, $sort);
+      }
+//      dd($view->get_items('sort'));
+    }
   }
 }
 
@@ -70,8 +118,7 @@ function slickgrid_theme(){
       'arguments' => array(
         'options' => array(),
         'columns' => array(),
-        'data' => array(),
-        'filter' => NULL
+        'data' => array()
       )
     ),
     'slickgrid_views_plugin_table' => array(
@@ -80,6 +127,51 @@ function slickgrid_theme(){
       )
     )
   );
+}
+
+/**
+ * Implementation of hook_slickgrid_plugins().
+ */
+function slickgrid_slickgrid_plugins(){
+  $path = drupal_get_path('module', 'slickgrid');
+  $plugins = array(
+    'TextCellEditor' => array(
+      'description' => t('Text cell'),
+      'file' => $path . '/js/slick.editors.js',
+      'field_type' => array(
+        'text_textfield',
+        'text_textarea',
+        'node_title'
+      ), // Need to only allow for certain field types.
+      'plugin_type' => 'editor'
+    ),
+    'LongTextCellEditor' => array(
+      'description' => t('Simple textarea'),
+      'file' => $path . '/js/slick.editors.js',
+      'field_type' => array(
+        'text_textarea',
+        'node_revisions_body'
+      ),
+      'plugin_type' => 'editor'
+    ),
+    'nodeFormEditor' => array(
+      'description' => t('Popup node form'),
+      'file' => $path . '/js/slick.editors.js',
+      'plugin_type' => 'editor'
+    ),
+    'requiredFieldValidator' => array(
+      'description' => t('Required field'),
+      'file' => $path . '/js/slick.validators.js',
+      'plugin_type' => 'validator'
+    ), //    	'field_type' => array() // Works for all fields types
+    // Validators
+    'textFilter' => array(
+      'description' => t('Text filter'),
+      'file' => $path . '/js/slick.filters.js',
+      'plugin_type' => 'filter'
+    ) //    	'field_type' => array() // Works for all fields types
+  );
+  return $plugins;
 }
 
 /*********************************************************************************************
@@ -92,9 +184,7 @@ function slickgrid_theme(){
  * Repurpose the views result for slickgrid
  */
 function slickgrid_preprocess_views_view_slickgrid(&$vars){
-	
-	global $user;
-	
+  global $user;
   $view = $vars['view'];
   // Add settings we'll need client side
   drupal_add_js(array(
@@ -106,32 +196,44 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   ));
   // Get any view settings
   $view->style_plugin->options['settings'] = slickgrid_get_settings($user->uid, $view->name);
-  
   // Add some extra slickgrid options here
   $view->style_plugin->options['enableCellNavigation'] = $view->style_plugin->options['editable'];
   $view->style_plugin->options['enableAddRow'] = false;
+  // Overide view height option if it's been set by user
+  if(is_numeric($view->style_plugin->options['settings']['viewport_height'])){
+    $view->style_plugin->options['viewport_height'] = $view->style_plugin->options['settings']['viewport_height'];
+  }
   $result = $vars['rows'];
   $handler = $view->style_plugin;
   $handlers = $view->style_plugin->display->handler->get_handlers('field');
   $fields = &$view->field;
-  
   $ordered_columns = array();
   $unordered_columns = array();
-  
+  $field_aliases = array(); // Array mapping aliases to their field names.
   // Build the slickgrid columns  
   foreach($handlers as $field => $handler){
     if(!$name = $handler->label()){
       $name = $handler->ui_name();
     }
     ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
+    // Get the field alias - needed when mapping $data at the end of this function
+    $field_aliases[$id] = $handler->field_alias;
+    // Get the column width
+    if($view->style_plugin->options['settings']['column_width'][$field]){ // UI column resized
+      $column_width = $view->style_plugin->options['settings']['column_width'][$field];
+    }elseif($view->style_plugin->options['columns'][$field]['width']){ // width set from within the view
+      $column_width = $view->style_plugin->options['columns'][$field]['width'];
+    }else{
+      $column_width = 100; // default width for all unset columns
+    }
     $column = array(
       'id' => $field,
       'name' => $name,
       'field' => $field,
-      'width' => ($view->style_plugin->options['columns'][$field]['width'] ? $view->style_plugin->options['columns'][$field]['width'] : 100),
+      'width' => $column_width,
       'cssClass' => 'cell-title',
       'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0),
-      'args' => '',
+      'args' => ''
     );
     // Is this a CCK field?
     if($handler->content_field['widget']['type']){
@@ -144,9 +246,26 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       }
     }
     // Is this field being filtered?
-    // If any fields require filtering, we need to set the slickgrid variable to display headers
+    // If any fields require filtering, we need to let the JS know
     if($view->style_plugin->options['columns'][$field]['filter']){
-      $view->style_plugin->options['showHeaderRow'] = TRUE;
+      $view->style_plugin->options['has_filters'] = TRUE;
+      // Add a header row for the filters
+      // Don't add a headerRow if the filter is set on a taxonomy filter field - this won't require a header row
+      if($view->style_plugin->options['collapsible_taxonomy_field'] != $field){
+        $view->style_plugin->options['showHeaderRow'] = TRUE;
+      }
+    }
+    // Loop through all the plugin types and see if it's been set for this column
+    foreach(array_keys(slickgrid_get_plugin_types()) as $plugin_type){
+      // Is there an plugin defined for this column
+      if($view->style_plugin->options['columns'][$field][$plugin_type]){
+        $column[$plugin_type] = $view->style_plugin->options['columns'][$field][$plugin_type];
+        // If just one column is editable, turn on editable & cell navigation for the grid
+        if($plugin_type == 'editor'){
+          $view->style_plugin->options['editable'] = TRUE;
+          $view->style_plugin->options['enableCellNavigation'] = TRUE;
+        }
+      }
     }
     // Is this field sortable?
     // If any fields are sortable, set style option so we can access it in the js
@@ -154,38 +273,56 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       $view->style_plugin->options['sortable_columns'] = TRUE;
       $column['sortable'] = 1;
     }
+    // Is this using the collapsible tree formatter plugin?
+    if($view->style_plugin->options['collapsible_taxonomy_field'] == $field){
+      // Set the filters & formatters for the collapsible field column
+      $view->style_plugin->options['columns'][$field]['filter'] = $column['filter'] = 'collapsibleFilter';
+      $view->style_plugin->options['columns'][$field]['formatter'] = $column['formatter'] = 'collapsibleFormatter';
+    }
     // We need to know the column label for the group by function in JS
     // Add it to the views plugin options so we can access it efficiantly (otherwise I'll need to loop thru columns array)
     $view->style_plugin->options['columns'][$field]['label'] = $name;
-    
-		if(is_array($view->style_plugin->options['settings']['ordered_columns']) && is_numeric($ordered_column_position = array_search($field, $view->style_plugin->options['settings']['ordered_columns']))){ // This is an ordered column
-			
-			$ordered_columns[$ordered_column_position] = $column;
-			
-		}else{ // There is no ordering for this column
-			
-			$unordered_columns[] = $column;
-			
-		}
-
-    
+    if(is_array($view->style_plugin->options['settings']['ordered_columns']) && is_numeric($ordered_column_position = array_search($field, $view->style_plugin->options['settings']['ordered_columns']))){ // This is an ordered column
+      $ordered_columns[$ordered_column_position] = $column;
+    }else{ // There is no ordering for this column
+      $unordered_columns[] = $column;
+    }
   }
-  
   ksort($ordered_columns);
-
   // Merge ordered & unordered columns 
   // Any unordered columns are added to the end to allow for new columns added through the view
   $columns = array_merge($ordered_columns, $unordered_columns);
-  
   // Construct the slickgrid data array	
   $keys = array_keys($view->field);
   $data = array();
+  $parents = array(); // array of tid => array(nid => nid, indent => indent) so we can retrive the nid & indentation of a parent node
   foreach($result as $count => $row){
+    // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
+    // These are aliased in $row so get the field aliases
+    if($slickgrid_tid = $row->{$field_aliases['slickgrid_tid']}){
+      if($parent = $parents[$row->{$field_aliases['slickgrid_parent_tid']}]){
+        // If we can find a parent, set the parent nid & indentation++
+        $data[$count]['indent'] = $parent['indent'] + 1;
+        $data[$count]['parent'] = $parent['nid'];
+      }else{
+        // Otherwise set indent & parent to 0 - this breaks if left blank
+        $data[$count]['indent'] = 0;
+        $data[$count]['parent'] = 0;
+      }
+      // Store the indent & nid so then can be used to calculate child term indentation 
+      $parents[$slickgrid_tid] = array(
+        'nid' => $row->nid,
+        'indent' => $data[$count]['indent']
+      );
+    }
     foreach($keys as $id){
       $data[$count][$id] = $view->field[$id]->theme($row);
     }
     $data[$count]['id'] = $row->nid;
   }
+  
+  dd($data);
+  
   $vars['title'] = $view->get_title();
   $vars['slickgrid'] = theme('slickgrid', $view->style_plugin->options, $columns, $data, $view->name);
 }
@@ -200,34 +337,26 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
  * @param array $options
  * @param array $columns
  * @param array $data
- * @param array $filter
+ * @param array $view_name
  */
-function theme_slickgrid($options, $columns, $data, $name){
+function theme_slickgrid($options, $columns, $data, $view_name){
   $output = '';
   // Add all the CSS & JS
-  _slickgrid_add_files($options);
+  _slickgrid_add_files($options, $columns);
   $js = array();
   $js[] = 'var options = ' . drupal_to_js($options) . ';';
   $js[] = 'var data = []; data = ' . drupal_to_js($data) . ';';
   $js[] = 'var columns = ' . _slickgrid_drupal_to_js($columns) . ';';
-  $js[] = '$(function() { var gridObj = new Slickgrid("#slickgrid"); })';
+  $js[] = '$(function() { var gridObj = new Slickgrid("#slickgrid", "' . $view_name . '", "' . url(SLICKGRID_CALLBACK_PATH) . '"); })';
   drupal_add_js(implode("\n", $js), 'inline');
-  // Add callback path to drupal settings
-  drupal_add_js(array(
-    'Slickgrid' => array(
-    	'CallbackPath' => url(SLICKGRID_CALLBACK_PATH),
-  		'View' => $name
-  	)
-  ), 'setting');
   // output a placeholder div for the slickgrid
   $output .= '<div id="slickgrid" style="width:100%;height:' . $options['viewport_height'] . 'px;" class="hideCols hideRows ' . ($options['editable'] ? 'editable' : '') . '"></div>';
-  
   $output .= '<div id="controls">';
   if($options['pager']){
     $output .= '<div id="pager"></div>';
   }
-  $output .= '<div id="result"></div></div>';
-  if($options['row_delete']){
+  $output .= '<div id="slickgrid-status"></div></div>';
+  if($options['delete_nodes']){
     $output .= '<ul id="contextMenu" style="display:none;position:absolute"><li>Delete row</li></ul>';
   }
   return $output;
@@ -241,16 +370,19 @@ function theme_slickgrid_views_plugin_table($form){
   $header = array(
     t('Field'),
     t('Width'),
-    t('Display header filter'),
     t('Sortable')
   );
   $rows = array();
+  $plugin_types = slickgrid_get_plugin_types();
+  $header += $plugin_types;
   foreach(element_children($form['columns']) as $id){
     $row = array();
     $row[] = drupal_render($form['columns'][$id]['name']);
     $row[] = drupal_render($form['columns'][$id]['width']);
-    $row[] = drupal_render($form['columns'][$id]['filter']);
     $row[] = drupal_render($form['columns'][$id]['sortable']);
+    foreach(array_keys($plugin_types) as $plugin_type){
+      $row[] = drupal_render($form['columns'][$id][$plugin_type]);
+    }
     $rows[] = $row;
   }
   $output .= theme('table', $header, $rows);
@@ -263,7 +395,6 @@ function theme_slickgrid_views_plugin_table($form){
  * DAO GET / SETTERS
  * 
  ********************************************************************************************/
-
 function slickgrid_set_settings($view_name, $setting, $value){
   global $user;
   if($user->uid){
@@ -280,7 +411,6 @@ function slickgrid_set_settings($view_name, $setting, $value){
     }
     $record->settings[$setting] = $value;
     $record->settings = serialize($record->settings);
-    
     drupal_write_record('slickgrid', $record, $update);
   }
 }
@@ -294,13 +424,12 @@ function slickgrid_get_settings($uid, $view_name, $setting = null){
   }
 }
 
-
 /*********************************************************************************************
  * 
  * HELPER FUNCTIONS
  * 
  ********************************************************************************************/
-function _slickgrid_add_files($options){
+function _slickgrid_add_files($options, $columns){
   $path = drupal_get_path('module', 'slickgrid');
   drupal_add_js($path . '/js/slickgrid/lib/jquery-1.4.3.min.js');
   // Add slickgrid dependencies
@@ -336,11 +465,29 @@ function _slickgrid_add_files($options){
   if($options['grouping_field']){
     drupal_add_js($path . '/js/slick.groups-ui.js');
   }
+  if($options['collapsible_taxonomy_field']){
+    drupal_add_js($path . '/js/slick.collapsible.js');
+  }
+  $slickgrid_plugins = slickgrid_get_plugins();
+  // Need to add all the files associated with plugins
+  // Loop through all the columns
+  foreach($columns as $column){
+    foreach(array_keys(slickgrid_get_plugin_types()) as $plugin_type){
+      // Does this column have this type of plugin defined? And is there as JS file?
+      if(isset($column[$plugin_type]) && isset($slickgrid_plugins[$column[$plugin_type]]['file'])){
+        drupal_add_js($slickgrid_plugins[$column[$plugin_type]]['file']);
+      }
+    }
+  }
   // Add bespoke slickgrid js/css
   drupal_add_js($path . '/js/slickgrid.js');
   drupal_add_css($path . '/css/slickgrid.css');
   // TODO - remove
   drupal_add_css($path . '/js/slickgrid/examples/examples.css');
+  // Add beautytips if the module's available
+  if(module_exists(beautytips)){
+    beautytips_add_beautytips();
+  }
 }
 
 /** 
@@ -379,4 +526,113 @@ function _slickgrid_drupal_to_js($elements, $additional_function_names = array()
     return $js_string;
   }
 }
+
+/**
+ * Discover all action functions by invoking hook_action_info().
+ *
+ * @code
+ * mymodule_action_info() {
+ * return array(
+ * 'mymodule_functiondescription_action' => array(
+ * 'type' => 'node',
+ * 'description' => t('Save node'),
+ * 'configurable' => FALSE,
+ * 'hooks' => array(
+ * 'nodeapi' => array('delete', 'insert', 'update', 'view'),
+ * 'comment' => array('delete', 'insert', 'update', 'view'),
+ * )
+ * )
+ * );
+ * }
+ * @endcode
+ *
+ * The description is used in presenting possible actions to the user for
+ * configuration. The type is used to present these actions in a logical
+ * grouping and to denote context. Some types are 'node', 'user', 'comment',
+ * and 'system'. If an action is configurable it will provide form,
+ * validation and submission functions. The hooks the action supports
+ * are declared in the 'hooks' array.
+ *
+ * @param $reset
+ * Reset the action info static cache.
+ *
+ * @return
+ * An associative array keyed on function name. The value of each key is
+ * an array containing information about the action, such as type of
+ * action and description of the action, e.g.,
+ *
+ * @code
+ * $actions['node_publish_action'] = array(
+ * 'type' => 'node',
+ * 'description' => t('Publish post'),
+ * 'configurable' => FALSE,
+ * 'hooks' => array(
+ * 'nodeapi' => array('presave', 'insert', 'update', 'view'),
+ * 'comment' => array('delete', 'insert', 'update', 'view'),
+ * ),
+ * );
+ * @endcode
+ */
+function slickgrid_plugins_list($reset = FALSE){
+  static $plugins;
+  if(!isset($plugins) || $reset){
+    $editors = module_invoke_all('slickgrid_plugins');
+    drupal_alter('slickgrid_plugins', $editors);
+  }
+  return (array)$editors;
+}
+
+/**
+ * 
+ * Enter description here ...
+ * @param array $filters
+ * Array of filters to filter list of plugins 
+ * eg: array('plugin_type' => 'editor' will return a list of all editors 
+ */
+function slickgrid_get_plugins($filters){
+  // Get a list of all available plugins 
+  $plugins = slickgrid_plugins_list();
+  // If they need to be filtered...
+  if(is_array($filters)){
+    $plugins = slickgrid_filter_plugins($plugins, $filters);
+  }
+  return $plugins;
+}
+
+/**
+ * 
+ * Return all plugins matching the filters
+ * @param array $plugins
+ * @param array $filters
+ */
+function slickgrid_filter_plugins($plugins, $filters){
+  // Loop through all of the plugins
+  foreach($plugins as $plugin_type => $plugin){
+    // Loop through the plugins
+    foreach($filters as $property => $value){
+      // If the plugin has a property that doesn't match the filter...	
+      if((is_array($plugin[$property]) && !in_array($value, $plugin[$property])) || (is_string($plugin[$property]) && $plugin[$property] != $value)){
+        // Remove the plugin
+        unset($plugins[$plugin_type]);
+        // And move onto the next plugin
+        break;
+      }
+    }
+  }
+  return $plugins;
+}
+
+/**
+ * 
+ * Array of all allowed plugin types
+ */
+function slickgrid_get_plugin_types(){
+  return array(
+    'formatter' => t('Formatter'),
+    'editor' => t('Editor'),
+    'validator' => t('Validator'),
+    'filter' => t('Filter')
+  );
+}
+
 

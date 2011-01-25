@@ -17,7 +17,7 @@ function slickgrid_callback_delete(){
 	
 	$node = node_load($_POST['nid']);
 	
-	// node_delete() has access check
+	// node_delete() has access check so it's safe just to try and delete the node
 	node_delete($node->nid);
 	
 	return array(
@@ -33,7 +33,7 @@ function slickgrid_callback_delete(){
  */
 function slickgrid_callback_settings(){
 	
-	slickgrid_set_settings($_POST['view'], $_POST['setting'], $_POST['columns']);
+	slickgrid_set_settings($_POST['view'], $_POST['setting'], $_POST['value']);
 
 		return array(
       'status' => TRUE

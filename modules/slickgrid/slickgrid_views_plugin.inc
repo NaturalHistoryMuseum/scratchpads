@@ -100,12 +100,16 @@ class slickgrid_views_plugin extends views_plugin_style{
     $field_names = $this->display->handler->get_field_labels();
     if(empty($columns)){
       $form['error_markup'] = array(
-        '#value' => t('You need at least one field before you can configure your table settings'),
+        '#value' => t('You need at least one field before you can configure your slickgrid settings'),
         '#prefix' => '<div class="error form-item description">',
         '#suffix' => '</div>'
       );
       return;
     }
+    // Array of node term fields that can be selected to be a collapsible taxonomy 
+    $collapsible_taxonomy_options = array(
+      '' => t('<None>')
+    );
     // Create an array of allowed columns from the data we know:
     foreach($columns as $field => $column){
       // Field for setting a column's width
@@ -114,12 +118,6 @@ class slickgrid_views_plugin extends views_plugin_style{
         '#default_value' => ($this->options['columns'][$field]['width'] ? $this->options['columns'][$field]['width'] : 50),
         '#size' => 10,
         '#maxlength' => 10
-      );
-      // Field for setting a column's width
-      $form['columns'][$field]['filter'] = array(
-        '#type' => 'checkbox',
-        '#default_value' => $this->options['columns'][$field]['filter'],
-        '#size' => 10
       );
       // Can this field be sorted?
       if($handlers[$field]->click_sortable()){
@@ -130,6 +128,50 @@ class slickgrid_views_plugin extends views_plugin_style{
           '#size' => 10
         );
       }
+      $filters = array();
+      // Is this a CCK field?
+      // If it is we know its editable
+      if(isset($handlers[$field]->content_field['widget']['type'])){
+        $filters['field_type'] = $handlers[$field]->content_field['widget']['type'];
+      }else{
+        // Is it's not a CCK field, make a field_type from {table}_{field}
+        // We can then define editors for node fields (eg: node_title) and any other fields
+        $filters['field_type'] = $handlers[$field]->table . '_' . $handlers[$field]->real_field;
+      }
+      // Is this a term node type?
+      if($filters['field_type'] == 'term_node_tid'){
+        // If it is, this can be provided as "collapsible taxonomy" option
+        $collapsible_taxonomy_options[$field] = $field_names[$field];
+      }
+      foreach(slickgrid_get_plugin_types() as $plugin_type => $plugin_label){
+        // Ensure NID & node type can never be edited, even for generic editors
+        // Is this a locked field?
+        if($this->is_locked($filters['field_type']) && ($plugin_type == 'editor' || $plugin_type == 'validator')){
+          // Field locked so do not try and find an editor
+          // Add HTML warning & continue() to next to plugin type
+          $form['columns'][$field][$plugin_type] = array(
+            '#value' => t('This field cannot be edited.')
+          );
+          continue;
+        }
+        $filters['plugin_type'] = $plugin_type;
+        $plugins = slickgrid_get_plugins($filters);
+        // Are there plugins we can use for this field?
+        if(count($plugins)){
+          $form['columns'][$field][$plugin_type] = array(
+            '#type' => 'select',
+            '#default_value' => $this->options['columns'][$field][$plugin_type],
+            '#options' => $this->get_plugin_options($plugins)
+          );
+        }else{
+          $form['columns'][$field][$plugin_type] = array(
+            '#value' => t('No %plugin_label plugins for this field.', array(
+              '%plugin_label' => strtolower($plugin_label)
+            ))
+          );
+        }
+      }
+      // Field for setting if a column is editable
       // markup for the field name
       $form['columns'][$field]['name'] = array(
         '#value' => $field_names[$field]
@@ -156,12 +198,16 @@ class slickgrid_views_plugin extends views_plugin_style{
           '#default_value' => !empty($this->options['collapse_groups_by_default'])
         );
       }
+      if(count($collapsible_taxonomy_options) > 1){ // Default value of <none> so needs to be greater than 1 if there's actually any fields
+        $form['collapsible_taxonomy_field'] = array(
+          '#type' => 'select',
+          '#title' => t('Collapsible taxonomy field'),
+          '#options' => $collapsible_taxonomy_options,
+          '#default_value' => $this->options['collapsible_taxonomy_field'],
+          '#description' => t('You may optionally specify a collapsible taxonomy field. Setting this will add a taxonomy parent relationship & ordering to the view.')
+        );
+      }
     }
-    $form['editable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Editable'),
-      '#default_value' => !empty($this->options['editable'])
-    );
     $form['enableColumnResize'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable resizing columns'),
@@ -172,28 +218,34 @@ class slickgrid_views_plugin extends views_plugin_style{
       '#title' => t('Enable reordering columns'),
       '#default_value' => !empty($this->options['enableColumnReorder'])
     );
-    $form['asyncEditorLoading'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('A sync editor loading'),
-      '#default_value' => !empty($this->options['asyncEditorLoading'])
-    );
-    $form['select_row_checkbox'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Row selection'),
-      '#description' => t('Add a checkbox to select rows.'),
-      '#default_value' => !empty($this->options['select_row_checkbox'])
-    );
     $form['select_columns'] = array(
       '#type' => 'checkbox',
       '#title' => t('Column visibility'),
       '#description' => t('Allow users to show &amp; hide columns'),
       '#default_value' => !empty($this->options['select_columns'])
     );
-    $form['row_delete'] = array(
-      '#title' => t('Delete rows'),
-      '#description' => t('Allow users to delete rows'),
+    $form['delete_nodes'] = array(
+      '#title' => t('Delete nodes'),
+      '#description' => t('Allow users to delete nodes from within the slickgrid.'),
       '#type' => 'checkbox',
-      '#default_value' => $this->options['row_delete']
+      '#default_value' => $this->options['delete_nodes']
+    );
+    $form['asyncEditorLoading'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('A sync editor loading'),
+      '#default_value' => !empty($this->options['asyncEditorLoading'])
+    );
+    $form['autoEdit'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Auto edit'),
+      '#default_value' => !empty($this->options['autoEdit']),
+      '#description' => t('Activate edit on entry to cell, otherwise double click to edit.')
+    );
+    $form['select_row_checkbox'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Row selection'),
+      '#description' => t('Add a checkbox to select rows.'),
+      '#default_value' => !empty($this->options['select_row_checkbox'])
     );
     $form['viewport_height'] = array(
       '#title' => t('Viewport height'),
@@ -215,6 +267,29 @@ class slickgrid_views_plugin extends views_plugin_style{
   function query(){
     // We always want the node type to be returned
     $this->view->query->add_field('node', 'type');
+  }
+
+  // Is this field editable? Lock any fields which may break the editor
+  function is_locked($field_type){
+    // Is the real field id a locked field?
+    // Add the real_field value into the array to lock more fields
+    // term_data_tid & term_data_name do not have VIDs defined, so cannot be edited
+    return (in_array($field_type, array(
+      'node_nid',
+      'node_type',
+      'term_data_name',
+      'term_data_tid'
+    )));
+  }
+
+  // Get a FAPI select list optiuons from an array of plugins
+  function get_plugin_options($plugins){
+    $options = array(
+      '' => 'None'
+    );
+    // Just want the plugin description in the option field
+    // Use array_map and anonymous funciton to retrieve the description
+    return $options + (array)array_map(create_function('$plugins', 'return $plugins["description"];'), $plugins);
   }
 }
 ?>
