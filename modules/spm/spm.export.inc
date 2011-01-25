@@ -150,9 +150,7 @@ function spm_export_nodes($nids = FALSE){
             $xml_array_child[] = array(
               'element_name' => 'dataObject',
               'dataType' => 'http://purl.org/dc/dcmitype/StillImage',
-              'mediaURL' => url(NULL, array(
-                'absolute' => TRUE
-              )) . $image['filepath'],
+
               'agent' => array(
                 'attributes' => array(
                   'role' => 'author'
@@ -161,12 +159,21 @@ function spm_export_nodes($nids = FALSE){
                   'absolute' => TRUE
                 ))
               ),
+
               'dcterms:created' => $node->created,
+
               'dcterms:modified' => $node->changed,
+
               'license' => 'http://creativecommons.org/licenses/by-nc/3.0/',
+
               'dc:source' => url('node/' . $node->nid, array(
                 'absolute' => TRUE
               ))
+
+              'mediaURL' => url(NULL, array(
+                'absolute' => TRUE
+              )) . $image['filepath'],
+
             );
           }
         }
