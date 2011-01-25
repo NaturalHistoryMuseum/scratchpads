@@ -103,7 +103,7 @@ function slickgrid_views_pre_view(&$view, $display_id){
         );
         $view->set_item($display_id, 'sort', $id, $sort);
       }
-//      dd($view->get_items('sort'));
+       //      dd($view->get_items('sort'));
     }
   }
 }
@@ -209,15 +209,18 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   $fields = &$view->field;
   $ordered_columns = array();
   $unordered_columns = array();
-  $field_aliases = array(); // Array mapping aliases to their field names.
   // Build the slickgrid columns  
   foreach($handlers as $field => $handler){
+  	
+  	// If this field is ecluded from the display, continue to the next one
+  	if($handler->options['exclude']){
+  		continue;
+  	}
+  	
     if(!$name = $handler->label()){
       $name = $handler->ui_name();
     }
     ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
-    // Get the field alias - needed when mapping $data at the end of this function
-    $field_aliases[$id] = $handler->field_alias;
     // Get the column width
     if($view->style_plugin->options['settings']['column_width'][$field]){ // UI column resized
       $column_width = $view->style_plugin->options['settings']['column_width'][$field];
@@ -297,10 +300,17 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   $data = array();
   $parents = array(); // array of tid => array(nid => nid, indent => indent) so we can retrive the nid & indentation of a parent node
   foreach($result as $count => $row){
+    // Add the data fields
+    foreach($keys as $id){
+      if(!($view->field[$id]->options['exclude'])){
+        $data[$count][$id] = $view->field[$id]->theme($row);
+      }
+    }
+    $data[$count]['id'] = $row->nid;
     // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
     // These are aliased in $row so get the field aliases
-    if($slickgrid_tid = $row->{$field_aliases['slickgrid_tid']}){
-      if($parent = $parents[$row->{$field_aliases['slickgrid_parent_tid']}]){
+    if($slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
+      if($parent = $parents[$row->{$view->field['slickgrid_parent_tid']->field_alias}]){
         // If we can find a parent, set the parent nid & indentation++
         $data[$count]['indent'] = $parent['indent'] + 1;
         $data[$count]['parent'] = $parent['nid'];
@@ -315,14 +325,7 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
         'indent' => $data[$count]['indent']
       );
     }
-    foreach($keys as $id){
-      $data[$count][$id] = $view->field[$id]->theme($row);
-    }
-    $data[$count]['id'] = $row->nid;
   }
-  
-  dd($data);
-  
   $vars['title'] = $view->get_title();
   $vars['slickgrid'] = theme('slickgrid', $view->style_plugin->options, $columns, $data, $view->name);
 }
