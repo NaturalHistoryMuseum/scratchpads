@@ -76,6 +76,18 @@ function scratchpad_menu(){
       'type' => MENU_CALLBACK,
       'file' => 'scratchpad.login.inc'
     ),
+    'logins/return/%' => array(
+      'title' => t('Scratchpad login'),
+      'page callback' => 'scratchpad_do_openid_login',
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
+      'type' => MENU_CALLBACK,
+      'file' => 'scratchpad.login.inc'
+    ),
     'admin/reports/updates/check' => array(
       'title' => 'Manual update check',
       'page callback' => 'update_manual_status',
