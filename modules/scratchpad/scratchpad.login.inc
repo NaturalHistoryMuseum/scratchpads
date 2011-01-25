@@ -54,8 +54,11 @@ function scratchpad_logins(){
 }
 
 function scratchpad_logins_submit(){
-  openid_begin($_POST['openid'], url('logins/return/' . $_POST['uid'], array(
-    'absolute' => TRUE
+  openid_begin($_POST['openid'], url('user', array(
+    'absolute' => TRUE,
+    'query' => array(
+      'uid' => $_POST['uid']
+    )
   )));
 }
 

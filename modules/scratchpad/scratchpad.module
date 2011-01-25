@@ -17,11 +17,22 @@
  * Implementation of hook_form_FORM_ID_alter
  */
 function scratchpad_form_user_login_alter(&$form, &$form_state, $form_id){
+  // We need to check here to see if we have the nice stuff being returned by
+  // an openid login
+  if(isset($_GET['uid']) && isset($_GET['openid_mode'])){
+    module_load_include('login.inc', 'scratchpad');
+    scratchpad_do_openid_login($_GET['uid']);
+  }
   // If we're offline, then we need to add the logins form elements to the user
   // form, as otherwise we can't login to help peeps.
   if(variable_get('site_offline', 0)){
     module_load_include('login.inc', 'scratchpad');
     $logins_form = scratchpad_logins();
+    // Change the name of the logins button, so that we can tell which button
+    // has been pressed.
+    $logins_form['submit-logins'] = $logins_form['submit'];
+    $logins_form['submit-logins']['#value'] = t('Logins login');
+    unset($logins_form['submit']);
     $form['logins'] = array(
       '#weight' => 10,
       '#title' => t('Scratchpad Team Logins'),
@@ -30,6 +41,21 @@ function scratchpad_form_user_login_alter(&$form, &$form_state, $form_id){
       '#collapsible' => TRUE,
       $logins_form
     );
+    // We need to add a validation step which comes before the standard
+    // validation step
+    $form['#validate'] = array_merge(array(
+      'scratchpad_logins_validate'
+    ), $form['#validate']);
+  }
+}
+
+/**
+ * Scratchpad validate
+ */
+function scratchpad_logins_validate($form, &$form_state){
+  if($form_state['values']['submit-logins'] == $form_state['clicked_button']['#value']){
+    // Skip validation, as Logins requires no validation at this stage.
+    scratchpad_logins_submit();
   }
 }
 
@@ -43,18 +69,6 @@ function scratchpad_menu(){
       'page callback' => 'drupal_get_form',
       'page arguments' => array(
         'scratchpad_logins'
-      ),
-      'access arguments' => array(
-        'access content'
-      ),
-      'type' => MENU_CALLBACK,
-      'file' => 'scratchpad.login.inc'
-    ),
-    'logins/return/%' => array(
-      'title' => t('Scratchpad login'),
-      'page callback' => 'scratchpad_do_openid_login',
-      'page arguments' => array(
-        2
       ),
       'access arguments' => array(
         'access content'
