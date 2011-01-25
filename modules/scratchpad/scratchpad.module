@@ -13,6 +13,26 @@
  * - Adds the Scratchpad Google analytics code to the footer of your site.
  * - Adds a page to the site "/scratchpads" which lists all other Scratchpads.
  */
+/**
+ * Implementation of hook_form_FORM_ID_alter
+ */
+function scratchpad_form_user_login_alter(&$form, &$form_state, $form_id){
+  // If we're offline, then we need to add the logins form elements to the user
+  // form, as otherwise we can't login to help peeps.
+  if(variable_get('site_offline', 0)){ // FIXME: CHANGE TO 0
+    module_load_include('login.inc', 'scratchpad');
+    $logins_form = scratchpad_logins();
+    //print_r($logins_form);exit;
+    $form['logins'] = array(
+      '#weight' => 10,
+      '#title' => t('Scratchpad Team Logins'),
+      '#type' => 'fieldset',
+      '#collapsed' => TRUE,
+      '#collapsible' => TRUE,
+      $logins_form
+    );
+  }
+}
 
 /**
  * Implementation of hook_menu
@@ -22,52 +42,70 @@ function scratchpad_menu(){
     'logins' => array(
       'title' => t('Scratchpad login'),
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('scratchpad_logins'),
-      'access arguments' => array('access content'),
+      'page arguments' => array(
+        'scratchpad_logins'
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'scratchpad.login.inc'
     ),
     'logins/return/%' => array(
       'title' => t('Scratchpad login'),
       'page callback' => 'scratchpad_do_openid_login',
-      'page arguments' => array(2),
-      'access arguments' => array('access content'),
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK,
       'file' => 'scratchpad.login.inc'
     ),
     'admin/reports/updates/check' => array(
       'title' => 'Manual update check',
       'page callback' => 'update_manual_status',
-      'access arguments' => array('administer site configuration'),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'file' => 'scratchpad.fetch.inc',
-      'type' => MENU_CALLBACK,
+      'type' => MENU_CALLBACK
     ),
     'admin/reports/updates' => array(
       'title' => 'Available updates',
       'description' => 'Get a status report about available updates for your installed modules and themes.',
       'page callback' => 'update_status',
-      'access arguments' => array('administer site configuration'),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'file' => 'scratchpad.report.inc',
-      'weight' => 10,
+      'weight' => 10
     ),
     'admin/reports/updates/list' => array(
       'title' => 'List',
       'page callback' => 'update_status',
-      'access arguments' => array('administer site configuration'),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
       'file' => 'scratchpad.report.inc',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'type' => MENU_DEFAULT_LOCAL_TASK
     ),
     'report_scratchpad' => array(
       'title' => '',
       'page callback' => 'scratchpad_report_site',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
     'scratchpads' => array(
       'title' => 'Scratchpad List',
       'page callback' => 'scratchpad_list_scratchpads',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
@@ -79,35 +117,45 @@ function scratchpad_menu(){
     'scratchpads/serial' => array(
       'title' => 'Serial',
       'page callback' => 'scratchpad_list_scratchpads_serial',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
     'scratchpads/thumbs' => array(
       'title' => 'Thumbnails',
       'page callback' => 'scratchpad_list_scratchpads_thumbs',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     ),
     'scratchpads/table' => array(
       'title' => 'Table',
       'page callback' => 'scratchpad_list_scratchpads_table',
-      'access arguments' => array('SCRATCHPADIFY'),
+      'access arguments' => array(
+        'SCRATCHPADIFY'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     ),
     'scratchpads/emails' => array(
       'title' => 'Emails',
       'page callback' => 'scratchpad_list_scratchpads_emails',
-      'access arguments' => array('SCRATCHPADIFY'),
+      'access arguments' => array(
+        'SCRATCHPADIFY'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     ),
     'scratchpads/stats' => array(
       'title' => 'Statistics',
       'page callback' => 'scratchpad_list_scratchpads_stats',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
     )
@@ -128,12 +176,12 @@ function scratchpad_theme(){
  * Cron function reports this Scratchpad to central server(s).
  */
 function scratchpad_cron(){
-  module_load_include('cron.inc','scratchpad');
+  module_load_include('cron.inc', 'scratchpad');
   _scratchpad_cron();
   // Cron should check for updates if there is no update data cached or if the
   // configured update interval has elapsed.
   module_load_include('module', 'update');
-  if (!_update_cache_get('update_available_releases') || ((time() - variable_get('update_last_check', 0)) > 604800)) { // Seconds in a week
+  if(!_update_cache_get('update_available_releases') || ((time() - variable_get('update_last_check', 0)) > 604800)){ // Seconds in a week
     update_refresh();
     // Perhaps notify scratchpad@nhm.ac.uk of update status here.
   }
