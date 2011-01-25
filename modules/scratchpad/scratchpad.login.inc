@@ -8,7 +8,7 @@ function scratchpad_admin_openids(){
     'http://vbrant.eu/user/5/identity' => 'Dave Roberts (http://vbrant.eu/user/5/identity)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
     'http://vbrant.eu/user/57/identity' => 'Ben Scott (http://vbrant.eu/user/57/identity)',
-    'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)',
+    'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
   );
 }
 
@@ -28,7 +28,7 @@ function scratchpad_logins(){
   $lowest_maintainer_uid = db_result(db_query('SELECT MIN(uid) FROM {users_roles} WHERE rid = 5 AND uid > 1'));
   $boost_warning = '';
   if(module_exists('boost')){
-    $boost_warning = '<p>'.t("Note, this page will be cached by Boost.  If you've recently added a new maintainer and they're not in the list below, press Ctrl-F5 (<a href=\"http://en.wikipedia.org/wiki/Wikipedia:Bypass_your_cache#Instructions_for_various_browsers\">or something else</a>)").'</p>';
+    $boost_warning = '<p>' . t("Note, this page will be cached by Boost.  If you've recently added a new maintainer and they're not in the list below, press Ctrl-F5 (<a href=\"http://en.wikipedia.org/wiki/Wikipedia:Bypass_your_cache#Instructions_for_various_browsers\">or something else</a>)") . '</p>';
   }
   return array(
     'boost_warning' => array(
@@ -73,9 +73,11 @@ function scratchpad_do_openid_login($uid){
     }
     drupal_goto();
   }else{
-    watchdog('logins', print_r($result,1));
+    watchdog('logins', print_r($result, 1));
     //db_query("DELETE FROM {openid_association} WHERE idp_endpoint_uri = '%s'")
-    drupal_set_message(t('Login failed, are you sure the OpenID "%openid" is permitted to "Logins"', array('%openid' => $result['openid.claimed_id'])), 'error');
+    drupal_set_message(t('Login failed, are you sure the OpenID "%openid" is permitted to "Logins"', array(
+      '%openid' => $result['openid.claimed_id']
+    )), 'error');
     drupal_goto('logins');
   }
 }
