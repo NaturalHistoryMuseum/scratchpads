@@ -168,11 +168,11 @@ function spm_export_nodes($nids = FALSE){
 
               'dc:source' => url('node/' . $node->nid, array(
                 'absolute' => TRUE
-              ))
+              )),
 
               'mediaURL' => url(NULL, array(
                 'absolute' => TRUE
-              )) . $image['filepath'],
+              )) . $image['filepath']
 
             );
           }
