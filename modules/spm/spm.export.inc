@@ -24,9 +24,9 @@ function spm_export(){
  * SPM Settings form
  */
 function spm_settings(){
-  $results = db_query("SELECT nid, title FROM {node} WHERE type = 'spm'");
+  $results = db_query("SELECT nid, title FROM {node} WHERE type = 'spm' ORDER BY title");
   while($row = db_fetch_array($results)){
-    $options[$row['nid']] = $row['title'];
+    $options[$row['nid']] = l($row['title'], 'node/'.$row['nid']);
   }
   $form['spm_nodes'] = array(
     '#type' => 'checkboxes',
