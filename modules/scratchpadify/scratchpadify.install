@@ -363,6 +363,7 @@ function _scratchpadify_install_image_fields(){
  * 6175: Fix multiple attached images
  * 6176: Update method of adding additional permissions to anonymous users.
  * 6177: Enable the scratchpadify_help module.
+ * 6178: Enable the views_bonus_export module.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1553,6 +1554,44 @@ function scratchpadify_update_6177(){
   module_rebuild_cache();
   $modules = array(
     'scratchpadify_help'
+  );
+  foreach($modules as $module){
+    if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
+      $ret['#abort'] = array(
+        'success' => FALSE,
+        'query' => t('A required module is missing.')
+      );
+      return $ret;
+    }
+  }
+  // Set the variable for the Image gallery
+  include_once './includes/install.inc';
+  drupal_install_modules($modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Required modules installed.')
+  );
+  module_enable($modules);
+  // Clear caches (we'll do this again at the end).
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
+  menu_rebuild();
+  cache_clear_all('schema', 'cache');
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  return $ret;
+}
+
+/**
+ * Enable the views_bonus_export module.  Also doing this to ensure that the 
+ * cache for the "scratchpad" module is clear.
+ */
+function scratchpadify_update_6178(){
+  $ret = array();
+  // Ensure that the following modules are enabled
+  module_rebuild_cache();
+  $modules = array(
+    'views_bonus_export'
   );
   foreach($modules as $module){
     if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
