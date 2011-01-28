@@ -92,7 +92,7 @@ function spm_export_nodes($nids = FALSE){
           $xml_array_child[] = array(
             'element_name' => 'reference',
             'attributes' => array('doi' => $biblio_node->biblio_doi),
-            $biblio_node->title
+            strip_tags(theme('biblio_style', $biblio_node))
           );
         }
       }
