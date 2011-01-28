@@ -92,7 +92,7 @@ function spm_export_nodes($nids = FALSE){
           $xml_array_child[] = array(
             'element_name' => 'reference',
             'attributes' => array('doi' => $biblio_node->biblio_doi),
-            strip_tags(theme('biblio_style', $biblio_node))
+            strip_tags(theme('biblio_style', $biblio_node, 'biblio', 'cse')) // Note, the biblio base path doesn't matter, as we strip the HTML anyway.
           );
         }
       }
