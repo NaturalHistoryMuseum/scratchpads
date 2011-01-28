@@ -18,6 +18,7 @@ function spm_export(){
     }
   }
   spm_export_nodes($nodes);
+  exit;
 }
 
 /**
@@ -131,7 +132,7 @@ function spm_export_nodes($nids = FALSE){
               'attributes' => array(
                 'xml:lang' => 'en'
               ),
-              htmlentities($value)
+              $value
             )
           );
         }
@@ -170,10 +171,9 @@ function spm_export_nodes($nids = FALSE){
                 'absolute' => TRUE
               )),
 
-              'mediaURL' => url(NULL, array(
+              'mediaURL' => url($image['filepath'], array(
                 'absolute' => TRUE
-              )) . $image['filepath']
-
+              ))
             );
           }
         }

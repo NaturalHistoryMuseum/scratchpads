@@ -14,6 +14,8 @@ class EOLXML extends XMLWriter{
    * @param null
    */
   public function __construct(){
+    // Load the Force UTF-8 file
+    module_load_include('forceutf8.inc', 'spm');
     $this->openMemory();
     $this->setIndent(true);
     $this->setIndentString(' ');
@@ -42,7 +44,7 @@ class EOLXML extends XMLWriter{
    */
   public function setElement($tag, $data){
     $this->startElement($tag);
-    $this->text($data);
+    $this->text(forceUTF8($data));
     $this->endElement();
   }
 
@@ -73,7 +75,7 @@ class EOLXML extends XMLWriter{
             }
           }
           if(!is_array($element)){
-            $this->text($element);
+            $this->text(forceUTF8(mb_convert_encoding($element, 'HTML-ENTITIES', 'UTF-8')));
           } else {
             $this->fromArray($element);
           }
@@ -104,6 +106,6 @@ class EOLXML extends XMLWriter{
    */
   public function output(){
     header('Content-type: text/xml');
-    echo $this->getDocument();
+    print $this->getDocument();
   }
 }
