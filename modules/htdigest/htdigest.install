@@ -69,6 +69,15 @@ function htdigest_update_6103(){
 }
 
 /**
+ * Clear the htdigest_basic table - I had it wrong.
+ */
+function htdigest_update_6104(){
+  $ret = array();
+  $ret[] = update_sql('DELETE FROM {htdigest_basic}');
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema
  */
 function htdigest_schema(){

@@ -29,10 +29,10 @@ function htdigest_update_user($account, $password){
     // We're using Basic, lets save the password
     if(db_result(db_query('SELECT COUNT(*) FROM {htdigest_basic} WHERE uid = %d', $account->uid))){
       // Update
-      db_query("UPDATE {htdigest_basic} SET pass = '%s' WHERE uid = %d", $password, $account->uid);
+      db_query("UPDATE {htdigest_basic} SET pass = '%s' WHERE uid = %d", crypt($password, base64_encode($password)), $account->uid);
     } else {
       // Insert
-      db_query("INSERT INTO {htdigest_basic} (pass, uid) VALUES ('%s', %d)", $password, $account->uid);
+      db_query("INSERT INTO {htdigest_basic} (pass, uid) VALUES ('%s', %d)", crypt($password, base64_encode($password)), $account->uid);
     }
   }
   // Save for each realm
@@ -276,6 +276,9 @@ function htdigest_perm(){
   while($row = db_fetch_array($result)){
     $perms[] = 'access htdigest realm ' . $row['realm'];
   }
+  if(variable_get('htdigest_allow_basic', 0)){
+    $perms[] = 'access with basic authentication';// FIXME - This isn't used yet
+  }
   return $perms;
 }
 
@@ -291,7 +294,7 @@ function htdigest_settings_form(&$form_state){
         '#type' => 'checkbox',
         '#title' => t('Allow Basic authentication'),
         '#default_value' => variable_get('htdigest_allow_basic', 0),
-        '#description' => t('If checked, you will be able to use username/password combinations with Basic HTTP authentication.  Please note, this is a <span class="error">SECURITY RISK</span>, as all user passwords will be stored as plain text in your database.  Ensure you have adequate protection on your server.')
+        '#description' => t('If checked, you will be able to use username/password combinations with Basic HTTP authentication.')
       ),
       'save_basic' => array(
         '#type' => 'submit',
