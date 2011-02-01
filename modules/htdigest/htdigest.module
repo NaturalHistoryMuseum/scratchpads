@@ -24,6 +24,17 @@ function htdigest_user($op, &$edit, &$account, $category = NULL){
 function htdigest_update_user($account, $password){
   // We're updating the user's password, lets save the user's password to the
   // htdigest tables.
+  // First we save for basic authentication if it is being used.
+  if(variable_get('htdigest_allow_basic', 0) && $account->uid > 1){
+    // We're using Basic, lets save the password
+    if(db_result(db_query('SELECT COUNT(*) FROM {htdigest_basic} WHERE uid = %d', $account->uid))){
+      // Update
+      db_query("UPDATE {htdigest_basic} SET pass = '%s' WHERE uid = %d", $password, $account->uid);
+    } else {
+      // Insert
+      db_query("INSERT INTO {htdigest_basic} (pass, uid) VALUES ('%s', %d)", $password, $account->uid);
+    }
+  }
   // Save for each realm
   $result = db_query('SELECT * FROM {htdigest_realm}');
   while($row_realm = db_fetch_array($result)){
@@ -273,9 +284,23 @@ function htdigest_perm(){
  */
 function htdigest_settings_form(&$form_state){
   $form = array(
+    'basic' => array(
+      '#type' => 'fieldset',
+      '#title' => t('Basic'),
+      'allow_basic' => array(
+        '#type' => 'checkbox',
+        '#title' => t('Allow Basic authentication'),
+        '#default_value' => variable_get('htdigest_allow_basic', 0),
+        '#description' => t('If checked, you will be able to use username/password combinations with Basic HTTP authentication.  Please note, this is a <span class="error">SECURITY RISK</span>, as all user passwords will be stored as plain text in your database.  Ensure you have adequate protection on your server.')
+      ),
+      'save_basic' => array(
+        '#type' => 'submit',
+        '#value' => t('Save')
+      )
+    ),
     'new_realm' => array(
       '#type' => 'fieldset',
-      '#title' => t('New realm'),
+      '#title' => t('Digest: New realm'),
       'new_realm' => array(
         '#type' => 'textfield',
         '#title' => t('New realm'),
@@ -300,7 +325,7 @@ function htdigest_settings_form(&$form_state){
   if(count($realms)){
     $form['current_realms_fieldset'] = array(
       '#type' => 'fieldset',
-      '#title' => 'Current realms',
+      '#title' => 'Digest: Current realms',
       'current_realms' => array(
         '#type' => 'checkboxes',
         '#title' => t('Select realms to delete'),
@@ -320,8 +345,12 @@ function htdigest_settings_form(&$form_state){
  * Submit function for above form
  */
 function htdigest_settings_form_submit($form, &$form_state){
+  // Set the value of Basic
+  if($form_state['values']['op'] == $form_state['values']['save_basic']){
+    variable_set('htdigest_allow_basic', $form_state['values']['allow_basic']);
+  }
   // If we're creating
-  if($form_state['values']['op'] == $form_state['values']['submit_new_realm']){
+  else if($form_state['values']['op'] == $form_state['values']['submit_new_realm']){
     // Following ignores the error if a realm already exists.
     db_query("INSERT INTO {htdigest_realm} (realm, allow_alias) VALUES ('%s', %d)", $form_state['values']['new_realm'], $form_state['values']['allow_alias']);
   }else if($form_state['values']['op'] == $form_state['values']['delete_selected_realms']){

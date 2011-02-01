@@ -42,6 +42,33 @@ function htdigest_update_6102(){
 }
 
 /**
+ * Add the htdigest_basic table.  This is so that we can support Basic HTTP 
+ * authentication.  This sadly means that we'll be storing passwords
+ * unencrypted, which is a little security issue.  We therefore won't save the
+ * password for UID 1.
+ */
+function htdigest_update_6103(){
+  $ret = array();
+  db_create_table($ret, 'htdigest_basic', array(
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE
+      ),
+      'pass' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255
+      )
+    ),
+    'primary key' => array(
+      'uid'
+    )
+  ));
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema
  */
 function htdigest_schema(){
@@ -65,6 +92,22 @@ function htdigest_schema(){
       'primary key' => array(
         'aid',
         'rid'
+      )
+    ),
+    'htdigest_basic' => array(
+      'fields' => array(
+        'uid' => array(
+          'type' => 'int',
+          'not null' => TRUE
+        ),
+        'pass' => array(
+          'type' => 'varchar',
+          'not null' => TRUE,
+          'length' => 255
+        )
+      ),
+      'primary key' => array(
+        'uid'
       )
     ),
     'htdigest_realm' => array(
