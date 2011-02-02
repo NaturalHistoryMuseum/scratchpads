@@ -233,7 +233,8 @@ function term_node_taxonomy($op, $type, $array = NULL){
         if($content_type){
           $result = db_query("SELECT nid FROM {node} WHERE type = '%s' AND nid NOT IN (SELECT nid FROM {term_data} t INNER JOIN {term_node} n ON t.tid = n.tid WHERE t.vid = %d)", $content_type, $array['vid']);
           while($row = db_fetch_array($result)){
-            node_delete($row['nid']);
+            // Remove temporarily.
+            //node_delete($row['nid']);
           }
         }
         cache_clear_all($array['tid'], 'cache_term');
