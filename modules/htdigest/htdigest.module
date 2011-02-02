@@ -8,6 +8,9 @@ function htdigest_user($op, &$edit, &$account, $category = NULL){
     case 'insert':
       // Add the blank entry to the htdigest_alias table.
       db_query('INSERT INTO {htdigest_alias} (uid) VALUES (%d)', $account->uid);
+      if(strpos($account->name, " ")){
+        db_query("INSERT INTO {htdigest_alias} (uid, alias) VALUES (%d, '%s')", $account->uid, str_replace(" ", "", $account->name));
+      }
     case 'update':
     case 'login':
       // Here we will ensure that htdigest_user entries are upto date.

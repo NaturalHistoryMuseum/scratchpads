@@ -78,6 +78,15 @@ function htdigest_update_6104(){
 }
 
 /**
+ * Add aliases with spaces removed.
+ */
+function htdigest_update_6105(){
+  $ret = array();
+  $ret[] = update_sql("INSERT INTO {htdigest_alias} (uid, alias) SELECT uid, REPLACE(name, ' ', '') FROM users WHERE name LIKE '% %'");
+  return $ret;
+}
+
+/**
  * Implementation of hook_schema
  */
 function htdigest_schema(){
