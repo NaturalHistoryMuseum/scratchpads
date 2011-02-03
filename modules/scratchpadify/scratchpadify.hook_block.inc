@@ -101,6 +101,10 @@ function _scratchpadify_block($op, $delta, $edit){
             'group' => array(
               'view' => 'og',
               'import' => FALSE
+            ),
+            'og' => array(
+              'view' => 'og',
+              'import' => FALSE
             )
           );
           $query = array();
