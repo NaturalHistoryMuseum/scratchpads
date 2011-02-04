@@ -702,6 +702,8 @@ function scratchpad_profile_profile_tasks_2(){
     'css_settings' => 'theme'
   );
   db_query("INSERT INTO {wysiwyg} (format, editor, settings) VALUES (2, 'tinymce', '%s'),(1, 'tinymce', '%s')", serialize($tinymce_settings), serialize($tinymce_settings));
+  // Ensure redirects are created for old aliases
+  variable_set('pathauto_update_action', 3);
   // Setup IMCE
   variable_set('imce_profiles', array(
     1 => array(
