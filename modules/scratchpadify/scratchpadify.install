@@ -364,6 +364,7 @@ function _scratchpadify_install_image_fields(){
  * 6176: Update method of adding additional permissions to anonymous users.
  * 6177: Enable the scratchpadify_help module.
  * 6178: Enable the views_bonus_export module.
+ * 6179: Fix issue with redirects not being saved (fucking stupid default configuration).
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1618,4 +1619,14 @@ function scratchpadify_update_6178(){
   drupal_clear_css_cache();
   drupal_clear_js_cache();
   return $ret;
+}
+
+/**
+ * 6179: Fix issue with redirects not being saved (fucking stupid default configuration).
+ */
+function scratchpadify_udpate_6179(){
+  variable_set('pathauto_update_action', 3);
+  return array(
+    '#finished' => TRUE
+  );  
 }
