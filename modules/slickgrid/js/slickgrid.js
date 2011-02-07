@@ -19,6 +19,7 @@ var dataView;
         var checkboxSelector;
         var $status; // $status container for result icons & messages
         var $loadingBar; // $loadingBar container for loading bar
+        var $undo; // $undo div
         var activeRow; // The row currently being edited
         var commandQueue = [];
         var ajaxOptions; // default options for ajax callback
@@ -28,6 +29,7 @@ var dataView;
 
             $status = $('#slickgrid-status');
             $loadingBar = $('#slickgrid-loading-bar');
+            $undo = $('#slickgrid-undo');
             
             resetAjaxOptions();
             
@@ -41,7 +43,7 @@ var dataView;
             }
             
             // Is undo enabled? If it is, add an editCommandHandler
-            if (options['editable']) {
+            if (options['undo']) {
                 
                 initUndo();
                 
@@ -326,24 +328,30 @@ var dataView;
         
         function update(item, cell, nids){
           
-           if(typeof item.serialised_data != 'undefined'){
-              data = item.serialised_data;
-            }else{ // Build the data to pass to back end
+          var c = grid.getColumns()[cell];
 
-              var c = grid.getColumns()[cell];
+          // Array of data to be passed to the backend
+          data = {
+            'view': viewName,
+            'display_id': viewDisplayID,
+            'nids': nids,
+            'id': c.id,
+            'field_name': c.field,
+            'undo': options['undo']
+          }
+       
+        // Is this a serialised form? If it is serliase the data array
+         if(typeof item.serialised_data != 'undefined'){
+            
+            data = $.param(data) + '&' + item.serialised_data;
+            
+          }else{ // If not serialised pass data as an object
 
-              // Array of data to be passed to the backend
-              data = {
-                'view': viewName,
-                'display_id': viewDisplayID,
-                'nids': nids,
-                'field_name': c.id
-              }
+            data[c.id] = item[c.id];
 
-              data[c.id] = item[c.field];
-
-            }
+          }
           
+          // Perform the update
           callback('update', data, true);
           
         }
@@ -594,7 +602,7 @@ var dataView;
         function callback(op, data, lock){
 
           // Should this be locked for the duration of the callback.
-          // Default is true - should be locked for all edits
+          // Default is true - should be locked for all edits & undos
           if(lock){
             editorLock(true);
           }
@@ -630,10 +638,13 @@ var dataView;
         }
         
         // Error handling function
-        function callbackError(x, e){
+        function callbackError(args){
+                    
+          grid.getEditController().cancelCurrentEdit();
           
-          updateLoadingBar(false);
-          
+          x = args[0];
+          e = args[1];
+
           var errorMessage = []; // Error message for user
           var errorLog; // Error message for log
           
@@ -654,14 +665,21 @@ var dataView;
             }else if(e=='timeout'){
             errorLog =  'Request Time out.';
             }else {
-            errorLog =  'Unknown Error: '+x.responseText;
+            errorLog =  'Unknown Error';
             }
+            
+            // turn off error function to prevent everlasting loop if there is an error
+            setAjaxOption('errorFunctions'); 
+            setAjaxOption('completeFunctions'); 
+            setAjaxOption('errorFunctions', function(){resetAjaxOptions()});
+            setAjaxOption('successFunctions'); 
             
             // Pass the error to the callback function so we can try and fix any errors.
             callback('log', {error : errorLog});
           
           }
           
+          updateLoadingBar(false);
           updateStatus(true, errorMessage);
           
         }
@@ -675,94 +693,44 @@ var dataView;
 
           if(response){
             
+            // Are there any update nodes
             if(response.updated){
-              
-              // Loop through all the updated nids, and set the values in the grid
-              // We also need to modify the commandQueue
-              var command = commandQueue.pop();
-              
-              // Get the column id
-              var id = columns[command.cell]['id']; 
-              
-              // Need to get the NID of the edited row (not a mluti-select row)
-              var item = dataView.getItem(command.row);
-              
-              
-              var i = response.updated.indexOf(item.id);
-              
-              // Is there a value to update the cells with?
-              if(response.reloaded_value){
-                value = response.reloaded_value;
-                
-                // Need to update the edited cell with the new value
-                item[id] = value;
-                dataView.updateItem(item.id, item);
-                
-                // Update the command queue with the new command
-                command.serializedValue = value;
-                
-                // If we've reloaded, ondo cannot just reset the value in the grid as it 
-                // might not match the node - needs to use node revisions
-                command.revisions = true;
-                
-              }else{
-                value = command.serializedValue;
-              }
-
-              // Was the edited item succesfully updated?
-              if(i !== -1){
-                // If it was, remove it from the response.updated array prior to looping through
-                response.updated.splice(i, 1);
-              }else{ // Reset the field to the original value
-
-                // Reset the field value 
-                item[id] = command.prevSerializedValue;
-
-                // Update the dataView with the old value
-                dataView.updateItem(item.id, item);
-
-                // Move the focus back
-                grid.setActiveCell(command.row, command.cell);
-
-              }
-              
-              if(response.updated.length){
-                
-                command.multipleEdits = [];
-                
-                $.each(response.updated, function(i, node) { 
+                           
+                $.each(response.updated, function(nid, node) { 
                 
                   // Get the row denoted by the nid
-                  row = dataView.getRowById(node.nid);
+                  row = dataView.getRowById(nid);
                 
-                  // // Get the data item for the row
+                  // Get the data item for the row
                   var item = dataView.getItem(row);
                 
 
                   // Update the item with the new value (if necessary)
-                  if(item[id] != value){
-                    
-                    // We want this to be included in the commandQueue so add it.
-                    command.multipleEdits.push({
-                                                  row: row,
-                                                  prevSerializedValue: item[id]
-                                              });
+                  if(item[response.id] != node.value){
 
                       // Change the value
-                      item[id] = value;
+                      item[response.id] = node.value;
 
                       // Update the dataView
                       dataView.updateItem(item.id, item);
 
-                    }           
+                  }           
                 
                 
                 });
-              
+
+              // Are we allowing undoing content (there will be a command queue if we are)
+              if(options['undo'] && response.op == 'update'){
+
+                if(!$undo.hasClass('undo-enabled')){
+
+                  enableUndo();
+                
+                }
+                
+                // Store all of the updated items so we know we can undo them
+                commandQueue[commandQueue.length  - 1]['updated'] =  response.updated;
               }
-              
-              // Add the modified command back onto the queue
-              commandQueue.push(command);
 
             }
             // Were there any errors?
@@ -805,6 +773,9 @@ var dataView;
             
           }
           
+          // Reset ajax options after successful request
+          resetAjaxOptions(); 
+          
         }
         
         function callbackComplete(args){
@@ -813,9 +784,6 @@ var dataView;
           if(locked){
             editorLock(false);
           }
-          
-          // Reset ajax options after request
-          resetAjaxOptions(); 
           
         }
         
@@ -856,7 +824,14 @@ var dataView;
         function initUndo(){
           
           options['editCommandHandler'] = queueAndExecuteCommand;
-          $('#slickgrid-undo').click(undo);
+          
+        }
+        
+        // Only enable undo when there are items that can be undone
+        function enableUndo(){
+
+          $undo.addClass('undo-enabled');
+          $undo.click(undo);
           
         }
         
@@ -870,33 +845,21 @@ var dataView;
 
             var command = commandQueue.pop();
             if (command && Slick.GlobalEditorLock.cancelCurrentEdit()) {
-
-                command.undo();
                 
-                var data = [];
-
-                // Build an array of nids to reset
-                var item = dataView.getItem(command.row);
+                // Undo is handled via node revisions so post to backend all nodes updated as part of this command
                 
-                data.undo = [];
-                
-                data.undo.push({
-                  nid: item.id, 
-                  value: command.prevSerializedValue
-                });  
-                
-                // If there's multiple edits, loop through & reset all of them
-                if(typeof command.multipleEdits !== 'undefined'){
-                  $.each(command.multipleEdits, function(i, multipleEdit) { 
-                    // Retrieve the data item of the selected row
-                    var item = dataView.getItem(multipleEdit.row);
-                    data.undo.push({
-                      nid: item.id, 
-                      value: multipleEdit.prevSerializedValue
-                    });
-                  });
+                // Get the column
+                var c = grid.getColumns()[command.cell];
+                var data = {
+                  'view': viewName,
+                  'display_id': viewDisplayID,
+                  'field_name': c.id,
+                  'updated': command.updated
                 }
-                grid.gotoCell(command.row,command.cell,false);
+                
+                callback('undo', data, true);
+                grid.gotoCell(command.row, command.cell, false);
+                
             }
         }
         
@@ -913,38 +876,45 @@ var dataView;
           };
           
           // This allows us have an array of success, error functions etc.,
-          $.each(['success', 'error', 'complete'], function(i, func){
+          $.each(['success', 'error', 'complete'], function(i, type){
             
-            ajaxOptions[func] = function(){            
-              ajaxFunctionCaller(this, func, arguments);
+            ajaxOptions[type] = function(){            
+              ajaxFunctionCaller(type, arguments);
             };
             
           })
 
         }
         
-        function ajaxFunctionCaller(thisAjaxOptions, type, args){
-          
-          $.each(ajaxOptions[type+'Functions'], function(i, func){
-            // TODO - Insecure. Change this.
-            eval(func)(args);
-          });
+        function ajaxFunctionCaller(type, args){
+
+          if(ajaxOptions[type+'Functions']){
+            $.each(ajaxOptions[type+'Functions'], function(i, func){
+              // TODO - Insecure. Change this.
+              eval(func)(args);
+
+            });
+          }
+
           
         }
         
         // Default ajax options
         // Type successFunctions
         function setAjaxOption(type, value){
-
           if(typeof value == 'function'){
-              ajaxOptions[type].push(value);          
+               if(typeof ajaxOptions[type] == 'undefined'){
+                 ajaxOptions[type] = [value]; 
+               }else{
+                 ajaxOptions[type].push(value); 
+               }     
           }else if(typeof value != 'undefined'){
               ajaxOptions[type] = value; 
           }
           else{ // Not a function so remove the option
             delete ajaxOptions[type];
           }
-          
+ 
         }
         
         function resetAjaxOptions(){

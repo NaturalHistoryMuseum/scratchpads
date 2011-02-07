@@ -29,7 +29,11 @@ class slickgrid_views_plugin extends views_plugin_style{
     );
     // maps to slickgrid option rowHeight
     $options['rowHeight'] = array(
-      'default' => 24
+      'default' => 25
+    );
+    // maps to slickgrid option forceFitColumns
+    $options['forceFitColumns'] = array(
+      'default' => false
     );
     // The following options are not internal to slickgrid & are handled by this module
     $options['select_row_checkbox'] = array(
@@ -112,6 +116,9 @@ class slickgrid_views_plugin extends views_plugin_style{
     );
     // Create an array of allowed columns from the data we know:
     foreach($columns as $field => $column){
+      if($handlers[$field]->options['exclude']){
+        continue;
+      }
       // Field for setting a column's width
       $form['columns'][$field]['width'] = array(
         '#type' => 'textfield',
@@ -241,11 +248,23 @@ class slickgrid_views_plugin extends views_plugin_style{
       '#default_value' => !empty($this->options['autoEdit']),
       '#description' => t('Activate edit on entry to cell, otherwise double click to edit.')
     );
-    $form['select_row_checkbox'] = array(
+    $form['forceFitColumns'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Row selection'),
-      '#description' => t('Add a checkbox to select rows.'),
-      '#default_value' => !empty($this->options['select_row_checkbox'])
+      '#title' => t('Force fit columns'),
+      '#default_value' => !empty($this->options['forceFitColumns']),
+      '#description' => t('Force column widths to fit the grid.')
+    );
+    $form['multi_edit'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Multi-edit'),
+      '#description' => t('Users can select & edit multiple nodes at once.'),
+      '#default_value' => !empty($this->options['multi_edit'])
+    );
+    $form['undo'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Undo'),
+      '#description' => t('Allow users to undo updates. Warning: if turned on, all updates will create a node revision.'),
+      '#default_value' => !empty($this->options['undo'])
     );
     $form['viewport_height'] = array(
       '#title' => t('Viewport height'),
@@ -262,6 +281,13 @@ class slickgrid_views_plugin extends views_plugin_style{
       '#maxlength' => 10
     );
     $form['#theme'] = 'slickgrid_views_plugin_table';
+  }
+
+  function options_submit(){
+    // If admin updates the node, delete the user customisation
+    slickgrid_delete_settings(array(
+      'view_name' => $this->view->name
+    ));
   }
 
   function query(){

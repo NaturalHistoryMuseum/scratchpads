@@ -68,7 +68,7 @@ if (typeof Slick === "undefined") {
             enableColumnReorder: true,
             asyncEditorLoading: false,
             asyncEditorLoadDelay: 100,
-            forceFitColumns: false,
+            forceFitColumns: true,
             enableAsyncPostRender: false,
             asyncPostRenderDelay: 60,
             autoHeight: false,
@@ -1134,6 +1134,7 @@ if (typeof Slick === "undefined") {
         }
 
         function updateCell(row,cell) {
+          
             var cellNode = getCellNode(row,cell);
             if (!cellNode) {
                 return;
@@ -2137,7 +2138,6 @@ if (typeof Slick === "undefined") {
         function commitCurrentEdit() {
             var item = getDataItem(activeRow);
             var column = columns[activeCell];
-
             if (currentEditor) {
                 if (currentEditor.isValueChanged()) {
                     var validationResults = currentEditor.validate();
@@ -2180,6 +2180,7 @@ if (typeof Slick === "undefined") {
                             var newItem = {};
                             currentEditor.applyValue(newItem,currentEditor.serializeValue());
                             makeActiveCellNormal();
+
                             trigger(self.onAddNewRow, {item:newItem, column:column});
                         }
 

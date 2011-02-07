@@ -1,4 +1,4 @@
-<!-- <div class="<?php
+<!-- <div class="clear-block <?php
 print $class;
 ?>-wrapper">
   <div id="<?php
@@ -22,12 +22,8 @@ print $class;
   ?>
 </div> -->
 
+<div class="slickgrid-wrapper clear-block">
 <?php
-if(isset($title)):
-  ?>
-<div class="grid-header"><h5><?php print $title; ?></h5></div>
-
-<?php endif;
-
 print $slickgrid;
 ?>
+</div>
