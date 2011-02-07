@@ -10,32 +10,51 @@ var dataView;
     });
 
     // Slickgrid class implementation
-    function Slickgrid(container, viewName, callbackPath) {
+    function Slickgrid(container, viewName, viewDisplayID, callbackPath) {
 
 
         var columnFilters = {};
         var objHttpDataRequest;
         var timeout;
-        var $status; // $status container for result messages / working icon
-
+        var checkboxSelector;
+        var $status; // $status container for result icons & messages
+        var $loadingBar; // $loadingBar container for loading bar
+        var activeRow; // The row currently being edited
+        var commandQueue = [];
+        var ajaxOptions; // default options for ajax callback
+        var locked; // Flag denoting log status
+        
         function init() {
 
             $status = $('#slickgrid-status');
+            $loadingBar = $('#slickgrid-loading-bar');
+            
+            resetAjaxOptions();
+            
             
             // Are row checkboxes enabled? If they are, add a checkbox selector column
-            if (options['select_row_checkbox']) {
+            if (options['multi_edit']) {
 
+                // Init row checkboxes - needs to be done before the grid is initiated as a column needs to be added
                 initRowCheckboxes();
 
             }
-
+            
+            // Is undo enabled? If it is, add an editCommandHandler
+            if (options['editable']) {
+                
+                initUndo();
+                
+            }
+            
+              
             // Initialise the dataview & slickgrid
             dataView = new Slick.Data.DataView();
             grid = new Slick.Grid(container, dataView, columns, options);
 
             // Is pager enabled?
             if (options['pager']) {
-                var pager = new Slick.Controls.Pager(dataView, grid, $("#pager"));
+                var pager = new Slick.Controls.Pager(dataView, grid, $("#slickgrid-pager"));
             }
             
             // Is delete enabled? If it is, add the context menu
@@ -72,12 +91,24 @@ var dataView;
 
 
             // If row checkboxes are enabled, add row selection to the grid & register the plugin
-            if (options['select_row_checkbox']) {
+            if (options['multi_edit']) {
+              
                 grid.setSelectionModel(new Slick.RowSelectionModel({
-                    selectActiveRow: false
+                    selectActiveRow: false  // Do not select active row 
+                                            // Going to handle this ourselves (making it selected) so user can select & edit multiple items
+                                            // Otherwise all rows will be deselected on edit
                 }));
+
                 grid.registerPlugin(checkboxSelector);
-            }            
+
+            } 
+            
+            // Register events for my handling of active rows
+            grid.onBeforeEditCell.subscribe(onBeforeEditCell);
+            grid.onBeforeCellEditorDestroy.subscribe(onBeforeCellEditorDestroy);
+            
+            // Cell has been changed - need to submit the changes
+            grid.onCellChange.subscribe(onCellChange);
 
             dataView.onRowCountChanged.subscribe(function(e, args) {
                 grid.updateRowCount();
@@ -98,7 +129,7 @@ var dataView;
             // NB: needs to come after the data has been added to the dataView
             if (options['grouping_field']) {
 
-                initGrouping();   
+                initGroups();   
 
             }
           
@@ -132,10 +163,11 @@ var dataView;
           
           grid.onColumnsResized.subscribe(onColumnsResized);
           
+          // grid.onViewportChanged.subscribe(onViewportChanged);
+          
           // Add resizable callback event
           $('#slickgrid').resizable({
-        		maxWidth : $(container).width(), // Only allow vertical resizing
-        		minWidth : $(container).width(),
+            handles: 's',
         		stop : function(e, ui) {
 
         			if (ui.originalSize.height != ui.size.height) {
@@ -194,9 +226,12 @@ var dataView;
         
         // The context menu (choosing which columns to display) has been opened
         function onHeaderContextMenu(e, ui){
-
+          // User has changed the columns
           $('input[id^=columnpicker]', '.slick-columnpicker').change(onColumnsChanged);
-  
+          // Auto resize does not fire column resize - so need to call it manually
+          $('#autoresize').change(function(){
+            onAutoResize($(this).is(':checked') ? 1 : 0);
+          });
         }
         
         // Columns have been resized
@@ -222,12 +257,105 @@ var dataView;
           
         }
         
+        function onAutoResize(value){
+          
+          updateSettings('forceFitColumns', value);
+          
+        }
+        
+        // User has started editing a cell
+        // Need to add row to the selected rows
+        function onBeforeEditCell(e, ui){
+          
+          setActiveRow(ui.row); 
+
+          // BUG fix: need to turn off & remove tooltips prior to re-editing
+          cellNode = grid.getCellNode(ui.row, ui.cell);  
+
+          if(typeof $(cellNode).attr('bt-xTitle') != 'undefined'){
+            $(cellNode).btOff();  
+            $(cellNode).bt({removeTip: 1});            
+          }          
+
+          $(cellNode).removeClass('invalid');
+          
+        }
+        
+        // User has stopped editing a cell
+        // Deselect the row being actively edited
+        function onBeforeCellEditorDestroy(editor){
+
+          unsetActiveRow();     
+          
+        }
+        
+        function setActiveRow(row){
+          
+          $('div[row="'+row+'"]').addClass('active-row');
+          
+        }
+        
+        function unsetActiveRow(){
+          
+          var cell = grid.getActiveCell();
+          $('div[row="'+cell.row+'"]').removeClass('active-row');
+          
+        }
+        
+        function onCellChange(e, ui){
+          
+          nids  = [ui.item.id];
+          
+          $.each(grid.getSelectedRows(), function(i, row) { 
+
+            // Retrieve the data item of the selected row
+            var item = dataView.getItem(row);
+
+            if(item.id != ui.item.id){
+              
+              // Add the NID to the edited nids object
+              nids.push(item.id);
+
+            }
+          
+          });
+          
+          update(ui.item, ui.cell, nids);
+          
+        }
+        
+        function update(item, cell, nids){
+          
+           if(typeof item.serialised_data != 'undefined'){
+              data = item.serialised_data;
+            }else{ // Build the data to pass to back end
+
+              var c = grid.getColumns()[cell];
+
+              // Array of data to be passed to the backend
+              data = {
+                'view': viewName,
+                'display_id': viewDisplayID,
+                'nids': nids,
+                'field_name': c.id
+              }
+
+              data[c.id] = item[c.field];
+
+            }
+          
+          callback('update', data, true);
+          
+        }
+      
+        
         function initRowCheckboxes(){
           
-          var checkboxSelector = new Slick.CheckboxSelectColumn({
+          checkboxSelector = new Slick.CheckboxSelectColumn({
               cssClass: "slick-cell-checkboxsel"
           });
 
+          // Add the selector column
           columns.unshift(checkboxSelector.getColumnDefinition());
           
         }
@@ -251,6 +379,7 @@ var dataView;
             grid.onColumnsResized.subscribe(function(e, args) {
                 updateFilters();
             });
+            
 
         }
 
@@ -271,11 +400,13 @@ var dataView;
                        // Does this filter have an input function? 
                        // If it does, add the input html
                        if(typeof columns[i].filter.input === 'function'){
-                         columns[i].filter.input()
+                         
+                         var $input = columns[i].filter.input()
                           .data("columnId", columns[i].id)
-                          .width($(header).width() - 4)
-                          .val(columnFilters[columns[i].id])
-                          .appendTo(header);
+                          .val(columnFilters[columns[i].id]);
+                          
+                          Drupal.theme('slickgridFilter', $input, options['columns'][columns[i].id]['filter']).appendTo(header);
+                          
                        }
                    
  
@@ -422,7 +553,7 @@ var dataView;
            
            var item = dataView.getItem(row);
            dataView.deleteItem(item.id);
-           callback('delete', {'nid': item.id});
+           callback('delete', {'nid': item.id}, true);
            
         }
         
@@ -448,7 +579,7 @@ var dataView;
              
              $(columns).each(function(i,e) {
            
-               if(jQuery.inArray(columns[i]['id'], options['settings']['hidden_columns']) === -1){
+               if($.inArray(columns[i]['id'], options['settings']['hidden_columns']) === -1){
                  visibleColumns.push(columns[i]);
                }
                
@@ -459,8 +590,17 @@ var dataView;
         }
         
         // All callbacks should be routed through this function
-        function callback(op, data){
+        // Pass in array of overideFunctions to prevent default
+        function callback(op, data, lock){
 
+          // Should this be locked for the duration of the callback.
+          // Default is true - should be locked for all edits
+          if(lock){
+            editorLock(true);
+          }
+          
+          updateLoadingBar(true);
+          
           // Check to see if there is an AJAX request already in
           // progress that needs to be stopped.
           if (objHttpDataRequest){
@@ -469,23 +609,15 @@ var dataView;
           objHttpDataRequest.abort();
 
           }
-          
-          // Clear the timeout for removing the result
-          clearTimeout(timeout);
-          
-          objHttpDataRequest = $.ajax({
-            type: 'POST',
-            url: callbackPath + '/' + op,
-            data: data,
-            success: callbackSuccess,
-            dataType: "json"
-          });
+
+          ajaxOptions['url'] = callbackPath + '/' + op;
+          ajaxOptions['data'] = data;
+
+          objHttpDataRequest = $.ajax(ajaxOptions);
 
         }
         
         function updateSettings(setting, value){
-          
-          updateStatus(true);
           
           data = {
             'view': viewName,
@@ -497,33 +629,383 @@ var dataView;
           
         }
         
-        function callbackSuccess(response){
+        // Error handling function
+        function callbackError(x, e){
           
-          updateStatus(false);
+          updateLoadingBar(false);
           
-          if(response && response.result){
-            $result.append(response.result);
-            timeout = setTimeout("$('#result').empty();",3000);
+          var errorMessage = []; // Error message for user
+          var errorLog; // Error message for log
+          
+          if(x.status==0){
+            
+            errorMessage.push({type : 'error', message: 'You are offline! Please Check Your Network.'});
+            
+          }else{
+          
+            errorMessage.push({type : 'error', message: 'Sorry there was an error - please reload this page and try again.'});
+          
+            if(x.status==404){
+            errorLog =  '404: Requested URL not found.';
+            }else if(x.status==500){
+            errorLog =  '500: Internel Server Error.';
+            }else if(e=='parsererror'){
+            errorLog =  'Error parsing JSON Request..';
+            }else if(e=='timeout'){
+            errorLog =  'Request Time out.';
+            }else {
+            errorLog =  'Unknown Error: '+x.responseText;
+            }
+            
+            // Pass the error to the callback function so we can try and fix any errors.
+            callback('log', {error : errorLog});
+          
+          }
+          
+          updateStatus(true, errorMessage);
+          
+        }
+        
+        function callbackSuccess(args){
+          
+          // Our ajax function caller just passes in an array of all arguments
+          response = args[0];
+          
+          updateLoadingBar(false);
+
+          if(response){
+            
+            if(response.updated){
+              
+              // Loop through all the updated nids, and set the values in the grid
+              // We also need to modify the commandQueue
+              var command = commandQueue.pop();
+              
+              // Get the column id
+              var id = columns[command.cell]['id']; 
+              
+              // Need to get the NID of the edited row (not a mluti-select row)
+              var item = dataView.getItem(command.row);
+              
+              
+              var i = response.updated.indexOf(item.id);
+              
+              // Is there a value to update the cells with?
+              if(response.reloaded_value){
+                value = response.reloaded_value;
+                
+                // Need to update the edited cell with the new value
+                item[id] = value;
+                dataView.updateItem(item.id, item);
+                
+                // Update the command queue with the new command
+                command.serializedValue = value;
+                
+                // If we've reloaded, ondo cannot just reset the value in the grid as it 
+                // might not match the node - needs to use node revisions
+                command.revisions = true;
+                
+              }else{
+                value = command.serializedValue;
+              }
+
+              // Was the edited item succesfully updated?
+              if(i !== -1){
+                // If it was, remove it from the response.updated array prior to looping through
+                response.updated.splice(i, 1);
+              }else{ // Reset the field to the original value
+
+                // Reset the field value 
+                item[id] = command.prevSerializedValue;
+
+                // Update the dataView with the old value
+                dataView.updateItem(item.id, item);
+
+                // Move the focus back
+                grid.setActiveCell(command.row, command.cell);
+
+              }
+              
+              if(response.updated.length){
+                
+                command.multipleEdits = [];
+                
+                $.each(response.updated, function(i, node) { 
+                
+                  // Get the row denoted by the nid
+                  row = dataView.getRowById(node.nid);
+                
+                  // // Get the data item for the row
+                  var item = dataView.getItem(row);
+                
+
+                  // Update the item with the new value (if necessary)
+                  if(item[id] != value){
+                    
+                    // We want this to be included in the commandQueue so add it.
+                    command.multipleEdits.push({
+                                                  row: row,
+                                                  prevSerializedValue: item[id]
+                                              });
+
+                      // Change the value
+                      item[id] = value;
+
+                      // Update the dataView
+                      dataView.updateItem(item.id, item);
+
+                    }           
+                
+                
+                });
+              
+              }
+              
+              // Add the modified command back onto the queue
+              commandQueue.push(command);
+
+            }
+            // Were there any errors?
+            if(response.errors){  
+
+              error = true;
+
+              $.each(response.errors, function(nid, errorMessage) { 
+                
+                row = dataView.getRowById(nid);
+                cellNode = grid.getCellNode(row, command.cell);
+                
+                $(cellNode).addClass('invalid');
+
+                 $(cellNode).bt(errorMessage[id], {
+                  positions : 'right',
+                  fill : 'rgba(0, 0, 0, .7)',
+                  strokeWidth : 0,
+                  spikeLength : 10,
+                  cssStyles : {
+                    color : 'white',
+                    'font-size' : '10px'
+                  },
+                  width: 150,
+                  closeWhenOthersOpen : true
+                });
+                
+                                         
+              });
+              
+            }else{
+              
+              error = false;
+              
+            }
+
+            if(response.messages){
+            updateStatus(error, response.messages);
+            }
+            
           }
           
         }
         
-        function updateStatus(loading){
-          
-          if(loading){
-            $status.empty();
-            $status.addClass('loading');
-          }else{
-            $status.removeClass('loading');
+        function callbackComplete(args){
+
+          // Ajax has completed - so turn off the lock (IF it's on)
+          if(locked){
+            editorLock(false);
           }
           
+          // Reset ajax options after request
+          resetAjaxOptions(); 
+          
+        }
+        
+        function updateStatus(error, statusMessages){
+          
+           $status.attr('class', '');
+           
+           $status.addClass((error) ? 'slickgrid-error' : 'slickgrid-no-error');
+         
+           $status.bt({
+            contentSelector: Drupal.theme('slickgridMessages', statusMessages), 
+            positions : 'left',
+            fill : 'rgba(0, 0, 0, .7)',
+            strokeWidth : 0,
+            spikeLength : 10,
+            cssStyles : {
+              color : 'white',
+              'font-size' : '10px'
+            },
+            width: 250,
+            closeWhenOthersOpen : true,
+            trigger : 'hover'
+          });        
+          
+        }
+        
+        function updateLoadingBar(loading){
+                    
+          if(loading){
+            $loadingBar.addClass('loading');
+          }else{
+            $loadingBar.removeClass('loading');
+          }
+          
+        }
+        
+        // Undo
+        function initUndo(){
+          
+          options['editCommandHandler'] = queueAndExecuteCommand;
+          $('#slickgrid-undo').click(undo);
+          
+        }
+        
+        function queueAndExecuteCommand(item,column,editCommand) {
+        
+            commandQueue.push(editCommand);
+            editCommand.execute();
+        }
+
+        function undo() {
+
+            var command = commandQueue.pop();
+            if (command && Slick.GlobalEditorLock.cancelCurrentEdit()) {
+
+                command.undo();
+                
+                var data = [];
+
+                // Build an array of nids to reset
+                var item = dataView.getItem(command.row);
+                
+                data.undo = [];
+                
+                data.undo.push({
+                  nid: item.id, 
+                  value: command.prevSerializedValue
+                });  
+                
+                // If there's multiple edits, loop through & reset all of them
+                if(typeof command.multipleEdits !== 'undefined'){
+                  $.each(command.multipleEdits, function(i, multipleEdit) { 
+                    // Retrieve the data item of the selected row
+                    var item = dataView.getItem(multipleEdit.row);
+                    data.undo.push({
+                      nid: item.id, 
+                      value: multipleEdit.prevSerializedValue
+                    });
+                  });
+                }
+                grid.gotoCell(command.row,command.cell,false);
+            }
+        }
+        
+        // Default ajax options
+        function defaultAjaxOptions(){
+          
+          ajaxOptions = {
+            type: 'POST',
+            dataType: "json",
+            successFunctions: ['callbackSuccess'],
+            errorFunctions: ['callbackError'],
+            completeFunctions: ['callbackComplete'],
+            lock: true  
+          };
+          
+          // This allows us have an array of success, error functions etc.,
+          $.each(['success', 'error', 'complete'], function(i, func){
+            
+            ajaxOptions[func] = function(){            
+              ajaxFunctionCaller(this, func, arguments);
+            };
+            
+          })
 
         }
+        
+        function ajaxFunctionCaller(thisAjaxOptions, type, args){
+          
+          $.each(ajaxOptions[type+'Functions'], function(i, func){
+            // TODO - Insecure. Change this.
+            eval(func)(args);
+          });
+          
+        }
+        
+        // Default ajax options
+        // Type successFunctions
+        function setAjaxOption(type, value){
+
+          if(typeof value == 'function'){
+              ajaxOptions[type].push(value);          
+          }else if(typeof value != 'undefined'){
+              ajaxOptions[type] = value; 
+          }
+          else{ // Not a function so remove the option
+            delete ajaxOptions[type];
+          }
+          
+        }
+        
+        function resetAjaxOptions(){
+          defaultAjaxOptions();
+        }
+        
+        function getViewName(){
+          return viewName;
+        }
+        
+        function getViewDisplayID(){
+          return viewDisplayID;
+        }
+        
+        // Function for locking grid edits globally
+        function editorLock(status){
+          grid.setOptions({editable: !status});
+          locked = status;
+
+        }
+        
+        ///////////////////////////////////////////// Public API /////////////////////////////////////////////
+        $.extend(this, {
+           // Methods
+           "callback":               callback,
+           "setAjaxOption":          setAjaxOption,
+           "resetAjaxOptions":       resetAjaxOptions,
+           "getViewName":            getViewName,
+           "getViewDisplayID":       getViewDisplayID
+        });
 
         init();
 
     }
 
 })(jQuery);
+
+// Theme functions 
+
+// Theme a slickgrid filter
+Drupal.theme.prototype.slickgridFilter = function ($input, type) {
+  
+  return $('<span class="slickgrid-filter slickgrid-filter-'+type+'"></span>')
+  .click(function(){$input.focus()}) // Make it a bit more uable - click anywhere on the span to set the focus on the input
+  .append($('<span></span>').append($input));
+  
+};
+
+// Theme the messages
+Drupal.theme.prototype.slickgridMessages = function (messages) {
+  
+  var $ul = $('<ul class="slickgrid-messages">');
+
+  $.each(messages, function(i, message) { 
+    $('<li class="'+message.type+'">'+message.message+'</li>').appendTo($ul);
+  });
+
+  return $ul;
+  
+};
+
+
 
 
