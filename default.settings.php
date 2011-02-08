@@ -1,4 +1,5 @@
 <?php
+
 // Automatic DB, user, password configuration
 $database = preg_replace("/[-\.]/", "", $_SERVER['HTTP_HOST']);
 $conf = array(
