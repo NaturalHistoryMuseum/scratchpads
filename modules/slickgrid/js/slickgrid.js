@@ -49,7 +49,6 @@ var dataView;
                 
             }
             
-              
             // Initialise the dataview & slickgrid
             dataView = new Slick.Data.DataView();
             grid = new Slick.Grid(container, dataView, columns, options);
@@ -430,7 +429,6 @@ var dataView;
             for (var columnId in columnFilters) {
                 if (columnId !== undefined && columnFilters[columnId] !== "") {
                     var c = grid.getColumns()[grid.getColumnIndex(columnId)];
-
                       // Pass the filtering to the doFilter function of whatever filter object is being used                      
                       if(c.filter.doFilter(item, c.id, columnFilters[columnId]) === false){
                         return false; // only return false at this point so ALL filters get a chance to run
@@ -735,16 +733,19 @@ var dataView;
             // Were there any errors?
             if(response.errors){  
 
-              error = true;
+              response.error = true;
 
               $.each(response.errors, function(nid, errorMessage) { 
                 
                 row = dataView.getRowById(nid);
-                cellNode = grid.getCellNode(row, command.cell);
+
+                cell = grid.getColumnIndex(response.field_id);
+                
+                cellNode = grid.getCellNode(row, cell);
                 
                 $(cellNode).addClass('invalid');
-
-                 $(cellNode).bt(errorMessage[id], {
+                  
+                 $(cellNode).bt(errorMessage[response.field_name], {
                   positions : 'right',
                   fill : 'rgba(0, 0, 0, .7)',
                   strokeWidth : 0,
@@ -760,14 +761,10 @@ var dataView;
                                          
               });
               
-            }else{
-              
-              error = false;
-              
             }
 
             if(response.messages){
-            updateStatus(error, response.messages);
+            updateStatus(response.error, response.messages);
             }
             
           }
@@ -789,6 +786,7 @@ var dataView;
         function updateStatus(error, statusMessages){
           
            $status.attr('class', '');
+
            
            $status.addClass((error) ? 'slickgrid-error' : 'slickgrid-no-error');
          

@@ -220,8 +220,13 @@
               // Get the form 
               var data = {
                 nid: args.item.id,
-                field_name: args.column.field
+                field_name: args.column.field,
               };
+              
+              // Is there a VID? If there is this is a taxonomy field
+              if(args.column.vid){
+                data.vid = args.column.vid;
+              }
               
               // Set the ajax success function to add the form when callback is complete
               slickgrid.setAjaxOption('successFunctions', this.ajaxSuccess); 
@@ -238,12 +243,24 @@
              }
              
              this.buildForm = function(response){
+
+               if(response.error){
+                 scope.cancel();
+               }  
                
-               $form = $(response.data).appendTo($formContainer);
+               $form = $(response.data.content).appendTo($formContainer);
                
+               if (response.data.__callbacks) {
+                 $.each(response.data.__callbacks, function(i, callback) {
+                   eval(callback)($form, response.data);
+                 });
+               }  
+
                $("<input type='hidden' name='reload_from_view' value='1' />").appendTo($form);
                
                $form.bind("keydown", scope.handleKeyDown);
+               
+               Drupal.attachBehaviors($formContainer);               
                
              }
 

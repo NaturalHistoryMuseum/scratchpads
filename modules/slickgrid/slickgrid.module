@@ -30,6 +30,22 @@ function slickgrid_menu(){
   return $items;
 }
 
+/** 
+ * Implementation of hook_menu_alter(). 
+ */
+function slickgrid_menu_alter(&$items){
+  // JSON parsing is much stricter is jquery 1.4 so using drupal_to_js() in AHAH callbacks will result in a parse error
+  // Rewrite the callbacks to use json_encode()   
+  // Content add more
+  $items['content/js_add_more']['page callback'] = 'slickgrid_content_add_more_js';
+  $items['content/js_add_more']['file'] = 'slickgrid.ahah.inc';
+  $items['content/js_add_more']['file path'] = drupal_get_path('module', 'slickgrid');
+  // File field
+  $items['filefield/ahah/%/%/%']['page callback'] = 'slickgrid_filefield_js';
+  $items['filefield/ahah/%/%/%']['file'] = 'slickgrid.ahah.inc';
+  $items['filefield/ahah/%/%/%']['file path'] = drupal_get_path('module', 'slickgrid');
+}
+
 /**
  * Implementation of hook_views_api
  */
@@ -211,6 +227,8 @@ function slickgrid_user($op, &$edit, &$account, $category = NULL){
  */
 function slickgrid_preprocess_views_view_slickgrid(&$vars){
   global $user;
+  // We'll need node.pages so the node forms can be pseudo-rendered
+  module_load_include('inc', 'node', 'node.pages');
   $view = $vars['view'];
   // Add settings we'll need client side
   drupal_add_js(array(
@@ -250,7 +268,6 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     if(!$name = $handler->label()){
       $name = $handler->ui_name();
     }
-    
     ($handler->content_field['field_name'] ? $field_name = $handler->content_field['field_name'] : $field_name = $field);
     // Get the column width
     if($view->style_plugin->options['settings']['column_width'][$field]){ // UI column resized
@@ -260,7 +277,6 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     }else{
       $column_width = 100; // default width for all unset columns
     }
-    
     $column = array(
       'id' => $field, // The ID of the field from the view
       'name' => $name, // Column title / label
@@ -268,9 +284,15 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       'width' => $column_width,
       'cssClass' => 'cell-title',
       'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0),
-      'args' => ''
     );
-  
+    // Is this a taxonomy term field?
+    if(is_array($handler->options['vids'])){
+      $vids = array_filter($handler->options['vids']);
+      // We can only use this as an editable field if one VID is selected
+      if(count($vids) == 1){
+        $column['vid'] = current($vids);
+      }
+    }
     // Is this field being filtered?
     // If any fields require filtering, we need to let the JS know
     if($view->style_plugin->options['columns'][$field]['filter']){
@@ -321,19 +343,16 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   $columns = array_merge($ordered_columns, $unordered_columns);
   // Construct the slickgrid data array	
   $keys = array_keys($view->field);
-  
   $data = array();
   $parents = array(); // array of tid => array(nid => nid, indent => indent) so we can retrive the nid & indentation of a parent node
   foreach($result as $count => $row){
     // Add the data fields
     foreach($columns as $column){
-    	dd($view->field[$column['field']]);
       if(!($view->field[$column['field']]->options['exclude'])){
-        $data[$count][$column['field']] = $view->field[$column['id']]->theme($row);        
+        $data[$count][$column['field']] = $view->field[$column['id']]->theme($row);
       }
     }
     $data[$count]['id'] = $row->nid;
-
     // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
     // These are aliased in $row so get the field aliases
     if(property_exists($row, $view->field['slickgrid_tid']->field_alias) && $slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
@@ -353,7 +372,6 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       );
     }
   }
-
   $vars['slickgrid'] = theme('slickgrid', $view->style_plugin->options, $columns, $data, $view);
 }
 
@@ -711,7 +729,7 @@ function slickgrid_get_plugin_types(){
  * (optional) If set, the variable will be converted to JSON and output.
  */
 function slickgrid_json($var = NULL){
-  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
+  //  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
   if(isset($var)){
     echo json_encode($var);
   }
