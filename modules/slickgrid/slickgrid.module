@@ -250,7 +250,8 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     if(!$name = $handler->label()){
       $name = $handler->ui_name();
     }
-    ($handler->content_field['field_name'] ? $id = $handler->content_field['field_name'] : $id = $field);
+    
+    ($handler->content_field['field_name'] ? $field_name = $handler->content_field['field_name'] : $field_name = $field);
     // Get the column width
     if($view->style_plugin->options['settings']['column_width'][$field]){ // UI column resized
       $column_width = $view->style_plugin->options['settings']['column_width'][$field];
@@ -259,29 +260,17 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
     }else{
       $column_width = 100; // default width for all unset columns
     }
+    
     $column = array(
-      'id' => $id, // The ID of the field from the view
+      'id' => $field, // The ID of the field from the view
       'name' => $name, // Column title / label
-      'field' => $field, // The CCK / Node field name
+      'field' => $field_name, // The CCK / Node field name - data values match the field
       'width' => $column_width,
       'cssClass' => 'cell-title',
       'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0),
       'args' => ''
     );
-    
-    dd($column);
-    
-    // Is this a CCK field?
-    if($handler->content_field['widget']['type']){
-      $column['id'] = $handler->content_field['field_name'];
-       //      $column['field'] = $handler->content_field['field_name'];
-    }elseif(count($handler->options['vids'])){
-      foreach($handler->options['vids'] as $vid){
-        if($vid){
-          $column['args'] .= 'vids[]=' . $vid . '&';
-        }
-      }
-    }
+  
     // Is this field being filtered?
     // If any fields require filtering, we need to let the JS know
     if($view->style_plugin->options['columns'][$field]['filter']){
@@ -332,17 +321,19 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   $columns = array_merge($ordered_columns, $unordered_columns);
   // Construct the slickgrid data array	
   $keys = array_keys($view->field);
+  
   $data = array();
   $parents = array(); // array of tid => array(nid => nid, indent => indent) so we can retrive the nid & indentation of a parent node
   foreach($result as $count => $row){
     // Add the data fields
-    foreach($keys as $id){
-    	dd($id);
-      if(!($view->field[$id]->options['exclude'])){
-        $data[$count][$id] = $view->field[$id]->theme($row);
+    foreach($columns as $column){
+    	dd($view->field[$column['field']]);
+      if(!($view->field[$column['field']]->options['exclude'])){
+        $data[$count][$column['field']] = $view->field[$column['id']]->theme($row);        
       }
     }
     $data[$count]['id'] = $row->nid;
+
     // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
     // These are aliased in $row so get the field aliases
     if(property_exists($row, $view->field['slickgrid_tid']->field_alias) && $slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
@@ -362,6 +353,7 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       );
     }
   }
+
   $vars['slickgrid'] = theme('slickgrid', $view->style_plugin->options, $columns, $data, $view);
 }
 

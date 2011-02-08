@@ -335,7 +335,7 @@ var dataView;
             'view': viewName,
             'display_id': viewDisplayID,
             'nids': nids,
-            'id': c.id,
+            'field_id': c.id,
             'field_name': c.field,
             'undo': options['undo']
           }
@@ -432,7 +432,7 @@ var dataView;
                     var c = grid.getColumns()[grid.getColumnIndex(columnId)];
 
                       // Pass the filtering to the doFilter function of whatever filter object is being used                      
-                      if(c.filter.doFilter(item, c.field, columnFilters[columnId]) === false){
+                      if(c.filter.doFilter(item, c.id, columnFilters[columnId]) === false){
                         return false; // only return false at this point so ALL filters get a chance to run
                       } 
                 }
@@ -572,7 +572,7 @@ var dataView;
               var sortCol = data.sortCol;
               var sortAsc = data.sortAsc;
               sortdir = sortAsc ? 1: -1;
-              sortcol = sortCol.field;
+              sortcol = sortCol.id;
       
               // Set which function to use to sort the column - presently just uses a basic comparer
               dataView.sort(comparer, sortAsc);
@@ -704,12 +704,11 @@ var dataView;
                   // Get the data item for the row
                   var item = dataView.getItem(row);
                 
-
                   // Update the item with the new value (if necessary)
-                  if(item[response.id] != node.value){
+                  if(item[response.field_name] != node.value){
 
                       // Change the value
-                      item[response.id] = node.value;
+                      item[response.field_name] = node.value;
 
                       // Update the dataView
                       dataView.updateItem(item.id, item);
@@ -853,7 +852,8 @@ var dataView;
                 var data = {
                   'view': viewName,
                   'display_id': viewDisplayID,
-                  'field_name': c.id,
+                  'field_name': c.field,
+                  'field_id': c.id,
                   'updated': command.updated
                 }
                 

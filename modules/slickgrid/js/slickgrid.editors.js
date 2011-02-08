@@ -220,7 +220,7 @@
               // Get the form 
               var data = {
                 nid: args.item.id,
-                field_name: args.column.id
+                field_name: args.column.field
               };
               
               // Set the ajax success function to add the form when callback is complete

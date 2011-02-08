@@ -9,7 +9,7 @@ function slickgrid_callback($op){
   // Basic required json 
   $json = array(
     'status' => TRUE,
-  	'op' => $op
+    'op' => $op
   );
   // The callback can append extra json
   if(is_array($additonal_json = $func())){
@@ -26,7 +26,6 @@ function slickgrid_callback($op){
   }
   // Return the json
   slickgrid_json($json);
-  
 }
 
 /**
@@ -46,6 +45,7 @@ function slickgrid_callback_update(){
   // TODO - Batch processing
   // TODO - Access checks
   $field_name = $_POST['field_name'];
+  $field_id = $_POST['field_id'];
   $updated = array(); // Array of NIDs that have been updated
   $form_state = array(
     'values' => $_POST
@@ -53,14 +53,12 @@ function slickgrid_callback_update(){
   foreach($_POST['nids'] as $nid){
     $node = node_load($nid);
     if($field = content_fields($field_name)){ // Is this a CKK field    	
-//      $form_state['values'][$field_name][0] = array(
-//        'value' => $_POST[$field_name]
-//      );
+    //      $form_state['values'][$field_name][0] = array(
+    //        'value' => $_POST[$field_name]
+    //      );
     }
-    
     // Get the vid before it is updated
     $vid = $node->vid;
-    
     // Need to create new revision
     drupal_execute('slickgrid_field_form', $form_state, $node, $field_name);
     // Has there been an error?
@@ -70,21 +68,17 @@ function slickgrid_callback_update(){
       // If not, mark it as updated nids
       $updated_nodes[$nid] = array(
         'vid' => $vid,
-      	'value' => ($_POST['reload_from_view'] ? '' : $_POST[$field_name]) // If not being reloaded from the view, populate the value  
+        'value' => ($_POST['reload_from_view'] ? '' : $_POST[$field_name]) // If not being reloaded from the view, populate the value  
       );
     }
   }
-  
   // If we want to get the value from the view, load it now
   if($_POST['reload_from_view']){
     $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], $_POST['nids']);
-
     foreach($view->result as $count => $row){
-    	$updated_nodes[$row->nid]['value'] = $view->render_field('field_ef_test_text_value', $count);
+      $updated_nodes[$row->nid]['value'] = $view->render_field($field_id, $count);
     }
-    
   }
-  
   // Clear the message queue
   drupal_get_messages();
   // Add our own messages
@@ -94,36 +88,31 @@ function slickgrid_callback_update(){
   if($count_errors = count($errors)){
     drupal_set_message(format_plural($count_errors, 'There was 1 error.', 'There were @count errors.'), 'error');
   }
-  
   return array(
     'errors' => $errors,
     'updated' => $updated_nodes,
-    'id' => $field_name
+    'field_name' => $field_name
   );
 }
 
 function slickgrid_callback_get_view($view_name, $display_id, $nids){
   $view = views_get_view($view_name);
   $view->set_display($display_id);
-
   // Add an argument to limit the view to only nids being updated	
   $options = array(
-  	'table' => 'node',
-  	'field' => nid,
-  	'break_phrase' => 1, // Allow multiple nids,
-  	'validate_argument_nid_type' => 'nid'
+    'table' => 'node',
+    'field' => nid,
+    'break_phrase' => 1, // Allow multiple nids,
+    'validate_argument_nid_type' => 'nid'
   );
-  
   $view->add_item($display_id, 'argument', 'node', 'nid', $options);
-  
-  $view->set_arguments(array(implode('+', $nids)));
-  
+  $view->set_arguments(array(
+    implode('+', $nids)
+  ));
   $view->pre_execute();
   $view->execute();
   $view->render();
-  
   return $view;
-  
 }
 
 /**
@@ -217,9 +206,9 @@ function slickgrid_callback_get_form(){
  * Callback function - log an message 
  */
 function slickgrid_callback_undo(){
-	
-	$updated_nodes = $_POST['updated'];
-	
+  $field_name = $_POST['field_name'];
+  $field_id = $_POST['field_id'];
+  $updated_nodes = $_POST['updated'];
   if(is_array($updated_nodes)){
     foreach($_POST['updated'] as $nid => $node){
       $node_revision = node_load($nid, $node['vid']);
@@ -229,19 +218,14 @@ function slickgrid_callback_undo(){
       ));
       node_save($node_revision);
     }
-    
     // All nodes have been reverted - need to get the values from the view
-      $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], array_keys($updated_nodes));
-
+    $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], array_keys($updated_nodes));
     foreach($view->result as $count => $row){
-    	$updated_nodes[$row->nid]['value'] = $view->render_field($_POST['field_name'], $count);
+      $updated_nodes[$row->nid]['value'] = $view->render_field($field_id, $count);
     }
-    
   }
-  
   return array(
     'updated' => $updated_nodes,
-    'id' => $_POST['field_name']
+    'field_name' => $field_name
   );
-  
 }
