@@ -13,6 +13,8 @@ function scratchpadify_help_help($path) {
       return theme('advanced_help_topic', 'scratchpadify_help', 'Forums');
     case 'admin/settings/language':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Multiple-languages');
+    case 'admin/settings/spm':
+      return theme('advanced_help_topic', 'scratchpadify_help', 'Export-taxon-descriptions-to-EOL');
     case 'node/add/biblio':
       return theme('advanced_help_topic', 'scratchpadify_help', 'Biblio');
     case 'node/add/blog':
@@ -67,6 +69,26 @@ function scratchpadify_help_form_alter(&$form, $form_state, $form_id) {
 function scratchpadify_help_get_from_key($key) {
   static $helpkeys = array(
     '*:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'biblio_node_form:attachments' => array('module' => 'scratchpadify_help', 'file' => 'File-attachments'),
+    'biblio_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
+    'biblio_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
+    'biblio_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'biblio_node_form:og_nodeapi:visible:og_groups' => array('module' => 'scratchpadify_help', 'file' => 'Access'),
+    'biblio_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
+    'biblio_node_form:path' => array('module' => 'scratchpadify_help', 'file' => 'URL-path-settings'),
+    'biblio_node_form:print' => array('module' => 'scratchpadify_help', 'file' => 'Printer--e-mail-and-PDF-versions'),
+    'biblio_node_form:revision_information' => array('module' => 'scratchpadify_help', 'file' => 'Revision-information'),
+    'biblio_node_form:weight_form' => array('module' => 'scratchpadify_help', 'file' => 'Node-Weight'),
+    'blog_node_form:attachments' => array('module' => 'scratchpadify_help', 'file' => 'File-attachments'),
+    'blog_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
+    'blog_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
+    'blog_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'blog_node_form:og_nodeapi:visible:og_groups' => array('module' => 'scratchpadify_help', 'file' => 'Access'),
+    'blog_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
+    'blog_node_form:path' => array('module' => 'scratchpadify_help', 'file' => 'URL-path-settings'),
+    'blog_node_form:print' => array('module' => 'scratchpadify_help', 'file' => 'Printer--e-mail-and-PDF-versions'),
+    'blog_node_form:revision_information' => array('module' => 'scratchpadify_help', 'file' => 'Revision-information'),
+    'blog_node_form:weight_form' => array('module' => 'scratchpadify_help', 'file' => 'Node-Weight'),
     'countriesmap_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
     'countriesmap_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
     'countriesmap_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
@@ -78,11 +100,21 @@ function scratchpadify_help_get_from_key($key) {
     'darwincorelocation_node_form:title' => array('module' => 'scratchpadify_help', 'file' => 'Location-title'),
     'group_node_form:og_register' => array('module' => 'scratchpadify_help', 'file' => 'Registration-form'),
     'group_node_form:title' => array('module' => 'scratchpadify_help', 'file' => 'Group-title'),
+    'image_node_form:attachments' => array('module' => 'scratchpadify_help', 'file' => 'File-attachments'),
+    'image_node_form:author' => array('module' => 'scratchpadify_help', 'file' => 'Authoring-information'),
+    'image_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
     'image_node_form:field_imagefield:0' => array('module' => 'scratchpadify_help', 'file' => 'Upload-single-image'),
     'image_node_form:image_publication' => array('module' => 'scratchpadify_help', 'file' => 'Link-to-a-bibliographic-citation'),
     'image_node_form:image_specimen' => array('module' => 'scratchpadify_help', 'file' => 'Link-to-a-specimen'),
+    'image_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'image_node_form:og_nodeapi:visible:og_groups' => array('module' => 'scratchpadify_help', 'file' => 'Access'),
+    'image_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
+    'image_node_form:path' => array('module' => 'scratchpadify_help', 'file' => 'URL-path-settings'),
+    'image_node_form:print' => array('module' => 'scratchpadify_help', 'file' => 'Printer--e-mail-and-PDF-versions'),
+    'image_node_form:revision_information' => array('module' => 'scratchpadify_help', 'file' => 'Revision-information'),
     'image_node_form:taxonomy:13' => array('module' => 'scratchpadify_help', 'file' => 'Vocabularies'),
     'image_node_form:taxonomy:7' => array('module' => 'scratchpadify_help', 'file' => 'Image-galleries'),
+    'image_node_form:weight_form' => array('module' => 'scratchpadify_help', 'file' => 'Node-Weight'),
     'nexus_character_form:group:character_group' => array('module' => 'scratchpadify_help', 'file' => 'Character-group'),
     'nexus_character_form:name' => array('module' => 'scratchpadify_help', 'file' => 'Character-title'),
     'nexus_export_form:nex' => array('module' => 'scratchpadify_help', 'file' => 'Nexus'),
@@ -93,6 +125,7 @@ function scratchpadify_help_get_from_key($key) {
     'page_node_form:body_field:body' => array('module' => 'scratchpadify_help', 'file' => 'Rich-text-editor'),
     'page_node_form:comment_settings' => array('module' => 'scratchpadify_help', 'file' => 'Comment-settings'),
     'page_node_form:menu' => array('module' => 'scratchpadify_help', 'file' => 'Menu-settings'),
+    'page_node_form:og_nodeapi:visible:og_groups' => array('module' => 'scratchpadify_help', 'file' => 'Access'),
     'page_node_form:options' => array('module' => 'scratchpadify_help', 'file' => 'Publishing-options'),
     'page_node_form:path' => array('module' => 'scratchpadify_help', 'file' => 'URL-path-settings'),
     'page_node_form:print' => array('module' => 'scratchpadify_help', 'file' => 'Printer--e-mail-and-PDF-versions'),
