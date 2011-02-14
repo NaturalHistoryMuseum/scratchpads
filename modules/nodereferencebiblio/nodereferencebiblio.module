@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * hook_field_formatter_info
+ */
+function nodereferencebiblio_field_formatter_info(){
+  return array(
+    'bibliographic_citation' => array(
+      'label' => 'Bibliographic citation (default site format)',
+      'field types' => array(
+        'nodereference'
+      )
+    )
+  );
+}
+
+/**
+ * hook_theme
+ */
+function nodereferencebiblio_theme(){
+  return array(
+    'nodereferencebiblio_formatter_bibliographic_citation' => array(
+      'arguments' => array(
+        'element' => NULL
+      ),
+      'function' => 'nodereferencebiblio_formatter_bibliographic_citation'
+    )
+  );
+}
+
+/**
+ * Theme function for 'plain' nodereference field formatter.
+ */
+function nodereferencebiblio_formatter_bibliographic_citation($element){
+  $biblio_node = node_load(array(
+    'nid' => $element['#item']['nid']
+  ));
+  return theme('biblio_style', $biblio_node, variable_get('biblio_base', 'biblio'), variable_get('biblio_style', 'classic'), TRUE);
+}
