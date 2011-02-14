@@ -26,6 +26,7 @@
         }
 
         function doFilter(item, field, search) {
+          
             // Perform the actual filtering
             if(item[field].toLowerCase().indexOf(search.toLowerCase()) === -1){
               return false;

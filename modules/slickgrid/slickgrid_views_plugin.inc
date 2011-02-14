@@ -10,7 +10,15 @@ class slickgrid_views_plugin extends views_plugin_style{
    */
   function option_definition(){
     $options = parent::option_definition();
-    // These options map directly to slickgrid options
+    $options['grouping_field'] = array(
+      'default' => NULL
+    );
+    $options['collapse_groups_by_default'] = array(
+      'default' => FALSE
+    );
+    $options['collapsible_taxonomy_field'] = array(
+      'default' => NULL
+    );
     // maps to slickgrid option enableColumnResize
     $options['enableColumnResize'] = array(
       'default' => TRUE
@@ -19,28 +27,38 @@ class slickgrid_views_plugin extends views_plugin_style{
     $options['enableColumnReorder'] = array(
       'default' => TRUE
     );
-    // maps to slickgrid option enableCellNavigation
-    $options['enableCellNavigation'] = array(
+    $options['select_columns'] = array(
+      'default' => TRUE
+    );
+    $options['delete_nodes'] = array(
       'default' => TRUE
     );
     // maps to slickgrid option asyncEditorLoading
     $options['asyncEditorLoading'] = array(
       'default' => TRUE
     );
-    // maps to slickgrid option rowHeight
-    $options['rowHeight'] = array(
-      'default' => 25
+    // maps to slickgrid option enableCellNavigation
+    $options['autoEdit'] = array(
+      'default' => FALSE
     );
     // maps to slickgrid option forceFitColumns
     $options['forceFitColumns'] = array(
       'default' => false
     );
-    // The following options are not internal to slickgrid & are handled by this module
-    $options['select_row_checkbox'] = array(
-      'default' => FALSE
+    // maps to slickgrid option forceFitColumns
+    $options['multi_edit'] = array(
+      'default' => false
+    );
+    // maps to slickgrid option forceFitColumns
+    $options['undo'] = array(
+      'default' => false
     );
     $options['viewport_height'] = array(
-      'default' => 200
+      'default' => 500
+    );
+    // maps to slickgrid option rowHeight
+    $options['rowHeight'] = array(
+      'default' => 30
     );
     return $options;
   }
@@ -122,7 +140,7 @@ class slickgrid_views_plugin extends views_plugin_style{
       // Field for setting a column's width
       $form['columns'][$field]['width'] = array(
         '#type' => 'textfield',
-        '#default_value' => ($this->options['columns'][$field]['width'] ? $this->options['columns'][$field]['width'] : 50),
+        '#default_value' => ($this->options['columns'][$field]['width'] ? $this->options['columns'][$field]['width'] : 100),
         '#size' => 10,
         '#maxlength' => 10
       );
@@ -131,7 +149,7 @@ class slickgrid_views_plugin extends views_plugin_style{
         // Field for setting if a column is sortable
         $form['columns'][$field]['sortable'] = array(
           '#type' => 'checkbox',
-          '#default_value' => $this->options['columns'][$field]['sortable'],
+          '#default_value' => ($this->options['columns'][$field]['sortable'] ? $this->options['columns'][$field]['sortable'] : false),
           '#size' => 10
         );
       }
@@ -141,7 +159,7 @@ class slickgrid_views_plugin extends views_plugin_style{
       if(isset($handlers[$field]->content_field['widget']['type'])){
         $filters['field_type'] = $handlers[$field]->content_field['widget']['type'];
       }else{
-        // Is it's not a CCK field, make a field_type from {table}_{field}
+        // If it's not a CCK field, make a field_type from {table}_{field}
         // We can then define editors for node fields (eg: node_title) and any other fields
         $filters['field_type'] = $handlers[$field]->table . '_' . $handlers[$field]->real_field;
       }
@@ -151,9 +169,8 @@ class slickgrid_views_plugin extends views_plugin_style{
         $collapsible_taxonomy_options[$field] = $field_names[$field];
       }
       foreach(slickgrid_get_plugin_types() as $plugin_type => $plugin_label){
-        // Ensure NID & node type can never be edited, even for generic editors
-        // Is this a locked field?
-        if($this->is_locked($filters['field_type']) && ($plugin_type == 'editor' || $plugin_type == 'validator')){
+        // Only allow editing (and therefore validation) if this is an editable field
+        if(($plugin_type == 'editor' || $plugin_type == 'validator') && !$this->is_editable($handlers[$field], $filters['field_type'])){
           // Field locked so do not try and find an editor
           // Add HTML warning & continue() to next to plugin type
           $form['columns'][$field][$plugin_type] = array(
@@ -167,7 +184,7 @@ class slickgrid_views_plugin extends views_plugin_style{
         if(count($plugins)){
           $form['columns'][$field][$plugin_type] = array(
             '#type' => 'select',
-            '#default_value' => $this->options['columns'][$field][$plugin_type],
+            '#default_value' => ($this->options['columns'][$field][$plugin_type] ? $this->options['columns'][$field][$plugin_type] : ''),
             '#options' => $this->get_plugin_options($plugins)
           );
         }else{
@@ -202,7 +219,7 @@ class slickgrid_views_plugin extends views_plugin_style{
           '#type' => 'checkbox',
           '#title' => t('Collapse groups'),
           '#description' => t('All groups should be collapsed by default.'),
-          '#default_value' => !empty($this->options['collapse_groups_by_default'])
+          '#default_value' => $this->options['collapse_groups_by_default']
         );
       }
       if(count($collapsible_taxonomy_options) > 1){ // Default value of <none> so needs to be greater than 1 if there's actually any fields
@@ -218,18 +235,18 @@ class slickgrid_views_plugin extends views_plugin_style{
     $form['enableColumnResize'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable resizing columns'),
-      '#default_value' => !empty($this->options['enableColumnResize'])
+      '#default_value' => $this->options['enableColumnResize']
     );
     $form['enableColumnReorder'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable reordering columns'),
-      '#default_value' => !empty($this->options['enableColumnReorder'])
+      '#default_value' => $this->options['enableColumnReorder']
     );
     $form['select_columns'] = array(
       '#type' => 'checkbox',
       '#title' => t('Column visibility'),
       '#description' => t('Allow users to show &amp; hide columns'),
-      '#default_value' => !empty($this->options['select_columns'])
+      '#default_value' => $this->options['select_columns']
     );
     $form['delete_nodes'] = array(
       '#title' => t('Delete nodes'),
@@ -240,31 +257,31 @@ class slickgrid_views_plugin extends views_plugin_style{
     $form['asyncEditorLoading'] = array(
       '#type' => 'checkbox',
       '#title' => t('A sync editor loading'),
-      '#default_value' => !empty($this->options['asyncEditorLoading'])
+      '#default_value' => $this->options['asyncEditorLoading']
     );
     $form['autoEdit'] = array(
       '#type' => 'checkbox',
       '#title' => t('Auto edit'),
-      '#default_value' => !empty($this->options['autoEdit']),
+      '#default_value' => $this->options['autoEdit'],
       '#description' => t('Activate edit on entry to cell, otherwise double click to edit.')
     );
     $form['forceFitColumns'] = array(
       '#type' => 'checkbox',
       '#title' => t('Force fit columns'),
-      '#default_value' => !empty($this->options['forceFitColumns']),
+      '#default_value' => $this->options['forceFitColumns'],
       '#description' => t('Force column widths to fit the grid.')
     );
     $form['multi_edit'] = array(
       '#type' => 'checkbox',
       '#title' => t('Multi-edit'),
       '#description' => t('Users can select & edit multiple nodes at once.'),
-      '#default_value' => !empty($this->options['multi_edit'])
+      '#default_value' => $this->options['multi_edit']
     );
     $form['undo'] = array(
       '#type' => 'checkbox',
       '#title' => t('Undo'),
       '#description' => t('Allow users to undo updates. Warning: if turned on, all updates will create a node revision.'),
-      '#default_value' => !empty($this->options['undo'])
+      '#default_value' => $this->options['undo']
     );
     $form['viewport_height'] = array(
       '#title' => t('Viewport height'),
@@ -296,16 +313,23 @@ class slickgrid_views_plugin extends views_plugin_style{
   }
 
   // Is this field editable? Lock any fields which may break the editor
-  function is_locked($field_type){
-    // Is the real field id a locked field?
-    // Add the real_field value into the array to lock more fields
-    // term_data_tid & term_data_name do not have VIDs defined, so cannot be edited
-    return (in_array($field_type, array(
+  function is_editable($handler, $field_type){
+    // Is this a taxonomy field?  	
+    if(in_array($handler->table, array(
+      'term_node',
+      'term_data',
+      'vocabulary'
+    ))){
+      // If it is a taxonomy field, it is only editable if it has one VID selected      
+      if(!(is_array($handler->options['vids']) && slickgrid_taxonomy_field_get_vid($handler))){return FALSE;}
+    }
+    // Is this a locked field?
+    // NID & node type should never be editable. Are there any other fields that need to be locked?
+    if(in_array($field_type, array(
       'node_nid',
-      'node_type',
-      'term_data_name',
-      'term_data_tid'
-    )));
+      'node_type'
+    ))){return FALSE;}
+    return TRUE;
   }
 
   // Get a FAPI select list optiuons from an array of plugins

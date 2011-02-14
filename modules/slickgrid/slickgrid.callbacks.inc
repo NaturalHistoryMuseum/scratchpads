@@ -46,27 +46,24 @@ function slickgrid_callback_delete(){
  */
 function slickgrid_callback_update(){
   // TODO - Batch processing
-  // TODO - Access checks
   $field_name = $_POST['field_name'];
   $field_id = $_POST['field_id'];
   $updated = array(); // Array of NIDs that have been updated
   $form_state = array(
     'values' => $_POST
   );
-  dd($_POST);
+
   foreach($_POST['nids'] as $nid){
     $node = node_load($nid);
-    if($field = content_fields($field_name)){ // Is this a CKK field    	
-    //      $form_state['values'][$field_name][0] = array(
-    //        'value' => $_POST[$field_name]
-    //      );
-    }
+
     // Get the vid before it is updated
     $revision_vid = $node->vid;
+    
+    // Get the vocabulary vid
     if(is_array($_POST['taxonomy'])){
       $vid = key($_POST['taxonomy']);
     }
-    // Need to create new revision
+    // Execute the form
     drupal_execute('slickgrid_field_form', $form_state, $node, $field_name, $vid);
     // Has there been an error?
     if($err = form_get_errors()){
@@ -128,7 +125,7 @@ function slickgrid_callback_get_view($view_name, $display_id, $nids){
 /**
  * Builds a form for a particular field
  */
-function slickgrid_field_form(&$form_state, $node, $field_name, $vid){
+function slickgrid_field_form(&$form_state, $node, $field_name, $vid = null){
   module_load_include('inc', 'node', 'node.pages');
   module_load_include('inc', 'content', 'includes/content.node_form');
   // Basic form settings - need to have the node in the submit handler
@@ -144,8 +141,8 @@ function slickgrid_field_form(&$form_state, $node, $field_name, $vid){
   if($vid){
     $form['taxonomy'][$vid] = taxonomy_form($vid, array_keys($node->taxonomy));
     $form['#tree'] = true;
-     // Does the field exist for this node?
-  // Or if it's body change it to body_field
+    // Does the field exist for this node?
+    // Or if it's the body field change it to body_field
   }elseif(($field_name == 'body' && $field_name = 'body_field') || property_exists($node, $field_name)){
     // Is the a CCK field?
     if($field = content_fields($field_name)){
@@ -194,10 +191,13 @@ function _slickgrid_callback_get_form_element($form, $field_name){
  */
 function slickgrid_field_form_submit($form, &$form_state){
   $node = $form['#node'];
+  
   if($form_state['values']['taxonomy']){
-  	// TODO - this wipes all taxonomy
-  	$node->taxonomy = array();
-    $vid = key($form_state['values']['taxonomy']);
+
+  	$vid = key($form_state['values']['taxonomy']);
+
+		// Filter existing terms with the same VID
+  	$node->taxonomy = array_filter($node->taxonomy, function ($element) use ($vid) { return ($element->vid != $vid); });
     foreach($form_state['values']['taxonomy'][$vid] as $tid){
       $node->taxonomy[$tid] = new stdClass();
       $node->taxonomy[$tid]->tid = $tid;
@@ -213,12 +213,14 @@ function slickgrid_field_form_submit($form, &$form_state){
   node_save($node);
 }
 
+
 /**
  * 
  * Callback function - update a view's settings
  */
 function slickgrid_callback_settings(){
-  slickgrid_set_settings($_POST['view'], $_POST['setting'], $_POST['value']);
+	global $user;
+  slickgrid_set_settings($user->uid, $_POST['view'], array($_POST['setting'] => $_POST['value']));
 }
 
 /**

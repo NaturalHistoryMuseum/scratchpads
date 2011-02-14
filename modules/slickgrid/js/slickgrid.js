@@ -59,7 +59,7 @@ var dataView;
             }
             
             // Is delete enabled? If it is, add the context menu
-            if (options['row_delete']) {
+            if (options['delete_nodes']) {
               
                 initRowDelete();
                 
@@ -75,7 +75,9 @@ var dataView;
 
             // Users can show / hide columns
             if (options['select_columns']) {
-                var columnpicker = new Slick.Controls.ColumnPicker(columns, grid, options);
+      
+              var columnpicker = new Slick.Controls.ColumnPicker(columns, grid, options);
+              
             }
 
             // Are there hidden columns?
@@ -90,19 +92,18 @@ var dataView;
                 initFilters();
             }
 
+            grid.setSelectionModel(new Slick.RowSelectionModel({
+                selectActiveRow: false  // Do not select active row 
+                                        // Going to handle this ourselves (making it selected) so user can select & edit multiple items
+                                        // Otherwise all rows will be deselected on edit
+            }));
 
             // If row checkboxes are enabled, add row selection to the grid & register the plugin
             if (options['multi_edit']) {
-              
-                grid.setSelectionModel(new Slick.RowSelectionModel({
-                    selectActiveRow: false  // Do not select active row 
-                                            // Going to handle this ourselves (making it selected) so user can select & edit multiple items
-                                            // Otherwise all rows will be deselected on edit
-                }));
 
                 grid.registerPlugin(checkboxSelector);
 
-            } 
+            }
             
             // Register events for my handling of active rows
             grid.onBeforeEditCell.subscribe(onBeforeEditCell);
@@ -227,6 +228,12 @@ var dataView;
         
         // The context menu (choosing which columns to display) has been opened
         function onHeaderContextMenu(e, ui){
+          
+          // If multi edit is anebled we want to hide the first column from the user as its the checkbox select one
+          if (options['multi_edit']) {
+            $('.slick-columnpicker li').eq(0).hide()
+          }  
+          
           // User has changed the columns
           $('input[id^=columnpicker]', '.slick-columnpicker').change(onColumnsChanged);
           // Auto resize does not fire column resize - so need to call it manually
@@ -374,6 +381,7 @@ var dataView;
             // Apply filters to the input kep up event
             $(grid.getHeaderRow()).delegate(":input", "change keyup",
             function(e) {
+                // console.log($(this).data("columnId"));
                 columnFilters[$(this).data("columnId")] = $.trim($(this).val());             
                 dataView.refresh();
             });
@@ -430,7 +438,7 @@ var dataView;
                 if (columnId !== undefined && columnFilters[columnId] !== "") {
                     var c = grid.getColumns()[grid.getColumnIndex(columnId)];
                       // Pass the filtering to the doFilter function of whatever filter object is being used                      
-                      if(c.filter.doFilter(item, c.id, columnFilters[columnId]) === false){
+                      if(c.filter.doFilter(item, c.field, columnFilters[columnId]) === false){
                         return false; // only return false at this point so ALL filters get a chance to run
                       } 
                 }
@@ -447,9 +455,11 @@ var dataView;
         
         function initGroups(){
           
-                        var groupsUI = new Slick.Controls.GroupsUI(dataView, grid, $("#controls"));
+                        // var groupsUI = new Slick.Controls.GroupsUI(dataView, grid, $("#controls"));
 
                         var groupingFieldLabel = options['columns'][options['grouping_field']]['label'];
+
+                        console.log(options['grouping_field']);  
 
                         // Set the grouping field
                         dataView.groupBy(
@@ -527,29 +537,28 @@ var dataView;
           {
               e.preventDefault();
               var cell = grid.getCellFromEvent(e);
+
+              var offset = $("#slickgrid").offset();
               
-              var offset = $('.view-slickgrid').offset();
-              
-              $("#contextMenu")
+              $("#slickgrid-delete")
                       .data("row", cell.row)
                       .css("top", e.pageY  - offset.top)
                       .css("left", e.pageX - offset.left)
                       .show();
 
               $("body").one("click", function() {
-                  $("#contextMenu").hide();
+                  $("#slickgrid-delete").hide();
               });
+              
+              $('.slick-viewport').scroll(function(){
+                $("#slickgrid-delete").hide();
+              })
           });
           
           // Register event for user clicking the context menu
-          $("#contextMenu").click(function(e) {
-      			if (!$(e.target).is("li"))
-      				return;
-
-      			var row = $(this).data("row");
-      			
-      			deleteRow(row);
-
+          $("#slickgrid-delete-button").click(function(e) {
+      			var row = $('#slickgrid-delete').data("row");
+            deleteRow(row);
       		});
           
         }
@@ -832,6 +841,13 @@ var dataView;
           
         }
         
+        function disableUndo(){
+
+          $undo.removeClass('undo-enabled');
+          $undo.unbind('click');
+          
+        }
+        
         function queueAndExecuteCommand(item,column,editCommand) {
         
             commandQueue.push(editCommand);
@@ -859,6 +875,11 @@ var dataView;
                 grid.gotoCell(command.row, command.cell, false);
                 
             }
+            
+            if(commandQueue.length == 0){
+              disableUndo();
+            }
+            
         }
         
         // Default ajax options

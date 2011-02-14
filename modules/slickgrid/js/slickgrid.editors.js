@@ -206,7 +206,7 @@
               // Initalise the container for the form
               var $container = $("body");
 
-              $wrapper = $("<div style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
+              $wrapper = $("<div class='node-form-editor' style='z-index:10000;position:absolute;'/>")
                   .appendTo($container);
               
               $formContainer = $('<div />').appendTo($wrapper);

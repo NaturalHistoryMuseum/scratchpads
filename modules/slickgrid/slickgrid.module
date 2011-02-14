@@ -107,7 +107,7 @@ function slickgrid_views_pre_view(&$view, $display_id){
       $existing_sorts = $view->get_items('sort');
       // Unset all the existing sorts
       foreach(array_keys($existing_sorts) as $existing_sort_id){
-        $view->set_item($display_id, 'sort', $existing_sort_id);
+        $view->set_item($display_id, 'sort', $existing_sort_id, null);
       }
       // Add two sorts to the view - one for the parent term, one for the child
       foreach(array(
@@ -216,6 +216,20 @@ function slickgrid_user($op, &$edit, &$account, $category = NULL){
   }
 }
 
+/**
+ * Implementation of hook_form_alter().
+ */
+function slickgrid_form_alter(&$form, $form_state, $form_id){
+  global $user;
+  switch($form_id){
+    case 'views_ui_rearrange_form':
+      // We want to reset field visiabilty & order when views fields are rearranged
+      // Add another submit handler so we can get a handle on this 
+      $form['buttons']['submit']['#submit'][] = 'slickgrid_views_ui_rearrange_form_submit';
+      break;
+  }
+}
+
 /*********************************************************************************************
  * 
  * PREPROCESSOR FUNCTIONS
@@ -230,14 +244,6 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   // We'll need node.pages so the node forms can be pseudo-rendered
   module_load_include('inc', 'node', 'node.pages');
   $view = $vars['view'];
-  // Add settings we'll need client side
-  drupal_add_js(array(
-    'slickgrid' => array(
-      'callback_uri' => url('matrix_editor/callback/' . $view->name),
-      'path' => drupal_get_path('module', 'slickgrid'),
-      'view_name' => $view->name
-    )
-  ));
   // Get any view settings
   $view->style_plugin->options['settings'] = slickgrid_get_settings($user->uid, $view->name);
   // Set header height default
@@ -283,15 +289,11 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       'field' => $field_name, // The CCK / Node field name - data values match the field
       'width' => $column_width,
       'cssClass' => 'cell-title',
-      'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0),
+      'resizable' => ($view->style_plugin->options['enableColumnResize'] ? 1 : 0)
     );
     // Is this a taxonomy term field?
-    if(is_array($handler->options['vids'])){
-      $vids = array_filter($handler->options['vids']);
-      // We can only use this as an editable field if one VID is selected
-      if(count($vids) == 1){
-        $column['vid'] = current($vids);
-      }
+    if(is_array($handler->options['vids']) && ($vid = slickgrid_taxonomy_field_get_vid($handler))){
+      $column['vid'] = $vid;
     }
     // Is this field being filtered?
     // If any fields require filtering, we need to let the JS know
@@ -412,7 +414,7 @@ function theme_slickgrid($options, $columns, $data, $view){
   $output .= '<div id="slickgrid-loading-bar"></div>';
   $output .= '</div>';
   if($options['delete_nodes']){
-    $output .= '<ul id="contextMenu" style="display:none;position:absolute"><li>Delete row</li></ul>';
+    $output .= '<div id="slickgrid-delete" style="display:none;position:absolute"><h6>Delete node</h6><p>Are you sure you want to delete this node? This action cannot be undone!</p><p class="buttons"><input type="button" value="Delete" id="slickgrid-delete-button" /><input type="button" value="Cancel" id="slickgrid-cancel-delete" /></p></div>';
   }
   return $output;
 }
@@ -450,24 +452,23 @@ function theme_slickgrid_views_plugin_table($form){
  * DAO GET / SETTERS
  * 
  ********************************************************************************************/
-function slickgrid_set_settings($view_name, $setting, $value){
-  global $user;
-  if($user->uid){
-    $record = new stdClass();
-    $record->uid = $user->uid;
-    $record->view_name = $view_name;
-    if($record->settings = slickgrid_get_settings($user->uid, $view_name)){
-      $update = array(
-        'uid',
-        'view_name'
-      );
-    }else{
-      $update = array();
-    }
-    $record->settings[$setting] = $value;
-    $record->settings = serialize($record->settings);
-    drupal_write_record('slickgrid', $record, $update);
+function slickgrid_set_settings($uid, $view_name, $settings){
+  $record = new stdClass();
+  $record->uid = $uid;
+  $record->view_name = $view_name;
+  if($record->settings = slickgrid_get_settings($uid, $view_name)){
+    $update = array(
+      'uid',
+      'view_name'
+    );
+  }else{
+    $update = array();
   }
+  foreach($settings as $setting => $value){
+    $record->settings[$setting] = $value;
+  }
+  $record->settings = serialize($record->settings);
+  drupal_write_record('slickgrid', $record, $update);
 }
 
 /**
@@ -510,6 +511,7 @@ function slickgrid_delete_settings($params){
  * 
  ********************************************************************************************/
 function _slickgrid_add_files($options, $columns){
+
   $path = drupal_get_path('module', 'slickgrid');
   drupal_add_js($path . '/js/slickgrid/lib/jquery-1.4.3.min.js');
   // Add slickgrid dependencies
@@ -522,15 +524,12 @@ function _slickgrid_add_files($options, $columns){
   drupal_add_css($path . '/js/slickgrid/slick.grid.css');
   // Add jQuery UI files
   // Uses the UI files included in slickgrid to ensure compatibility 
-  // TODO Make this work with the jquery.ui module
   drupal_add_js($path . '/js/slickgrid/lib/jquery-ui-1.8.5.custom.min.js');
   drupal_add_css($path . '/js/slickgrid/css/smoothness/jquery-ui-1.8.5.custom.css');
   // Depending on options slected for the view, enable slickgrid plugins
   // Is check box select column enabled?
-  if($options['multi_edit']){
-    drupal_add_js($path . '/js/slickgrid/plugins/slick.checkboxselectcolumn.js');
-    drupal_add_js($path . '/js/slickgrid/plugins/slick.rowselectionmodel.js');
-  }
+  drupal_add_js($path . '/js/slickgrid/plugins/slick.checkboxselectcolumn.js');
+  drupal_add_js($path . '/js/slickgrid/plugins/slick.rowselectionmodel.js');
   // Depending on options selected, enable controls (pager, show / hide column headers)
   if($options['pager']){
     drupal_add_js($path . '/js/slickgrid/controls/slick.pager.js');
@@ -567,12 +566,8 @@ function _slickgrid_add_files($options, $columns){
   // Add bespoke slickgrid js/css
   drupal_add_js($path . '/js/slickgrid.js');
   drupal_add_css($path . '/css/slickgrid.css');
-  //TODO - remove
-  //  drupal_add_css($path . '/js/slickgrid/examples/examples.css');
-  // Add beautytips if the module's available
-  if(module_exists(beautytips)){
-    beautytips_add_beautytips();
-  }
+  // Add beautytips
+  beautytips_add_beautytips();
 }
 
 /** 
@@ -674,7 +669,7 @@ function slickgrid_plugins_list($reset = FALSE){
  * Array of filters to filter list of plugins 
  * eg: array('plugin_type' => 'editor' will return a list of all editors 
  */
-function slickgrid_get_plugins($filters){
+function slickgrid_get_plugins($filters = array()){
   // Get a list of all available plugins 
   $plugins = slickgrid_plugins_list();
   // If they need to be filtered...
@@ -688,7 +683,7 @@ function slickgrid_get_plugins($filters){
  * 
  * Return all plugins matching the filters
  * @param array $plugins
- * @param array $filters
+ * @param array $filters	
  */
 function slickgrid_filter_plugins($plugins, $filters){
   // Loop through all of the plugins
@@ -734,6 +729,41 @@ function slickgrid_json($var = NULL){
     echo json_encode($var);
   }
   exit();
+}
+
+/**
+ * 
+ * Get the vid from a taxonomy field
+ * @param object $handler
+ * @return mixed
+ * returns numeric vid if field is editable (only one vid is selected), 
+ * returns false if none or multiple vids (so not editable)
+ */
+function slickgrid_taxonomy_field_get_vid($handler){
+  $vids = array_filter($handler->options['vids']);
+  // We can only use this as an editable field if one VID is selected
+  if(count($vids) == 1){return current($vids);}
+  return FALSE;
+}
+
+/**
+ * 
+ * Additional submit handler for views_ui_rearrange_form
+ * Delete any user settings for the view which will prevent reraranged fields from displaying properly 
+ * @param array $form
+ * @param array $form_state
+ */
+function slickgrid_views_ui_rearrange_form_submit($form, $form_state){
+  global $user;
+  // Get any settings for this view	
+  $settings = slickgrid_get_settings($user->uid, $form_state['view']->name);
+  // If there are settings, wipe hidden_columns & ordered_columns
+  if(is_array($settings)){
+    slickgrid_set_settings($user->uid, $form_state['view']->name, array(
+      'hidden_columns' => null,
+      'ordered_columns' => null
+    ));
+  }
 }
 
 
