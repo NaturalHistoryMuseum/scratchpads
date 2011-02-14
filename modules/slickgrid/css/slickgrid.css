@@ -164,19 +164,28 @@ span.grouping-field-count{
   color: green;
 }
 
+.slick-group-toggle {
+    margin-right: 5px;
+}
+
+
 /* Collapsible */
 
-.toggle {
+.toggle,
+.slick-group-toggle {
   height: 9px;
   width: 9px;
   display: inline-block;
+  cursor: pointer;
 }
 
-.toggle.expand {
+.toggle.expand,
+.slick-group-toggle.collapsed{
   background: url(../images/expand.gif) no-repeat center center;
 }
 
-.toggle.collapse {
+.toggle.collapse,
+.slick-group-toggle.expanded {
   background: url(../images/collapse.gif) no-repeat center center;
 }
 
@@ -388,35 +397,57 @@ ul.slickgrid-messages li.error{
 
 /* Context menu */
 
-.view-slickgrid{
-  position: relative; 
-  /* Need to position contextMenu is relation to this known container */
-}
-
-#contextMenu
+#slickgrid-delete,
+.slick-columnpicker
 {
-	background: #e1efc7;
-	border: 1px solid gray;
-	padding: 2px;
+	border: 1px solid #949494;
 	display: inline-block;
-	min-width: 100px;
-	-moz-box-shadow: 2px 2px 2px silver;
-	-webkit-box-shadow: 2px 2px 2px silver;
+	-moz-box-shadow: 3px 3px 3px #C0C0C0;
+	-webkit-box-shadow: 3px 3px 3px #C0C0C0;
 	z-index: 99999;
+  padding-bottom: 5px;
+  background: #F4F4F4;
 }
 
-#contextMenu li
-{
-        padding: 4px 4px 4px 14px;
-        list-style: none;
-	cursor: pointer;
-	background: url("../images/arrow_right_peppermint.png") no-repeat center left;
-
-    }
-
-#contextMenu li:hover
-{
-	background-color: white;
+#slickgrid-delete{
+  font-size: 1.1em;
+  width: 300px;  
 }
+
+#slickgrid-delete h6{
+  background: url('../images/header-bg.png') repeat-x!important;
+  border-bottom: 1px solid #949494;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 15px;
+  margin-bottom: 15px;
+  
+}
+
+#slickgrid-delete p{
+  background: url("../images/delete.png") no-repeat 0 5px;
+  margin: 15px 15px;
+  padding-left: 25px;
+  line-height: 1.4em;
+}
+
+#slickgrid-delete p.buttons{
+  text-align: right;
+  background: none;
+}
+
+#slickgrid-delete input#slickgrid-delete-button{
+  margin-right: 10px;
+}
+
+.slick-columnpicker{
+  font-size: 0.9em;
+}
+
+.slick-columnpicker hr{
+  margin: 5px;
+  border: 1px inset #F4F4F4;
+}
+
 
 
