@@ -354,8 +354,8 @@ function _scratchpadify_install_image_fields(){
  * 6168: Set the "Publication" and "Group" content types as og groups
  * 6169: Update image fields
  * 6170: Possible PHP Bug (or more likely I don't understand the complexities of
- *       "foreach") caused issues with the install and setting of
- *       image_gallery_* variable.  This fixes it.
+ * "foreach") caused issues with the install and setting of
+ * image_gallery_* variable.  This fixes it.
  * 6171: Add all images to the Library.
  * 6172: Add creativecommons_lite back to the image content type
  * 6173: Run 6140 again, just for mhp.myspecies.info
@@ -1347,7 +1347,6 @@ function scratchpadify_update_6166(){
   );
 }
  */
-
 /**
  * Unset "Promoted to front page" for darwincorelocation content type
  */
@@ -1520,7 +1519,7 @@ function scratchpadify_update_6175(){
     // Also need the max delta
     $da['delta'] = db_result(db_query('SELECT MAX(delta)+1 FROM content_field_imagefield WHERE vid = %d', $da['vid']));
     db_query("INSERT INTO {content_field_imagefield} (vid, nid, delta, field_imagefield_fid, field_imagefield_list, field_imagefield_data) VALUES (%d, %d, %d, %d, %d, '%s')", $da);
-    $num_images ++;
+    $num_images++;
   }
   return array(
     array(
@@ -1536,7 +1535,9 @@ function scratchpadify_update_6175(){
  * Update method of adding additional permissions to anonymous users.
  */
 function scratchpadify_update_6176(){
-  variable_set('scratchpadify_anon_perms', array('post comments' => variable_get('scratchpadify_allow_anonymous_comments', 0)));
+  variable_set('scratchpadify_anon_perms', array(
+    'post comments' => variable_get('scratchpadify_allow_anonymous_comments', 0)
+  ));
   variable_del('scratchpadify_allow_anonymous_comments');
   return array(
     array(
@@ -1628,5 +1629,14 @@ function scratchpadify_udpate_6179(){
   variable_set('pathauto_update_action', 3);
   return array(
     '#finished' => TRUE
-  );  
+  );
+}
+
+/**
+ * 6180: Update "Help" link.
+ */
+function scratchpadify_update_6180(){
+  $ret = array();
+  $ret = update_sql("UPDATE {menu_links} SET link_path = 'admin/advanced_help/scratchpadify_help' WHERE link_path = 'http://scratchpads.eu/help'");
+  return $ret;
 }
