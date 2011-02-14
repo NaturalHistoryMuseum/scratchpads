@@ -1,5 +1,5 @@
 <?php
-// $Id: views_bonus_panels.module,v 1.2 2009/01/03 04:50:45 neclimdul Exp $
+// $Id: views_bonus_panels.module,v 1.4 2009/06/24 08:20:35 neclimdul Exp $
 /**
  * @file
  * Base module file for views bonus panels plugins.
@@ -14,45 +14,50 @@ function views_bonus_panels_views_api() {
   );
 }
 
-function template_preprocess_views_bonus_panels_threecol(&$vars) {
-  $vars['panel_name'] = 'threecol_33_34_33_stacked';
-  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 3, false);
-}
-
-function template_preprocess_views_bonus_panels_threecol_stack(&$vars) {
-  $vars['panel_name'] = 'threecol_33_34_33_stacked';
-  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 3, true);
-}
-
-function template_preprocess_views_bonus_panels_twocol(&$vars) {
-  $vars['panel_name'] = 'twocol';
-  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 2, true);
-}
-
-function template_preprocess_views_bonus_panels_twocol_stack(&$vars) {
-  $vars['panel_name'] = 'twocol_stacked';
-  $vars['content'] = views_bonus_panels_shared_preprocess($vars['rows'], 2, true);
+function theme_views_bonus_panels_render($view, $options, $rows, $title) {
+  panels_load_include('display-render');
+  list($panel_name, $content) = views_bonus_panels_shared_preprocess($view->plugin_name, $rows);
+  return panels_print_layout($panel_name, $content);
 }
 
 function template_preprocess_views_bonus_panels_threecol_term(&$vars) {
   //
-  dpm('threecol term');
-  dpm($vars);
 }
 
 /**
  * Shared preprocess to devide out rendered rows into panel sections.
  *
+ * @param plugin_name
+ * 
  * @param $rows
  * An array of rendered views rows.
- * @param $columns
- * Number of columns to use. Valid values are 2 and 3.
- * @param $stacked
- * Whether this is a stacked layout on not(does it have a top section?)
  * @return
  * Panels content array.
  */
-function views_bonus_panels_shared_preprocess($rows, $columns = 2, $stacked = false) {
+function views_bonus_panels_shared_preprocess($plugin_name, $rows) {
+  switch ($plugin_name) {
+    case 'panels_threecol':
+      $panel_name = 'threecol_33_34_33';
+      $stacked = false;
+      $columns = 3;
+      break;
+    case 'panels_threecol_stack':
+      $panel_name = 'threecol_33_34_33_stacked';
+      $stacked = true;
+      $columns = 3;
+      break;
+    case 'panels_twocol':
+      $panel_name = 'twocol';
+      $stacked = false;
+      $columns = 2;
+      break;
+    case 'panels_twocol_stack':
+      $panel_name = 'twocol_stacked';
+      $stacked = true;
+      $columns = 2;
+      break;
+  }
+
   $content = array(
     'left' => '',
     'right' => '',
@@ -63,15 +68,13 @@ function views_bonus_panels_shared_preprocess($rows, $columns = 2, $stacked = fa
     $content['top'] = array_shift($rows);
   }
 
-  if ($columns == 2) {
-    // Setup the left and right column.
-    $col_names = array('left', 'right');
-  }
-  else {
+  $col_names[] = 'left';
+  if ($columns != 2) {
     // Assume its 3 and add the middle column.
-    $col_names = array('left', 'middle', 'right');
+    $col_names[] = 'middle';
     $content['middle'] = '';
   }
+  $col_names[] = 'right';
 
   // iterate over remaining rows and fill columns.
   foreach ($rows as $offset => $row) {
@@ -79,5 +82,5 @@ function views_bonus_panels_shared_preprocess($rows, $columns = 2, $stacked = fa
     $content[$col_names[$r]] .= $row;
   }
 
-  return $content;
+  return array($panel_name, $content);
 }
