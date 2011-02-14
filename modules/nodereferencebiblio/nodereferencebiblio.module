@@ -35,5 +35,5 @@ function nodereferencebiblio_formatter_bibliographic_citation($element){
   $biblio_node = node_load(array(
     'nid' => $element['#item']['nid']
   ));
-  return theme('biblio_style', $biblio_node, variable_get('biblio_base', 'biblio'), variable_get('biblio_style', 'classic'), TRUE);
+  return theme('biblio_style', $biblio_node, variable_get('biblio_base', 'biblio'), variable_get('biblio_style', 'classic'));
 }
