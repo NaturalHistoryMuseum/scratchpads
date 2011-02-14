@@ -203,7 +203,7 @@ function _scratchpadify_block($op, $delta, $edit){
               'attributes' => array(
                 'title' => 'View your site\'s taxonomies'
               )
-            )) . ' <div class="add-links">' . l('<img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/import.png" alt="Import"/>', 'admin/content/taxonomy/classification/import', array(
+            )) . ' <div class="add-links">' . l('<img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/import.png" alt="Import"/>', 'admin/content/taxonomy/import', array(
               'html' => TRUE,
               'attributes' => array(
                 'title' => t('Import a classification')
