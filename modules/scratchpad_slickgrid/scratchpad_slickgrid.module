@@ -1,0 +1,57 @@
+<?php
+
+/*********************************************************************************************
+ * 
+ * HOOKS
+ * 
+ ********************************************************************************************/
+
+/**
+ * Implementation of hook_init().
+ * Turn on lightbox light for slickgrid view pages - full lightbox is incompatible with jquery 1.4
+ */
+function scratchpad_slickgrid_init(){
+  global $conf;
+  if(module_exists('lightbox2')){
+    $menu_item = menu_get_item();
+    if($menu_item['page_callback'] == 'views_page'){
+      $view = views_get_view($menu_item['page_arguments'][0]);
+      if($view->display['default']->display_options['style_plugin'] == 'slickgrid'){
+        $conf['lightbox2_lite'] = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_views_api
+ */
+function scratchpad_slickgrid_views_api(){
+  return array(
+    'api' => 2
+  );
+}
+
+/**
+ * hook_imagecache_default_presets
+ * Create an imagecache preset for using in the grid editor
+ */
+function slickgrid_imagecache_default_presets(){
+  return array(
+    'matrix_editor_thumbnail' => array(
+      'presetname' => 'matrix_editor_thumbnail',
+      'actions' => array(
+        array(
+          'weight' => '0',
+          'module' => 'imagecache',
+          'action' => 'imagecache_scale',
+          'data' => array(
+            'width' => '100',
+            'height' => '100',
+            'upscale' => 0
+          )
+        )
+      )
+    )
+  );
+}
