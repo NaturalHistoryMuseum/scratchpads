@@ -38,6 +38,7 @@ var collapsibleFormatter = function(row, cell, value, columnDef, dataContext) {
     {
 
         function doFilter(item, field, search) {
+        
             
           if (item.parent != null) {
             

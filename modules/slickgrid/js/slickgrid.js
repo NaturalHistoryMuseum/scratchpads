@@ -381,7 +381,6 @@ var dataView;
             // Apply filters to the input kep up event
             $(grid.getHeaderRow()).delegate(":input", "change keyup",
             function(e) {
-                // console.log($(this).data("columnId"));
                 columnFilters[$(this).data("columnId")] = $.trim($(this).val());             
                 dataView.refresh();
             });
@@ -526,6 +525,7 @@ var dataView;
     			                    delete columnFilters[field];
     			                    
     			                    e.stopImmediatePropagation();
+    			                    
     			                }
     			            });
           

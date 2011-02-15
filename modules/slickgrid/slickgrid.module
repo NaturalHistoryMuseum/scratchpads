@@ -66,6 +66,7 @@ function slickgrid_views_pre_view(&$view, $display_id){
   // TODO - Can this be moved into the views style plugin? See plugins.inc
   // Is this view a slickgrid view
   if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
+  	
     // turn off views paging
     $view->display_handler->set_option('use_pager', FALSE);
     // Need to have all rows returned for slickgrid to work correctly, so turn off items per page
@@ -187,12 +188,13 @@ function slickgrid_slickgrid_plugins(){
       'css' => $path . '/css/slickgrid.editors.css',
       'plugin_type' => 'editor'
     ),
+    // Validators
     'requiredFieldValidator' => array(
       'description' => t('Required field'),
       'js' => $path . '/js/slickgrid.validators.js',
       'plugin_type' => 'validator'
     ), //    	'field_type' => array() // Works for all fields types
-    // Validators
+    // Filters
     'textFilter' => array(
       'description' => t('Text filter'),
       'js' => $path . '/js/slickgrid.filters.js',
@@ -329,6 +331,7 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
       // Set the filters & formatters for the collapsible field column
       $view->style_plugin->options['columns'][$field]['filter'] = $column['filter'] = 'collapsibleFilter';
       $view->style_plugin->options['columns'][$field]['formatter'] = $column['formatter'] = 'collapsibleFormatter';
+      $view->style_plugin->options['has_filters'] = true;
     }
     // We need to know the column label for the group by function in JS
     // Add it to the views plugin options so we can access it efficiantly (otherwise I'll need to loop thru columns array)

@@ -184,7 +184,7 @@
          * If it doesn't work for a particular field, raise an issue
          */
         nodeFormEditor : function (args) {
-            var $form, $wrapper;
+            var $form, $wrapper, $input;
             var defaultValue;
             var scope = this;
 
@@ -260,6 +260,8 @@
                
                $form.bind("keydown", scope.handleKeyDown);
                
+               $input = $('textarea, input[type="text"]', $form).eq(0);
+               
                Drupal.attachBehaviors($formContainer);               
                
              }
@@ -327,9 +329,16 @@
             this.isValueChanged = function() {
                 return true; // Is there a better way of knowing if the form has changed?
             };
+            
+            this.focus = function() {
+              $input.focus();
+            }
 
             this.validate = function() {
               if (args.column.validator) {
+                
+                  
+                
                   var validationResults = args.column.validator($input.val(), $input);
                   if (!validationResults.valid)
                       return validationResults;
