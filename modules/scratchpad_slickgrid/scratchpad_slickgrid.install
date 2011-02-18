@@ -6,10 +6,69 @@
  * We need this module's hook_init to run first so lightbox_lite variable can be set
  */
 function scratchpad_slickgrid_install(){
-	
-	if(module_exists('lightbox2')){
-  // Set the module's weight high so that it runs after other modules.
-  db_query("UPDATE {system} SET weight = 1 WHERE name = 'lightbox2' and type = 'module'");  
-	}
-	
+  if(module_exists('lightbox2')){
+    // Set the module's weight high so that it runs after other modules.
+    db_query("UPDATE {system} SET weight = 1 WHERE name = 'lightbox2' and type = 'module'");
+  }
+  // Create tables.
+  drupal_install_schema('scratchpad_slickgrid');
+}
+
+function scratchpad_slickgrid_uninstall(){
+  drupal_uninstall_schema('scratchpad_slickgrid');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function scratchpad_slickgrid_schema(){
+  $schema['scratchpad_slickgrid_batches'] = array(
+    'fields' => array(
+      'bid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The batch id'
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The users UID.'
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the batch was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      )
+    ),
+    'primary key' => array(
+      'bid'
+    )
+  );
+  $schema['scratchpad_slickgrid_nodes'] = array(
+    'fields' => array(
+      'bid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The batch id'
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The node id'
+      )
+    ),
+    'primary key' => array(
+      'bid',
+    	'nid'
+    )
+  );
+  return $schema;
 }

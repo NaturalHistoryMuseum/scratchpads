@@ -5,7 +5,6 @@
  * HOOKS
  * 
  ********************************************************************************************/
-
 /**
  * Implementation of hook_init().
  * Turn on lightbox light for slickgrid view pages - full lightbox is incompatible with jquery 1.4
@@ -21,6 +20,30 @@ function scratchpad_slickgrid_init(){
       }
     }
   }
+  // Unset scratchpad_slickgrid_bid session variable so it can be recreated for subsequent batch uploads
+  if((arg(0) == 'file-plupload' || arg(0) == 'batch')){ // Is this any page load other than via batch?
+    $path = drupal_get_path('module', 'scratchpad_slickgrid');
+    drupal_add_js($path . '/js/batch.js');
+    if($_SESSION['scratchpad_slickgrid_bid']){
+      $_SESSION['scratchpad_slickgrid_bid'] = NULL;
+    }
+  }
+}
+
+/** 
+ * Implementation of hook_menu(). 
+ */
+function scratchpad_slickgrid_menu(){
+  // Menu callbacks
+  $items['scratchpad-slickgrid/callback/get-bid'] = array(
+    'page callback' => 'scratchpad_slickgrid_callback_get_bid',
+    'access arguments' => array(
+      'access content'
+    ),
+    'type' => MENU_CALLBACK,
+    'file' => 'scratchpad_slickgrid.callbacks.inc'
+  );
+  return $items;
 }
 
 /**
@@ -36,10 +59,10 @@ function scratchpad_slickgrid_views_api(){
  * hook_imagecache_default_presets
  * Create an imagecache preset for using in the grid editor
  */
-function slickgrid_imagecache_default_presets(){
+function scratchpad_slickgrid_imagecache_default_presets(){
   return array(
-    'matrix_editor_thumbnail' => array(
-      'presetname' => 'matrix_editor_thumbnail',
+    'slickgrid_thumbnail' => array(
+      'presetname' => 'slickgrid_thumbnail',
       'actions' => array(
         array(
           'weight' => '0',
@@ -54,4 +77,149 @@ function slickgrid_imagecache_default_presets(){
       )
     )
   );
+}
+
+/**
+ * 
+ * hook_nodeapi
+ * @param $node
+ * @param $op
+ * Need to record when user performs batch creation of nodes
+ * If nodes are being batch created, set type & start time in a session
+ * We need to set a session as plupload doesn't allow us to get a handle on batch completion
+ */
+function scratchpad_slickgrid_nodeapi(&$node, $op){
+  global $user;
+  switch($op){
+    case 'insert':
+      if(arg(0) == 'plupload-pernode' || arg(0) == 'batch'){ // Are images being batch uploaded by plupload?
+        // Store the BID in a session - plupload uses multi http requests so static vars don't persist
+        if(!$_SESSION['scratchpad_slickgrid_bid']){
+          $_SESSION['scratchpad_slickgrid_bid'] = scratchpad_slickgrid_create_batch($user->uid, $node->timestamp);
+        }
+        scratchpad_slickgrid_add_node_to_batch($_SESSION['scratchpad_slickgrid_bid'], $node->nid);
+      }
+      break;
+    case 'delete':
+      scratchpad_slickgrid_delete('scratchpad_slickgrid_nodes', array(
+        'nid' => $node->nid
+      ));
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function scratchpad_slickgrid_form_alter(&$form, $form_state, $form_id){
+  // Is this a node type form being displayed in a pop up?
+  if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){
+    // hashcash prevents form submitting, so turn it off
+    global $conf;
+    $conf['hashcash_addorignore'] = true;
+    
+    // If hashcash alter has run before this one, remove the validation function
+    if(is_numeric($hashcash_validate_key = array_search('hashcash_validate', $form['#validate']))){
+    	unset($form['#validate'][$hashcash_validate_key]);
+    }
+    
+  }
+}
+
+/*********************************************************************************************
+ * 
+ * PREPROCESSOR FUNCTIONS
+ * 
+ ********************************************************************************************/
+function scratchpad_slickgrid_preprocess_page(&$vars){
+  if(arg(0) == 'file-plupload'){
+    $vars['content'] .= "<script type='text/javascript'>$(function() {new Batch($('#html5_uploader'), 'image'); })</script>";
+  }
+}
+
+/*********************************************************************************************
+ * 
+ * BATCH HANDLING
+ * 
+ ********************************************************************************************/
+/**
+ * 
+ * Create a batch
+ * @param int $uid
+ * @param int $time
+ */
+function scratchpad_slickgrid_create_batch($uid, $time){
+  $batch = new stdClass();
+  $batch->uid = $uid;
+  $batch->created = $time;
+  drupal_write_record('scratchpad_slickgrid_batches', $batch);
+  return $batch->bid;
+}
+
+/**
+ * 
+ * Store a nid / bid
+ * @param int $bid
+ * @param int $nid
+ */
+function scratchpad_slickgrid_add_node_to_batch($bid, $nid){
+  $node = new stdClass();
+  $node->bid = $bid;
+  $node->nid = $nid;
+  drupal_write_record('scratchpad_slickgrid_nodes', $node);
+  return $node;
+}
+
+/**
+ * 
+ * Store a nid / bid
+ * @param int $bid
+ * @param int $nid
+ */
+function scratchpad_slickgrid_delete($table, $params){
+  $conj = '';
+  if(count($params)){
+    $sql = 'DELETE FROM {' . $table . '} WHERE ';
+    foreach($params as $field => $param){
+      $sql .= $conj . $field . ' = "%s"';
+      $conj = ' AND ';
+    }
+    db_query($sql, $params);
+  }
+}
+
+/**
+ * 
+ * Store a nid / bid
+ * @param int $bid
+ * @param int $nid
+ */
+function scratchpad_slickgrid_get_batch($params, $limit = 1){
+  $conj = '';
+  if(count($params)){
+    $sql = 'SELECT bid FROM {scratchpad_slickgrid_batches} WHERE ';
+    foreach($params as $field => $param){
+      $sql .= $conj . $field . ' = "%s"';
+      $conj = ' AND ';
+    }
+    $sql .= ' ORDER BY created DESC';
+    if($limit){
+      $sql .= ' LIMIT ' . $limit;
+    }
+    $result = db_query($sql, $params);
+    return db_result($result);
+  }
+}
+
+/**
+ * Get all node types with batches
+ */
+function scratchpad_slickgrid_get_batch_node_types(){
+  $node_types = array();
+  $sql = 'SELECT DISTINCT type FROM {node} n INNER JOIN {scratchpad_slickgrid_nodes} ssn ON ssn.nid = n.nid';
+  $result = db_query($sql);
+  while($node = db_fetch_object($result)){
+    $node_types[] = $node->type;
+  }
+  return $node_types;
 }
