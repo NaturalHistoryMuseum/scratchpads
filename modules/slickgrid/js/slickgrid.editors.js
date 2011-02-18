@@ -50,6 +50,7 @@
 
             this.applyValue = function(item,state) {
                 item[args.column.field] = state;
+                delete item.serialised_data;
             };
 
             this.isValueChanged = function() {
@@ -187,6 +188,7 @@
             var $form, $wrapper, $input;
             var defaultValue;
             var scope = this;
+            var serialised_data;
 
             function toggle(e) {
                 if (e.type == "keydown" && e.which != 32) return;
@@ -260,7 +262,7 @@
                
                $form.bind("keydown", scope.handleKeyDown);
                
-               $input = $('textarea, input[type="text"]', $form).eq(0);
+               $input = $('textarea, input[type="text"], select', $form).eq(0);
                
                Drupal.attachBehaviors($formContainer);               
                
@@ -322,8 +324,11 @@
             };
 
             this.applyValue = function(item,state) {
+              
                 item[args.column.field] = state;
-                item['serialised_data'] = $form.serialize();
+
+                item.serialised_data = $form.serialize();
+  
             };
 
             this.isValueChanged = function() {
@@ -335,10 +340,7 @@
             }
 
             this.validate = function() {
-              if (args.column.validator) {
-                
-                  
-                
+              if (args.column.validator) {                
                   var validationResults = args.column.validator($input.val(), $input);
                   if (!validationResults.valid)
                       return validationResults;

@@ -36,35 +36,30 @@ function slickgrid_callback($op){
  */
 function slickgrid_callback_delete(){
   $node = node_load($_POST['nid']);
-  // node_delete() has access check so it's safe just to try and delete the node
+  // node_delete() has access check so it's safe to just try and delete the node
   node_delete($node->nid);
 }
 
-/**
- * 
- * Callback function - update a node
- */
 function slickgrid_callback_update(){
+	
   // TODO - Batch processing
   $field_name = $_POST['field_name'];
   $field_id = $_POST['field_id'];
+	module_load_include('inc', 'node', 'node.pages');
   $updated = array(); // Array of NIDs that have been updated
   $form_state = array(
-    'values' => $_POST
+  	'values' => $_POST
   );
-
+  $form_state['values']['op'] = t('Save');
+  $form_state['submitted'] = true;
   foreach($_POST['nids'] as $nid){
     $node = node_load($nid);
-
     // Get the vid before it is updated
     $revision_vid = $node->vid;
+    $form_id = $node->type . '_node_form';
+    // Execute the node form
+    drupal_execute($form_id, $form_state, $node);
     
-    // Get the vocabulary vid
-    if(is_array($_POST['taxonomy'])){
-      $vid = key($_POST['taxonomy']);
-    }
-    // Execute the form
-    drupal_execute('slickgrid_field_form', $form_state, $node, $field_name, $vid);
     // Has there been an error?
     if($err = form_get_errors()){
       $errors[$nid] = $err;
@@ -76,7 +71,7 @@ function slickgrid_callback_update(){
       );
     }
   }
-  // If we want to get the value from the view, load it now
+  // If we want to reload the value from the view, get it now
   if($_POST['reload_from_view']){
     $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], $_POST['nids']);
     foreach($view->result as $count => $row){
@@ -102,9 +97,20 @@ function slickgrid_callback_update(){
   );
 }
 
+/**
+ * 
+ * Get a views filtered by NIDs 
+ * @param string $view_name
+ * @param string $display_id
+ * @param array $nids
+ */
 function slickgrid_callback_get_view($view_name, $display_id, $nids){
   $view = views_get_view($view_name);
   $view->set_display($display_id);
+  // Remove all existing arguments - we'll limit result set by NID only
+  foreach($view->get_items('argument') as $id => $arg){
+    $view->set_item($display_id, 'argument', $id);
+  }
   // Add an argument to limit the view to only nids being updated	
   $options = array(
     'table' => 'node',
@@ -122,105 +128,16 @@ function slickgrid_callback_get_view($view_name, $display_id, $nids){
   return $view;
 }
 
-/**
- * Builds a form for a particular field
- */
-function slickgrid_field_form(&$form_state, $node, $field_name, $vid = null){
-  module_load_include('inc', 'node', 'node.pages');
-  module_load_include('inc', 'content', 'includes/content.node_form');
-  // Basic form settings - need to have the node in the submit handler
-  $form = array(
-    '#node' => $node,
-    '#field_name' => $field_name
-  );
-  if(!node_access('update', $node)){
-    drupal_set_message(t('Access denied'), 'error');
-    return;
-  }
-  // If $vid has been passed in, this is a taxonomy field
-  if($vid){
-    $form['taxonomy'][$vid] = taxonomy_form($vid, array_keys($node->taxonomy));
-    $form['#tree'] = true;
-    // Does the field exist for this node?
-    // Or if it's the body field change it to body_field
-  }elseif(($field_name == 'body' && $field_name = 'body_field') || property_exists($node, $field_name)){
-    // Is the a CCK field?
-    if($field = content_fields($field_name)){
-      // Check access for this field
-      if(!content_access('edit', $field)){
-        drupal_set_message(t('Access denied'), 'error');
-        return;
-      }
-      $form += content_field_form($form, $form_state, $field);
-    }else{ // Not CCK - try and extract the form from the node form
-      $node_form = node_form($form_state, $node);
-      if($element = _slickgrid_callback_get_form_element($node_form, $field_name)){
-        $form += $element;
-      }else{
-        drupal_set_message(t('Field not found'), 'error');
-        return;
-      }
-    }
-  }else{
-    drupal_set_message(t('Field not found'), 'error');
-    return;
-  }
-  return $form;
-}
-
-/**
- * Recursively extract a field from a form array
- * @param array $form
- * @param string $field_name
- */
-function _slickgrid_callback_get_form_element($form, $field_name){
-  static $element;
-  foreach(element_children($form) as $key){
-    if($key == $field_name){
-      $element[$key] = $form[$key];
-      return $element;
-    }else{
-      _slickgrid_callback_get_form_element($form[$key], $field_name);
-    }
-    if(isset($element)){return $element;}
-  }
-}
-
-/**
- * Submit handler for slickgrid_field_form()
- */
-function slickgrid_field_form_submit($form, &$form_state){
-  $node = $form['#node'];
-  
-  if($form_state['values']['taxonomy']){
-
-  	$vid = key($form_state['values']['taxonomy']);
-
-		// Filter existing terms with the same VID
-  	$node->taxonomy = array_filter($node->taxonomy, function ($element) use ($vid) { return ($element->vid != $vid); });
-    foreach($form_state['values']['taxonomy'][$vid] as $tid){
-      $node->taxonomy[$tid] = new stdClass();
-      $node->taxonomy[$tid]->tid = $tid;
-      $node->taxonomy[$tid]->vid = $vid;
-    }
-  }else{
-    $node->{$form['#field_name']} = $form_state['values'][$form['#field_name']];
-  }
-  // If undo is enabled, create a new node revision	
-  if($_POST['undo']){
-    $node->revision = true;
-  }
-  node_save($node);
-}
-
 
 /**
  * 
  * Callback function - update a view's settings
  */
 function slickgrid_callback_settings(){
-	global $user;
-  slickgrid_set_settings($user->uid, $_POST['view'], array($_POST['setting'] => $_POST['value']));
+  global $user;
+  slickgrid_set_settings($user->uid, $_POST['view'], array(
+    $_POST['setting'] => $_POST['value']
+  ));
 }
 
 /**
@@ -234,11 +151,9 @@ function slickgrid_callback_log(){
  * Callback function - retrieve a form 
  */
 function slickgrid_callback_get_form(){
+  module_load_include('inc', 'node', 'node.pages');
   $node = node_load($_POST['nid']);
-  $field_name = $_POST['field_name'];
-  // taxonomy vid (passed in if this a taxonomy field)
-  $vid = $_POST['vid'];
-  $html = drupal_get_form('slickgrid_field_form', $node, $field_name, $vid);
+  $html = drupal_get_form($node->type . '_node_form', $node);
   $data = new stdClass();
   $data->content = $html;
   // Register the JavaScript callback for this module.

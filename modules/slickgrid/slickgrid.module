@@ -66,7 +66,6 @@ function slickgrid_views_pre_view(&$view, $display_id){
   // TODO - Can this be moved into the views style plugin? See plugins.inc
   // Is this view a slickgrid view
   if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
-  	
     // turn off views paging
     $view->display_handler->set_option('use_pager', FALSE);
     // Need to have all rows returned for slickgrid to work correctly, so turn off items per page
@@ -168,7 +167,8 @@ function slickgrid_slickgrid_plugins(){
       'field_type' => array(
         'text_textfield',
         'text_textarea',
-        'node_title'
+        'node_title',
+  			'date_text'
       ), // Need to only allow for certain field types.
       'plugin_type' => 'editor'
     ),
@@ -229,6 +229,10 @@ function slickgrid_form_alter(&$form, $form_state, $form_id){
       // Add another submit handler so we can get a handle on this 
       $form['buttons']['submit']['#submit'][] = 'slickgrid_views_ui_rearrange_form_submit';
       break;
+  }
+  // Is this a node type form being displayed in a pop up?
+  if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){
+    $form['#after_build'][] = 'slickgrid_node_form_after_build';
   }
 }
 
@@ -510,11 +514,10 @@ function slickgrid_delete_settings($params){
 
 /*********************************************************************************************
  * 
- * HELPER FUNCTIONS
+ * OTHER FUNCTIONS
  * 
  ********************************************************************************************/
 function _slickgrid_add_files($options, $columns){
-
   $path = drupal_get_path('module', 'slickgrid');
   drupal_add_js($path . '/js/slickgrid/lib/jquery-1.4.3.min.js');
   // Add slickgrid dependencies
@@ -767,6 +770,58 @@ function slickgrid_views_ui_rearrange_form_submit($form, $form_state){
       'ordered_columns' => null
     ));
   }
+}
+
+function slickgrid_node_form_after_build(&$form, &$form_state){
+  if($_POST['vid']){
+    $vid = $_POST['vid'];
+    // Load the vocabulary so we know whether this vocabulary uses tags
+    $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
+    if($vocabularies[$vid]->tags){
+      $field_name = 'taxonomy[tags][' . $vid . ']';
+    }else{
+      $field_name = 'taxonomy[' . $vid . ']';
+    }
+  }elseif($_POST['field_name'] == 'body'){
+    $field_name = 'body_field';
+  }else{
+    $field_name = $_POST['field_name'];
+  }
+  if(!slickgrid_callback_get_form_element($form, $field_name)){
+    drupal_set_message(t('Field not found'), 'error');
+  }
+  return $form;
+}
+
+function slickgrid_callback_get_form_element(&$form, $field_name){
+  static $element_exists;
+  foreach(element_children($form) as $key){
+    // If this isn't the field we're looking for it needs to be removed from the form 
+    if($key === $field_name || $form[$key]['#name'] == $field_name){
+      // tidy up the form a bit by removing fieldsets if the field is in one
+      if($form['#type'] == 'fieldset'){
+        unset($form['#type']);
+      }
+      $element_exists = true;
+    }else{
+      if(count(element_children($form[$key]))){
+        // If this item has children, call again
+        slickgrid_callback_get_form_element($form[$key], $field_name);
+      }
+      if(!count(element_children($form[$key]))){
+        // If there are no children & it's not a requried field, unset it     
+        // Keep all hidden elements
+        // these will containf form build id etc.,  
+        if(!in_array($key, array(
+          'form_build_id',
+          'form_id'
+        )) || is_numeric($key)){
+          unset($form[$key]);
+        }
+      }
+    }
+  }
+  return $element_exists;
 }
 
 
