@@ -151,6 +151,7 @@ function slickgrid_callback_log(){
  * Callback function - retrieve a form 
  */
 function slickgrid_callback_get_form(){
+	
   module_load_include('inc', 'node', 'node.pages');
   $node = node_load($_POST['nid']);
   $html = drupal_get_form($node->type . '_node_form', $node);
@@ -163,6 +164,7 @@ function slickgrid_callback_get_form(){
   return array(
     'data' => $data
   );
+  
 }
 
 /**

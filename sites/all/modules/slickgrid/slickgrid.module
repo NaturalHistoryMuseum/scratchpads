@@ -234,6 +234,7 @@ function slickgrid_form_alter(&$form, $form_state, $form_id){
   if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){
     $form['#after_build'][] = 'slickgrid_node_form_after_build';
   }
+
 }
 
 /*********************************************************************************************
@@ -778,16 +779,20 @@ function slickgrid_node_form_after_build(&$form, &$form_state){
     // Load the vocabulary so we know whether this vocabulary uses tags
     $vocabularies = taxonomy_get_vocabularies($form['#node']->type);
     if($vocabularies[$vid]->tags){
-      $field_name = 'taxonomy[tags][' . $vid . ']';
+      $form['#field_name'] = 'taxonomy[tags][' . $vid . ']';
     }else{
-      $field_name = 'taxonomy[' . $vid . ']';
+      $form['#field_name'] = 'taxonomy[' . $vid . ']';
     }
   }elseif($_POST['field_name'] == 'body'){
-    $field_name = 'body_field';
+    $form['#field_name'] = 'body_field';
   }else{
-    $field_name = $_POST['field_name'];
+    $form['#field_name'] = $_POST['field_name'];
   }
-  if(!slickgrid_callback_get_form_element($form, $field_name)){
+  
+  // Some modules might need to play around with the form / field name to get the correct part of the form 
+  drupal_alter('slickgrid_field', $form, $form['#field_name']);
+  
+  if(!slickgrid_callback_get_form_element($form, $form['#field_name'])){
     drupal_set_message(t('Field not found'), 'error');
   }
   return $form;
