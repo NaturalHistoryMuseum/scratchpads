@@ -1,4 +1,4 @@
-<?php
+  <?php
 
 /**
  * Extending the view_plugin_style class to provide a slickgrid style.
@@ -163,6 +163,7 @@ class slickgrid_views_plugin extends views_plugin_style{
         // We can then define editors for node fields (eg: node_title) and any other fields
         $filters['field_type'] = $handlers[$field]->table . '_' . $handlers[$field]->real_field;
       }
+      
       // Is this a term node type?
       if($filters['field_type'] == 'term_node_tid'){
         // If it is, this can be provided as "collapsible taxonomy" option

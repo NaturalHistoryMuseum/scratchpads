@@ -328,6 +328,8 @@ var dataView;
           
           });
           
+          
+          
           update(ui.item, ui.cell, nids);
           
         }
@@ -343,14 +345,14 @@ var dataView;
             'nids': nids,
             'field_id': c.id,
             'field_name': c.field,
-            'undo': options['undo']
+            'revision': options['undo']
           }
-       
+          
         // Is this a serialised form? If it is serliase the data array
          if(typeof item.serialised_data != 'undefined'){
             
             data = $.param(data) + '&' + item.serialised_data;
-            
+              
           }else{ // If not serialised pass data as an object
 
             data[c.id] = item[c.id];
@@ -457,8 +459,6 @@ var dataView;
                         // var groupsUI = new Slick.Controls.GroupsUI(dataView, grid, $("#controls"));
 
                         var groupingFieldLabel = options['columns'][options['grouping_field']]['label'];
-
-                        console.log(options['grouping_field']);  
 
                         // Set the grouping field
                         dataView.groupBy(
@@ -746,26 +746,30 @@ var dataView;
 
               $.each(response.errors, function(nid, errorMessage) { 
                 
-                row = dataView.getRowById(nid);
-
-                cell = grid.getColumnIndex(response.field_id);
-                
-                cellNode = grid.getCellNode(row, cell);
-                
-                $(cellNode).addClass('invalid');
+                if(errorMessage[response.field_name]){
                   
-                 $(cellNode).bt(errorMessage[response.field_name], {
-                  positions : 'right',
-                  fill : 'rgba(0, 0, 0, .7)',
-                  strokeWidth : 0,
-                  spikeLength : 10,
-                  cssStyles : {
-                    color : 'white',
-                    'font-size' : '10px'
-                  },
-                  width: 150,
-                  closeWhenOthersOpen : true
-                });
+                  row = dataView.getRowById(nid);
+
+                  cell = grid.getColumnIndex(response.field_id);
+                
+                  cellNode = grid.getCellNode(row, cell);
+                
+                  $(cellNode).addClass('invalid');
+                  
+                   $(cellNode).bt(errorMessage[response.field_name], {
+                    positions : 'right',
+                    fill : 'rgba(0, 0, 0, .7)',
+                    strokeWidth : 0,
+                    spikeLength : 10,
+                    cssStyles : {
+                      color : 'white',
+                      'font-size' : '10px'
+                    },
+                    width: 150,
+                    closeWhenOthersOpen : true
+                  });
+                
+                }
                 
                                          
               });

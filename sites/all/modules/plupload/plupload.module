@@ -107,7 +107,7 @@ function plupload_upload_page(){
 });
 __RSD__;
   drupal_add_js($script, 'inline');
-  $output = '<div id="html5_uploader">You browser does not support native upload. Try Firefox 3 or Safari 4 or Chrome.</div><h1 class="plupload_container">'.l('Edit uploaded images', 'matrix-editor/image').'</h1>';
+  $output = '<div id="html5_uploader">You browser does not support native upload. Try Firefox 3 or Safari 4 or Chrome.</div>';
   return $output;
 }
 

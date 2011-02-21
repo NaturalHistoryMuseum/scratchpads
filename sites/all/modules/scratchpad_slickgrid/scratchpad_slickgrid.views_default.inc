@@ -4,8 +4,9 @@
  * Implementation of hook_views_default_views().
  * Loop through all the node types & define grid editor views for them all
  */
-function slickgrid_views_default_views(){
+function scratchpad_slickgrid_views_default_views(){
   $node_types = node_get_types();
+  $batch_node_types = scratchpad_slickgrid_get_batch_node_types();
   foreach($node_types as $node_type){
     $view_name = 'slickgrid_' . $node_type->type;
     $view = new view();
@@ -19,6 +20,25 @@ function slickgrid_views_default_views(){
     $handler = $view->new_display('default', 'Defaults', 'default');
     // Define the fields
     $views_fields = array();
+    // Are there batches for this content type
+    if(in_array($node_type->type, $batch_node_types)){
+      $views_fields['batch_created'] = array(
+        'label' => t('Batch created'),
+        'alter' => array(),
+        'exclude' => 0,
+        'date_format' => 'custom',
+        'custom_date_format' => 'd/m/y H:i',
+        'id' => 'batch_created',
+        'table' => 'scratchpad_slickgrid_batches',
+        'field' => 'created',
+        'relationship' => 'none'
+      );
+      $columns['batch_created'] = array(
+        'width' => 50,
+        'sortable' => true,
+        'filter' => 'textFilter'
+      );
+    }
     // If there's a title field, add it
     if($node_type->has_title){
       $views_fields['title'] = array(
@@ -140,7 +160,7 @@ function slickgrid_views_default_views(){
         switch($field['type']){
           case 'filefield': // If this is an image field, need to add thumbnail formatting & multi image handling
             if($field['widget']['type'] == 'imagefield_widget'){
-              $views_fields[$field_id]['format'] = 'matrix_editor_thumbnail_default';
+              $views_fields[$field_id]['format'] = 'slickgrid_thumbnail_default';
               $views_fields[$field_id]['multiple'] = array(
                 'group' => 1,
                 'multiple_number' => '',
@@ -215,6 +235,27 @@ function slickgrid_views_default_views(){
     }
     // add the filters to the view
     $handler->override_option('filters', $filters);
+    // Arguments
+    $arguments['bid'] = array(
+      'default_action' => 'ignore',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'breadcrumb' => '',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'bid',
+      'table' => 'scratchpad_slickgrid_batches',
+      'field' => 'bid'
+    );
+    // add the arguments to the view
+    $handler->override_option('arguments', $arguments);
     // Set access options
     $handler->override_option('access', array(
       'type' => 'none'
