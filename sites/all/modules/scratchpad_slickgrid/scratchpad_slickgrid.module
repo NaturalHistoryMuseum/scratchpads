@@ -46,6 +46,7 @@ function scratchpad_slickgrid_menu(){
   return $items;
 }
 
+
 /**
  * Implementation of hook_views_api
  */
@@ -117,14 +118,47 @@ function scratchpad_slickgrid_form_alter(&$form, $form_state, $form_id){
     // hashcash prevents form submitting, so turn it off
     global $conf;
     $conf['hashcash_addorignore'] = true;
-    
     // If hashcash alter has run before this one, remove the validation function
     if(is_numeric($hashcash_validate_key = array_search('hashcash_validate', $form['#validate']))){
-    	unset($form['#validate'][$hashcash_validate_key]);
+      unset($form['#validate'][$hashcash_validate_key]);
     }
-    
+
   }
 }
+
+/**
+ * Implementation of hook_slickgrid_field_alter().
+ */
+
+function scratchpad_slickgrid_slickgrid_field_alter(&$form, $field_name){
+	
+	if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] == 'darwincore'){
+		
+		unset($form['tabs']['#prefix']);
+		unset($form['tabs']['#suffix']);
+		
+		if($_POST['vid']){
+			// Taxonomy field names are hand coded in darwincore to the name of the vocabulary!!
+			$vocabulary = taxonomy_vocabulary_load($_POST['vid']);
+			$form['#field_name'] = strtolower(str_replace(' ', '', $vocabulary->name));
+		}
+
+	}
+	
+}
+
+/**
+ * Implementation of hook_ajax_data
+ */
+function scratchpad_slickgrid_ajax_data_alter($data, $module, $html){
+	// Need to ensure lightbox2 scripts aren't added to the page
+	unset($data->scripts['module']['sites/all/modules/lightbox2/js/lightbox.js']);
+	unset($data->scripts['module']['sites/all/modules/lightbox2/js/auto_image_handling.js']);
+}
+
+
+
+
 
 /**
  * Implementation of hook_scratchpad_updates
@@ -234,3 +268,5 @@ function scratchpad_slickgrid_get_batch_node_types(){
   }
   return $node_types;
 }
+
+

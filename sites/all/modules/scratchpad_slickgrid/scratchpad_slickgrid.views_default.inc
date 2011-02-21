@@ -60,7 +60,7 @@ function scratchpad_slickgrid_views_default_views(){
       );
     }
     // If there's a body field, add it
-    if($node_type->has_body){
+    if($node_type->has_body && $node_type->type != 'darwincore'){ // DWC hides the body field??
       $views_fields['body'] = array(
         'label' => $node_type->body_label,
         'alter' => array(),
