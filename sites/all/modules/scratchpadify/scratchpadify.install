@@ -1661,7 +1661,7 @@ function scratchpadify_update_6178(){
 }
 
 /**
- * 6179: Fix issue with redirects not being saved (fucking stupid default configuration).
+ * Fix issue with redirects not being saved (fucking stupid default configuration).
  */
 function scratchpadify_udpate_6179(){
   variable_set('pathauto_update_action', 3);
@@ -1671,7 +1671,7 @@ function scratchpadify_udpate_6179(){
 }
 
 /**
- * 6180: Update "Help" link.
+ * Update "Help" link.
  */
 function scratchpadify_update_6180(){
   $ret = array();
@@ -1680,7 +1680,7 @@ function scratchpadify_update_6180(){
 }
 
 /**
- * 6181: Install the new slickgrid modules 
+ * Install the new slickgrid modules 
  */
 function scratchpadify_update_6181(){
   $modules = array(
