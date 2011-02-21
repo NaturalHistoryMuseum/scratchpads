@@ -16,7 +16,7 @@
 /**
  * Implementation of hook_form_FORM_ID_alter
  */
-function scratchpad_form_user_login_alter(&$form, &$form_state, $form_id){
+function scratchpad_form_user_login_alter(&$form, &$form_state){
   // We need to check here to see if we have the nice stuff being returned by
   // an openid login
   if(isset($_GET['uid']) && isset($_GET['openid_mode'])){
