@@ -126,6 +126,17 @@ function scratchpad_slickgrid_form_alter(&$form, $form_state, $form_id){
   }
 }
 
+/**
+ * Implementation of hook_scratchpad_updates
+ */
+function scratchpad_slickgrid_scratchpad_updates(){
+  return array(
+    'scratchpad_slickgrid' => array(
+      1298574000 => t('The new Scratchpad grid editor is ready to to be used.')
+    )
+  );
+}
+
 /*********************************************************************************************
  * 
  * PREPROCESSOR FUNCTIONS
