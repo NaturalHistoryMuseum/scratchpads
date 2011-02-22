@@ -311,7 +311,6 @@ function scratchpadify_install_modules($modules){
   drupal_rebuild_theme_registry();
   node_types_rebuild();
   menu_rebuild();
-  cache_clear_all('schema', 'cache');
   drupal_clear_css_cache();
   drupal_clear_js_cache();
   return $ret;
@@ -1684,7 +1683,9 @@ function scratchpadify_update_6180(){
  */
 function scratchpadify_update_6181(){
   $modules = array(
-    'scratchpad_slickgrid'
+  	'beautytips'
+    'slickgrid'
+  	'scratchpad_slickgrid'
   );
   return scratchpadify_install_modules($modules);
 }
