@@ -306,7 +306,6 @@ function scratchpadify_install_modules($modules){
     'success' => TRUE,
     'query' => t('Required modules installed.')
   );
-  module_enable($modules);
   // Clear caches (we'll do this again at the end).
   drupal_rebuild_theme_registry();
   node_types_rebuild();
@@ -1683,9 +1682,12 @@ function scratchpadify_update_6180(){
  */
 function scratchpadify_update_6181(){
   $modules = array(
-  	'beautytips'
-    'slickgrid'
-  	'scratchpad_slickgrid'
+    'beautytips',
+    'slickgrid',
+    'scratchpad_slickgrid'
   );
-  return scratchpadify_install_modules($modules);
+  $ret = scratchpadify_install_modules($modules);
+  cache_clear_all('*', 'cache_views', TRUE);
+  cache_clear_all('*', 'cache_views_data', TRUE);
+  return $ret;
 }
