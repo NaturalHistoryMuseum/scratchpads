@@ -12,6 +12,31 @@ define('SLICKGRID_CALLBACK_PATH', 'slickgrid/callback');
  * 
  ********************************************************************************************/
 /** 
+ * Implementation of hook_init().
+ * The full lightbox2 does not work with jquery 1.4.3, so need to turn it off for slickgrid pages
+ */
+function slickgrid_init(){
+  global $conf;
+  if(module_exists('lightbox2')){
+  	// Is this a slickgrid callback?
+  	// JS files are added via ajax_load so need to set lightbox2_lite here too
+    if(arg(0) == 'slickgrid' && arg(1) == 'callback'){
+      $conf['lightbox2_lite'] = TRUE;
+    }else{
+      $menu_item = menu_get_item();
+      // Is this a slickgrid view page?
+      if($menu_item['page_callback'] == 'views_page'){
+        $view = views_get_view($menu_item['page_arguments'][0]);
+        if($view->display['default']->display_options['style_plugin'] == 'slickgrid'){
+          // If it is set lightbox2_lite = true so the full lightbox JS won't get added to the page
+          $conf['lightbox2_lite'] = TRUE;
+        }
+      }
+    }
+  }
+}
+
+/** 
  * Implementation of hook_menu(). 
  */
 function slickgrid_menu(){
@@ -168,7 +193,7 @@ function slickgrid_slickgrid_plugins(){
         'text_textfield',
         'text_textarea',
         'node_title',
-  			'date_text'
+        'date_text'
       ), // Need to only allow for certain field types.
       'plugin_type' => 'editor'
     ),
@@ -234,7 +259,6 @@ function slickgrid_form_alter(&$form, $form_state, $form_id){
   if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){
     $form['#after_build'][] = 'slickgrid_node_form_after_build';
   }
-
 }
 
 /*********************************************************************************************
@@ -788,10 +812,8 @@ function slickgrid_node_form_after_build(&$form, &$form_state){
   }else{
     $form['#field_name'] = $_POST['field_name'];
   }
-  
   // Some modules might need to play around with the form / field name to get the correct part of the form 
   drupal_alter('slickgrid_field', $form, $form['#field_name']);
-  
   if(!slickgrid_callback_get_form_element($form, $form['#field_name'])){
     drupal_set_message(t('Field not found'), 'error');
   }

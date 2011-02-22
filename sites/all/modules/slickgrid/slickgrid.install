@@ -6,6 +6,13 @@
 function slickgrid_install(){
   // Set the module's weight high so that it runs after other modules.
   db_query("UPDATE {system} SET weight = 100 WHERE name = 'slickgrid' and type = 'module'");
+  
+  if(module_exists('lightbox2')){
+    // Set the module's weight higher than 100 so that it runs after slickgrid
+    // We need to do this so we can set variables before lightbox adds its js files in hook_init()
+    db_query("UPDATE {system} SET weight = 101 WHERE name = 'lightbox2' and type = 'module'");
+  }
+  
   // Create tables.
   drupal_install_schema('slickgrid');
 }
