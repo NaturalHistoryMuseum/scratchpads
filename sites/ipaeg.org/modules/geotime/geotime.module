@@ -1,0 +1,702 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Allows nodes to be tagged with geological time periods and events
+ */
+
+/**
+ * Implementation of hook_menu
+ */
+function geotime_menu() {
+  $items['admin/settings/geotime'] = array(
+    'title' => 'Geological Timescales',
+    'description' => 'Manage recording and import of geological timescale data',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('geotime_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+  );
+  $items['admin/settings/geotime/content_types'] = array(
+    'title' => 'Content Types',
+	'description' => 'Change which nodes can have geological timescale data and import data.',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('geotime_admin_settings'),
+	'access arguments' => array('administer site configuration'),
+	'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/settings/geotime/import'] = array(
+    'title' => 'Import',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('geotime_import'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+} 
+ 
+
+/**
+ * Allow user to select what node types can be associated with GeoTime data
+ */
+function geotime_admin_settings() {
+  $options = node_get_types('names');
+  //Remove geotime content type
+  unset($options['geotime']); 
+  
+  $form['geotime_node_types'] = array(
+    '#type' => 'checkboxes',
+	'#title' => t('Allow recording of geological timescale data on these content types'),
+	'#options' => $options,
+	'#default_value' => variable_get('geotime_node_types', ''),
+	'#description' => t('On these content types a form will be displayed to collect geological timescale data'), 
+  );
+  $form['#submit'][] = 'geotime_admin_types_submit';
+  return system_settings_form($form);
+}
+
+
+/**
+ * Allow user to select geological time data to import
+ */
+function geotime_import() {
+  $options[] = 'Chronostrat';
+  $options[] = 'Magnetostrat';
+  
+  $form['geotime_import_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Import these geological time data'),
+    '#options' => $options,
+    '#description' => t('What data sets should be imported?'),
+  );
+  $form['#submit'][] = 'geotime_import_process';
+  return system_settings_form($form);
+}
+
+
+/**
+ * Process adding fields to node types
+ */
+ function geotime_admin_types_submit($form) {
+  $geotime_types = $form['geotime_node_types']['#post']['geotime_node_types'];
+  //Get node types that should have geotime fields
+  if (is_array($geotime_types)) {
+  	foreach ($geotime_types as $geotime_type) {
+  	 // Check if fields exist already
+  	 $field = content_fields('field_geotime_lookup', $geotime_type);
+  	  //If not then create them
+  	  if (!$field) {
+  	    geotime_node_install_fields($geotime_type);
+  	  }
+  	}
+  }
+  
+  //Get node types that should not have geotime fields
+  $node_types = node_get_types();
+  if (is_array($geotime_types)) {
+  	foreach ($node_types as $node_type) {
+      if (!in_array($node_type->type, $geotime_types)) {
+      	geotime_node_uninstall_fields($node_type->type);
+      }
+  	}
+  	
+  } else {
+  	foreach ($node_types as $node_type) {
+  	  geotime_node_uninstall_fields($node_type->type);
+  	}
+  }
+  node_types_rebuild();
+}
+
+/**
+ * Install geotime fields for a node type
+ */
+function geotime_node_install_fields($node_type) {
+  module_load_include('inc', 'content', 'includes/content.crud');
+  //First create GeoTime Group
+  $groups = geotime_node_group_info($node_type);
+  //echo 'Creating fields for '.$node_type;
+  foreach($groups as $group){
+    $group['settings'] = field_group_default_settings($group['group_type']);
+    fieldgroup_save_group($group['type_name'], $group);
+  }
+  
+  //Then create the fields
+  $fields = geotime_node_field_info($node_type);
+  foreach($fields as $field){
+    content_field_instance_create($field);
+  }
+
+  //Assign fields to groups
+  foreach($fields as $field){
+    if(isset($field['group'])){
+      fieldgroup_update_fields(array(
+        'field_name' => $field['field_name'], 
+        'group' => $field['group'], 
+        'type_name' => $field['type_name']
+      ));
+    }
+  }
+}
+
+
+/**
+ * Uninstall fields for a node type
+ */
+function geotime_node_uninstall_fields($node_type) {
+  module_load_include('inc', 'content', 'includes/content.crud');
+  //Remove fields
+  $fields = geotime_node_field_info($node_type);
+  foreach($fields as $field){
+    content_field_instance_delete($field['field_name'], $field['type_name']);
+  }
+  
+  //Remove groups
+  $groups = geotime_node_group_info($node_type);
+  foreach ($groups as $group) {
+  	fieldgroup_delete($node_type, $group['group_name']);
+  }
+}
+
+/**
+ * Implementation of hook_node_info()
+ */
+function geotime_node_info() {
+  return array(
+    'geotime' => array(
+	  'name' => t('Geological Time'),
+	  'module' => 'geotime',
+	  'description' => t('Holds information about chronolgoical stratigraphy.'),
+	  'has_title' => TRUE,
+	  'title_label' => t('geotime region name'),
+	  'has_body' => FALSE,
+	  'locked' => TRUE
+	)
+  );
+}
+
+/**
+ * Implementation of hook_perm()
+ */
+function geotime_perm() {
+  return array('create geotime', 'edit own geotime', 'edit any geotime', 'delete own geotime', 'delete any geotime');
+}
+
+/** 
+ * Implementation of hook_access()
+ */
+function geotime_access($op, $node, $account) {
+  $is_author = $account->uid == $node->uid;
+  switch ($op) {
+    case 'create':
+	  return user_access('create geotime', $account);
+	case 'update':
+	  return user_access('edit own geotime', $account) && $is_author || user_access('edit any geotime', $account);
+	case 'delete':
+	  return user_access('delete own geotime', $account) && $is_author || user_access('delete any geotime', $account);
+  }
+}
+ 
+
+function geotime_group_info(){
+  return array(
+    array(
+      'label' => 'Event',
+      'weight' => 1,
+      'group_type' => 'standard',
+      'group_name' => 'group_geotime_event',
+      'type_name' => 'geotime'
+    ),
+    array(
+      'label' => 'Interval',
+      'weight' => 2,
+      'group_type' => 'standard',
+      'group_name' => 'group_geotime_interval',
+      'type_name' => 'geotime'
+    ),
+    array(
+      'label' => 'Marine Isotope Stage',
+      'weight' => 3,
+      'group_type' => 'standard',
+      'group_name' => 'group_geotime_mis',
+      'type_name' => 'geotime'
+    ),
+    array(
+      'label' => 'Additional Data',
+      'weight' => 4,
+      'group_type' => 'standard',
+      'group_name' => 'group_geotime_misc',
+      'type_name' => 'geotime'
+    ),
+  );
+}
+
+
+function geotime_field_info(){
+  return array(
+/*    array(
+      'label' => 'Event Type',
+      'field_name' => 'field_geotime_event_type',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_event',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('Please enter the type of geological event (e.g. Standard Marker, Additional Marker).')
+    ),
+    array(
+      'label' => 'Species',
+      'field_name' => 'field_geotime_species',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_event',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('Please enter the species associated with this geological event.')
+    ),*/
+    array(
+      'label' => 'Age',
+      'field_name' => 'field_geotime_age',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_event',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the age of this event (millions of years ago)')
+    ),
+    
+    /*array(
+      'label' => 'Base Marker',
+      'field_name' => 'field_geotime_interval_bmarker',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_interval',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'text_processing' => '1',
+      'description' => t('Please enter the base marker for this interval.')
+    ),*/
+    array(
+      'label' => 'Base Age',
+      'field_name' => 'field_geotime_base_age',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_event',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the base age of this event (millions of years ago)')
+    ),
+    array(
+      'label' => 'Top Age',
+      'field_name' => 'field_geotime_top_age',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_event',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),
+    /*array(
+      'label' => 'Top Marker',
+      'field_name' => 'field_geotime_interval_topmarker',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_interval',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('Please enter the top marker for this interval.')
+    ),*/
+    array(
+      'label' => 'Interval Type',
+      'field_name' => 'field_geotime_interval_type',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_interval',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('Please enter the type of this interval (e.g. Eon, Period).')
+    ),
+    array(
+      'label' => 'Import Type',
+      'field_name' => 'field_geotime_import',
+      'type_name' => 'geotime',
+      'group' => 'group_geotime_interval',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '1',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('Used to manage imports and where they come from')
+    ),
+  );
+}
+
+
+/**
+ * Group to add to other nodes
+ */
+function geotime_node_group_info($node_type) {
+  return array(
+	array(
+      'label' => 'Geological Time Data',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_geotime_node',
+      'type_name' => $node_type,
+    ),
+  );
+}
+
+/**
+ * Fields to add to other nodes
+ */
+function geotime_node_field_info($node_type) {
+  return array(
+    array (
+    'label' => 'Geological Time Periods',
+    'field_name' => 'field_geotime_lookup',
+    'type' => 'nodereference',
+    'widget_type' => 'nodereference_autocomplete',
+    'change' => 'Change basic information',
+    'weight' => '31',
+    'autocomplete_match' => 'contains',
+    'size' => '100',
+    'description' => '',
+    'type_name' => $node_type,
+    'delta' => 0,
+    'default_value' => 
+    array (
+      0 => 
+      array (
+        'nid' => NULL,
+        '_error_element' => 'default_value_widget][field_geotime_lookup][0][nid][nid',
+      ),
+    ),
+    'default_value_php' => '',
+    'default_value_widget' => NULL,
+    'group' => 'group_geotime_node',
+    'required' => 0,
+    'multiple' => '1',
+    'db_storage' => 1,
+    'referenceable_types' => 
+    array (
+      'geotime' => 'geotime',
+    ),
+    'advanced_view' => 'geotime_lookup',
+    'advanced_view_args' => '',
+    'op' => 'Save field settings',
+    'module' => 'nodereference',
+    'widget_module' => 'nodereference',
+    'columns' => 
+    array (
+      'nid' => 
+      array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => false,
+        'index' => true,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'label' => 
+      array (
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    ),
+    array(
+      'label' => 'Other Top Age',
+      'field_name' => 'field_geotime_node_top',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '32',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)'),
+    ),
+    array(
+      'label' => 'Other Base Age',
+      'field_name' => 'field_geotime_node_base',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '33',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),   
+    array(
+      'label' => 'Other Spot Age',
+      'field_name' => 'field_geotime_node_spot',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '34',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the age of this event (millions of years ago)')
+    ),  
+    array(
+      'label' => 'Union Top Age',
+      'field_name' => 'field_geotime_union_top',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '41',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),
+    array(
+      'label' => 'Union Base Age',
+      'field_name' => 'field_geotime_union_base',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '42',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),
+    array(
+      'label' => 'Intersect Base Age',
+      'field_name' => 'field_geotime_intersect_base',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '44',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),
+    array(
+      'label' => 'Intersect Top Age',
+      'field_name' => 'field_geotime_intersect_top',
+      'type_name' => $node_type,
+      'group' => 'group_geotime_node',
+      'type' => 'number_float',
+      'widget_type' => 'number',
+      'weight' => '43',
+      'required' => 0,
+      'locked' => 0,
+      'min' => '0',
+      'max' => '1000000',
+      'suffix' => t('mya'),
+      'description' => t('Please enter the top age of this event (millions of years ago)')
+    ),
+  );
+}	
+
+
+function geotime_form(&$node, $form_state){
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => 'GeoTime Region',
+    '#required' => TRUE,
+    '#default_value' => $node->title,
+    '#weight' => -5
+  );
+  return $form;
+}
+
+function geotime_views_api() {
+  return array('api' => 2.0);
+}
+
+function geotime_views_query_alter(&$view, &$query) {
+  switch($view->name) {
+  	case 'search' :
+  	  echo print_r($query);
+  }
+}
+
+function geotime_nodeapi(&$node, $op, $a3 = NULL, $a4 =NULL) {
+  if ($op == 'presave') {
+  if (in_array($node->type, variable_get('geotime_node_types', '')) && $node->type != 'geotime' ) {
+  	
+  	//Get all timescale lookup data together
+  	$dates = array();
+  	if (isset($node->field_geotime_lookup)) {
+  	foreach ($node->field_geotime_lookup as $geotime_node) {	  
+  	  if ($geotime_node_dates = geotime_getages_from_nid($geotime_node['nid'])) {
+  	  	$date = array();
+  	  	$date['min'] = $geotime_node_dates->field_geotime_top_age_value;
+  	  	$date['max'] = $geotime_node_dates->field_geotime_base_age_value;
+  	  	$date['spot'] = $geotime_node_dates->field_geotime_spot_age_value;
+  	  	$dates[] = $date;
+  	  }	  
+  	}
+  	}
+  	
+  	//Add data enterred directly into node
+  	$date = array();
+  	if (isset($node->field_geotime_node_top[0]['value']) && isset($node->field_geotime_node_base[0]['value'])) {	
+  	  $date['min'] = $node->field_geotime_node_top[0]['value'];
+  	  $date['max'] = $node->field_geotime_node_base[0]['value'];
+  	}
+  	if (isset($node->field_geotime_node_spot[0]['value'])) {$date['spot'] = $node->field_geotime_node_spot[0]['value']; }
+  	if ( (isset($date['min']) && isset($date['max']) || isset($date['spot']))) {$dates[]=$date;}
+  	
+  	//Do some processing.....
+  	
+  	//If spot date is set then set max/min to spot
+  	for ($i=0; $i < count($dates); $i++) {
+  	  if($dates[$i]['spot']) {$dates[$i]['min'] = $dates[$i]['max'] = $dates[$i]['spot'];}
+  	}
+   	
+  	//Calculate the union dates
+  	$union = array();
+  	$union['min'] = $dates[0]['min'];
+  	$union['max'] = $dates[0]['max'];
+  	foreach ($dates as $geotime_node) {
+  	  if ($geotime_node['min'] < $union['min']) { $union['min'] = $geotime_node['min']; }
+  	  if ($geotime_node['max'] > $union['max']) { $union['max'] = $geotime_node['max']; }
+  	}
+  	
+  	//Calculate the intersect ages
+  	$intersect = array();
+  	$intersect['min'] = $dates[0]['min'];
+  	$intersect['max'] = $dates[0]['max'];
+  	for ($i = 1; $i < count($dates); $i++) {
+  	  //Check if new data intersect with $intersect
+  	  $intersect_build = geotime_intersect_check($intersect['min'], $intersect['max'], $dates[$i]['min'], $dates[$i]['max']);
+  	  if ($intersect_build) {
+  	  	//echo '<pre>'.print_r($intersect);
+  	  	$intersect = $intersect_build; //Replace old intersection with new
+  	  } else {
+  	  	//The intersect can't be calculated
+  	  	drupal_set_message("The intersect could not be calculated for $node->title.", 'warning');
+  	  	$i = count($dates) + 1;  //break loop
+  	  	$intersect['min'] = NULL;
+  	  	$intersect['max'] = NULL;
+  	  }
+  	}
+  	
+  	//Save the calculated union and intersect to the node
+  	$node->field_geotime_union_top[0]['value'] = $union['min'];
+  	$node->field_geotime_union_base[0]['value'] = $union['max'];
+  	$node->field_geotime_intersect_top[0]['value'] = $intersect['min'];
+  	$node->field_geotime_intersect_base[0]['value'] = $intersect['max'];
+  	
+  }
+  }
+}
+
+function geotime_getages_from_nid($nid) {
+  $sql = 'SELECT field_geotime_base_age_value, field_geotime_top_age_value, field_geotime_age_value FROM content_type_geotime WHERE nid = %d';
+  $result = db_query(db_rewrite_sql($sql), $nid);  //ERRORS HERE - function called even when no date set?
+  return db_fetch_object($result);
+}
+
+
+
+//Check if two ranges intersect - if so return an array of min and max values of intersect
+function geotime_intersect_check($min1, $max1, $min2, $max2) {
+  drupal_set_message("min1:$min1 max1:$max1 min2:$min2 max2:$max2", 'warning');
+  if ($max2 < $min1) {return FALSE; drupal_set_message('max2 smaller than min1', 'warning');}
+  if ($max1 < $min2) {return FALSE; drupal_set_message('max1 smaller than min2', 'warning');}
+  
+  $intersect = array();
+  if ($max1 > $max2) { $intersect['max'] = $max2; } else { $intersect['max'] = $max1; }
+  if ($min1 < $min2) { $intersect['min'] = $min2; } else { $intersect['min'] = $min1; }
+  
+  return $intersect;
+}
+
+
+
+
+function geotime_import_process($options) {
+  //Decide what imports to perform, if any
+  
+  //Do some importing
+  geotime_import_chronostrat();
+}
+
+
+
+function geotime_import_chronostrat() {
+  //Import chronostratigraphy data into the Scratchpad
+  
+  //Should probably check if imported already
+  
+  //Get data
+ 
+  $feed = fopen("http://vocabularies.gbif.org/chronostrat.csv", "r");
+  while (($data = fgetcsv($feed, 1000, ',', '"') !== FALSE)) {
+  	echo '<pre>'.print_r($data[0][0]).'</pre>';
+  }
+}

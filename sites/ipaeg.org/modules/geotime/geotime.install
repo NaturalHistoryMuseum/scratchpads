@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+
+function geotime_install() {
+  drupal_install_schema('geotime');
+  drupal_load('module', 'geotime');
+  geotime_install_create_fields();
+  geotime_install_create_groups();
+  geotime_install_add_fields_to_groups();
+}
+ 
+function geotime_uninstall() {
+  drupal_uninstall_schema('geotime');
+  geotime_uninstall_fields();
+ }
+ 
+ 
+ /**
+  * Implementation of hook_schema
+  */
+ function geotime_schema() {
+   $schema['geotime'] = array(
+     'description' => t("Stores information on geological intervals and events."),
+	 'fields' => array(
+	   'nid' => array(
+	     'type' => 'int',
+		 'unsigned' => TRUE,
+		 'not null' => TRUE,
+		 'default' => 0,
+		 'description' => t("The {node}.nid for this interval or event."),
+		 ),
+	   'vid' => array(
+	     'type' => 'int',
+		 'unsigned' => TRUE,
+		 'not null' => TRUE,
+		 'default' => 0,
+		 'description' => t("The {node_revisions}.vid for this interval or event."),
+		 ),
+	   ),
+	 'primary key' => array('nid', 'vid'),
+	 'unique keys' => array(
+	   'vid' => array('vid')
+	  ),
+	  'indexes' => array(
+	    'nid' => array('nid')
+	  ),
+	);
+	
+	return $schema;
+ }
+ 
+ /**
+ * Create CCK fields for geotime content types
+ */
+function geotime_install_create_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = geotime_field_info();
+  foreach($fields as $field){
+    content_field_instance_create($field);
+  }
+}
+
+/**
+ * Create CCK groups for geotime content types
+ */
+function geotime_install_create_groups(){
+  $groups = geotime_group_info();
+  foreach($groups as $group){
+    $group['settings'] = field_group_default_settings($group['group_type']);
+    fieldgroup_save_group($group['type_name'], $group);
+  }
+}
+
+/**
+ * Add CCK fields to groups.
+ */
+function geotime_install_add_fields_to_groups(){
+  $fields = geotime_field_info();
+  foreach($fields as $field){
+    if(isset($field['group'])){
+      fieldgroup_update_fields(array(
+        'field_name' => $field['field_name'], 
+        'group' => $field['group'], 
+        'type_name' => $field['type_name']
+      ));
+    }
+  }
+}
+
+/**
+ * Uninstall GeoTime fields
+ */
+function geotime_uninstall_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = geotime_field_info();
+  foreach($fields as $field){
+    content_field_instance_delete($field['field_name'], $field['type_name']);
+  }
+}
+
+/**
+ * Copied from the itis_term module.  Ensure noderelationships module IS 
+ * INSTALLED before attempting to install this one.
+ */
+function geotime_requirements($phase){
+  if($phase == 'install' && substr($_SERVER['SCRIPT_FILENAME'], -9) == 'index.php'){
+    $info_file = parse_ini_file(substr(__FILE__, 0, strrpos(__FILE__, ".")) . '.info');
+    $module_not_found = FALSE;
+    foreach($info_file['dependencies'] as $required_module){
+      if(!module_exists($required_module)){
+        $module_not_found = TRUE;
+      }
+    }
+    if($module_not_found){
+      $t = get_t();
+      drupal_set_message($t('The module %module has not been installed because a dependency needed installing first, please try again', array(
+        '%module' => $info_file['name']
+      )), 'error');
+      return array(
+        basename(__FILE__) => array(
+          'title' => 'Failed module requiredment in ' . basename(__FILE__), 
+          'severity' => REQUIREMENT_ERROR
+        )
+      );
+    }
+  }
+  return array();
+}
