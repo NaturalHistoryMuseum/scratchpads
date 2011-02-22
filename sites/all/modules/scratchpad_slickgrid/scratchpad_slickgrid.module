@@ -10,16 +10,6 @@
  * Turn on lightbox light for slickgrid view pages - full lightbox is incompatible with jquery 1.4
  */
 function scratchpad_slickgrid_init(){
-  global $conf;
-  if(module_exists('lightbox2')){
-    $menu_item = menu_get_item();
-    if($menu_item['page_callback'] == 'views_page'){
-      $view = views_get_view($menu_item['page_arguments'][0]);
-      if($view->display['default']->display_options['style_plugin'] == 'slickgrid'){
-        $conf['lightbox2_lite'] = TRUE;
-      }
-    }
-  }
   // Unset scratchpad_slickgrid_bid session variable so it can be recreated for subsequent batch uploads
   if((arg(0) == 'file-plupload' || arg(0) == 'batch')){ // Is this any page load other than via batch?
     $path = drupal_get_path('module', 'scratchpad_slickgrid');
@@ -146,18 +136,6 @@ function scratchpad_slickgrid_slickgrid_field_alter(&$form, $field_name){
 	}
 	
 }
-
-/**
- * Implementation of hook_ajax_data
- */
-function scratchpad_slickgrid_ajax_data_alter($data, $module, $html){
-	// Need to ensure lightbox2 scripts aren't added to the page
-	unset($data->scripts['module']['sites/all/modules/lightbox2/js/lightbox.js']);
-	unset($data->scripts['module']['sites/all/modules/lightbox2/js/auto_image_handling.js']);
-}
-
-
-
 
 
 /**

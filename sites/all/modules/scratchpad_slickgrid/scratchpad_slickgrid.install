@@ -6,10 +6,6 @@
  * We need this module's hook_init to run first so lightbox_lite variable can be set
  */
 function scratchpad_slickgrid_install(){
-  if(module_exists('lightbox2')){
-    // Set the module's weight high so that it runs after other modules.
-    db_query("UPDATE {system} SET weight = 1 WHERE name = 'lightbox2' and type = 'module'");
-  }
   // Create tables.
   drupal_install_schema('scratchpad_slickgrid');
 }
