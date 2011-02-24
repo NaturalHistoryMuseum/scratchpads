@@ -585,7 +585,7 @@ function geotime_views_query_alter(&$view, &$query) {
 
 function geotime_nodeapi(&$node, $op, $a3 = NULL, $a4 =NULL) {
   if ($op == 'presave') {
-  if (in_array($node->type, variable_get('geotime_node_types', '')) && $node->type != 'geotime' ) {
+  if (in_array($node->type, variable_get('geotime_node_types', array())) && $node->type != 'geotime' ) {
   	
   	//Get all timescale lookup data together
   	$dates = array();
