@@ -323,7 +323,7 @@ function scratchpad_slickgrid_views_default_views(){
     ));
     // Define the page
     $handler = $view->new_display('page', 'Page', 'page_1');
-    $handler->override_option('path', 'grid/' . str_replace('_', '-', $node_type->type));
+    $handler->override_option('path', 'matrix-editor/' . str_replace('_', '-', $node_type->type));
     // We do not want a menu item
     $handler->override_option('menu', array(
       'type' => 'none',
