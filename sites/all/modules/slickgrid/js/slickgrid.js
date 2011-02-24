@@ -810,7 +810,7 @@ var dataView;
            if(error){
              $status.addClass('slickgrid-error').html('Warning');
            }else{
-             $status.addClass('slickgrid-no-error').html('OK');
+             $status.addClass('slickgrid-no-error').empty();
            }
 
            $status.bt({

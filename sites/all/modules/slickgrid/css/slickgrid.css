@@ -351,8 +351,6 @@ div.slick-cell-checkboxsel input{
 /* Only give it dimensions when it has content*/
 #slickgrid-status.slickgrid-error,
 #slickgrid-status.slickgrid-no-error{
-  margin-right: 10px;
-  
   height: 20px;
 }
 
@@ -360,12 +358,13 @@ div.slick-cell-checkboxsel input{
   background: url('../images/error.png') no-repeat left;
   width: 47px;
   color: #BC302D;
+  margin-right: 10px;
 }
 
 #slickgrid-status.slickgrid-no-error{
   background: url('../images/no-error.png') no-repeat left;
   color: #6AAF11;
-  width: 20px;
+  width: 10px;
 }
 
 /* Response messages */
