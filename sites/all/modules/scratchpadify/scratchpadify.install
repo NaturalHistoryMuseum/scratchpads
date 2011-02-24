@@ -1687,6 +1687,7 @@ function scratchpadify_update_6181(){
 	foreach($views as $view){
 		if($view->display['default']->display_options['style_plugin'] == 'matrix'){
 			$view->delete();
+			views_object_cache_clear('view', $view->name);
 		}
 	}
 	
@@ -1701,3 +1702,4 @@ function scratchpadify_update_6181(){
   cache_clear_all('*', 'cache_views_data', TRUE);
   return $ret;
 }
+
