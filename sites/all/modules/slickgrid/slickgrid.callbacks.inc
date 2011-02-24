@@ -41,25 +41,24 @@ function slickgrid_callback_delete(){
 }
 
 function slickgrid_callback_update(){
-	
   // TODO - Batch processing
   $field_name = $_POST['field_name'];
   $field_id = $_POST['field_id'];
-	module_load_include('inc', 'node', 'node.pages');
-  $updated = array(); // Array of NIDs that have been updated
-  $form_state = array(
-  	'values' => $_POST
-  );
-  $form_state['values']['op'] = t('Save');
-  $form_state['submitted'] = true;
+  module_load_include('inc', 'node', 'node.pages');
+  $updated = array(); // Array of NIDs that have been updated  
   foreach($_POST['nids'] as $nid){
+    // $form_state gets changed by the form submission so re-intialise for every loop
+    $form_state = array(
+      'values' => $_POST
+    );
+    $form_state['values']['op'] = t('Save');
+    $form_state['submitted'] = true;
     $node = node_load($nid);
     // Get the vid before it is updated
     $revision_vid = $node->vid;
     $form_id = $node->type . '_node_form';
     // Execute the node form
     drupal_execute($form_id, $form_state, $node);
-    
     // Has there been an error?
     if($err = form_get_errors()){
       $errors[$nid] = $err;
@@ -109,7 +108,7 @@ function slickgrid_callback_get_view($view_name, $display_id, $nids){
   $view->set_display($display_id);
   // Remove all existing arguments - we'll limit result set by NID only
   foreach($view->get_items('argument') as $id => $arg){
-    $view->set_item($display_id, 'argument', $id);
+    $view->set_item($display_id, 'argument', $id, NULL);
   }
   // Add an argument to limit the view to only nids being updated	
   $options = array(
@@ -127,7 +126,6 @@ function slickgrid_callback_get_view($view_name, $display_id, $nids){
   $view->render();
   return $view;
 }
-
 
 /**
  * 
@@ -151,7 +149,6 @@ function slickgrid_callback_log(){
  * Callback function - retrieve a form 
  */
 function slickgrid_callback_get_form(){
-	
   module_load_include('inc', 'node', 'node.pages');
   $node = node_load($_POST['nid']);
   $html = drupal_get_form($node->type . '_node_form', $node);
@@ -164,7 +161,6 @@ function slickgrid_callback_get_form(){
   return array(
     'data' => $data
   );
-  
 }
 
 /**

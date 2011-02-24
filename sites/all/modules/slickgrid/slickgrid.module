@@ -18,8 +18,8 @@ define('SLICKGRID_CALLBACK_PATH', 'slickgrid/callback');
 function slickgrid_init(){
   global $conf;
   if(module_exists('lightbox2')){
-  	// Is this a slickgrid callback?
-  	// JS files are added via ajax_load so need to set lightbox2_lite here too
+    // Is this a slickgrid callback?
+    // JS files are added via ajax_load so need to set lightbox2_lite here too
     if(arg(0) == 'slickgrid' && arg(1) == 'callback'){
       $conf['lightbox2_lite'] = TRUE;
     }else{
@@ -276,7 +276,9 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   module_load_include('inc', 'node', 'node.pages');
   $view = $vars['view'];
   // Get any view settings
-  $view->style_plugin->options['settings'] = slickgrid_get_settings($user->uid, $view->name);
+  
+  $view->style_plugin->options['settings'] = (array) slickgrid_get_settings($user->uid, $view->name) + (array) $view->style_plugin->options['settings'];
+
   // Set header height default
   $view->style_plugin->options['headerHeight'] = 42;
   // Add some extra slickgrid options here
@@ -599,6 +601,14 @@ function _slickgrid_add_files($options, $columns){
   drupal_add_css($path . '/css/slickgrid.css');
   // Add beautytips
   beautytips_add_beautytips();
+
+  // ajax_load borks on wysiwyg so load all the profiles on page load to add all the js / css files
+  // Get the filter formats
+  $filter_formats = filter_formats();
+  foreach($filter_formats as $filter_format){
+  	wysiwyg_get_profile($filter_format->format);
+  }
+  
 }
 
 /** 
@@ -850,5 +860,6 @@ function slickgrid_callback_get_form_element(&$form, $field_name){
   }
   return $element_exists;
 }
+
 
 

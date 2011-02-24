@@ -9,7 +9,7 @@
             var scope = this;
 
             this.init = function() {
-              
+
                 $input = $("<INPUT type=text class='editor-text' />")
                     .appendTo(args.container)
                     .bind("keydown.nav", function(e) {
@@ -185,7 +185,7 @@
          * If it doesn't work for a particular field, raise an issue
          */
         nodeFormEditor : function (args) {
-            var $form, $wrapper, $input;
+            var $form, $wrapper, $input, $loadingForm;
             var defaultValue;
             var scope = this;
             var serialised_data;
@@ -210,14 +210,8 @@
 
               $wrapper = $("<div class='node-form-editor' style='z-index:10000;position:absolute;'/>")
                   .appendTo($container);
-              
-              $formContainer = $('<div />').appendTo($wrapper);
-              
-              $("<div style='text-align:right'><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></div>")
-                  .appendTo($wrapper);
-              
-              $wrapper.find("button:first").bind("click", this.save);
-              $wrapper.find("button:last").bind("click", this.cancel);
+
+              $loadingForm = $("<div class='loading-form'>Loading the form...</div>").appendTo($wrapper);      
 
               // Get the form 
               var data = {
@@ -233,8 +227,6 @@
               // Set the ajax success function to add the form when callback is complete
               slickgrid.setAjaxOption('successFunctions', this.ajaxSuccess); 
               slickgrid.callback('get_form', data);
-              
-              scope.position(args.position);
                 
             }
             
@@ -250,7 +242,32 @@
                  scope.cancel();
                }  
                
-               $form = $(response.data.content).appendTo($formContainer);
+               $form = $(response.data.content);
+
+               $loadingForm.remove();
+               
+               $form.appendTo($wrapper);
+               
+               // Add the buttons;
+               $("<div style='text-align:right'><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></div>")
+                   .appendTo($wrapper);
+               
+                 $wrapper.find("button:first").bind("click", function(){
+
+                   var fieldID = $form.find('textarea').attr('id');
+
+                   // Is this a wysiwyg textarea?
+                   if(typeof fieldID != 'undefined' && typeof Drupal.wysiwyg.instances[fieldID] == 'object'){
+                     // detach the wysiwyg editor (ann apply the value to the form)
+                     Drupal.wysiwygDetach($form, {field: fieldID});
+                   }
+                   
+                   scope.save();
+                   
+                 });
+
+               
+               $wrapper.find("button:last").bind("click", this.cancel);
                
                if (response.data.__callbacks) {
                  $.each(response.data.__callbacks, function(i, callback) {
@@ -264,13 +281,15 @@
                
                $input = $('textarea, input[type="text"], select', $form).eq(0);
                
-               Drupal.attachBehaviors($formContainer);               
+               Drupal.attachBehaviors($form);               
                
              }
 
             this.handleKeyDown = function(e) {
-                if (e.which == $.ui.keyCode.ENTER && e.ctrlKey) {
-                    scope.save();
+
+                if (e.which == $.ui.keyCode.ENTER &! $form.find('textarea').length) {
+                  e.preventDefault();
+                  scope.save();
                 }
                 else if (e.which == $.ui.keyCode.ESCAPE) {
                     e.preventDefault();
@@ -293,6 +312,7 @@
 
             this.cancel = function() {
                 args.cancelChanges();
+                return false;
             };
 
             this.hide = function() {
@@ -303,10 +323,19 @@
                 $wrapper.show();
             };
 
-            this.position = function(position) {
+            this.position = function() {
+              
+              var left;
+              
+              if(args.position.left + $wrapper.width() > args.gridPosition.right){
+                left = (args.gridPosition.width + args.gridPosition.left) - $wrapper.width() - 10;
+              }else{
+                left = args.position.left - 5;
+              }
+              
                 $wrapper
-                    .css("top", position.top - 5)
-                    .css("left", position.left - 5)
+                    .css("top", args.position.top - 5)
+                    .css("left", left)
             };
 
             this.destroy = function() {
@@ -323,8 +352,8 @@
                 
             };
 
-            this.applyValue = function(item,state) {
-              
+            this.applyValue = function(item,state) {            
+                
                 item[args.column.field] = state;
 
                 item.serialised_data = $form.serialize();

@@ -13,7 +13,7 @@ function slickgrid_content_add_more_js($type_name_url, $field_name){
   $field = content_fields($field_name, $type['type']);
   if(($field['multiple'] != 1) || empty($_POST['form_build_id'])){
     // Invalid request.
-    drupal_json(array(
+    slickgrid_json(array(
       'data' => ''
     ));
     exit();
@@ -26,7 +26,7 @@ function slickgrid_content_add_more_js($type_name_url, $field_name){
   $form = form_get_cache($form_build_id, $form_state);
   if(!$form){
     // Invalid form_build_id.
-    drupal_json(array(
+    slickgrid_json(array(
       'data' => ''
     ));
     exit();

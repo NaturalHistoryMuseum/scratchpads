@@ -14,5 +14,17 @@
 	z-index: 99999;
   padding: 10px;
   background: #F4F4F4;
-  min-width: 350px;
+  width: 400px;
+}
+
+.node-form-editor input.form-text,
+.node-form-editor select,
+.node-form-editor textarea{
+  width: 95%!important;
+}
+
+.loading-form{
+  background: #F4F4F4 url('../images/loading-indicator.gif') no-repeat 2px;
+  padding-left: 30px;
+  margin: 20px;
 }

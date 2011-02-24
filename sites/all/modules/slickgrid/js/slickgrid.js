@@ -540,6 +540,8 @@ var dataView;
 
               var offset = $("#slickgrid").offset();
               
+              $('div[row="'+cell.row+'"]').addClass('delete-row');
+              
               $("#slickgrid-delete")
                       .data("row", cell.row)
                       .css("top", e.pageY  - offset.top)
@@ -547,11 +549,11 @@ var dataView;
                       .show();
 
               $("body").one("click", function() {
-                  $("#slickgrid-delete").hide();
+                  cancelDelete(cell);
               });
               
               $('.slick-viewport').scroll(function(){
-                $("#slickgrid-delete").hide();
+                cancelDelete(cell);
               })
           });
           
@@ -561,6 +563,11 @@ var dataView;
             deleteRow(row);
       		});
           
+        }
+        
+        function cancelDelete(cell){
+          $("#slickgrid-delete").hide();
+          $('div[row="'+cell.row+'"]').removeClass('delete-row');
         }
         
         // Delete a row from the dataset
@@ -657,7 +664,7 @@ var dataView;
           
           if(x.status==0){
             
-            errorMessage.push({type : 'error', message: 'You are offline! Please Check Your Network.'});
+            errorMessage.push({type : 'error', message: 'Could not connect to server. Your website may be unavailable!'});
             
           }else{
           
@@ -799,10 +806,13 @@ var dataView;
         function updateStatus(error, statusMessages){
           
            $status.attr('class', '');
-
            
-           $status.addClass((error) ? 'slickgrid-error' : 'slickgrid-no-error');
-         
+           if(error){
+             $status.addClass('slickgrid-error').html('Warning');
+           }else{
+             $status.addClass('slickgrid-no-error').html('OK');
+           }
+
            $status.bt({
             contentSelector: Drupal.theme('slickgridMessages', statusMessages), 
             positions : 'left',
