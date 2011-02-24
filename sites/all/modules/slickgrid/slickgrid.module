@@ -91,13 +91,13 @@ function slickgrid_views_pre_view(&$view, $display_id){
   // TODO - Can this be moved into the views style plugin? See plugins.inc
   // Is this view a slickgrid view
   if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
-    // turn off views paging
-    $view->display_handler->set_option('use_pager', FALSE);
-    // Need to have all rows returned for slickgrid to work correctly, so turn off items per page
-    $view->display_handler->set_option('items_per_page', FALSE);
-    // let slickgrid know we want to use it's own paging system by setting it as a view style option		
     $style_options = $view->display_handler->get_option('style_options');
-    $style_options['pager'] = TRUE;
+    if($view->display_handler->get_option('use_pager')){
+      // turn off views paging
+      $view->display_handler->set_option('use_pager', FALSE);
+      // let slickgrid know we want to use it's own paging system by setting it as a view style option		
+      $style_options['pager'] = TRUE;
+    }
     $view->display_handler->set_option('style_options', $style_options);
     // If this is using a collapsible taxonomy field, we need to ensure the nodes are in the right order, and the parent TID is available
     // Much faster to do it now than in a preprocesser after the view data has been constructed
@@ -276,9 +276,7 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   module_load_include('inc', 'node', 'node.pages');
   $view = $vars['view'];
   // Get any view settings
-  
-  $view->style_plugin->options['settings'] = (array) slickgrid_get_settings($user->uid, $view->name) + (array) $view->style_plugin->options['settings'];
-
+  $view->style_plugin->options['settings'] = (array)slickgrid_get_settings($user->uid, $view->name) + (array)$view->style_plugin->options['settings'];
   // Set header height default
   $view->style_plugin->options['headerHeight'] = 42;
   // Add some extra slickgrid options here
@@ -601,14 +599,12 @@ function _slickgrid_add_files($options, $columns){
   drupal_add_css($path . '/css/slickgrid.css');
   // Add beautytips
   beautytips_add_beautytips();
-
   // ajax_load borks on wysiwyg so load all the profiles on page load to add all the js / css files
   // Get the filter formats
   $filter_formats = filter_formats();
   foreach($filter_formats as $filter_format){
-  	wysiwyg_get_profile($filter_format->format);
+    wysiwyg_get_profile($filter_format->format);
   }
-  
 }
 
 /** 
