@@ -1681,20 +1681,18 @@ function scratchpadify_update_6180(){
  * Install the new slickgrid modules 
  */
 function scratchpadify_update_6181(){
-	
-	// Remove matrix editor views 
-	$views = views_get_all_views();
-	foreach($views as $view){
-		if($view->display['default']->display_options['style_plugin'] == 'matrix'){
-			$view->delete();
-			views_object_cache_clear('view', $view->name);
-		}
-	}
-	
+  // Remove matrix editor views 
+  $views = views_get_all_views();
+  foreach($views as $view){
+    if($view->display['default']->display_options['style_plugin'] == 'matrix'){
+      $view->delete();
+      views_object_cache_clear('view', $view->name);
+    }
+  }
   $modules = array(
     'beautytips',
     'slickgrid',
-  	'editor_views',
+    'editor_views',
     'scratchpad_slickgrid'
   );
   $ret = scratchpadify_install_modules($modules);
