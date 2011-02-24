@@ -1681,6 +1681,15 @@ function scratchpadify_update_6180(){
  * Install the new slickgrid modules 
  */
 function scratchpadify_update_6181(){
+	
+	// Remove matrix editor views 
+	$views = views_get_all_views();
+	foreach($views as $view){
+		if($view->display['default']->display_options['style_plugin'] == 'matrix'){
+			$view->delete();
+		}
+	}
+	
   $modules = array(
     'beautytips',
     'slickgrid',
