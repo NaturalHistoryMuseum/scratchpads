@@ -18,6 +18,14 @@ function scratchpad_slickgrid_init(){
       $_SESSION['scratchpad_slickgrid_bid'] = NULL;
     }
   }
+  if(arg(0) == 'slickgrid' && arg(1) == 'callback'){
+    // Batax breaks the grid, add all vids to batax_disable_vids so it isn't used for slickgrid get form callbacks
+    global $conf;
+    $vocabularies = taxonomy_get_vocabularies();
+    foreach($vocabularies as $vocabulary){
+      $conf['batax_disable_vids'][$vocabulary->vid] = true;
+    }
+  }
 }
 
 /** 
@@ -35,7 +43,6 @@ function scratchpad_slickgrid_menu(){
   );
   return $items;
 }
-
 
 /**
  * Implementation of hook_views_api
@@ -112,31 +119,32 @@ function scratchpad_slickgrid_form_alter(&$form, $form_state, $form_id){
     if(is_numeric($hashcash_validate_key = array_search('hashcash_validate', $form['#validate']))){
       unset($form['#validate'][$hashcash_validate_key]);
     }
-
   }
 }
 
 /**
  * Implementation of hook_slickgrid_field_alter().
  */
-
 function scratchpad_slickgrid_slickgrid_field_alter(&$form, $field_name){
-	
-	if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] == 'darwincore'){
-		
-		unset($form['tabs']['#prefix']);
-		unset($form['tabs']['#suffix']);
-		
-		if($_POST['vid']){
-			// Taxonomy field names are hand coded in darwincore to the name of the vocabulary!!
-			$vocabulary = taxonomy_vocabulary_load($_POST['vid']);
-			$form['#field_name'] = strtolower(str_replace(' ', '', $vocabulary->name));
-		}
-
-	}
-	
+  if(isset($form['type']) && isset($form['#node'])){
+    switch($form['type']['#value']){
+      case 'darwincore':
+        unset($form['tabs']['#prefix']);
+        unset($form['tabs']['#suffix']);
+        if($_POST['vid']){
+          // Taxonomy field names are hand coded in darwincore to the name of the vocabulary!!
+          $vocabulary = taxonomy_vocabulary_load($_POST['vid']);
+          $form['#field_name'] = strtolower(str_replace(' ', '', $vocabulary->name));
+        }
+        break;
+      case 'tree':
+        if($form['#field_name'] == 'body_field'){
+          $form['#field_name'] = 'body_filter';
+        }
+        break;
+    }
+  }
 }
-
 
 /**
  * Implementation of hook_scratchpad_updates

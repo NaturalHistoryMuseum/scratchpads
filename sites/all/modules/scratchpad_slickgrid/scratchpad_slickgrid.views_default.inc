@@ -8,6 +8,7 @@ function scratchpad_slickgrid_views_default_views(){
   $node_types = node_get_types();
   $batch_node_types = scratchpad_slickgrid_get_batch_node_types();
   foreach($node_types as $node_type){
+    $style_option_settings = array();
     $view_name = 'slickgrid_' . $node_type->type;
     $view = new view();
     $view->name = $view_name;
@@ -20,6 +21,8 @@ function scratchpad_slickgrid_views_default_views(){
     $handler = $view->new_display('default', 'Defaults', 'default');
     // Define the fields
     $views_fields = array();
+    // array of fields defined in the views (so not in the node or cck)
+    $views_defined_fields = scratchpad_slickgrid_views_defined_fields();
     // Are there batches for this content type
     if(in_array($node_type->type, $batch_node_types)){
       $views_fields['batch_created'] = array(
@@ -151,11 +154,14 @@ function scratchpad_slickgrid_views_default_views(){
           'table' => 'node_data_' . $field['field_name'],
           'field' => $field_id . '_' . array_shift(array_keys($field['columns'])),
           'relationship' => 'none',
-          'label_type' => 'widget'
+          'label_type' => 'widget',
+          'link_to_node' => 0
         );
         $columns[$field_id] = array(
           'width' => 100,
-          'editor' => 'nodeFormEditor'
+          'editor' => 'nodeFormEditor',
+          'sortable' => true,
+          'filter' => 'textFilter'
         );
         switch($field['type']){
           case 'filefield': // If this is an image field, need to add thumbnail formatting & multi image handling
@@ -174,6 +180,34 @@ function scratchpad_slickgrid_views_default_views(){
               $columns[$field_id]['validator'] = 'requiredFieldValidator';
             }
             break;
+        }
+      }
+    }
+    // Get additional fields from the views definition?
+    if(is_array($views_defined_fields[$node_type->type])){
+      $views_data = views_fetch_data($node_type->type);
+      foreach($views_data as $id => $views_data_item){
+        if(isset($views_data_item['field'])){
+          $views_fields[$id] = array(
+            'label' => $views_data_item['title'],
+            'alter' => array(),
+            'exclude' => 0,
+            'id' => $id,
+            'table' => 'darwincore',
+            'field' => $id,
+            'relationship' => 'none',
+            'label_type' => 'widget'
+          );
+          $columns[$id] = array(
+            'width' => 100,
+            'editor' => 'nodeFormEditor',
+            'sortable' => true,
+            'filter' => 'textFilter'
+          );
+          // Should this field be displayed by default
+          if(!in_array($id, $views_defined_fields[$node_type->type])){
+            $style_option_settings['hidden_columns'][] = $id;
+          }
         }
       }
     }
@@ -281,9 +315,11 @@ function scratchpad_slickgrid_views_default_views(){
       'forceFitColumns' => true,
       'multi_edit' => true,
       'undo' => true,
+      'autoEdit' => true,
       'viewportHeight' => 500,
       'rowHeight' => 100,
-      'columns' => $columns
+      'columns' => $columns,
+      'settings' => $style_option_settings
     ));
     // Define the page
     $handler = $view->new_display('page', 'Page', 'page_1');
@@ -302,4 +338,21 @@ function scratchpad_slickgrid_views_default_views(){
     $views[$view->name] = $view;
   } // End of foreach($node_types as $node_type){
   return $views;
-}  
+}
+
+function scratchpad_slickgrid_views_defined_fields(){
+  return array(
+    'darwincore' => array(
+      'institutioncode',
+      'collectioncode',
+      'cataloguenumbertext'
+    ),
+    'biblio' => array(
+      'biblio_authors',
+      'biblio_isbn',
+    	'biblio_year',
+    	'biblio_notes'
+    )
+  );
+}
+
