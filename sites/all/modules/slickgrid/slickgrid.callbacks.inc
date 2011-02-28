@@ -71,8 +71,8 @@ function slickgrid_callback_update(){
     }
   }
   // If we want to reload the value from the view, get it now
-  if($_POST['reload_from_view']){
-    $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], $_POST['nids']);
+  if(count($updated_nodes) && $_POST['reload_from_view']){
+    $view = slickgrid_callback_get_view($_POST['view'], $_POST['display_id'], array_keys($updated_nodes));
     foreach($view->result as $count => $row){
       $updated_nodes[$row->nid]['value'] = $view->render_field($field_id, $count);
     }
