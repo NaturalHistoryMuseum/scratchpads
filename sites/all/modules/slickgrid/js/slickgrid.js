@@ -978,7 +978,8 @@ var dataView;
            "setAjaxOption":          setAjaxOption,
            "resetAjaxOptions":       resetAjaxOptions,
            "getViewName":            getViewName,
-           "getViewDisplayID":       getViewDisplayID
+           "getViewDisplayID":       getViewDisplayID,
+           "editorLock":             editorLock
         });
 
         init();

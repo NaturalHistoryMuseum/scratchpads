@@ -189,6 +189,7 @@
             var defaultValue;
             var scope = this;
             var serialised_data;
+            var isChanged = false;
 
             function toggle(e) {
                 if (e.type == "keydown" && e.which != 32) return;
@@ -207,7 +208,7 @@
               
               // Initalise the container for the form
               var $container = $("body");
-
+              
               $wrapper = $("<div class='node-form-editor' style='z-index:10000;position:absolute;'/>")
                   .appendTo($container);
 
@@ -306,6 +307,8 @@
             };
 
             this.save = function() {
+             
+             isChanged = true;       
               // Commit the changes to the grid       
               args.commitChanges();
             };
@@ -316,6 +319,7 @@
             };
 
             this.hide = function() {
+                
                 $wrapper.hide();
             };
 
@@ -361,7 +365,7 @@
             };
 
             this.isValueChanged = function() {
-                return true; // Is there a better way of knowing if the form has changed?
+                return isChanged;
             };
             
             this.focus = function() {
