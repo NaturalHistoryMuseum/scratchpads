@@ -427,10 +427,15 @@ function theme_slickgrid($options, $columns, $data, $view){
   _slickgrid_add_files($options, $columns);
   $js = array();
   $js[] = 'var options = ' . drupal_to_js($options) . ';';
-  $js[] = 'var data = []; data = ' . drupal_to_js($data) . ';';
+  $js[] = 'if (typeof data === "undefined") { var data = []; }';
+  $js[] = 'data = data.concat(' . drupal_to_js($data) . ');';
   $js[] = 'var columns = ' . _slickgrid_drupal_to_js($columns) . ';';
   $js[] = 'var slickgrid;';
-  $js[] = '$(function() { slickgrid = new Slickgrid("#slickgrid", "' . $view->name . '", "' . $view->current_display . '", "' . url(SLICKGRID_CALLBACK_PATH) . '"); })';
+  $js[] = '$(function() {';
+  $js[] = 'if(typeof slickgrid === "undefined"){';
+  $js[] = 'slickgrid = new Slickgrid("#slickgrid", "' . $view->name . '", "' . $view->current_display . '", "' . url(SLICKGRID_CALLBACK_PATH) . '");';
+  $js[] = '}';
+  $js[] = '})';
   drupal_add_js(implode("\n", $js), 'inline');
   // Adjust hieght to allow for scrollbar
   // output a placeholder div for the slickgrid
@@ -761,7 +766,7 @@ function slickgrid_get_plugin_types(){
  * (optional) If set, the variable will be converted to JSON and output.
  */
 function slickgrid_json($var = NULL){
-  //  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
+  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
   if(isset($var)){
     echo json_encode($var);
   }

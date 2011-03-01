@@ -22,8 +22,13 @@ print $class;
   ?>
 </div> -->
 
+  <?php
+  if(isset($slickgrid)):
+  ?>
 <div class="slickgrid-wrapper clear-block">
 <?php
 print $slickgrid;
 ?>
 </div>
+  <?php endif;
+  ?>

@@ -165,8 +165,6 @@ var dataView;
           
           grid.onColumnsResized.subscribe(onColumnsResized);
           
-          // grid.onViewportChanged.subscribe(onViewportChanged);
-          
           // Add resizable callback event
           $('#slickgrid').resizable({
             handles: 's',
@@ -404,26 +402,29 @@ var dataView;
             // add the header inputs
             for (var i = 0; i < columns.length; i++) {
 
-                if (columns[i].id !== "selector") {
+                if (columns[i].id !== "_checkbox_selector") {
                   
                     var header = grid.getHeaderRowColumn(columns[i].id);
                     $(header).empty();
                     
                     if (options['columns'][columns[i].id] && options['columns'][columns[i].id]['filter']) {
-                        
-                      columns[i].filter = eval('new Slick.Filters.' + options['columns'][columns[i].id]['filter'] + '()');
-                       
-                       // Does this filter have an input function? 
-                       // If it does, add the input html
-                       if(typeof columns[i].filter.input === 'function'){
-                         
-                         var $input = columns[i].filter.input()
-                          .data("columnId", columns[i].id)
-                          .val(columnFilters[columns[i].id]);
-                          
-                          Drupal.theme('slickgridFilter', $input, options['columns'][columns[i].id]['filter']).appendTo(header);
-                          
-                       }
+                      
+                      
+                      var c = grid.getColumns()[grid.getColumnIndex(columns[i].id)];
+                      
+                      if(typeof c != 'undefined'){
+                        c.filter = eval('new Slick.Filters.' + options['columns'][columns[i].id]['filter'] + '()');
+                          // Does this filter have an input function? 
+                         // If it does, add the input html
+                         if(typeof c.filter.input === 'function'){
+                           var $input = c.filter.input()
+                            .data("columnId", c.id)
+                            .val(columnFilters[c.id]);
+                            Drupal.theme('slickgridFilter', $input, options['columns'][c.id]['filter']).appendTo(header);
+                         }                        
+                      }
+                      
+
                    
  
                     }
@@ -437,8 +438,9 @@ var dataView;
         function filter(item) {          
             for (var columnId in columnFilters) {
                 if (columnId !== undefined && columnFilters[columnId] !== "") {
+                  
                     var c = grid.getColumns()[grid.getColumnIndex(columnId)];
-                      // Pass the filtering to the doFilter function of whatever filter object is being used                      
+                      // Pass the filtering to the doFilter function of whatever filter object is being used  
                       if(c.filter.doFilter(item, c.field, columnFilters[columnId]) === false){
                         return false; // only return false at this point so ALL filters get a chance to run
                       } 
@@ -675,7 +677,7 @@ var dataView;
             }else if(x.status==500){
             errorLog =  '500: Internel Server Error.';
             }else if(e=='parsererror'){
-            errorLog =  'Error parsing JSON Request..';
+            errorLog =  'Error parsing JSON Request.';
             }else if(e=='timeout'){
             errorLog =  'Request Time out.';
             }else {
