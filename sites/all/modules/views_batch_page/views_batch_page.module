@@ -75,8 +75,8 @@ function views_batch_page_process(&$view, $limit, &$context){
   }else{
     $context['results']['data']['output'] .= $context['results']['view']->render();
     // We want add all JS & CSS files onto the page so keep track of them to add later
-    $context['results']['data']['scripts'] = drupal_add_js();
-    $context['results']['data']['css'] = drupal_add_css();
+    $context['results']['data']['scripts'][] = drupal_add_js();
+    $context['results']['data']['css'][] = drupal_add_css();
     // Ensure the clone view has the same current display as the original
     // This is used for the batch id 
     $context['results']['view']->current_display = $view->current_display;

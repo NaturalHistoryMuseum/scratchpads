@@ -91,38 +91,39 @@ class views_plugin_display_batch_page extends views_plugin_display_page{
       // And the title, which is much easier.
       drupal_set_title(filter_xss_admin($this->view->get_title()));
       // And now render the view.
-
       // Add all the JS files
-      foreach($cached_view->data['scripts'] as $type => $scripts){
-        switch($type){
-          case 'core':
-          case 'module':
-          case 'theme':
-            foreach($scripts as $script => $params){
-              drupal_add_js($script, $type);
-            }
-            break;
-          case 'setting':
-            foreach($scripts as $setting){
-              drupal_add_js($setting, 'setting');
-            }
-            break;
-          case 'inline':
-          	
-            foreach($scripts as $inline){
-              drupal_add_js($inline['code'], 'inline', 'header', $inline['defer']);
-            }
-            break;
+      foreach($cached_view->data['scripts'] as $batch_scripts){
+        foreach($batch_scripts as $type => $batch_script){
+          switch($type){
+            case 'core':
+            case 'module':
+            case 'theme':
+              foreach($batch_script as $script => $params){
+                drupal_add_js($script, $type);
+              }
+              break;
+            case 'setting':
+              foreach($batch_script as $setting){
+                drupal_add_js($setting, 'setting');
+              }
+              break;
+            case 'inline':
+              foreach($batch_script as $inline){
+                drupal_add_js($inline['code'], 'inline', 'header', $inline['defer']);
+              }
+              break;
+          }
         }
       }
-      
       // Add all the CSS files
-      foreach($cached_view->data['css'] as $media => $style_sheets){
-      	foreach($style_sheets as $type => $style_sheet){
-      		foreach($style_sheet as $file => $preprocess){
-      			drupal_add_css($file, $type, $media, $preprocess);
-      		}
-      	}
+      foreach($cached_view->data['css'] as $batch_css){
+        foreach($batch_css as $media => $style_sheets){
+          foreach($style_sheets as $type => $style_sheet){
+            foreach($style_sheet as $file => $preprocess){
+              drupal_add_css($file, $type, $media, $preprocess);
+            }
+          }
+        }
       }
       // The output has already been created by the batch process
       return $cached_view->data['output'];
