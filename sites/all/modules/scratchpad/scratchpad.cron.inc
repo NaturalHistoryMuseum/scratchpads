@@ -47,7 +47,10 @@ function _scratchpad_cron(){
       $central_servers = variable_get('scratchpad_central_servers', array('http://dev.scratchpads.eu/'));
       $sites = array();
       foreach($central_servers as $central_server){
-        $sites = array_merge($sites, unserialize(file_get_contents($central_server . 'scratchpads/serial')));     
+        $content = file_get_contents($central_server . 'scratchpads/serial');
+        if($content){
+          $sites = array_merge($sites, unserialize($content));
+        }     
       }
       variable_set('scratchpad_sites_list', $sites);
       variable_set('scratchpad_last_updated', time());
