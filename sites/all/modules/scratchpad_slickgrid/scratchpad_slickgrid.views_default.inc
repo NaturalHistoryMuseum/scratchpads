@@ -333,7 +333,7 @@ function scratchpad_slickgrid_views_default_views(){
       'name' => 'navigation'
     ));
     // Set pager
-    $handler->override_option('items_per_page', 50);
+    $handler->override_option('items_per_page', 0);
     $handler->override_option('use_pager', '1');
     $views[$view->name] = $view;
   } // End of foreach($node_types as $node_type){
