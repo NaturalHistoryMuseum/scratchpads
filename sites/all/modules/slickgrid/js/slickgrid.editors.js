@@ -258,7 +258,7 @@
                    var fieldID = $form.find('textarea').attr('id');
 
                    // Is this a wysiwyg textarea?
-                   if(typeof fieldID != 'undefined' && typeof Drupal.wysiwyg.instances[fieldID] == 'object'){
+                   if(typeof Drupal.wysiwyg != 'undefined' &&  typeof fieldID != 'undefined' && typeof Drupal.wysiwyg.instances[fieldID] == 'object'){
                      // detach the wysiwyg editor (ann apply the value to the form)
                      Drupal.wysiwygDetach($form, {field: fieldID});
                    }

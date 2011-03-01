@@ -33,7 +33,6 @@ var dataView;
             
             resetAjaxOptions();
             
-            
             // Are row checkboxes enabled? If they are, add a checkbox selector column
             if (options['multi_edit']) {
 

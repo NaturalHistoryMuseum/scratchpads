@@ -606,9 +606,11 @@ function _slickgrid_add_files($options, $columns){
   beautytips_add_beautytips();
   // ajax_load borks on wysiwyg so load all the profiles on page load to add all the js / css files
   // Get the filter formats
-  $filter_formats = filter_formats();
-  foreach($filter_formats as $filter_format){
-    wysiwyg_get_profile($filter_format->format);
+  if(module_exists('wysiwyg')){
+    $filter_formats = filter_formats();
+    foreach($filter_formats as $filter_format){
+      wysiwyg_get_profile($filter_format->format);
+    }
   }
 }
 
