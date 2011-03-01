@@ -58,7 +58,7 @@
     this.addLink = function(){
       
       
-      $dom.append('<a class="slickgrid-edit-link" href="/grid/'+node_type+'/'+bid+'">Edit these items</a>');
+      $dom.append('<a class="slickgrid-edit-link" href="/matrix-editor/'+node_type+'/'+bid+'">Edit these items</a>');
       
       
     }
