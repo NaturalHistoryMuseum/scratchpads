@@ -401,6 +401,7 @@ function scratchpadify_install_modules($modules){
  * 6179: Fix issue with redirects not being saved (fucking stupid default configuration).
  * 6180: Update "Help" link.
  * 6181: Install the new slickgrid modules 
+ * 6182: Install the new views batch page module 
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1698,6 +1699,27 @@ function scratchpadify_update_6181(){
   $ret = scratchpadify_install_modules($modules);
   cache_clear_all('*', 'cache_views', TRUE);
   cache_clear_all('*', 'cache_views_data', TRUE);
+  return $ret;
+}
+
+/**
+ * Install the new batch page module
+ */
+function scratchpadify_update_6182(){
+  // Remove matrix editor views 
+  if(module_exists('slickgrid')){
+    $modules = array(
+      'views_batch_page'
+    );
+    $ret = scratchpadify_install_modules($modules);
+    cache_clear_all('*', 'cache_views', TRUE);
+    cache_clear_all('*', 'cache_views_data', TRUE);
+  }else{
+    $ret['#abort'] = array(
+      'success' => FALSE,
+      'query' => t('The slickgrid module is missing.')
+    );
+  }
   return $ret;
 }
 
