@@ -63,7 +63,7 @@ function scratchpad_slickgrid_views_default_views(){
       );
     }
     // If there's a body field, add it
-    if($node_type->has_body && $node_type->type != 'darwincore'){ // DWC hides the body field??
+    if($node_type->has_body && $node_type->type != 'darwincore' && $node_type->type != 'biblio'){ // DWC hides the body field??
       $views_fields['body'] = array(
         'label' => $node_type->body_label,
         'alter' => array(),
@@ -302,6 +302,7 @@ function scratchpad_slickgrid_views_default_views(){
     $handler->override_option('empty', t('Sorry no %node_type nodes could be found.', array(
       '%node_type' => $node_type->name
     )));
+    $handler->override_option('distinct', 1);
     $handler->override_option('empty_format', '1');
     // Define the slickgrid plugin
     $handler->override_option('style_plugin', 'slickgrid');
