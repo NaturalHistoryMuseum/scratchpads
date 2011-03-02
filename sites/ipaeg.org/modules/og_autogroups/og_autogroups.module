@@ -1,0 +1,47 @@
+<?php
+//$Id: og_autogroups.module,v 1.6 2009/09/25 19:59:46 ezrag Exp $
+/*
+ * Implementation of hook_form_alter().
+ */
+function og_autogroups_form_alter($form, &$form_state, $form_id) {
+  if (isset($form['#node']) && $form_id == $form['#node']->type .'_node_form') {
+    $node = $form['#node'];
+    if (variable_get("og_autogroups_$node->type", '')) {
+      $form['og_nodeapi']['visible']['og_groups']['#value'] = variable_get("og_autogroups_$node->type", '');
+      $form['og_nodeapi']['visible']['og_groups']['#type'] = 'value';
+    }
+  }
+  if ($form_id == 'og_admin_settings') {
+    //Add the autogroups fieldset to the form.
+    $form['og_autogroups'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Automatic Group Assignment'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#weight' => 0,
+    );
+    //Generate the list of available groups.
+    $types = node_get_types();
+    foreach ($types as $type) {
+      if (og_is_group_type($type->type)) {
+        $group_types[$type->type] = $type->type;
+      }
+    }
+    $placeholders = db_placeholders($group_types, 'text');
+    $query = db_query(db_rewrite_sql("SELECT nid, title FROM {node} n WHERE type IN ($placeholders) AND n.status = 1"), $group_types);
+    while ($result = db_fetch_object($query)) {
+      $groups[$result->nid] = $result->title;
+    }
+    //Create a selectbox of available groups for each content type that can be posted into an organic group.
+    $post_types = og_get_types('group_post');
+    foreach ($post_types as $key => $post_type) {
+      $form['og_autogroups']["og_autogroups_$post_type"] = array(
+        '#title' => t("@post_type: Auomatically post into the following groups", array('@post_type' => $post_type)),
+        '#type' => 'select',
+        '#multiple' => TRUE,
+        '#options' => $groups,
+        '#default_value' => variable_get('og_autogroups_'. $post_type, ''),
+      );
+    }
+  }
+}
