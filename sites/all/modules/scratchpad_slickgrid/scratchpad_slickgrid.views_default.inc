@@ -110,6 +110,21 @@ function scratchpad_slickgrid_views_default_views(){
       'sortable' => true,
       'filter' => 'textFilter'
     );
+    // Add the groups field - not editable but used for the filters
+    $views_fields['group_nid'] = array(
+      'label' => t('Groups'),
+      'type' => 'ul',
+      'alter' => array(),
+      'exclude' => 0,
+      'id' => 'group_nid',
+      'table' => 'og_ancestry',
+      'field' => 'group_nid'
+    );
+    $columns['group_nid'] = array(
+      'width' => 50,
+      'sortable' => true,
+      'filter' => 'textFilter'
+    );
     //    Vocabulary fields
     $vocabularies = taxonomy_get_vocabularies($node_type->type);
     if(count($vocabularies)){
@@ -351,8 +366,8 @@ function scratchpad_slickgrid_views_defined_fields(){
     'biblio' => array(
       'biblio_authors',
       'biblio_isbn',
-    	'biblio_year',
-    	'biblio_notes'
+      'biblio_year',
+      'biblio_notes'
     )
   );
 }
