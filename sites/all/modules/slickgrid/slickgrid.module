@@ -272,7 +272,7 @@ function slickgrid_form_alter(&$form, $form_state, $form_id){
  */
 function slickgrid_preprocess_views_view_slickgrid(&$vars){
   if($vars['view']){
-  	slickgrid_build_data($vars);
+    slickgrid_build_data($vars);
     $vars['slickgrid'] = theme('slickgrid', $vars['view']->style_plugin->options, $vars['columns'], $vars['data'], $vars['view']);
   }
 }
@@ -827,6 +827,8 @@ function slickgrid_node_form_after_build(&$form, &$form_state){
     }else{
       $form['#field_name'] = 'taxonomy[' . $vid . ']';
     }
+  }elseif($_POST['field_name'] == 'group_nid'){
+    $form['#field_name'] = 'og_groups';
   }elseif($_POST['field_name'] == 'body'){
     $form['#field_name'] = 'body_field';
   }else{
