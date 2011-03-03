@@ -26,7 +26,6 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
  * are installed automatically, with no user input.
  */
 function sandbox_form_alter(&$form, $form_state, $form_id){
-  echo $form_id;
   switch($form_id){
     case 'install_configure_form':
       $form_state = array(
