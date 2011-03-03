@@ -14,7 +14,7 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
       $time_passed = format_interval($time_passed);
       return array(
         'subject' => '',
-        'content' => "<p>The Sandbox was last updated $time_passed ago. You have approximately $time_left before the site is wiped.</p>"
+        'content' => "<p style=\"display:block;margin-top:0;\">The Sandbox was last updated $time_passed ago. You have approximately $time_left before the site is wiped.</p><p style=\"display:block;margin-top:0;\">".l('Login', 'user')." to the site using the username: \"test\" and the password: \"pass\"</p>"
       );
   }
 }
@@ -59,7 +59,25 @@ function sandbox_form_alter(&$form, $form_state, $form_id){
         }else{
           drupal_goto(referer_uri());
         }
-        break;
       }
+      break;
+    case 'user_login':
+      $form['login_details'] = array(
+        '#value' => '<h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>',
+        '#weight' => -100
+      );
+      break;
+    case 'system_site_information_settings':
+      $form['site_mission']['#disabled'] = TRUE;
+      $form['site_mission']['#description'] = '<p class="error">'.t('Editing of the mission statement on this site has been disabled.').'</p>';
+      $form['#submit'] = array_merge(array('sandbox_settings_submit'), $form['#submit']);
+      break;
   }
+}
+
+/**
+ * Submit function to prevent editing of the mission statement.
+ */
+function sandbox_settings_submit($form, &$form_state){
+  $form_state['values']['site_mission'] = variable_get('site_mission', '');
 }
