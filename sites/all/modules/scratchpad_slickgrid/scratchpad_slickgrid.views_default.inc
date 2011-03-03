@@ -208,7 +208,7 @@ function scratchpad_slickgrid_views_default_views(){
             'alter' => array(),
             'exclude' => 0,
             'id' => $id,
-            'table' => 'darwincore',
+            'table' => $node_type->type,
             'field' => $id,
             'relationship' => 'none',
             'label_type' => 'widget'
