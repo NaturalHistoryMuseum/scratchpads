@@ -30,7 +30,7 @@ var dataView;
             $status = $('#slickgrid-status');
             $loadingBar = $('#slickgrid-loading-bar');
             $undo = $('#slickgrid-undo');
-            
+                        
             resetAjaxOptions();
             
             // Are row checkboxes enabled? If they are, add a checkbox selector column
