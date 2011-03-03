@@ -26,6 +26,7 @@ function sandbox_block($op = 'list', $delta = 0, $edit = array()){
  * are installed automatically, with no user input.
  */
 function sandbox_form_alter(&$form, $form_state, $form_id){
+  echo $form_id;
   switch($form_id){
     case 'install_configure_form':
       $form_state = array(
@@ -67,5 +68,17 @@ function sandbox_form_alter(&$form, $form_state, $form_id){
         '#weight' => -100
       );
       break;
+    case 'system_site_information_settings':
+      $form['site_mission']['#disabled'] = TRUE;
+      $form['site_mission']['#description'] = '<p class="error">'.t('Editing of the mission statement on this site has been disabled.').'</p>';
+      $form['#submit'] = array_merge(array('sandbox_settings_submit'), $form['#submit']);
+      break;
   }
+}
+
+/**
+ * Submit function to prevent editing of the mission statement.
+ */
+function sandbox_settings_submit($form, &$form_state){
+  $form_state['values']['site_mission'] = variable_get('site_mission', '');
 }
