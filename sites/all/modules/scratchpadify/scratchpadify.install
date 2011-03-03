@@ -1715,11 +1715,9 @@ function scratchpadify_update_6182(){
     cache_clear_all('*', 'cache_views', TRUE);
     cache_clear_all('*', 'cache_views_data', TRUE);
   }else{
-    $ret['#abort'] = array(
-      'success' => FALSE,
-      'query' => t('The slickgrid module is missing.')
+    return array(
+      '#finished' => TRUE
     );
   }
   return $ret;
 }
-
