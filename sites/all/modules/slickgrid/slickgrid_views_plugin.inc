@@ -101,9 +101,10 @@ class slickgrid_views_plugin extends views_plugin_style{
         if(!isset($sanitized[$field])){
           continue;
         }
+        $column_name = key($column);
         // If the field is the column, mark it so, or the column
         // it's set to is a column, that's ok
-        if($field == $column || $columns[$column] == $column && !empty($sanitized[$column])){
+        if($field == $column_name || $columns[$column_name] == $column && !empty($sanitized[$column_name])){
           $sanitized[$field] = $column;
         }
          // Since we set the field to itself initially, ignoring
