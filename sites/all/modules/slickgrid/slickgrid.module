@@ -73,7 +73,6 @@ function slickgrid_menu_alter(&$items){
   $items['nodereference/autocomplete']['page callback'] = 'slickgrid_nodereference_autocomplete';
   $items['nodereference/autocomplete']['file'] = 'slickgrid.ahah.inc';
   $items['nodereference/autocomplete']['file path'] = drupal_get_path('module', 'slickgrid');
-    
 }
 
 /**
@@ -93,9 +92,14 @@ function slickgrid_views_api(){
  * @author Ben Scott
  */
 function slickgrid_views_pre_view(&$view, $display_id){
+  global $conf;
   // TODO - Can this be moved into the views style plugin? See plugins.inc
   // Is this view a slickgrid view
   if($view->display_handler->get_option('style_plugin') == 'slickgrid'){
+    // Really hacky, but ajax_load chokes on agrregated JS so I need to turn it off
+    // TODO There must be a better way of working round this!
+    $conf['preprocess_js'] = 0;
+    
     $style_options = $view->display_handler->get_option('style_options');
     if($view->display_handler->get_option('use_pager')){
       // turn off views paging
