@@ -21,8 +21,6 @@ function scratchpad_slickgrid_views_default_views(){
     $handler = $view->new_display('default', 'Defaults', 'default');
     // Define the fields
     $views_fields = array();
-    // array of fields defined in the views (so not in the node or cck)
-    $views_defined_fields = scratchpad_slickgrid_views_defined_fields();
     // Are there batches for this content type
     if(in_array($node_type->type, $batch_node_types)){
       $views_fields['batch_created'] = array(
@@ -124,7 +122,7 @@ function scratchpad_slickgrid_views_default_views(){
       'width' => 50,
       'sortable' => true,
       'filter' => 'textFilter',
-    	'editor' => 'nodeFormEditor'
+      'editor' => 'nodeFormEditor'
     );
     //    Vocabulary fields
     $vocabularies = taxonomy_get_vocabularies($node_type->type);
@@ -200,8 +198,8 @@ function scratchpad_slickgrid_views_default_views(){
       }
     }
     // Get additional fields from the views definition?
-    if(is_array($views_defined_fields[$node_type->type])){
-      $views_data = views_fetch_data($node_type->type);
+    $views_data = views_fetch_data($node_type->type);
+    if(is_array($views_data)){
       foreach($views_data as $id => $views_data_item){
         if(isset($views_data_item['field'])){
           $views_fields[$id] = array(
@@ -220,13 +218,10 @@ function scratchpad_slickgrid_views_default_views(){
             'sortable' => true,
             'filter' => 'textFilter'
           );
-          // Should this field be displayed by default
-          if(!in_array($id, $views_defined_fields[$node_type->type])){
-            $style_option_settings['hidden_columns'][] = $id;
-          }
         }
       }
     }
+    $style_option_settings['hidden_columns'] = scratchpad_slickgrid_hidden_fields($node_type->type);
     // Add the fields to the view
     $handler->override_option('fields', $views_fields);
     // Sorting
@@ -357,19 +352,103 @@ function scratchpad_slickgrid_views_default_views(){
   return $views;
 }
 
-function scratchpad_slickgrid_views_defined_fields(){
-  return array(
+function scratchpad_slickgrid_hidden_fields($node_type){
+  $hidden_fields = array(
+    'image' => array(
+      'batch_created',
+      'name',
+      'created',
+      'group_nid'
+    ),
     'darwincore' => array(
-      'institutioncode',
-      'collectioncode',
-      'cataloguenumbertext'
+      'sex',
+      'basisofrecord',
+      'typestatus',
+      'taxonomicname',
+      'identificationqualifier',
+      'identifiedby',
+      'dateidentifiedyear',
+      'dateidentifiedmonth',
+      'dateidentifiedday',
+      'collectornumber',
+      'fieldnumber',
+      'collector',
+      'earliestdatecollected',
+      'latestdatecollected',
+      'fieldnotes',
+      'othercataloguenum',
+      'lifestage',
+      'count',
+      'genbanknum',
+      'remarks',
+      'name',
+      'created',
+      'group_nid'
     ),
     'biblio' => array(
-      'biblio_authors',
-      'biblio_isbn',
-      'biblio_year',
-      'biblio_notes'
+      'citation',
+      'biblio_secondary_authors',
+      'biblio_tertiary_authors',
+      'biblio_subsidiary_authors',
+      'biblio_corp_authors',
+      'biblio_secondary_title',
+      'biblio_tertiary_title',
+      'biblio_accession_number',
+      'biblio_call_number',
+      'biblio_other_number',
+      'biblio_other_author_affiliations',
+      'biblio_publisher',
+      'biblio_place_published',
+      'biblio_edition',
+      'biblio_volume',
+      'biblio_number',
+      'biblio_pages',
+      'biblio_date',
+      'biblio_lang',
+      'biblio_abst_e',
+      'biblio_abst_f',
+      'biblio_type_of_work',
+      'biblio_url',
+      'biblio_issue',
+      'biblio_research_notes',
+      'biblio_custom1',
+      'biblio_custom2',
+      'biblio_custom3',
+      'biblio_custom4',
+      'biblio_custom5',
+      'biblio_custom6',
+      'biblio_custom7',
+      'biblio_number_of_volumes',
+      'biblio_short_title',
+      'biblio_alternate_title',
+      'biblio_translated_title',
+      'biblio_original_publication',
+      'biblio_reprint_edition',
+      'biblio_section',
+      'biblio_citekey',
+      'biblio_coins',
+      'biblio_issn',
+      'biblio_doi',
+      'biblio_auth_address',
+      'biblio_remote_db_name',
+      'biblio_remote_db_provider',
+      'biblio_label',
+      'biblio_access_date',
+      'biblio_refereed',
+      'name',
+      'created',
+      'group_nid'
     )
   );
+  if($hidden_fields[$node_type]){
+    return $hidden_fields[$node_type];
+  }else{
+    // Default hidden fields
+    return array(
+      'name',
+      'created',
+      'group_nid'
+    );
+  }
 }
 
