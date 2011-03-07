@@ -1721,3 +1721,15 @@ function scratchpadify_update_6182(){
   }
   return $ret;
 }
+
+/**
+ * Install ajax load module
+ */
+function scratchpadify_update_6183(){
+  // Remove matrix editor views 
+  $modules = array(
+    'ajax_load',
+  );
+  $ret = scratchpadify_install_modules($modules);
+  return $ret;
+}
