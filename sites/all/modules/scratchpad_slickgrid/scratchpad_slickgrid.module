@@ -10,9 +10,7 @@
  * Turn on lightbox light for slickgrid view pages - full lightbox is incompatible with jquery 1.4
  */
 function scratchpad_slickgrid_init(){
-	
-
-	
+  global $conf;
   // Unset scratchpad_slickgrid_bid session variable so it can be recreated for subsequent batch uploads
   if((arg(0) == 'file-plupload' || arg(0) == 'batch')){ // Is this any page load other than via batch?
     $path = drupal_get_path('module', 'scratchpad_slickgrid');
@@ -23,7 +21,6 @@ function scratchpad_slickgrid_init(){
   }
   if(arg(0) == 'slickgrid' && arg(1) == 'callback'){
     // Batax breaks the grid, add all vids to batax_disable_vids so it isn't used for slickgrid get form callbacks
-    global $conf;
     $vocabularies = taxonomy_get_vocabularies();
     foreach($vocabularies as $vocabulary){
       $conf['batax_disable_vids'][$vocabulary->vid] = true;
@@ -31,7 +28,6 @@ function scratchpad_slickgrid_init(){
   }
   
 }
-
 
 /** 
  * Implementation of hook_menu(). 
