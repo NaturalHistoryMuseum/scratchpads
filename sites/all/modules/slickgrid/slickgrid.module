@@ -69,6 +69,11 @@ function slickgrid_menu_alter(&$items){
   $items['filefield/ahah/%/%/%']['page callback'] = 'slickgrid_filefield_js';
   $items['filefield/ahah/%/%/%']['file'] = 'slickgrid.ahah.inc';
   $items['filefield/ahah/%/%/%']['file path'] = drupal_get_path('module', 'slickgrid');
+  // Node reference autocomplete
+  $items['nodereference/autocomplete']['page callback'] = 'slickgrid_nodereference_autocomplete';
+  $items['nodereference/autocomplete']['file'] = 'slickgrid.ahah.inc';
+  $items['nodereference/autocomplete']['file path'] = drupal_get_path('module', 'slickgrid');
+    
 }
 
 /**

@@ -84,7 +84,11 @@ class views_plugin_display_batch_page extends views_plugin_display_page{
    * on the view.
    */
   function execute(){
-    if($cached_view = views_batch_page_cache_get($this->view)){
+  	
+  	if(is_array($this->view->args)){ // Do not use batch if there are arguments
+  		// Use the normal parent page display
+  		return parent::execute();
+  	}elseif($cached_view = views_batch_page_cache_get($this->view)){
       views_set_page_view($this);
       if(!empty($this->view->build_info['fail'])){return drupal_not_found();}
       $this->view->get_breadcrumb(TRUE);
