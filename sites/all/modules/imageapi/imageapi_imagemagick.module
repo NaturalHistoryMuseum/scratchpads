@@ -148,8 +148,8 @@ function imageapi_imagemagick_image_desaturate(&$image) {
  * "convert_to" action defined by the scratchpadify module.
  */
 function _imageapi_imagemagick_convert($source, $dest, $args) {
+  $original_dest = $dest;
   if(isset($args['convert_to'])){
-    $original_dest = $dest;
     $dest = $args['convert_to'].':'.$dest;
     unset($args['convert_to']);
   }
