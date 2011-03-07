@@ -4,6 +4,7 @@
  */
 function darwincore_autocomplete($field, $string=''){
   // Sanity check required to ensure that NO CRACKING can be done!
+  $matches = array();
   if(in_array($field, array('institutioncode','collectioncode','taxonomicname','identificationqualifier','identifiedby','collector','lifestage'))){
     switch ($field){
       case 'taxonomicname':
@@ -16,12 +17,14 @@ function darwincore_autocomplete($field, $string=''){
       default:
         $results = db_query_range("SELECT DISTINCT %s AS string FROM {darwincore} WHERE LOWER(%s) LIKE LOWER('%s%%')", $field, $field, $string, 0, 10);
     }
-    while ($result = db_fetch_object($results)){
-      $matches[$result->string] = check_plain($result->string);
-    }
   } else if (in_array($field, array('stateprovince','islandgroup','island','county','geodeticdatum','verbatimcoordinatesystem','georeferenceprotocol'))){
     $results = db_query_range("SELECT DISTINCT %s AS string FROM {darwincorelocation} WHERE LOWER(%s) LIKE LOWER('%s%%')", $field, $field, $string, 0, 10);
   }
-  print drupal_to_js($matches);
+  if($results){
+    while ($result = db_fetch_object($results)){
+      $matches[$result->string] = check_plain($result->string);
+    }
+  }
+  print json_encode($matches);
   exit();
 }
