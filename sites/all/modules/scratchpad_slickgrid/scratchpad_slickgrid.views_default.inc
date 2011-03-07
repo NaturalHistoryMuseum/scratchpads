@@ -123,7 +123,8 @@ function scratchpad_slickgrid_views_default_views(){
     $columns['group_nid'] = array(
       'width' => 50,
       'sortable' => true,
-      'filter' => 'textFilter'
+      'filter' => 'textFilter',
+    	'editor' => 'nodeFormEditor'
     );
     //    Vocabulary fields
     $vocabularies = taxonomy_get_vocabularies($node_type->type);
