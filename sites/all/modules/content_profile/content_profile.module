@@ -286,7 +286,7 @@ function content_profile_form_alter(&$form, $form_state, $form_id) {
     // SDRycroft - If the user already has a profile, we set the authored by 
     // field to '' and give a message.
     global $user;
-    if(content_profile_profile_exists($form['#node'], $user->uid) && $form['author']['name']['#default_value'] != ''){
+    if(content_profile_profile_exists($form['#node'], $user->uid) && $form['author']['name']['#default_value'] != '' && !$form['nid']['#value']){
       // Set the author to blank
       $form['author']['name']['#default_value'] = '';
       // Message
