@@ -208,3 +208,18 @@ function slickgrid_filefield_js($type_name, $field_name, $delta){
   }
   exit();
 }
+
+
+function slickgrid_nodereference_autocomplete($field_name, $string = '') {
+  $fields = content_fields();
+  $field = $fields[$field_name];
+  $match = isset($field['widget']['autocomplete_match']) ? $field['widget']['autocomplete_match'] : 'contains';
+  $matches = array();
+
+  $references = _nodereference_potential_references($field, $string, $match, array(), 10);
+  foreach ($references as $id => $row) {
+    // Add a class wrapper for a few required CSS overrides.
+    $matches[$row['title'] ." [nid:$id]"] = '<div class="reference-autocomplete">'. $row['rendered'] . '</div>';
+  }
+  slickgrid_json($matches);
+}
