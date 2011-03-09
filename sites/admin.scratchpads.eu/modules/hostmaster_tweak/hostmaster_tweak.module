@@ -41,6 +41,28 @@ function hostmaster_tweak_menu(){
       ),
       'file' => 'scratchpad_form.inc',
       'type' => MENU_CALLBACK
+    ),
+    'apply/results/%' => array(
+      'title' => 'Results',
+      'page callback' => 'scratchapd_application_results',
+      'page arguments' => array(
+        2
+      ),
+      'access arguments' => array(
+        'apply for scratchpad'
+      ),
+      'file' => 'scratchpad_form.inc',
+      'type' => MENU_CALLBACK
+    ),
+    'apply/success' => array(
+      'title' => 'Thank you for your application',
+      'description' => 'Thank you for your application',
+      'page callback' => 'scratchapd_application_success',
+      'access arguments' => array(
+        'apply for scratchpad'
+      ),
+      'file' => 'scratchpad_form.inc',
+      'type' => MENU_CALLBACK
     )
   );
 }

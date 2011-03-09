@@ -307,7 +307,7 @@ function scratchpad_application_form(){
         '#type' => 'textfield',
         '#required' => TRUE
       ),
-      'domain' => array(
+      'subdomain' => array(
         '#title' => t('Proposed subdomain of myspecies.info'),
         '#description' => '<h3>Your domain name should be:</h3><ul><li><em>Short</em>. You can choose up to 34 characters, but short names and single words are easier to remember. We recommend no more than 20 characters.</li><li><em>Simple</em>. The subdomain name should be your website\'s name.</li><li><em>Legal</em>. Spaces and special characters are not allowed. Remember also that domain names are NOT case sensitive.</li></ul><h3>Using your own domain</h3><p>Users are more than welcome to purchase their own domain name for use with a Scratchpad.  All that is required is that the domain name is pointed at our server quartz.nhm.ac.uk which has the IP address 157.140.2.32.  If using your own domain name, the domain purchase should be completed before the Scratchpad application.</p><p>If you would like to use your own domain name, then enter the full domain name (without "http://").</p>',
         '#type' => 'textfield',
@@ -366,9 +366,69 @@ Array
 /**
  * Validate function for the above form
  */
-function scratchpad_application_form_validate(&$form, &$form_state){}
+function scratchpad_application_form_validate(&$form, &$form_state){
+  // Next check the Google Map API key is the correct length (or roughly)
+  $gapi_length = strlen(trim($form_state['values']['googleapi']));
+  if($gapi_length < 80 || $gapi_length > 90){
+    form_set_error('googleapi', 'Your Google Map API key does not look to be valid, please ensure it is correct.');
+  }
+  // Next, check the domain name resolves to Quartz
+  // If we have dots, then it is not a subdomain of myspecies.info - we need to check it.
+  if(strpos($form_state['values']['subdomain'], '.')){
+    // We have a new domain, lets check it's pointing at Quartz
+    if(gethostbyname($form_state['values']['submitted_tree']['aboutscratchpad']['subdomain']) !== gethostbyname('quartz.nhm.ac.uk')){
+      form_set_error('subdomain', 'The domain name you have entered is not pointing at our server.');
+    }
+  } else {
+    $form_state['values']['subdomain'] .= '.myspecies.info';
+  }
+  // Also check that the domain name is unique.
+  if(db_result(db_query("SELECT COUNT(*) FROM {hostmaster_tweak} WHERE domain = '%s'", $form_state['values']['subdomain']))){
+    form_set_error('subdomain', t('That domain name is already taken'));
+  }
+}
 
 /**
  * Submit function for the above form
  */
-function scratchpad_application_form_submit(&$form, &$form_state){}
+function scratchpad_application_form_submit(&$form, &$form_state){
+  // Lets simply save the values to the table - easy!
+  // If we have don't have dots, then we need to add .myspecies.info
+  if(!strpos($form_state['values']['subdomain'], '.')){
+    $form_state['values']['subdomain'] .= '.myspecies.info';
+  }
+  db_query("INSERT INTO {hostmaster_tweak} VALUES ('%s', '%s')", $form_state['values']['subdomain'], serialize($form_state['values']));
+  drupal_goto('apply/success');
+}
+
+/**
+ * Callback for confirmation
+ */
+function scratchapd_application_success(){
+  return '<div>
+ <div class="boxtop">
+  <div class="bc ctr"></div>
+  <div class="bc ctl"></div>
+ </div>
+ <div class="boxcontent">
+  <div class="boxtitle">
+   <h1>Success</h1>
+  </div>
+  <div class="subboxcontent">
+   <div style="padding:20px;"><h1>Thanks very much</h1><p>We have received your application.  You should receive an email from us soon.</p></div>
+ 	</div>
+ </div>
+ <div class="boxbtm">
+  <div class="bc cbr"></div>
+  <div class="bc cbl"></div>
+ </div>
+</div>';
+}
+/**
+ * Callback for the profile so that it can get the results
+ */
+function scratchapd_application_results($domain){
+  $data = unserialize(db_result(db_query("SELECT data FROM {hostmaster_tweak} WHERE domain LIKE '%s'", $domain)));
+  echo json_encode($data);
+  exit();
+}
