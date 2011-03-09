@@ -1148,7 +1148,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
-  $data = (array)json_decode(file_get_contents('http://admin.scratchpads.eu/apply/results/'.$url));
+  $data = (array)json_decode(file_get_contents('http://admin.scratchpads.eu/apply/results/' . $url));
   if(is_array($data) && count($data)){
     $names = explode(" ", $data['fullname']);
     $familyname = array_pop($names);
@@ -1174,12 +1174,11 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     variable_del('personal_submitted');
     variable_del('clustrmap_submitted');
     variable_del('mission_submitted');
-    $task = 'scratchpadcleanup';    
+    $task = 'scratchpadcleanup';
     // Add the site title and email address
     variable_set('site_name', $data['sitetitle']);
     variable_set('site_mail', $data['email']);
-    // Update the user.
-    
+     // Update the user.
   }
   if($task == 'personal'){
     $output = drupal_get_form('scratchpad_personal', $url);
