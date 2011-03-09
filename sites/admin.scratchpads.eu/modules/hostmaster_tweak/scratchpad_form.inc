@@ -289,7 +289,7 @@ function scratchpad_application_form(){
         '#required' => TRUE
       ),
       'subdomain' => array(
-        '#title' => t('Proposed subdomain of myspecies.info'),
+        '#title' => t('Website domain'),
         '#description' => '<h3>Your domain name should be:</h3><ul><li><em>Short</em>. You can choose up to 34 characters, but short names and single words are easier to remember. We recommend no more than 20 characters.</li><li><em>Simple</em>. The subdomain name should be your website\'s name.</li><li><em>Legal</em>. Spaces and special characters are not allowed. Remember also that domain names are NOT case sensitive.</li></ul><h3>Using your own domain</h3><p>Users are more than welcome to purchase their own domain name for use with a Scratchpad.  All that is required is that the domain name is pointed at our server quartz.nhm.ac.uk which has the IP address 157.140.2.32.  If using your own domain name, the domain purchase should be completed before the Scratchpad application.</p><p>If you would like to use your own domain name, then enter the full domain name (without "http://").</p>',
         '#type' => 'textfield',
         '#required' => TRUE,
