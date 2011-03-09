@@ -393,7 +393,11 @@ function scratchpad_application_form_submit(&$form, &$form_state){
   $node = array(
     'type' => 'site'
   );
+  // Submit as UID 1 (bad idea, but hey, only way).
+  global $user;
+  $user = user_load(array('uid' => 1));
   drupal_execute('site_node_form', $node_form_state, (object)$node);
+  $user = drupal_anonymous_user();
   // Clear messages before forwarding.
   drupal_get_messages('error', TRUE);
   drupal_get_messages('status', TRUE);
