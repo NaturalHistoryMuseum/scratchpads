@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function hostmaster_tweak_install(){
+  drupal_install_schema('hostmaster_tweak');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function hostmaster_tweak_schema(){
+  return array(
+    'hostmaster_tweak' => array(
+      'fields' => array(
+        'domain' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => true
+        ),
+        'data' => array(
+          'type' => 'text',
+          'size' => 'medium',
+          'not null' => true
+        )
+      ),
+      'primary key' => array(
+        'domain'
+      )  
+    )
+  );
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function hostmaster_tweak_update_6101(){
+  return drupal_install_schema('hostmaster_tweak');  
+}
