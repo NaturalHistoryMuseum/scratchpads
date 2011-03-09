@@ -342,25 +342,6 @@ function scratchpad_application_form(){
       '#value' => t('Get my Scratchpad')
     )
   );
-  /*
-Array
-(
-    [email] => Campostoma_ornatum@hotmail.com
-    [fullname] => Heidi B. Blasius
-    [institution] => Desert Fishes Council
-    [googleapi] => ABQIAAAAcLZNiH_rOk3J9D1tL2uJWBRS1vbOs1bhdWNP30X5GB4rFnhWphQHNSGJokRoasMgVWM-dW9sATPtgA
-    [taxonomicscope] => Division Teleostei 
-    [missionstatement] => Arizona's Desert Fish
-    [country] => USA
-    [subdomain] => Arizonadesertfish
-    [comments] => 
-    [clustrmaphtml] => <a href="http://www2.clustrmaps.com/counter/maps.php?url=http://Arizonadesertfish.myspecies.info" id="clustrMapsLink"><img src="http://www2.clustrmaps.com/counter/index2.php?url=http://Arizonadesertfish.myspecies.info" style="border:0px;" alt="Locations of visitors to this page" title="Locations of visitors to this page" id="clustrMapsImg" onerror="this.onerror=null; this.src='http://clustrmaps.com/images/clustrmaps-back-soon.jpg'; document.getElementById('clustrMapsLink').href='http://clustrmaps.com';" />
-</a>
-
-    [sitetitle] => Arizona Desert Fish
-    [title] => Ms. Heidi B. Blasius
-)
-   */
 }
 
 /**
@@ -379,7 +360,7 @@ function scratchpad_application_form_validate(&$form, &$form_state){
     if(gethostbyname($form_state['values']['submitted_tree']['aboutscratchpad']['subdomain']) !== gethostbyname('quartz.nhm.ac.uk')){
       form_set_error('subdomain', 'The domain name you have entered is not pointing at our server.');
     }
-  } else {
+  }else{
     $form_state['values']['subdomain'] .= '.myspecies.info';
   }
   // Also check that the domain name is unique.
@@ -398,6 +379,23 @@ function scratchpad_application_form_submit(&$form, &$form_state){
     $form_state['values']['subdomain'] .= '.myspecies.info';
   }
   db_query("INSERT INTO {hostmaster_tweak} VALUES ('%s', '%s')", $form_state['values']['subdomain'], serialize($form_state['values']));
+  // We submit the site-node-form!
+  $node_form_state = array(
+    'values' => array(
+      'title' => $form_state['values']['subdomain'],
+      'profile' => 691, // Scratchpad profile
+      'platform' => 5, // Quartz Drupal 6 platform
+      'op' => t('Save')
+    )
+  );
+  module_load_include('pages.inc', 'node');
+  $node = array(
+    'type' => 'site'
+  );
+  drupal_execute('site_node_form', $node_form_state, (object)$node);
+  // Clear messages before forwarding.
+  drupal_get_messages('error', TRUE);
+  drupal_get_messages('status', TRUE);
   drupal_goto('apply/success');
 }
 
@@ -415,7 +413,7 @@ function scratchapd_application_success(){
    <h1>Success</h1>
   </div>
   <div class="subboxcontent">
-   <div style="padding:20px;"><h1>Thanks very much</h1><p>We have received your application.  You should receive an email from us soon.</p></div>
+   <div style="padding:20px;"><h1>Thanks very much</h1><p>We have received your application.  You should receive an email from us soon.</p><p><a href="http://scratchpads.eu/">Scratchpads home</a></p></div>
  	</div>
  </div>
  <div class="boxbtm">
@@ -424,6 +422,7 @@ function scratchapd_application_success(){
  </div>
 </div>';
 }
+
 /**
  * Callback for the profile so that it can get the results
  */
