@@ -199,7 +199,14 @@ function scratchpad_profile_profile_modules(){
     'uwho_client',
     'remote_issue_tab',
     'comment_upload',
-    'commentmail'
+    'commentmail',
+    // Matrix editor  
+    'beautytips',
+    'slickgrid',
+    'views_batch_page',
+    'ajax_load',
+    'editor_views',
+    'scratchpad_slickgrid'
   );
 }
 
