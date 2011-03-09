@@ -5,25 +5,6 @@
  */
 function scratchpad_application_form(){
   return array(
-    '#prefix' => '<div>
- <div class="boxtop">
-  <div class="bc ctr"></div>
-  <div class="bc ctl"></div>
- </div>
- <div class="boxcontent">
-  <div class="boxtitle">
-   <h1>Apply</h1>
-  </div>
-  <div class="subboxcontent">
-   <div id="apply-form">',
-    '#suffix' => '</div>
- 	</div>
- </div>
- <div class="boxbtm">
-  <div class="bc cbr"></div>
-  <div class="bc cbl"></div>
- </div>
-</div>',
     'about_you' => array(
       '#type' => 'fieldset',
       '#title' => t('About you'),
