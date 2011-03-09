@@ -385,7 +385,8 @@ function scratchpad_application_form_submit(&$form, &$form_state){
       'title' => $form_state['values']['subdomain'],
       'profile' => 691, // Scratchpad profile
       'platform' => 5, // Quartz Drupal 6 platform
-      'op' => t('Save')
+      'op' => t('Save'),
+      'uid' => 1
     )
   );
   module_load_include('pages.inc', 'node');
