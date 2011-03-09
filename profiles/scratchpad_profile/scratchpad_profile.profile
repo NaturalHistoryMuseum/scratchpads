@@ -1148,7 +1148,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
-  $data = (array)json_decode(file_get_contents('http://admin.scratchpads.eu/apply/results/' . $url));
+  $data = (array)json_decode(file_get_contents('http://get.scratchpads.eu/apply/results/' . $url));
   if(is_array($data) && count($data)){
     $names = explode(" ", $data['fullname']);
     $familyname = array_pop($names);
