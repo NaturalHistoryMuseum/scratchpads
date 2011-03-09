@@ -315,10 +315,16 @@ function scratchpad_application_form(){
         '#resizable' => FALSE
       )
     ),
-    'comments' => array(
-      '#type' => 'textarea',
-      '#resizable' => FALSE,
-      '#title' => t('Any other comments')
+    'cmments_fieldset' => array(
+      '#type' => 'fieldset',
+      '#title' => t('Miscellaneous'),
+      '#collapsed' => FALSE,
+      '#collapsible' => FALSE,
+      'comments' => array(
+        '#type' => 'textarea',
+        '#resizable' => FALSE,
+        '#title' => t('Any other comments')
+      )
     ),
     'submit' => array(
       '#type' => 'submit',
