@@ -15,7 +15,7 @@ function scratchpad_application_form(){
    <h1>Apply</h1>
   </div>
   <div class="subboxcontent">
-   <div style="padding:20px;">',
+   <div id="apply-form">',
     '#suffix' => '</div>
  	</div>
  </div>
@@ -312,13 +312,13 @@ function scratchpad_application_form(){
         '#description' => '<h3>Your domain name should be:</h3><ul><li><em>Short</em>. You can choose up to 34 characters, but short names and single words are easier to remember. We recommend no more than 20 characters.</li><li><em>Simple</em>. The subdomain name should be your website\'s name.</li><li><em>Legal</em>. Spaces and special characters are not allowed. Remember also that domain names are NOT case sensitive.</li></ul><h3>Using your own domain</h3><p>Users are more than welcome to purchase their own domain name for use with a Scratchpad.  All that is required is that the domain name is pointed at our server quartz.nhm.ac.uk which has the IP address 157.140.2.32.  If using your own domain name, the domain purchase should be completed before the Scratchpad application.</p><p>If you would like to use your own domain name, then enter the full domain name (without "http://").</p>',
         '#type' => 'textfield',
         '#required' => TRUE,
-        '#field_prefix' => 'http://',
         '#field_suffix' => '.myspecies.info'
       ),
       'missionstatement' => array(
         '#title' => t('Mission statement'),
         '#description' => t('A description of your site, including what information a user of your site is likely to find there. By default the mission statement will appear on the front page of your site (although this can be changed later).'),
         '#type' => 'textarea',
+        '#resizable' => FALSE,
         '#required' => TRUE
       ),
       'googleapi' => array(
@@ -330,11 +330,13 @@ function scratchpad_application_form(){
       'clustrmaphtml' => array(
         '#title' => t('ClustrMap HTML'),
         '#description' => '<p>Note, this is not required. <a href="http://clustrmaps.com/admin/register.php" target="_blank"><strong>ClustrMap signup page</strong></a></p>',
-        '#type' => 'textarea'
+        '#type' => 'textarea',
+        '#resizable' => FALSE
       )
     ),
     'comments' => array(
       '#type' => 'textarea',
+      '#resizable' => FALSE,
       '#title' => t('Any other comments')
     ),
     'submit' => array(
@@ -342,6 +344,43 @@ function scratchpad_application_form(){
       '#value' => t('Get my Scratchpad')
     )
   );
+}
+
+/**
+ * Theme for the above form
+ */
+function theme_scratchpad_application_form($form){
+  drupal_add_css(drupal_get_path('module', 'hostmaster_tweak') . '/hostmaster_tweak.css');
+  $options = array();
+  foreach(array(
+    'about_you',
+    'about_scratchpad'
+  ) as $fieldset){
+    foreach($form[$fieldset] as $key => $form_part){
+      if(is_array($form_part) && isset($form_part['#description'])){
+        $options[$key] = array(
+          'cssSelect' => '#edit-' . $key,
+          'text' => $form_part['#description'],
+          'trigger' => array(
+            'focus'
+          ),
+          'width' => 350,
+          'positions' => 'top'
+        );
+      }
+    }
+  }
+  /*$options['bt_drupal_help_page'] = array(
+    'cssSelect' => '#edit-sitetitle',
+    'text' => 'Some shit here',
+    'trigger' => array(
+      'mouseover',
+      'mouseout'
+    ),
+    'width' => 350
+  );*/
+  beautytips_add_beautytips($options);
+  return drupal_render_form($form['#id'], $form);
 }
 
 /**
@@ -395,7 +434,9 @@ function scratchpad_application_form_submit(&$form, &$form_state){
   );
   // Submit as UID 1 (bad idea, but hey, only way).
   global $user;
-  $user = user_load(array('uid' => 1));
+  $user = user_load(array(
+    'uid' => 1
+  ));
   drupal_execute('site_node_form', $node_form_state, (object)$node);
   $user = drupal_anonymous_user();
   // Clear messages before forwarding.

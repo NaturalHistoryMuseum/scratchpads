@@ -25,7 +25,7 @@ function hostmaster_tweak_perm(){
 }
 
 /**
- * Implementation of hook_menu().
+ * Implementation of hook_menu().asdfasdf
  */
 function hostmaster_tweak_menu(){
   return array(
@@ -63,6 +63,21 @@ function hostmaster_tweak_menu(){
       ),
       'file' => 'scratchpad_form.inc',
       'type' => MENU_CALLBACK
+    )
+  );
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function hostmaster_tweak_theme(){
+  return array(
+    'scratchpad_application_form' => array(
+      'arguments' => array(
+        'form' => NULL,
+        'vocabulary' => NULL
+      ),
+      'file' => 'scratchpad_form.inc'
     )
   );
 }

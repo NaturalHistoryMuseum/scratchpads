@@ -38,3 +38,37 @@ function hostmaster_tweak_schema(){
 function hostmaster_tweak_update_6101(){
   return drupal_install_schema('hostmaster_tweak');  
 }
+
+/**
+ * Implementation of hook_update_N().
+ */
+function hostmaster_tweak_update_6102(){
+  // install beauty tips  
+  $modules = array('beautytips');
+  $ret = array();
+  // Ensure that the following modules are enabled
+  module_rebuild_cache();
+  foreach($modules as $module){
+    if(!db_result(db_query("SELECT COUNT(*) FROM {system} WHERE name = '%s'", $module))){
+      $ret['#abort'] = array(
+        'success' => FALSE,
+        'query' => t('A required module is missing.')
+      );
+      return $ret;
+    }
+  }
+  // Set the variable for the Image gallery
+  include_once './includes/install.inc';
+  drupal_install_modules($modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Required modules installed.')
+  );
+  // Clear caches (we'll do this again at the end).
+  drupal_rebuild_theme_registry();
+  node_types_rebuild();
+  menu_rebuild();
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  return $ret;
+}
