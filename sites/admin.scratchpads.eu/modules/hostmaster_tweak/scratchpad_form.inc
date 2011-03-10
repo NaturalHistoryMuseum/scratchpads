@@ -391,7 +391,7 @@ function scratchpad_application_form_validate(&$form, &$form_state){
     $form_state['values']['subdomain'] .= '.myspecies.info';
   }
   // Also check that the domain name is unique.
-  if(db_result(db_query("SELECT COUNT(*) FROM {node} WHERE title = '%s' AND type = 'site'", $form_state['values']['subdomain']))){
+  if(db_result(db_query("SELECT COUNT(*) FROM {node} n, {hosting_site} h WHERE n.nid = h.nid AND title = '%s' AND type = 'site' AND h.status != -2", $form_state['values']['subdomain']))){
     form_set_error('subdomain', t('That domain name is already taken'));
   }
 }
