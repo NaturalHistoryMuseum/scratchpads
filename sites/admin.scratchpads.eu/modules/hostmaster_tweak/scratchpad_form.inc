@@ -351,6 +351,7 @@ function theme_scratchpad_application_form($form){
           'trigger' => array(
             'focus'
           ),
+          'shadow' => TRUE,
           'width' => 350,
           'positions' => 'top'
         );
