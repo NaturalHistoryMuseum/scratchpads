@@ -4,6 +4,14 @@
  * Callback for Scratchpad form
  */
 function scratchpad_application_form(){
+  global $user;
+  if($user->uid){
+    return array(
+      'logout_to_see_form' => array(
+        '#value' => '<p>'.t('Please logout to see the application form').'</p>'
+      )
+    );
+  }
   return array(
     'about_you' => array(
       '#type' => 'fieldset',
@@ -337,6 +345,9 @@ function scratchpad_application_form(){
  * Theme for the above form
  */
 function theme_scratchpad_application_form($form){
+  if(isset($form['logout_to_see_form'])){
+    return drupal_render_form($form['#id'], $form);
+  }
   drupal_add_css(drupal_get_path('module', 'hostmaster_tweak') . '/hostmaster_tweak.css');
   $options = array();
   foreach(array(
