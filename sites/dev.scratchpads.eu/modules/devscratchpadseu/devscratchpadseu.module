@@ -36,7 +36,9 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       unset($form['issue_info']['category']['#options']['task']);
       $form['project_info']['rid']['#value'] = 48;
       $form['project_info']['rid']['#type'] = 'hidden';
-      $form['project_info']['#type'] = 'hidden';
+      if(arg(3)!='emonocot'){
+        $form['project_info']['#type'] = 'hidden';
+      }
       $form['issue_info']['assigned']['#type'] = 'hidden';
       $form['issue_details']['format']['#type'] = 'hidden';
       $form['attachments']['#collapsed'] = TRUE;

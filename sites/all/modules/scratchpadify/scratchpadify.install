@@ -1728,8 +1728,17 @@ function scratchpadify_update_6182(){
 function scratchpadify_update_6183(){
   // Remove matrix editor views 
   $modules = array(
-    'ajax_load',
+    'ajax_load'
   );
   $ret = scratchpadify_install_modules($modules);
+  return $ret;
+}
+
+/**
+ * Update issues queue RSS URL due to addition of E-Monocot project.
+ */
+function scratchpadify_update_6184(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE {aggregator_feed} SET url = 'http://dev.scratchpads.eu/project/issues/rss/scratchpads' WHERE url = 'http://dev.scratchpads.eu/project/issues/rss'");
   return $ret;
 }
