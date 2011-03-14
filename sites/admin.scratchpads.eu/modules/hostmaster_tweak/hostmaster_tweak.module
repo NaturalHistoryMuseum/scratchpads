@@ -68,6 +68,16 @@ function hostmaster_tweak_menu(){
 }
 
 /**
+ * Implementation of drush_hook_pre_hosting_task()
+ */
+function drush_scratchpad_tweak_pre_hosting_task(){
+  $task =& drush_get_context('HOSTING_TASK');
+  if($task->ref->type == 'site' && ($task->task_type == 'install' || $task->task_type == 'verify')){
+    $task->options['scratchpad_apply_form'] = unserialize(db_result(db_query("SELECT data FROM {hostmaster_tweak} WHERE domain LIKE '%s'", $task->ref->title)));
+  }
+}
+
+/**
  * Implementation of hook_theme().
  */
 function hostmaster_tweak_theme(){

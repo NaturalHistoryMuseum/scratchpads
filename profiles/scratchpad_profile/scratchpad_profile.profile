@@ -1148,7 +1148,14 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
-  $data = (array)json_decode(file_get_contents('http://get.scratchpads.eu/apply/results/' . $url));
+  // First we try with Drush
+  if(function_exists('drush_get_option')){
+    $data = drush_get_option('scratchpad_apply_form', FALSE);
+  }
+  if(!$data){
+    // Second we try with a URL
+    $data = (array)json_decode(file_get_contents('http://get.scratchpads.eu/apply/results/' . $url));
+  }
   if(is_array($data) && count($data)){
     $names = explode(" ", $data['fullname']);
     $familyname = array_pop($names);
