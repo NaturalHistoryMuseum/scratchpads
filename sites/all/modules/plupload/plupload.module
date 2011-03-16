@@ -118,7 +118,7 @@ function plupload_pernode(){
   // Get and clean the filename.
   $file_name = isset($_REQUEST["name"]) ? $_REQUEST["name"] : '';
   // Clean the fileName for security reasons
-  $file_name = preg_replace('/[^\w\._]+/', '', $file_name);
+  $file_name = preg_replace('/[^\w\._\-]+/', '', $file_name);
   // Look for the content type header
   if(isset($_SERVER["HTTP_CONTENT_TYPE"])){
     $content_type = $_SERVER["HTTP_CONTENT_TYPE"];
