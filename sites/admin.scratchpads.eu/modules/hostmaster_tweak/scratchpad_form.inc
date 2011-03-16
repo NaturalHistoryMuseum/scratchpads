@@ -396,7 +396,7 @@ function scratchpad_application_form_validate(&$form, &$form_state){
   if(strpos($form_state['values']['subdomain'], '.')){
     // We have a new domain, lets check it's pointing at Quartz
     if(gethostbyname($form_state['values']['submitted_tree']['aboutscratchpad']['subdomain']) !== gethostbyname('quartz.nhm.ac.uk')){
-      form_set_error('subdomain', 'The domain name you have entered is not pointing at our server.');
+      form_set_error('subdomain', 'The domain name you have entered is not pointing at our server:<ul><li>'.$form_state['values']['submitted_tree']['aboutscratchpad']['subdomain'].' = '.gethostbyname($form_state['values']['submitted_tree']['aboutscratchpad']['subdomain']).'</li><li>quartz.nhm.ac.uk = '.gethostbyname('quartz.nhm.ac.uk').'</li></ul>');
     }
   }else{
     $form_state['values']['subdomain'] .= '.myspecies.info';
