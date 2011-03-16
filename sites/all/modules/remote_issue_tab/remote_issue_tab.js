@@ -9,10 +9,17 @@ Drupal.behaviors.remote_issues_block = function(context){
       remote_issues_block_hidden = true;      
     }
   });
-  $('.items li').bind('mouseenter', function(){
-    $(this).children().children('p').slideDown(500);
-    $(this).siblings().each(function(){
-      $(this).children().children('p').slideUp(500);
-    });
+  var timeoutid = false;
+  $('#remote-issue-tab .items li').mousemove(function(){
+    var parentthis = this;    
+    if(timeoutid){
+      window.clearTimeout(timeoutid);    
+    }
+    timeoutid = window.setTimeout(function(){
+      $(parentthis).children().children('p').slideDown(200);
+      $(parentthis).siblings().each(function(){
+        $(this).children().children('p').slideUp(1000);
+      });          
+    }, 500);
   });
 };
