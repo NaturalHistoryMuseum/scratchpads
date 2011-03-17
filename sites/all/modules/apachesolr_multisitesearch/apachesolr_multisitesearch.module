@@ -1,0 +1,466 @@
+<?php
+// $Id: apachesolr_multisitesearch.module,v 1.13 2010/09/03 02:29:25 pwolanin Exp $
+
+/**
+ * @file
+ *   Provides a multi-site search implementation for use with the Apache Solr module
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function apachesolr_multisitesearch_menu() {
+  $items = array();
+  $items['admin/settings/apachesolr/multisite-filters'] = array(
+    'title'              => 'Multisite filters',
+    'page callback'      => 'drupal_get_form',
+    'page arguments'     => array('apachesolr_multisitesearch_enabled_facets_form'),
+    'weight'             => -6,
+    'access arguments'   => array('administer search'),
+    'file'               => 'apachesolr_multisitesearch.admin.inc',
+    'type'               => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_menu_alter().
+ */
+function apachesolr_multisitesearch_menu_alter(&$menu) {
+  if (isset($menu['search/apachesolr_multisitesearch/%menu_tail'])) {
+    $menu['search/apachesolr_multisitesearch/%menu_tail']['page callback'] = 'apachesolr_search_view';
+  }
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function apachesolr_multisitesearch_cron() {
+  apachesolr_multisitesearch_refresh_metadata();
+}
+
+function apachesolr_multisitesearch_refresh_metadata() {
+  // Update meta data 1x per hour max.
+  // Fetch meta data 1x per 5 minutes max.
+  // TODO - make these intervals controllable.
+  $last_update = variable_get('apachesolr_multisitesearch_last_metadata_update', 0);
+  $last_fetch = variable_get('apachesolr_multisitesearch_last_metadata_fetch', 0);
+  $time = time();
+  module_load_include('inc', 'apachesolr_multisitesearch', 'apachesolr_multisitesearch.admin');
+  if ($time - $last_update > 60*60) {
+    if (apachesolr_multisitesearch_update_metadata()) {
+      variable_set('apachesolr_multisitesearch_last_metadata_update', $time);
+    }
+  }
+  if ($time - $last_fetch > 60*5) {
+    apachesolr_multisitesearch_get_metadata();
+  }
+  apachesolr_index_updated($time);
+}
+
+/**
+ * Implementation of hook_search()
+ */
+function apachesolr_multisitesearch_search($op = 'search', $keys = NULL) {
+
+  switch ($op) {
+    case 'name':
+      return t('Multi-site search');
+
+    case 'reset':
+      return;
+
+    case 'status':
+      return;
+
+    case 'search':
+      $filters = isset($_GET['filters']) ? $_GET['filters'] : '';
+      $solrsort = isset($_GET['solrsort']) ? $_GET['solrsort'] : '';
+      $page = isset($_GET['page']) ? $_GET['page'] : 0;
+      try {
+        $results = apachesolr_multisitesearch_execute($keys, $filters, $solrsort, 'search/' . arg(1), $page);
+        return $results;
+      }
+      catch (Exception $e) {
+        watchdog('Apache Solr Multisite', nl2br(check_plain($e->getMessage())), NULL, WATCHDOG_ERROR);
+      }
+      break;
+  } // switch
+}
+
+/**
+ * Implementation of hook_apachesolr_process_results()
+ */
+function apachesolr_multisitesearch_apachesolr_process_results(&$results, $namespace = FALSE) {
+  if ($namespace == 'apachesolr_multisitesearch') {
+    foreach ($results as $key => $result) {
+      $results[$key]['extra'][] = theme('apachesolr_breadcrumb_hash', $result['node']->hash);
+    }
+  }
+}
+
+/**
+ * Execute a search results based on keyword, filter, and sort strings.
+ *
+ * @throws Exception
+ */
+function apachesolr_multisitesearch_execute($keys, $filters, $solrsort, $base_path = '', $page = 0, $caller = 'apachesolr_multisitesearch') {
+
+  $params = array();
+  // This is the object that knows about the query coming from the user.
+  $query = apachesolr_drupal_query($keys, $filters, $solrsort, $base_path);
+  if (empty($query)) {
+    throw new Exception(t('Could not construct a Solr query in function apachesolr_search_search()'));
+  }
+  $query->multisite = TRUE;
+  // This is the object that does the communication with the solr server.
+  $solr = apachesolr_get_solr();
+  $params += apachesolr_multisitesearch_basic_params($query);
+  if ($keys) {
+    $params += apachesolr_search_highlighting_params($query);
+    $params += apachesolr_search_spellcheck_params($query);
+  }
+  else {
+    // No highlighting, use the teaser as a snippet.
+    $params['fl'] .= ',teaser';
+  }
+  apachesolr_multisitesearch_add_facet_params($params, $query);
+  apachesolr_search_add_boost_params($params, $query, $solr);
+
+  // Allow modules to alter the query prior to statically caching it.
+  // This can e.g. be used to add available sorts.
+  foreach (module_implements('apachesolr_prepare_query') as $module) {
+    $function_name = $module . '_apachesolr_prepare_query';
+    $function_name($query, $params, $caller);
+  }
+
+  // Cache the built query. Since all the built queries go through
+  // this process, all the hook_invocations will happen later
+  $current_query = apachesolr_current_query($query);
+
+  // This hook allows modules to modify the query and params objects.
+  apachesolr_modify_query($query, $params, $caller);
+  $params['start'] = $page * $params['rows'];
+
+  if (!$query) {
+    return array();
+  }
+
+  if (('' == $keys) && isset($params['fq'])) {
+    // Move the fq params to the q.alt for better performance.
+    $params['q.alt'] = implode(' ', $params['fq']);
+    unset($params['fq']);
+  }
+
+  // We must run htmlspecialchars() here since converted entities are in the index.
+  // and thus bare entities &, > or < won't match.
+  $response = $solr->search(htmlspecialchars($query->get_query_basic(), ENT_NOQUOTES, 'UTF-8'), $params['start'], $params['rows'], $params);
+  // The response is cached so that it is accessible to the blocks and anything
+  // else that needs it beyond the initial search.
+  apachesolr_static_response_cache($response);
+  apachesolr_multisitesearch_has_searched(TRUE);
+  // Add search terms and filters onto the breadcrumb.
+  drupal_set_breadcrumb(array_merge(menu_get_active_breadcrumb(), $current_query->get_breadcrumb()));
+  return apachesolr_multisitesearch_process_response($response, $query, $params);
+}
+
+function apachesolr_multisitesearch_add_facet_params(&$params, $query) {
+  $facet_query_limits = variable_get('apachesolr_facet_query_limits', array());
+  $facet_missing = variable_get('apachesolr_facet_missing', array());
+
+  foreach (apachesolr_multisitesearch_enabled_facets() as $module => $module_facets) {
+    if (!module_exists($module)) {
+      // When modules are disabled their facet settings may remain.
+      continue;
+    }
+    foreach($module_facets as $delta => $facet_field) {
+      // TODO: generalize handling of date and range facets.
+      if (($facet_field == 'created' || $facet_field == 'changed')) {
+        list($start, $end, $gap) = apachesolr_search_date_range($query, $facet_field);
+        if ($gap) {
+          $params['facet.date'][] = $facet_field;
+          $params['f.'. $facet_field .'.facet.date.start'] = $start;
+          $params['f.'. $facet_field .'.facet.date.end'] = $end;
+          $params['f.'. $facet_field .'.facet.date.gap'] = $gap;
+        }
+      }
+      else {
+        $params['facet.field'][] = $facet_field;
+        // Facet limits
+        if (isset($facet_query_limits[$module][$delta])) {
+          $params['f.' . $facet_field . '.facet.limit'] = $facet_query_limits[$module][$delta];
+        }
+        // Facet missing
+        if (!empty($facet_missing[$module][$delta])) {
+          $params['f.' . $facet_field . '.facet.missing'] = 'true';
+        }
+      }
+    }
+  }
+
+  if (!empty($params['facet.field'])) {
+    // Add a default limit for fields where no limit was set.
+    $params['facet.limit'] = variable_get('apachesolr_facet_query_limit_default', 20);
+  }
+}
+
+
+function apachesolr_multisitesearch_has_searched($set = NULL) {
+  static $searched = FALSE;
+  if (isset($set)) {
+    $searched = !empty($set);
+  }
+  return $searched;
+}
+
+/**
+ * Implementation of hook_apachesolr_modify_query().
+ */
+function apachesolr_multisitesearch_apachesolr_modify_query(&$query, &$params, $caller) {
+  if (empty($query->multisite)) {
+    // Limit single site searchs via the site hash.
+    $query->add_filter('hash', apachesolr_site_hash());
+  }
+}
+
+function apachesolr_multisitesearch_basic_params($query) {
+  $params = array(
+    'fl' => 'id,nid,title,comment_count,type,type_name,entity,created,changed,score,url,uid,name,site,hash',
+    'rows' => variable_get('apachesolr_rows', 10),
+    'facet' => 'true',
+    'facet.mincount' => 1,
+    'facet.sort' => 'true'
+  );
+  return $params;
+}
+
+function apachesolr_multisitesearch_process_response($response, $query, $params) {
+  $results = array();
+  // We default to getting snippets from the body.
+  $hl_fl = is_null($params['hl.fl']) ? 'body' : $params['hl.fl'];
+  $total = $response->response->numFound;
+  apachesolr_pager_init($total, $params['rows']);
+  if ($total > 0) {
+    foreach ($response->response->docs as $doc) {
+      $extra = array();
+
+      // Find the nicest available snippet.
+      if (isset($response->highlighting->{$doc->id}->$hl_fl)) {
+        $snippet = theme('apachesolr_search_snippets', $doc, $response->highlighting->{$doc->id}->$hl_fl);
+      }
+      elseif (isset($doc->teaser)) {
+        $snippet = theme('apachesolr_search_snippets', $doc, array(truncate_utf8($doc->teaser, 256, TRUE)));
+      }
+      else {
+        $snippet = '';
+      }
+
+      if (!isset($doc->body)) {
+        $doc->body = $snippet;
+      }
+      $doc->created = strtotime($doc->created);
+      $doc->changed = strtotime($doc->changed);
+      // Allow modules to alter each document.
+      drupal_alter('apachesolr_search_result', $doc);
+      // Copy code from comment_nodeapi().
+      $extra[] = format_plural($doc->comment_count, '1 comment', '@count comments');
+      $results[] = array(
+        'link' => $doc->url,
+        'type' => $doc->type_name,
+        // template_preprocess_search_result() runs check_plain() on the title
+        // again.  Decode to correct the display.
+        'title' => htmlspecialchars_decode($doc->title, ENT_QUOTES),
+        'user' => theme('apachesolr_multisitesearch_username', $doc),
+        'date' => $doc->created,
+        'node' => $doc,
+        'extra' => $extra,
+        'score' => $doc->score,
+        'snippet' => $snippet,
+      );
+    }
+
+    // Hook to allow modifications of the retrieved results
+    foreach (module_implements('apachesolr_process_results') as $module) {
+      $function = $module .'_apachesolr_process_results';
+      // 2nd param is a namespace for those modules which might use it.
+      $function($results, 'apachesolr_multisitesearch');
+    }
+  }
+  return $results;
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function apachesolr_multisitesearch_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $enabled_facets = apachesolr_multisitesearch_enabled_facets('apachesolr_multisitesearch');
+      $facets = apachesolr_multisitesearch_apachesolr_multisitesearch_facets();
+      // Add the blocks
+      $blocks = array();
+      foreach ($enabled_facets as $delta => $facet_field) {
+        if (isset($facets[$delta])) {
+          $blocks[$delta] = $facets[$delta] + array('cache' => BLOCK_CACHE_PER_PAGE,);
+        }
+      }
+      $blocks['currentsearch'] = array(
+        'info' => t('Apache Solr Multisite Search: Current search'),
+        'cache' => BLOCK_CACHE_PER_PAGE,
+      );
+      return $blocks;
+
+    case 'view':
+      if (apachesolr_multisitesearch_has_searched()) {
+        // Get the query and response. Without these no blocks make sense.
+        $response = apachesolr_static_response_cache();
+        if (empty($response)) {
+          return;
+        }
+        $query = apachesolr_current_query();
+        switch ($delta) {
+          case 'currentsearch':
+            return apachesolr_multisitesearch_currentsearch($response, $query);
+           case 'name':
+            return apachesolr_facet_block($response, $query, 'apachesolr_multisitesearch', $delta, $delta, t('Filter by author'));
+          case 'type':
+            return apachesolr_facet_block($response, $query, 'apachesolr_multisitesearch', $delta, $delta, t('Filter by type'), 'apachesolr_search_get_type');
+          case 'changed':
+            return apachesolr_date_facet_block($response, $query, 'apachesolr_multisitesearch', $delta, $delta, t('Filter by modification date'));
+          case 'created':
+            return apachesolr_date_facet_block($response, $query, 'apachesolr_multisitesearch', $delta, $delta, t('Filter by post date'));
+          case 'hash':
+            return apachesolr_facet_block($response, $query, 'apachesolr_multisitesearch', $delta, $delta, t('Filter by site'), 'theme_apachesolr_breadcrumb_hash');
+        }
+      }
+      break;
+
+    case 'configure':
+      if ($delta != 'currentsearch') {
+        return apachesolr_facetcount_form('apachesolr_multisitesearch', $delta);
+      }
+      break;
+
+    case 'save':
+      if ($delta != 'currentsearch') {
+        apachesolr_facetcount_save($edit);
+      }
+      break;
+  }
+}
+
+function apachesolr_multisitesearch_currentsearch($response, $query) {
+    $fields = $query->get_filters();
+    $path = $query->get_path();
+    $options = array();
+    if (!$fields) {
+      $options['attributes']['class'] = 'active';
+    }
+    $links[] = apachesolr_l($query->get_query_basic(), $path, $options);
+    foreach($fields as $field) {
+      if ($field['#name']) {
+        $new_query = clone $query;
+        $new_query->remove_filter($field['#name'], $field['#value']);
+        $options['query'] = $new_query->get_url_queryvalues();
+        $fielddisplay = theme("apachesolr_breadcrumb_". $field['#name'], $field['#value']);
+        if (!$fielddisplay) {
+          $fielddisplay = $field['#value'];
+        }
+        $links[] = theme('apachesolr_unclick_link', $fielddisplay, $new_query->get_path(), $options);
+      }
+    }
+    $content = theme('apachesolr_currentsearch', $response->response->numFound, $links);
+    return array('subject' => t('Current search'), 'content' => $content);
+}
+
+function apachesolr_multisitesearch_enabled_facets($module = NULL) {
+  $facets = variable_get('apachesolr_multisitesearch_enabled_facets', array('apachesolr_multisitesearch' => array()));
+  if (isset($module)) {
+    return isset($facets[$module]) ? $facets[$module] : array();
+  }
+  return $facets;
+}
+
+/**
+ * Implementation of hook_apachesolr_multisitesearch_facets().
+ *
+ * Returns an array keyed by block delta.
+ */
+function apachesolr_multisitesearch_apachesolr_multisitesearch_facets($rebuild = FALSE) {
+  if (!$rebuild) {
+    $cache = cache_get('apachesolr_multisitesearch:facets', 'cache_apachesolr');
+    if (isset($cache->data)) {
+ 	    return $cache->data;
+    }
+  }
+  module_load_include('inc', 'apachesolr_multisitesearch', 'apachesolr_multisitesearch.admin');
+  return apachesolr_multisitesearch_rebuild_facets();
+}
+
+
+/**
+ * Implementation of hook_theme().
+ */
+function apachesolr_multisitesearch_theme() {
+  return array(
+    'apachesolr_multisitesearch_username' => array(
+      'arguments' => array('doc' => NULL),
+    ),
+    'apachesolr_breadcrumb_hash' => array(
+      'arguments' => array('hash' => NULL, 'exclude' => FALSE),
+    ),
+  );
+}
+
+function theme_apachesolr_breadcrumb_hash($hash, $exclude = FALSE) {
+  static $meta;
+  if (!isset($meta)) {
+    $meta = variable_get('apachesolr_multisitesearch_metadata', array());
+  }
+  if ($hash == apachesolr_site_hash()) {
+    return t('This site (!site)', array('!site' => variable_get('site_name', 'Drupal')));
+  }
+  elseif (isset($meta[$hash]['ss_multisite_meta_sitename'])) {
+    return $meta[$hash]['ss_multisite_meta_sitename'];
+  }
+  return $hash;
+}
+
+/**
+ * Modified username theme function.
+ *
+ * @see theme_username()
+ */
+function theme_apachesolr_multisitesearch_username($doc) {
+
+  if ($doc->name) {
+    // Shorten the name when it is too long or it will break many tables.
+    if (drupal_strlen($doc->name) > 20) {
+      $name = drupal_substr($doc->name, 0, 15) .'...';
+    }
+    else {
+      $name = $doc->name;
+    }
+
+    // Only make links for local users.
+    if ($doc->uid && apachesolr_site_hash() == $doc->hash && user_access('access user profiles')) {
+      $output = l($name, 'user/'. $doc->uid, array('attributes' => array('title' => t('View user profile.'))));
+    }
+    else {
+      $output = check_plain($name);
+    }
+  }
+  else {
+    $output = check_plain(variable_get('anonymous', t('Anonymous')));
+  }
+
+  return $output;
+}
+
+/**
+ * Implementation of hook_apachesolr_delete_index_alter()
+ */
+function apachesolr_multisitesearch_apachesolr_delete_index_alter(&$query) {
+  // Limit to the current site.
+  $query = "($query) AND hash:" . apachesolr_site_hash();
+}
