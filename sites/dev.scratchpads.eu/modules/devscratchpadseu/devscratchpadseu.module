@@ -109,13 +109,15 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['revision_information']['#type'] = 'hidden';
       $form['comment_settings']['#type'] = 'hidden';
       $default_value = 0;
-      foreach($form['project_info']['rid']['#options'] as $key => $option){
-        if($key){
-          $default_value = $key;
-          break;
+      if(isset($form['project_info']['rid'])){
+        foreach($form['project_info']['rid']['#options'] as $key => $option){
+          if($key){
+            $default_value = $key;
+            break;
+          }
         }
+        $form['project_info']['rid']['#default_value'] = $default_value;
       }
-      $form['project_info']['rid']['#default_value'] = $default_value;
     }else if($form_id == 'comment_form'){
       $form['notifications']['#collapsed'] = 1;
       $form['notifications']['notify_settings'] = $form['notify_settings'];
