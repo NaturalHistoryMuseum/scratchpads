@@ -5,23 +5,63 @@ function devscratchpadseu_menu(){
     'timestamp' => array(
       'title' => t('Timestamp of next update'),
       'page callback' => 'devscratchpadseu_timestamp',
-      'access arguments' => array('access content'),
+      'access arguments' => array(
+        'access content'
+      ),
       'type' => MENU_CALLBACK
+    ),
+    'issues/%devscratchpadseu_project' => array(
+      'title' => 'View Issues',
+      'page callback' => 'devscratchpadseu_issues',
+      'page arguments' => array(
+        1
+      ),
+      'access callback' => TRUE,
+      'parent' => ''
+    ),
+    'report/%devscratchpadseu_project' => array(
+      'title' => 'Report Issue',
+      'page callback' => 'devscratchpadseu_issues_report',
+      'page arguments' => array(
+        1
+      ),
+      'access callback' => TRUE,
+      'parent' => ''
     )
   );
+}
+
+/**
+ * Returns the user id of the currently logged in user.
+ */
+function devscratchpadseu_project_to_arg($project){
+  if(arg(2) == 'emonocot' || arg(3) == 'emonocot'){return 'emonocot';}
+  return 'scratchpads';
+}
+
+function devscratchpadseu_project_load($project = ''){
+  return $project;
+}
+
+function devscratchpadseu_issues($project){
+  drupal_goto('project/issues/' . $project);
+}
+
+function devscratchpadseu_issues_report($project){
+  drupal_goto('node/add/project-issue/' . $project);
 }
 
 function devscratchpadseu_timestamp(){
   $today_details = getdate();
   $timestamp = 0;
   if($today_details['wday'] != 4 || $today_details['hours'] < 11){
-    $timestamp = (strtotime('next thursday'))+(19*3600);
-  } else {
-    $timestamp = (strtotime($today_details['year'].'-'.$today_details['mon'].'-'.$today_details['mday']))+(19*3600);
+    $timestamp = (strtotime('next thursday')) + (19 * 3600);
+  }else{
+    $timestamp = (strtotime($today_details['year'] . '-' . $today_details['mon'] . '-' . $today_details['mday'])) + (19 * 3600);
   }
-  $output = '<h1 style="font-weight:300;font-size:200%">Time stamp for <em>'.format_date($timestamp, 'long').'</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">'.$timestamp.'</h1>';
+  $output = '<h1 style="font-weight:300;font-size:200%">Time stamp for <em>' . format_date($timestamp, 'long') . '</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">' . $timestamp . '</h1>';
   $timestamp -= 604800; // Last weeks.
-  return $output .'<h1 style="font-weight:300;font-size:200%">Previous timestamp <em>'.format_date($timestamp, 'long').'</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">'.$timestamp.'</h1>';
+  return $output . '<h1 style="font-weight:300;font-size:200%">Previous timestamp <em>' . format_date($timestamp, 'long') . '</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">' . $timestamp . '</h1>';
 }
 
 function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
@@ -36,7 +76,7 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       unset($form['issue_info']['category']['#options']['task']);
       $form['project_info']['rid']['#value'] = 48;
       $form['project_info']['rid']['#type'] = 'hidden';
-      if(arg(3)!='emonocot'){
+      if(arg(3) != 'emonocot'){
         $form['project_info']['#type'] = 'hidden';
       }
       $form['issue_info']['assigned']['#type'] = 'hidden';
