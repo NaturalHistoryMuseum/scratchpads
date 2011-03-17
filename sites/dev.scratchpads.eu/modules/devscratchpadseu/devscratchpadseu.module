@@ -36,6 +36,12 @@ function devscratchpadseu_menu(){
  */
 function devscratchpadseu_project_to_arg($project){
   if(arg(2) == 'emonocot' || arg(3) == 'emonocot'){return 'emonocot';}
+  if(arg(0) == 'node' && is_numeric(arg(1))){
+    $results = db_query('SELECT uri FROM project_projects pp LEFT JOIN project_issues pi ON pp.nid = pi.pid WHERE pp.nid = %d OR pi.nid = %d', arg(1), arg(1));
+    while($row = db_fetch_array($results)){
+      return $row['uri'];
+    }
+  }
   return 'scratchpads';
 }
 
@@ -103,13 +109,15 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       $form['revision_information']['#type'] = 'hidden';
       $form['comment_settings']['#type'] = 'hidden';
       $default_value = 0;
-      foreach($form['project_info']['rid']['#options'] as $key => $option){
-        if($key){
-          $default_value = $key;
-          break;
+      if(isset($form['project_info']['rid'])){
+        foreach($form['project_info']['rid']['#options'] as $key => $option){
+          if($key){
+            $default_value = $key;
+            break;
+          }
         }
+        $form['project_info']['rid']['#default_value'] = $default_value;
       }
-      $form['project_info']['rid']['#default_value'] = $default_value;
     }else if($form_id == 'comment_form'){
       $form['notifications']['#collapsed'] = 1;
       $form['notifications']['notify_settings'] = $form['notify_settings'];
