@@ -18,6 +18,14 @@ body.front #search-form{
 .ac-results *{
   font-size:130% !important;
 }
+.apachesolr_multisitesearch-results .title, .apachesolr_multisitesearch-results .title *{
+  padding:7px 0 5px 0;
+  margin:3px;
+  border-top:1px solid #eee;
+}
+.apachesolr_multisitesearch-results .title a{
+  color:#2200C1;
+}
 /***************************************************************
  * GENERAL
  ***************************************************************/
@@ -31,7 +39,7 @@ body {
   font-size: 10pt;}
 a{
   text-decoration: none;
-  color: #003b00;}
+  color: #2200C1;}
 a:hover{
   text-decoration: underline;}
 hr {
