@@ -84,7 +84,7 @@ function apachesolr_autocomplete_menu() {
   $items['apachesolr_autocomplete'] = array(
     'page callback' => 'apachesolr_autocomplete_callback',
     'access callback' => 'user_access',
-    'access arguments' => array('access content'),
+    'access arguments' => array('search content'),
     'type' => MENU_CALLBACK,
   );
   return $items;
