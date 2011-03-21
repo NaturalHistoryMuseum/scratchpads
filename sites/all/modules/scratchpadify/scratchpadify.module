@@ -693,6 +693,9 @@ function scratchpadify_footer($main = 0){
   if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.' && $_SERVER['SERVER_NAME'] != 'dev.scratchpads.eu'){
     $dev_server_message = '<h1 style="position:absolute;top:0;left:0;background-color:white;color:red;padding:10px;border:solid 1px black;margin:10px;z-index:10000;font-weight:900">DEVELOPMENT SERVER</h1>';
   }
+  if(variable_get('emonocot_is_emonocot_site', FALSE)){
+    return '';
+  }
   return $dev_server_message . '<div id="scratchpadify-footer" align="center" style="padding: 20px"><p><a 
 href="http://e-taxonomy.eu/"><img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/edit_small.png" 
 alt="edit logo" style="padding: 0px 30px"/></a><a href="http://scratchpads.eu"/><img alt="Scratchpads logo" style="border-width: 0; padding:10px 30px 0 0" src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/scratchpads.png"/></a><a rel="license" 
