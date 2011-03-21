@@ -1742,3 +1742,24 @@ function scratchpadify_update_6184(){
   $ret[] = update_sql("UPDATE {aggregator_feed} SET url = 'http://dev.scratchpads.eu/project/issues/rss/scratchpads' WHERE url = 'http://dev.scratchpads.eu/project/issues/rss'");
   return $ret;
 }
+
+/**
+ * Enable Apache solr
+ */
+function scratchpadify_update_6185(){
+  $modules = array(
+    'apachesolr',
+    'apachesolr_search'
+  );
+  $ret = scratchpadify_install_modules($modules);
+  variable_set('apachesolr_search_excluded_types', array('ispecies'=>'ispecies'));
+  variable_set('apachesolr_host', 'web-scratchpad-solr.nhm.ac.uk');
+  variable_set('apachesolr_port', 80);
+  variable_set('apachesolr_cron_limit', 200);
+  variable_set('apachesolr_path', '/solr');
+  variable_set('apachesolr_rows', 25);
+  variable_set('apachesolr_failure', 'show_error');
+  variable_set('apachesolr_search_make_default', 1);
+  variable_set('apachesolr_search_default_previous', 1);
+  variable_set('apachesolr_search_spellcheck', 1);
+}
