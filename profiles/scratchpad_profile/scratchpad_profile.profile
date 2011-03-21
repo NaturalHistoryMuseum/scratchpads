@@ -362,7 +362,7 @@ function scratchpad_profile_profile_tasks_2(){
   // Remote Issues Tab
   $feed = array(
     'title' => 'Scratchpads Issue Queue',
-    'url' => 'http://dev.scratchpads.eu/project/issues/rss',
+    'url' => 'http://dev.scratchpads.eu/project/issues/rss/scratchpads',
     'refresh' => 900
   );
   aggregator_save_feed($feed);
