@@ -118,11 +118,9 @@ function glossary_install(){
  * It is left to the user to dispose of any vocabularies that are no longer needed.
  */
 function glossary_uninstall(){
-  // Find out how many input formats are set.
-  
+  // Find out how many input formats are set.  
   db_query("DELETE FROM {variable} WHERE name LIKE 'glossary_%'");
   // Let's make sure the filter cache is cleared of our stuff.
   cache_clear_all(NULL, 'cache_filter');
-  drupal_set_message(t('The Glossary module has been uninstalled. You will still need to decide what to do with vocabularies that were used.'), 'warning');
   drupal_uninstall_schema('glossary');
 }
