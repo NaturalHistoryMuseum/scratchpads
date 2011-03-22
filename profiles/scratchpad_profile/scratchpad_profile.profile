@@ -206,7 +206,10 @@ function scratchpad_profile_profile_modules(){
     'views_batch_page',
     'ajax_load',
     'editor_views',
-    'scratchpad_slickgrid'
+    'scratchpad_slickgrid',
+    // Solr    
+    'apachesolr',
+    'apachesolr_search'
   );
 }
 
@@ -357,6 +360,20 @@ function scratchpad_profile_profile_install_profile(){
 }
 
 function scratchpad_profile_profile_tasks_2(){
+  // Solr settings  
+  $ret = scratchpadify_install_modules($modules);
+  variable_set('apachesolr_search_excluded_types', array(
+    'ispecies' => 'ispecies'
+  ));
+  variable_set('apachesolr_host', 'web-scratchpad-solr.nhm.ac.uk');
+  variable_set('apachesolr_port', 80);
+  variable_set('apachesolr_cron_limit', 200);
+  variable_set('apachesolr_path', '/solr');
+  variable_set('apachesolr_rows', 25);
+  variable_set('apachesolr_failure', 'show_error');
+  variable_set('apachesolr_search_make_default', 1);
+  variable_set('apachesolr_search_default_previous', 1);
+  variable_set('apachesolr_search_spellcheck', 1);
   // Comment upload module - enable for forums
   variable_set('comment_upload_forum', 1);
   // Remote Issues Tab
