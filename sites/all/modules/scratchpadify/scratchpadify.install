@@ -1746,10 +1746,11 @@ function scratchpadify_update_6184(){
 /**
  * Enable Apache solr
  */
-function scratchpadify_update_6185(){
+function scratchpadify_update_6186(){
   $modules = array(
     'apachesolr',
-    'apachesolr_search'
+    'apachesolr_search',
+    'apachesolr_multisitesearch'
   );
   $ret = scratchpadify_install_modules($modules);
   variable_set('apachesolr_search_excluded_types', array('ispecies'=>'ispecies'));
