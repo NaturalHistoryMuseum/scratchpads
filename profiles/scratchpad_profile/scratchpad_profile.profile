@@ -209,7 +209,8 @@ function scratchpad_profile_profile_modules(){
     'scratchpad_slickgrid',
     // Solr    
     'apachesolr',
-    'apachesolr_search'
+    'apachesolr_search',
+    'apachesolr_multisitesearch'
   );
 }
 
