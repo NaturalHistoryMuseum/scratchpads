@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * Implementation of hook_form_FORM_ID_alter
+ */
+function hostmaster_scratchpad_form_alter(&$form, $form_state, $form_id){
+  
+}
+
+/**
+ * Implementation of hook_theme
+ */
+function hostmaster_scratchpad_theme(){
+  return array(
+    'hostmaster_scratchpad_application_form' => array(
+      'arguments' => array(
+        'form' => NULL
+      )
+    )
+  );
+}
+
+/**
+ * Theme for the above form
+ */
+function theme_hostmaster_scratchpad_application_form($form){
+  if(isset($form['logout_to_see_form'])){return drupal_render_form($form['#id'], $form);}
+  drupal_add_css(drupal_get_path('module', 'hostmaster_scratchpad') . '/hostmaster_scratchpad.css');
+  $options = array();
+  foreach(array(
+    'about_you',
+    'about_scratchpad'
+  ) as $fieldset){
+    foreach($form[$fieldset] as $key => $form_part){
+      if(is_array($form_part) && isset($form_part['#description'])){
+        $options[$key] = array(
+          'cssSelect' => '#edit-' . $key,
+          'text' => $form_part['#description'],
+          'trigger' => array(
+            'focus'
+          ),
+          'shadow' => TRUE,
+          'width' => 350,
+          'positions' => 'top'
+        );
+      }
+    }
+  }
+  /*$options['bt_drupal_help_page'] = array(
+    'cssSelect' => '#edit-sitetitle',
+    'text' => 'Some shit here',
+    'trigger' => array(
+      'mouseover',
+      'mouseout'
+    ),
+    'width' => 350
+  );*/
+  beautytips_add_beautytips($options);
+  return drupal_render_form($form['#id'], $form);
+}
