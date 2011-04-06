@@ -269,7 +269,7 @@ function spm_update($node){
 }
 
 function theme_spm_view_field($value, $field){
-  if(trim($value) != ''){return '<h1 class="spm">' . $field['name'] . '</h1><div class="spm">' . _filter_autop($value) . '</div>';}
+  if(trim($value) != ''){return '<h1 class="spm">' . $field['name'] . '</h1><div class="spm">' . filter_xss($value) . '</div>';}
 }
 
 function theme_spm_node_form($form){
