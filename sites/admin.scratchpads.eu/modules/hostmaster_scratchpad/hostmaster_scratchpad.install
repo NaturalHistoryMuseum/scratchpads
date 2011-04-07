@@ -31,15 +31,7 @@ function hostmaster_scratchpad_schema(){
           'unsigned' => TRUE,
           'not null' => TRUE
         ),
-        'maintainer_title' => array(
-          'type' => 'varchar',
-          'length' => 255
-        ),
-        'maintainer_name' => array(
-          'type' => 'varchar',
-          'length' => 255
-        ),
-        'maintainer_email' => array(
+        'client_title' => array(
           'type' => 'varchar',
           'length' => 255
         ),
@@ -56,6 +48,14 @@ function hostmaster_scratchpad_schema(){
           'length' => 255
         ),
         'taxonomic_scope' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'googleapi' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'clustrmaphtml' => array(
           'type' => 'varchar',
           'length' => 255
         ),
