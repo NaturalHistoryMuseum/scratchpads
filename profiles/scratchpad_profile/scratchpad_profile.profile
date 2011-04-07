@@ -1169,6 +1169,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   $data = array();
   if(function_exists('drush_get_option')){
     $site_title = drush_get_option('site_title', FALSE);
+    variable_set('fantastic_1', $site_title);
     if($site_title){
       $data = array(
       	'sitetitle' => $site_title,
@@ -1182,6 +1183,8 @@ function scratchpad_profile_profile_tasks(&$task, $url){
         'sitetitle' => drush_get_option('site_title', ''),
       );
     }    
+  } else {
+    variable_set('bollocks_1', TRUE);
   }
   if(!count($data)){
     // Second we try with a URL
