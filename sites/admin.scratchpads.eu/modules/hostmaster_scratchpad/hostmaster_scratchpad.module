@@ -453,12 +453,16 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
 function drush_hostmaster_scratchpad_pre_hosting_task(){
   $task =& drush_get_context('HOSTING_TASK');
   if($task->ref->type == 'site' && ($task->task_type == 'install' || $task->task_type == 'verify')){
+    $client = node_load($node->client);
     $task->options['client_title'] = $task->ref->client_title;
+    $task->options['client_name'] = $client->title;
     $task->options['institution'] = $task->ref->institution;
     $task->options['site_title'] = $task->ref->site_title;
+    $task->options['email'] = $client->name;
     $task->options['googleapi'] = $task->ref->googleapi;
     $task->options['clustrmaphtml'] = $task->ref->clustrmaphtml;
     $task->options['mission_statement'] = $task->ref->mission_statement;
+    $task->options['taxonomic_scope'] = $task->ref->taxonomic_scope;
   }
 }
 /**

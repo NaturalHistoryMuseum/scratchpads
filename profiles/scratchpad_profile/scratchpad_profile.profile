@@ -1166,13 +1166,27 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
   // First we try with Drush
-  //if(function_exists('drush_get_option')){
-  //  $data = drush_get_option('scratchpad_apply_form', FALSE);
-  //}
-  //if(!$data){
+  $data = array();
+  if(function_exists('drush_get_option')){
+    $site_title = drush_get_option('site_title', FALSE);
+    if($site_title){
+      $data = array(
+      	'sitetitle' => $site_title,
+        'title' => drush_get_option('client_title', ''),
+        'fullname' => drush_get_option('client_name', ''),
+        'institution' => drush_get_option('institution', ''),
+        'taxonomicscope' => drush_get_option('taxonomic_scope', ''),
+        'googleapi' => drush_get_option('googleapi', ''),
+        'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),
+        'mission_statement' => drush_get_option('mission_statement', ''),
+        'sitetitle' => drush_get_option('site_title', ''),
+      );
+    }    
+  }
+  if(!count($data)){
     // Second we try with a URL
     $data = (array)json_decode(file_get_contents('http://get.scratchpads.eu/apply/results/' . $url));
-  //}
+  }
   if(is_array($data) && count($data)){
     $names = explode(" ", $data['fullname']);
     $familyname = array_pop($names);
