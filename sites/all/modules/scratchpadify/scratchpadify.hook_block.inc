@@ -42,6 +42,10 @@ function _scratchpadify_block($op, $delta, $edit){
             'subject' => 'Statistics',
             'content' => theme_item_list($items)
           );
+          
+          
+          
+          
         case 1:
           $links_override = array(
             'biblio' => array(
@@ -218,6 +222,13 @@ function _scratchpadify_block($op, $delta, $edit){
             ))
           );
           break;
+          
+          
+          
+          
+          
+          
+          
         case 2:
           $uid = array_pop(db_fetch_array(db_query("SELECT uid FROM users WHERE uid > 1 AND uid IN (SELECT uid FROM users_roles WHERE rid = 5) ORDER BY uid ASC LIMIT 1")));
           $maintainer = user_load(array(
