@@ -1169,7 +1169,6 @@ function scratchpad_profile_profile_tasks(&$task, $url){
   $data = array();
   if(function_exists('drush_get_option')){
     $site_title = drush_get_option('site_title', FALSE);
-    variable_set('fantastic_1', $site_title);
     if($site_title){
       $data = array(
       	'sitetitle' => $site_title,
@@ -1179,12 +1178,10 @@ function scratchpad_profile_profile_tasks(&$task, $url){
         'taxonomicscope' => drush_get_option('taxonomic_scope', ''),
         'googleapi' => drush_get_option('googleapi', ''),
         'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),
-        'mission_statement' => drush_get_option('mission_statement', ''),
+        'missionstatement' => drush_get_option('mission_statement', ''),
         'sitetitle' => drush_get_option('site_title', ''),
       );
     }    
-  } else {
-    variable_set('bollocks_1', TRUE);
   }
   if(!count($data)){
     // Second we try with a URL
