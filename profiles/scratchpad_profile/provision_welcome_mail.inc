@@ -25,7 +25,9 @@ $mail['subject'] = st('Your new site !site has been created.');
 //$mail['bcc'] = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
 $mail['body'] = st("Dear !username,
 
-Your new Scratchpad !site has been created for you
+!uri
+
+Your new Scratchpad \"!site\" has been created for you
 
 You can now login to !site by clicking on this link or copying it into your browser:
 

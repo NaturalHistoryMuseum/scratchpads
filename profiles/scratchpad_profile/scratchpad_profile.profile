@@ -32,12 +32,6 @@ function scratchpad_profile_profile_details(){
  */
 function scratchpad_profile_profile_modules(){
   return array(
-    // -------------------------------------------------------------------------
-    // 
-    // NOTE - IF THE FOLLOWING IS CHANGED, THE UPGRADE SCRIPT 
-    // /home/simor/upgrade/createdatabase MUST ALSO BE CHANGED.
-    //
-    // -------------------------------------------------------------------------
     // Core - optional
     'blog',
     'color',
@@ -805,138 +799,6 @@ function scratchpad_profile_profile_tasks_2(){
   session_destroy();
 }
 
-function scratchpad_profile_profile_tasks_3(){
-  // Email the user to say the site has been setup
-  $maintainer = user_load(array(
-    'uid' => 2
-  ));
-  $password = user_password();
-  db_query("UPDATE {users} SET pass = '%s' , status = 1 WHERE uid = 2", md5($password));
-  $name = $maintainer->name;
-  $mail = $maintainer->mail;
-  $site = url("", array(
-    'absolute' => TRUE
-  ));
-  $paragraphs = array(
-    'Dear ' . $maintainer->name,
-    url('', array(
-      'absolute' => TRUE
-    )),
-    'Your new Scratchpad has been created for you.  Your login details are provided below.  Please login as soon as possible, and change your password.',
-    "username: '$name'\npassword: $password",
-    'Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.',
-    'The Scratchpad Team',
-    '[1] http://scratchpads.eu/help',
-    "--\nhttp://scratchpads.eu/\nscratchpad@nhm.ac.uk"
-  );
-  $from = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
-  $message = array(
-    'id' => 'site_created',
-    'to' => "$name <$mail>",
-    'from' => $from,
-    'subject' => st('Your new Scratchpad'),
-    'body' => quoted_printable_encode(drupal_wrap_mail(implode("\n\n", $paragraphs))),
-    'headers' => array(
-      'From' => $from,
-      'Content-Transfer-Encoding' => 'quoted-printable',
-      'Content-Type' => 'text/plain; charset="utf-8"'
-    )
-  );
-  drupal_mail_send($message);
-}
-if(!function_exists('quoted_printable_encode')){
-
-  function quoted_printable_encode($input, $line_max = 1000){ // Don't actually need the line_max, but can't be bothered to remove it!
-    $hex = array(
-      '0',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      'A',
-      'B',
-      'C',
-      'D',
-      'E',
-      'F'
-    );
-    $lines = preg_split("/(?:\r\n|\r|\n)/", $input);
-    $linebreak = "=0D=0A=\r\n";
-    /* the linebreak also counts as characters in the mime_qp_long_line
-      * rule of spam-assassin */
-    $line_max = $line_max - strlen($linebreak);
-    $escape = "=";
-    $output = "";
-    $cur_conv_line = "";
-    $length = 0;
-    $whitespace_pos = 0;
-    $addtl_chars = 0;
-    // iterate lines
-    for($j = 0; $j < count($lines); $j++){
-      $line = $lines[$j];
-      $linlen = strlen($line);
-      // iterate chars
-      for($i = 0; $i < $linlen; $i++){
-        $c = substr($line, $i, 1);
-        $dec = ord($c);
-        $length++;
-        if($dec == 32){
-          // space occurring at end of line, need to encode
-          if(($i == ($linlen - 1))){
-            $c = "=20";
-            $length += 2;
-          }
-          $addtl_chars = 0;
-          $whitespace_pos = $i;
-        }elseif(($dec == 61) || ($dec < 32) || ($dec > 126)){
-          $h2 = floor($dec / 16);
-          $h1 = floor($dec % 16);
-          $c = $escape . $hex["$h2"] . $hex["$h1"];
-          $length += 2;
-          $addtl_chars += 2;
-        }
-        // length for wordwrap exceeded, get a newline into the text
-        if($length >= $line_max){
-          $cur_conv_line .= $c;
-          // read only up to the whitespace for the current line
-          $whitesp_diff = $i - $whitespace_pos + $addtl_chars;
-          /* the text after the whitespace will have to be read
-           * again ( + any additional characters that came into
-           * existence as a result of the encoding process after the whitespace)
-           *
-           * Also, do not start at 0, if there was *no* whitespace in
-           * the whole line */
-          if(($i + $addtl_chars) > $whitesp_diff){
-            $output .= substr($cur_conv_line, 0, (strlen($cur_conv_line) - $whitesp_diff)) . $linebreak;
-            $i = $i - $whitesp_diff + $addtl_chars;
-          }else{
-            $output .= $cur_conv_line . $linebreak;
-          }
-          $cur_conv_line = "";
-          $length = 0;
-          $whitespace_pos = 0;
-        }else{
-          // length for wordwrap not reached, continue reading
-          $cur_conv_line .= $c;
-        }
-      } // end of for
-      $length = 0;
-      $whitespace_pos = 0;
-      $output .= $cur_conv_line;
-      $cur_conv_line = "";
-      if($j <= count($lines) - 1){
-        $output .= $linebreak;
-      }
-    } // end for
-    return trim($output);
-  }
-}
-
 function scratchpad_profile_profile_tasks_4(){
   // Set garland as installed WTF???  
   db_query("UPDATE {system} SET status = 1 WHERE name = 'garland'");
@@ -1271,7 +1133,6 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     if(is_array($data) && count($data)){
       db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['client_email'], $data['fullname']);
     }
-    scratchpad_profile_profile_tasks_3();
     scratchpad_profile_profile_tasks_4();
     $task = 'profile-finished';
   }
