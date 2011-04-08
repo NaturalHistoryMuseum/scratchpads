@@ -361,7 +361,6 @@ function scratchpad_profile_profile_install_profile(){
 
 function scratchpad_profile_profile_tasks_2(){
   // Solr settings  
-  $ret = scratchpadify_install_modules($modules);
   variable_set('apachesolr_search_excluded_types', array(
     'ispecies' => 'ispecies'
   ));
@@ -1171,7 +1170,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     $site_title = drush_get_option('site_title', FALSE);
     if($site_title){
       $data = array(
-      	'sitetitle' => $site_title,
+        'sitetitle' => $site_title,
         'title' => drush_get_option('client_title', ''),
         'fullname' => drush_get_option('fullname', ''),
         'institution' => drush_get_option('institution', ''),
@@ -1179,9 +1178,9 @@ function scratchpad_profile_profile_tasks(&$task, $url){
         'googleapi' => drush_get_option('googleapi', ''),
         'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),
         'missionstatement' => drush_get_option('mission_statement', ''),
-        'sitetitle' => drush_get_option('site_title', ''),
+        'sitetitle' => drush_get_option('site_title', '')
       );
-    }    
+    }
   }
   if(!count($data)){
     // Second we try with a URL

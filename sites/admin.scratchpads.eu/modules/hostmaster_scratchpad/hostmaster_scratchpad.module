@@ -20,6 +20,15 @@ function hostmaster_scratchpad_form_site_node_form_alter(&$form, $form_state){
 }
 
 /**
+ * Implementation of hook_mail_alter().
+ */
+function hostmaster_scratchpad_mail_alter(&$message){
+  // Prevent sending of the "your new site" message. Gah!
+  if(substr($message['subject'], 0, 13) == 'Your new site'){
+    $message['to'] = '<aegir>';
+  }
+}
+/**
  * Implementation of hook_form_FORM_ID_alter
  */
 function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_state){
