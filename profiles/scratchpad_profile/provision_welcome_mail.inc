@@ -37,7 +37,7 @@ This is a one-time login, so it can be used only once.
 
 Once you have logged in, you will be redirected to !edit_uri so you can change your password.
 
-Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.
+Further help is available on the Scratchpad website [1], or the Issues... tab that is present on all Scratchpads.
 
 The Scratchpad Team
 

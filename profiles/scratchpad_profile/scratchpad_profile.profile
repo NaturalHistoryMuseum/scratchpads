@@ -261,14 +261,6 @@ function scratchpad_profile_profile_tasks_1(){
   variable_set('og_content_type_usage_group', 'group');
   // Add the default profile fields to the content type profile
   scratchpad_profile_profile_install_profile();
-  /*
-  db_query("INSERT INTO {profile_fields} (title, name, category, type, weight, required, register, visibility,autocomplete) VALUES 
-    ('".st('Title')."','profile_title','".st('Personal information')."','textfield',0,1,1,3,1),
-    ('".st('Given name(s)')."','profile_givennames','".st('Personal information')."','textfield',1,1,1,3,0), 
-    ('".st('Family name')."','profile_familyname','".st('Personal information')."','textfield',2,1,1,3,0), 
-    ('".st('Institution')."','profile_institution','".st('Personal information')."','textfield',3,0,1,3,0),
-    ('".st('Area of Taxonomic Interest')."','profile_taxonomy','".st('Personal information')."','textfield',4,0,1,3,1)");
-  */
 }
 
 /**
