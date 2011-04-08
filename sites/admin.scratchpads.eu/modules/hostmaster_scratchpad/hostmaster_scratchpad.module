@@ -509,7 +509,7 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
           );
           if(trim($node->mission_statement)){
             $node->content['info']['mission_statement'] = array(
-              '#weight' => 1000,
+              '#weight' => 1001,
               '#type' => 'item',
               '#title' => t('Mission statement'),
               '#value' => $node->mission_statement
