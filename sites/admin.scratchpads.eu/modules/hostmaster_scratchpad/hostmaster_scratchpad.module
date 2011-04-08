@@ -535,9 +535,8 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
 function drush_hostmaster_scratchpad_pre_hosting_task(){
   $task = & drush_get_context('HOSTING_TASK');
   if($task->ref->type == 'site' && ($task->task_type == 'install' || $task->task_type == 'verify')){
-    $client = node_load($node->client);
     $task->options['client_title'] = $task->ref->client_title;
-    $task->options['fullname'] = "Client name: ".$client->title;
+    $task->options['fullname'] = "Client name: ".db_result(db_query('SELECT r.title FROM {node_revisions} r, {node} n WHERE n.vid = r.vid AND n.nid = %d', $node->client));
     $task->options['institution'] = $task->ref->institution;
     $task->options['site_title'] = $task->ref->site_title;
     $task->options['email'] = $client->name;

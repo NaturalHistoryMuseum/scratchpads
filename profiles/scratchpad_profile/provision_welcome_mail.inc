@@ -8,6 +8,14 @@
  * At the very least you will want to send them the one-time login url, !login_url.
  */
 /**
+ * Adjust the UID 1.
+ */
+$account = user_load(1);
+$account->name = 'Scratchpad Team';
+$account->pass = 'no-direct-login';
+$account->mail = 'scratchpad@nhm.ac.uk';
+user_save($account);
+/**
  * Here we load account two, as that is the one we want to send the email for.
  */
 $account = user_load(2);
