@@ -1173,7 +1173,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
       $data = array(
       	'sitetitle' => $site_title,
         'title' => drush_get_option('client_title', ''),
-        'fullname' => drush_get_option('client_name', ''),
+        'fullname' => drush_get_option('fullname', ''),
         'institution' => drush_get_option('institution', ''),
         'taxonomicscope' => drush_get_option('taxonomic_scope', ''),
         'googleapi' => drush_get_option('googleapi', ''),
