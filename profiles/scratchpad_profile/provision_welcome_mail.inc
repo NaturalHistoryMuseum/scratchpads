@@ -22,7 +22,7 @@ $account = user_load(2);
 $onetime = user_pass_reset_url($account);
 $mail = array();
 $mail['subject'] = st('Your new site !site has been created.');
-//$mail['bcc'] = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
+$mail['bcc'] = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
 $mail['body'] = st("Dear !username,
 
 !uri
