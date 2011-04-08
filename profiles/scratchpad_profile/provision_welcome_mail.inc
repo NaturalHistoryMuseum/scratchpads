@@ -22,9 +22,10 @@ $account = user_load(2);
 $onetime = user_pass_reset_url($account);
 $mail = array();
 $mail['subject'] = st('Your new site !site has been created.');
-$mail['body'] = st("!username,
+//$mail['bcc'] = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
+$mail['body'] = st("Dear !username,
 
-Your new site !site has been created.
+Your new Scratchpad !site has been created for you
 
 You can now login to !site by clicking on this link or copying it into your browser:
 
@@ -32,10 +33,20 @@ You can now login to !site by clicking on this link or copying it into your brow
 
 This is a one-time login, so it can be used only once.
 
-Once you have logged in, you will be redirected to !edit_uri so you can change your password.", array(
+Once you have logged in, you will be redirected to !edit_uri so you can change your password.
+
+Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.
+
+The Scratchpad Team
+
+[1] http://scratchpads.eu/help
+
+--
+http://scratchpads.eu
+scratchpad@nhm.ac.uk", array(
   '!onetime' => $onetime,
   '!username' => $account->name,
   '!edit_uri' => url('user/' . $account->uid . '/edit', array(
     'absolute' => TRUE
   ))
-)) . print_r(debug_backtrace(), 1);
+));

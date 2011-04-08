@@ -1213,7 +1213,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     $task = 'scratchpadcleanup';
     // Add the site title and email address
     variable_set('site_name', $data['sitetitle']);
-    variable_set('site_mail', $data['email']);
+    variable_set('site_mail', $data['client_email']);
      // Update the user.
   }
   if($task == 'personal'){
@@ -1268,7 +1268,7 @@ function scratchpad_profile_profile_tasks(&$task, $url){
     // if we're installing user Aegir.  This means the next funciton will email
     // the right person! WOOT!
     if(is_array($data) && count($data)){
-      db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['email'], $data['fullname']);
+      db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['client_email'], $data['fullname']);
     }
     scratchpad_profile_profile_tasks_3();
     scratchpad_profile_profile_tasks_4();

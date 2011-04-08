@@ -540,7 +540,7 @@ function drush_hostmaster_scratchpad_pre_hosting_task(){
     $task->options['fullname'] = $client ? $client->title : 'Scratchpad Maintainer';
     $task->options['institution'] = $task->ref->institution;
     $task->options['site_title'] = $task->ref->site_title;
-    $task->options['email'] = $client->name;
+    $task->options['client_email'] = $client->name;
     $task->options['googleapi'] = $task->ref->googleapi;
     $task->options['clustrmaphtml'] = $task->ref->clustrmaphtml;
     $task->options['mission_statement'] = $task->ref->mission_statement;
