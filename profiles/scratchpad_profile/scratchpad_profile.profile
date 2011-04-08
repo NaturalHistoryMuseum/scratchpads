@@ -1177,7 +1177,8 @@ function scratchpad_profile_profile_tasks(&$task, $url){
         'googleapi' => drush_get_option('googleapi', ''),
         'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),
         'missionstatement' => drush_get_option('mission_statement', ''),
-        'sitetitle' => drush_get_option('site_title', '')
+        'sitetitle' => drush_get_option('site_title', ''),
+        'client_email' => drush_get_option('client_email', '')
       );
     }
   }
