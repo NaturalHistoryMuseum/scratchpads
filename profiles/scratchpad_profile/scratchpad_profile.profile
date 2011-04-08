@@ -838,7 +838,6 @@ function scratchpad_profile_profile_tasks_3(){
     'body' => quoted_printable_encode(drupal_wrap_mail(implode("\n\n", $paragraphs))),
     'headers' => array(
       'From' => $from,
-      'Bcc' => $from,
       'Content-Transfer-Encoding' => 'quoted-printable',
       'Content-Type' => 'text/plain; charset="utf-8"'
     )
