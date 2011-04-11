@@ -8,7 +8,9 @@
  * At the very least you will want to send them the one-time login url, !login_url.
  */
 /**
- * Adjust the UID 1.
+ * Adjust the UID 1. Not ideal doing this here, but we only actually need to do
+ * this when being installed via Aegir, and this only gets installed when called
+ * by Aegir.
  */
 $account = user_load(1);
 $account->name = 'Scratchpad Team';
@@ -22,7 +24,6 @@ $account = user_load(2);
 $onetime = user_pass_reset_url($account);
 $mail = array();
 $mail['subject'] = st('Your new site !site has been created.');
-$mail['bcc'] = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
 $mail['body'] = st("Dear !username,
 
 !uri
