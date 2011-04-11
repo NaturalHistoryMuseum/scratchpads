@@ -58,8 +58,15 @@ function emonocot_block($op, $delta, $edit) {
 }
 
 function emonocot_footer() {
+	//Generate path
+	$em_img_dir = base_path() . drupal_get_path('module', 'emonocot') . '/images/';
+	$sp_img_dir = base_path() . drupal_get_path('module', 'scratchpadify') . '/images/';
 	//TODO: Licenses
-  return '<div id="scratchpadify-footer" align="center" style="padding: 20px"><p>eMonocot Footer Images to go here</p>
+  return '<div id="scratchpadify-footer" align="center" style="padding: 20px">
+          <a href="http://www.kew.org"><img src="'.$em_img_dir.'kew_small.png" style="height:30px; padding:3px;"/></a>
+          <a href="http://www.oxford.ac.uk"><img src="'.$em_img_dir.'oxford_small.png" style="height:30px; padding:3px;"/></a>
+          <a href="http://www.nhm.ac.uk"><img src="'.$em_img_dir.'nhm_small.png" style="height:30px; padding:3px;"/></a>
+          <a href="http://www.nhm.ac.uk"><img src="'.$sp_img_dir.'scratchpads.png" style="height:30px; padding:3px;"/></a>
   <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
