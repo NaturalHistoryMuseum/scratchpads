@@ -106,10 +106,11 @@ function emonocot_list_scratchpads(){
       if(user_access('SCRATCHPADIFY')){
       '<br/><span style="font-size:80%">Last login: ' . $data['last_login_time'] . ' | Last Edited: ' . $data['last_node_changed_time'] . '</span>';
       }
+      $items[] = $output;
   	}
-    $items[] = $output;
+
   }
-  return theme('item_list', $items, count($sites) . ' sites');
+  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p><a href="scratchpads">List of all Scratchpads</a></p>';
 }
 
 
