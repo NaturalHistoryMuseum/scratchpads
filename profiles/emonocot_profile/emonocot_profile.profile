@@ -80,7 +80,6 @@ function emonocot_profile_profile_modules(){
     'print',
     'imce',
     'imce_wysiwyg',
-    'porterstemmer',
     'ajax',
     // Spam control
     'mollom',
