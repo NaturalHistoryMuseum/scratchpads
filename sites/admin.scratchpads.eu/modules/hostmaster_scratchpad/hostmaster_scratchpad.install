@@ -15,14 +15,15 @@ function hostmaster_scratchpad_uninstall(){
 }
 
 /**
- * Implementation of hook_update_N
+ * Update primary key
  */
-function hostmaster_scratchpad_update_6101(){
+function hostmaster_scratchpad_update_6102(){
   $ret = array();
   // Remove primary key
   db_drop_primary_key($ret, 'hostmaster_scratchpad');
   // Add primary key
-  db_add_primary_key($ret, 'hostmaster_scratchpad', 'vid');
+  db_add_primary_key($ret, 'hostmaster_scratchpad', array('vid'));
+  return $ret;
 }
 
 /**
