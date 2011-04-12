@@ -389,10 +389,10 @@ function emonocot_profile_profile_tasks_2(){
   variable_del('node_access_needs_rebuild');
   // Set statistics module up to count node accesses.
   variable_set('statistics_count_content_views', 1);
-  //Reset below!
+
   // Alter the USER to be UID 2, and create a user with UID 1
-  //db_query("UPDATE {users} SET uid = 2 WHERE uid = 1");
-  //db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'Scratchpad Team','no-direct-login',1,NOW())");
+  db_query("UPDATE {users} SET uid = 2 WHERE uid = 1");
+  db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'Scratchpad Team','no-direct-login',1,NOW())");
   // Update the autoincrement (not sure why this breaks, silly MySQL).
   db_query('ALTER TABLE {users} AUTO_INCREMENT = 3');
   db_query("INSERT INTO {users_roles} (uid,rid) VALUES (2,5)"); // Tsk, adding role when none exist!
