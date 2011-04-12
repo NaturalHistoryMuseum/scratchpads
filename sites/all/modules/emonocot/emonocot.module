@@ -1,5 +1,18 @@
 <?php
 
+function emonocot_menu() {
+  return array(
+    'scratchpads/emonocot' => array(
+      'title' => 'eMonocot Scratchpad List',
+      'page callback' => 'emonocot_list_scratchpads',
+      'access arguments' => array(
+        'access content'
+      ),
+      'type' => MENU_CALLBACK,
+    ),
+  );
+}
+
 function emonocot_menu_alter(&$items) {
   $items['taskguide']['page callback'] = 'emonocot_taskguide';
   $items['node'] = array(
@@ -80,7 +93,25 @@ function emonocot_footer() {
 }
 
 
+/**
+ * Provides a page that lists all the Scratchpads.
+ */
+function emonocot_list_scratchpads(){
+  $sites = variable_get('scratchpad_sites_list', array());
+  $items = array();
+  ksort($sites);
+  foreach($sites as $data){
+  	if ($data['profile'] == 'emonocot_profile') {
+      $output = l($data['site_title'] . ' (http://' . $data['site_url'] . ')', 'http://' . $data['site_url']) . '<br/><span style="font-size:80%">Users: ' . $data['users']['total'] . ' | Nodes: ' . (is_array($data['nodes']) ? array_sum($data['nodes']) : 0) . ' | Views: ' . $data['views'] . '</span>';
+      if(user_access('SCRATCHPADIFY')){
+      '<br/><span style="font-size:80%">Last login: ' . $data['last_login_time'] . ' | Last Edited: ' . $data['last_node_changed_time'] . '</span>';
+      }
+      $items[] = $output;
+  	}
 
+  }
+  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p><a href="scratchpads">List of all Scratchpads</a></p>';
+}
 
 
 /**
