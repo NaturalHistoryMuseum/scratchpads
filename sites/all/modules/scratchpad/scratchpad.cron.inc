@@ -35,7 +35,8 @@ function _scratchpad_cron(){
         'views' => $views['totalcount'],
         'maintainer_emails' => $mails,
         'last_login_time' => db_result(db_query('SELECT access FROM {users} WHERE uid > 1 ORDER BY access DESC LIMIT 1;')),
-        'last_node_changed_time' => db_result(db_query('SELECT created FROM {node} ORDER BY created DESC LIMIT 1'))
+        'last_node_changed_time' => db_result(db_query('SELECT created FROM {node} ORDER BY created DESC LIMIT 1')),
+        'profile' => variable_get('install_profile', 'scratchpad_profile')
       );
       foreach($central_servers as $central_server){
         file_get_contents($central_server . 'report_scratchpad/?data=' . urlencode(serialize($report_data))); // Could run into GET limits here. Ho hum!

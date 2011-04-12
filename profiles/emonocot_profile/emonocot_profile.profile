@@ -181,7 +181,7 @@ function emonocot_profile_profile_modules(){
     //'tree',
     'femail',
     'term_node',
-    //'scratchpad',
+    'scratchpad',
     'tui',
     'classification_import',
     'csv_import',
