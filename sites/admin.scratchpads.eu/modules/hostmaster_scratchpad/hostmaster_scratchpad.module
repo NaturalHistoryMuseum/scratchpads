@@ -3,6 +3,7 @@
  * Define an array of Scratchpad profile node IDs
  */
 define('SCRATCHPAD_PROFILE_NID', 691);
+define('EMONOCOT_PROFILE_NID', 1754);
 
 /**
  * Implementation of hook_form_FORM_ID_alter
@@ -28,31 +29,14 @@ function hostmaster_scratchpad_mail_alter(&$message){
     $message['to'] = '<aegir>';
   }
 }
+
 /**
  * Implementation of hook_form_FORM_ID_alter
  */
 function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_state){
-  $form['#theme'] = 'hostmaster_scratchpad_application_form';
-  // We need to set some values here if the user isn't a trusted one.
-  if(!user_access('SPECIAL')){
-    // Set the default profile.  Note, this will need updating, or a nice way
-    // of setting the default profile for anon is required.
-    $form['site']['profile'] = array(
-      '#type' => 'hidden',
-      '#value' => SCRATCHPAD_PROFILE_NID
-    );
-    $form['site']['platform'] = array(
-      '#type' => 'hidden',
-      '#value' => 5
-    );
-    $form['site']['site_language'] = array(
-      '#type' => 'hidden',
-      '#value' => 'en'
-    );
-    $form['site']['db_server'] = array(
-      '#type' => 'hidden',
-      '#value' => '2'
-    );
+  global $user;
+  if($user->theme != 'eldir'){
+    $form['#theme'] = 'hostmaster_scratchpad_application_form';
   }
   if(!isset($form['client']['#type'])){
     $form['client'] = array(
@@ -390,6 +374,34 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_stat
       '#title' => t('Any other comments')
     )
   );
+  // We need to set some values here if the user isn't a trusted one.
+  if(!user_access('SPECIAL')){
+    // Set the default profile.  Note, this will need updating, or a nice way
+    // of setting the default profile for anon is required.
+    unset($form['site']['profile']);
+    $form['about_scratchpad']['profile'] = array(
+      '#type' => 'select',
+      '#title' => t('Scratchpad type'),
+      '#default_value' => SCRATCHPAD_PROFILE_NID,
+      '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
+      '#options' => array(
+        SCRATCHPAD_PROFILE_NID => t('Standard Scratchpad (http://scratchpads.eu)'),
+        EMONOCOT_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
+      )
+    );
+    $form['site']['platform'] = array(
+      '#type' => 'hidden',
+      '#value' => 5
+    );
+    $form['site']['site_language'] = array(
+      '#type' => 'hidden',
+      '#value' => 'en'
+    );
+    $form['site']['db_server'] = array(
+      '#type' => 'hidden',
+      '#value' => '2'
+    );
+  }
   unset($form['site']['title']);
   // Set the weight of the button
   $form['submit']['#weight'] = 1000;
@@ -408,7 +420,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_stat
  */
 function hostmaster_scratchpad_form_validate($form, &$form_state){
   // Only validate if we are trying to create a Scratchpad
-  if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID){
+  if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_PROFILE_NID){
     // Next check the Google Map API key is the correct length (or roughly)
     $gapi_length = strlen(trim($form_state['values']['googleapi']));
     if($gapi_length < 80 || $gapi_length > 90){
@@ -448,7 +460,7 @@ function hostmaster_scratchpad_form_submit($form, &$form_state){
  */
 function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   // Only do this if the profile is a Scratchpad one (1 or 2)
-  if($node->type == 'site' && $node->profile == SCRATCHPAD_PROFILE_NID){
+  if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);

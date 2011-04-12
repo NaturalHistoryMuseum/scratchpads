@@ -1137,15 +1137,15 @@ function emonocot_profile_profile_tasks(&$task, $url){
     $givennames = implode(" ", $names);
     // Submit the forms
     $form_state = array('values' => array('title' => $data['title'],'given' => $givennames,'family' => $familyname,'institution' => $data['institution'],'expertise' => $data['taxonomicscope'],'gmapkey' => $data['googleapi'],'clustrmap' => $data['clustrmaphtml'],'mission' => $data['missionstatement']));
-    scratchpad_personal_submit(NULL, $form_state);
-    scratchpad_gmapkey_submit(NULL, $form_state);
-    scratchpad_clustrmap_submit(NULL, $form_state);
-    scratchpad_mission_submit(NULL, $form_state);
+    emonocot_personal_submit(NULL, $form_state);
+    emonocot_gmapkey_submit(NULL, $form_state);
+    emonocot_clustrmap_submit(NULL, $form_state);
+    emonocot_mission_submit(NULL, $form_state);
     // Delete variables
     variable_del('personal_submitted');
     variable_del('clustrmap_submitted');
     variable_del('mission_submitted');
-    $task = 'scratchpadcleanup';
+    $task = 'emonocotcleanup';
     // Add the site title and email address
     variable_set('site_name', $data['sitetitle']);
     variable_set('site_mail', $data['client_email']);
