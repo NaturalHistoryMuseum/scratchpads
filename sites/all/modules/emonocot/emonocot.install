@@ -2,4 +2,9 @@
 
 function emonocot_install() {
   db_query("UPDATE {system} SET weight = 78 WHERE name = 'emonocot'"); //1 heavier than scratchpadify
+  variable_set('emonocot_is_emonocot_site', TRUE);
+}
+
+function emonocot_disable() {
+  variable_set('emonocot_is_emonocot_site', FALSE);
 }
