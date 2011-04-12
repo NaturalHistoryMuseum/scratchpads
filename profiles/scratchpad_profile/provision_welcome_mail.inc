@@ -22,6 +22,8 @@ user_save($account);
  */
 $account = user_load(2);
 $onetime = user_pass_reset_url($account);
+// Set the status of account two (it's not set to zero for some reason
+db_query('UPDATE {users} SET status = 1 WHERE uid = 2');
 $mail = array();
 $mail['subject'] = st('Your new site !site has been created.');
 $mail['body'] = st("Dear !username,
