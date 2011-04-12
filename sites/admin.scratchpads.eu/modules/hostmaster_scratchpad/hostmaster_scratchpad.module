@@ -380,12 +380,13 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_stat
     // of setting the default profile for anon is required.
     unset($form['site']['profile']);
     $form['about_scratchpad']['profile'] = array(
-      '#type' => 'radios',
+      '#type' => 'select',
       '#title' => t('Scratchpad type'),
       '#default_value' => SCRATCHPAD_PROFILE_NID,
+      '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
       '#options' => array(
-        SCRATCHPAD_PROFILE_NID => t('Standard Scratchpad'),
-        EMONOCOT_PROFILE_NID => t('emonocot Scratchpad')
+        SCRATCHPAD_PROFILE_NID => t('Standard Scratchpad (http://scratchpads.eu)'),
+        EMONOCOT_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
       )
     );
     $form['site']['platform'] = array(
