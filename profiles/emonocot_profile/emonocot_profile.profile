@@ -221,6 +221,7 @@ function emonocot_profile_profile_task_list(){
 function emonocot_profile_profile_tasks_1(){
   //Set variable to say this is an eMonocot Scratchpad
   variable_set('emonocot_is_emonocot_site', TRUE);
+  
   // Insert default user-defined node types into the database. For a complete
   // list of available node type attributes, refer to the node type API
   // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
@@ -369,10 +370,7 @@ function emonocot_profile_profile_tasks_2(){
   variable_set('remote_issues_tab_roles', array(
     5
   ));
-  $ret[] = array(
-    'success' => TRUE,
-    'query' => t('Variables set.')
-  );
+
   // Finally, we feed the feed so the Issues tab isn't empty.
   $feed = aggregator_feed_load($fid);
   aggregator_refresh($feed);
@@ -513,8 +511,9 @@ function emonocot_profile_profile_tasks_2(){
     //eMonocot jiggling
     db_query("UPDATE {blocks} SET weight = -30 WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 1 ", $theme->name);
   }
-  //eM Change role visibility pf block
+  //eM Play with blocks
   db_query("INSERT INTO {blocks_roles} (module, delta, rid) VALUES ('user', 1, 2)");
+  db_query("UPDATE {blocks} SET title = 'Search' WHERE module = 'search' AND delta = 0");
   // Hide the theme search form
   variable_set('theme_settings', array(
     'toggle_search' => 0
@@ -804,46 +803,7 @@ function emonocot_profile_profile_tasks_2(){
   session_destroy();
 }
 
-function emonocot_profile_profile_tasks_3(){
-  // Email the user to say the site has been setup
-  $maintainer = user_load(array(
-    'uid' => 2
-  ));
-  $password = user_password();
-  db_query("UPDATE {users} SET pass = '%s' , status = 1 WHERE uid = 2", md5('pass')); //TODO 'pass' -> $password
-  $name = $maintainer->name;
-  $mail = $maintainer->mail;
-  $site = url("", array(
-    'absolute' => TRUE
-  ));
-  $paragraphs = array(
-    'Dear ' . $maintainer->name,
-    url('', array(
-      'absolute' => TRUE
-    )),
-    'Your new Scratchpad has been created for you.  Your login details are provided below.  Please login as soon as possible, and change your password.',
-    "username: '$name'\npassword: $password",
-    'Further help is available on the Scratchpad website [1], or if you are still having difficulty, simply reply to this message, and one of the us will get back to you.',
-    'The eMonocot & Scratchpad Teams',
-    '[1] http://scratchpads.eu/help',
-    "--\nhttp://scratchpads.eu/\nscratchpad@nhm.ac.uk"
-  );
-  $from = 'Scratchpad Team <scratchpad@nhm.ac.uk>';
-  $message = array(
-    'id' => 'site_created',
-    'to' => "$name <$mail>",
-    'from' => $from,
-    'subject' => st('Your new Scratchpad'),
-    'body' => quoted_printable_encode(drupal_wrap_mail(implode("\n\n", $paragraphs))),
-    'headers' => array(
-      'From' => $from,
-      'Bcc' => $from,
-      'Content-Transfer-Encoding' => 'quoted-printable',
-      'Content-Type' => 'text/plain; charset="utf-8"'
-    )
-  );
-  drupal_mail_send($message);
-}
+
 if(!function_exists('quoted_printable_encode')){
 
   function quoted_printable_encode($input, $line_max = 1000){ // Don't actually need the line_max, but can't be bothered to remove it!
@@ -1164,36 +1124,32 @@ function emonocot_profile_profile_tasks(&$task, $url){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
-  $data = (array)json_decode(file_get_contents('http://scratchpads.eu/scratchpad/apply/result/' . $url));
-  if(is_array($data) && count($data)){
+  // First we try with Drush
+  $data = array();
+  if(function_exists('drush_get_option')){
+    $site_title = drush_get_option('site_title', FALSE);
+    if($site_title){
+      $data = array('sitetitle' => $site_title,'title' => drush_get_option('client_title', ''),'fullname' => drush_get_option('fullname', ''),'institution' => drush_get_option('institution', ''),'taxonomicscope' => drush_get_option('taxonomic_scope', ''),'googleapi' => drush_get_option('googleapi', ''),'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),'missionstatement' => drush_get_option('mission_statement', ''),'sitetitle' => drush_get_option('site_title', ''),'client_email' => drush_get_option('client_email', ''));
+    }
+  }
+  if(count($data)){
     $names = explode(" ", $data['fullname']);
     $familyname = array_pop($names);
     $givennames = implode(" ", $names);
     // Submit the forms
-    $form_state = array(
-      'values' => array(
-        'title' => $data['title'],
-        'given' => $givennames,
-        'family' => $familyname,
-        'institution' => $data['institution'],
-        'expertise' => $data['taxonomicscope'],
-        'gmapkey' => $data['googleapi'],
-        'clustrmap' => $data['clustrmaphtml'],
-        'mission' => $data['missionstatement']
-      )
-    );
-    emonocot_personal_submit(NULL, $form_state);
-    emonocot_gmapkey_submit(NULL, $form_state);
-    emonocot_clustrmap_submit(NULL, $form_state);
-    emonocot_mission_submit(NULL, $form_state);
+    $form_state = array('values' => array('title' => $data['title'],'given' => $givennames,'family' => $familyname,'institution' => $data['institution'],'expertise' => $data['taxonomicscope'],'gmapkey' => $data['googleapi'],'clustrmap' => $data['clustrmaphtml'],'mission' => $data['missionstatement']));
+    scratchpad_personal_submit(NULL, $form_state);
+    scratchpad_gmapkey_submit(NULL, $form_state);
+    scratchpad_clustrmap_submit(NULL, $form_state);
+    scratchpad_mission_submit(NULL, $form_state);
     // Delete variables
     variable_del('personal_submitted');
     variable_del('clustrmap_submitted');
     variable_del('mission_submitted');
-    $task = 'emonocotcleanup';
+    $task = 'scratchpadcleanup';
     // Add the site title and email address
     variable_set('site_name', $data['sitetitle']);
-    variable_set('site_mail', $data['email']);
+    variable_set('site_mail', $data['client_email']);
      // Update the user.
   }
   if($task == 'personal'){
@@ -1250,7 +1206,6 @@ function emonocot_profile_profile_tasks(&$task, $url){
     if(is_array($data) && count($data)){
       db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['email'], $data['fullname']);
     }
-    emonocot_profile_profile_tasks_3();
     emonocot_profile_profile_tasks_4();
     $task = 'profile-finished';
   }

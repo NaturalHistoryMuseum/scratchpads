@@ -53,6 +53,7 @@ function emonocot_block($op, $delta, $edit) {
   				  'subject' => 'About eMonoct',
   				  'content' => '<p>This site is an <a href="http://e-monocot.org/scratchpads">eMonocot Scratchpad</a>.</p><p>&nbsp;</p><p><a href="http://e-monocot.org">e-Monocot</a> is a <a href="http://www.nerc.ac.uk/">NERC</a> funded consortium between the <a href="http://www.kew.org/">Royal Botanic Gardens Kew</a>, <a href="http://www.ox.ac.uk/">Oxford University</a> and the <a href="http://www.nhm.ac.uk">Natural History Museum</a>.</p><p>&nbsp;</p><p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu">Scratchpad</a> team at the Natural History Museum, London.</p>',
   				);
+  				
   		}
   }
 }
@@ -63,10 +64,12 @@ function emonocot_footer() {
 	$sp_img_dir = base_path() . drupal_get_path('module', 'scratchpadify') . '/images/';
 	//TODO: Licenses
   return '<div id="scratchpadify-footer" align="center" style="padding: 20px">
-          <a href="http://www.kew.org"><img src="'.$em_img_dir.'kew_small.png" style="height:30px; padding:3px;"/></a>
+         <!-- <a href="http://www.kew.org"><img src="'.$em_img_dir.'kew_small.png" style="height:30px; padding:3px;"/></a>
           <a href="http://www.oxford.ac.uk"><img src="'.$em_img_dir.'oxford_small.png" style="height:30px; padding:3px;"/></a>
-          <a href="http://www.nhm.ac.uk"><img src="'.$em_img_dir.'nhm_small.png" style="height:30px; padding:3px;"/></a>
+          <a href="http://www.nhm.ac.uk"><img src="'.$em_img_dir.'nhm_small.png" style="height:30px; padding:3px;"/></a> -->
           <a href="http://www.nhm.ac.uk"><img src="'.$sp_img_dir.'scratchpads.png" style="height:30px; padding:3px;"/></a>
+          <a rel="license" href="href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" style="border-width: 0pt;" src="'.$sp_img_dir.'cc.logo.1.png"></a>
+          <p style="font-size:80%; text-align:center"><a href="/">Other eMonocot Scratchpads</a></p>
   <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
