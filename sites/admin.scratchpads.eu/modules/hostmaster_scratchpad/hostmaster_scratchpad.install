@@ -15,6 +15,17 @@ function hostmaster_scratchpad_uninstall(){
 }
 
 /**
+ * Implementation of hook_update_N
+ */
+function hostmaster_scratchpad_update_6101(){
+  $ret = array();
+  // Remove primary key
+  db_drop_primary_key($ret, 'hostmaster_scratchpad');
+  // Add primary key
+  db_add_primary_key($ret, 'hostmaster_scratchpad', 'vid');
+}
+
+/**
  * Hook_schema
  */
 function hostmaster_scratchpad_schema(){
@@ -69,7 +80,7 @@ function hostmaster_scratchpad_schema(){
         )
       ),
       'primary key' => array(
-        'nid'
+        'vid'
       )
     )
   );
