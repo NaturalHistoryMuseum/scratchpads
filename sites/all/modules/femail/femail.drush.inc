@@ -158,7 +158,7 @@ function _femail_post_comment($msg, $user, $status){
       // FFS, the comment_upload module doesn't accept files as objects. Ah well
       // we'll convert them here.
       $ffs_fussy_cu = array();
-      if(is_array($msg['files']) || is_object($msg['files'])){
+      if(isset($msg['files']) && count($msg['files'])){
         foreach($msg['files'] as $fid => $file_tmp){
           $ffs_fussy_cu[$fid] = (array)$file_tmp;
         }
