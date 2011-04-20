@@ -21,6 +21,13 @@ function _scratchpadify_form_alter(&$form, &$form_state, $form_id){
         unset($form['field_imagefield'][$key]);
       }
     }
+    if(isset($form['taxonomy']['tags'])){
+      foreach($form['taxonomy']['tags'] as $key => $data){
+        if(isset($data['#title']) && $data['#title'] == t('Keywords')){
+          $form['taxonomy']['tags'][$key]['#description'] .= '<br/>'.l(t('Edit existing keywords (opens in new window)'), 'admin/content/taxonomy/'.$key, array('attributes' => array('target' => '_blank')));
+        }
+      }
+    }
   }else if($form_id == 'og_user_roles_page_form'){
     foreach($form['user_roles'] as $uid => $form_part){
       if(is_numeric($uid) && isset($form_part['roles'])){
