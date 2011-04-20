@@ -195,7 +195,7 @@ function emonocot_profile_profile_modules(){
     'comment_upload',
     'commentmail',
     //eMonocot
-    'emonocot'
+    'emonocot',
   );
 }
 
