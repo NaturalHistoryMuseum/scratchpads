@@ -100,7 +100,8 @@ function emonocot_profile_profile_tasks(&$task, $url){
     $task = 'personal';
     emonocot_profile_profile_tasks_1();
   }
-  $output = scratchpad_profile_do_tasks($task, $url);
+  $data = array();
+  $output = scratchpad_profile_do_tasks($task, $url, $data);
   if($output){
     return $output;
   }
