@@ -85,7 +85,7 @@ function emonocot_profile_profile_tasks_1(){
 function emonocot_profile_profile_tasks_2(){
   scratchpad_profile_set_settings();
   emonocot_profile_set_conditions();
-  emonocot_profile_set_issue_feed();
+  scratchpad_profile_set_issue_feed('eMonocot Scratchpads Issue Queue', 'http://dev.scratchpads.eu/project/issues/rss/emonocot');
   scratchpad_profile_profile_set_perms();
   emonocot_profile_set_blocks();
   emonocot_profile_tweak_menu();

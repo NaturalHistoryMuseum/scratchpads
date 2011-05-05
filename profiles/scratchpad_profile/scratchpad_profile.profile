@@ -220,7 +220,7 @@ function scratchpad_profile_profile_tasks_1(){
 function scratchpad_profile_profile_tasks_2(){
   scratchpad_profile_set_settings();
   scratchpad_profile_set_conditions();
-  scratchpad_profile_set_issue_feed();
+  scratchpad_profile_set_issue_feed('Scratchpads Issue Queue', 'http://dev.scratchpads.eu/project/issues/rss/scratchpads');
   scratchpad_profile_profile_set_perms();
   scratchpad_profile_set_blocks();
   scratchpad_profile_tweak_menu();

@@ -474,11 +474,11 @@ function scratchpad_profile_set_conditions(){
   variable_set('legal_display', 2);
 }
 
-function scratchpad_profile_set_issue_feed(){
+function scratchpad_profile_set_issue_feed($title, $url){
   // Remote Issues Tab
   $feed = array(
-    'title' => 'Scratchpads Issue Queue',
-    'url' => 'http://dev.scratchpads.eu/project/issues/rss/scratchpads',
+    'title' => $title,
+    'url' => $url,
     'refresh' => 900
   );
   aggregator_save_feed($feed);
