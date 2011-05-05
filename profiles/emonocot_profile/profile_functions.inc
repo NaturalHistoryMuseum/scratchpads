@@ -33,6 +33,20 @@ function emonocot_profile_set_issue_feed(){
     'refresh' => 900
   );
   aggregator_save_feed($feed);
+  // Set the variables
+  // Note, $feed is not passed by reference to aggregator_save_feed (Possible 
+  // bug with the Drupal code there), so we have to use db_last_insert_id.
+  $fid = db_last_insert_id('aggregator_feed', 'fid');
+  variable_set('remote_issue_tab_feed', $fid);
+  variable_set('remote_issue_tab_uwho_client_key', '58d972f86f9d963837bebcd8d4b46d39');
+  variable_set('remote_issue_tab_uwho_url', 'http://dev.scratchpads.eu/uwho');
+  variable_set('remote_issue_tab_footer', '<h1>Help</h1><h3>Not sure what you are doing, try the <a href="http://scratchpads.eu/help">Scratchpad Help Page</a>.</h3>');
+  variable_set('remote_issues_tab_roles', array(
+    5
+  ));
+  // Finally, we feed the feed so the Issues tab isn't empty.
+  $feed = aggregator_feed_load($fid);
+  aggregator_refresh($feed);
 }
 
 function emonocot_profile_set_conditions(){
