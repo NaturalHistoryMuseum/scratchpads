@@ -790,7 +790,7 @@ function scratchpad_profile_set_theme($theme_name){
   cache_clear_all('*', 'cache_views_data', TRUE);
 }
 
-function scratchpad_profile_do_tasks(&$task, $url){
+function scratchpad_profile_do_tasks(&$task, $url, &$data){
   // Attempt to load the data from the Scratchpad Application form, if we fail,
   // we'll continue as normal, if we succeed, then we'll skip the following
   // steps
