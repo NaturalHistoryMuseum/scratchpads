@@ -25,16 +25,6 @@ function emonocot_profile_set_blocks(){
   db_query("UPDATE {blocks} SET title = 'Search' WHERE module = 'search' AND delta = 0");
 }
 
-function emonocot_profile_set_issue_feed(){
-  // Remote Issues Tab
-  $feed = array(
-    'title' => 'eMonocot Scratchpads Issue Queue',
-    'url' => 'http://dev.scratchpads.eu/project/issues/rss/emonocot',
-    'refresh' => 900
-  );
-  aggregator_save_feed($feed);
-}
-
 function emonocot_profile_set_conditions(){
   // Insert conditions into the Scratchpad
   $conditions = '<ol>
