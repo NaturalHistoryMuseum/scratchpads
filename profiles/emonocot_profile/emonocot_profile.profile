@@ -12,7 +12,6 @@ set_time_limit(300);
  * Note, this profile was renamed to avoid a conflict with the module of the
  * same name.
  */
-
 /**
  * Details about this module
  * 
@@ -220,7 +219,6 @@ function emonocot_profile_profile_task_list(){
 function emonocot_profile_profile_tasks_1(){
   //Set variable to say this is an eMonocot Scratchpad
   variable_set('emonocot_is_emonocot_site', TRUE);
-  
   // Insert default user-defined node types into the database. For a complete
   // list of available node type attributes, refer to the node type API
   // documentation at: http://api.drupal.org/api/HEAD/function/hook_node_info.
@@ -369,7 +367,6 @@ function emonocot_profile_profile_tasks_2(){
   variable_set('remote_issues_tab_roles', array(
     5
   ));
-
   // Finally, we feed the feed so the Issues tab isn't empty.
   $feed = aggregator_feed_load($fid);
   aggregator_refresh($feed);
@@ -388,7 +385,6 @@ function emonocot_profile_profile_tasks_2(){
   variable_del('node_access_needs_rebuild');
   // Set statistics module up to count node accesses.
   variable_set('statistics_count_content_views', 1);
-
   // Alter the USER to be UID 2, and create a user with UID 1
   db_query("UPDATE {users} SET uid = 2 WHERE uid = 1");
   db_query("INSERT INTO {users} (uid,name,pass,status,login) VALUES (1,'Scratchpad Team','no-direct-login',1,NOW())");
@@ -801,8 +797,6 @@ function emonocot_profile_profile_tasks_2(){
   // Log the user out
   session_destroy();
 }
-
-
 if(!function_exists('quoted_printable_encode')){
 
   function quoted_printable_encode($input, $line_max = 1000){ // Don't actually need the line_max, but can't be bothered to remove it!
@@ -1128,7 +1122,18 @@ function emonocot_profile_profile_tasks(&$task, $url){
   if(function_exists('drush_get_option')){
     $site_title = drush_get_option('site_title', FALSE);
     if($site_title){
-      $data = array('sitetitle' => $site_title,'title' => drush_get_option('client_title', ''),'fullname' => drush_get_option('fullname', ''),'institution' => drush_get_option('institution', ''),'taxonomicscope' => drush_get_option('taxonomic_scope', ''),'googleapi' => drush_get_option('googleapi', ''),'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),'missionstatement' => drush_get_option('mission_statement', ''),'sitetitle' => drush_get_option('site_title', ''),'client_email' => drush_get_option('client_email', ''));
+      $data = array(
+        'sitetitle' => $site_title,
+        'title' => drush_get_option('client_title', ''),
+        'fullname' => drush_get_option('fullname', ''),
+        'institution' => drush_get_option('institution', ''),
+        'taxonomicscope' => drush_get_option('taxonomic_scope', ''),
+        'googleapi' => drush_get_option('googleapi', ''),
+        'clustrmaphtml' => drush_get_option('clustrmaphtml', ''),
+        'missionstatement' => drush_get_option('mission_statement', ''),
+        'sitetitle' => drush_get_option('site_title', ''),
+        'client_email' => drush_get_option('client_email', '')
+      );
     }
   }
   if(count($data)){
@@ -1136,7 +1141,18 @@ function emonocot_profile_profile_tasks(&$task, $url){
     $familyname = array_pop($names);
     $givennames = implode(" ", $names);
     // Submit the forms
-    $form_state = array('values' => array('title' => $data['title'],'given' => $givennames,'family' => $familyname,'institution' => $data['institution'],'expertise' => $data['taxonomicscope'],'gmapkey' => $data['googleapi'],'clustrmap' => $data['clustrmaphtml'],'mission' => $data['missionstatement']));
+    $form_state = array(
+      'values' => array(
+        'title' => $data['title'],
+        'given' => $givennames,
+        'family' => $familyname,
+        'institution' => $data['institution'],
+        'expertise' => $data['taxonomicscope'],
+        'gmapkey' => $data['googleapi'],
+        'clustrmap' => $data['clustrmaphtml'],
+        'mission' => $data['missionstatement']
+      )
+    );
     emonocot_personal_submit(NULL, $form_state);
     emonocot_gmapkey_submit(NULL, $form_state);
     emonocot_clustrmap_submit(NULL, $form_state);
