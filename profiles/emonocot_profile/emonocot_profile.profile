@@ -1203,7 +1203,7 @@ function emonocot_profile_profile_tasks(&$task, $url){
     // if we're installing user Aegir.  This means the next funciton will email
     // the right person! WOOT!
     if(is_array($data) && count($data)){
-      db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['email'], $data['fullname']);
+      db_query("UPDATE {users} SET mail = '%s', name = '%s' WHERE uid = 2", $data['client_email'], $data['fullname']);
     }
     emonocot_profile_profile_tasks_4();
     $task = 'profile-finished';
