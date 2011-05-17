@@ -51,15 +51,14 @@ function emonocot_profile_profile_modules(){
     'editor_views',
     'scratchpad_slickgrid'
   );
-  $emonocot_modules = array(
-    'emonocot'
-  );
+  $emonocot_modules = array();
   $scratchpad_modules = scratchpad_profile_profile_modules();
   foreach($scratchpad_modules as $module){
     if(!in_array($module, $modules_to_disable)){
       $emonocot_modules[] = $module;
     }
   }
+  $emonocot_modules[] = 'emonocot';
   return $emonocot_modules;
 }
 
