@@ -25,6 +25,16 @@ function emonocot_menu_alter(&$items) {
   );
 }
 
+function emonocot_form_alter(&$form, &$form_state, $form_id) {
+  //drupal_set_message($form_id);
+}
+
+function emonocot_form_tui_search_form_alter(&$form, &$form_state, $form_id) {
+  drupal_set_message(print_r($form));
+  
+
+}
+
 function emonocot_node_page_default(){
   $result = pager_query(db_rewrite_sql('SELECT n.nid, n.sticky, n.created FROM {node} n WHERE n.promote = 1 AND n.status = 1 ORDER BY n.sticky DESC, n.created DESC'), variable_get('default_nodes_main', 10));
   $output = '';
@@ -57,6 +67,9 @@ function emonocot_block($op, $delta, $edit) {
   		  array(
   		    'info' => t('About eMonocot'),
   		  ),
+  		  array(
+  		    'info' => t('eMonocot Task List'),
+  		  ),
   		);
   	
   	case 'view':
@@ -65,6 +78,11 @@ function emonocot_block($op, $delta, $edit) {
   				return array(
   				  'subject' => 'About eMonoct',
   				  'content' => '<p>This site is an <a href="http://e-monocot.org/scratchpads">eMonocot Scratchpad</a>.</p><p>&nbsp;</p><p><a href="http://e-monocot.org">e-Monocot</a> is a <a href="http://www.nerc.ac.uk/">NERC</a> funded consortium between the <a href="http://www.kew.org/">Royal Botanic Gardens Kew</a>, <a href="http://www.ox.ac.uk/">Oxford University</a> and the <a href="http://www.nhm.ac.uk">Natural History Museum</a>.</p><p>&nbsp;</p><p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu">Scratchpad</a> team at the Natural History Museum, London.</p>',
+  				);
+  			case 1:
+  				return array(
+  				  'subject' => 'Task List',
+  				  'content' => emonocot_block_task_list(),
   				);
   				
   		}
@@ -119,7 +137,7 @@ function emonocot_list_scratchpads(){
  */
 function emonocot_taskguide(){
   return '<div class="mission" style="text-align: justify">
-  <h1 style="text-decoration:underline;padding-bottom:20px">eMonocot Scratchpads: getting started</h1>
+  <h1 style="text-decoration:underline;padding-bottom:20px">eMonocot Scratchpads Task Guide: getting started</h1>
 <p>Set up your Scratchpad by going through the list below. It can be useful to attend a ' . l('training course', 'http://scratchpads.eu/scratchpad-training-courses') . ' or go through the ' . l('manual of the basic training course', 'http://scratchpads.eu/sites/scratchpads.eu/files/ScratchpadTrainingBasic.doc') . ' on your own.
 
   <div>
@@ -154,4 +172,361 @@ function emonocot_taskguide(){
     <p>For more help check out the Scratchpad resources (' . l('Help', 'http://scratchpads.eu/help') . ', and the ' . l('sandbox', 'http://sandbox.scratchpads.eu/') . ') on the ' . l('Scratchpad project website', 'http://scratchpads.eu') . '. If you are still stuck, ' . l('contact us', 'http://scratchpads.eu/contact') . ' and we will get back to you as soon as possible.</p>
   </div>
 </div>';
+}
+
+function emonocot_spm_field_info() {
+  return array(
+    //Identification
+    array(
+      'label' => 'Taxonomic Notes',
+      'field_name' => 'field_spm_em_taxonomic_notes',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_taxonomy',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    //Misc
+
+    array(
+      'label' => 'Cultivation',
+      'field_name' => 'field_spm_em_cultivation',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Phenology',
+      'field_name' => 'field_spm_em_phenology',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Pollination',
+      'field_name' => 'field_spm_em_pollination',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Dispersal',
+      'field_name' => 'field_spm_em_dispersal',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Population Dynamics',
+      'field_name' => 'field_spm_em_population_dynamics',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Evolutionary Discussion',
+      'field_name' => 'field_spm_em_evolution',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Physiology',
+      'field_name' => 'field_spm_em_physiology',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Anatomy',
+      'field_name' => 'field_spm_em_anatomy',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Cytogenetics',
+      'field_name' => 'field_spm_em_cytogenetics',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Fossil Record',
+      'field_name' => 'field_spm_em_fossil_record',
+      'type_name' => 'spm',
+      'group' => 'group_spm_em_misc',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+  );
+}
+
+function emonocot_itis_field_info() {
+  return array(
+    array(
+      'label' => 'Taxonomic Notes',
+      'field_name' => 'field_itis_em_taxonomic_notes',
+      'type_name' => 'itis_term',
+      'group' => 'group_itis_em_notes',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Etymology',
+      'field_name' => 'field_itis_em_etymology',
+      'type_name' => 'spm',
+      'group' => 'group_itis_em_etymology',
+      'type' => 'text',
+      'widget_type' => 'text_textarea',
+      'rows' => '5',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t(''),
+      'text_processing' =>1,
+    ),
+    array(
+      'label' => 'Link',
+      'field_name' => 'field_itis_em_url',
+      'type_name' => 'itis_term',
+      'group' => 'group_reference',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'weight' => 0,
+      'required' => 0,
+      'locked' => 0,
+      'description' => t('URL of reference in BHL or other online repository'),
+      'text_processing' =>0,
+    ),
+  );
+}
+
+function emonocot_image_field_info() {
+  return array(
+    array(
+      'label' => 'Subject',
+      'field_name' => 'field_image_em_subject',
+      'type' => 'text',
+      'widget_type' => 'optionwidgets_select',
+      'description' => 'help text',
+      'default_value_widget' => NULL,
+      'allowed_values' => 'Habitat
+Flower',
+      'widget_module' => 'optionwidgets',
+      'type_name' => 'image',
+    ),
+  );
+}
+
+function emonocot_spm_group_info() {
+  return array(
+    array (
+      'label' => 'Misc',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_spm_em_misc',
+      'type_name' => 'spm',
+    ),
+    array (
+      'label' => 'Taxonomy',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_spm_em_taxonomy',
+      'type_name' => 'spm',
+    ),
+  );
+}
+
+function emonocot_itis_group_info() {
+  return array(
+    array (
+      'label' => 'Notes',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_itis_em_notes',
+      'type_name' => 'itis_term',
+    ),
+    array (
+      'label' => 'Etymology',
+      'weight' => 10,
+      'group_type' => 'standard',
+      'group_name' => 'group_itis_em_etymology',
+      'type_name' => 'itis_term',
+    ),
+  );
+}
+
+function emonocot_block_task_list() {
+  //First see what has been completed already
+  $output = '';
+  $items = array();
+  
+
+  $items['bio_taxonomy']['status'] = FALSE;
+  $items['bio_taxonomy']['parent_complete'] = TRUE;
+  $items['bio_taxonomy']['description'] = 'Add a biological taxonomy';
+  $items['bio_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-vocabulary';
+  foreach (variable_get('term_node_vocabularies-contenttypes', array()) as $term_node) {
+  	if ($term_node == 'itis_term') {$items['bio_taxonomy']['status'] = TRUE;}
+  }
+  
+  $items['import_taxonomy']['status'] = FALSE;
+  $items['import_taxonomy']['description'] = 'Import a classification';
+  $items['import_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Import-a-classification-taxonomy';
+  $items['import_taxonomy']['inset'] = 1;
+  $items['import_taxonomy']['parent_complete'] = $items['bio_taxonomy']['status'];
+  //Get list of vocabs associated with itis names
+  $term_nodes = variable_get('term_node_vocabularies-contenttypes', array());
+  $keys = array_keys($term_nodes, 'itis_term'); 
+  foreach ($keys as $vid) {
+  	//Count number of terms in vocabularly
+  	$result = db_fetch_array(db_query("SELECT COUNT(vid) FROM {term_data} WHERE vid = %d", $vid));
+  	if ($result && ($result['COUNT(vid)'] >0 )) {
+      $items['import_taxonomy']['status'] = TRUE;
+  	}
+  }
+  
+  $items['add_user']['status'] = FALSE;
+  $items['add_user']['parent_complete'] = TRUE;
+  $items['add_user']['description'] = 'Add a user';
+  $items['add_user']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-user';
+  $num_users = db_fetch_array(db_query("SELECT COUNT(uid) FROM {users}"));
+  if ($num_users['COUNT(uid)'] > 3) {$items['add_user']['status'] = TRUE;}
+  
+  $items['biblio']['status'] = FALSE;
+  $items['biblio']['parent_complete'] = TRUE;
+  $items['biblio']['description'] = 'Create bibliography';
+  $items['biblio']['help_link'] = base_path() . 'help/scratchpadify_help/Biblio';
+  $num_biblio = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'biblio';"));
+  if ($num_biblio['COUNT(nid)'] > 0) {$items['biblio']['status'] = TRUE;}
+  
+  $items['darwincorelocation']['status'] = FALSE;
+  $items['darwincorelocation']['parent_complete'] = TRUE;
+  $items['darwincorelocation']['description'] = 'Add a location';
+  $items['darwincorelocation']['help_link'] = base_path() . 'help/scratchpadify_help/Location';
+  $num_darwincorelocation = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincorelocation';"));
+  if ($num_darwincorelocation['COUNT(nid)'] > 0) {$items['darwincorelocation']['status'] = TRUE;}
+  
+  $items['darwincore']['status'] = FALSE;
+  $items['darwincore']['parent_complete'] = TRUE;
+  $items['darwincore']['description'] = 'Add a specimen';
+  $items['darwincore']['help_link'] = base_path() . 'help/scratchpadify_help/Specimen';
+  $num_darwincore = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincore';"));
+  if ($num_darwincore['COUNT(nid)'] > 0) {$items['darwincore']['status'] = TRUE;}
+  
+  $items['image']['status'] = FALSE;
+  $items['image']['parent_complete'] = TRUE;
+  $items['image']['description'] = 'Add an image';
+  $items['image']['help_link'] = base_path() . 'help/scratchpadify_help/Add-an-image-or-collection-of-images';
+  $num_image = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'image';"));
+  if ($num_image['COUNT(nid)'] > 0) {$items['image']['status'] = TRUE;}
+  
+  //HTMLify
+  foreach ($items as $item) {
+  	$output .= '<div';
+  	  if (isset($item['inset']) && ($item['inset'] > 0) ) {
+  	    $output .= ' style="padding-left:'.$item['inset'] * 16 . 'px"';
+  	  }
+  	$output .= '>';
+  	
+  	if ($item['status'] == TRUE) {
+  		$output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/tick.png"/>';
+  	} else {
+  		if ($item['parent_complete'] && $item['parent_complete'] = TRUE) {
+  		  $output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/cross.png"/>';
+  		} else {
+  		  $output .= '<img src="'.base_path().'/sites/all/modules/emonocot/images/cross_bw.png"/>';
+  		}
+  	}
+  	$output .= ' ';
+  	if ($item['parent_complete'] && $item['parent_complete'] = TRUE || $item['status'] = TRUE) {
+  	  $output .= '<a href="'.$item['help_link'].'">'.$item['description'].'</a>';
+  	} else {
+  	  $output .= $item['description'];
+  	}
+  	$output .= '</div>';
+  }
+  
+  return $output;
 }
