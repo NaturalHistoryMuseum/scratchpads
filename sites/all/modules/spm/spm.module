@@ -110,7 +110,7 @@ function spm_view($node, $teaser = FALSE, $page = FALSE){
         '#value' => theme('spm_view_field', $node->$key, $field),
         '#weight' => $i
       );
-      $i ++;
+      $i++;
     }
   }
   drupal_add_css(drupal_get_path('module', 'spm') . '/spm.css');
