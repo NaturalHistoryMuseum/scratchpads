@@ -281,3 +281,178 @@ function theme_spm_node_form($form){
   drupal_add_css(drupal_get_path('module', 'spm') . '/spm.css');
   return theme('node_form', $form);
 }
+
+/**
+ * Following two hooks are related to the node_import module.
+ */
+function spm_node_import_fields($type){
+  if($type == 'node:spm'){
+    $vocabularies = taxonomy_get_vocabularies();
+    foreach($vocabularies as $vocabulary){
+      if($vocabulary->module == 'spm'){
+        $options[strtolower($vocabulary->name)] = taxonomy_get_tree($vocabulary->vid);
+      }
+    }
+  }
+  $fields = array();
+  $allowed_values = array();
+  $fields['GeneralDescription'] = array(
+    'title' => t('General Description'),
+    'group' => t('SPM Core')
+  );
+  $fields['Biology'] = array(
+    'title' => t('Biology'),
+    'group' => t('SPM Core')
+  );
+  $fields['ConservationStatus'] = array(
+    'title' => t('Conservation Status'),
+    'group' => t('SPM Core')
+  );
+  $fields['Legislation'] = array(
+    'title' => t('Legislation'),
+    'group' => t('SPM Core')
+  );
+  $fields['Management'] = array(
+    'title' => t('Management'),
+    'group' => t('SPM Core')
+  );
+  $fields['Procedures'] = array(
+    'title' => t('Procedures'),
+    'group' => t('SPM Core')
+  );
+  $fields['Threats'] = array(
+    'title' => t('Threats'),
+    'group' => t('SPM Core')
+  );
+  $fields['Trends'] = array(
+    'title' => t('Trends'),
+    'group' => t('SPM Core')
+  );
+  $fields['Behaviour'] = array(
+    'title' => t('Behaviour'),
+    'group' => t('SPM Core')
+  );
+  $fields['Cytology'] = array(
+    'title' => t('Cytology'),
+    'group' => t('SPM Core')
+  );
+  $fields['DiagnosticDescription'] = array(
+    'title' => t('Diagnostic Description'),
+    'group' => t('SPM Core')
+  );
+  $fields['Genetics'] = array(
+    'title' => t('Genetics'),
+    'group' => t('SPM Core')
+  );
+  $fields['Growth'] = array(
+    'title' => t('Growth'),
+    'group' => t('SPM Core')
+  );
+  $fields['LookAlikes'] = array(
+    'title' => t('Look Alikes'),
+    'group' => t('SPM Core')
+  );
+  $fields['MolecularBiology'] = array(
+    'title' => t('Molecular Biology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Morphology'] = array(
+    'title' => t('Morphology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Physiology'] = array(
+    'title' => t('Physiology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Size'] = array(
+    'title' => t('Size'),
+    'group' => t('SPM Core')
+  );
+  $fields['TaxonBiology'] = array(
+    'title' => t('Taxon Biology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Associations'] = array(
+    'title' => t('Associations'),
+    'group' => t('SPM Core')
+  );
+  $fields['Cyclicty'] = array(
+    'title' => t('Cyclicity'),
+    'group' => t('SPM Core')
+  );
+  $fields['Dispersal'] = array(
+    'title' => t('Dispersal'),
+    'group' => t('SPM Core')
+  );
+  $fields['Distribution'] = array(
+    'title' => t('Distribution'),
+    'group' => t('SPM Core')
+  );
+  $fields['Ecology'] = array(
+    'title' => t('Ecology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Habitat'] = array(
+    'title' => t('Habitat'),
+    'group' => t('SPM Core')
+  );
+  $fields['LifeCycle'] = array(
+    'title' => t('Life Cycle'),
+    'group' => t('SPM Core')
+  );
+  $fields['LifeExpectancy'] = array(
+    'title' => t('Life Expectancy'),
+    'group' => t('SPM Core')
+  );
+  $fields['Migration'] = array(
+    'title' => t('Migration'),
+    'group' => t('SPM Core')
+  );
+  $fields['TrophicStrategy'] = array(
+    'title' => t('Trophic Strategy'),
+    'group' => t('SPM Core')
+  );
+  $fields['PopulationBiology'] = array(
+    'title' => t('Population Biology'),
+    'group' => t('SPM Core')
+  );
+  $fields['Reproduction'] = array(
+    'title' => t('Reproduction'),
+    'group' => t('SPM Core')
+  );
+  $fields['Evolution'] = array(
+    'title' => t('Evolution'),
+    'group' => t('SPM Core')
+  );
+  $fields['Phylogeny'] = array(
+    'title' => t('Phylogeny'),
+    'group' => t('SPM Core')
+  );
+  $fields['Diseases'] = array(
+    'title' => t('Diseases'),
+    'group' => t('SPM Core')
+  );
+  $fields['RiskStatement'] = array(
+    'title' => t('Risk Statement'),
+    'group' => t('SPM Core')
+  );
+  $fields['Uses'] = array(
+    'title' => t('Uses'),
+    'group' => t('SPM Core')
+  );
+  return $fields;
+}
+
+
+function spm_node_import_fields_alter(&$fields, $type){
+/** Do we need this?
+	if($type == 'node:spm'){
+    // Unset all vocabulary fields - we'll do the association ourselves.
+    $vocabularies_text = t('Vocabularies');
+    foreach($fields as $key => $field){
+      if($field['group'] == $vocabularies_text){
+        unset($fields[$key]);
+      }
+    }
+  }*/
+}
