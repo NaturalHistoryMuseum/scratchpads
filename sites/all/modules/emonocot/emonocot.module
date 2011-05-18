@@ -109,7 +109,7 @@ function emonocot_footer() {
           <a href="http://www.nhm.ac.uk"><img src="'.$em_img_dir.'nhm_small.png" style="height:30px; padding:3px;"/></a> -->
           <a href="http://www.nhm.ac.uk"><img src="'.$sp_img_dir.'scratchpads.png" style="height:30px; padding:3px;"/></a>
           <a rel="license" href="href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" style="border-width: 0pt;" src="'.$sp_img_dir.'cc.logo.1.png"></a>
-          <p style="font-size:80%; text-align:center"><a href="/">Other eMonocot Scratchpads</a></p>
+          <p style="font-size:80%; text-align:center">'.l('Other eMonocot Scratchpads', 'scratchpads/emonocot').'</p>
   <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
@@ -137,7 +137,7 @@ function emonocot_list_scratchpads(){
   	}
 
   }
-  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p><a href="scratchpads">List of all Scratchpads</a></p>';
+  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p>'.l('List of all Scratchpads', 'scratchpads').'</p>';
 }
 
 
