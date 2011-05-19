@@ -456,15 +456,15 @@ function emonocot_block_task_list() {
 
   $items['bio_taxonomy']['status'] = FALSE;
   $items['bio_taxonomy']['parent_complete'] = TRUE;
-  $items['bio_taxonomy']['description'] = 'Add a biological taxonomy';
-  $items['bio_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-vocabulary';
+  $items['bio_taxonomy']['description'] = 'Add a Biological Classification';
+  $items['bio_taxonomy']['help_link'] = l($items['bio_taxonomy']['description'], '/help/scratchpadify_help/Add-a-vocabulary');
   foreach (variable_get('term_node_vocabularies-contenttypes', array()) as $term_node) {
   	if ($term_node == 'itis_term') {$items['bio_taxonomy']['status'] = TRUE;}
   }
   
   $items['import_taxonomy']['status'] = FALSE;
   $items['import_taxonomy']['description'] = 'Import a classification';
-  $items['import_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Import-a-classification-taxonomy';
+  $items['import_taxonomy']['help_link'] = l($items['import_taxonomy']['description'], 'help/scratchpadify_help/Import-a-classification-taxonomy');
   $items['import_taxonomy']['inset'] = 1;
   $items['import_taxonomy']['parent_complete'] = $items['bio_taxonomy']['status'];
   //Get list of vocabs associated with itis names
@@ -481,35 +481,35 @@ function emonocot_block_task_list() {
   $items['add_user']['status'] = FALSE;
   $items['add_user']['parent_complete'] = TRUE;
   $items['add_user']['description'] = 'Add a user';
-  $items['add_user']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-user';
+  $items['add_user']['help_link'] = l($items['add_user']['description'], 'help/scratchpadify_help/Add-a-user');
   $num_users = db_fetch_array(db_query("SELECT COUNT(uid) FROM {users}"));
   if ($num_users['COUNT(uid)'] > 3) {$items['add_user']['status'] = TRUE;}
   
   $items['biblio']['status'] = FALSE;
   $items['biblio']['parent_complete'] = TRUE;
   $items['biblio']['description'] = 'Create bibliography';
-  $items['biblio']['help_link'] = base_path() . 'help/scratchpadify_help/Biblio';
+  $items['biblio']['help_link'] = l($items['biblio']['description'], 'help/scratchpadify_help/Biblio');
   $num_biblio = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'biblio';"));
   if ($num_biblio['COUNT(nid)'] > 0) {$items['biblio']['status'] = TRUE;}
   
   $items['darwincorelocation']['status'] = FALSE;
   $items['darwincorelocation']['parent_complete'] = TRUE;
   $items['darwincorelocation']['description'] = 'Add a location';
-  $items['darwincorelocation']['help_link'] = base_path() . 'help/scratchpadify_help/Location';
+  $items['darwincorelocation']['help_link'] = l($items['darwincorelocation']['description'], 'help/scratchpadify_help/Location');
   $num_darwincorelocation = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincorelocation';"));
   if ($num_darwincorelocation['COUNT(nid)'] > 0) {$items['darwincorelocation']['status'] = TRUE;}
   
   $items['darwincore']['status'] = FALSE;
   $items['darwincore']['parent_complete'] = TRUE;
   $items['darwincore']['description'] = 'Add a specimen';
-  $items['darwincore']['help_link'] = base_path() . 'help/scratchpadify_help/Specimen';
+  $items['darwincore']['help_link'] = l($items['darwincore']['help_link'], 'help/scratchpadify_help/Specimen');
   $num_darwincore = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincore';"));
   if ($num_darwincore['COUNT(nid)'] > 0) {$items['darwincore']['status'] = TRUE;}
   
   $items['image']['status'] = FALSE;
   $items['image']['parent_complete'] = TRUE;
   $items['image']['description'] = 'Add an image';
-  $items['image']['help_link'] = base_path() . 'help/scratchpadify_help/Add-an-image-or-collection-of-images';
+  $items['image']['help_link'] = l($items['image']['description'], 'help/scratchpadify_help/Add-an-image-or-collection-of-images');
   $num_image = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'image';"));
   if ($num_image['COUNT(nid)'] > 0) {$items['image']['status'] = TRUE;}
   
@@ -532,7 +532,7 @@ function emonocot_block_task_list() {
   	}
   	$output .= ' ';
   	if ($item['parent_complete'] && $item['parent_complete'] = TRUE || $item['status'] = TRUE) {
-  	  $output .= '<a href="'.$item['help_link'].'">'.$item['description'].'</a>';
+  	  $output .= $item['help_link'];
   	} else {
   	  $output .= $item['description'];
   	}
