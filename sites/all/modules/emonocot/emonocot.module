@@ -1,6 +1,6 @@
 <?php
 
-function emonocot_menu() {
+function emonocot_menu(){
   return array(
     'scratchpads/emonocot' => array(
       'title' => 'eMonocot Scratchpad List',
@@ -8,12 +8,12 @@ function emonocot_menu() {
       'access arguments' => array(
         'access content'
       ),
-      'type' => MENU_CALLBACK,
-    ),
+      'type' => MENU_CALLBACK
+    )
   );
 }
 
-function emonocot_menu_alter(&$items) {
+function emonocot_menu_alter(&$items){
   $items['taskguide']['page callback'] = 'emonocot_taskguide';
   $items['node'] = array(
     'title' => 'Content',
@@ -25,14 +25,22 @@ function emonocot_menu_alter(&$items) {
   );
 }
 
-function emonocot_form_alter(&$form, &$form_state, $form_id) {
-  //drupal_set_message($form_id);
-}
+function emonocot_form_alter(&$form, &$form_state){
+  if ($form['#id']=='node-form' && $form['type']['#value'] == 'spm') {
+    //play with the fields and stuff them into tabs
+    $em_spm_fields = emonocot_spm_field_info();
+    foreach ($em_spm_fields as $em_spm_field) {
+      	$form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['group']][$em_spm_field['field_name']];
+      	unset($form[$em_spm_field['group']][$em_spm_field['field_name']]);
 
-function emonocot_form_tui_search_form_alter(&$form, &$form_state, $form_id) {
-  drupal_set_message(print_r($form));
-  
-
+    }
+    
+    //Also unset groups so no empty fieldsets shown
+    $em_spm_groups = emonocot_spm_group_info();
+    foreach ($em_spm_groups as $em_spm_group) {
+      unset($form[$em_spm_group['group_name']]);
+    }
+  }
 }
 
 function emonocot_node_page_default(){
@@ -53,8 +61,9 @@ function emonocot_node_page_default(){
     if(user_access('create type content')){
       $output = emonocot_taskguide();
     }else{
-      $output = '<div id="first-time" style="background-color:white;border:1px solid #e0e5fb; padding: 20px;">' . t('<h1 class="title">Welcome to your new eMonocot Scratchpad</h1><p>Once logged-in you\'ll be confronted by our Task guide which will help you get started with your site.</p><p>Further help is available from <a href="http://scratchpads.eu/" target="_blank">http://scratchpads.eu/</a>.</p></div>') . '</div>';
-    }
+      $output = '<div id="first-time" style="background-color:white;border:1px solid #e0e5fb; padding: 20px;">' . t('<h1 class="title">Welcome to your new eMonocot Scratchpad</h1><p>Once logged-in you\'ll be confronted by our Task guide which will help you get started with your site.</p><p>Further help is available from <a href="http://scratchpads.eu/" target="_blank">http://scratchpads.eu/</a>.</p></div>') . 
+  '</div>';
+}
   }
   drupal_set_title('');
   return $output;
@@ -100,7 +109,7 @@ function emonocot_footer() {
           <a href="http://www.nhm.ac.uk"><img src="'.$em_img_dir.'nhm_small.png" style="height:30px; padding:3px;"/></a> -->
           <a href="http://www.nhm.ac.uk"><img src="'.$sp_img_dir.'scratchpads.png" style="height:30px; padding:3px;"/></a>
           <a rel="license" href="href="http://creativecommons.org/licenses/by-nc-sa/3.0/"><img alt="Creative Commons License" style="border-width: 0pt;" src="'.$sp_img_dir.'cc.logo.1.png"></a>
-          <p style="font-size:80%; text-align:center"><a href="/">Other eMonocot Scratchpads</a></p>
+          <p style="font-size:80%; text-align:center">'.l('Other eMonocot Scratchpads', 'scratchpads/emonocot').'</p>
   <!--/Creative Commons License--><!-- <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
   <Work rdf:about="">
     <license rdf:resource="http://creativecommons.org/licenses/by-nc-sa/3.0/" />
@@ -128,7 +137,7 @@ function emonocot_list_scratchpads(){
   	}
 
   }
-  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p><a href="scratchpads">List of all Scratchpads</a></p>';
+  return theme('item_list', $items, count($items) . ' sites') . '<br/<<br/><p>'.l('List of all Scratchpads', 'scratchpads').'</p>';
 }
 
 
@@ -355,7 +364,7 @@ function emonocot_itis_field_info() {
     array(
       'label' => 'Etymology',
       'field_name' => 'field_itis_em_etymology',
-      'type_name' => 'spm',
+      'type_name' => 'itis_term',
       'group' => 'group_itis_em_etymology',
       'type' => 'text',
       'widget_type' => 'text_textarea',
@@ -407,6 +416,7 @@ function emonocot_spm_group_info() {
       'group_type' => 'standard',
       'group_name' => 'group_spm_em_misc',
       'type_name' => 'spm',
+      'description' => 'eMonocot specific fields',
     ),
     array (
       'label' => 'Taxonomy',
@@ -414,6 +424,7 @@ function emonocot_spm_group_info() {
       'group_type' => 'standard',
       'group_name' => 'group_spm_em_taxonomy',
       'type_name' => 'spm',
+      'description' => 'eMonocot specific taxonomy fields',
     ),
   );
 }
@@ -529,4 +540,14 @@ function emonocot_block_task_list() {
   }
   
   return $output;
+}
+
+function emonocot_node_import_fields_alter(&$fields, $type){
+  if($type == 'node:spm'){
+    $em_spm_fields = emonocot_spm_field_info();
+    foreach($em_spm_fields as $em_spm_field){
+      $ni_field_name = 'cck:' . $em_spm_field['field_name'] . ':value';
+      $fields[$ni_field_name]['group'] = 'eMonocot SPM extension';
+    }
+  }
 }
