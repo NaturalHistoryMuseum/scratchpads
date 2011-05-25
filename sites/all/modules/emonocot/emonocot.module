@@ -27,12 +27,12 @@ function emonocot_menu_alter(&$items){
 
 function emonocot_form_alter(&$form, &$form_state){
   if ($form['#id']=='node-form' && $form['type']['#value'] == 'spm') {
+  	unset($form['#pre_render'][0]);
     //play with the fields and stuff them into tabs
     $em_spm_fields = emonocot_spm_field_info();
     foreach ($em_spm_fields as $em_spm_field) {
       	$form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['group']][$em_spm_field['field_name']];
       	unset($form[$em_spm_field['group']][$em_spm_field['field_name']]);
-
     }
     
     //Also unset groups so no empty fieldsets shown
@@ -41,6 +41,11 @@ function emonocot_form_alter(&$form, &$form_state){
       unset($form[$em_spm_group['group_name']]);
     }
   }
+}
+
+function emonocot_spm_form_pre_render($form) {
+  return $form;
+ 
 }
 
 function emonocot_node_page_default(){
@@ -522,14 +527,12 @@ function emonocot_block_task_list() {
   	$output .= '>';
   	
   	if ($item['status'] == TRUE) {
-  		
-  		//base_path() . drupal_get_path('module', 'emonocot') . '/images/'
-  		$output .= '<img src="'.base_path().drupal_getpath('module', 'scratchpadify').'/images/tick.png"/>';
+  		$output .= '<img src="'.base_path().drupal_get_path('module', 'scratchpadify').'/images/tick.png"/>';
   	} else {
   		if ($item['parent_complete'] && $item['parent_complete'] = TRUE) {
-  		  $output .= '<img src="'.base_path().drupal_getpath('module', 'scratchpadify').'/images/cross.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_get_path('module', 'scratchpadify').'/images/cross.png"/>';
   		} else {
-  		  $output .= '<img src="'.base_path().drupal_getpath('module', 'emonocot').'/images/cross_bw.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_get_path('module', 'emonocot').'/images/cross_bw.png"/>';
   		}
   	}
   	$output .= ' ';
