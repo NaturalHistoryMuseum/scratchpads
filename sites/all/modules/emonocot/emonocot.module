@@ -450,7 +450,7 @@ function emonocot_itis_group_info() {
 
 function emonocot_block_task_list() {
   //First see what has been completed already
-  $output = '';
+  $output = '<p style="font-size:smaller;"|>These are the basic actions you need to populate your site. Clicking on a task will take you to the help page for that task.</p>';
   $items = array();
   
 
@@ -480,7 +480,7 @@ function emonocot_block_task_list() {
   
   $items['add_user']['status'] = FALSE;
   $items['add_user']['parent_complete'] = TRUE;
-  $items['add_user']['description'] = 'Add a user';
+  $items['add_user']['description'] = 'Add another user';
   $items['add_user']['help_link'] = l($items['add_user']['description'], 'help/scratchpadify_help/Add-a-user');
   $num_users = db_fetch_array(db_query("SELECT COUNT(uid) FROM {users}"));
   if ($num_users['COUNT(uid)'] > 3) {$items['add_user']['status'] = TRUE;}
@@ -502,7 +502,7 @@ function emonocot_block_task_list() {
   $items['darwincore']['status'] = FALSE;
   $items['darwincore']['parent_complete'] = TRUE;
   $items['darwincore']['description'] = 'Add a specimen';
-  $items['darwincore']['help_link'] = l($items['darwincore']['help_link'], 'help/scratchpadify_help/Specimen');
+  $items['darwincore']['help_link'] = l($items['darwincore']['description'], 'help/scratchpadify_help/Specimen');
   $num_darwincore = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincore';"));
   if ($num_darwincore['COUNT(nid)'] > 0) {$items['darwincore']['status'] = TRUE;}
   
@@ -522,12 +522,14 @@ function emonocot_block_task_list() {
   	$output .= '>';
   	
   	if ($item['status'] == TRUE) {
-  		$output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/tick.png"/>';
+  		
+  		//base_path() . drupal_get_path('module', 'emonocot') . '/images/'
+  		$output .= '<img src="'.base_path().drupal_getpath('module', 'scratchpadify').'/images/tick.png"/>';
   	} else {
   		if ($item['parent_complete'] && $item['parent_complete'] = TRUE) {
-  		  $output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/cross.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_getpath('module', 'scratchpadify').'/images/cross.png"/>';
   		} else {
-  		  $output .= '<img src="'.base_path().'/sites/all/modules/emonocot/images/cross_bw.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_getpath('module', 'emonocot').'/images/cross_bw.png"/>';
   		}
   	}
   	$output .= ' ';
