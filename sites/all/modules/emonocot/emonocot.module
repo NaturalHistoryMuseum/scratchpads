@@ -27,7 +27,7 @@ function emonocot_menu_alter(&$items){
 
 function emonocot_form_alter(&$form, &$form_state){
   if ($form['#id']=='node-form' && $form['type']['#value'] == 'spm') {
-  	unset($form['#pre_render'][0]);
+  	//unset($form['#pre_render'][0]);
     //play with the fields and stuff them into tabs
     $em_spm_fields = emonocot_spm_field_info();
     foreach ($em_spm_fields as $em_spm_field) {
