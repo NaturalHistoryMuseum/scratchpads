@@ -27,12 +27,12 @@ function emonocot_menu_alter(&$items){
 
 function emonocot_form_alter(&$form, &$form_state){
   if ($form['#id']=='node-form' && $form['type']['#value'] == 'spm') {
+  	//unset($form['#pre_render'][0]);
     //play with the fields and stuff them into tabs
     $em_spm_fields = emonocot_spm_field_info();
     foreach ($em_spm_fields as $em_spm_field) {
       	$form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['group']][$em_spm_field['field_name']];
       	unset($form[$em_spm_field['group']][$em_spm_field['field_name']]);
-
     }
     
     //Also unset groups so no empty fieldsets shown
@@ -41,6 +41,11 @@ function emonocot_form_alter(&$form, &$form_state){
       unset($form[$em_spm_group['group_name']]);
     }
   }
+}
+
+function emonocot_spm_form_pre_render($form) {
+  return $form;
+ 
 }
 
 function emonocot_node_page_default(){
@@ -85,7 +90,7 @@ function emonocot_block($op, $delta, $edit) {
   		switch ($delta) {
   			case 0:
   				return array(
-  				  'subject' => 'About eMonoct',
+  				  'subject' => 'About eMonocot',
   				  'content' => '<p>This site is an <a href="http://e-monocot.org/scratchpads">eMonocot Scratchpad</a>.</p><p>&nbsp;</p><p><a href="http://e-monocot.org">e-Monocot</a> is a <a href="http://www.nerc.ac.uk/">NERC</a> funded consortium between the <a href="http://www.kew.org/">Royal Botanic Gardens Kew</a>, <a href="http://www.ox.ac.uk/">Oxford University</a> and the <a href="http://www.nhm.ac.uk">Natural History Museum</a>.</p><p>&nbsp;</p><p>This site uses <a href="http://drupal.org">Drupal</a> and is based on a set of templates and modules defined by the <a href="http://scratchpads.eu">Scratchpad</a> team at the Natural History Museum, London.</p>',
   				);
   			case 1:
@@ -450,21 +455,21 @@ function emonocot_itis_group_info() {
 
 function emonocot_block_task_list() {
   //First see what has been completed already
-  $output = '';
+  $output = '<p style="font-size:smaller;"|>These are the basic actions you need to populate your site. Clicking on a task will take you to the help page for that task.</p>';
   $items = array();
   
 
   $items['bio_taxonomy']['status'] = FALSE;
   $items['bio_taxonomy']['parent_complete'] = TRUE;
-  $items['bio_taxonomy']['description'] = 'Add a biological taxonomy';
-  $items['bio_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-vocabulary';
+  $items['bio_taxonomy']['description'] = 'Add a Biological Classification';
+  $items['bio_taxonomy']['help_link'] = l($items['bio_taxonomy']['description'], '/help/scratchpadify_help/Add-a-vocabulary');
   foreach (variable_get('term_node_vocabularies-contenttypes', array()) as $term_node) {
   	if ($term_node == 'itis_term') {$items['bio_taxonomy']['status'] = TRUE;}
   }
   
   $items['import_taxonomy']['status'] = FALSE;
   $items['import_taxonomy']['description'] = 'Import a classification';
-  $items['import_taxonomy']['help_link'] = base_path() . 'help/scratchpadify_help/Import-a-classification-taxonomy';
+  $items['import_taxonomy']['help_link'] = l($items['import_taxonomy']['description'], 'help/scratchpadify_help/Import-a-classification-taxonomy');
   $items['import_taxonomy']['inset'] = 1;
   $items['import_taxonomy']['parent_complete'] = $items['bio_taxonomy']['status'];
   //Get list of vocabs associated with itis names
@@ -480,36 +485,36 @@ function emonocot_block_task_list() {
   
   $items['add_user']['status'] = FALSE;
   $items['add_user']['parent_complete'] = TRUE;
-  $items['add_user']['description'] = 'Add a user';
-  $items['add_user']['help_link'] = base_path() . 'help/scratchpadify_help/Add-a-user';
+  $items['add_user']['description'] = 'Add another user';
+  $items['add_user']['help_link'] = l($items['add_user']['description'], 'help/scratchpadify_help/Add-a-user');
   $num_users = db_fetch_array(db_query("SELECT COUNT(uid) FROM {users}"));
   if ($num_users['COUNT(uid)'] > 3) {$items['add_user']['status'] = TRUE;}
   
   $items['biblio']['status'] = FALSE;
   $items['biblio']['parent_complete'] = TRUE;
   $items['biblio']['description'] = 'Create bibliography';
-  $items['biblio']['help_link'] = base_path() . 'help/scratchpadify_help/Biblio';
+  $items['biblio']['help_link'] = l($items['biblio']['description'], 'help/scratchpadify_help/Biblio');
   $num_biblio = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'biblio';"));
   if ($num_biblio['COUNT(nid)'] > 0) {$items['biblio']['status'] = TRUE;}
   
   $items['darwincorelocation']['status'] = FALSE;
   $items['darwincorelocation']['parent_complete'] = TRUE;
   $items['darwincorelocation']['description'] = 'Add a location';
-  $items['darwincorelocation']['help_link'] = base_path() . 'help/scratchpadify_help/Location';
+  $items['darwincorelocation']['help_link'] = l($items['darwincorelocation']['description'], 'help/scratchpadify_help/Location');
   $num_darwincorelocation = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincorelocation';"));
   if ($num_darwincorelocation['COUNT(nid)'] > 0) {$items['darwincorelocation']['status'] = TRUE;}
   
   $items['darwincore']['status'] = FALSE;
   $items['darwincore']['parent_complete'] = TRUE;
   $items['darwincore']['description'] = 'Add a specimen';
-  $items['darwincore']['help_link'] = base_path() . 'help/scratchpadify_help/Specimen';
+  $items['darwincore']['help_link'] = l($items['darwincore']['description'], 'help/scratchpadify_help/Specimen');
   $num_darwincore = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'darwincore';"));
   if ($num_darwincore['COUNT(nid)'] > 0) {$items['darwincore']['status'] = TRUE;}
   
   $items['image']['status'] = FALSE;
   $items['image']['parent_complete'] = TRUE;
   $items['image']['description'] = 'Add an image';
-  $items['image']['help_link'] = base_path() . 'help/scratchpadify_help/Add-an-image-or-collection-of-images';
+  $items['image']['help_link'] = l($items['image']['description'], 'help/scratchpadify_help/Add-an-image-or-collection-of-images');
   $num_image = db_fetch_array(db_query("SELECT COUNT(nid) FROM {node} WHERE type = 'image';"));
   if ($num_image['COUNT(nid)'] > 0) {$items['image']['status'] = TRUE;}
   
@@ -522,17 +527,17 @@ function emonocot_block_task_list() {
   	$output .= '>';
   	
   	if ($item['status'] == TRUE) {
-  		$output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/tick.png"/>';
+  		$output .= '<img src="'.base_path().drupal_get_path('module', 'scratchpadify').'/images/tick.png"/>';
   	} else {
   		if ($item['parent_complete'] && $item['parent_complete'] = TRUE) {
-  		  $output .= '<img src="'.base_path().'/sites/all/modules/scratchpadify/images/cross.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_get_path('module', 'scratchpadify').'/images/cross.png"/>';
   		} else {
-  		  $output .= '<img src="'.base_path().'/sites/all/modules/emonocot/images/cross_bw.png"/>';
+  		  $output .= '<img src="'.base_path().drupal_get_path('module', 'emonocot').'/images/cross_bw.png"/>';
   		}
   	}
   	$output .= ' ';
   	if ($item['parent_complete'] && $item['parent_complete'] = TRUE || $item['status'] = TRUE) {
-  	  $output .= '<a href="'.$item['help_link'].'">'.$item['description'].'</a>';
+  	  $output .= $item['help_link'];
   	} else {
   	  $output .= $item['description'];
   	}
