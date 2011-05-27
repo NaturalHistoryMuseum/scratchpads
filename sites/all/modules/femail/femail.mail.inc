@@ -5,19 +5,23 @@
  * 
  * Contains the two functions used for sending out mail messages.
  */
-function _femail_get_emails($tid, $account){
+function _femail_get_emails($tid, $account, $nid){
   // We'll let our SQL do the magic
-  $results = db_query("SELECT DISTINCT CONCAT('<', LOWER(mail), '>') as mail FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $tid, $account->uid);
+  $results = db_query("SELECT DISTINCT u.uid FROM {users} u, {femail_user_subscriptions} f WHERE u.uid = f.uid AND (tid = %d OR tid = 0) AND u.uid != %d", $tid, $account->uid);
+  $node = node_load($nid);
   $emails = array();
   while($row = db_fetch_array($results)){
-    $emails[] = $row['mail'];
+    $account = user_load(array('uid' => $row['uid']));
+    if(node_access('view', $node, $account)){
+      $emails[] = "<{$account->mail}>";
+    }
   }
   return $emails;
 }
 
 function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $cid = 0, $inreplyto = FALSE){
   global $user;
-  $emails = _femail_get_emails($tid, $user);
+  $emails = _femail_get_emails($tid, $user, $nid);
   $forum_term = taxonomy_get_term($tid);
   if(count($emails)){
     $from_emails = variable_get('femail_emails', array());
@@ -35,7 +39,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $ci
         $file = (array)$file;
         $additional_text .= url('', array(
           'absolute' => TRUE
-        )) . drupal_urlencode($file['filepath']) . "\n";
+        )) . file_create_url($file['filepath']) . "\n";
       }
       $body = $additional_text . "\n" . $body;
     }
