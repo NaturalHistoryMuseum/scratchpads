@@ -37,7 +37,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $ci
       $additional_text = "Files:\n";
       foreach($files as $file){
         $file = (array)$file;
-        $additional_text .= file_create_url($file['filepath']) . "\n";
+        $additional_text .= file_create_url(str_replace(' ', '%20', $file['filepath'])) . "\n";
       }
       $body = $additional_text . "\n" . $body;
     }
