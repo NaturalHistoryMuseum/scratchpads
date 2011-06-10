@@ -56,6 +56,7 @@ function views_batch_page_process(&$view, $limit, &$context){
   }
   // Use a copy of the view
   $cloned_view = $context['sandbox']['view']->clone_view();
+  $cloned_view->set_display($context['sandbox']['view']->current_display);
   $cloned_view->pager = array(
     'use_pager' => 1,
     'items_per_page' => $limit,
@@ -70,26 +71,22 @@ function views_batch_page_process(&$view, $limit, &$context){
   }else{
     $cloned_view->render();
   }
-  
   $context['sandbox']['progress'] += $limit;
-  
   // Process the data items for the grid
   // This is defined in views_batch_page_slickgrid_alter()
   foreach($context['sandbox']['data'] as $data){
-  	// As we're processing the vie win batch, it doesn't always ensure NID are unique. Perform a check here.
-  	if(!in_array($data[id], $context['sandbox']['nids'])){
-  		$context['sandbox']['nids'][] = $data[id];
-  		$context['results']['data'][] = $data;	
-  	}
+    // As we're processing the vie win batch, it doesn't always ensure NID are unique. Perform a check here.
+    if(!in_array($data[id], $context['sandbox']['nids'])){
+      $context['sandbox']['nids'][] = $data[id];
+      $context['results']['data'][] = $data;
+    }
   }
   // Update our progress information.
   if($context['sandbox']['progress'] >= $context['sandbox']['max']){
-  	$context['finished'] = 1;
+    $context['finished'] = 1;
   }else{
-  	$context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
   }
-  
-  
 }
 
 /**
@@ -134,4 +131,9 @@ function views_batch_page_cache_set($cache_id, $data){
 function views_batch_page_cache_get($view){
   $cache_id = views_batch_page_get_cache_id($view);
   return cache_get($cache_id, 'cache_views');
+}
+
+function views_batch_page_cache_clear($view){
+  $cache_id = views_batch_page_get_cache_id($view);
+  return cache_clear_all($cache_id, 'cache_views');	
 }
