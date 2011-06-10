@@ -88,6 +88,16 @@ function slickgrid_callback_update(){
   if($count_errors = count($errors)){
     drupal_set_message(format_plural($count_errors, 'There was 1 error.', 'There were @count errors.'), 'error');
   }
+  // If batch page exists, we need to clear the cache
+  if(module_exists('views_batch_page') && strpos($_POST['display_id'], 'views_batch_page') !== false){
+    // If we haven't already retrieved the view, build a dummy object to build the cache id from
+    if(!isset($view)){
+      $view = new stdClass();
+      $view->name = $_POST['view'];
+      $view->current_display = $_POST['display_id'];
+    }
+    views_batch_page_cache_clear($view);
+  }
   return array(
     'errors' => $errors,
     'updated' => $updated_nodes,

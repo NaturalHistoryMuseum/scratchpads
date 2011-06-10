@@ -99,7 +99,6 @@ function slickgrid_views_pre_view(&$view, $display_id){
     // Really hacky, but ajax_load chokes on agrregated JS so I need to turn it off
     // TODO There must be a better way of working round this!
     $conf['preprocess_js'] = 0;
-    
     $style_options = $view->display_handler->get_option('style_options');
     if($view->display_handler->get_option('use_pager')){
       // turn off views paging
@@ -199,8 +198,6 @@ function slickgrid_slickgrid_plugins(){
       'js' => $path . '/js/slickgrid.editors.js',
       'css' => $path . '/css/slickgrid.editors.css',
       'field_type' => array(
-        'text_textfield',
-        'text_textarea',
         'node_title',
         'date_text'
       ), // Need to only allow for certain field types.
@@ -391,31 +388,42 @@ function slickgrid_preprocess_views_view_slickgrid(&$vars){
   $parents = array(); // array of tid => array(nid => nid, indent => indent) so we can retrive the nid & indentation of a parent node
   $data = array();
   if(is_array($result)){
+    // Keep a record of all ids & trigger an error on duplication	
+    $ids = array();
     foreach($result as $count => $row){
-      // Add the data fields
-      foreach($columns as $column){
-        if(!($view->field[$column['field']]->options['exclude'])){
-          $data[$count][$column['field']] = $view->field[$column['id']]->theme($row);
+      // Has this already been added to the data grid?
+      if(in_array($row->nid, $ids)){
+        drupal_set_message(t('There are duplicate nodes in this grid - each row must be unique.'), 'error');
+        watchdog('slickgrid', t('Duplicate nodes - @id is not unique.'), array(
+          '@id' => $row->{$view->base_field}
+        ), WATCHDOG_ERROR);
+        break;
+      }else{
+        // Add the data fields
+        foreach($columns as $column){
+          if(!($view->field[$column['field']]->options['exclude'])){
+            $data[$count][$column['field']] = $view->field[$column['id']]->theme($row);
+          }
         }
-      }
-      $data[$count]['id'] = $row->nid;
-      // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
-      // These are aliased in $row so get the field aliases
-      if(property_exists($row, $view->field['slickgrid_tid']->field_alias) && $slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
-        if($parent = $parents[$row->{$view->field['slickgrid_parent_tid']->field_alias}]){
-          // If we can find a parent, set the parent nid & indentation++
-          $data[$count]['indent'] = $parent['indent'] + 1;
-          $data[$count]['parent'] = $parent['nid'];
-        }else{
-          // Otherwise set indent & parent to 0 - this breaks if left blank
-          $data[$count]['indent'] = 0;
-          $data[$count]['parent'] = 0;
+        $data[$count]['id'] = $row->nid;
+        // If this has collapsible_taxonomy_field set, we will have added slickgrid_parent_tid & slickgrid_tid in hook_views_pre_view
+        // These are aliased in $row so get the field aliases
+        if(property_exists($row, $view->field['slickgrid_tid']->field_alias) && $slickgrid_tid = $row->{$view->field['slickgrid_tid']->field_alias}){
+          if($parent = $parents[$row->{$view->field['slickgrid_parent_tid']->field_alias}]){
+            // If we can find a parent, set the parent nid & indentation++
+            $data[$count]['indent'] = $parent['indent'] + 1;
+            $data[$count]['parent'] = $parent['nid'];
+          }else{
+            // Otherwise set indent & parent to 0 - this breaks if left blank
+            $data[$count]['indent'] = 0;
+            $data[$count]['parent'] = 0;
+          }
+          // Store the indent & nid so then can be used to calculate child term indentation 
+          $parents[$slickgrid_tid] = array(
+            'nid' => $row->nid,
+            'indent' => $data[$count]['indent']
+          );
         }
-        // Store the indent & nid so then can be used to calculate child term indentation 
-        $parents[$slickgrid_tid] = array(
-          'nid' => $row->nid,
-          'indent' => $data[$count]['indent']
-        );
       }
     }
   }
