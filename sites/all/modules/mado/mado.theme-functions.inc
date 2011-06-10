@@ -143,7 +143,7 @@ function mado_get_blocks($all_views = FALSE){
     )
   );
   foreach(array_keys(node_get_types('names')) as $name){
-    $default_to_ignore['views'][] = 'matrix_editor_' . $name;
+    $default_to_ignore['views'][] = 'slickgrid_' . $name;
   }
   $views_blocks_to_ignore = variable_get('mado_ignore_views_and_blocks', $default_to_ignore);
   foreach(views_get_all_views() as $view){

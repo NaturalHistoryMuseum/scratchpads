@@ -1,0 +1,126 @@
+<?php
+// $Id: apachesolr_stats.install,v 1.1.2.3 2010/02/10 16:55:15 janusman Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function apachesolr_stats_install() {
+  drupal_install_schema('apachesolr_stats');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function apachesolr_stats_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('apachesolr_stats');
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function apachesolr_stats_enable() {
+  drupal_set_message(t("Apache Solr Statistics module enabled. Enable logging and other settings at the !link", array('!link' => l('module configuration page', 'admin/settings/apachesolr/stats'))));
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function apachesolr_stats_schema() {
+  $schema['apachesolr_stats'] = array(
+    'description' => t('Table that contains a log of Apache Solr queries and performace.'),
+    'fields' => array(
+      'qid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique log ID.',
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Unix timestamp of when query occurred.',
+      ),
+      'numfound' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Number of results.',
+      ),
+      'total_time' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Total query time (miliseconds).',
+      ),
+      'prepare_time' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Time taken by Solr prepare phase for this query (miliseconds).',
+      ),
+      'process_time' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Time taken by Solr process phase for this query (miliseconds).',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid of the user who triggered the query.',
+      ),
+      'sid' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Session ID of user who triggered the query.',
+      ),
+      'showed_suggestions' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Indicates whether a spelling suggestion was shown.',
+      ),
+      'page' => array(
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Current results page.',
+      ),
+      'keywords' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Query keywords arguments.',
+      ),
+      'filters' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Query filter arguments.',
+      ),
+      'sort' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Query sort arguments.',
+      ),
+      'params' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'description' => "Query object's complete parameters.",
+      ),
+    ),
+    'primary key' => array('qid'),
+  );
+
+  return $schema;
+}

@@ -10,10 +10,22 @@ function remote_issue_tab_requirements($phase){
       'remote_issue_tab' => array(
         'title' => 'Remote Issues Tab Settings',
         'value' => $all_set ? t('Requires configuration') : t('Correctly configured'),
-        'description' => $all_set ? t('Please ensure the Remote Issue Tab is properly <a href="!settings_page">configured</a>.', array('!settings_page' => url('admin/settings/remote-issue-tab'))) : '',
+        'description' => $all_set ? t('Please ensure the Remote Issue Tab is properly <a href="!settings_page">configured</a>.', array(
+          '!settings_page' => url('admin/settings/remote-issue-tab')
+        )) : '',
         'severity' => $all_set ? REQUIREMENT_WARNING : REQUIREMENT_OK
       )
     );
   }
   return array();
+}
+
+/**
+ * Clear the JS cache.
+ */
+function remote_issue_tab_update_6101(){
+  drupal_clear_js_cache();
+  return array(
+    '#finished' => TRUE
+  );
 }

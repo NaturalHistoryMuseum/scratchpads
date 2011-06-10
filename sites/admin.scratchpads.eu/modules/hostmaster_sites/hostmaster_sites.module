@@ -1,0 +1,121 @@
+<?php
+
+/**
+ * S.D.Rycroft
+ * 
+ * Hostmaster_sites module
+ */
+function hostmaster_sites_menu(){
+  return array(
+    'node/add/site/multi' => array(
+      'title' => 'Create multiple sites',
+      'page callback' => 'hostmaster_sites_form',
+      'access arguments' => array(
+        'create site'
+      )
+    )
+  );
+}
+
+/**
+ * Get the form
+ *
+ */
+function hostmaster_sites_form(){
+  // Pulled from node.pages.inc
+  global $user;
+  $types = node_get_types();
+  $type = 'site';
+  // If a node type has been specified, validate its existence.
+  if(isset($types[$type]) && node_access('create', $type)){
+    // Initialize settings:
+    $node = array(
+      'uid' => $user->uid,
+      'name' => (isset($user->name) ? $user->name : ''),
+      'type' => $type,
+      'language' => ''
+    );
+    drupal_set_title(t('Create @names', array(
+      '@name' => $types[$type]->name
+    )));
+    $output = drupal_get_form($type . '_node_form', $node);
+  }
+  return $output;
+}
+
+/**
+ * Tweak the form is being viewed on the multiple page.
+ */
+function hostmaster_sites_form_site_node_form_alter(&$form, &$form_state){
+  if(arg(3) == 'multi'){
+    // Unset submit functions and remove preview button
+    unset($form['buttons']['submit']['#submit']);
+    unset($form['buttons']['preview']);
+    // Add our own special submit function
+    $form['#submit'] = array(
+      'hostmaster_sites_form_submit'
+    );
+    // Copy the title (prevent validation from failing), we'll hide the real
+    // title field and set its value to a valid fqdn
+    $form['title_copy'] = $form['title'];
+    $form['title']['#type'] = 'hidden';
+    $form['title']['#value'] = 'example.com';
+    $form['title_copy']['#description'] = t('A range must be included in the domain name.  This must be in the format "[x-y]" where x and y are both integers, and y is greater than x.  e.g. <strong>training[1-20].taxon.name</strong>');
+    // Add an additional validation step for the domain name, to ensure it has
+    // the multi section added.
+    $form['title_copy']['#element_validate'] = array(
+      'hostmaster_sites_validate_domain'
+    );
+  }else{
+    // We'll add the link to the multi page from the normal page, only if we're
+    // on node/add
+    if(arg(1) == 'add'){
+      $form['multi_link'] = array(
+        '#value' => t('<h1>You may also create multiple sites on the <a href="!url">multiple site creation page</a>.', array(
+          '!url' => url('node/add/site/multi')
+        )),
+        '#weight' => -100
+      );
+    }
+  }
+}
+
+/**
+ * Function to validate the domain name
+ */
+function hostmaster_sites_validate_domain($element){
+  if(strpos($element['#value'], '[') === FALSE || strpos($element['#value'], ']') === FALSE){
+    form_set_error('title_copy', t('A valid range must be included in the format "[x-y]"'));
+  }else{
+    // We've got "[" and "]", now check that there is a range in between them.
+    $parts = preg_split('/[\[\]]/', $element['#value']);
+    $range_parts = explode("-", $parts[1]);
+    if(!is_numeric($range_parts[0]) || !is_numeric($range_parts[1])){
+      form_set_error('title_copy', t('The range you have provided does not appear to be numeric'));
+    }else{
+      if($range_parts[0] >= $range_parts[1]){
+        form_set_error('title_copy', t('Please ensure the first number in your range is smaller than the second.'));
+      }
+    }
+  }
+}
+
+/**
+ * Submit for multi form
+ */
+function hostmaster_sites_form_submit(&$form, &$form_state){
+  // Loop the submission and submit as normal!
+  unset($form['#submit']);
+  $parts = preg_split('/[\[\]]/', $form_state['values']['title_copy']);
+  $range_parts = explode("-", $parts[1]);
+  for($i = $range_parts[0]; $i <= $range_parts[1]; $i++){
+    $form_copy = $form;
+    $form_state_copy = $form_state;
+    // Set correct title
+    $correct_title = $parts[0] . $i . $parts[2];
+    $form_state_copy['values']['title'] = $correct_title;
+    $form_copy['title']['#value'] = $correct_title;
+    module_load_include('pages.inc', 'node');
+    node_form_submit($form_copy, $form_state_copy);
+  }
+}

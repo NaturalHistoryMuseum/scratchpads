@@ -57,6 +57,14 @@ function _femail_get_msg(){
     }
     // Get the To: header, which will be used to work out which forum this 
     // message wants to go into
+    if(isset($part_data['headers']['to'])){
+      $to = mailparse_rfc822_parse_addresses($part_data['headers']['to']);
+      $msg['to'] = $to[0]['address'];
+    }
+    if(isset($part_data['headers']['x-original-to'])){
+      $to = mailparse_rfc822_parse_addresses($part_data['headers']['x-original-to']);
+      $msg['to'] = $to[0]['address'];
+    }
     if(isset($part_data['headers']['envelope-to'])){
       $to = mailparse_rfc822_parse_addresses($part_data['headers']['envelope-to']);
       $msg['to'] = $to[0]['address'];
@@ -64,7 +72,7 @@ function _femail_get_msg(){
     // Get the body for the node/comment body
     if(!$body_is_set){
       if(isset($part_data['headers']['content-type'])){
-        if(strpos($part_data['headers']['content-type'], 'text/plain') !== FALSE){
+        if(strpos(strtolower($part_data['headers']['content-type']), 'text/plain') !== FALSE){
           if($part_data['headers']['content-transfer-encoding'] == 'base64'){
             $msg['body'] = base64_decode(substr($msg['body'], $part_data['starting-pos-body'], $part_data['ending-pos-body'] - $part_data['starting-pos-body']));
           }else{
@@ -138,6 +146,16 @@ function _femail_get_msg(){
       $msg['in-reply-to'] = $part_data['headers']['in-reply-to'];
     }
   }
+  if(!$body_is_set){
+    // Looks like we have a none mime encoded message.  Here we need to loop
+    // through each line, throwing them away until we reach a blank line, the
+    // rest of the lines become the body.
+    $lines = preg_split('/[\n\r]/', $msg['body']);
+    while(trim(array_shift($lines))){
+      ;// Nothing to do here, all done in the while statement.
+    }
+    $msg['body'] = implode("\n", $lines);
+  }
   return $msg;
 }
 
@@ -158,8 +176,10 @@ function _femail_post_comment($msg, $user, $status){
       // FFS, the comment_upload module doesn't accept files as objects. Ah well
       // we'll convert them here.
       $ffs_fussy_cu = array();
-      foreach($msg['files'] as $fid => $file_tmp){
-        $ffs_fussy_cu[$fid] = (array)$file_tmp;
+      if(isset($msg['files']) && count($msg['files'])){
+        foreach($msg['files'] as $fid => $file_tmp){
+          $ffs_fussy_cu[$fid] = (array)$file_tmp;
+        }
       }
       $edit = array(
         'author' => $user->name,

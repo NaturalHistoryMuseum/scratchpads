@@ -1,0 +1,643 @@
+<?php
+/**
+ * Define an array of Scratchpad profile node IDs
+ */
+define('SCRATCHPAD_PROFILE_NID', 691);
+define('EMONOCOT_PROFILE_NID', 1754);
+define('ADMIN_RID', 4);
+
+/**
+ * Implementation of hook_mail_alter().
+ */
+function hostmaster_scratchpad_mail_alter(&$message){
+  // Prevent sending of the "your new site" message. Gah!
+  if(substr($message['subject'], 0, 13) == 'Your new site'){
+    $message['to'] = '<aegir>';
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter
+ */
+function hostmaster_scratchpad_form_site_node_form_alter(&$form, $form_state){
+  hostmaster_scratchpad_form_hosting_signup_form_alter($form, $form_state);
+  $form['client']['#collapsed'] = TRUE;
+  $form['client']['#collapsible'] = TRUE;
+  $form['about_scratchpad']['#collapsed'] = TRUE;
+  $form['about_scratchpad']['#collapsible'] = TRUE;
+  $form['comments_fieldset']['#collapsed'] = TRUE;
+  $form['comments_fieldset']['#collapsible'] = TRUE;
+  unset($form['about_scratchpad']['title']);
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter
+ */
+function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_state){
+  // Check whether we have access to the normal create site page.  If we do, we
+  // should be there instead of here.
+  if(user_access('create site') && arg(0) == 'hosting' && arg(1) == 'signup'){
+    drupal_goto('node/add/site');
+  }
+  return hostmaster_scratchpad_form_hosting_signup_form_alter_alter($form, $form_state);
+}
+
+function hostmaster_scratchpad_validate_fail($form, &$form_state){
+  form_set_error('', t('Editing disabled'));
+}
+
+/**
+ * Helper for the above two form alter functions
+ */
+function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $form_state){
+  global $user;
+  if(isset($user->roles[ADMIN_RID])){
+    // Add a warning that this can not be edited, and that new sites Scratchpads
+    // should be created from the signup form.
+    if(arg(1) != 'add'){
+      $form['warning'] = array(
+        '#value' => '<div class="message warning" style="margin:5px 0;"><p style="padding:0;margin:0"><strong>' . t('Warning') . ':</strong> ' . t('It is not possible to edit a site once it has been created.') . '</p></div>',
+        '#weight' => -1000
+      );
+      $form['#validate'] = array(
+        'hostmaster_scratchpad_validate_fail'
+      );
+      unset($form['submit']);
+    }else{
+      // We're adding a site, warn that we shouldn't add Scratchpads from here.
+      $form['warning'] = array(
+        '#value' => '<div class="message warning" style="margin:5px 0;"><p style="padding:0;margin:0"><strong>' . t('Warning') . ':</strong> ' . t('Scratchpads should be created using the signup form ONLY') . '</p></div>',
+        '#weight' => -1000
+      );
+      unset($form['profile']['#options'][SCRATCHPAD_PROFILE_NID]);
+      unset($form['profile']['#options'][EMONOCOT_PROFILE_NID]);
+    }
+    return;
+  }
+  $form['#theme'] = 'hostmaster_scratchpad_application_form';
+  if(!isset($user->roles[ADMIN_RID])){
+    $form['client'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('About you'),
+      '#weight' => 4,
+      '#collapsed' => FALSE,
+      '#collapsible' => FALSE,
+      'client_title' => array(
+        '#title' => t('Title'),
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
+        '#type' => 'textfield',
+        '#description' => t('Mr/Mrs/Dr/Professor/Vicar')
+      ),
+      'client_name' => array(
+        '#title' => t('Full name'),
+        '#description' => t('At minimum this should be your first given name and your family name'),
+        '#type' => 'textfield',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
+        '#default_value' => isset($form['#node']->client_name) ? $form['#node']->client_name : ''
+      ),
+      'email' => array(
+        '#title' => t('Email'),
+        '#description' => t('Your email address. This must be a valid email address, as your password will be sent to it'),
+        '#type' => 'textfield',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+      ),
+      'email_confirm' => array(
+        '#title' => 'Confirm Email',
+        '#type' => 'textfield',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+      ),
+      'institution' => array(
+        '#title' => t('Institution'),
+        '#description' => t('The institution with which you are most closely associated. If retired or amateur, please insert "N/A"'),
+        '#type' => 'textfield',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+      ),
+      'country' => array(
+        '#title' => t('Country'),
+        '#description' => t('The country that you are based in.'),
+        '#type' => 'select',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
+        '#options' => array(
+          NULL => '-- Select --',
+          'Afghanistan' => 'Afghanistan',
+          'Albania' => 'Albania',
+          'Algeria' => 'Algeria',
+          'American Samoa' => 'American Samoa',
+          'Andorra' => 'Andorra',
+          'Angola' => 'Angola',
+          'Anguilla' => 'Anguilla',
+          'Antigua and Barbuda' => 'Antigua and Barbuda',
+          'Argentina' => 'Argentina',
+          'Armenia' => 'Armenia',
+          'Aruba' => 'Aruba',
+          'Australia' => 'Australia',
+          'Austria' => 'Austria',
+          'Azerbaijan' => 'Azerbaijan',
+          'Bahamas' => 'Bahamas',
+          'Bahrain' => 'Bahrain',
+          'Bangladesh' => 'Bangladesh',
+          'Barbados' => 'Barbados',
+          'Belarus' => 'Belarus',
+          'Belgium' => 'Belgium',
+          'Belize' => 'Belize',
+          'Benin' => 'Benin',
+          'Bermuda' => 'Bermuda',
+          'Bhutan' => 'Bhutan',
+          'Bolivia' => 'Bolivia',
+          'Bosnia and Herzegovina' => 'Bosnia and Herzegovina',
+          'Botswana' => 'Botswana',
+          'Brazil' => 'Brazil',
+          'British Indian Ocean Territory' => 'British Indian Ocean Territory',
+          'British Virgin Islands' => 'British Virgin Islands',
+          'Brunei' => 'Brunei',
+          'Bulgaria' => 'Bulgaria',
+          'Burkina Faso' => 'Burkina Faso',
+          'Burundi' => 'Burundi',
+          'Cambodia' => 'Cambodia',
+          'Cameroon' => 'Cameroon',
+          'Canada' => 'Canada',
+          'Cape Verde Islands' => 'Cape Verde Islands',
+          'Cayman Islands' => 'Cayman Islands',
+          'Central African Republic' => 'Central African Republic',
+          'Chad' => 'Chad',
+          'Chile' => 'Chile',
+          'China' => 'China',
+          'Colombia' => 'Colombia',
+          'Comoros' => 'Comoros',
+          'Congo' => 'Congo',
+          'Cook Islands' => 'Cook Islands',
+          'Costa Rica' => 'Costa Rica',
+          'Côte d\'Ivoire' => 'Côte d\'Ivoire',
+          'Croatia' => 'Croatia',
+          'Cuba' => 'Cuba',
+          'Cyprus' => 'Cyprus',
+          'Czech Republic' => 'Czech Republic',
+          'dc:title' => 'dc:title',
+          'Democratic Republic of the Congo' => 'Democratic Republic of the Congo',
+          'Denmark' => 'Denmark',
+          'Djibouti' => 'Djibouti',
+          'Dominica' => 'Dominica',
+          'Dominican Republic' => 'Dominican Republic',
+          'East Timor' => 'East Timor',
+          'Ecuador' => 'Ecuador',
+          'Egypt' => 'Egypt',
+          'El Salvador' => 'El Salvador',
+          'Equatorial Guinea' => 'Equatorial Guinea',
+          'Eritrea' => 'Eritrea',
+          'Estonia' => 'Estonia',
+          'Ethiopia' => 'Ethiopia',
+          'Falkland Islands' => 'Falkland Islands',
+          'Fiji' => 'Fiji',
+          'Finland' => 'Finland',
+          'France' => 'France',
+          'French Guiana' => 'French Guiana',
+          'French Polynesia' => 'French Polynesia',
+          'Gabon' => 'Gabon',
+          'Gambia' => 'Gambia',
+          'Georgia' => 'Georgia',
+          'Germany' => 'Germany',
+          'Ghana' => 'Ghana',
+          'Gibraltar' => 'Gibraltar',
+          'Greece' => 'Greece',
+          'Greenland' => 'Greenland',
+          'Grenada' => 'Grenada',
+          'Guadeloupe' => 'Guadeloupe',
+          'Guam' => 'Guam',
+          'Guatemala' => 'Guatemala',
+          'Guinea' => 'Guinea',
+          'Guinea-Bissau' => 'Guinea-Bissau',
+          'Guyana' => 'Guyana',
+          'Haiti' => 'Haiti',
+          'Honduras' => 'Honduras',
+          'Hungary' => 'Hungary',
+          'Iceland' => 'Iceland',
+          'India' => 'India',
+          'Indonesia' => 'Indonesia',
+          'Iran' => 'Iran',
+          'Iraq' => 'Iraq',
+          'Ireland' => 'Ireland',
+          'Israel' => 'Israel',
+          'Italy' => 'Italy',
+          'Jamaica' => 'Jamaica',
+          'Japan' => 'Japan',
+          'Jordan' => 'Jordan',
+          'Kazakhstan' => 'Kazakhstan',
+          'Kenya' => 'Kenya',
+          'Kiribati' => 'Kiribati',
+          'Korea, North' => 'Korea, North',
+          'Korea, South' => 'Korea, South',
+          'Kuwait' => 'Kuwait',
+          'Kyrgyzstan' => 'Kyrgyzstan',
+          'Laos' => 'Laos',
+          'Latvia' => 'Latvia',
+          'Lebanon' => 'Lebanon',
+          'Lesotho' => 'Lesotho',
+          'Liberia' => 'Liberia',
+          'Libya' => 'Libya',
+          'Liechtenstein' => 'Liechtenstein',
+          'Lithuania' => 'Lithuania',
+          'Luxembourg' => 'Luxembourg',
+          'Macedonia' => 'Macedonia',
+          'Madagascar' => 'Madagascar',
+          'Malawi' => 'Malawi',
+          'Malaysia' => 'Malaysia',
+          'Maldives' => 'Maldives',
+          'Mali' => 'Mali',
+          'Malta' => 'Malta',
+          'Marshall Islands' => 'Marshall Islands',
+          'Martinique' => 'Martinique',
+          'Mauritania' => 'Mauritania',
+          'Mauritius' => 'Mauritius',
+          'Mayotte' => 'Mayotte',
+          'Mexico' => 'Mexico',
+          'Micronesia' => 'Micronesia',
+          'Moldova' => 'Moldova',
+          'Monaco' => 'Monaco',
+          'Mongolia' => 'Mongolia',
+          'Montserrat' => 'Montserrat',
+          'Morocco' => 'Morocco',
+          'Mozambique' => 'Mozambique',
+          'Myanmar' => 'Myanmar',
+          'Namibia' => 'Namibia',
+          'Nauru' => 'Nauru',
+          'Nepal' => 'Nepal',
+          'Netherlands' => 'Netherlands',
+          'Netherlands Antilles' => 'Netherlands Antilles',
+          'New Caledonia' => 'New Caledonia',
+          'New Zealand' => 'New Zealand',
+          'Nicaragua' => 'Nicaragua',
+          'Niger' => 'Niger',
+          'Nigeria' => 'Nigeria',
+          'Niue' => 'Niue',
+          'Norfolk Island' => 'Norfolk Island',
+          'Northern Mariana Islands' => 'Northern Mariana Islands',
+          'Norway' => 'Norway',
+          'Oman' => 'Oman',
+          'Pakistan' => 'Pakistan',
+          'Palau' => 'Palau',
+          'Palestinian West Bank and Gaza' => 'Palestinian West Bank and Gaza',
+          'Panama' => 'Panama',
+          'Papua New Guinea' => 'Papua New Guinea',
+          'Paraguay' => 'Paraguay',
+          'Peru' => 'Peru',
+          'Philippines' => 'Philippines',
+          'Pitcairn' => 'Pitcairn',
+          'Poland' => 'Poland',
+          'Portugal' => 'Portugal',
+          'Puerto Rico' => 'Puerto Rico',
+          'Qatar' => 'Qatar',
+          'Réunion' => 'Réunion',
+          'Romania' => 'Romania',
+          'Russia' => 'Russia',
+          'Rwanda' => 'Rwanda',
+          'Saint Helena' => 'Saint Helena',
+          'Saint Kitts and Nevis' => 'Saint Kitts and Nevis',
+          'Saint Lucia' => 'Saint Lucia',
+          'Saint Pierre and Miquelon' => 'Saint Pierre and Miquelon',
+          'Saint Vincent and the Grenadines' => 'Saint Vincent and the Grenadines',
+          'Samoa' => 'Samoa',
+          'San Marino' => 'San Marino',
+          'São Tomé e Príncipe' => 'São Tomé e Príncipe',
+          'Saudi Arabia' => 'Saudi Arabia',
+          'Senegal' => 'Senegal',
+          'Serbia and Montenegro' => 'Serbia and Montenegro',
+          'Seychelles' => 'Seychelles',
+          'Sierra Leone' => 'Sierra Leone',
+          'Singapore' => 'Singapore',
+          'Slovakia' => 'Slovakia',
+          'Slovenia' => 'Slovenia',
+          'Solomon Islands' => 'Solomon Islands',
+          'Somalia' => 'Somalia',
+          'South Africa' => 'South Africa',
+          'Spain' => 'Spain',
+          'Sri Lanka' => 'Sri Lanka',
+          'Sudan' => 'Sudan',
+          'Suriname' => 'Suriname',
+          'Swaziland' => 'Swaziland',
+          'Sweden' => 'Sweden',
+          'Switzerland' => 'Switzerland',
+          'Syria' => 'Syria',
+          'Taiwan' => 'Taiwan',
+          'Tajikistan' => 'Tajikistan',
+          'Tanzania' => 'Tanzania',
+          'Thailand' => 'Thailand',
+          'Togo' => 'Togo',
+          'Tokelau' => 'Tokelau',
+          'Tonga' => 'Tonga',
+          'Trinidad and Tobago' => 'Trinidad and Tobago',
+          'Tunisia' => 'Tunisia',
+          'Turkey' => 'Turkey',
+          'Turkmenistan' => 'Turkmenistan',
+          'Turks and Caicos Islands' => 'Turks and Caicos Islands',
+          'Tuvalu' => 'Tuvalu',
+          'Uganda' => 'Uganda',
+          'Ukraine' => 'Ukraine',
+          'United Arab Emirates' => 'United Arab Emirates',
+          'United Kingdom' => 'United Kingdom',
+          'Uruguay' => 'Uruguay',
+          'USA' => 'USA',
+          'U.S. Virgin Islands' => 'U.S. Virgin Islands',
+          'Uzbekistan' => 'Uzbekistan',
+          'Vanuatu' => 'Vanuatu',
+          'Vatican State' => 'Vatican State',
+          'Venezuela' => 'Venezuela',
+          'Viet Nam' => 'Viet Nam',
+          'Wallis and Futuna' => 'Wallis and Futuna',
+          'Yemen' => 'Yemen',
+          'Zambia' => 'Zambia',
+          'Zimbabwe' => 'Zimbabwe'
+        )
+      )
+    );
+  }
+  $form['about_scratchpad'] = array(
+    '#type' => 'fieldset',
+    '#weight' => 4,
+    '#title' => t('About your Scratchpad'),
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    'site_title' => array(
+      '#title' => t('Site title'),
+      '#description' => t('The site title will appear in the header section of your Scratchpad by default but can be removed later.'),
+      '#type' => 'textfield',
+      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+    ),
+    'taxonomic_scope' => array(
+      '#title' => t('Taxonomic scope'),
+      '#description' => t('The taxonomic group which best describes what taxa will be featured on your site. e.g. Insecta, Aves, Phthiraptera, Dragons'),
+      '#type' => 'textfield',
+      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+    ),
+    'title' => array(
+      '#title' => t('Website domain'),
+      '#description' => '<h3>Your domain name should be:</h3><ul><li><em>Short</em>. You can choose up to 34 characters, but short names and single words are easier to remember. We recommend no more than 20 characters.</li><li><em>Simple</em>. The subdomain name should be your website\'s name.</li><li><em>Legal</em>. Spaces and special characters are not allowed. Remember also that domain names are NOT case sensitive.</li></ul><h3>Using your own domain</h3><p>Users are more than welcome to purchase their own domain name for use with a Scratchpad.  All that is required is that the domain name is pointed at our server quartz.nhm.ac.uk which has the IP address 157.140.2.32.  If using your own domain name, the domain purchase should be completed before the Scratchpad application.</p><p>If you would like to use your own domain name, then enter the full domain name (without "http://").</p>',
+      '#type' => 'textfield',
+      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
+      '#field_suffix' => '.myspecies.info',
+      '#hosting_site_field' => 'title',
+      '#hosting_site_field_value' => '',
+      '#attributes' => array(
+        'class' => 'subdomain'
+      )
+    ),
+    'mission_statement' => array(
+      '#title' => t('Mission statement'),
+      '#description' => t('A description of your site, including what information a user of your site is likely to find there. By default the mission statement will appear on the front page of your site (although this can be changed later).'),
+      '#type' => 'textarea',
+      '#resizable' => FALSE,
+      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+    ),
+    'googleapi' => array(
+      '#title' => t('Google API key'),
+      '#description' => '<p>Go to the <a href="http://code.google.com/apis/maps/signup.html" target="_blank"><strong>Google API key signup page</strong></a>, check the terms &amp; conditions, enter the URL for your new Scratchpad ("xyz.myspecies.info") and click on the \'Generate API key\' button. Sign into an existing Google Account or create a new one. If you are now back on the Sign up page you will have to reenter the data to generate the API key. You will now see a page with several versions of the API key. Copy the first version under \'Your key is:\' and paste it in the field above.</p>',
+      '#type' => 'textfield',
+      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
+    ),
+    'clustrmaphtml' => array(
+      '#title' => t('ClustrMap HTML'),
+      '#description' => '<p>Note, this is not required. <a href="http://clustrmaps.com/admin/register.php" target="_blank"><strong>ClustrMap signup page</strong></a></p>',
+      '#type' => 'textarea',
+      '#resizable' => FALSE
+    )
+  );
+  $form['comments_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Miscellaneous'),
+    '#weight' => 5,
+    '#collapsed' => FALSE,
+    '#collapsible' => FALSE,
+    'comments' => array(
+      '#type' => 'textarea',
+      '#resizable' => FALSE,
+      '#title' => t('Any other comments')
+    )
+  );
+  // We need to set some values here if the user isn't a trusted one.
+  if(!isset($user->roles[ADMIN_RID])){
+    // Set the default profile.  Note, this will need updating, or a nice way
+    // of setting the default profile for anon is required.
+    unset($form['site']['profile']);
+    $form['about_scratchpad']['profile'] = array(
+      '#type' => 'select',
+      '#title' => t('Scratchpad type'),
+      '#default_value' => SCRATCHPAD_PROFILE_NID,
+      '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
+      '#options' => array(
+        SCRATCHPAD_PROFILE_NID => t('Standard Scratchpad (http://scratchpads.eu)'),
+        EMONOCOT_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
+      )
+    );
+    $form['site']['platform'] = array(
+      '#type' => 'hidden',
+      '#value' => 5
+    );
+    $form['site']['site_language'] = array(
+      '#type' => 'hidden',
+      '#value' => 'en'
+    );
+    $form['site']['db_server'] = array(
+      '#type' => 'hidden',
+      '#value' => '2'
+    );
+  }
+  unset($form['site']['title']);
+  // Set the weight of the button
+  $form['submit']['#weight'] = 1000;
+  // Add validate
+  $form['#validate'] = array_merge((is_array($form['#validate']) ? $form['#validate'] : array()), array(
+    'hostmaster_scratchpad_form_validate'
+  ));
+  // Add submit (needs to be first)
+  $form['#submit'] = array_merge(array(
+    'hostmaster_scratchpad_form_submit'
+  ), (is_array($form['#submit']) ? $form['#submit'] : array()));
+}
+
+/**
+ * Validate function for the above form
+ */
+function hostmaster_scratchpad_form_validate($form, &$form_state){
+  // Only validate if we are trying to create a Scratchpad
+  if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_PROFILE_NID){
+    // Next check the Google Map API key is the correct length (or roughly)
+    $gapi_length = strlen(trim($form_state['values']['googleapi']));
+    if($gapi_length < 80 || $gapi_length > 90){
+      form_set_error('googleapi', 'Your Google Map API key does not look to be valid, please ensure it is correct.');
+    }
+    // Next, check the domain name resolves to Quartz
+    // If we have dots, then it is not a subdomain of myspecies.info - we need to check it.
+    if(strpos($form_state['values']['title'], '.')){
+      // We have a new domain, lets check it's pointing at Quartz
+      if(gethostbyname($form_state['values']['title']) !== gethostbyname('quartz.nhm.ac.uk')){
+        form_set_error('title', 'The domain name you have entered is not pointing at our server:<ul><li>' . $form_state['values']['title'] . ' = ' . gethostbyname($form_state['values']['title']) . '</li><li>quartz.nhm.ac.uk = ' . gethostbyname('quartz.nhm.ac.uk') . '</li></ul>');
+      }
+    }else{
+      $form_state['values']['subdomain'] .= '.myspecies.info';
+    }
+    // Also check that the domain name is unique.
+    if(db_result(db_query("SELECT COUNT(*) FROM {node} n, {hosting_site} h WHERE n.nid = h.nid AND title = '%s' AND type = 'site' AND h.status != -2", $form_state['values']['subdomain']))){
+      form_set_error('subdomain', t('That domain name is already taken'));
+    }
+  }
+}
+
+/**
+ * Submit function for the above form
+ */
+function hostmaster_scratchpad_form_submit($form, &$form_state){
+  // Lets simply save the values to the table - easy!
+  // If we have don't have dots, then we need to add .myspecies.info
+  //form_set_value
+  if(!strpos($form_state['values']['title'], '.')){
+    form_set_value($form['about_scratchpad']['title'], $form_state['values']['title'] . '.myspecies.info', $form_state);
+  }
+}
+
+/**
+ * Implementation of hook_insert
+ */
+function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  // Only do this if the profile is a Scratchpad one (1 or 2)
+  if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
+    switch($op){
+      case 'delete':
+        db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);
+        break;
+      case 'delete revision':
+        db_query('DELETE FROM {hostmaster_scratchpad} WHERE vid = %d', $node->nid, $node->vid);
+        break;
+      case 'insert':
+      case 'update':
+        db_query('DELETE FROM {hostmaster_scratchpad} WHERE vid = %d', $node->nid, $node->vid);
+        db_query("INSERT INTO {hostmaster_scratchpad} (nid, vid, client_title, institution, country, site_title, taxonomic_scope, googleapi, clustrmaphtml, mission_statement, comments) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", array(
+          $node->nid,
+          $node->vid,
+          $node->client_title,
+          $node->institution,
+          $node->country,
+          $node->site_title,
+          $node->taxonomic_scope,
+          $node->googleapi,
+          $node->clustrmaphtml,
+          $node->mission_statement,
+          $node->comments
+        ));
+        break;
+      case 'load':
+        $additional_node = db_fetch_object(db_query('SELECT * FROM {hostmaster_scratchpad} WHERE vid = %d', $node->vid));
+        if($additional_node){
+          foreach($additional_node as $key => $value){
+            $node->$key = $value;
+          }
+        }
+        break;
+      case 'view':
+        if($node->site_title){
+          $node->content['info']['country'] = array(
+            '#weight' => 1000,
+            '#type' => 'item',
+            '#title' => t('Country'),
+            '#value' => $node->country
+          );
+          $node->content['info']['site_title'] = array(
+            '#weight' => 1000,
+            '#type' => 'item',
+            '#title' => t('Site title'),
+            '#value' => $node->site_title
+          );
+          $node->content['info']['institution'] = array(
+            '#weight' => 1000,
+            '#type' => 'item',
+            '#title' => t('Institution'),
+            '#value' => $node->institution
+          );
+          $node->content['info']['taxonomic_scope'] = array(
+            '#weight' => 1000,
+            '#type' => 'item',
+            '#title' => t('Taxonomic scope'),
+            '#value' => $node->taxonomic_scope
+          );
+          if(trim($node->mission_statement)){
+            $node->content['info']['mission_statement'] = array(
+              '#weight' => 1001,
+              '#type' => 'item',
+              '#title' => t('Mission statement'),
+              '#value' => $node->mission_statement
+            );
+          }
+          if(trim($node->comments)){
+            $node->content['info']['comments'] = array(
+              '#weight' => 1000,
+              '#type' => 'item',
+              '#title' => t('Comments'),
+              '#value' => $node->commentsss
+            );
+          }
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Implementation of drush_hook_pre_hosting_task()
+ */
+function drush_hostmaster_scratchpad_pre_hosting_task(){
+  $task = & drush_get_context('HOSTING_TASK');
+  if($task->ref->type == 'site' && ($task->task_type == 'install' || $task->task_type == 'verify')){
+    $client = node_load($task->ref->client);
+    $task->options['client_title'] = $task->ref->client_title;
+    $task->options['fullname'] = $client ? $client->title : 'Scratchpad Maintainer';
+    $task->options['institution'] = $task->ref->institution;
+    $task->options['site_title'] = $task->ref->site_title;
+    $task->options['client_email'] = $client->name;
+    $task->options['googleapi'] = $task->ref->googleapi;
+    $task->options['clustrmaphtml'] = $task->ref->clustrmaphtml;
+    $task->options['mission_statement'] = $task->ref->mission_statement;
+    $task->options['taxonomic_scope'] = $task->ref->taxonomic_scope;
+  }
+}
+
+/**
+ * Implementation of hook_theme
+ */
+function hostmaster_scratchpad_theme(){
+  return array(
+    'hostmaster_scratchpad_application_form' => array(
+      'arguments' => array(
+        'form' => NULL
+      )
+    )
+  );
+}
+
+/**
+ * Theme for the above form
+ */
+function theme_hostmaster_scratchpad_application_form($form){
+  //drupal_set_message(print_r($form, 1));
+  if(isset($form['logout_to_see_form'])){return drupal_render_form($form['#id'], $form);}
+  drupal_add_css(drupal_get_path('module', 'hostmaster_scratchpad') . '/hostmaster_scratchpad.css');
+  $options = array();
+  foreach(array(
+    'client',
+    'about_scratchpad'
+  ) as $fieldset){
+    foreach($form[$fieldset] as $key => $form_part){
+      if(is_array($form_part) && isset($form_part['#description'])){
+        $options[$key] = array(
+          'cssSelect' => '#edit-' . str_replace("_", "-", $key),
+          'text' => $form_part['#description'],
+          'trigger' => array(
+            'focus'
+          ),
+          'shadow' => TRUE,
+          'width' => 350,
+          'positions' => 'top'
+        );
+      }
+    }
+  }
+  beautytips_add_beautytips($options);
+  return drupal_render_form($form['#id'], $form);
+}

@@ -1,0 +1,62 @@
+<?php
+
+function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
+  global $user;
+  if($form_id == 'user_login'){
+    $form['no_login_warning'] = array(
+      '#value' => '<h1>Direct login to this site has been disabled, please login by clicking on "Search for/Report an issue" from the Issues tab on your Scratchpad.</h1>'
+    );
+  }
+  if(!isset($user->roles[5])){
+    if($form_id == 'project_issue_node_form'){
+      unset($form['issue_info']['category']['#options']['task']);
+      $form['project_info']['rid']['#value'] = 48;
+      $form['project_info']['rid']['#type'] = 'hidden';
+      $form['project_info']['#type'] = 'hidden';
+      $form['issue_info']['assigned']['#type'] = 'hidden';
+      $form['issue_details']['format']['#type'] = 'hidden';
+      $form['attachments']['#collapsed'] = TRUE;
+    }else if($form_id == 'comment_form'){
+      if(isset($form['comment_filter']['format'])){
+        $form['comment_filter']['format']['#type'] = 'hidden';
+      }
+      $form['original_issue']['project_info']['pid']['#type'] = 'hidden';
+      $form['original_issue']['project_info']['rid']['#type'] = 'hidden';
+      $form['original_issue']['project_info']['assigned']['#type'] = 'hidden';
+      $form['original_issue']['#collapsed'] = 1;
+      $form['original_issue']['#weight'] = 1;
+      $form['attachments']['#collapsed'] = 1;
+      $form['notify_settings']['notify']['#type'] = 'hidden';
+      $form['notify_settings']['notify_type']['#type'] = 'hidden';
+    }
+  }else{
+    // Maintainers
+    if($form_id == 'project_issue_node_form'){
+      $form['menu']['#type'] = 'hidden';
+      $form['notifications']['#type'] = 'hidden';
+      $form['revision_information']['#type'] = 'hidden';
+      $form['comment_settings']['#type'] = 'hidden';
+      $default_value = 0;
+      foreach($form['project_info']['rid']['#options'] as $key => $option){
+        if($key){
+          $default_value = $key;
+          break;
+        }
+      }
+      $form['project_info']['rid']['#default_value'] = $default_value;
+    }else if($form_id == 'comment_form'){
+      $form['notifications']['#collapsed'] = 1;
+      $form['notifications']['notify_settings'] = $form['notify_settings'];
+      unset($form['notify_settings']);
+      $form['attachments']['#collapsed'] = 1;
+    }
+  }
+}
+
+function devscratchpadseu_user($op, &$edit, &$account, $category = NULL){
+  switch($op){
+    case 'insert':
+      $edit['notifications_auto'] = 1;
+      break;
+  }
+}

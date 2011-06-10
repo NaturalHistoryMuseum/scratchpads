@@ -1,0 +1,119 @@
+<?php
+
+function emonocot_install(){
+  drupal_load('module', 'emonocot');
+  db_query("UPDATE {system} SET weight = 78 WHERE name = 'emonocot'"); //1 heavier than scratchpadify
+  variable_set('emonocot_is_emonocot_site', TRUE);
+  //Expand SPM with eMonocot fields
+  emonocot_install_spm_create_fields();
+  emonocot_install_spm_create_groups();
+  emonocot_install_spm_add_fields_to_groups();
+  //Expand ITIS with eMonocot fields
+  emonocot_install_itis_create_fields();
+  emonocot_install_itis_create_groups();
+  emonocot_install_itis_add_fields_to_groups();
+  //Add metadata to image
+  emonocot_install_image_create_fields();
+  //Modify tabs in SPM module
+  $em_spm_tabs = variable_get('spm_headers', array());
+  $em_spm_tabs['group_spm_em_taxonomy'] = array(
+    'name' => 'Taxonomy',
+    'description' => 'Taxonomic Notes'
+  );
+  $em_spm_tabs['group_spm_em_misc'] = array(
+    'name' => 'Misc',
+    'description' => 'eMonocot specific fields'
+  );
+  variable_set('spm_headers', $em_spm_tabs);
+}
+
+function emonocot_disable(){
+  variable_set('emonocot_is_emonocot_site', FALSE);
+}
+
+function emonocot_uninstall(){
+  variable_del('emonocot_is_emonocot_site');
+  emonocot_uninstall_spm_fields();
+}
+
+function emonocot_install_spm_create_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = emonocot_spm_field_info();
+  foreach($fields as $field){
+    content_field_instance_create($field);
+  }
+}
+
+function emonocot_install_itis_create_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = emonocot_itis_field_info();
+  foreach($fields as $field){
+    content_field_instance_create($field);
+  }
+}
+
+function emonocot_install_image_create_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = emonocot_image_field_info();
+  foreach($fields as $field){
+    content_field_instance_create($field);
+  }
+}
+
+function emonocot_install_spm_create_groups(){
+  $groups = emonocot_spm_group_info();
+  foreach($groups as $group){
+    $group['settings'] = field_group_default_settings($group['group_type']);
+    fieldgroup_save_group($group['type_name'], $group);
+  }
+}
+
+function emonocot_install_itis_create_groups(){
+  $groups = emonocot_itis_group_info();
+  foreach($groups as $group){
+    $group['settings'] = field_group_default_settings($group['group_type']);
+    fieldgroup_save_group($group['type_name'], $group);
+  }
+}
+
+function emonocot_install_spm_add_fields_to_groups(){
+  $fields = emonocot_spm_field_info();
+  foreach($fields as $field){
+    if(isset($field['group'])){
+      fieldgroup_update_fields(array(
+        'field_name' => $field['field_name'],
+        'group' => $field['group'],
+        'type_name' => $field['type_name']
+      ));
+    }
+  }
+}
+
+function emonocot_install_itis_add_fields_to_groups(){
+  $fields = emonocot_itis_field_info();
+  foreach($fields as $field){
+    if(isset($field['group'])){
+      fieldgroup_update_fields(array(
+        'field_name' => $field['field_name'],
+        'group' => $field['group'],
+        'type_name' => $field['type_name']
+      ));
+    }
+  }
+}
+
+function emonocot_uninstall_spm_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = emonocot_spm_field_info();
+  foreach($fields as $field){
+    content_field_instance_delete($field['field_name'], $field['type_name']);
+  }
+}
+
+function emonocot_uninstall_itis_fields(){
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $fields = emonocot_spm_field_info();
+  foreach($fields as $field){
+    content_field_instance_delete($field['field_name'], $field['type_name']);
+  }
+}

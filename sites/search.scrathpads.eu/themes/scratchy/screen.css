@@ -1,0 +1,419 @@
+/****
+ * Solr
+ */
+#search-form .apachesolr-autocomplete, #search-form #edit-submit{
+  font-size:150%;
+  background-image:none !important;
+  border: solid 1px #ccc;
+  padding:5px;
+}
+body.front #search-form{
+  font-size:150%;
+}
+#search-form label, ul.primary{
+  display:none;
+}
+.ac_results{
+  width:500px !important;
+}
+.ac-results *{
+  font-size:130% !important;
+}
+.apachesolr_multisitesearch-results .title{
+  padding:7px 0 5px 0;
+  margin:3px;
+  border-top:1px solid #eee;
+}
+.apachesolr_multisitesearch-results .title a{
+  color:#2200C1;
+}
+/***************************************************************
+ * GENERAL
+ ***************************************************************/
+body {
+  color: black;
+  background-color: white;
+  border: 0;
+  margin: 0;
+  font-family: helvetica, arial, sans-serif;
+  text-align: justify;
+  font-size: 10pt;}
+a{
+  text-decoration: none;
+  color: #2200C1;}
+a:hover{
+  text-decoration: underline;}
+hr {
+  border: 0;
+  border-bottom: solid 1px #cccccc;
+  margin: 10px;}
+div#iecentral{
+  text-align: center;}
+h1 {font-size: 170%;}
+h2 {font-size: 140%;margin:0;}
+h3 {
+  margin:0 0 5px 5px;
+  padding:0;
+}
+h4 {font-size: 120%;}
+h5 {font-size: 120%;}
+h6 {font-size: 110%; margin: 10px 0 5px 0}
+p  {font-size: 100%;margin:0;}
+.sticky{
+  background-color: #f5f5f5;}
+.comment {
+  padding: 3px 0;}
+/***************************************************************
+ * CONTENT
+ ***************************************************************/
+#content {
+  padding: 10px 0 0 0;
+  width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: justify;}
+#content p a{
+	text-decoration:underline;
+}
+div#main {
+  width: 720px;
+  margin: 0;
+  position: relative;
+  float: left;}
+div#main-wide {
+  width: 980px;
+  margin: 0;
+  position: relative;
+  float: left;}
+div.mainfull{
+  margin: 0;padding: 0;
+  clear: both;
+	width: 100%;}
+div.node, div.messagescontainer{
+  color: black;
+  padding: 0;
+  /* Removed to try and get the fancy pants stuff border: dashed 1px #ccc;*/
+  margin: 0 0 10px 0;
+  z-index: 100;}
+div.node h2{
+  padding: 0;
+  line-height: normal;
+  padding: 5px;
+  margin: 0;}
+div.content{
+  padding: 0 10px 10px 10px;
+  margin: 0;}
+div.messagescontainer{
+  background-color: #eee;}
+div.messagescontainer .boxcontent{
+  padding:10px 20px;}
+div.error{
+  color:#f00;
+  background-color:inherit;
+  border: none;}
+/***************************************************************
+ * HEADER
+ ***************************************************************/
+#header {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 90px;
+  background-image: url('images/header-small.jpg');
+  background-position: 50% 100%;
+  text-align: center;}
+#searchbox {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 10px;
+  background-image: url(images/searchbox_background.png);
+  background-position: 0 100%;
+  filter:alpha(opacity=60);
+  -moz-opacity: 0.6;
+  opacity: 0.6;}
+#searchbox label{
+	display:none;
+}
+#searchbox input {
+  background-color: white;
+  color: black;
+  border: solid 2px black;}
+#breadcrumbs{
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 10px;
+  background-image: url(images/breadcrumbs_background.png);
+  background-position: 100% 100%;
+  filter:alpha(opacity=60);
+  -mox-opacity: 0.6;
+  opacity:0.6;
+  color: white;}
+#breadcrumbs a{
+  color:white;}
+#loggedinas{
+	position:absolute;
+	left:10px;
+	top:50px;
+	padding:5px;
+	border:solid 1px white;}
+#loggedinas,#loggedinas *{
+	color:white;
+	background-color:black}
+/***************************************************************
+ * BOOKS
+ ***************************************************************/
+ .bookbody p{
+   margin: 15px 5px;
+   font-size: 110%;
+ }
+ .book-navigation{
+   font-weight: bold;
+ }
+ .central{
+   margin-left:auto;
+   margin-right:auto;
+   text-alight:center;
+ }
+ .screencastmissing{
+   width:634px;
+   height:88px;
+   text-align:center;
+   border: solid 1px #333;
+   padding: 200px 20px;
+   font-style:italic;
+   font-size: 130%;
+ }
+/***************************************************************
+ * LINKS
+ ***************************************************************/
+ul.primary {
+  border-bottom:1px solid #BBBBBB;
+  border-collapse:collapse;
+  height:auto;
+  line-height:normal;
+  list-style-image:none;
+  list-style-position:outside;
+  list-style-type:none;
+  margin:5px 5px 10px 5px;
+  padding:0pt 0pt 0pt 5px;
+  white-space:nowrap;}
+div.navlinks{
+  background-image: url('images/header-background.gif');
+  background-repeat: repeat-x;
+  background-position: 0 0;
+  height: 35px;
+  /* I should be sent to hell for this: */
+  color: white;
+  background-color: white;
+  /* Phew, hot down there */
+  padding: 5px;
+  text-align: center;}
+div.navlinks a{
+  color: white;
+  font-size: 120%;
+  padding: 0 10px;
+  font-weight: bold;}
+div.navlinks a:hover, div.navlinks a:active{
+  color: green;
+  text-decoration: none;}
+/***************************************************************
+ * SIDEBAR
+ ***************************************************************/
+#sidebar-right h2.title{
+  display:none;}
+div#sidebar-right {
+  width: 240px;
+  margin: 0;
+  position: relative;
+  float: right;
+  font-size:90%;}
+#sidebar-right .content{
+  padding:0 0 10px 0;
+}
+.signup{
+  margin:0px 0px 15px;
+  background-image:url('/files/images/signup-background.jpg');
+  background-color: black
+}
+#sidebar-right ul{
+  padding:0 20px;
+  margin:0;
+  }
+.scratchy-padding .boxcontent{
+  padding:0;
+}
+/***************************************************************
+ * CURVY BOX
+ ***************************************************************/
+.bc  {position: relative;width: 8px;height: 8px;font-size: 1px;background-repeat: no-repeat;margin-bottom: -1px;z-index: 2;line-height: 0px;}
+.ctr {float: right;background-image: url(images/ctr.gif);margin-right: -1px;margin-top: -1px;line-height: 0px;}
+.ctl {float: left;background-image: url(images/ctl.gif);margin-left: -1px;margin-top: -1px;line-height: 0px;}
+.cbr {float: right;background-image: url(images/cbr.gif);margin-right: -1px;margin-top: 1px;line-height: 0px;}
+.cbl {float: left;background-image: url(images/cbl.gif);margin-left: -1px;margin-top: 1px;line-height: 0px;}
+.boxtop {border-top: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxbtm {border-bottom: 1px #ccc solid;border-left: 1px #ccc solid;border-right: 1px #ccc solid;height: 8px;line-height: 0px;z-index:100;}
+.boxcontent{border-left: 1px #ccc solid;border-right: 1px #ccc solid;z-index:100;}
+.subboxcontent{/*min-height: 50px;*/}
+.subboxcontent .links {
+  font-size: 80%;
+}
+.boxtitle, .boxtitle-sticky{
+	position: relative;
+	top: -9px;
+	height: auto;
+	overflow: hidden;
+	margin: 0px 0px 0 0px;
+}
+.boxtitle {
+  background-image: url('images/main_header_back.gif');
+}
+.boxtitle-sticky{
+  background-image: url('images/main_header_back_sticky.gif');
+}
+.boxtitle-none{
+  background-image: none;
+	border-bottom: 1px #ccc solid;
+}
+.boxtitle h1,.boxtitle-sticky h1{
+  font-size: 100%;
+  padding: 5px 20px;
+  margin: 0;
+  line-height: 100%;
+}
+.boxtitle-sticky h1 a{
+  color: white;
+}
+.cornerbox {
+  margin:0px 0px 15px;
+}
+/***************************************************************
+ * MISSION STATEMENT
+ ***************************************************************/
+.mission li{
+  margin:0;
+  display:block;
+  height:43px;
+  padding:0 10px;
+  line-height: 130%;
+  width:180px;
+  font-size: 115%;
+  font-weight:500;
+  background-image:url('images/button.jpg');
+  color:white;
+  background-color:#eee;
+  text-align:center;
+}
+.mission a{
+  text-decoration: underline;}
+.mission li>*{
+  display:table-cell;
+  height:40px;
+  width:180px;
+  vertical-align:middle;
+}
+.mission li:hover{
+  background-image:url('images/button-over.jpg');
+  cursor:pointer;
+}
+.mission li.active{
+  background-image:url('images/button-over.jpg');
+}
+.mission ul{
+  margin:0;
+  padding:0;
+  border-left:solid 1px black;
+}
+.padding{
+  margin:0;
+  padding:0;
+}
+.teaserboxpadding1{
+  height:284px;
+  position:relative;
+}
+.teaserboxpadding2{
+  height:300px;
+  overflow:hidden;
+  position:absolute;
+  top:-8px;
+  width: 718px;
+}
+/***************************************************************
+ * FOOTER
+ ***************************************************************/
+div.bottom {
+  /*bottom: 0;*/
+  clear:both;
+  width: 100%;
+  border-top: solid 1px #BBBBBB;
+  /*position: fixed;*/
+  text-align: center;
+  background-color: white;
+  padding-top: 5px;
+  font-size: 90%;
+	z-index: 20;}
+div.bottom .block {
+  display: inline;}
+div.bottom h2 {
+  display:none;}
+div.bottom a{
+  color: #bbb;}
+div.bottom ul {
+  border-collapse:collapse;
+  height:auto;
+  line-height:normal;
+  list-style-image:none;
+  list-style-position:outside;
+  white-space:nowrap;}
+div.bottom ul li {
+  display:inline;
+  list-style-type: none;}
+div.bottom ul li ul{
+  display: none;}
+legend {
+  font-size: 120%;}
+/***************************************************************
+ * FORUM
+ ***************************************************************/
+td.container{
+  background-color: #444;
+  color: white;
+  padding: 5px;}
+td.container a{
+  color: white;  }
+.forum table, #forum table {
+  border: solid 3px black;
+  width: 95%;}
+.forum th, #forum th {
+  background-image: url('images/header-background.gif');
+  background-color: black;
+  height: 32px;
+  padding-left: 10px;
+  color: white;
+  border: 0;}
+.forum th a, #forum th a{
+  color: white;}
+.forum tr {
+  background-color: #fff;}
+/**********************************************************************************
+ * FAQ Page
+ **********************************************************************************/
+#faqpage div.content{
+  padding: 0;}
+h2 {
+  padding: 5px 0;}
+p.faqquestion:hover {
+  text-decoration: underline;
+  cursor: help;}
+.item-list > ul > li{
+  list-style-type: none !important;}
+.faqquestion{
+  color: #003b00;}
+.faqanswer{
+  display:none;
+  padding:10px;
+  background-color:#f4f4f4;
+  margin: 5px;
+  border: solid 1px #ccc;}

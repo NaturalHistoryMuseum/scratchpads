@@ -1,0 +1,136 @@
+<?php
+
+function devscratchpadseu_menu(){
+  return array(
+    'timestamp' => array(
+      'title' => t('Timestamp of next update'),
+      'page callback' => 'devscratchpadseu_timestamp',
+      'access arguments' => array(
+        'access content'
+      ),
+      'type' => MENU_CALLBACK
+    ),
+    'issues/%devscratchpadseu_project' => array(
+      'title' => 'View Issues',
+      'page callback' => 'devscratchpadseu_issues',
+      'page arguments' => array(
+        1
+      ),
+      'access callback' => TRUE,
+      'parent' => ''
+    ),
+    'report/%devscratchpadseu_project' => array(
+      'title' => 'Report Issue',
+      'page callback' => 'devscratchpadseu_issues_report',
+      'page arguments' => array(
+        1
+      ),
+      'access callback' => TRUE,
+      'parent' => ''
+    )
+  );
+}
+
+/**
+ * Returns the user id of the currently logged in user.
+ */
+function devscratchpadseu_project_to_arg($project){
+  if(arg(2) == 'emonocot' || arg(3) == 'emonocot'){return 'emonocot';}
+  if(arg(0) == 'node' && is_numeric(arg(1))){
+    $results = db_query('SELECT uri FROM project_projects pp LEFT JOIN project_issues pi ON pp.nid = pi.pid WHERE pp.nid = %d OR pi.nid = %d', arg(1), arg(1));
+    while($row = db_fetch_array($results)){
+      return $row['uri'];
+    }
+  }
+  return 'scratchpads';
+}
+
+function devscratchpadseu_project_load($project = ''){
+  return $project;
+}
+
+function devscratchpadseu_issues($project){
+  drupal_goto('project/issues/' . $project);
+}
+
+function devscratchpadseu_issues_report($project){
+  drupal_goto('node/add/project-issue/' . $project);
+}
+
+function devscratchpadseu_timestamp(){
+  $today_details = getdate();
+  $timestamp = 0;
+  if($today_details['wday'] != 4 || $today_details['hours'] < 11){
+    $timestamp = (strtotime('next thursday')) + (19 * 3600);
+  }else{
+    $timestamp = (strtotime($today_details['year'] . '-' . $today_details['mon'] . '-' . $today_details['mday'])) + (19 * 3600);
+  }
+  $output = '<h1 style="font-weight:300;font-size:200%">Time stamp for <em>' . format_date($timestamp, 'long') . '</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">' . $timestamp . '</h1>';
+  $timestamp -= 604800; // Last weeks.
+  return $output . '<h1 style="font-weight:300;font-size:200%">Previous timestamp <em>' . format_date($timestamp, 'long') . '</em>:</h1><h1 style="text-align:center;font-weight:300;font-size:400%;border:solid 1px #ddd;background-color:#eee;">' . $timestamp . '</h1>';
+}
+
+function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
+  global $user;
+  if($form_id == 'user_login'){
+    $form['no_login_warning'] = array(
+      '#value' => '<h1>Direct login to this site has been disabled, please login by clicking on "Search for/Report an issue" from the Issues tab on your Scratchpad.</h1>'
+    );
+  }
+  if(!isset($user->roles[5])){
+    if($form_id == 'project_issue_node_form'){
+      unset($form['issue_info']['category']['#options']['task']);
+      $form['project_info']['rid']['#value'] = 48;
+      $form['project_info']['rid']['#type'] = 'hidden';
+      if(arg(3) != 'emonocot'){
+        $form['project_info']['#type'] = 'hidden';
+      }
+      $form['issue_info']['assigned']['#type'] = 'hidden';
+      $form['issue_details']['format']['#type'] = 'hidden';
+      $form['attachments']['#collapsed'] = TRUE;
+    }else if($form_id == 'comment_form'){
+      if(isset($form['comment_filter']['format'])){
+        $form['comment_filter']['format']['#type'] = 'hidden';
+      }
+      $form['original_issue']['project_info']['pid']['#type'] = 'hidden';
+      $form['original_issue']['project_info']['rid']['#type'] = 'hidden';
+      $form['original_issue']['project_info']['assigned']['#type'] = 'hidden';
+      $form['original_issue']['#collapsed'] = 1;
+      $form['original_issue']['#weight'] = 1;
+      $form['attachments']['#collapsed'] = 1;
+      $form['notify_settings']['notify']['#type'] = 'hidden';
+      $form['notify_settings']['notify_type']['#type'] = 'hidden';
+    }
+  }else{
+    // Maintainers
+    if($form_id == 'project_issue_node_form'){
+      $form['menu']['#type'] = 'hidden';
+      $form['notifications']['#type'] = 'hidden';
+      $form['revision_information']['#type'] = 'hidden';
+      $form['comment_settings']['#type'] = 'hidden';
+      $default_value = 0;
+      if(isset($form['project_info']['rid'])){
+        foreach($form['project_info']['rid']['#options'] as $key => $option){
+          if($key){
+            $default_value = $key;
+            break;
+          }
+        }
+        $form['project_info']['rid']['#default_value'] = $default_value;
+      }
+    }else if($form_id == 'comment_form'){
+      $form['notifications']['#collapsed'] = 1;
+      $form['notifications']['notify_settings'] = $form['notify_settings'];
+      unset($form['notify_settings']);
+      $form['attachments']['#collapsed'] = 1;
+    }
+  }
+}
+
+function devscratchpadseu_user($op, &$edit, &$account, $category = NULL){
+  switch($op){
+    case 'insert':
+      $edit['notifications_auto'] = 1;
+      break;
+  }
+}

@@ -1,0 +1,33 @@
+<?php 
+
+/*
+ * Aegir Services Schema
+ */
+function hostmaster_services_schema(){
+  $schema['hostmaster_services_platforms'] = array(
+    'description' => t('Stores additional information for the client side part of the handshake'),
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'not null' => TRUE
+      ),			
+     )
+	);
+  return $schema;
+}
+
+/*
+ * Aegir Sercies Install
+ */
+function hostmaster_services_install(){
+  drupal_install_schema('hostmaster_services');
+}
+
+function hostmaster_services_uninstall(){
+  drupal_uninstall_schema('hostmaster_services');
+}
+?>

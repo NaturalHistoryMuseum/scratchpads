@@ -401,7 +401,12 @@ function scratchpadify_install_modules($modules){
  * 6179: Fix issue with redirects not being saved (fucking stupid default configuration).
  * 6180: Update "Help" link.
  * 6181: Install the new slickgrid modules 
- * 6182: Install the new views batch page module 
+ * 6182: Install the new views batch page module
+ * 6183: Install ajax load module
+ * 6184: Update issues queue RSS URL due to addition of E-Monocot project.
+ * 6185: *
+ * 6186: Enable Apache solr
+ * 6187: Disable porterstemmer module
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1728,8 +1733,69 @@ function scratchpadify_update_6182(){
 function scratchpadify_update_6183(){
   // Remove matrix editor views 
   $modules = array(
-    'ajax_load',
+    'ajax_load'
   );
   $ret = scratchpadify_install_modules($modules);
+  return $ret;
+}
+
+/**
+ * Update issues queue RSS URL due to addition of E-Monocot project.
+ */
+function scratchpadify_update_6184(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE {aggregator_feed} SET url = 'http://dev.scratchpads.eu/project/issues/rss/scratchpads' WHERE url = 'http://dev.scratchpads.eu/project/issues/rss'");
+  return $ret;
+}
+
+/**
+ * Enable Apache solr
+ */
+function scratchpadify_update_6186(){
+  $modules = array(
+    'apachesolr',
+    'apachesolr_search',
+    'apachesolr_multisitesearch'
+  );
+  $ret = scratchpadify_install_modules($modules);
+  variable_set('apachesolr_search_excluded_types', array(
+    'ispecies' => 'ispecies'
+  ));
+  variable_set('apachesolr_host', 'web-scratchpad-solr.nhm.ac.uk');
+  variable_set('apachesolr_port', 80);
+  variable_set('apachesolr_cron_limit', 200);
+  variable_set('apachesolr_path', '/solr');
+  variable_set('apachesolr_rows', 25);
+  variable_set('apachesolr_failure', 'show_error');
+  variable_set('apachesolr_search_make_default', 1);
+  variable_set('apachesolr_search_default_previous', 1);
+  variable_set('apachesolr_search_spellcheck', 1);
+  return $ret;
+}
+
+/**
+ * Disable porterstemmer module
+ */
+function scratchpadify_update_6187(){
+  // Disable the messaging
+  $uninstall_modules = array(
+    'porterstemmer'
+  );
+  module_disable($uninstall_modules);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Disabled modules (!modules)', array(
+      '!modules' => implode(", ", $uninstall_modules)
+    ))
+  );
+  foreach($uninstall_modules as $module){
+    drupal_uninstall_module($module);
+  }
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => t('Uninstalled modules (!modules)', array(
+      '!modules' => implode(", ", $uninstall_modules)
+    ))
+  );
   return $ret;
 }

@@ -342,7 +342,7 @@ function scratchpadify_cron(){
   db_query("DELETE FROM {sessions} WHERE timestamp < %d", time() - 604800);
   // Ensure the User with UID 1 is set as "Scratchpad Team".  Note, this has
   // been added as a result of Aegir, and may not be necessary in the future.
-  db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', pass = 'no-direct-login', name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin' and mail = 's.rycroft@nhm.ac.uk'");
+  db_query("UPDATE {users} SET mail = 'scratchpad@nhm.ac.uk', pass = 'no-direct-login', name = 'Scratchpad Team' WHERE uid = 1 AND name = 'admin'");
 }
 
 /**
@@ -692,6 +692,9 @@ function scratchpadify_footer($main = 0){
   $dev_server_message = '';
   if(substr($_SERVER['SERVER_NAME'], 0, 4) == 'dev.' && $_SERVER['SERVER_NAME'] != 'dev.scratchpads.eu'){
     $dev_server_message = '<h1 style="position:absolute;top:0;left:0;background-color:white;color:red;padding:10px;border:solid 1px black;margin:10px;z-index:10000;font-weight:900">DEVELOPMENT SERVER</h1>';
+  }
+  if(variable_get('emonocot_is_emonocot_site', FALSE)){
+    return '';
   }
   return $dev_server_message . '<div id="scratchpadify-footer" align="center" style="padding: 20px"><p><a 
 href="http://e-taxonomy.eu/"><img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/edit_small.png" 

@@ -1,0 +1,88 @@
+<?php
+
+/**
+ * Hook_install
+ */
+function hostmaster_scratchpad_install(){
+  drupal_install_schema('hostmaster_scratchpad');
+}
+
+/**
+ * Hook_uninstall
+ */
+function hostmaster_scratchpad_uninstall(){
+  drupal_install_schema('hostmaster_scratchpad');
+}
+
+/**
+ * Update primary key
+ */
+function hostmaster_scratchpad_update_6102(){
+  $ret = array();
+  // Remove primary key
+  db_drop_primary_key($ret, 'hostmaster_scratchpad');
+  // Add primary key
+  db_add_primary_key($ret, 'hostmaster_scratchpad', array('vid'));
+  return $ret;
+}
+
+/**
+ * Hook_schema
+ */
+function hostmaster_scratchpad_schema(){
+  return array(
+    'hostmaster_scratchpad' => array(
+      'fields' => array(
+        'nid' => array(
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE
+        ),
+        'vid' => array(
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE
+        ),
+        'client_title' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'institution' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'country' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'site_title' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'taxonomic_scope' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'googleapi' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'clustrmaphtml' => array(
+          'type' => 'varchar',
+          'length' => 255
+        ),
+        'mission_statement' => array(
+          'type' => 'text',
+          'size' => 'medium'
+        ),
+        'comments' => array(
+          'type' => 'text',
+          'size' => 'medium'
+        )
+      ),
+      'primary key' => array(
+        'vid'
+      )
+    )
+  );
+}

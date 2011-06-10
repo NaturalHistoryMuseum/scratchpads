@@ -1,5 +1,7 @@
 <?php
-
+// Load scratchpad_profile files.
+require_once (dirname(__FILE__) . '/../scratchpad_profile/profile_functions.inc');
+require_once (dirname(__FILE__) . '/../scratchpad_profile/scratchpad_profile.profile');
 
 /**
  * The Scratchpad profile.  This will replace the default profile so that all
@@ -29,7 +31,6 @@ function sandbox_profile_profile_details(){
  * hook_profile_modules
  */
 function sandbox_profile_profile_modules(){
-  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
   // FIXME: Remove scratchapdify_help once it is added to the scratchpad module.
   $modules = array_merge(scratchpad_profile_profile_modules(), array('sandbox', 'scratchpadify_help'));
   unset($modules[array_search('boost',$modules)]);
@@ -1655,7 +1656,7 @@ function sandbox_profile_profile_tasks(&$task, $url){
     $region = system_default_region(variable_get('theme_default', 'garland'));
     db_query("UPDATE {blocks} SET status = 1, weight = -100, theme = 'garland', region = '%s' WHERE delta = 'tinytax-13'", $region);
     
-    scratchpad_profile_profile_tasks_4();
+    scratchpad_profile_set_theme('garland');
     $task = 'profile-finished';
     // Finally, truncate the authmap table to ensure we can't login as the admin
     // user
