@@ -34,7 +34,8 @@ function mado_get_blocks($all_views = FALSE){
       'taxonomy_term',
       'matrix_page',
       'matrix_editor_specimens',
-      'matrix_images'
+      'matrix_images',
+      'slickgrid'
     ),
     'blocks' => array(
       'blog' => array(
