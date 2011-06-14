@@ -176,6 +176,7 @@ function scratchpad_profile_profile_modules(){
     'tcs_import',
     'eol_import',
     'publication',
+    'nodereferencebiblio',
     'nodereferencethumb',
     'aggregator',
     'uwho_client',
