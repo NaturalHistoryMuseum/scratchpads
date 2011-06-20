@@ -17,7 +17,7 @@ Xvfb :3 -screen 0 800x600x16 -fbdir /tmp -nolisten inet6 &>/dev/null &
 XVFB_PID=$!
 DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox_profile &>/dev/null &
 FIREFOX_PID=$!
-sleep 240
+sleep 300
 kill -9 $FIREFOX_PID $XVFB_PID &>/dev/null
 
 # Hide sandbox.html
