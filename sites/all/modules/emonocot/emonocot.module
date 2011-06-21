@@ -25,7 +25,7 @@ function emonocot_menu_alter(&$items){
   );
 }
 
-/**function emonocot_form_alter(&$form, &$form_state){
+function emonocot_form_alter(&$form, &$form_state){
   if($form['#id'] == 'node-form' && $form['type']['#value'] == 'spm'){
     //unset($form['#pre_render'][0]);
     //play with the fields and stuff them into tabs
@@ -40,7 +40,7 @@ function emonocot_menu_alter(&$items){
       unset($form[$em_spm_group['group_name']]);
     }
   }
-}*/
+}
 
 function emonocot_spm_form_pre_render($form){
   return $form;
@@ -1008,4 +1008,57 @@ function emonocot_node_import_fields_alter(&$fields, $type){
       $fields[$ni_field_name]['group'] = 'eMonocot SPM extension';
     }
   }
+}
+
+function emonocot_taxonomy($op, $type, $vocabulary) {
+  if ($op == 'insert' && $type == 'vocabulary') {
+  	db_query("INSERT INTO {mado} (identifier, blocks) VALUES (%d, '%s')", $vocabulary['vid'], serialize(emonocot_mado_config()));
+  }
+}
+
+function emonocot_mado_config() {
+ $mado = array(
+    'view-itis_term' => array(
+            '#type' => 'view',
+            '#name' => 'itis_term',
+            '#scroll' => 1,
+            '#css' => 'mado_block',
+   ),
+
+    'view-spm' => array(
+            '#type' => 'view',
+            '#name' => 'spm',
+            '#scroll' => '1',
+            '#css' => 'mado_block_2',
+   ),
+   
+/*    [view-biblio_table] => Array
+        (
+            [#type] => view
+            [#name] => biblio_table
+            [#scroll] => 1
+            [#css] => mado_block_2
+        )
+
+    [view-image_thumbnails] => Array
+        (
+            [#type] => view
+            [#name] => image_thumbnails
+            [#scroll] => 1
+            [#css] => mado_block_2
+        )
+
+    [block-citation/0] => Array
+        (
+            [#type] => block
+            [#name] => citation/0
+            [#scroll] => 0
+            [#css] => mado_block
+        )
+*/
+    'divider' => array(
+            '#type' => 'divider',
+       ),
+  );
+  return $mado;
 }
