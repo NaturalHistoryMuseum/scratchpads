@@ -14,6 +14,15 @@ function emonocot_install(){
   emonocot_install_itis_add_fields_to_groups();
   //Add metadata to image
   emonocot_install_image_create_fields();
+
+  //Hide post info on selected node types
+  $hide_post = array('spm', 'itis_term');
+  $theme_settings = variable_get('theme_settings', array());
+  foreach ($hide_post as $hp_node) {
+    $theme_settings['toggle_node_info_' . $hp_node] = 0;
+  }
+  variable_set('theme_settings', $theme_settings);
+  
   //Modify tabs in SPM module
   $em_spm_tabs = variable_get('spm_headers', array());
   $em_spm_tabs['group_spm_em_taxonomy'] = array(
