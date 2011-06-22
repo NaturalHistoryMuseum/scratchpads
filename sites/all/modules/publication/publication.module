@@ -949,6 +949,7 @@ function publication_access_node($node, $account = FALSE){
     $account = $user;
   }
   if($account->uid == 1){return TRUE;}
+  if($node->og_public){return TRUE;}
   if($node->type == 'publication'){
     $account_subs = og_get_subscriptions($account->uid);
     $annon_subs = og_get_subscriptions(0);
