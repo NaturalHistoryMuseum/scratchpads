@@ -27,16 +27,18 @@ function emonocot_menu_alter(&$items){
 
 function emonocot_form_alter(&$form, &$form_state){
   if($form['#id'] == 'node-form' && $form['type']['#value'] == 'spm'){
-    //unset($form['#pre_render'][0]);
+    drupal_add_js(drupal_get_path('module', 'emonocot') . '/em_spm.js');
     //play with the fields and stuff them into tabs
     $em_spm_fields = emonocot_spm_field_info();
     foreach($em_spm_fields as $em_spm_field){
-      if (isset($form[$em_spm_field['group']][$em_spm_field['field_name']]) ) {
-    	$form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['group']][$em_spm_field['field_name']];
+      if(isset($form[$em_spm_field['group']][$em_spm_field['field_name']])){
+        //Shift into tabs
+        $form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['group']][$em_spm_field['field_name']];
         unset($form[$em_spm_field['group']][$em_spm_field['field_name']]);
-      } 
-      else if (isset($form[$em_spm_field['field_name']])) {
-      	$form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']] = $form[$em_spm_field['field_name']];
+        //Use wysiwyg editor
+        $form['tabs'][$em_spm_field['group']][$em_spm_field['field_name']]['format']['#parent'] = $em_spm_field['field_name'];
+      }else if(isset($form[$em_spm_field['field_name']])){
+        $form['tabs'][$em_spm_field['group']][$em_spm_field['parent_wrapper']][$em_spm_field['field_name']] = $form[$em_spm_field['field_name']];
         unset($form[$em_spm_field['field_name']]);
       }
     }
@@ -46,10 +48,6 @@ function emonocot_form_alter(&$form, &$form_state){
       unset($form[$em_spm_group['group_name']]);
     }
   }
-}
-
-function emonocot_spm_form_pre_render($form){
-  return $form;
 }
 
 function emonocot_node_page_default(){
@@ -203,18 +201,19 @@ function emonocot_spm_field_info(){
       'description' => t(''),
       'text_processing' => 1
     ),
-      array(
-        'label' => 'Taxonomic Notes Reference',
-        'field_name' => 'field_spm_em_tn_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_taxonomy',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Taxonomic Notes Reference',
+      'field_name' => 'field_spm_em_tn_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_taxonomy',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -1
+    ),
     //Misc
     array(
       'label' => 'Cultivation',
@@ -224,24 +223,25 @@ function emonocot_spm_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textarea',
       'rows' => '5',
-      'weight' => 0,
+      'weight' => -50,
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
       'text_processing' => 1
     ),
-      array(
-        'label' => 'Cultivation Reference',
-        'field_name' => 'field_spm_em_cult_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Cultivation Reference',
+      'field_name' => 'field_spm_em_cult_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -51
+    ),
     array(
       'label' => 'Phenology',
       'field_name' => 'field_spm_em_phenology',
@@ -254,20 +254,22 @@ function emonocot_spm_field_info(){
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
-      'text_processing' => 1
+      'text_processing' => 1,
+      'weight' => -40
     ),
-      array(
-        'label' => 'Phenology Reference',
-        'field_name' => 'field_spm_em_phen_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Phenology Reference',
+      'field_name' => 'field_spm_em_phen_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -41
+    ),
     array(
       'label' => 'Pollination',
       'field_name' => 'field_spm_em_pollination',
@@ -276,24 +278,25 @@ function emonocot_spm_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textarea',
       'rows' => '5',
-      'weight' => 0,
+      'weight' => -30,
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
       'text_processing' => 1
     ),
-      array(
-        'label' => 'Pollination Reference',
-        'field_name' => 'field_spm_em_poll_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Pollination Reference',
+      'field_name' => 'field_spm_em_poll_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -31
+    ),
     array(
       'label' => 'Anatomy',
       'field_name' => 'field_spm_em_anatomy',
@@ -302,24 +305,25 @@ function emonocot_spm_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textarea',
       'rows' => '5',
-      'weight' => 0,
+      'weight' => -20,
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
       'text_processing' => 1
     ),
     array(
-        'label' => 'Anatomy Reference',
-        'field_name' => 'field_spm_em_anatomy_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+      'label' => 'Anatomy Reference',
+      'field_name' => 'field_spm_em_anatomy_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -21
+    ),
     array(
       'label' => 'Cytogenetics',
       'field_name' => 'field_spm_em_cytogenetics',
@@ -328,24 +332,25 @@ function emonocot_spm_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textarea',
       'rows' => '5',
-      'weight' => 0,
+      'weight' => -10,
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
       'text_processing' => 1
     ),
-      array(
-        'label' => 'Cytogenetics Reference',
-        'field_name' => 'field_spm_em_cytog_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Cytogenetics Reference',
+      'field_name' => 'field_spm_em_cytog_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -11
+    ),
     array(
       'label' => 'Fossil Record',
       'field_name' => 'field_spm_em_fossil_record',
@@ -360,451 +365,487 @@ function emonocot_spm_field_info(){
       'description' => t(''),
       'text_processing' => 1
     ),
-      array(
-        'label' => 'Fossil Record Reference',
-        'field_name' => 'field_spm_em_fossil_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'group_spm_em_misc',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      
-      array(
-        'label' => 'General Description Reference',
-        'field_name' => 'field_spm_em_gd_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Overview',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Biology Reference',
-        'field_name' => 'field_spm_em_bio_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Overview',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Conservation Status Reference',
-        'field_name' => 'field_spm_em_cs_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Legislation Reference',
-        'field_name' => 'field_spm_em_leg_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Management Reference',
-        'field_name' => 'field_spm_em_manage_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Procedures Reference',
-        'field_name' => 'field_spm_em_proc_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Threats Reference',
-        'field_name' => 'field_spm_em_threats_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Trends Reference',
-        'field_name' => 'field_spm_em_trends_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Conservation',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Behaviour Reference',
-        'field_name' => 'field_spm_beha_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Cytology Reference',
-        'field_name' => 'field_spm_cytol_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Diagnostic Description Reference',
-        'field_name' => 'field_spm_dd_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Genetics Reference',
-        'field_name' => 'field_spm_genetics_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Groeth Reference',
-        'field_name' => 'field_spm_growth_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Look Alikes Reference',
-        'field_name' => 'field_spm_la_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Molecular Biology Reference',
-        'field_name' => 'field_spm_mb_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'RMorphology Reference',
-        'field_name' => 'field_spm_morph_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Physiology Reference',
-        'field_name' => 'field_spm_phys_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Size Reference',
-        'field_name' => 'field_spm_size_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Taxon Biology Reference',
-        'field_name' => 'field_spm_tb_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Description',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Associations Reference',
-        'field_name' => 'field_spm_assoc_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Cyclicity)',
-        'field_name' => 'field_spm_cyclicity_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Dispersal)',
-        'field_name' => 'field_spm_dispersal_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Distribution)',
-        'field_name' => 'field_spm_distribution_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (EcologyandDistribution)',
-        'field_name' => 'field_spm_ecology_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Habitat)',
-        'field_name' => 'field_spm_habitat_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Life Cycle)',
-        'field_name' => 'field_spm_lc_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Life Expectancy)',
-        'field_name' => 'field_spm_le_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Migration)',
-        'field_name' => 'field_spm_migration_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Trophic Startegy)',
-        'field_name' => 'field_spm_ts_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Population Biology)',
-        'field_name' => 'field_spm_popbio_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Reproduction)',
-        'field_name' => 'field_spm_repro_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EcologyandDistribution',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Evolution)',
-        'field_name' => 'field_spm_evo_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EvolutionandSystematics',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Phylogeny)',
-        'field_name' => 'field_spm_phylo_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'EvolutionandSystematics',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Diseases)',
-        'field_name' => 'field_spm_diseases_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Relevance',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Risk Statement)',
-        'field_name' => 'field_spm_rs_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Relevance',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
-      array(
-        'label' => 'Reference (Uses)',
-        'field_name' => 'field_spm_uses_ref',
-        'type_name' => 'spm',
-        'type' => 'nodereference',
-        'widget_type' => 'nodereference_select',
-        'description' => '',
-        'group' => 'Relevance',
-        'advanced_view' => 'biblio_nodes',
-        'module' => 'nodereference',
-        'widget_module' => 'nodereference'
-      ),
+    array(
+      'label' => 'Fossil Record Reference',
+      'field_name' => 'field_spm_em_fossil_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'group_spm_em_misc',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'weight' => -1
+    ),
+    array(
+      'label' => 'General Description Reference',
+      'field_name' => 'field_spm_em_gd_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Overview',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'GeneralDescription_wrapper'
+    ),
+    array(
+      'label' => 'Biology Reference',
+      'field_name' => 'field_spm_em_bio_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Overview',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Biology_wrapper'
+    ),
+    array(
+      'label' => 'Conservation Status Reference',
+      'field_name' => 'field_spm_em_cs_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'ConservationStatus_wrapper'
+    ),
+    array(
+      'label' => 'Legislation Reference',
+      'field_name' => 'field_spm_em_leg_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Legislation_wrapper'
+    ),
+    array(
+      'label' => 'Management Reference',
+      'field_name' => 'field_spm_em_manage_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Management_wrapper'
+    ),
+    array(
+      'label' => 'Procedures Reference',
+      'field_name' => 'field_spm_em_proc_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Procedures_wrapper'
+    ),
+    array(
+      'label' => 'Threats Reference',
+      'field_name' => 'field_spm_em_threats_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Threats_wrapper'
+    ),
+    array(
+      'label' => 'Trends Reference',
+      'field_name' => 'field_spm_em_trends_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Conservation',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Trends_wrapper'
+    ),
+    array(
+      'label' => 'Behaviour Reference',
+      'field_name' => 'field_spm_beha_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Behaviour_wrapper'
+    ),
+    array(
+      'label' => 'Cytology Reference',
+      'field_name' => 'field_spm_cytol_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Cytology_wrapper'
+    ),
+    array(
+      'label' => 'Diagnostic Description Reference',
+      'field_name' => 'field_spm_dd_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'DiagnosticDescription_wrapper'
+    ),
+    array(
+      'label' => 'Genetics Reference',
+      'field_name' => 'field_spm_genetics_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Genetics_wrapper'
+    ),
+    array(
+      'label' => 'Groeth Reference',
+      'field_name' => 'field_spm_growth_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Growth_wrapper'
+    ),
+    array(
+      'label' => 'Look Alikes Reference',
+      'field_name' => 'field_spm_la_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'LookAlikes_wrapper'
+    ),
+    array(
+      'label' => 'Molecular Biology Reference',
+      'field_name' => 'field_spm_mb_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'MolecularBiology_wrapper'
+    ),
+    array(
+      'label' => 'Morphology Reference',
+      'field_name' => 'field_spm_morph_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Morphology_wrapper'
+    ),
+    array(
+      'label' => 'Physiology Reference',
+      'field_name' => 'field_spm_phys_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Physiology_wrapper'
+    ),
+    array(
+      'label' => 'Size Reference',
+      'field_name' => 'field_spm_size_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Size_wrapper'
+    ),
+    array(
+      'label' => 'Taxon Biology Reference',
+      'field_name' => 'field_spm_tb_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Description',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'TaxonBiology_wrapper'
+    ),
+    array(
+      'label' => 'Associations Reference',
+      'field_name' => 'field_spm_assoc_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Associations_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Cyclicity)',
+      'field_name' => 'field_spm_cyclicity_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Cyclicity_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Dispersal)',
+      'field_name' => 'field_spm_dispersal_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Dispersal_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Distribution)',
+      'field_name' => 'field_spm_distribution_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Distribution_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Ecology)',
+      'field_name' => 'field_spm_ecology_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Ecology_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Habitat)',
+      'field_name' => 'field_spm_habitat_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Habitat_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Life Cycle)',
+      'field_name' => 'field_spm_lc_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'LifeCycle_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Life Expectancy)',
+      'field_name' => 'field_spm_le_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'LifeExpectancy_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Migration)',
+      'field_name' => 'field_spm_migration_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Migration_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Trophic Startegy)',
+      'field_name' => 'field_spm_ts_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'TrophicStrategy_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Population Biology)',
+      'field_name' => 'field_spm_popbio_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'PopulationBiology_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Reproduction)',
+      'field_name' => 'field_spm_repro_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EcologyandDistribution',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Reproduction_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Evolution)',
+      'field_name' => 'field_spm_evo_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EvolutionandSystematics',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Evolution_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Phylogeny)',
+      'field_name' => 'field_spm_phylo_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'EvolutionandSystematics',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Phylogeny_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Diseases)',
+      'field_name' => 'field_spm_diseases_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Relevance',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Diseases_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Risk Statement)',
+      'field_name' => 'field_spm_rs_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Relevance',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'RiskStatement_wrapper'
+    ),
+    array(
+      'label' => 'Reference (Uses)',
+      'field_name' => 'field_spm_uses_ref',
+      'type_name' => 'spm',
+      'type' => 'nodereference',
+      'widget_type' => 'nodereference_select',
+      'description' => '',
+      'group' => 'Relevance',
+      'advanced_view' => 'biblio_nodes',
+      'module' => 'nodereference',
+      'widget_module' => 'nodereference',
+      'parent_wrapper' => 'Uses_wrapper'
+    )
   );
 }
 
@@ -1016,27 +1057,26 @@ function emonocot_node_import_fields_alter(&$fields, $type){
   }
 }
 
-function emonocot_taxonomy($op, $type, $vocabulary) {
-  if ($op == 'insert' && $type == 'vocabulary') {
-  	db_query("INSERT INTO {mado} (identifier, blocks) VALUES (%d, '%s')", $vocabulary['vid'], serialize(emonocot_mado_config()));
+function emonocot_taxonomy($op, $type, $vocabulary){
+  if($op == 'insert' && $type == 'vocabulary'){
+    db_query("INSERT INTO {mado} (identifier, blocks) VALUES (%d, '%s')", $vocabulary['vid'], serialize(emonocot_mado_config()));
   }
 }
 
-function emonocot_mado_config() {
- $mado = array(
+function emonocot_mado_config(){
+  $mado = array(
     'view-itis_term' => array(
-            '#type' => 'view',
-            '#name' => 'itis_term',
-            '#scroll' => 1,
-            '#css' => 'mado_block',
-   ),
-
+      '#type' => 'view',
+      '#name' => 'itis_term',
+      '#scroll' => 1,
+      '#css' => 'mado_block'
+    ),
     'view-spm' => array(
-            '#type' => 'view',
-            '#name' => 'spm',
-            '#scroll' => '1',
-            '#css' => 'mado_block_2',
-   ),
+      '#type' => 'view',
+      '#name' => 'spm',
+      '#scroll' => '1',
+      '#css' => 'mado_block_2'
+    ),
    
 /*    [view-biblio_table] => Array
         (
@@ -1063,8 +1103,8 @@ function emonocot_mado_config() {
         )
 */
     'divider' => array(
-            '#type' => 'divider',
-       ),
+      '#type' => 'divider'
+    )
   );
   return $mado;
 }
