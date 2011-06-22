@@ -5,14 +5,19 @@ function emonocot_profile_set_blocks(){
   db_query("DELETE FROM {blocks} WHERE module = 'search' AND delta = 0");
   db_query("DELETE FROM {blocks} WHERE module = 'system' AND delta = 0");
   foreach(list_themes() as $theme){
-    //Changed for eMonocot profile
+    // Below here changed for eMonocot profile
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 1", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight,title) VALUES ('scratchpadify',1,'%s','left',1,-10,'Common Tasks')", $theme->name);
+    //About eMonocot Block
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'emonocot' AND delta = 0", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('emonocot',0,'%s','left',1,20)", $theme->name);
+    //eMonocot task guide
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'emonocot' AND delta = 1", $theme->name);
+    db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('emonocot',1,'%s','left',1,-23)", $theme->name);
+    //
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'user' AND delta = 1", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('user', 1, '%s', 'left',1,-11)", $theme->name);
-    //Not changed for eMonocot profile
+    //Below here not changed for eMonocot profile
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 4", $theme->name);
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status) VALUES ('scratchpadify',4,'%s','header',1)", $theme->name);
     db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'search' AND delta = 0", $theme->name);

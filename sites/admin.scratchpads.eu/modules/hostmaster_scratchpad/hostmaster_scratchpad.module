@@ -54,16 +54,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   if(isset($user->roles[ADMIN_RID])){
     // Add a warning that this can not be edited, and that new sites Scratchpads
     // should be created from the signup form.
-    if(arg(1) != 'add'){
-      $form['warning'] = array(
-        '#value' => '<div class="message warning" style="margin:5px 0;"><p style="padding:0;margin:0"><strong>' . t('Warning') . ':</strong> ' . t('It is not possible to edit a site once it has been created.') . '</p></div>',
-        '#weight' => -1000
-      );
-      $form['#validate'] = array(
-        'hostmaster_scratchpad_validate_fail'
-      );
-      unset($form['submit']);
-    }else{
+    if(arg(1) == 'add'){
       // We're adding a site, warn that we shouldn't add Scratchpads from here.
       $form['warning'] = array(
         '#value' => '<div class="message warning" style="margin:5px 0;"><p style="padding:0;margin:0"><strong>' . t('Warning') . ':</strong> ' . t('Scratchpads should be created using the signup form ONLY') . '</p></div>',

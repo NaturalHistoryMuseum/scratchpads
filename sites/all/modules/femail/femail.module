@@ -351,6 +351,11 @@ function femail_comment($comment, $op){
  */
 function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
   if(($op == 'insert' || $op == 'update') && $node->type == 'forum' && $node->status){
+    // First, if this is an insert, we need to ensure the grants have been 
+    // saved, as they are required.
+    if($op == 'insert'){
+      node_access_acquire_grants($node);
+    }
     // We've added/updated a forum post, lets mail it out
     // First, we'll get the forum that this has been posted to.
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
