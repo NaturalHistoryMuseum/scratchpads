@@ -38,7 +38,8 @@ function migrate_image_to_imagefield($field_name = 'field_imagefield'){
   drupal_clear_css_cache();
   drupal_clear_js_cache();
   // Need to manually call init, as it isn't called when a module is installed.
-  imagefield_init();
+  // Looks like imagefield_init has been removed.
+  //imagefield_init();
   filefield_init();
   // We'll get the current sizes that are being used by the image module.  If 
   // all the names match ones being provided by other modules, then we happy, 
