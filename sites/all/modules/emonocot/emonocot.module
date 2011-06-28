@@ -161,7 +161,7 @@ function emonocot_taskguide(){
 <div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/taxonomy.png" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
-      <h2>Taxonomy</h2><p>Add a ' . l('biological taxonomy', 'admin/content/taxonomy/add/vocabulary') . ' (vocabulary), and then ' . l('import a classification', 'admin/content/taxonomy/classification/import') . ' into your new vocabulary. The classification is the backbone of your site and allows you to aggregate species pages with information from the web and information you have uploaded into your site. With a taxonomy you can automatically integrate and navigate content across your site.</p>
+      <h2>Taxonomy</h2><p>Add a ' . l('biological taxonomy', 'admin/content/taxonomy/add/vocabulary') . ' (vocabulary), and then ' . l('import a classification', 'admin/content/taxonomy/import') . ' into your new vocabulary. The classification is the backbone of your site and allows you to aggregate species pages with information from the web and information you have uploaded into your site. With a taxonomy you can automatically integrate and navigate content across your site.</p>
     </div>
   </div>
     <div>
@@ -959,7 +959,7 @@ function emonocot_block_task_list(){
   $items['bio_taxonomy']['status'] = FALSE;
   $items['bio_taxonomy']['parent_complete'] = TRUE;
   $items['bio_taxonomy']['description'] = 'Add a Biological Classification';
-  $items['bio_taxonomy']['help_link'] = l($items['bio_taxonomy']['description'], '/help/scratchpadify_help/Add-a-vocabulary');
+  $items['bio_taxonomy']['help_link'] = l($items['bio_taxonomy']['description'], 'help/scratchpadify_help/Add-a-vocabulary');
   foreach(variable_get('term_node_vocabularies-contenttypes', array()) as $term_node){
     if($term_node == 'itis_term'){
       $items['bio_taxonomy']['status'] = TRUE;

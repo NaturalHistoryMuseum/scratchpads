@@ -44,12 +44,6 @@ function emonocot_profile_profile_modules(){
     'nexus',
     'tree',
     'publication',
-    'beautytips',
-    'slickgrid',
-    'views_batch_page',
-    'ajax_load',
-    'editor_views',
-    'scratchpad_slickgrid'
   );
   $emonocot_modules = array();
   $scratchpad_modules = scratchpad_profile_profile_modules();
