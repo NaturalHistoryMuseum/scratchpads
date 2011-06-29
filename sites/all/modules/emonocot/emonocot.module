@@ -23,6 +23,36 @@ function emonocot_menu_alter(&$items){
     ),
     'type' => MENU_CALLBACK
   );
+  
+ //Stop people plyaying with the theme.
+ $items['admin/settings/admin'] = array(
+    'access arguments' => array('eMonocot Admin'),
+
+  );
+  // Themes:
+  $items['admin/build/themes'] = array(
+    'access arguments' => array('eMonocot Admin'),
+  );
+  $items['admin/build/themes/select'] = array(
+    'access arguments' => array('eMonocot Admin'),
+  );
+  $items['admin/build/themes/settings'] = array(
+    'access arguments' => array('eMonocot Admin'),
+  );
+  // Theme configuration subtabs
+  $items['admin/build/themes/settings/global'] = array(
+    'access arguments' => array('eMonocot Admin'),
+  );
+
+  foreach (list_themes() as $theme) {
+    $items['admin/build/themes/settings/'. $theme->name] = array(
+      'title' => $theme->info['name'],
+      'page arguments' => array('system_theme_settings', $theme->name),
+      'type' => MENU_LOCAL_TASK,
+      'access callback' => '_system_themes_access',
+      'access arguments' => array($theme),
+    );
+  }
 }
 
 function emonocot_form_alter(&$form, &$form_state){
@@ -535,7 +565,7 @@ function emonocot_spm_field_info(){
       'parent_wrapper' => 'Genetics_wrapper'
     ),
     array(
-      'label' => 'Groeth Reference',
+      'label' => 'Growth Reference',
       'field_name' => 'field_spm_growth_ref',
       'type_name' => 'spm',
       'type' => 'nodereference',
@@ -851,7 +881,7 @@ function emonocot_spm_field_info(){
 
 function emonocot_itis_field_info(){
   return array(
-    array(
+  /*  array(
       'label' => 'Taxonomic Notes',
       'field_name' => 'field_itis_em_taxonomic_notes',
       'type_name' => 'itis_term',
@@ -864,7 +894,7 @@ function emonocot_itis_field_info(){
       'locked' => 0,
       'description' => t(''),
       'text_processing' => 1
-    ),
+    ),*/
     array(
       'label' => 'Etymology',
       'field_name' => 'field_itis_em_etymology',
@@ -890,7 +920,7 @@ function emonocot_itis_field_info(){
       'required' => 0,
       'locked' => 0,
       'description' => t('URL of reference in BHL or other online repository'),
-      'text_processing' => 0
+      'text_processing' => 1
     )
   );
 }
@@ -935,13 +965,13 @@ function emonocot_spm_group_info(){
 
 function emonocot_itis_group_info(){
   return array(
-    array(
+    /*array(
       'label' => 'Notes',
       'weight' => 10,
       'group_type' => 'standard',
       'group_name' => 'group_itis_em_notes',
       'type_name' => 'itis_term'
-    ),
+    ),*/
     array(
       'label' => 'Etymology',
       'weight' => 10,
@@ -1069,13 +1099,13 @@ function emonocot_mado_config(){
       '#type' => 'view',
       '#name' => 'itis_term',
       '#scroll' => 1,
-      '#css' => 'mado_block'
+      '#css' => 'mado_block',
     ),
     'view-spm' => array(
       '#type' => 'view',
       '#name' => 'spm',
       '#scroll' => '1',
-      '#css' => 'mado_block_2'
+      '#css' => 'mado_block',
     ),
    
 /*    [view-biblio_table] => Array
