@@ -44,12 +44,6 @@ function emonocot_profile_profile_modules(){
     'nexus',
     'tree',
     'publication',
-    'beautytips',
-    'slickgrid',
-    'views_batch_page',
-    'ajax_load',
-    'editor_views',
-    'scratchpad_slickgrid'
   );
   $emonocot_modules = array();
   $scratchpad_modules = scratchpad_profile_profile_modules();
@@ -85,6 +79,7 @@ function emonocot_profile_profile_tasks_2(){
   scratchpad_profile_set_settings();
   emonocot_profile_set_conditions();
   scratchpad_profile_set_issue_feed('eMonocot Scratchpads Issue Queue', 'http://dev.scratchpads.eu/project/issues/rss/emonocot');
+  variable_set('remote_issue_tab_redirect_path', 'project/issues/emonocot');
   scratchpad_profile_profile_set_perms();
   emonocot_profile_set_blocks();
   emonocot_profile_tweak_menu();
