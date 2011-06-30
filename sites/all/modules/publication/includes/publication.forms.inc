@@ -364,8 +364,8 @@ function publication_form_alter(&$form, $form_state, $form_id){
       $view = $form['#parameters'][1]['view'];
       if($view->name == _publication_get_nodereference_view_name()){
       	// Bug fix - turn off js aggregation
-//        global $conf;
-//        $conf['preprocess_js'] = 0;
+        global $conf;
+        $conf['preprocess_js'] = 0;
         // Ensure these values are available when user submits filter form
         $form['vocabulary'] = array(
           '#type' => 'hidden',
