@@ -232,15 +232,19 @@
             }
             
              this.ajaxSuccess = function(args) {
+              
 
-              scope.buildForm(args[0]);
+                scope.buildForm(args[0]);
+              
+              
       
              }
              
              this.buildForm = function(response){
 
-               if(response.error){
+               if(response['error']){
                  scope.cancel();
+                 return;
                }  
                
                $form = $(response.data.content);

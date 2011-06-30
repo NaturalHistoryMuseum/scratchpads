@@ -749,7 +749,7 @@ var dataView;
             }
             // Were there any errors?
             if(response.errors){  
-
+              
               response.error = true;
 
               $.each(response.errors, function(nid, errorMessage) { 
