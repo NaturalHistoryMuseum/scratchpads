@@ -240,7 +240,7 @@ function publication_form_alter(&$form, $form_state, $form_id){
       unset($form['buttons']['preview']);
       break;
     case 'content_add_more_js': // Callback when new items are added to the form
-    	$_POST['selectedItems'] = explode(',', $_POST['selectedItems']);
+      $_POST['selectedItems'] = explode(',', $_POST['selectedItems']);
       $field_name = arg(4);
       $field = publication_get_field_info($field_name);
       publication_field_publication_nodereference_alter($form[$field_name], $field, $_POST['publication_nid'], $form_id);
@@ -363,6 +363,9 @@ function publication_form_alter(&$form, $form_state, $form_id){
     case 'views_exposed_form':
       $view = $form['#parameters'][1]['view'];
       if($view->name == _publication_get_nodereference_view_name()){
+      	// Bug fix - turn off js aggregation
+        global $conf;
+        $conf['preprocess_js'] = 0;
         // Ensure these values are available when user submits filter form
         $form['vocabulary'] = array(
           '#type' => 'hidden',
@@ -545,10 +548,10 @@ function publication_field_nodereference_after_build(&$element, &$form){
     if($element[$key]['#type'] == 'nodereference_autocomplete'){
       // Don't show rows with nothing selected - add class to hide them
       if($element['#form_id'] == 'content_add_more_js'){
-      	if(!$_POST['selectedItems'][$key]){
-      		        // If this is being added via nodereference, add hide class if key is greater than the number selected
-        $element[$key]['#attributes']['class'] = 'publication-empty-node-ref';
-      	}
+        if(!$_POST['selectedItems'][$key]){
+          // If this is being added via nodereference, add hide class if key is greater than the number selected
+          $element[$key]['#attributes']['class'] = 'publication-empty-node-ref';
+        }
       }elseif(!$element[$key]['#default_value']['nid']){ // Node is loading so we have access to default values
         $element[$key]['#attributes']['class'] = 'publication-empty-node-ref';
       }

@@ -54,20 +54,26 @@ function slickgrid_callback_update(){
     $form_state['values']['op'] = t('Save');
     $form_state['submitted'] = true;
     $node = node_load($nid);
-    // Get the vid before it is updated
-    $revision_vid = $node->vid;
-    $form_id = $node->type . '_node_form';
-    // Execute the node form
-    drupal_execute($form_id, $form_state, $node);
-    // Has there been an error?
-    if($err = form_get_errors()){
-      $errors[$nid] = $err;
+    if(node_access('update', $node)){
+      // Get the vid before it is updated
+      $revision_vid = $node->vid;
+      $form_id = $node->type . '_node_form';
+      // Execute the node form
+      drupal_execute($form_id, $form_state, $node);
+      // Has there been an error?
+      if($err = form_get_errors()){
+        $errors[$nid] = $err;
+      }else{
+        // If not, mark it as updated nids
+        $updated_nodes[$nid] = array(
+          'vid' => $revision_vid,
+          'value' => ($_POST['reload_from_view'] ? '' : $_POST[$field_name]) // If not being reloaded from the view, populate the value  
+        );
+      }
     }else{
-      // If not, mark it as updated nids
-      $updated_nodes[$nid] = array(
-        'vid' => $revision_vid,
-        'value' => ($_POST['reload_from_view'] ? '' : $_POST[$field_name]) // If not being reloaded from the view, populate the value  
-      );
+      $errors[$nid] = t('You do not have access to edit @node', array(
+        '@node' => $node->title
+      ));
     }
   }
   // If we want to reload the value from the view, get it now
@@ -161,16 +167,20 @@ function slickgrid_callback_log(){
 function slickgrid_callback_get_form(){
   module_load_include('inc', 'node', 'node.pages');
   $node = node_load($_POST['nid']);
-  $html = drupal_get_form($node->type . '_node_form', $node);
-  $data = new stdClass();
-  $data->content = $html;
-  // Register the JavaScript callback for this module.
-  $data->__callbacks = array();
-  // Allow other modules to extend the data returned.
-  drupal_alter('ajax_data', $data, 'slickgrid', $html);
-  return array(
-    'data' => $data
-  );
+  if(node_access('update', $node)){
+    $html = drupal_get_form($node->type . '_node_form', $node);
+    $data = new stdClass();
+    $data->content = $html;
+    // Register the JavaScript callback for this module.
+    $data->__callbacks = array();
+    // Allow other modules to extend the data returned.
+    drupal_alter('ajax_data', $data, 'slickgrid', $html);
+    return array(
+      'data' => $data
+    );
+  }else{
+		drupal_set_message(t("You do not have access to edit @title", array('@title' => $node->title)), 'error');
+  }
 }
 
 /**

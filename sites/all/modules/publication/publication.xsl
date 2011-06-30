@@ -60,7 +60,6 @@
     <div class="section">
       <xsl:apply-templates/>
       <xsl:apply-templates select="taxon-treatment"/>
-      <xsl:apply-templates select="sec"/>
     </div>
   </xsl:template>
   
