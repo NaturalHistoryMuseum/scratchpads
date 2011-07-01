@@ -128,7 +128,6 @@ function nexus_import_form_upload_validate(&$form, &$form_state){
   );
   // Save new file uploads.
   if($file = file_save_upload('import_file', $validators, FALSE, FALSE)){
-  	dd($file);
     $file->list = variable_get('upload_list_default', 1);
     $file->description = $file->filename;
     $file->weight = 0;
