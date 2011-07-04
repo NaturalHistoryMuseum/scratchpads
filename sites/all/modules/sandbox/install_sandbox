@@ -23,7 +23,7 @@ FIREFOX_PID=$!
 SANDBOX_INSTALLED=1
 until [ $SANDBOX_INSTALLED -lt 1 ]
 do
-        QUERY_OUTPUT=`echo "SELECT * FROM variable WHERE name = 'classification_scratchpads'" 2>/dev/null | mymysql sandboxscratchpadseu | tail -n1`
+        QUERY_OUTPUT=`echo "SELECT * FROM variable WHERE name = 'classification_scratchpads'" | mymysql sandboxscratchpadseu 2>/dev/null | tail -n1`
         if [ -n "$QUERY_OUTPUT" ]
         then
                 echo "Sandbox not installed"
