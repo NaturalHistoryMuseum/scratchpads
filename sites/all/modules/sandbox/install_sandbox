@@ -23,18 +23,17 @@ FIREFOX_PID=$!
 SANDBOX_INSTALLED=1
 until [ $SANDBOX_INSTALLED -lt 1 ]
 do
+        sleep 3
         QUERY_OUTPUT=`echo "SELECT * FROM variable WHERE name = 'classification_scratchpads'" | mymysql sandboxscratchpadseu 2>/dev/null | tail -n1`
         if [ -n "$QUERY_OUTPUT" ]
         then
-                echo "Sandbox not installed"
                 SANDBOX_INSTALLED=0
         fi
-        sleep 3
 done
 # Finally, really make sure we really have finished, by waiting a further 30
 # seconds.
 sleep 30
-kill -9 $FIREFOX_PID $XVFB_PID &>/dev/null
+kill -9 $FIREFOX_PID $XVFB_PID 2>/dev/null >/dev/null
 
 # Hide sandbox.html
 mv /var/lib/drupal6/all/modules/sandbox/sandbox.html /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden
