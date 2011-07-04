@@ -17,7 +17,23 @@ Xvfb :3 -screen 0 800x600x16 -fbdir /tmp -nolisten inet6 &>/dev/null &
 XVFB_PID=$!
 DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox_profile &>/dev/null &
 FIREFOX_PID=$!
-sleep 300
+
+# Check every 3 seconds to see if we have finished
+#!/bin/bash
+SANDBOX_INSTALLED=1
+until [ $SANDBOX_INSTALLED -lt 1 ]
+do
+        QUERY_OUTPUT=`echo "SELECT * FROM variable WHERE name = 'classification_scratchpads'" | mymysql sandboxscratchpadseu | tail -n1`
+        if [ -n "$QUERY_OUTPUT" ]
+        then
+                echo "Sandbox not installed"
+                SANDBOX_INSTALLED=0
+        fi
+        sleep 3
+done
+# Finally, really make sure we really have finished, by waiting a further 30
+# seconds.
+sleep 30
 kill -9 $FIREFOX_PID $XVFB_PID &>/dev/null
 
 # Hide sandbox.html
