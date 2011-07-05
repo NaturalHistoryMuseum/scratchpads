@@ -1661,5 +1661,8 @@ function sandbox_profile_profile_tasks(&$task, $url){
     // Finally, truncate the authmap table to ensure we can't login as the admin
     // user
     db_query('TRUNCATE {authmap}');
+    
+    // Finally finally, we create a file to mark this sandbox as "installed".
+    file_put_contents(file_directory_path().'/sandbox_installed', 'INSTALLED');
   }
 }
