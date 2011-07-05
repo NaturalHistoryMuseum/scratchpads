@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Update the Sandbox
-# Simply comment out the following lines (like this one) to
-# stop the sandbox wipe process.
+# Move the sandbox.html file into place
+mv /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden /var/lib/drupal6/all/modules/sandbox/sandbox.html
 
 # Delete ALL the files from the sandbox dir
 rm -rf /var/lib/drupal6/sandbox.scratchpads.eu/files/*
 
-# Move the sandbox.html file into place
-mv /var/lib/drupal6/all/modules/sandbox/sandbox.html.hidden /var/lib/drupal6/all/modules/sandbox/sandbox.html
-
 # Recreate the database.
 echo "DROP DATABASE sandboxscratchpadseu; CREATE DATABASE sandboxscratchpadseu;" | mysql -uroot_with_drop -pOecey9cheehiphohngeiwi8lahH1ohNi
 
+# Install via Firefox
 Xvfb :3 -screen 0 800x600x16 -fbdir /tmp -nolisten inet6 2>/dev/null >/dev/null &
 XVFB_PID=$!
 DISPLAY=:3.0 firefox http://sandbox.scratchpads.eu/install.php?profile=sandbox_profile 2>/dev/null >/dev/null &
