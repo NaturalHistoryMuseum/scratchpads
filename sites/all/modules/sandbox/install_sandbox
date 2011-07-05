@@ -24,8 +24,7 @@ SANDBOX_INSTALLED=1
 until [ $SANDBOX_INSTALLED -lt 1 ]
 do
         sleep 3
-        QUERY_OUTPUT=`echo "SELECT * FROM variable WHERE name = 'classification_scratchpads'" | mymysql sandboxscratchpadseu 2>/dev/null | tail -n1`
-        if [ -n "$QUERY_OUTPUT" ]
+        if [ -e /var/lib/drupal6/sandbox.scratchpads.eu/files/sandbox_installed ]
         then
                 SANDBOX_INSTALLED=0
         fi
