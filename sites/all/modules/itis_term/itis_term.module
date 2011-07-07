@@ -106,7 +106,7 @@ function itis_term_form_alter(&$form, &$form_state, $form_id){
  *
  */
 function itis_term_form_taxonomy_form_vocabulary_alter(&$form, &$form_state){
-  $classification_type = 0;
+  /*$classification_type = 0;
   if(isset($form['vid']['#value']) && $form['vid']['#value']){
     $classification_types = variable_get('itis_term_classification_types', array());
     if(isset($classification_types[$form['vid']['#value']])){
@@ -119,7 +119,7 @@ function itis_term_form_taxonomy_form_vocabulary_alter(&$form, &$form_state){
     '#title' => t('Classification type'),
     '#description' => t('If this vocabulary is to be used to store a biological classification, then please select which kingdom best represents your classification (and therefore the nomenclatural code to use)'),
     '#default_value' => $classification_type
-  );
+  );*/
 }
 
 function itis_term_validate($form, &$form_state){
