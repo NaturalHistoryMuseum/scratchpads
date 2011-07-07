@@ -85,6 +85,10 @@ function scratchpad_do_openid_login($uid){
     if(function_exists('boost_init')){
       boost_init();
     }
+    watchdog('logins', '"@openid" logged in as "@user"', array(
+      '@openid' => $result['openid.claimed_id'],
+      '@user' => $user->name
+    ));
     drupal_goto();
   }else{
     watchdog('logins', print_r($result, 1));
