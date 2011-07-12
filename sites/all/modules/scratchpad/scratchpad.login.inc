@@ -7,7 +7,7 @@ function scratchpad_admin_openids(){
     'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
     'http://vbrant.eu/user/58/identity' => 'Irina Brake (http://vbrant.eu/user/58/identity)',
-    'http://www.google.com/profiles/laurence.livermore' => 'Laurence Livermore (http://www.google.com/profiles/laurence.livermore)',
+    'http://laurencelivermore.myopenid.com/' => 'Laurence Livermore (http://laurencelivermore.myopenid.com/)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
     'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
   );
