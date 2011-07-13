@@ -18,11 +18,15 @@ function scratchpad_logins(){
   $roles = user_roles();
   unset($roles[1]);
   unset($roles[2]);
-  $users = array(
-    'Scratchpad Team' => array(
-      1 => 'Scratchpad Team [1]'
-    )
-  );
+  if(variable_get('scratchpad_logins_uid_1', TRUE)){
+    $users = array(
+      'Scratchpad Team' => array(
+        1 => 'Scratchpad Team [1]'
+      )
+    );
+  }else{
+    $users = array();
+  }
   while($row = db_fetch_array($result)){
     $users[$roles[$row['rid']]][$row['uid']] = $row['name'] . " [" . $row['uid'] . "]";
   }
