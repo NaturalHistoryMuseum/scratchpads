@@ -77,7 +77,7 @@ function devscratchpadseu_form_alter(&$form, &$form_state, $form_id){
       '#value' => '<h1>Direct login to this site has been disabled, please login by clicking on "Search for/Report an issue" from the Issues tab on your Scratchpad.</h1>'
     );
   }
-  if(!isset($user->roles[5])){
+  if(!isset($user->roles[6])){
     if($form_id == 'project_issue_node_form'){
       unset($form['issue_info']['category']['#options']['task']);
       $form['project_info']['rid']['#value'] = 48;
