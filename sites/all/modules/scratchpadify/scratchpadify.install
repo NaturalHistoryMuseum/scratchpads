@@ -407,6 +407,7 @@ function scratchpadify_install_modules($modules){
  * 6185: *
  * 6186: Enable Apache solr
  * 6187: Disable porterstemmer module
+ * 6188: Remove "administer nodes" from Editor role.
  * 
  * * Updates removed as later updates render them unnecessary.
  */
@@ -1797,5 +1798,15 @@ function scratchpadify_update_6187(){
       '!modules' => implode(", ", $uninstall_modules)
     ))
   );
+  return $ret;
+}
+
+/**
+ * Remove administer nodes from editor role
+ */
+function scratchpadify_update_6188(){
+  $ret = array();
+  $ret[] = update_sql("UPDATE permission SET perm = REPLACE(perm, 'administer nodes, ', '') WHERE rid = 4");
+  $ret[] = update_sql("UPDATE permission SET perm = REPLACE(perm, 'administer nodes', '') WHERE rid = 4");
   return $ret;
 }
