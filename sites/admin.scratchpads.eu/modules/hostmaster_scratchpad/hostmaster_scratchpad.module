@@ -435,9 +435,9 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   // Set the weight of the button
   $form['submit']['#weight'] = 1000;
   // Add validate
-  $form['#validate'] = array_merge((is_array($form['#validate']) ? $form['#validate'] : array()), array(
+  $form['#validate'] = array(
     'hostmaster_scratchpad_form_validate'
-  ));
+  );
   // Add submit (needs to be first)
   $form['#submit'] = array_merge(array(
     'hostmaster_scratchpad_form_submit'
@@ -448,6 +448,16 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
  * Validate function for the above form
  */
 function hostmaster_scratchpad_form_validate($form, &$form_state){
+  // Add the validation back from hosting_signup_form_validate.
+  // Note, we don't validate the client as we're happy for the same person to 
+  // signup for a site twice. 
+  /*$client = (object) $form_state['values'];
+  $client->type = 'client';
+  $client->title = $client->client_name;
+  node_validate($client);*/
+  $site = (object) $form_state['values'];
+  $site->type = 'site';
+  node_validate($site);
   // Only validate if we are trying to create a Scratchpad
   if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_PROFILE_NID){
     // Next check the Google Map API key is the correct length (or roughly)
@@ -488,6 +498,15 @@ function hostmaster_scratchpad_form_submit($form, &$form_state){
  * Implementation of hook_insert
  */
 function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  // If we're saving a new client, ensure that we don't already have this client
+  // If we do, we load it.
+  if($node->type == 'client'){
+    switch($op){
+      case 'presave':
+        print_r($node);
+        break;
+    }
+  }
   // Only do this if the profile is a Scratchpad one (1 or 2)
   if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
     switch($op){
@@ -497,8 +516,22 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
       case 'delete revision':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE vid = %d', $node->nid, $node->vid);
         break;
+      case 'presave':
+        $client = hosting_get_client($node->client_name);
+        if($client){
+          hosting_client_user_form_submit();
+          $node->new_client = FALSE;
+          $node->uid = $client->uid;
+          $node->client = $client->nid;
+          unset($node->client_name);
+          unset($node->client_title);
+          unset($node->email);
+          unset($node->email_confirm);
+        }
+        break;
       case 'insert':
       case 'update':
+        $node->uid = 1;
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE vid = %d', $node->nid, $node->vid);
         db_query("INSERT INTO {hostmaster_scratchpad} (nid, vid, client_title, institution, country, site_title, taxonomic_scope, googleapi, clustrmaphtml, mission_statement, comments) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", array(
           $node->nid,
@@ -606,7 +639,6 @@ function hostmaster_scratchpad_theme(){
  * Theme for the above form
  */
 function theme_hostmaster_scratchpad_application_form($form){
-  //drupal_set_message(print_r($form, 1));
   if(isset($form['logout_to_see_form'])){return drupal_render_form($form['#id'], $form);}
   drupal_add_css(drupal_get_path('module', 'hostmaster_scratchpad') . '/hostmaster_scratchpad.css');
   $options = array();
