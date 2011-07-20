@@ -364,7 +364,8 @@ return array(
       'description' => 'With or without year and brackets',
       'group' => 'group_reference',
       'module' => 'text',
-      'widget_module' => 'text'
+      'widget_module' => 'text',
+      'weight' => 0,
     ),
     array(
       'label' => 'Reference',
@@ -375,7 +376,8 @@ return array(
       'group' => 'group_reference',
       'advanced_view' => 'biblio_nodes',
       'module' => 'nodereference',
-      'widget_module' => 'nodereference'
+      'widget_module' => 'nodereference',
+      'weight' => 10,
     ),
     array(
       'label' => 'Page number',
@@ -385,7 +387,8 @@ return array(
       'description' => '',
       'group' => 'group_reference',
       'module' => 'text',
-      'widget_module' => 'text'
+      'widget_module' => 'text',
+      'weight' => 30,
     ),
     array(
       'label' => 'Vernacular Names',
