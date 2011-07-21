@@ -19,7 +19,7 @@
                     <div class="head-row1">
                         <div class="col1">
                             <?php $logo = drupal_get_path('theme', 'emonocot_sp') . '/logo.png'; ?>
-                                <p align="center"><a href="<?php print $front_page ?>" title="<?php print t('Home') ?>"><img src="<?php print($logo) ?>" alt="<?php print t('Home') ?>" border="0" class="logo" /></a><br /></p>
+                                <p align="center"><img src="<?php print($logo) ?>" alt="<?php print t('Home') ?>" border="0" class="logo" /><br /></p>
                             
                             <?php if ($site_name) : ?>
                                 <h1 class='site-name'><a href="<?php print $front_page ?>" title="<?php print t('Home') ?>"><?php print $site_name ?></a></h1>
