@@ -3,10 +3,9 @@
 function scratchpad_admin_openids(){
   return array(
     'http://vbrant.eu/user/57/identity' => 'Ben Scott (http://vbrant.eu/user/57/identity)',
-    'http://vbrant.eu/user/5/identity' => 'Dave Roberts (http://vbrant.eu/user/5/identity)',
+    'http://vbrant.eu/users/dave-roberts/openid' => 'Dave Roberts (http://vbrant.eu/users/dave-roberts/openid)',
     'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
-    'http://vbrant.eu/user/58/identity' => 'Irina Brake (http://vbrant.eu/user/58/identity)',
     'http://laurencelivermore.myopenid.com/' => 'Laurence Livermore (http://laurencelivermore.myopenid.com/)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
     'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
