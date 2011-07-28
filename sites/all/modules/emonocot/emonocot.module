@@ -1138,46 +1138,53 @@ function emonocot_taxonomy($op, $type, $vocabulary){
 
 function emonocot_mado_config(){
   $mado = array(
-    'view-itis_term' => array(
-      '#type' => 'view',
-      '#name' => 'itis_term',
-      '#scroll' => 1,
-      '#css' => 'mado_block'
-    ),
-    'view-spm' => array(
-      '#type' => 'view',
-      '#name' => 'spm',
-      '#scroll' => '1',
-      '#css' => 'mado_block'
-    ),
-   
-/*    [view-biblio_table] => Array
+      'block-taxonlist/nomenclature' => Array
         (
-            [#type] => view
-            [#name] => biblio_table
-            [#scroll] => 1
-            [#css] => mado_block_2
-        )
+            '#type' => 'block',
+            '#name' => 'taxonlist/nomenclature',
+            '#scroll' => 1,
+            '#css' => 'mado_block_2',
+        ),
 
-    [view-image_thumbnails] => Array
+    'view-image' => Array
         (
-            [#type] => view
-            [#name] => image_thumbnails
-            [#scroll] => 1
-            [#css] => mado_block_2
-        )
+            '#type' => 'view',
+            '#name' => 'image',
+            '#scroll' => 1,
+            '#css' => mado_block_2,
+        ),
 
-    [block-citation/0] => Array
+    'block-taxonlist/taxonlist' => Array
         (
-            [#type] => block
-            [#name] => citation/0
-            [#scroll] => 0
-            [#css] => mado_block
-        )
-*/
-    'divider' => array(
-      '#type' => 'divider'
-    )
+            '#type' => 'block',
+            '#name' => 'taxonlist/taxonlist',
+            '#scroll' => 1,
+            '#css' => 'mado_block_2',
+        ),
+
+    'view-spm' => Array
+        (
+            '#type' => 'view',
+            '#name' => 'spm',
+            '#scroll' => 0,
+            '#css' => 'mado_block',
+        ),
+
+    'view-specimen_table' => Array
+        (
+            '#type' => 'view',
+            '#name' => 'specimen_table',
+            '#scroll' => 0,
+            '#css' => 'mado_block',
+        ),
+
+    'view-biblio_table' => Array
+        (
+            '#type' => 'view',
+            '#name' => 'biblio_table',
+            '#scroll' => 0,
+            '#css' => 'mado_block',
+        ),
   );
   return $mado;
 }

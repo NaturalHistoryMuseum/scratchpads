@@ -53,6 +53,7 @@ function emonocot_profile_profile_modules(){
     }
   }
   $emonocot_modules[] = 'emonocot';
+  $emonocot_modules[] = 'taxonlist';
   return $emonocot_modules;
 }
 

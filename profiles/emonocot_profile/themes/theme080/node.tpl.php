@@ -5,7 +5,7 @@
 	<?php if ($page == 0): ?>
     	
 			<?php print $picture ?>
-            <div class="bg-h2">
+            <div class="bg-h2">         
                 <h1 class="title"><a href="<?php print $node_url ?>"><?php print $title ?></a></h1>
                 <div class="submit"><span class="submitted"><?php print $submitted ?></span></div>
             </div>

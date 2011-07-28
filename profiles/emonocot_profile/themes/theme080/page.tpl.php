@@ -10,7 +10,6 @@
   <?php print $scripts ?>
 
 </head>
-  
 <body>
 	<div class="bg-top">
     	<div class="bg">
