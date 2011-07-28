@@ -1,46 +1,59 @@
 <?php
-// $Id: legal.install,v 1.5 2008/08/02 14:03:13 MegaGrunt Exp $
+// $Id$
 
 /**
- * Implementation of hook_install()
+ * @file
+ * Installation and update functions for the Legal module.
+ */
+
+/**
+ * Implementation of hook_install();
  */
 function legal_install() {
-  $created = drupal_install_schema('legal');
-
-  if ($created) {
-    drupal_set_message(t('Legal module installed successfully.'));
-  }
-  else {
-    drupal_set_message(t('Table installation for the Legal module was unsuccessful. The tables may need to be installed by hand. See legal.install file for a list of the installation queries.'), 'error');
-  }
-  
-  return;
+  drupal_install_schema('legal');
 }
 
 /**
  * Implementation of hook_schema().
  */
 function legal_schema() {
+  $schema['legal_conditions'] = array(
+    'fields' => array(
+      'tc_id' => array('type' => 'serial', 'unsigned' => FALSE, 'not null' => TRUE, 'disp-width' => 10),
+      'version' => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+      'revision' => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+        'language' => array(
+          'description' => t("TODO."),
+          'type' => 'varchar',
+          'length' => '12',
+          'not null' => TRUE,
+          'default' => ''
+        ),
+      'conditions'  => array('type' => 'text', 'size' => 'big', 'not null' => TRUE),
+      'date'        => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+      'extras'      => array('type' => 'text'),
+      'changes'     => array('type' => 'text'),
+    ),
+    'primary key' => array('tc_id'),
+  );
+
   $schema['legal_accepted'] = array(
     'fields' => array(
-    	'legal_id'  => array('type' => 'serial', 'unsigned' => FALSE, 'not null' => TRUE, 'disp-width' => 10),
-    	'uid'       => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 10),
-    	'tc_id'     => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 10),
-    	'accepted'  => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+      'legal_id'  => array('type' => 'serial', 'unsigned' => FALSE, 'not null' => TRUE, 'disp-width' => 10),
+      'version' => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+      'revision' => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
+        'language' => array(
+          'description' => t("TODO."),
+          'type' => 'varchar',
+          'length' => '12',
+          'not null' => TRUE,
+          'default' => ''
+        ),
+      'uid'       => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 10),
+      'accepted'  => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
     ),
     'indexes' => array('uid' => array('uid')),
     'primary key' => array('legal_id'),
-  );
-
-  $schema['legal_conditions'] = array(
-    'fields' => array(
-    	'tc_id'       => array('type' => 'serial', 'unsigned' => FALSE, 'not null' => TRUE, 'disp-width' => 10),
-    	'conditions'  => array('type' => 'text', 'size' => 'big', 'not null' => TRUE),
-    	'date'        => array('type' => 'int', 'unsigned' => FALSE, 'not null' => TRUE, 'default' => 0, 'disp-width' => 11),
-    	'extras'      => array('type' => 'text'),
-    	'changes'     => array('type' => 'text'),
-    ),
-    'primary key' => array('tc_id'),
   );
 
   return $schema;
@@ -48,8 +61,8 @@ function legal_schema() {
 
 function legal_update_1() {
 
-	_system_update_utf8(array('legal_accepted', 'legal_conditions'));
-	
+  _system_update_utf8(array('legal_accepted', 'legal_conditions'));
+
   $ret = array();
 
   db_add_field($ret, 'legal_conditions', 'extras', array('type' => 'text'));
@@ -60,7 +73,7 @@ function legal_update_1() {
 
 /**
  * Remove conditions and extras from users.data field.
-*/ 
+ */
 function legal_update_2() {
   // How many users to process each time.
   $limit = 50;
@@ -70,7 +83,7 @@ function legal_update_2() {
     $conditions = db_fetch_array(db_query_range("SELECT * FROM {legal_conditions} ORDER BY tc_id DESC", 0, 1));
     if (empty($conditions['conditions'])) return;
 
-		$extras = empty($conditions['extras']) ? NULL : array_keys(unserialize($conditions['extras']));
+    $extras = empty($conditions['extras']) ? NULL : array_keys(unserialize($conditions['extras']));
 
     $_SESSION['legal_update_2'] = array(
       'uid' => 0,
@@ -85,18 +98,19 @@ function legal_update_2() {
   while ($user = db_fetch_object($result)) {
     $data = unserialize($user->data);
 
-    unset($data['conditions']); 
+    unset($data['conditions']);
 
-		if (!empty($_SESSION['legal_update_2']['extras'])) {
-	    foreach ($_SESSION['legal_update_2']['extras'] as $extra) {
-	      unset($data[$extra]);
-	    }
-		}
-
+    if (!empty($_SESSION['legal_update_2']['extras'])) {
+      foreach ($_SESSION['legal_update_2']['extras'] as $extra) {
+        unset($data[$extra]);
+      }
+    }
+    // Don't use update_sql() instead of db_query(), Coder module flags this as a problem but ignore.
+    // http://api.drupal.org/api/drupal/includes--database.inc/function/update_sql/6#comment-354
     db_query("UPDATE {users} SET data = '%s' WHERE uid = %d", serialize($data), $user->uid);
 
     $_SESSION['legal_update_2']['uid'] = $user->uid;
-    
+
     $user_count++;
   }
 
@@ -111,6 +125,38 @@ function legal_update_2() {
   }
 }
 
+/**
+ * Add version, revision, and language fields.
+ */
+function legal_update_6003() {
+
+  $ret = array();
+
+  db_add_field($ret, 'legal_conditions', 'version', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0));
+  db_add_field($ret, 'legal_conditions', 'revision', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0));
+  db_add_field($ret, 'legal_conditions', 'language', array('type' => 'varchar', 'length' => '12', 'not null' => TRUE, 'default' => ''));
+  db_add_field($ret, 'legal_accepted', 'version', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0));
+  db_add_field($ret, 'legal_accepted', 'revision', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0));
+  db_add_field($ret, 'legal_accepted', 'language', array('type' => 'varchar', 'length' => '12', 'not null' => TRUE, 'default' => ''));
+
+    if (module_exists('locale')) {
+      $language = language_default('language');
+    }
+    else {
+        $language = 'en';
+    }
+
+  $ret[] = update_sql('UPDATE {legal_conditions} SET version = tc_id');
+  $ret[] = update_sql('UPDATE {legal_conditions} SET revision = 1');
+  $ret[] = update_sql("UPDATE {legal_conditions} SET language = '$language'");
+  $ret[] = update_sql('UPDATE {legal_accepted} SET version = tc_id');
+  $ret[] = update_sql('UPDATE {legal_accepted} SET revision = 1');
+  $ret[] = update_sql("UPDATE {legal_accepted} SET language = '$language'");
+
+  db_drop_field($ret, 'legal_accepted', 'tc_id');
+
+  return $ret;
+}
 
 /**
  * Implementation of hook_uninstall().
@@ -119,4 +165,3 @@ function legal_uninstall() {
   drupal_uninstall_schema('legal');
   variable_del('legal_display');
 }
-

@@ -27,6 +27,15 @@ function hostmaster_scratchpad_update_6102(){
 }
 
 /**
+ * Drop index from hosting_client
+ */
+function hostmaster_scratchpad_update_6103(){
+  return array(
+    update_sql('ALTER TABLE {hosting_client} DROP INDEX uname_unq')
+  );
+}
+
+/**
  * Hook_schema
  */
 function hostmaster_scratchpad_schema(){

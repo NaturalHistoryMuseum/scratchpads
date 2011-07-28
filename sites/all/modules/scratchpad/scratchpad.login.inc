@@ -2,12 +2,12 @@
 
 function scratchpad_admin_openids(){
   return array(
+    'http://vbrant.eu/user/57/identity' => 'Ben Scott (http://vbrant.eu/user/57/identity)',
+    'http://vbrant.eu/users/dave-roberts/openid' => 'Dave Roberts (http://vbrant.eu/users/dave-roberts/openid)',
     'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
-    'http://vbrant.eu/user/58/identity' => 'Irina Brake (http://vbrant.eu/user/58/identity)',
-    'http://vbrant.eu/user/5/identity' => 'Dave Roberts (http://vbrant.eu/user/5/identity)',
+    'http://laurencelivermore.myopenid.com/' => 'Laurence Livermore (http://laurencelivermore.myopenid.com/)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
-    'http://vbrant.eu/user/57/identity' => 'Ben Scott (http://vbrant.eu/user/57/identity)',
     'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
   );
 }
@@ -17,11 +17,15 @@ function scratchpad_logins(){
   $roles = user_roles();
   unset($roles[1]);
   unset($roles[2]);
-  $users = array(
-    'Scratchpad Team' => array(
-      1 => 'Scratchpad Team [1]'
-    )
-  );
+  if(variable_get('scratchpad_logins_uid_1', TRUE)){
+    $users = array(
+      'Scratchpad Team' => array(
+        1 => 'Scratchpad Team [1]'
+      )
+    );
+  }else{
+    $users = array();
+  }
   while($row = db_fetch_array($result)){
     $users[$roles[$row['rid']]][$row['uid']] = $row['name'] . " [" . $row['uid'] . "]";
   }
@@ -84,6 +88,10 @@ function scratchpad_do_openid_login($uid){
     if(function_exists('boost_init')){
       boost_init();
     }
+    watchdog('logins', '"@openid" logged in as "@user"', array(
+      '@openid' => $result['openid.claimed_id'],
+      '@user' => $user->name
+    ));
     drupal_goto();
   }else{
     watchdog('logins', print_r($result, 1));

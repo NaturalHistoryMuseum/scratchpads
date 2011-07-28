@@ -354,6 +354,9 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     // First, if this is an insert, we need to ensure the grants have been 
     // saved, as they are required.
     if($op == 'insert'){
+      // Set the node as not being public - this will only be observed if og is
+      // installed.
+      $node->og_public = 0;
       node_access_acquire_grants($node);
     }
     // We've added/updated a forum post, lets mail it out

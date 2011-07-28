@@ -99,6 +99,9 @@ function spm_export_nodes($nids = FALSE){
       unset($spm_array['nid']);
       unset($spm_array['vid']);
       foreach($spm_array as $key => $value){
+        if($key == 'Phylogeny'){
+          continue;
+        }
         if($value != ''){
           $field_info = array();
           foreach($headers as $header_key => $header_value){

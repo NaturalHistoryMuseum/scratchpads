@@ -448,6 +448,12 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
  * Validate function for the above form
  */
 function hostmaster_scratchpad_form_validate($form, &$form_state){
+  // Check that the title isn't already in use.
+  $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : $form_state['values']['title'] . '.myspecies.info'; 
+  if(db_result(db_query("SELECT COUNT(*) FROM node n, hosting_site h WHERE h.nid = n.nid AND (h.status = 1 OR h.status = 0) AND type = 'site' AND n.title = '%s'", $site_url))){
+    // Site URL already in use.
+    form_set_error('title', 'The domain you have chosen is already in use');
+  }
   // Only validate if we are trying to create a Scratchpad
   if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_PROFILE_NID){
     // Next check the Google Map API key is the correct length (or roughly)
@@ -488,8 +494,19 @@ function hostmaster_scratchpad_form_submit($form, &$form_state){
  * Implementation of hook_insert
  */
 function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
+  if($node->type == 'client'){
+    switch($op){
+      case 'presave':
+        // Get the user from the email
+        $client_user = user_load(array('mail' => $node->email));
+        if($client_user){
+          $node->uid = $client_user->uid;
+        }
+        break;
+    }
+  }
   // Only do this if the profile is a Scratchpad one (1 or 2)
-  if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
+  else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);
