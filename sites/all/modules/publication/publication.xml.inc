@@ -2,7 +2,12 @@
 
 function publication_display_xml($node, $vid = FALSE){
   drupal_set_header('Content-Type: application/xml');
-  echo publication_get_xml($node->nid, $vid);
+  echo publication_xml_tidy(publication_get_xml($node->nid, $vid));
+}
+
+function publication_xml_tidy($xml){
+	// Remove unescaped ampersands
+	return preg_replace('/&(?![#]?[a-z0-9]+;)/i', "&amp;$1", $xml); 
 }
 
 function _publication_cock_off_tinymce($text){
