@@ -26,7 +26,6 @@ function scratchpad_slickgrid_init(){
       $conf['batax_disable_vids'][$vocabulary->vid] = true;
     }
   }
-  
 }
 
 /** 
@@ -98,12 +97,25 @@ function scratchpad_slickgrid_nodeapi(&$node, $op){
         }
         scratchpad_slickgrid_add_node_to_batch($_SESSION['scratchpad_slickgrid_bid'], $node->nid);
       }
+      // Reset views batch page
+      scratchpad_slickgrid_reset_views_batch_page($node->type);
+      break;
+    case 'update':
+      // Reset views batch page
+      scratchpad_slickgrid_reset_views_batch_page($node->type);
       break;
     case 'delete':
       scratchpad_slickgrid_delete('scratchpad_slickgrid_nodes', array(
         'nid' => $node->nid
       ));
       break;
+  }
+}
+
+function scratchpad_slickgrid_reset_views_batch_page($node_type){
+  $view_name = 'slickgrid_' . $node_type;
+  if($view = views_get_view($view_name)){
+    views_batch_page_cache_clear($view);
   }
 }
 
