@@ -254,26 +254,33 @@
                $form.appendTo($wrapper);
                
                // Add the buttons;
-               $("<div style='text-align:right'><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></div>")
-                   .appendTo($wrapper);
+               $buttons = $("<div style='text-align:right'>");
                
-                 $wrapper.find("button:first").bind("click", function(){
-
-                   var fieldID = $form.find('textarea').attr('id');
-
-                   // Is this a wysiwyg textarea?
-                   if(typeof Drupal.wysiwyg != 'undefined' &&  typeof fieldID != 'undefined' && typeof Drupal.wysiwyg.instances[fieldID] == 'object'){
-                     // detach the wysiwyg editor (ann apply the value to the form)
-                     Drupal.wysiwygDetach($form, {field: fieldID});
-                   }
-                   
-                   scope.save();
-                   
-                 });
-
+               $('<button>Save</button>').click(function(){
+                 
+                 var fieldID = $form.find('textarea').attr('id');
+                 
+                 // on some wysiwyg fields, input is used
+                 if(typeof fieldID == 'undefined'){
+                   var fieldID = $form.find('input.form-text').attr('id');
+                 }
+                
+                 // Is this a wysiwyg textarea?
+                 if(typeof Drupal.wysiwyg != 'undefined' &&  typeof fieldID != 'undefined' && typeof Drupal.wysiwyg.instances[fieldID] == 'object'){
+                   // detach the wysiwyg editor (and apply the value to the form)
+                   Drupal.wysiwygDetach($form, {field: fieldID});
+                 }
+                 
+                 scope.save();
+                 
+               }).appendTo($buttons);
                
-               $wrapper.find("button:last").bind("click", this.cancel);
+               $('<button>Cancel</button>').click(function(){
+                 scope.cancel();
+               }).appendTo($buttons);
                
+               $buttons.appendTo($wrapper);
+
                if (response.data.__callbacks) {
                  $.each(response.data.__callbacks, function(i, callback) {
                    eval(callback)($form, response.data);
