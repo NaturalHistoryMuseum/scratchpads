@@ -470,7 +470,7 @@ function scratchpad_profile_set_conditions(){
     'extras-4' => '',
     'extras-5' => ''
   );
-  db_query("INSERT INTO {legal_conditions} (conditions, date, extras) VALUES ('%s',NOW(),'%s')", $conditions, serialize($extras));
+  db_query("INSERT INTO {legal_conditions} (conditions, date, extras, language) VALUES ('%s',UNIX_TIMESTAMP(),'%s', 'en')", $conditions, serialize($extras));
   variable_set('legal_display', 2);
 }
 
