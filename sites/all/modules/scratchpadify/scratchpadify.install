@@ -1818,7 +1818,7 @@ function scratchpadify_update_6188(){
 function scratchpadify_update_6189(){
   $ret = array();
   $ret[] = update_sql("UPDATE {legal_conditions} SET language = 'en' WHERE language = ''");
-  $ret[] = update_sql("UPDATE {legal_conditions} SET version = 1 WHERE version 0");
+  $ret[] = update_sql("UPDATE {legal_conditions} SET version = 1 WHERE version = 0");
   $ret[] = update_sql("UPDATE {legal_conditions} SET revision = 1 WHERE revision = 0");
   return $ret;  
 }
