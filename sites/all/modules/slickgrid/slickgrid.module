@@ -262,8 +262,8 @@ function slickgrid_form_alter(&$form, $form_state, $form_id){
       break;
   }
   // Is this a node type form being displayed in a pop up?
-  if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){
-    $form['#after_build'][] = 'slickgrid_node_form_after_build';
+  if(isset($form['type']) && isset($form['#node']) && $form['type']['#value'] . '_node_form' == $form_id && arg(0) == 'slickgrid'){  	
+    $form['#pre_render'][] = 'slickgrid_node_form_pre_render';
   }
 }
 
@@ -833,7 +833,7 @@ function slickgrid_views_ui_rearrange_form_submit($form, $form_state){
   }
 }
 
-function slickgrid_node_form_after_build(&$form, &$form_state){
+function slickgrid_node_form_pre_render(&$form, &$form_state){
   if($_POST['vid']){
     $vid = $_POST['vid'];
     // Load the vocabulary so we know whether this vocabulary uses tags
