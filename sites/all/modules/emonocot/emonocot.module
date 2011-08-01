@@ -1146,13 +1146,7 @@ function emonocot_mado_config(){
             '#css' => 'mado_block_2',
         ),
 
-    'view-image' => Array
-        (
-            '#type' => 'view',
-            '#name' => 'image',
-            '#scroll' => 1,
-            '#css' => mado_block_2,
-        ),
+ 
 
     'block-taxonlist/taxonlist' => Array
         (
@@ -1160,6 +1154,14 @@ function emonocot_mado_config(){
             '#name' => 'taxonlist/taxonlist',
             '#scroll' => 1,
             '#css' => 'mado_block_2',
+        ),
+        
+     'view-spec_image_types' => Array
+        (
+            '#type' => 'view',
+            '#name' => 'spec_image_types',
+            '#scroll' => 1,
+            '#css' => mado_block,
         ),
 
     'view-spm' => Array
@@ -1173,7 +1175,7 @@ function emonocot_mado_config(){
     'view-specimen_table' => Array
         (
             '#type' => 'view',
-            '#name' => 'specimen_table',
+            '#name' => 'specimen_table_em',
             '#scroll' => 0,
             '#css' => 'mado_block',
         ),
@@ -1187,4 +1189,8 @@ function emonocot_mado_config(){
         ),
   );
   return $mado;
+}
+
+function emonocot_views_api() {
+  return array('api' => 2.0);
 }
