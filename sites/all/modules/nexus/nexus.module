@@ -51,6 +51,10 @@ function nexus_theme(){
 }
 
 function theme_nexus_matrix($matrix_editor, $node){
+  // Add the description to the view
+  if(isset($node->build_mode)){
+    $output .= $node->body;
+  }
   $output .= '<div id="character-groups"></div>';
   $output .= theme('matrix_editor', $matrix_editor->options, $matrix_editor->columns, $matrix_editor->data, $matrix_editor->filter);
   $path = drupal_get_path('module', 'nexus');
