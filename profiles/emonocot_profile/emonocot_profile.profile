@@ -54,6 +54,7 @@ function emonocot_profile_profile_modules(){
   }
   $emonocot_modules[] = 'emonocot';
   $emonocot_modules[] = 'taxonlist';
+  $emonocot_modules[] = 'wcm_import';
   return $emonocot_modules;
 }
 
