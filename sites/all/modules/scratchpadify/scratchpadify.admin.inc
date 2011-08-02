@@ -115,7 +115,7 @@ function scratchpadify_perm_helper($newperm, $enable){
 function scratchpadify_taskguide(){
   return '<div class="mission" style="text-align: justify">
   <h1 style="text-decoration:underline;padding-bottom:20px">Some tips to get you started:</h1>
-<p>Set up your Scratchpad by going through the list below. It can be useful to attend a ' . l('training course', 'http://scratchpads.eu/scratchpad-training-courses') . ' or go through the ' . l('manual of the basic training course', 'http://scratchpads.eu/sites/scratchpads.eu/files/ScratchpadTrainingBasic.doc') . ' on your own.
+<p>Set up your Scratchpad by going through the list below. It can be useful to attend a ' . l('training course', 'http://scratchpads.eu/scratchpad-training-courses') . ' or go through the ' . l('manual of the basic training course', 'help/scratchpadify_help/Basic-training-course') . ' on your own.
   <div>
     <div style="width:15%; float: left; text-align: right; clear: both;"><img src="' . base_path() . drupal_get_path('module', 'scratchpadify') . '/images/information.png" style="padding:10px;"/></div>
     <div style="width:75%; float: left;">
