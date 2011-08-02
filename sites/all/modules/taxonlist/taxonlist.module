@@ -27,12 +27,16 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()) {
   	case 'configure':
   	  $form['taxonlist_block_depth'] = array(
   	    '#type' => 'textfield',
-  	    '#title' => t('Depth of heirarchy to show. Set to 0 for complete hierarchy.'),
-  	    '#default_value' => variable_get('taxonlist_block_depth', 0),
+  	    '#title' => t('Depth of heirarchy to show. Leave blank for complete hierarchy.'),
+  	    '#default_value' => variable_get('taxonlist_block_depth', 3),
   	  );
   	  return $form;
   	case 'save':
-  	  variable_set('taxonlist_block_depth', (int)$edit['taxonlist_block_depth']);
+  	  if ($edit['taxonlist_block_depth'] = '') {
+  	  	variable_set('taxonlist_block_depth', NULL);
+  	  } else {
+  	    variable_set('taxonlist_block_depth', (int)$edit['taxonlist_block_depth']);
+  	  }
   	  break;
   	  
   	case 'view':
@@ -58,7 +62,7 @@ function taxonlist_block_view() {
       $term =tinytax_taxonomy_get_term($tid);
       $vid = $term->vid;
       
-      $content = taxonlist_list($vid, $tid, TRUE);
+      $content = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
       
       //If the user has permissions then provide a link to edit the itis_term
 	  if ( user_access('administer taxonomy') ) {
@@ -161,7 +165,7 @@ function taxonlist_nomenclature_block_view() {
 	return $block;	
 }
 
-function taxonlist_list($vid=10, $root=0, $is_block=FALSE) {
+function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL) {
   //Get parent of tid if tid is set
   if ($root != 0  && $is_block == FALSE) {
   	$parent = taxonomy_get_parents($root);
@@ -194,7 +198,7 @@ function taxonlist_list($vid=10, $root=0, $is_block=FALSE) {
   	$return .= '<br/>';
   }
   
-  $tree = taxonomy_get_tree($vid, $root);
+  $tree = taxonomy_get_tree($vid, $root, -1, $depth);
 
   foreach ($tree as $term) {
   	$term_data = taxonlist_fetch_itis($term->tid);

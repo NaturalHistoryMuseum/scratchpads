@@ -918,7 +918,7 @@ function emonocot_itis_field_info(){
       'description' => 'For use when the reference is not in the bibliography. NOT RECCOMENDED.',
     ),
     array(
-      'label' => 'Link',
+      'label' => 'Other Reference Link',
       'field_name' => 'field_itis_em_url',
       'type_name' => 'itis_term',
       'group' => 'group_reference',
@@ -928,7 +928,7 @@ function emonocot_itis_field_info(){
       'required' => 0,
       'locked' => 0,
       'description' => t('URL of reference in BHL or other online repository'),
-      'text_processing' => 1
+      'text_processing' => 0
     ),
     array (
       'label' => 'Type Taxon',
