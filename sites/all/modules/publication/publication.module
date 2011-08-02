@@ -49,6 +49,14 @@ function publication_content_is_empty(){
 }
 
 /**
+ * Is the key an OG (starts with og_)
+ * @param string $key
+ */
+function publication_is_og_key($key){
+	return (strpos($key, 'og_') !== false);
+}
+
+/**
  * Display only bold and italic buttons.
  * 
  * hook_wysiwyg_editor_settings_alter

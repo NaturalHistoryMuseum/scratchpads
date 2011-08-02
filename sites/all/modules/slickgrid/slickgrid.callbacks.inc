@@ -45,7 +45,7 @@ function slickgrid_callback_update(){
   $field_name = $_POST['field_name'];
   $field_id = $_POST['field_id'];
   module_load_include('inc', 'node', 'node.pages');
-  $updated = array(); // Array of NIDs that have been updated  
+  $updated = array(); // Array of NIDs that have been updated
   foreach($_POST['nids'] as $nid){
     // $form_state gets changed by the form submission so re-intialise for every loop
     $form_state = array(
@@ -53,12 +53,13 @@ function slickgrid_callback_update(){
     );
     $form_state['values']['op'] = t('Save');
     $form_state['submitted'] = true;
+    $form_state['submitted'] = 1;
     $node = node_load($nid);
     if(node_access('update', $node)){
       // Get the vid before it is updated
       $revision_vid = $node->vid;
       $form_id = $node->type . '_node_form';
-      // Execute the node form
+      // Execute the node form      
       drupal_execute($form_id, $form_state, $node);
       // Has there been an error?
       if($err = form_get_errors()){
@@ -92,7 +93,15 @@ function slickgrid_callback_update(){
     )));
   }
   if($count_errors = count($errors)){
-    drupal_set_message(format_plural($count_errors, 'There was 1 error.', 'There were @count errors.'), 'error');
+    $error_message = format_plural($count_errors, 'There was 1 error', 'There were @count errors');
+    drupal_set_message($error_message, 'error');
+    $error_message .= ': ';
+    foreach($errors as $error){
+      foreach($error as $err){
+        $error_message .= $err . '<br />';
+      }
+    }
+    watchdog('slickgrid', $error_message, array(), WATCHDOG_ERROR);
   }
   // If batch page exists, we need to clear the cache
   if(module_exists('views_batch_page') && strpos($_POST['display_id'], 'views_batch_page') !== false){
@@ -110,6 +119,21 @@ function slickgrid_callback_update(){
     'field_name' => $field_name,
     'field_id' => $field_id
   );
+}
+
+function slickgrid_execute($form_id, &$form_state){
+  $args = func_get_args();
+  // Make sure $form_state is passed around by reference.
+  $args[1] = &$form_state;
+  $form = call_user_func_array('drupal_retrieve_form', $args);
+  $form['#post'] = $form_state['values'];
+  drupal_prepare_form($form_id, $form, $form_state);
+  $form['#validate'][] = 'slickgrid_callback_form_validate';
+  drupal_process_form($form_id, $form, $form_state);
+}
+
+function slickgrid_callback_form_validate($form, &$form_state){
+  form_set_error(null, null, true);
 }
 
 /**
@@ -179,7 +203,9 @@ function slickgrid_callback_get_form(){
       'data' => $data
     );
   }else{
-		drupal_set_message(t("You do not have access to edit @title", array('@title' => $node->title)), 'error');
+    drupal_set_message(t("You do not have access to edit @title", array(
+      '@title' => $node->title
+    )), 'error');
   }
 }
 

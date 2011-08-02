@@ -32,6 +32,33 @@ function devscratchpadseu_menu(){
 }
 
 /**
+ * 
+ */
+function devscratchpadseu_block($op = 'list', $delta = 0, $edit = array()){
+  switch($op){
+    case 'list':
+      return array(
+        array(
+          'info' => t('Scratchpads version number'),
+          'cache' => BLOCK_CACHE_GLOBAL
+        )
+      );
+      break;
+    case 'view':
+      $result = db_fetch_array(db_query('SELECT nid, version FROM {project_release_nodes} WHERE pid = 45 ORDER BY nid DESC LIMIT 1'));
+      return array(
+        'subject' => '',
+        'content' => '<div style="position:absolute; right:20px; top:50px;border:solid 1px white;padding:5px 20px;background-color:black;z-index:1000;color:white;"><p style="margin:0; padding:0; margin-bottom:0 !important">Scratchpad version:</p><h1 style="padding:0; margin:0">' . l($result['version'], 'node/' . $result['nid'], array(
+          'attributes' => array(
+            'style' => 'color:white; font-size:150%; padding:0; margin:0'
+          )
+        )) . '</h1></div>'
+      );
+      break;
+  }
+}
+
+/**
  * Returns the user id of the currently logged in user.
  */
 function devscratchpadseu_project_to_arg($project){
