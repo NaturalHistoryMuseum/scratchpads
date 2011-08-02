@@ -5,6 +5,7 @@ function theme_publication_node_add_form($form){
 }
 
 function theme_publication_node_edit_form($form){
+	
   publication_add_files();
   // Add the taxonomy tree callback path
   if(!$form['#node']->vocabulary){
@@ -15,6 +16,10 @@ function theme_publication_node_edit_form($form){
       )
     ), 'setting');
   }
+  
+  // Get organic group keys
+  $og_keys = array_filter(array_keys($form), 'publication_is_og_key');
+  
   $groups = fieldgroup_groups('publication');
   foreach($groups as $group_name => $group){
     $closing_tab_content = null;
@@ -32,12 +37,10 @@ function theme_publication_node_edit_form($form){
           $closing_tab_content .= drupal_render($form[$group_name]['field_publication_ack']);
           $form[$group_name]['#title'] = t('Authors');
           break;
-        case 'group_publication_privacy':
-          $tab_content .= drupal_render($form['og_description']);
-          $tab_content .= drupal_render($form['og_selective']);
-          $tab_content .= drupal_render($form['og_private']);
-          $tab_content .= drupal_render($form['og_register']);
-          $tab_content .= drupal_render($form['og_directory']);
+        case 'group_publication_privacy':   
+        	foreach($og_keys as $og_key){
+        		$tab_content .= drupal_render($form[$og_key]);	
+        	}
           // Node publishing options
           $tab_content .= drupal_render($form['options']);
           break;
