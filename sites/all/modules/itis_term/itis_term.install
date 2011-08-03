@@ -322,6 +322,8 @@ return array(
 return array(
   'Animalia & Monera' => array(
     'junior synonym' => 'junior synonym',
+    'junior objective synonym' => 'junior objective synonym',
+    'junior subjective synonym' => 'junior subjective synonym',
     'original name/combination' => 'original name/combination',
     'subsequent name/combination' => 'subsequent name/combination',
     'junior homonym' => 'junior homonym',
@@ -342,6 +344,8 @@ return array(
   ),
   'Plantae & Fungi' => array(
     'synonym' => 'synonym',
+    'homotypic (nomenclatural) synonym' => 'homotypic (nomenclatural) synonym',
+    'heterotypic (taxonomic) synonym' => 'heterotypic (taxonomic) synonym',
     'homonym (illegitimate)' => 'homonym (illegitimate)',
     'superfluous renaming (illegitimate)' => 'superfluous renaming (illegitimate)',
     'rejected name' => 'rejected name',
@@ -793,5 +797,334 @@ function itis_term_update_6103(){
   $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'With or without year and brackets' WHERE field_name = 'field_taxon_author'");
   $ret[] = update_sql("UPDATE {content_node_field_instance} SET description = 'Current standing of name' WHERE field_name = 'field_usage'");
   cache_clear_all('*', 'cache_content', TRUE);
+  return $ret;
+}
+
+/**
+ * Add types of snyninyms for animals and plants (eMonocot)
+ */
+function itis_term_update_6104(){
+  // Following can't be executed using update_sql (STUPID DRUPAL)
+  $fields = array(
+    'field_rank_name' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:2013:"
+return array(
+  \'- Select one -\',
+  \'Plant/Fungi\' => array(
+    \'Kingdom\' => \'Kingdom\',
+    \'Subkingdom\' => \'Subkingdom\',
+    \'Division\' => \'Division\',
+    \'Subdivision\' => \'Subdivision\',
+    \'Class\' => \'Class\',
+    \'Subclass\' => \'Subclass\',
+    \'Order\' => \'Order\',
+    \'Suborder\' => \'Suborder\',
+    \'Family\' => \'Family\',
+    \'Subfamily\' => \'Subfamily\',
+    \'Tribe\' => \'Tribe\',
+    \'Subtribe\' => \'Subtribe\',
+    \'Genus\' => \'Genus\',
+    \'Subgenus\' => \'Subgenus\',
+    \'Section\' => \'Section\',
+    \'Subsection\' => \'Subsection\',
+    \'Species\' => \'Species\',
+    \'Subspecies\' => \'Subspecies\',
+    \'Variety\' => \'Variety\',
+    \'Subvariety\' => \'Subvariety\',
+    \'Form\' => \'Form\',
+    \'Subform\' => \'Subform\'
+  ),
+  \'Animal\' => array(
+    \'Kingdom\' => \'Kingdom\',
+    \'Subkingdom\' => \'Subkingdom\',
+    \'Phylum\' => \'Phylum\',
+    \'Subphylum\' => \'Subphylum\',
+    \'Superclass\' => \'Superclass\',
+    \'Class\' => \'Class\',
+    \'Subclass\' => \'Subclass\',
+    \'Infraclass\' => \'Infraclass\',
+    \'Superorder\' => \'Superorder\',
+    \'Order\' => \'Order\',
+    \'Suborder\' => \'Suborder\',
+    \'Infraorder\' => \'Infraorder\',
+    \'Superfamily\' => \'Superfamily\',
+    \'Family\' => \'Family\',
+    \'Subfamily\' => \'Subfamily\',
+    \'Tribe\' => \'Tribe\',
+    \'Subtribe\' => \'Subtribe\',
+    \'Genus\' => \'Genus\',
+    \'Subgenus\' => \'Subgenus\',
+    \'Species\' => \'Species\',
+    \'Subspecies\' => \'Subspecies\'  
+  ),
+  \'Moneran\' => array(
+    \'Kingdom\' => \'Kingdom\',
+    \'Subkingdom\' => \'Subkingdom\',
+    \'Phylum\' => \'Phylum\',
+    \'Subphylum\' => \'Subphylum\',
+    \'Superclass\' => \'Superclass\',
+    \'Class\' => \'Class\',
+    \'Subclass\' => \'Subclass\',
+    \'Infraclass\' => \'Infraclass\',
+    \'Superorder\' => \'Superorder\',
+    \'Order\' => \'Order\',
+    \'Suborder\' => \'Suborder\',
+    \'Infraorder\' => \'Infraorder\',
+    \'Superfamily\' => \'Superfamily\',
+    \'Family\' => \'Family\',
+    \'Subfamily\' => \'Subfamily\',
+    \'Tribe\' => \'Tribe\',
+    \'Subtribe\' => \'Subtribe\',
+    \'Genus\' => \'Genus\',
+    \'Subgenus\' => \'Subgenus\',
+    \'Species\' => \'Species\',
+    \'Subspecies\' => \'Subspecies\'
+  )
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_unit_ind1' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:30:"
+return array(
+  \'x\' => \'x\'
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_unit_ind2' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:30:"
+return array(
+  \'x\' => \'x\'
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_unit_ind3' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:200:"
+return array(
+  \'ssp.\' => \'ssp. (Plants and Fungi)\',
+  \'subsp.\' => \'subsp. (Animals and Monerans)\',
+  \'var.\' => \'var.\',
+  \'subvar.\' => \'subvar.\',
+  \'f.\' => \'f.\',
+  \'subf.\' => \'subf.\',
+  \'x\' => \'x\'
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_unit_ind4' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:186:"
+return array(
+  \'ssp.\' => \'ssp. (Plants and Fungi)\',
+  \'subsp.\' => \'subsp. (Animals and Monerans)\',
+  \'var.\' => \'var.\',
+  \'subvar.\' => \'subvar.\',
+  \'f.\' => \'f.\',
+  \'subf.\' => \'subf.\'
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_unacceptability_reason' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:1990:"
+return array(
+  \'Animalia & Monera\' => array(
+    \'junior synonym\' => \'junior synonym\',
+    \'junior objective synonym\' => \'junior objective synonym\',
+    \'junior subjective synonym\' => \'junior subjective synonym\',
+    \'original name/combination\' => \'original name/combination\',
+    \'subsequent name/combination\' => \'subsequent name/combination\',
+    \'junior homonym\' => \'junior homonym\',
+    \'homonym & junior synonym\' => \'homonym & junior synonym\',
+    \'unavailable, database artifact\' => \'unavailable, database artifact\',
+    \'unavailable, literature misspelling\' => \'unavailable, literature misspelling\',
+    \'unavailable, incorrect original spelling\' => \'unavailable, incorrect original spelling\',
+    \'unavailable, suppressed by ruling\' => \'unavailable, suppressed by ruling\',
+    \'unavailable, nomen nudum\' => \'unavailable, nomen nudum\',
+    \'unavailable, other\' => \'unavailable, other\',
+    \'unjustified emendation\' => \'unjustified emendation\',
+    \'unnecessary replacement\' => \'unnecessary replacement\',
+    \'nomen oblitum\' => \'nomen oblitum\',
+    \'misapplied\' => \'misapplied\',
+    \'pro parte\' => \'pro parte\',
+    \'other\' => \'other\',
+    \'nomen dubium\' => \'nomen dubium\'
+  ),
+  \'Plantae & Fungi\' => array(
+    \'synonym\' => \'synonym\',
+    \'homotypic (nomenclatural) synonym\' => \'homotypic (nomenclatural) synonym\',
+    \'heterotypic (taxonomic) synonym\' => \'heterotypic (taxonomic) synonym\',
+    \'homonym (illegitimate)\' => \'homonym (illegitimate)\',
+    \'superfluous renaming (illegitimate)\' => \'superfluous renaming (illegitimate)\',
+    \'rejected name\' => \'rejected name\',
+    \'invalidly published, nomen nudum\' => \'invalidly published, nomen nudum\',
+    \'invalidly published, other\' => \'invalidly published, other\',
+    \'misapplied\' => \'misapplied\',
+    \'pro parte\' => \'pro parte\',
+    \'horticultural\' => \'horticultural\',
+    \'database artifact\' => \'database artifact\',
+    \'orthographic variant (misspelling)\' => \'orthographic variant (misspelling)\',
+    \'other\' => \'other\'
+  )
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    ),
+    'field_usage' => array(
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:230:"
+return array(
+  \'- Select one -\',
+  \'Plants and Fungi\' => array(
+    \'accepted\' => \'accepted\',
+    \'not accepted\' => \'not accepted\'
+  ),
+  \'Animals and Monerans\' => array(
+    \'valid\' => \'valid\',
+    \'invalid\' => \'invalid\'
+  )
+);";}',
+      'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
+    )
+  );
+  foreach($fields as $field => $values){
+    $sql = "UPDATE {content_node_field} SET global_settings = '%s', db_columns = '%s' WHERE field_name = '%s'";
+    $result = db_query($sql, $values['global_settings'], $values['db_columns'], $field);
+    $ret[] = array(
+      'success' => $result,
+      'query' => check_plain($sql)
+    );
+  }
+  // Update the data:
+  $data_to_update = array(
+    'field_rank_name_value' => array(
+      1 => 'Kingdom',
+      2 => 'Subkingdom',
+      3 => 'Division',
+      4 => 'Subdivision',
+      5 => 'Class',
+      6 => 'Subclass',
+      7 => 'Order',
+      8 => 'Suborder',
+      9 => 'Family',
+      10 => 'Subfamily',
+      11 => 'Tribe',
+      12 => 'Subtribe',
+      13 => 'Genus',
+      14 => 'Subgenus',
+      15 => 'Section',
+      16 => 'Subsection',
+      17 => 'Species',
+      18 => 'Subspecies',
+      19 => 'Variety',
+      20 => 'Subvariety',
+      21 => 'Form',
+      22 => 'Subform',
+      23 => 'Kingdom',
+      24 => 'Subkingdom',
+      25 => 'Phylum',
+      26 => 'Subphylum',
+      27 => 'Superclass',
+      28 => 'Class',
+      29 => 'Subclass',
+      30 => 'Infraclass',
+      31 => 'Superorder',
+      32 => 'Order',
+      33 => 'Suborder',
+      34 => 'Infraorder',
+      35 => 'Superfamily',
+      36 => 'Family',
+      37 => 'Subfamily',
+      38 => 'Tribe',
+      39 => 'Subtribe',
+      30 => 'Genus',
+      41 => 'Subgenus',
+      42 => 'Species',
+      43 => 'Subspecies',
+      44 => 'Kingdom',
+      45 => 'Subkingdom',
+      46 => 'Phylum',
+      47 => 'Subphylum',
+      48 => 'Superclass',
+      49 => 'Class',
+      50 => 'Subclass',
+      51 => 'Infraclass',
+      52 => 'Superorder',
+      53 => 'Order',
+      54 => 'Suborder',
+      55 => 'Infraorder',
+      56 => 'Superfamily',
+      57 => 'Family',
+      58 => 'Subfamily',
+      59 => 'Tribe',
+      60 => 'Subtribe',
+      61 => 'Genus',
+      62 => 'Subgenus',
+      63 => 'Species',
+      64 => 'Subspecies'
+    ),
+    'field_unit_ind1_value' => array(
+      1 => 'x'
+    ),
+    'field_unit_ind2_value' => array(
+      1 => 'x'
+    ),
+    'field_unit_ind3_value' => array(
+      1 => 'ssp. (Plants and Fungi)',
+      2 => 'subsp. (Animals and Monerans)',
+      3 => 'var.',
+      4 => 'subvar.',
+      5 => 'f.',
+      6 => 'subf.',
+      7 => 'x'
+    ),
+    'field_unit_ind4_value' => array(
+      1 => 'ssp. (Plants and Fungi)',
+      2 => 'subsp. (Animals and Monerans)',
+      3 => 'var.',
+      4 => 'subvar.',
+      5 => 'f.',
+      6 => 'subf.'
+    ),
+    'field_usage_value' => array(
+      1 => 'accepted',
+      2 => 'not accepted',
+      3 => 'valid',
+      4 => 'invalid'
+    ),
+    'field_unacceptability_reason_value' => array(
+      1 => 'junior synonym',
+      2 => 'original name/combination',
+      3 => 'subsequent name/combination',
+      4 => 'junior homonym',
+      5 => 'homonym & junior synonym',
+      6 => 'unavailable, database artifact',
+      7 => 'unavailable, literature misspelling',
+      8 => 'unavailable, incorrect original spelling',
+      9 => 'unavailable, suppressed by ruling',
+      10 => 'unavailable, nomen nudum',
+      11 => 'unavailable, other',
+      12 => 'unjustified emendation',
+      13 => 'unnecessary replacement',
+      14 => 'nomen oblitum',
+      15 => 'misapplied',
+      16 => 'pro parte',
+      17 => 'other',
+      18 => 'nomen dubium',
+      19 => 'synonym',
+      20 => 'homonym (illegitimate)',
+      21 => 'superfluous renaming (illegitimate)',
+      22 => 'rejected name',
+      23 => 'invalidly published, nomen nudum',
+      24 => 'invalidly published, other',
+      25 => 'misapplied',
+      26 => 'pro parte',
+      27 => 'horticultural',
+      28 => 'database artifact',
+      29 => 'orthographic variant (misspelling)',
+      30 => 'other'
+    )
+  );
+  foreach($data_to_update as $field => $values){
+    foreach($values as $current_value => $new_value){
+      $ret[] = update_sql("UPDATE {content_type_itis_term} SET $field = '$new_value' WHERE $field = '$current_value'");
+    }
+  }
+  content_clear_type_cache(TRUE);
   return $ret;
 }
