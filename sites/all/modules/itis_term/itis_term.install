@@ -346,6 +346,7 @@ return array(
     'synonym' => 'synonym',
     'homotypic (nomenclatural) synonym' => 'homotypic (nomenclatural) synonym',
     'heterotypic (taxonomic) synonym' => 'heterotypic (taxonomic) synonym',
+    'basionym' => 'basionym',
     'homonym (illegitimate)' => 'homonym (illegitimate)',
     'superfluous renaming (illegitimate)' => 'superfluous renaming (illegitimate)',
     'rejected name' => 'rejected name',
@@ -807,7 +808,7 @@ function itis_term_update_6104(){
   // Following can't be executed using update_sql (STUPID DRUPAL)
   $fields = array(
     'field_rank_name' => array(
-      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:2013:"
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:2020:"
 return array(
   \'- Select one -\',
   \'Plant/Fungi\' => array(
@@ -923,7 +924,7 @@ return array(
       'db_columns' => 'a:1:{s:5:"value";a:5:{s:4:"type";s:4:"text";s:4:"size";s:3:"big";s:8:"not null";b:0;s:8:"sortable";b:1;s:5:"views";b:1;}}'
     ),
     'field_unacceptability_reason' => array(
-      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:1990:"
+      'global_settings' => 'a:4:{s:15:"text_processing";s:0:"";s:10:"max_length";s:0:"";s:14:"allowed_values";s:0:"";s:18:"allowed_values_php";s:2014:"
 return array(
   \'Animalia & Monera\' => array(
     \'junior synonym\' => \'junior synonym\',
@@ -951,6 +952,7 @@ return array(
     \'synonym\' => \'synonym\',
     \'homotypic (nomenclatural) synonym\' => \'homotypic (nomenclatural) synonym\',
     \'heterotypic (taxonomic) synonym\' => \'heterotypic (taxonomic) synonym\',
+    \'basionym\' => \'basionym\',
     \'homonym (illegitimate)\' => \'homonym (illegitimate)\',
     \'superfluous renaming (illegitimate)\' => \'superfluous renaming (illegitimate)\',
     \'rejected name\' => \'rejected name\',
