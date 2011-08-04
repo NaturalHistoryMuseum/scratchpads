@@ -24,6 +24,11 @@ function emonocot_profile_set_blocks(){
     db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight, title) VALUES ('search',0,'%s','left',1,-200,'<none>')", $theme->name);
     //eMonocot jiggling
     db_query("UPDATE {blocks} SET weight = -30 WHERE theme = '%s' AND module = 'scratchpadify' AND delta = 1 ", $theme->name);
+    //Apache Solr
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'apachesolr' AND delta = 'sort'", $theme->name);
+    db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('apachesolr','sort','%s','left',1,-27)", $theme->name);
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'apachesolr_search' AND delta = 'type'", $theme->name);
+    db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('apachesolr_search','type','%s','left',1,-26)", $theme->name);
   }
   //eM Play with blocks
   db_query("INSERT INTO {blocks_roles} (module, delta, rid) VALUES ('user', 1, 2)");
@@ -141,4 +146,11 @@ function emonocot_profile_tweak_menu(){
     'link_path' => 'user/login'
   );
   menu_link_save($em_link);
+}
+
+function emonocot_profile_apache_solr() {
+  $blocks = array( '');
+  $blocks['apachesolr_search'] = array('type' => 'type');
+  variable_set('apachesolr_enabled_facets', $blocks);
+  apachesolr_clear_cache();
 }

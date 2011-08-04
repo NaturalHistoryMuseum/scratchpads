@@ -1132,7 +1132,17 @@ function emonocot_node_import_fields_alter(&$fields, $type){
 
 function emonocot_taxonomy($op, $type, $vocabulary){
   if($op == 'insert' && $type == 'vocabulary'){
+  	//Define the default taxon page layout
     db_query("INSERT INTO {mado} (identifier, blocks) VALUES (%d, '%s')", $vocabulary['vid'], serialize(emonocot_mado_config()));
+    
+    //Let's add the associated apache_solr block
+    $new_block = 'im_vid_'.$vocabulary['vid'];
+    $blocks = unserialize(variable_get('apachesolr_enabled_facets', array()));
+    $blocks['apachesolr_search'][$new_block] = $new_block;
+    variable_set('apachesolr_enabled_facets', $blocks);
+    //and enable it
+    db_query("DELETE FROM {blocks} WHERE theme = '%s' AND module = 'apachesolr_search' AND delta = '%s'", $theme->name, $new_block);
+    db_query("INSERT INTO {blocks} (module, delta, theme, region, status, weight) VALUES ('apachesolr_search','%s','%s','left',1,-25)", $new_block, $theme->name);
   }
 }
 
