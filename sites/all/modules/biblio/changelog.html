@@ -7,7 +7,37 @@
 </head>
 <body>
 <div>
-
+<h3>6.x-1.x-dev</h3>
+<b>New features</b>
+<ul>
+<li> You can now mass import PubMed articles by listing the PubMed ID's in a text file (each on a separate line) and then importing the file like you would with other file formats (such as BibTex), just make sure to select PubMed ID's as the file type </li>
+<li> Title URL's are now aware of and use url aliases if they exist</li>
+<li> Added new Field mapper interface on the "admin/settings/biblio/fields/typemap" page.  This allows the admin to change the mapping (destination field)of data being imported from various file types</li>
+<li> Added a the abillity to filter fields out of data when it is exported to a file.  See 'admin/settings/biblio/fields/fieldmap/bibtex' for example and you will see an "export" check box next to each field.  By default they are all turned on, but unchecking a field and turning on the filtering option on the 'admin/settings/biblio/export' will filter cause the exported data to be filtered accordingly.</li>
+<li> Added a new author link option which will link author names to the authors profile pages if desired and the appropriate author id to Drupal UID mapping has been made.</li>
+</ul>
+<b>Bugs fixed</b>
+<ul>
+<li><a href="/node/955258">#955258</a> Fixed: Biblio fields are not indexed by search</li>
+<li><a href="/node/946362">#946362</a> Fixed: Encoding issue in author formatter</li>
+<li><a href="/node/946492">#946492</a> Fixed: Subsidiary authors not imported by tagged EndNote parser</li>
+<li><a href="/node/939766">#939766</a> Fixed: Fatal error: Call to undefined function _build_biblio_tagged_link()</li>
+<li><a href="/node/908050">#908050</a> Fixed: Views: Author Lastname filter</li>
+<li><a href="/node/935562">#935562</a> Fixed: Biblio block and Restric users to view own biblio entries</li>
+<li><a href="/node/924094">#924094</a> Fixed: biblio import incomplete? (some MARC sub-fields missing)</li>
+<li><a href="/node/920910">#920910</a> Fixed: Retrieve Author name from username (revert some funtionality which was removed in the 5 to 6 transition)</li>
+<li> Fixed a bug which could lead to biblio nodes being owned by the anonymous user (uid=0) if there are CCK fields attached to the biblio content type.</li>
+<li><a href="/node/898544">#898544</a> Fixed: How to make a default blank option in the dropdown filter menu</li>
+<li><a href="/node/843580">#843580</a> Fixed: Error in theme_biblio_filters() parameters</li>
+<li><a href="/node/666672#comment-3364446">#666672</a> More authors button hangs with an AJAX working icon</li>
+<li> Fixed a bug in the MARC parser which ignored repeating subfileds</li>
+<li><a href="/node/828728">#828728</a> Fixed: "SQL errors when migrating Biblio from Drupal 5</li>
+<li><a href="/node/859620">#859620</a> Fixed: "Populate using PubMed" overrides Citekey settings</li>
+<li><a href="/node/862740">#862740</a> Fixed: "Missing space between attachements in list output"</li>
+<li><a href="http://drupal.org/node/880218">#880218</a> Fixed: "Hyperlink author names" option ignored by theme_biblio_long()</li>
+<li><a href="http://drupal.org/node/844652#comment-3180882">#844652</a> Fixed: issue with citekey generation</li>
+</ul>
+<hr />
 <h3>6.x-1.14</h3>
 <b>New features...</b>
 <ul> 

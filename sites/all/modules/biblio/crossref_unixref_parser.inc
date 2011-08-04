@@ -1,5 +1,5 @@
 <?php
-// $Id: crossref_unixref_parser.inc,v 1.1.2.10 2009/07/22 18:20:51 rjerome Exp $
+// $Id: crossref_unixref_parser.inc,v 1.1.2.12 2010/10/13 16:52:03 rjerome Exp $
 function unixref_startElement($parser, $name, $attrs) {
   global $node, $element,  $attribute, $auth_category, $contrib_count, $org_count;
   switch ($name) {
@@ -66,7 +66,10 @@ function unixref_endElement($parser, $name) {
   switch ($name) {
     case 'doi_record' :
       array_walk_recursive($node,'unixref_decode' );
-      $nids[] = biblio_save_node($node, $batch, $session_id, $save_node);
+      $nid = biblio_save_node($node, $batch, $session_id, $save_node);
+      if (isset($nid)) {
+        $nids[] = $nid;
+      }
       break;
     case 'person_name' :
       $node['biblio_contributors'][$auth_category][$contrib_count]['auth_type'] = _biblio_get_auth_type($auth_category, $node['biblio_type']);
@@ -166,37 +169,8 @@ function unixref_characterData($parser, $data) {
 function _unixref_field_map($field) {
   static $field_map = array();
   if (empty($field_map)) {
-    $field_map = array(
-      'publisher_place'     => 'biblio_place_published',
-      'publisher_name'      => 'biblio_publisher',
-      'volume'              => 'biblio_volume',
-      'number'              => 'biblio_number',
-      'issue'               => 'biblio_issue',
-      'edition_number'      => 'biblio_edition',
-      'section'             => 'biblio_section',
-      'doi'                 => 'doi',
-      'title'               => 'title',
-      'isbn'                => 'isbn',
-      'issn'                => 'issn',
-      'first_page'          => 'biblio_first_page',
-      'last_page'           => 'biblio_last_page',
-      // Journal metadata
-      'full_title'          => 'biblio_secondary_title',
-      'abbrev_title'        => 'biblio_short_title',
-      // Conference metadata
-      'conference_location' => 'biblio_place_published',
-      'conference_name'     => 'biblio_secondary_title',
-      'conference_acronym'  => 'biblio_short_title',
-      // Proceedings metadata
-      'proceedings_title'   => 'biblio_secondary_title',
-      'year'                => 'year',
-      'month'               => 'month',
-      'day'                 => 'day',
-      'degree'              => 'biblio_type_of_work',
-      'error'               => 'error',
-      'language'            => 'biblio_lang',
-    );
-
+    module_load_include('inc', 'biblio', 'biblio.type.mapper');
+    $field_map = biblio_get_field_map('unixref');
   }
   return (isset($field_map[$field])) ? $field_map[$field]: FALSE;
 }

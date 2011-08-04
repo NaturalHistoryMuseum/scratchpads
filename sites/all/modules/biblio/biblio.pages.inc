@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.pages.inc,v 1.1.2.116 2010/06/30 19:31:11 rjerome Exp $
+// $Id: biblio.pages.inc,v 1.1.2.119 2010/10/08 15:45:24 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -888,6 +888,12 @@ function _get_biblio_search_filter($arg = 'keys') {
 
 function _get_biblio_filters() {
 
+  $pub_authors[0] = '';
+  $pub_years[0] = '';
+  $pub_type[0] = '';
+  $pub_taxo[0] = '';
+  $pub_keywords[0] = '';
+
   $fields = " b.biblio_year, t.name , t.tid ";
   $order = " b.biblio_year DESC";
   $taxo_fields = "td.name as termname,td.tid as taxid, v.name as vocab_name";
@@ -1034,9 +1040,13 @@ function biblio_form_filter_submit($form, &$form_state) {
  * @return unknown_type
  */
 function biblio_get_user_pubs($user, $profile='', $nofilters=''){
-  if (isset($user->biblio_contributor_id) && $user->biblio_contributor_id > 0 ){
+  if (isset($user->biblio_contributor_id) && !empty($user->biblio_contributor_id) ){
     $pubs = biblio_db_search('author', $user->biblio_contributor_id, $profile, $nofilters);
-  }else{
+  }
+  elseif (isset($user->biblio_lastname) && !empty($user->biblio_lastname)) {
+    $pubs = biblio_db_search('author', $user->biblio_lastname, $profile, $nofilters);
+  }
+  else{
     $pubs = biblio_db_search('uid', $user->uid, $profile, $nofilters);
   }
 
@@ -1115,6 +1125,7 @@ function _biblio_get_authors($filter = NULL) {
   $menu = menu_get_active_title();
   if ($menu == 'Authors') $path = $base.'/authors/';
   if ($menu == 'Biblio settings') $path = 'admin/settings/biblio/author/list/';
+
   if ($filter) {
     $filter = strtoupper($filter);
     $where[] =  "UPPER(SUBSTRING(lastname,1,1)) = '%s' ";
@@ -1124,9 +1135,14 @@ function _biblio_get_authors($filter = NULL) {
     $query_ext =  NULL;
     $header_ext = NULL;
   }
-  if ($user->uid != 1 ) {
+
+  if ($user->uid != 1 ) {//show only published entries to everyone except admin
     $where[] = 'n.status = 1 ';
-  }//show only published entries to everyone except admin
+  }
+
+  if (variable_get('biblio_view_only_own', 0) ) {//show only authors that belong to nodes that the user has access to
+    $where[] = "n.uid = $user->uid";
+  }
 
   if (count($where)) {
     $where_clause = count($where) > 1 ? 'WHERE ('. implode(') AND (', $where) .')': 'WHERE '. $where[0];
@@ -1212,10 +1228,13 @@ function _biblio_get_keywords($filter = NULL) {
     $header_ext = NULL;
   }
 
-  if ($user->uid != 1 ) {
+  if ($user->uid != 1 ) {//show only published entries to everyone except admin
     $where[] = 'n.status = 1 ';
-  }//show only published entries to everyone except admin
+  }
 
+  if (variable_get('biblio_view_only_own', 0) ) {//show only authors that belong to nodes that the user has access to
+    $where[] = "n.uid = $user->uid";
+  }
   if (count($where)) {
     $where_clause = count($where) > 1 ? 'WHERE ('. implode(') AND (', $where) .')': 'WHERE '. $where[0];
   }

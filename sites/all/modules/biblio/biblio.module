@@ -1,9 +1,9 @@
 <?php
-// $Id: biblio.module,v 1.123.2.181 2010/06/09 01:48:48 rjerome Exp $
+// $Id: biblio.module,v 1.123.2.193 2010/11/03 13:51:28 rjerome Exp $
 /**
  *   biblio.module for Drupal
  *
- *   Copyright (C) 2006-2008  Ron Jerome
+ *   Copyright (C) 2006-2010  Ron Jerome
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ function _biblio_get_auth_types($auth_category, $biblio_type) {
       $auth_types[$row->auth_category][$row->biblio_type][] = $row->auth_type;
     }
   }
-  $result = $auth_types[$auth_category][$biblio_type];
+  $result = isset($auth_types[$auth_category][$biblio_type])?$auth_types[$auth_category][$biblio_type]:null;
   // fall back to defaults, if no author types are defined for this biblio_type
   if (empty($result)) $result = $auth_types[$auth_category][0];
   return $result;
@@ -179,6 +179,10 @@ function biblio_theme() {
         'arguments' => array('form'),
     ),
    'biblio_admin_type_mapper_form' => array(
+        'file' => 'biblio.admin.inc',
+        'arguments' => array('form'),
+    )    ,
+   'biblio_admin_field_mapper_form' => array(
         'file' => 'biblio.admin.inc',
         'arguments' => array('form'),
     )    ,
@@ -442,6 +446,7 @@ function biblio_link($type, $node = NULL, $teaser = FALSE) {
 
     }
     if (biblio_access('export', $node)) {
+      module_load_include('inc','biblio','biblio_theme');
       $show_link = variable_get('biblio_export_links', array('tagged' => TRUE, 'xml' => TRUE, 'bibtex' => TRUE));
       $show_link['google'] = variable_get('biblio_google_link', 1);
       if ($show_link['tagged']) $links['biblio_tagged']         = _build_biblio_tagged_link($base, $node->nid);
@@ -737,18 +742,26 @@ function biblio_menu() {
     'weight'            => -8
   );
   $items['admin/settings/biblio/fields/typemap'] = array(
-    'title'             => t('Type Mapping'),
+    'title'             => 'Type Mapping',
     'page callback'     => 'biblio_admin_type_mapper_page',
- //   'page arguments'    => array('biblio_admin_type_mapper_page'),
     'access arguments'  => array('administer biblio'),
     'file'              => 'biblio.admin.inc',
     'type'              => MENU_LOCAL_TASK,
     'weight'            => -1
   );
   $items['admin/settings/biblio/fields/typemap/%'] = array(
-    'title'             => t('Type Mapping'),
+    'title'             => 'Type Mapping',
     'page callback'     => 'drupal_get_form',
     'page arguments'    => array('biblio_admin_type_mapper_form', 5),
+    'access arguments'  => array('administer biblio'),
+    'file'              => 'biblio.admin.inc',
+    'type'              => MENU_CALLBACK,
+    'weight'            => -1
+  );
+  $items['admin/settings/biblio/fields/fieldmap/%'] = array(
+    'title'             => 'Field Mapping',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('biblio_admin_field_mapper_form', 5),
     'access arguments'  => array('administer biblio'),
     'file'              => 'biblio.admin.inc',
     'type'              => MENU_CALLBACK,
@@ -1290,8 +1303,9 @@ function biblio_form($node, $form_state) {
             require_once(drupal_get_path('module', 'biblio') .'/biblio.keywords.inc');
             $node->$key = biblio_implode_keywords($node->$key);
           }
-
-          $fld['hint'] = t('Separate keywords using the " @sep " character', array('@sep' => $sep));
+          if (empty($fld['hint'])) {
+            $fld['hint'] = t('Separate keywords using the " @sep " character', array('@sep' => $sep));
+          }
         }
 
 
@@ -1363,9 +1377,9 @@ function biblio_form($node, $form_state) {
       '#weight' => 19
     );
     // embed filter form in "Full Text" fieldset, because it applies to the full text only
-    $form['body_field']['format'] = filter_form($node->format, 20);
+    //$form['body_field']['format'] = filter_form($node->format, 20);
   }
- //  $form['format'] = filter_form($node->format, 20);
+  $form['format'] = filter_form($node->format, 20);
 
   return $form;
 }
@@ -1526,7 +1540,7 @@ function biblio_contributors_js($tid, $auth_category, $other_fields = FALSE) {
   form_set_cache($form_build_id, $form, $form_state);
   $form += array(
     '#post' => $_POST,
-    '#programmed' => FALSE
+    '#programmed' => FALSE,
   );
   // Rebuild the form.
   $form = form_builder('biblio_node_form', $form, $form_state);
@@ -1593,6 +1607,7 @@ function biblio_form_validate($form, & $form_state) {
       else {
         $form_state['storage']['biblio_type']  = $form_state['values']['biblio_type'];
         $form_state['submitted'] = TRUE;
+        $form_state['rebuild'] = TRUE;
         return;
       }
   }
@@ -1722,7 +1737,7 @@ function biblio_citekey_generate($node) {
     $prefix          = variable_get('biblio_citekey_prefix', '');
     $primary_field   = variable_get('biblio_citekey_field1', 'nid');
     $secondary_field = variable_get('biblio_citekey_field2', 'nid');
-    $citekey = (!empty($node-> $primary_field)) ? $node-> $primary_field : (!empty($node-> $secondary_field)) ? $node-> $secondary_field : $node->nid;
+    $citekey = (!empty($node->$primary_field)) ? $node->$primary_field : ((!empty($node->$secondary_field)) ? $node->$secondary_field : $node->nid);
     return check_plain($prefix . $citekey);
   }
   else {
@@ -1774,6 +1789,8 @@ function biblio_view(& $node, $teaser = FALSE, $page = FALSE) {
  * Generates a block containing the latest poll.
  */
 function biblio_block($op = 'list', $delta = 0) {
+  global $user;
+
   if (user_access('access content')) {
     if ($op == 'list') {
       $blocks[0]['info'] = t('Most recent publications');
@@ -1784,22 +1801,28 @@ function biblio_block($op = 'list', $delta = 0) {
       // Retrieve the latest pubs
       $num_in_block = variable_get('biblio_rowsperblock', 4);
       $block_order = variable_get('biblio_block_order', 'n.created');
-      $query = "SELECT COUNT(n.nid)
-                  FROM {node} n
-                  WHERE n.type = 'biblio' AND n.status=1";
-      $num_rows = db_result(db_query_range(db_rewrite_sql($query), 0, $num_in_block));
-      if ($num_rows) {
+      if (variable_get('biblio_view_only_own', 0) ) {
+        $limit .= " AND n.uid = $user->uid ";
+      }
+//      $query = "SELECT COUNT(n.nid)
+//                  FROM {node} n
+//                  WHERE n.type = 'biblio' AND n.status=1 " . $limit;
+//      $num_rows = db_result(db_query_range(db_rewrite_sql($query), 0, $num_in_block));
+//      if ($num_rows) {
         $query = "SELECT n.nid, n.title
                     FROM {node} n
                     LEFT JOIN {biblio} b  on n.vid=b.vid
-                    WHERE n.type = 'biblio' AND n.status=1
-                    ORDER BY $block_order DESC";
+                    WHERE n.type = 'biblio' AND n.status=1 " . $limit .
+                    "ORDER BY $block_order DESC";
         $result = db_query_range(db_rewrite_sql($query), 0, $num_in_block);
         $base = variable_get('biblio_base', 'biblio');
         $block['subject'] = t('Recent Publications');
         $block['content'] = '<div class="item-list"><ul>';
         $options['html'] = TRUE;
         while ($pub = db_fetch_object($result)) {
+          if (variable_get('biblio_hide_bibtex_braces', 0)) {
+            $pub->title = biblio_remove_brace($pub->title);
+          }
           $block['content'] .= '<li >'. l(filter_xss($pub->title, biblio_get_allowed_tags()), "node/$pub->nid", $options) .'</li>';
         }
         $block['content'] .= '</ul>';
@@ -1810,7 +1833,7 @@ function biblio_block($op = 'list', $delta = 0) {
         }
         $block['content'] .= l(t('More...'), $base);
         $block['content'] .= '</div>';
-      }
+//      }
       return $block;
     }
   }
@@ -2382,12 +2405,27 @@ function biblio_get_allowed_tags() {
 }
 
 function biblio_get_title_url_info($node, $base = 'biblio', $inline = FALSE) {
-  $view_mode = ($inline) ? 'viewinline' : 'view';
-  $path = $base .'/'. $view_mode;
-
-  return array('link' =>  ((variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) ? $node->biblio_url : "$path/$node->nid" ),
+  $new_window = NULL;
+  if (variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) {
+    $path = $node->biblio_url;
+    if (variable_get('biblio_links_target_new_window',null)){
+      $new_window = array('target'=>'_blank');
+    }
+  }
+  else {
+    $language = isset($node->language) ? $node->language : '';
+    $view_mode = ($inline) ? 'viewinline' : 'view';
+    if (module_exists('biblio_client')) {
+      $path = $base .'/'. $view_mode. '/'. $node->nid;
+    }
+    else {
+      $node_path = 'node/'. $node->nid;
+      $path = drupal_get_path_alias($node_path, $language);
+    }
+  }
+  return array('link' => $path ,
                'options' =>
-                  array('attributes' => (variable_get('biblio_links_target_new_window',null) && variable_get('biblio_link_title_url', 0) && !empty($node->biblio_url)) ? array('target'=>'_blank') : null,
+                  array('attributes' => $new_window,
                         'html' => TRUE),
                 );
 }

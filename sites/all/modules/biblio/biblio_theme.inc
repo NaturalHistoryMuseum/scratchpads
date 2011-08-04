@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_theme.inc,v 1.8.2.104 2010/06/28 01:00:22 rjerome Exp $
+// $Id: biblio_theme.inc,v 1.8.2.114 2010/10/20 01:48:59 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -56,7 +56,6 @@ function theme_biblio_openurl($node) {
         'href'       => $openURLResolver,
         'html'       => TRUE,
         'attributes' => array(
-          'target'     => 'blank',
           'class'      => 'biblio-openurl-image',
         ),
         'query'      => $openurl_query_options,
@@ -67,7 +66,6 @@ function theme_biblio_openurl($node) {
         'title'      => t('Find It Via OpenURL!'),
         'href'       => $openURLResolver,
         'attributes' => array(
-          'target'     => 'blank',
           'class'      => 'biblio-openurl-text',
         ),
         'query'      => $openurl_query_options,
@@ -136,8 +134,9 @@ function theme_biblio_long($node, $base = 'biblio', $style = 'classic') {
     }
     return $output;
   }
+  $author_links = variable_get('biblio_author_links', 1);
   foreach ((array)$node->biblio_contributors[1] as $auth) {
-    $authors[] = theme('biblio_author_link', $auth['name'], $auth['cid'], $base);
+    $authors[] = $author_links ? theme('biblio_author_link', $auth) : check_plain(trim($auth['name']));
   }
   $authors = implode('; ', (array)$authors);
   $output .= theme('biblio_openurl', $node);
@@ -312,8 +311,8 @@ function theme_biblio_authors($contributors, $style = 'classic', $cat = 1, $inli
       $author = biblio_parse_author($author, $cat); // this is needed for form preview to fill in all fields
     }
     if (strlen($author['name'])) {
-      $format = $author_style_function($author);
-      if ($author_links) $format = theme('biblio_author_link', $format, $author['cid'], $base, $inline);
+      $$author['name'] = $author_style_function($author);
+      if ($author_links) $format = theme('biblio_author_link', $author);
       // add the auth_type as css id to allow later formatting
       $author_array[] = '<span id="'.$author['auth_type'].'">'.$format.'</span>';
     }
@@ -393,7 +392,7 @@ function _biblio_get_utf8_regex() {
   $graph = "^\p{C}\t\n\f\r\p{Z}"; // Unicode-aware equivalent of "[:graph:]"
 
   // Matches Unicode lower case letters:
-  $lower = "\p{Ll}"; // Unicode-aware equivalent of "[:lower:]"
+  $lower = "\p{Ll}\p{M}"; // Unicode-aware equivalent of "[:lower:]"
 
   // Matches Unicode printing characters (including space):
   $print = "\P{C}"; // same as "^\p{C}", Unicode-aware equivalent of "[:print:]"
@@ -458,6 +457,8 @@ function theme_biblio_format_authors($contributors, $options, $inline = false)
         // within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
         // to initials, i.e., only retain their first character
         $author['firstname'] = preg_replace("/([$upper])[$lower]+/$patternModifiers", '\\1', $author['firstname']);
+        $author['initials'] = $author['firstname'] . $author['initials'];
+        unset($author['firstname']);
         //$author['firstname'] = drupal_substr($author['firstname'], 0, 1);
         // the next line caused extra betweenInitialsDelim to appear in some circumstances
         //$author['firstname'] = preg_replace("/($space|$dash)?/$patternModifier", $options['betweenInitialsDelim'], $author['firstname']);
@@ -473,9 +474,9 @@ function theme_biblio_format_authors($contributors, $options, $inline = false)
       //$author['initials'] = str_replace(' ', '',  $author['initials']);
 
       // within initials, add a space after a hyphen, but only if ...
-      if (ereg(" $", $options['betweenInitialsDelim'])) // ... the delimiter that separates initials ends with a space
-      $author['initials'] = preg_replace("/-(?=[$upper])/$patternModifiers", "- ", $author['initials']);
-
+      if (preg_match('/ $/', $options['betweenInitialsDelim'])) { // ... the delimiter that separates initials ends with a space
+        $author['initials'] = preg_replace("/-(?=[$upper])/$patternModifiers", "- ", $author['initials']);
+      }
       // then, separate initials with the specified delimiter:
       $delim = $options['betweenInitialsDelim'];
       $author['initials'] = preg_replace("/([$upper])(?=[^$lower]+|$)/$patternModifiers", "\\1$delim", $author['initials']);
@@ -483,11 +484,11 @@ function theme_biblio_format_authors($contributors, $options, $inline = false)
       $shortenInitials = (isset($options['numberOfInitialsToKeep'])) ? $options['numberOfInitialsToKeep'] : FALSE;
       if ($shortenInitials) $author['initials'] = drupal_substr($author['initials'], 0, $shortenInitials);
 
-      if ($options['shortenGivenNames'] && !empty($author['firstname'])) {
-        $author['firstname'] = $author['firstname'].$options['betweenInitialsDelim'].$author['initials'];
-        if ($shortenInitials) $author['firstname'] = drupal_substr($author['firstname'], 0, $shortenInitials);
-      }
-      elseif(!empty($author['firstname'])) {
+//      if ($options['shortenGivenNames'] && !empty($author['firstname'])) {
+//        $author['firstname'] = $author['firstname'].$options['betweenInitialsDelim'].$author['initials'];
+//        if ($shortenInitials) $author['firstname'] = drupal_substr($author['firstname'], 0, $shortenInitials);
+//      }
+      if(!empty($author['firstname'])) {
         $author['firstname'] = $author['firstname'].' '.$author['initials'];
       }
       elseif(empty($author['firstname'])) {
@@ -521,7 +522,8 @@ function theme_biblio_format_authors($contributors, $options, $inline = false)
       $singleAuthorString = $author['lastname'];
     }
     if ($author_links) {
-      $singleAuthorString = theme('biblio_author_link',$singleAuthorString, $author['cid'], $base, $inline);
+      $author['name'] = $singleAuthorString;
+      $singleAuthorString = theme('biblio_author_link', $author);
     }
     else {
       $singleAuthorString = check_plain($singleAuthorString);
@@ -563,7 +565,9 @@ function theme_biblio_format_authors($contributors, $options, $inline = false)
   return $output;
 }
 
-function theme_biblio_author_link($author, $aid, $base='biblio', $inline = FALSE) {
+function theme_biblio_author_link($author) {
+  $base = variable_get('biblio_base', 'biblio');
+  $link_to_profile = variable_get('biblio_author_link_profile', 0);
   $options = array();
   $inline = $inline ? "/inline" : "";
 
@@ -573,9 +577,12 @@ function theme_biblio_author_link($author, $aid, $base='biblio', $inline = FALSE
   if (isset($_GET['order'])) {
     $options['query']['order'] = $_GET['order'];
   }
-
-  $html = l(trim($author), "$base/author/$aid".$inline, $options );
-
+  if ($link_to_profile && $author['drupal_uid'] ) {
+    return l(trim($author['name']), "user/".$author['drupal_uid']."/$base" );
+  }
+  else {
+    return l(trim($author['name']), "$base/author/". $author['cid'] .$inline, $options );
+  }
   return $html;
 }
 
@@ -726,7 +733,7 @@ function theme_biblio_entry($node, $base = 'biblio', $style = 'classic', $inline
  * @param $form
  * @return unknown_type
  */
-function theme_biblio_filters(& $form) {
+function theme_biblio_filters($form) {
   if (sizeof($form['current'])) {
     $output .= '<ul>';
     foreach (element_children($form['current']) as $key) {
@@ -824,10 +831,16 @@ function theme_biblio_download_links($node = NULL) {
     $file_count = 0;
     foreach ($node->files as $file) {
       if ($file->list) {
-        $file_count++;
-        $href = file_create_url($file->filepath);
+        if (variable_get('biblio_download_links_to_node', 0)) {
+          $href = 'biblio/view/'.$node->nid;
+        }
+        else {
+          $href = file_create_url($file->filepath);
+        }
         $text = $file->description ? $file->description : $file->filename;
+        if ($file_count) $files .= '; ';
         $files .= l($text, $href) .'&nbsp;('. format_size($file->filesize).')';
+        $file_count++;
       }
     }
     $files .= '</span>';
@@ -869,6 +882,9 @@ function theme_biblio_export_links($node = NULL) {
   if ($show_link['bibtex']) $links .= '<li> '. _build_biblio_link($base, $node, 'bibtex') .'</li>';
   if ($show_link['google'] && !empty($node))
                             $links .= '<li> '. _build_biblio_link($base, $node, 'google') .'</li>';
+  if ($show_link['pubmed'] && module_exists('biblio_pm') && !(empty($node))) {
+    $links .= '<li> '._build_biblio_link($base, $node, 'pubmed')  .'</li>';
+  }
   if ($node) $openurl_link = theme('biblio_openurl', $node);
   if (!empty($openurl_link)) {
     $links .= '<li> '. l($openurl_link['title'], $openurl_link['href'], $openurl_link) .'</li>';
@@ -905,8 +921,12 @@ function _build_biblio_link($base, $node = NULL, $type = NULL) {
     case 'rtf':
       $link = _build_biblio_rtf_link($base, $nid);
       break;
+    case 'pubmed':
+      $link = biblio_pm_biblio_lookup_link($node);
+      $link = $link['biblio_pubmed'];
+      break;
   }
-  return  l($link['title'], $link['href'], $link);
+  if (!empty($link)) return  l($link['title'], $link['href'], $link);
 }
 
 function _build_biblio_rtf_link($base, $nid) {

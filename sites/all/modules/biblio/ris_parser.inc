@@ -1,5 +1,5 @@
 <?php
-// $Id: ris_parser.inc,v 1.4.2.23 2010/03/22 00:10:57 rjerome Exp $
+// $Id: ris_parser.inc,v 1.4.2.24 2010/10/13 16:52:03 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *
@@ -49,7 +49,10 @@ function _ris_tagged_import($file, $terms = array(), $batch = FALSE, $session_id
               if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
               $node['taxonomy'] = array_merge($terms, $node['taxonomy']);
             }
-            $nids[] = biblio_save_node($node, $batch, $session_id);
+            $nid = biblio_save_node($node, $batch, $session_id);
+            if (isset($nid)) {
+              $nids[] = $nid;
+            }
           }
           $node = array();
           $incite = FALSE;

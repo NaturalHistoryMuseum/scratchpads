@@ -1,5 +1,5 @@
 <?php
-// $Id: endnote8_parser.inc,v 1.10.2.23 2009/07/22 18:20:51 rjerome Exp $
+// $Id: endnote8_parser.inc,v 1.10.2.26 2010/10/13 16:52:03 rjerome Exp $
 function en8_startElement($parser, $name, $attrs) {
   global $node, $element, $contributors, $contrib_count, $titles, $periodical, $dates, $urls, $keyword_count, $font_attr;
   switch ($name) {
@@ -67,7 +67,10 @@ function en8_endElement($parser, $name) {
         if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
         $node['taxonomy'] = array_merge($terms,$node['taxonomy']);
       }
-      $nids[] = biblio_save_node($node, $batch_proc, $session_id);
+      $nid = biblio_save_node($node, $batch_proc, $session_id);
+      if (isset($nid)) {
+        $nids[] = $nid;
+      }
       break;
     case 'authors' :
     case 'secondary-authors' :
@@ -189,7 +192,9 @@ function en8_characterData($parser, $data) {
             break;
         }
         break;
-
+      case 'title' :
+        $node['title'] .= $data;
+        break;
       default:
         if ($field = en8_parser_field_map(trim($element))) {
           $node[$field] .= $data;
@@ -201,85 +206,10 @@ function en8_characterData($parser, $data) {
 function en8_parser_field_map($enfield) {
   static $fmap = array();
   if(empty($fmap)) {
-    $fmap = array(
-       'source-app'               => '',
-       'rec-number'               => '',
-       'ref-type'                 => 'biblio_type',
-       'auth-address'             => 'biblio_auth_address',
-       'auth-affiliaton'          => '',
-       'title'                    => 'title',
-       'secondary-title'          =>'biblio_secondary_title',
-       'tertiary-title'           => 'biblio_tertiary_title',
-       'alt-title'                => 'biblio_alternate_title',
-       'short-title'              => 'biblio_short_title',
-       'translated-title'         => 'biblio_translated_title',
-       'full-title'               => '',
-       'abbr-1'                   => '',
-       'abbr-2'                   => '',
-       'abbr-3'                   => '',
-       'pages'                    => 'biblio_pages',
-       'volume'                   => 'biblio_volume',
-       'number'                   => 'biblio_number',
-       'issue'                    => 'biblio_issue',
-       'secondary-volume'         => '',
-       'secondary-issue'          => '',
-       'num-vols'                 => 'biblio_number_of_volumes',
-       'edition'                  => 'biblio_edition',
-       'section'                  => 'biblio_section',
-       'reprint-edition'          => 'biblio_reprint_edition',
-       'reprint-status'           => '',
-       'year'                     => 'biblio_year',
-       'pub-dates'                => 'biblio_date',
-       'copyright-dates'          => '',
-       'pub-location'             => 'biblio_place_published',
-       'publisher'                => 'biblio_publisher',
-       'orig-pub'                 => 'biblio_original_publication',
-       'isbn'                     => 'biblio_isbn',
-       'accession-num'            => 'biblio_accession_number',
-       'call-num'                 => 'biblio_call_number',
-       'report-id'                => '',
-       'coden'                    => '',
-       'electronic-resource-num'  => '',
-       'abstract'                 => 'biblio_abst_e',
-       'label'                    => 'biblio_label',
-       'image'                    => '',
-       'caption'                  => '',
-       'notes'                    => 'biblio_notes',
-       'research-notes'           => 'biblio_research_notes',
-       'work-type'                => 'biblio_type_of_work',
-       'reviewed-item'            => '',
-       'availability'             => '',
-       'remote-source'            => '',
-       'meeting-place'            => '',
-       'work-location'            => '',
-       'work-extent'              => '',
-       'pack-method'              => '',
-       'size'                     => '',
-       'repro-ratio'              => '',
-       'remote-database-name'     => 'biblio_remote_db_name',
-       'remote-database-provider' => 'biblio_remote_db_provider',
-       'language'                 => 'biblio_lang',
-       'web-urls'                 => '',
-       'pdf-urls'                 => '',
-       'text-urls'                => '',
-       'image-urls'               => '',
-       'related-urls'             => 'biblio_url',
-       'access-date'              => 'biblio_access_date',
-       'modified-date'            => '',
-       'custom1'                  => 'biblio_custom1',
-       'custom2'                  => 'biblio_custom2',
-       'custom3'                  => 'biblio_custom3',
-       'custom4'                  => 'biblio_custom4',
-       'custom5'                  => 'biblio_custom5',
-       'custom6'                  => 'biblio_custom6',
-       'custom7'                  => 'biblio_custom7',
-       'misc1'                    => '',
-       'misc2'                    => '',
-       'misc3'                    => '',
-    );
+    module_load_include('inc', 'biblio', 'biblio.type.mapper');
+    $fmap = biblio_get_field_map('endnote8');
   }
   return (!empty($fmap[$enfield])) ? $fmap[$enfield] : '';
-
 }
 
 function en8_parser_type_map($en8type){

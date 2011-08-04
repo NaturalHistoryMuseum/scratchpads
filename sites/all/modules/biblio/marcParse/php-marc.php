@@ -39,8 +39,8 @@
 //
 //-----------------------------------------------------------------------------
 //
-// $Id: php-marc.php,v 1.1.2.1 2009/02/10 02:46:16 rjerome Exp $
-// $Revision: 1.1.2.1 $
+// $Id: php-marc.php,v 1.1.2.2 2010/08/18 21:07:22 rjerome Exp $
+// $Revision: 1.1.2.2 $
 //
 //-----------------------------------------------------------------------------
 
@@ -318,7 +318,7 @@ Class File {
 				$subfield_data = array();
 				foreach ($subfields as $subfield) {
 					if ( strlen($subfield) > 0 ) {
-						$subfield_data[substr($subfield, 0, 1)] = substr($subfield, 1);
+						$subfield_data[substr($subfield, 0, 1)][] = substr($subfield, 1);
 					} else {
 						$this->_warn( "Entirely empty subfield found in tag $tagno" );
 					}
@@ -870,11 +870,11 @@ Class Field {
 	 * @param string Name of subfield
 	 * @return string|false Value of the subfield if exists, otherwise false
 	 */
-	function subfield($code) {
+	function subfield($code, $repeatable = FALSE) {
 		if(array_key_exists($code, $this->subfields)) {
-			return $this->subfields[$code];
+			return $repeatable ? $this->subfields[$code] : $this->subfields[$code][0];
 		} else {
-			return false;
+			return $repeatable ? array(): FALSE;
 		}
 	}
 	

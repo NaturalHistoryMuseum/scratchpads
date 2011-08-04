@@ -1,5 +1,5 @@
 <?PHP
-// $Id: biblio.install,v 1.30.2.99 2010/06/27 18:40:27 rjerome Exp $
+// $Id: biblio.install,v 1.30.2.103 2010/09/06 22:06:02 rjerome Exp $
 
 /**
  * @file
@@ -1119,13 +1119,15 @@ function _add_publication_types()
 
 
 function _add_db_field_data() {
+  global $db_type;
   $schema = biblio_schema();
   $fieldnames = array_keys($schema['biblio_fields']['fields']);
   $field_type_fieldnames = array_keys($schema['biblio_field_type']['fields']);
   $field_type_data_fieldnames = array_keys($schema['biblio_field_type_data']['fields']);
-  db_query("/*!40000 ALTER TABLE {biblio_field_type_data} DISABLE KEYS */;");
-  db_query("/*!40000 ALTER TABLE {biblio_fields} DISABLE KEYS */;");
-
+  if ($db_type == 'mysql' or $db_type == 'mysqli') {
+    db_query("/*!40000 ALTER TABLE {biblio_field_type_data} DISABLE KEYS */;");
+    db_query("/*!40000 ALTER TABLE {biblio_fields} DISABLE KEYS */;");
+  }
   $csv_file = drupal_get_path('module', 'biblio') .'/biblio.field.link.data.csv';
 
   if ($handle = fopen($csv_file, "r")){
@@ -1160,10 +1162,10 @@ function _add_db_field_data() {
     $result = array('success' => FALSE, 'query' => 'Could not open '.$csv_file);
   }
 
-
-  db_query("/*!40000 ALTER TABLE {biblio_field_type_data} ENABLE KEYS */;");
-  db_query("/*!40000 ALTER TABLE {biblio_fields} ENABLE KEYS */;");
-
+  if ($db_type == 'mysql' or $db_type == 'mysqli') {
+    db_query("/*!40000 ALTER TABLE {biblio_field_type_data} ENABLE KEYS */;");
+    db_query("/*!40000 ALTER TABLE {biblio_fields} ENABLE KEYS */;");
+  }
   return $result;
 }
 
@@ -1283,15 +1285,28 @@ function biblio_update_21(){
 }
 
 function biblio_update_22() {
+  global $db_type;
   $result = array();
 
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom1` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom2` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom3` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom4` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom5` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom6` text ;");
-  $result[] = update_sql("alter table {biblio} modify `biblio_custom7` text ;");
+  if ($db_type == 'pgsql') {
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom1` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom2` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom3` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom4` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom5` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom6` type text ;");
+    $result[] = update_sql("alter table {biblio} alter column `biblio_custom7` type text ;");
+  }
+  else{
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom1` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom2` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom3` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom4` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom5` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom6` text ;");
+    $result[] = update_sql("alter table {biblio} modify `biblio_custom7` text ;");
+
+  }
   $result[] = update_sql("UPDATE {biblio_fields}  SET  type = 'textarea',size=60,maxsize=65535 WHERE name LIKE 'biblio_custom%';");
   $result[] = update_sql("ALTER TABLE {biblio}  ADD  `biblio_auth_address` text ;");
   $result[] = update_sql("ALTER TABLE {biblio}  ADD  `biblio_remote_db_name` varchar(255) default NULL;");
@@ -1350,10 +1365,15 @@ function biblio_update_26() {
 }
 
 function biblio_update_27(){
+  global $db_type;
   $result = array();
 
-  $result[] = update_sql("ALTER TABLE {biblio_fields}  MODIFY hint varchar(255);");
-
+  if ($db_type == 'pgsql') {
+     $result[] = update_sql("ALTER TABLE {biblio_fields}  ALTER COLUMN hint TYPE varchar(255);");
+   }
+   else {
+     $result[] = update_sql("ALTER TABLE {biblio_fields}  MODIFY hint varchar(255);");
+   }
   return $result;
 }
 
@@ -1383,15 +1403,14 @@ function _move_field_data(&$result)
   while ($row = db_fetch_array($db_result))
   {
     // check for presence of this field_type
-    $fieldtype = db_fetch_array(db_query("SELECT * FROM {biblio_field_type_data} WHERE title='".$row['title']."'"));
+    $fieldtype = db_fetch_array(db_query("SELECT * FROM {biblio_field_type_data} WHERE title='%s'", $row['title']));
     if(!is_array($fieldtype)) {
       $new_ftdid = variable_get('biblio_last_ftdid',100);
       variable_set('biblio_last_ftdid',$new_ftdid + 1);
       $fieldtype = array('ftdid' => $new_ftdid, 'title' => $row['title'], 'hint' => $row['hint']);
-    // write_record may not work if module is diabled.
-    //drupal_write_record('biblio_field_type_data',$fieldtype);
-      db_query("INSERT INTO {biblio_field_type_data} (ftdid, title, hint)
-                  VALUES('" . implode("', '", $fieldtype) . "')");
+      // write_record may not work if module is diabled.
+      //drupal_write_record('biblio_field_type_data',$fieldtype);
+      db_query("INSERT INTO {biblio_field_type_data} (ftdid, title, hint) VALUES(%d, '%s', '%s')", $fieldtype['ftdid'], $fieldtype['title'], $fieldtype['hint']);
     }
     // update ftdid in linking table to new field type
     $ftdid=$fieldtype['ftdid'];
@@ -1663,17 +1682,19 @@ function biblio_update_6015() {
   $db_result = db_query('SELECT t.nid, t.vid, td.name as biblio_keywords FROM {term_node} t left join {term_data} td on t.tid=td.tid where td.vid=%d', variable_get('biblio_keyword_vocabulary', -1));
   $count=0;
   while ($node = db_fetch_object($db_result)){
-    $count += biblio_insert_keywords($node, TRUE);
+    biblio_insert_keywords($node, TRUE);
+    $count ++;
   }
   $result[] = array('success' => TRUE,
                     'query' => "Copied $count keywords to the new database stucture from taxonomy");
-  $count = array();
+  $count = 0;
   $db_result = db_query('SELECT nid,vid,biblio_keywords FROM {biblio} where biblio_keywords != "" ');
   while ($node = db_fetch_object($db_result)){
-    $count += biblio_insert_keywords($node, TRUE);
+    biblio_insert_keywords($node, TRUE);
+    $count ++;
   }
   $result[] = array('success' => TRUE,
-                    'query' => "Moved ". count($count) ." keywords to the new database stucture");
+                    'query' => "Moved ". $count ." keywords to the new database stucture");
   db_drop_field($result,'biblio', 'biblio_keywords');
   return $result;
 }
@@ -1697,7 +1718,7 @@ function biblio_update_6017() {
   }
 }
 
-function biblio_update_6018(&$sandbox) {
+function biblio_update_6018() {
   $result = array();
   $result[] = update_sql("UPDATE {biblio_contributor_data} SET aka = cid WHERE aka = 0 OR aka IS NULL");
   if (!db_table_exists('biblio_u5')) { // we don't need to do this if upgrading from 5.x
@@ -1816,5 +1837,24 @@ function biblio_update_6026() {
     }
     variable_del('biblio_block_title');
   }
+  return $result;
+}
+function biblio_update_6027() {
+  // renunmber the author rank such that it is zero based accross all categories
+  // this only needs to be done for entries that actually have auth_categories other than 1
+  require_once(drupal_get_path('module', 'biblio') .'/biblio.contributors.inc');
+  $result =  array();
+  $count = 0;
+  $db_result = db_query("SELECT DISTINCT(vid),nid FROM {biblio_contributor} WHERE auth_category IN (2,3,4,5) ");
+  $db_count_result = db_query("SELECT COUNT(DISTINCT(vid)) FROM {biblio_contributor} WHERE auth_category IN (2,3,4,5) ");
+  $count_success = db_result($db_count_result);
+  while ($node = db_fetch_object($db_result)) {
+    $contributors = biblio_load_contributors($node->vid);
+    _save_contributors($contributors, $node->nid, $node->vid, $update = FALSE) ;
+    $count++;
+  }
+  $mesg = "Reordered the authors on $count/$count_success nodes";
+  $result[] = array('success' => ($count_success == $count),
+                    'query' => $mesg);
   return $result;
 }

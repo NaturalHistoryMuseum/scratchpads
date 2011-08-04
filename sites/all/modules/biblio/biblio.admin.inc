@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.admin.inc,v 1.9.2.95 2010/06/28 20:43:17 rjerome Exp $
+// $Id: biblio.admin.inc,v 1.9.2.101 2010/09/24 14:24:12 rjerome Exp $
 /**
  *   biblio.admin.inc
  *
@@ -33,7 +33,7 @@ function biblio_admin_ahah($form, $element, $value) {
 * Implementation of hook_settings().
 */
 function biblio_admin_settings() {
-  $version = '$Name: DRUPAL-6--1-14 $ $Date: 2010/06/28 20:43:17 $';
+  $version = '$Name: DRUPAL-6--1-15 $ $Date: 2010/09/24 14:24:12 $';
   $version = str_replace('$', '', $version);
   $form['biblio_rev'] = array(
     '#value' => $version,
@@ -337,6 +337,9 @@ function biblio_admin_settings() {
     ),
     '#description' => t('You can select which export links to display here.')
   );
+  if (module_exists('biblio_pm')) {
+    $form['links']['export']['biblio_export_links']['#options'] += biblio_pm_biblio_lookup_link_settings();
+  }
   $form['links']['google'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -351,6 +354,13 @@ function biblio_admin_settings() {
     '#description' => t('Selecting this option will display a link to Google Scholar beside each entry.  Clicking this link searches Google Scholar using the title and first author of the current biblio entry.')
   );
 
+  $form['links']['biblio_download_links_to_node'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Download links in "List" view link to "Node" view'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('biblio_download_links_to_node', 0),
+    '#description' => t('If selected, the download links in the "List" view will link to the full "Node" view rather than the file itself, the file can then be downloaded from the node view')
+  );
   $form['links']['biblio_links_target_new_window'] = array(
     '#type' => 'checkbox',
     '#title' => t('Links open in new browser'),
@@ -379,6 +389,13 @@ function biblio_admin_settings() {
     '#return_value' => 1,
     '#default_value' => variable_get('biblio_author_links', 1),
     '#description' => t('This creates a hyperlink on author names which, when clicked, will select entries which contain that author')
+  );
+  $form['links']['biblio_author_link_profile'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hyperlink author names to author profile page'),
+    '#return_value' => 1,
+    '#default_value' => variable_get('biblio_author_link_profile', 0),
+    '#description' => t('This creates a hyperlink on author names which, when clicked, will take the user to the authors profile page')
   );
   $form['openurl'] = array(
     '#type' => 'fieldset',
@@ -879,14 +896,23 @@ function biblio_admin_types_edit_form_submit($form, & $form_state) {
 }
 
 function biblio_admin_type_mapper_page() {
-  $output .= '<h3>'.t('Choose a file format to modify').'</h3><p />';
-  $output .= l('BibTex', 'admin/settings/biblio/fields/typemap/bibtex').'<br>';
-  $output .= l('RIS', 'admin/settings/biblio/fields/typemap/ris').'<br>';
-  $output .= l('EndNote Tagged', 'admin/settings/biblio/fields/typemap/tagged').'<br>';
-  $output .= l('EndNote 7 XML', 'admin/settings/biblio/fields/typemap/endnote7').'<br>';
-  $output .= l('EndNote X3 XML', 'admin/settings/biblio/fields/typemap/endnote8').'<br>';;
-  $output .= l('CrossRef XML', 'admin/settings/biblio/fields/typemap/unixref').'<br>';
-  return $output;
+  $formats = array(
+    'BibTex' => 'bibtex',
+    'RIS' => 'ris',
+    'EndNote Tagged' => 'tagged',
+    'EndNote 7 XML' =>'endnote7',
+    'EndNote X3 XML' => 'endnote8',
+    'CrossRef XML' => 'unixref');
+
+  foreach ($formats as $key => $value) {
+    $rows[] = array(
+      $key,
+      l('edit', 'admin/settings/biblio/fields/typemap/'. $value),
+      l('edit', 'admin/settings/biblio/fields/fieldmap/'. $value)
+    );
+  }
+  $header = array(t('Format'), t('Publication Types'), t('Data Fields'));
+  return theme('table', $header, $rows);
 }
 
 function biblio_admin_type_mapper_form($form_state, $format = 'bibtex', $op = 'map') {
@@ -1005,6 +1031,7 @@ function biblio_admin_type_mapper_form_submit($form, $form_state) {
   elseif ($form_state['values']['op'] == t('Reset to Defaults')) {
     variable_del('biblio_'. $form_state['values']['fileformat'] .'_type_map');
     variable_del('biblio_'. $form_state['values']['fileformat'] .'_type_names');
+    drupal_goto('admin/settings/biblio/fields/typemap/'.$form_state['values']['fileformat']);
   }
   elseif ($form_state['values']['op'] == t('Add')) {
     $names = biblio_get_type_names($form_state['values']['fileformat']);
@@ -1013,6 +1040,143 @@ function biblio_admin_type_mapper_form_submit($form, $form_state) {
   }
   //drupal_goto('admin/settings/biblio/fields/typemap');
 }
+
+function biblio_admin_field_mapper_form($form_state, $format = 'bibtex', $op = 'map') {
+  module_load_include('inc', 'biblio', 'biblio.type.mapper');
+  $map = biblio_get_field_map($format);
+  $export_map = biblio_get_export_map($format);
+
+  $form['fileformat'] = array(
+    '#type' => 'hidden',
+    '#value' => $format,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  $form['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset to Defaults'),
+  );
+  $form['#redirect'] = 'admin/settings/biblio/fields/fieldmap';
+
+  if ($op == 'map') {
+    $schema = drupal_get_schema('biblio');
+    $fieldnames = array_keys($schema['fields']);
+    asort($fieldnames);
+    $biblio_field_options[''] =  t('-none-');
+    foreach ($fieldnames as $field) {
+      $biblio_field_options[$field] =  $field;
+    }
+    $biblio_field_select = array(
+    '#type' => 'select',
+    '#options' => $biblio_field_options,
+    );
+    foreach ($map as $key => $value) {
+      $biblio_field_select['#default_value'] = $map[$key];
+      $form['type'][$key] = array(
+      'format' => array('#value' => "<b>".$key."</b>"),
+      'biblio' => $biblio_field_select,
+      'export' => array('#type' => 'checkbox', '#default_value' => $export_map[$value]),
+      '#tree' => 1,
+      );
+
+    }
+  }
+  elseif($op == 'add') {
+    $form['type_name'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Publication Type',
+      '#required' => TRUE,
+      '#description' => t('This is the name of the type identifier, exactly as it appears in the file'),
+    );
+    $form['type_desc'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Description'
+    );
+    $form['submit']['#value'] = t('Add');
+    unset($form['reset']);
+    $form['#redirect'] = 'admin/settings/biblio/fields/typemap/'.$format;
+  }
+
+  return $form;
+}
+
+function theme_biblio_admin_field_mapper_form($form) {
+  switch ($form['fileformat']['#value']) {
+    case 'bibtex':
+      $title = 'BibTex';
+      break;
+    case 'ris':
+      $title = 'RIS';
+      break;
+    case 'tagged':
+      $title = 'EndNote Tagged';
+      break;
+    case 'endnote7':
+      $title = 'EndNote 7 and earlier XML';
+      break;
+    case 'endnote8':
+      $title = 'EndNote 8 and later XML';
+      break;
+  }
+  if ($form['submit']['#value'] == t('Save')) {
+  drupal_set_title($title.' '.t('Field Mapping'));
+  foreach(element_children($form['type']) as $key ){
+      $rows[] = array(
+        drupal_render($form['type'][$key]['format']),
+        drupal_render($form['type'][$key]['biblio']),
+        drupal_render($form['type'][$key])
+      );
+  }
+  $header = array(
+    $title .' '.t('field identifier'),
+    t('Biblio schema field'),
+    t('Export')
+  );
+  $output .= theme('table', $header, $rows);
+  //$output .= l('['.t('Add New'). " $title ".t('Publication Type').']','admin/settings/biblio/fields/typemap/'.$form['fileformat']['#value'].'/add').' ';
+  //$output .= l('['.t('Add New Biblio Publication Type').']','admin/settings/biblio/fields/type/new').'<br />';
+  }
+  elseif($form['submit']['#value'] == t('Add')) {
+   drupal_set_title(t('Add new publication type to '). $title.' '.t('file type'));
+   $output .= drupal_render($form['type_name']);
+   $output .= drupal_render($form['type_desc']);
+  }
+  $output .= drupal_render($form['submit']);
+  $output .= drupal_render($form['reset']);
+  $output .= drupal_render($form);
+
+  return $output;
+}
+
+function biblio_admin_field_mapper_form_submit($form, $form_state) {
+  if ($form_state['values']['op'] == t('Save')) {
+    foreach($form_state['values'] as $key => $value) {
+      if (is_array($value)) {
+        $map[$key]=$value['biblio'];
+        $export_map[$value['biblio']] = $value['export'];
+      }
+    }
+    variable_set('biblio_'.$form_state['values']['fileformat'] .'_field_map', $map);
+    variable_set('biblio_'.$form_state['values']['fileformat'] .'_export_map', $export_map);
+
+    drupal_goto('admin/settings/biblio/fields/typemap');
+  }
+  elseif ($form_state['values']['op'] == t('Reset to Defaults')) {
+    variable_del('biblio_'. $form_state['values']['fileformat'] .'_field_map');
+    variable_del('biblio_'. $form_state['values']['fileformat'] .'_export_map');
+
+    drupal_goto('admin/settings/biblio/fields/fieldmap/'.$form_state['values']['fileformat']);
+  }
+//  elseif ($form_state['values']['op'] == t('Add')) {
+//    $names = biblio_get_type_names($form_state['values']['fileformat']);
+//    $names[$form_state['values']['type_name']] = $form_state['values']['type_desc'];
+//    variable_set('biblio_'.$form_state['values']['fileformat'] .'_type_names', $names);
+//  }
+
+}
+
 
 function biblio_admin_types_form() {
   $result = db_query('SELECT t.* FROM {biblio_types} as t WHERE t.tid > 0');
@@ -1169,9 +1333,10 @@ function _biblio_get_user_profile_form(& $form, $profile_user = FALSE) {
   $form['biblio_profile'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
-    '#collapsed' =>  TRUE,
+    '#collapsed' =>  FALSE,
     '#title' => ($profile_user) ? t('My publications') : t('Profile pages')
   );
+
   if(!$profile_user) {
     $form['biblio_profile']['biblio_show_user_profile_form'] = array(
       '#type' => 'checkbox',
@@ -1181,6 +1346,7 @@ function _biblio_get_user_profile_form(& $form, $profile_user = FALSE) {
       '#default_value' => variable_get('biblio_show_user_profile_form', '1')
     );
   }
+
   $form['biblio_profile']['biblio_show_profile'] = array(
     '#type' => 'checkbox',
     '#title' => ($profile_user) ? t('Show my publications on my profile page') : t('Show publications on users profile pages'),
@@ -1188,52 +1354,70 @@ function _biblio_get_user_profile_form(& $form, $profile_user = FALSE) {
     '#disabled' => !$allow_edit,
     '#description' => ($profile_user) ? t('Selecting this will create a listing of your publications on your profile page') : t('This sets the site wide default, users may change this in their profile')
   );
+
   if ($profile_user) {
     $form['biblio_profile']['biblio_show_profile']['#default_value'] = (isset($profile_user->biblio_show_profile)) ? $profile_user->biblio_show_profile : variable_get('biblio_show_profile', '0');
   }
   else {
     $form['biblio_profile']['biblio_show_profile']['#default_value'] = variable_get('biblio_show_profile', '0');
   }
+
   $form['biblio_profile']['biblio_my_pubs_menu'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show "My publications" item in the navigation menu'),
     '#disabled' => !$allow_edit,
     '#return_value' => 1,
-    '#description' => ''
+    '#description' => '',
   );
+
   if ($profile_user) {
     $form['biblio_profile']['biblio_my_pubs_menu']['#default_value'] = ((isset($profile_user->biblio_my_pubs_menu)) ? $profile_user->biblio_my_pubs_menu : variable_get('biblio_my_pubs_menu', '0'));
   }
   else {
     $form['biblio_profile']['biblio_my_pubs_menu']['#default_value'] = variable_get('biblio_my_pubs_menu', '0');
   }
+
   if ($profile_user) {
     $db_result = db_query("SELECT cd.lastname, cd.firstname, cd.initials, cd.cid FROM {biblio_contributor_data} cd
             ORDER by cd.lastname ASC ");
     $options = array();
     $options[0] = t('(None)');
 
+   $cid = isset($profile_user->biblio_contributor_id) ? $profile_user->biblio_contributor_id : '';
     while ($row = db_fetch_object($db_result)) {
-        $options[$row->cid] =  "$row->lastname, $row->firstname $row->initials ";
+      $options[$row->cid] =  "$row->lastname, $row->firstname $row->initials ";
+      if(empty($cid)&& isset($profile_user->biblio_lastname) && !empty($profile_user->biblio_lastname)) {
+        if(trim($row->lastname) == trim($profile_user->biblio_lastname)) {
+          $cid = $row->cid;
+          $profile_user->biblio_lastname = '';
+        }
+      }
     }
+    $form['biblio_profile']['biblio_lastname'] = array(
+      '#type' => 'textfield',
+      '#title' => t('My last name'),
+      '#default_value' => isset($profile_user->biblio_lastname) && !empty($profile_user->biblio_lastname) ? $profile_user->biblio_lastname : '',
+      '#description' => t('NOTE: This field is depreciated and you should select your name from the list below.  If you name is not in the list below, then you can enter your last name in this field, and it will be used to select your publications, by doing a string search of author names with this value.')
+    );
+
     $form['biblio_profile']['biblio_contributor_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Link My Profile with this Author from the Biblio database'),
-    '#default_value' => $profile_user->biblio_contributor_id ,
-    '#disabled' => !$allow_edit,
-    '#options' => $options,
-    '#description' => t('This will link your profile to the selected author from the biblio database, then all publications containing this author to be displayed on your "Publications" tab.'),
+      '#type' => 'select',
+      '#title' => t('Link My Profile with this Author from the Biblio database'),
+      '#default_value' => $cid ,
+      '#disabled' => !$allow_edit,
+      '#options' => $options,
+      '#description' => t('This will link your profile to the selected author from the biblio database, then all publications containing this author to be displayed on your "Publications" tab.'),
     );
     $options = array();
     $options['system'] = t('System default');
     $options = array_merge($options, _biblio_admin_get_styles() );
     $form['biblio_profile']['biblio_user_style'] = array(
-    '#type' => 'radios',
-    '#title' => t('Style'),
-    '#default_value' => (isset($profile_user->biblio_user_style) ? $profile_user->biblio_user_style : 'system'),
-    '#options' => $options,
-    '#description' => t('Set the bibliographic style of the "list" view.')
-  );
+      '#type' => 'radios',
+      '#title' => t('Style'),
+      '#default_value' => (isset($profile_user->biblio_user_style) ? $profile_user->biblio_user_style : 'system'),
+      '#options' => $options,
+      '#description' => t('Set the bibliographic style of the "list" view.')
+    );
 
   }
 }
