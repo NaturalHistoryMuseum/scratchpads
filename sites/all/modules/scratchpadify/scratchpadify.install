@@ -1822,3 +1822,9 @@ function scratchpadify_update_6189(){
   $ret[] = update_sql("UPDATE {legal_conditions} SET revision = 1 WHERE revision = 0");
   return $ret;  
 }
+
+function scratchpadify_update_6190(){
+  $ret = array();
+  $ret[] = update_sql("DELETE FROM biblio_fields WHERE name = 'biblio_other_author_affiliations'");
+  return $ret;  
+}
