@@ -1,5 +1,5 @@
 <?php
-// $Id: tagged_parser.inc,v 1.8.2.20 2009/07/22 18:20:51 rjerome Exp $
+// $Id: tagged_parser.inc,v 1.8.2.22 2010/10/19 20:24:04 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *
@@ -147,17 +147,24 @@ function _endnote_tagged_import($file, $terms = array(), $batch = FALSE, $sessio
           $node['biblio_type_of_work'] = $value;
           break;
         case '%?' :
+          $node['biblio_contributors'][4][] = array(
+            'name' => $value,
+            'auth_type' => _biblio_get_auth_type(4, $node['biblio_type']));
           break;
         case '%@' :
           $node['biblio_isbn'] = $value;
           break;
         case '%!' :
+          $node['biblio_short_title'] = $value;
           break;
         case '%&' :
+          $node['biblio_section'] = $value;
           break;
         case '%(' :
+          $node['biblio_original_publication'] = $value;
           break;
         case '%)' :
+          $node['biblio_reprint_edition'] = $value;
           break;
         case '%*' :
           break;
@@ -174,7 +181,10 @@ function _endnote_tagged_import($file, $terms = array(), $batch = FALSE, $sessio
           if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
           $node['taxonomy'] = array_merge($terms,$node['taxonomy']);
         }
-        $nids[] = biblio_save_node($node, $batch, $session_id);
+        $nid = biblio_save_node($node, $batch, $session_id);
+        if (isset($nid)) {
+          $nids[] = $nid;
+        }
       }
 
       $node = array();

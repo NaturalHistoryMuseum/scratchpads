@@ -1,5 +1,5 @@
 <?php
-// $Id: EntrezClient.php,v 1.1.2.2 2009/12/04 14:34:03 rjerome Exp $
+// $Id: EntrezClient.php,v 1.1.2.3 2010/07/12 21:06:09 rjerome Exp $
 /**
  * @file EntrezClient.php
  * Provides Entrez client to retrieve items from the NCBI databases
@@ -435,7 +435,7 @@ class BiblioEntrezClient
    * @see search
    * @see setReturnMax
    */
-  private function fetchRecords($retStart=0, $summaries = FALSE) {
+  public function fetchRecords($retStart=0, $summaries = FALSE) {
     if (is_null($this->webEnvironment)) {
       throw new Exception(t('No web environment set.'));
     }
@@ -459,12 +459,35 @@ class BiblioEntrezClient
     }
     $result = @simplexml_load_file($this->query);
 
-    if (!$result) {
-      throw new Exception('Query ' . $this->query . ' failed.');
-    }
+    if(isset($result->body->pre->ERROR)) return FALSE;
 
     return $result;
   }
 
+  public function post($uids) {
+    $params['db'] = $this->getDatabase();
+    $params['id'] = implode(',', $uids);
+    $this->query = self::BASE_URL . 'epost.fcgi?' . http_build_query($params);
+    $headers = array();
+    $method = 'POST';
+    $result = drupal_http_request($this->query, $headers, $method);
+
+    if ($result->code != 200) {
+      throw new Exception('Query ' . $this->query . ' failed.');
+    }
+
+    $result = @simplexml_load_string($result->data);
+
+    if (!$result) {
+      throw new Exception('Query ' . $this->query . ' failed.');
+    }
+
+    if (isset($result->WebEnv)) {
+      $this->webEnvironment = (string)$result->WebEnv;
+      $this->queryKey = (int)$result->QueryKey;
+      $this->count = (int)$result->Count;
+    }
+
+  }
 
 }

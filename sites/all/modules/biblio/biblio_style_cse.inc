@@ -1,6 +1,6 @@
 <?php
 
-// $Id: biblio_style_cse.inc,v 1.9.2.23 2010/05/03 00:57:36 rjerome Exp $
+// $Id: biblio_style_cse.inc,v 1.9.2.24 2010/08/23 01:04:44 rjerome Exp $
 /**
  * Get the style information
  *
@@ -50,7 +50,7 @@ function biblio_style_cse($node, $base = 'biblio', $inline = false) {
   if (empty($authors) && count($node->biblio_contributors[5])) {// if no authors substitute corp author if available
     foreach ($node->biblio_contributors[5] as $rank => $author) {
       $authors .= (empty($authors)) ? '' : ', ';
-      $authors .= (variable_get('biblio_author_links', 1)) ?  theme('biblio_author_link',$author['name'], $author['cid'], variable_get('biblio_base', 'biblio'), $inline) : $author['name'];
+      $authors .= (variable_get('biblio_author_links', 1)) ?  theme('biblio_author_link', $author) : $author['name'];
     }
   }
   if (empty($authors)) $authors = '[' . t('Anonymous') . ']';  // use anonymous if we still have nothing.

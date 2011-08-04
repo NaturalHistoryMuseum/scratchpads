@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio.type.mapper.inc,v 1.1.2.4 2010/06/23 02:21:30 rjerome Exp $
+// $Id: biblio.type.mapper.inc,v 1.1.2.10 2010/10/19 20:24:04 rjerome Exp $
 function biblio_get_type_map($file_format, $default = FALSE) {
   if ($default) {
     switch ($file_format) {
@@ -435,6 +435,7 @@ function biblio_get_field_map($file_format, $default = FALSE) {
                 '%S' => 'biblio_tertiary_title',
                 '%U' => 'biblio_url',
                 '%V' => 'biblio_volume',
+                '%X' => 'biblio_abst_e',
                 '%1' => 'biblio_custom1',
                 '%2' => 'biblio_custom2',
                 '%3' => 'biblio_custom3',
@@ -449,10 +450,10 @@ function biblio_get_field_map($file_format, $default = FALSE) {
                 '%?' => '',
                 '%@' => 'biblio_isbn',
                 '%<' => 'biblio_research_notes',
-                '%!' => '',
-                '%&' => '',
-                '%(' => '',
-                '%)' => '',
+                '%!' => 'biblio_short_title',
+                '%&' => 'biblio_section',
+                '%(' => 'biblio_original_publication',
+                '%)' => 'biblio_reprint_edition',
                 '%*' => '',
                 '%+' => '',
         );
@@ -505,10 +506,6 @@ function biblio_get_field_map($file_format, $default = FALSE) {
         );
       case 'endnote7':
         return array(
-                'AUTHOR'            => 1,            //
-                'SECONDARY_AUTHOR'  => 2,  // The 4 author fields map back to the author category
-                'TERTIARY_AUTHOR'   => 3,   // rather than a field name.
-                'SUBSIDIARY_AUTHOR' => 4, //
                 'REFERENCE_TYPE'    => 'biblio_type',
                 'REFNUM'            => '',
                 'YEAR'              => 'biblio_year',
@@ -556,7 +553,6 @@ function biblio_get_field_map($file_format, $default = FALSE) {
                  'ref-type'                 => 'biblio_type',
                  'auth-address'             => 'biblio_auth_address',
                  'auth-affiliaton'          => '',
-                 'title'                    => '', //handled separately
                  'secondary-title'          => 'biblio_secondary_title',
                  'tertiary-title'           => 'biblio_tertiary_title',
                  'alt-title'                => 'biblio_alternate_title',
@@ -666,5 +662,20 @@ function biblio_get_field_map($file_format, $default = FALSE) {
     if (empty($map)) $map = biblio_get_field_map($file_format, TRUE);
     return $map;
 
+  }
+}
+
+function biblio_get_export_map($file_format, $default = FALSE) {
+  switch($default) {
+    case FALSE:
+      $map = variable_get('biblio_'.$file_format.'_export_map', array());
+      if(!empty($map)) return $map;
+    case TRUE:
+    default:
+      $schema = drupal_get_schema('biblio');
+      $fieldnames = array_keys($schema['fields']);
+      asort($fieldnames);
+      $map = array_fill_keys($fieldnames, 1);
+      return $map;
   }
 }

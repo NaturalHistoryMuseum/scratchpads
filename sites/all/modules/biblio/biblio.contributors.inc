@@ -1,5 +1,5 @@
 <?php
-//$Id: biblio.contributors.inc,v 1.1.2.35 2010/06/23 02:21:30 rjerome Exp $
+//$Id: biblio.contributors.inc,v 1.1.2.38 2010/10/08 16:29:47 rjerome Exp $
 /**
  * @param $aid
  * @return unknown_type
@@ -176,6 +176,7 @@ function biblio_update_contributor(&$author) {
  */
 function _save_contributors(&$contributors, $nid, $vid, $update = FALSE) {
   $md5 = _loadMD5();
+  $rank = 0;
   db_query('DELETE FROM {biblio_contributor} WHERE nid = %d AND vid = %d', array($nid, $vid));
   foreach ($contributors as $cat => $authors) {
     foreach ($authors as $key => $author) {
@@ -195,7 +196,7 @@ function _save_contributors(&$contributors, $nid, $vid, $update = FALSE) {
         'nid' => $nid,
         'vid' => $vid,
         'cid' => $author['cid'],
-        'rank' => ((isset($author['rank']) && is_numeric($author['rank'])) ? $author['rank'] : $key),
+        'rank' => $rank++, //((isset($author['rank']) && is_numeric($author['rank'])) ? $author['rank'] : $key),
         'auth_type' => $author['auth_type'],
         'auth_category' => $cat,
       );
@@ -385,4 +386,14 @@ function _loadMD5() {
     }
   }
   return (count($md5)) ? $md5 : NULL;
+}
+function biblio_contributor_user_access($user, $node) {
+  if(isset($node->biblio_contributors) && is_array($node->biblio_contributors)) {
+    foreach ($node->biblio_contributors as $cat => $authors) {
+      foreach ($authors as $key => $author) {
+        if ($author['drupal_uid'] == $user->uid) return TRUE;
+      }
+    }
+  }
+  return;
 }

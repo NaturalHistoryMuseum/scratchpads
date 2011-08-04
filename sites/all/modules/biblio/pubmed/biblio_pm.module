@@ -1,5 +1,5 @@
 <?php
-// $Id: biblio_pm.module,v 1.1.2.7 2010/05/12 01:55:40 rjerome Exp $
+// $Id: biblio_pm.module,v 1.1.2.12 2010/10/13 16:52:03 rjerome Exp $
 /*
  * @file pubmed.module
  *
@@ -64,6 +64,73 @@ function biblio_pm_form_biblio_node_form_validate($form, &$form_state) {
 
 }
 
+function biblio_pm_biblio_import_options() {
+  return array('biblio_pm' => t('PubMed ID List'));
+}
+
+function biblio_pm_biblio_import($file, $terms = array(), $batch = FALSE, $session_id = NULL, $save = TRUE, $string = FALSE) {
+  $nids = array();
+  $dups = array();
+  return _biblio_pm_import($file, $terms, $batch, $session_id);
+}
+
+function _biblio_pm_import($file, $terms, $batch, $session_id) {
+  module_load_include('php', 'biblio_pm', 'EntrezClient');
+  module_load_include('php', 'biblio_pm', 'EntrezPubmedArticle');
+  $pmids = file($file->filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  if (empty($pmids)) {
+    drupal_set_message("Could not open PubMed ID file", 'error');
+    return;
+  }
+  $retmax = 100;
+  $resmax = count($pmids);
+  $start = 0;
+  $Eclient = new BiblioEntrezClient;
+  $Eclient->post($pmids);
+  $Eclient->setReturnMax($retmax);
+  $nids = array();
+  $dups = array();
+  $node = new stdClass();
+  $data = new BiblioEntrezPubmedArticle();
+  while (($result = $Eclient->fetchRecords($start)) && $start < $resmax ) {
+    foreach ($result->xpath('//PubmedArticle') as $article) {
+      //$data->setArticle($article);
+      $node = $data->setArticle($article)->getBiblio();
+      if (isset($node)) {
+        if (!empty($terms)) {
+          if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
+          $node['taxonomy'] = array_merge($terms, $node['taxonomy']);
+        }
+        if (! ($dup = biblio_pm_check_md5($node['biblio_pubmed_md5']))) {
+          $nid = biblio_save_node($node, $batch, $session_id);
+          if (isset($nid)) {
+            $nids[] = $nid;
+          }
+        }
+        else {
+          $dups[] = $dup;
+        }
+        $node = null;
+      }
+      $start++;
+    }
+
+  }
+
+  return array($nids, $dups);
+}
+
+function biblio_pm_check_pmid($pmid) {
+    return db_result(db_query("SELECT nid FROM {biblio_pubmed} WHERE biblio_pubmed_id = %d", $pmid));
+}
+function biblio_pm_biblio_lookup_link_settings() {
+  return array('pubmed'  => t('PubMed'));
+}
+
+function biblio_pm_biblio_lookup_link($node) {
+  return biblio_pm_link('node', $node);
+}
+
 function biblio_pm_link($type, $node = NULL, $teaser = FALSE) {
   if ($type == 'node' && $node->type == 'biblio' && !empty($node->biblio_pubmed_id)) {
     $link  = 'http://www.ncbi.nlm.nih.gov/pubmed/' . $node->biblio_pubmed_id . '?dopt=Abstract';
@@ -108,8 +175,25 @@ function _biblio_pm_update($node) {
 
 function _biblio_pm_load($node) {
   static $result = array();
-  if (empty($result)) {
-    return $result = db_fetch_array(db_query('SELECT  biblio_pubmed_id  FROM {biblio_pubmed} WHERE nid = %d',$node->nid));
+  if (empty($result[$node->nid])) {
+    return $result[$node->nid] = db_fetch_array(db_query('SELECT  biblio_pubmed_id  FROM {biblio_pubmed} WHERE nid = %d', $node->nid));
   }
-  return $result ;
+  return $result[$node->nid] ;
+}
+
+function biblio_pm_check_md5($md5) {
+  static $pm_md5s = array();
+  if (empty($pm_md5s)) {
+    $result = db_query("SELECT * FROM {biblio_pubmed} ");
+    while ($row = db_fetch_object($result)) {
+      $pm_md5s[$row->biblio_pubmed_md5] = $row->nid;
+    }
+  }
+  if (isset($pm_md5s[$md5])) {
+    return $pm_md5s[$md5];
+  }
+  else {
+    $pm_md5s[$md5] = TRUE; // gaurd against duplicates in the same import
+    return;
+  }
 }

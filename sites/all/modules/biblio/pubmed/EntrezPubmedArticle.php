@@ -1,5 +1,5 @@
 <?php
-// $Id: EntrezPubmedArticle.php,v 1.1.2.3 2009/12/04 14:34:03 rjerome Exp $
+// $Id: EntrezPubmedArticle.php,v 1.1.2.6 2010/08/15 16:21:30 rjerome Exp $
 /**
  * @file EntrezPubmedArticle.php
  * Provides a class for handling PubMed articles retrieved with EFetch.
@@ -23,11 +23,11 @@ class BiblioEntrezPubmedArticle
    * @param $pubmedArticle
    *   a PubmedArticle element
    */
-  public function __construct(SimpleXMLElement $pubmedArticle)
+  public function __construct(SimpleXMLElement $pubmedArticle = NULL)
   {
-    $this->article = $pubmedArticle->MedlineCitation->Article;
-    $this->id = (int)$pubmedArticle->MedlineCitation->PMID;
-    $this->md5 = md5($pubmedArticle->asXML());
+    if ($pubmedArticle) {
+      $this->setArticle($pubmedArticle);
+    }
   }
 
   /**
@@ -35,6 +35,14 @@ class BiblioEntrezPubmedArticle
    *
    * @return int
    */
+  public function setArticle(SimpleXMLElement $pubmedArticle)
+  {
+    $this->biblio = array();
+    $this->article = $pubmedArticle->MedlineCitation;
+    $this->id = (int)$pubmedArticle->MedlineCitation->PMID;
+    $this->md5 = md5($pubmedArticle->asXML());
+    return $this;
+  }
   public function getId()
   {
     return $this->id;
@@ -59,24 +67,34 @@ class BiblioEntrezPubmedArticle
   public function getBiblio()
   {
     if (empty($this->biblio)) {
-      $this->biblio = array(
-        'title' => (string)$this->article->ArticleTitle,
-        'biblio_citekey' => $this->id,
+        if (variable_get('biblio_auto_citekey', 1) ) {
+          $citekey = '';
+        }
+        else {
+          $citekey = $this->id;
+        }
+
+        $this->biblio = array(
+        'title'           => (string)$this->article->Article->ArticleTitle,
+
+        'biblio_citekey'  => $citekey,
         'biblio_pubmed_id' => $this->id,
         'biblio_pubmed_md5' => $this->md5,
         'biblio_contributors' => $this->contributors(),
         // MedlineCitations are always articles from journals or books
-        'biblio_type' => 102,
-        'biblio_date' => $this->date(),
-        'biblio_year' => substr($this->date(), 0, 4),
-        'biblio_secondary_title' => (string)$this->article->Journal->Title,
-        'biblio_alternate_title' => (string)$this->article->Journal->ISOAbbreviation,
-        'biblio_volume' => (string)$this->article->Journal->JournalIssue->Volume,
-        'biblio_issue' => (string)$this->article->Journal->JournalIssue->Issue,
-        'biblio_issn' => (string)$this->article->Journal->Issn,
-        'biblio_pages' => (string)$this->article->Pagination->MedlinePgn,
-        'biblio_abst_e' => (string)$this->article->Abstract->AbstractText,
-        'biblio_custom1' => "http://www.ncbi.nlm.nih.gov/pubmed/{$this->id}?dopt=Abstract",
+        'biblio_type'     => 102,
+        'biblio_date'     => $this->date(),
+        'biblio_year'     => substr($this->date(), 0, 4),
+        'biblio_secondary_title' => (string)$this->article->Article->Journal->Title,
+        'biblio_alternate_title' => (string)$this->article->Article->Journal->ISOAbbreviation,
+        'biblio_volume'   => (string)$this->article->Article->Journal->JournalIssue->Volume,
+        'biblio_issue'    => (string)$this->article->Article->Journal->JournalIssue->Issue,
+        'biblio_issn'     => (string)$this->article->Article->Journal->ISSN,
+        'biblio_pages'    => (string)$this->article->Article->Pagination->MedlinePgn,
+        'biblio_abst_e'   => (string)$this->article->Article->Abstract->AbstractText,
+        'biblio_custom1'  => "http://www.ncbi.nlm.nih.gov/pubmed/{$this->id}?dopt=Abstract",
+        'biblio_keywords' => $this->keywords(),
+        'biblio_lang'     => $this->lang(),
       );
 
       $doi = $this->article->xpath('//ELocationID[@EIdType="doi"]/text()');
@@ -99,8 +117,8 @@ class BiblioEntrezPubmedArticle
   {
     $contributors = array();
 
-    if (isset($this->article->AuthorList->Author)) {
-      foreach ($this->article->AuthorList->Author as $author) {
+    if (isset($this->article->Article->AuthorList->Author)) {
+      foreach ($this->article->Article->AuthorList->Author as $author) {
         if (isset($author->CollectiveName)) {
           $category = 5; // corporate author
           $name = (string)$author->CollectiveName;
@@ -133,7 +151,7 @@ class BiblioEntrezPubmedArticle
    */
   private function date()
   {
-    $pubDate = $this->article->Journal->JournalIssue->PubDate;
+    $pubDate = $this->article->Article->Journal->JournalIssue->PubDate;
 
     if (isset($pubDate->MedlineDate)) {
       $date = (string)$pubDate->MedlineDate;
@@ -142,5 +160,22 @@ class BiblioEntrezPubmedArticle
     }
 
     return $date;
+  }
+
+  private function keywords() {
+    $keywords = array();
+    if (isset($this->article->MeshHeadingList->MeshHeading)) {
+      foreach ($this->article->MeshHeadingList->MeshHeading as $heading) {
+        $keywords[] = (string)$heading->DescriptorName;
+      }
+    }
+    return $keywords;
+  }
+
+  private function lang() {
+    if (isset($this->article->Article->Language)) {
+      return (string)$this->article->Article->Language;
+    }
+
   }
 }
