@@ -54,6 +54,7 @@ function emonocot_profile_profile_modules(){
   }
   $emonocot_modules[] = 'emonocot';
   $emonocot_modules[] = 'taxonlist';
+  $emonocot_modules[] = 'wcm_import';
   return $emonocot_modules;
 }
 
@@ -84,6 +85,7 @@ function emonocot_profile_profile_tasks_2(){
   scratchpad_profile_profile_set_perms();
   emonocot_profile_set_blocks();
   emonocot_profile_tweak_menu();
+  emonocot_profile_apache_solr();
 }
 /**
  * Code for the tasks

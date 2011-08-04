@@ -15,7 +15,7 @@ function wcm_import_classification_import_form(){
   return array(
     'wcm' => array(
       '#type' => 'fieldset',
-      '#title' => 'World Chechlist of Monocots',
+      '#title' => 'World checklist of Monocots',
       '#description' => 'Import a classification directly from WCM' . theme('advanced_help_topic', 'wcm_import', 'overview'),
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,

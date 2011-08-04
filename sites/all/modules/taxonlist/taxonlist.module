@@ -1,11 +1,14 @@
 <?php
 
-function taxonlist_menu() {
+function taxonlist_menu(){
   return array(
     'checklist/%/%' => array(
       'title' => 'Checklist',
       'page callback' => 'taxonlist_page',
-      'page arguments' => array(0,1),
+      'page arguments' => array(
+        0,
+        1
+      ),
       'access arguments' => array(
         'access content'
       ),
@@ -14,154 +17,168 @@ function taxonlist_menu() {
   );
 }
 
-function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()) {
-  switch ($op) {
-  	case 'list':
-  	  $blocks['taxonlist']['info'] = t('Checklist');
-  	  $blocks['taxonlist']['cahce'] = BLOCK_NO_CACHE;
-  	  
-  	  $blocks['nomenclature'] = t('Nomenclature');
-  	  $blocks['nomenclature'] = BLOCK_NO_CACHE;
-  	  return $blocks;
-  	  
-  	case 'configure':
-  	  $form['taxonlist_block_depth'] = array(
-  	    '#type' => 'textfield',
-  	    '#title' => t('Depth of heirarchy to show. Set to 0 for complete hierarchy.'),
-  	    '#default_value' => variable_get('taxonlist_block_depth', 0),
-  	  );
-  	  return $form;
-  	case 'save':
-  	  variable_set('taxonlist_block_depth', (int)$edit['taxonlist_block_depth']);
-  	  break;
-  	  
-  	case 'view':
-  	  switch ($delta) {
-  	  	case 'taxonlist':
-  	  		return taxonlist_block_view();
-  	  	case 'nomenclature':
-  	  		return taxonlist_nomenclature_block_view();
-  	  }
+function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
+  switch($op){
+    case 'list':
+      $blocks['taxonlist']['info'] = t('Checklist');
+      $blocks['taxonlist']['cahce'] = BLOCK_NO_CACHE;
+      $blocks['nomenclature'] = t('Nomenclature');
+      $blocks['nomenclature'] = BLOCK_NO_CACHE;
+      return $blocks;
+    case 'configure':
+      $form['taxonlist_block_depth'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Depth of heirarchy to show. Leave blank for complete hierarchy.'),
+        '#default_value' => variable_get('taxonlist_block_depth', 3)
+      );
+      return $form;
+    case 'save':
+      if($edit['taxonlist_block_depth'] = ''){
+        variable_set('taxonlist_block_depth', NULL);
+      }else{
+        variable_set('taxonlist_block_depth', (int)$edit['taxonlist_block_depth']);
+      }
+      break;
+    case 'view':
+      switch($delta){
+        case 'taxonlist':
+          return taxonlist_block_view();
+        case 'nomenclature':
+          return taxonlist_nomenclature_block_view();
+      }
   }
 }
 
-function taxonlist_page($vid, $tid=0) {
+function taxonlist_page($vid, $tid = 0){
   return taxonlist_list($vid, $tid);
 }
 
-function taxonlist_block_view() {
-	//Check everything is ok
-	if(arg(0) == "taxonomy" && arg(1) == "term") {
-	  //Find out what vocabularly we're in
-	  $tid = arg(2);
-	  //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
-      $term =tinytax_taxonomy_get_term($tid);
-      $vid = $term->vid;
-      
-      $content = taxonlist_list($vid, $tid, TRUE);
-      
-      //If the user has permissions then provide a link to edit the itis_term
-	  if ( user_access('administer taxonomy') ) {
-	    $content .= '<br/><br/><span style="font-size:smaller;">' . l('Edit', 'admin/content/taxonomy/edit/tui/'.$vid) . '</span>';
-	  }
-	}
-	$block['content'] = $content;
-	$block['subject'] = t('Checklist of ').$term->name;
-	return $block;
+function taxonlist_block_view(){
+  //Check everything is ok
+  if(arg(0) == "taxonomy" && arg(1) == "term"){
+    //Find out what vocabularly we're in
+    $tid = arg(2);
+    //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
+    $term = tinytax_taxonomy_get_term($tid);
+    $vid = $term->vid;
+    $content = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
+    //If the user has permissions then provide a link to edit the itis_term
+    if(user_access('administer taxonomy')){
+      $content .= '<br/><br/><span style="font-size:smaller;">' . l('Edit classification', 'admin/content/taxonomy/edit/tui/' . $vid) . '</span>';
+    }
+  }
+  $block['content'] = $content;
+  $block['subject'] = t('Checklist of ') . $term->name;
+  return $block;
 }
 
-function taxonlist_nomenclature_block_view() {
-	//Check everything is ok
-	if(arg(0) == "taxonomy" && arg(1) == "term") {
-	  //Find out what vocabularly we're in
-	  $tid = arg(2);
-	  //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
-      $term = tinytax_taxonomy_get_term($tid);
-      $vid = $term->vid;
-      
-      $data = taxonlist_fetch_itis($tid);
-      
-      //Get and format the name
-      $content  = '';
-      $content .= '<b>'.taxonlist_format_name($data, FALSE, FALSE).'</b><br/>';
-      $content .= '<span style="text-transform:capitalize">'.$data['usage'].'</span> ';
-      if ($data['unaccep_reason'] != '') {
-      	$content .= '('.$data['unaccep_reason'].') ';
+function taxonlist_nomenclature_block_view(){
+  //Check everything is ok
+  if(arg(0) == "taxonomy" && arg(1) == "term"){
+    //Find out what vocabularly we're in
+    $tid = arg(2);
+    //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
+    $term = tinytax_taxonomy_get_term($tid);
+    $vid = $term->vid;
+    $data = taxonlist_fetch_itis($tid);
+    //Get and format the name
+    $content = '';
+    $content .= '<b>' . taxonlist_format_name($data, FALSE, FALSE) . '</b><br/>';
+    $content .= '<span style="text-transform:capitalize">' . $data['usage'] . '</span> ';
+    if($data['unaccep_reason'] != ''){
+      $content .= '(' . $data['unaccep_reason'] . ') ';
+    }
+    $content .= '<span style="text-transform:lowercase">' . $data['rank'] . '</span> name';
+    if($data['accepted_name'] != ''){
+      $accepted = taxonomy_get_term($data['accepted_name']);
+      $content .= ' for ' . l($accepted->name, 'taxonomy/term/' . $accepted->tid);
+    }
+    $content .= '<br/><br/>';
+    //Sort out the references
+    if($data['reference'] != ''){
+      //Load the biblio node
+      $content .= taxonlist_get_biblio_ref_from_nid($data['reference'], $data['page_number']);
+    }
+    if($data['bad_ref'] != ''){
+      if($data['ref_url'] != ''){
+        $content .= '<a href="' . $data['ref_url'] . '">' . $data['bad_ref'] . '</a><br/>';
+      }else{
+        $content .= $data['bad_ref'] . '<br/>';
       }
-      $content .= '<span style="text-transform:lowercase">'.$data['rank'].'</span> name';
-      if ($data['accepted_name'] != '') {
-      	$accepted = taxonomy_get_term($data['accepted_name']);
-      	$content .= ' for '.l($accepted->name, 'taxonomy/term/'.$accepted->tid);
+    }
+    $content .= '<br/>';
+    //Type references
+    if($data['type_ref_array'][0]['nid'] != ''){
+      $plural = '';
+      if(count($data['type_ref_array']) > 1){
+        $plural = 's';
       }
-      $content .= '<br/><br/>';
-      
-      //Sort out the references
-      //TODO: Get bibliographic reference for name
-      
-      if ($data['reference'] != '' ) {
-      	//Load the biblio node
-      	$biblio = node_load($data['reference']);
-      	$authors = array();
-      	foreach ($biblio->biblio_contributors[1] as $author) {
-      	  $authors[] = $author['name'];
-      	}
-      	switch (count($authors)) {
-      		case 0:
-      		  $author_string = 'Unknown author';
-      		  break;
-      		case 1:
-      		  $author_string = $authors[0];
-      		  break;
-      		case 2:
-      		  $author_string = $authors[0].' & '.$authors[1];
-      		  break;
-      		case 3:
-      		  $author_string = $authors[0].', '.$authors[1].' & '.$authors[2];
-      		  break;
-      		default:
-      		  $author_string = $authors[0].' et al';
-      	}
-      	$ref_string = $author_string.' ('.$biblio->biblio_year.') '.$biblio->title;
-      	
-        if ($data['page_number'] != '') { $content .= l($ref_string.': '.$data['page_number'], 'node/'.$data['reference']).'<br/>'; }
-        else { $content .= l($ref_string, 'node/'.$data['reference']).'<br/>'; }
-      } 
-      if ($data['bad_ref'] != '') {
-      	if ($data['ref_url'] != '') { $content .= '<a href="'.$data['ref_url'].'">'.$data['bad_ref'].'</a><br/>'; }
-      	else { $content .= $data['bad_ref'].'<br/>'; }
+      $content .= '<b>Type Reference' . $plural . '</b><br/>';
+      foreach($data['type_ref_array'] as $node){
+        $content .= taxonlist_get_biblio_ref_from_nid($node['nid']);
       }
       $content .= '<br/>';
-      
-      //Vernacular Names
-      if ($data['common_array'][0]['value'] != '') {
-        $plural = '';
-        if (count($data['common_array']) > 1) { $plural = 's'; }
-        $content .= '<b>Vernacular Name'.$plural.'</b><br/>';
-        foreach ($data['common_array'] as $common_name) {
-      	  $content .= $common_name['value'].'<br/>';
-        }
-        $content .= '<br/>';
+    }
+    //Vernacular Names
+    if($data['common_array'][0]['value'] != ''){
+      $plural = '';
+      if(count($data['common_array']) > 1){
+        $plural = 's';
       }
-      
-      //Etymology
-      if ($data['etymology'] != '') {
-      	$content .= '<b>Etymology</b><br/>';
-      	$content .= $data['etymology'];
-      }    
-	}
-	
-	//If the user has permissions then provide a link to edit the itis_term
-	if ( user_access('administer nodes') ) {
-	  $content .= '<br/><br/><span style="font-size:smaller;">' . l('Edit', 'node/'.$data['nid'].'/edit') . '</span>';
-	}
-	
-	
-	$block['content'] = $content;
-	$block['subject'] = t('Nomenclature');
-	return $block;	
+      $content .= '<b>Vernacular Name' . $plural . '</b><br/>';
+      foreach($data['common_array'] as $common_name){
+        $content .= $common_name['value'] . '<br/>';
+      }
+      $content .= '<br/>';
+    }
+    //Etymology
+    if($data['etymology'] != ''){
+      $content .= '<b>Etymology</b><br/>';
+      $content .= $data['etymology'];
+    }
+  }
+  //If the user has permissions then provide a link to edit the itis_term
+  if(user_access('administer nodes')){
+    $content .= '<br/><br/><span style="font-size:smaller;">' . l('Edit', 'node/' . $data['nid'] . '/edit') . '</span>';
+  }
+  $block['content'] = $content;
+  $block['subject'] = t('Nomenclature');
+  return $block;
 }
 
-function taxonlist_list($vid=10, $root=0, $is_block=FALSE) {
+function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
+  $biblio = node_load($nid);
+  $content = '';
+  $authors = array();
+  foreach($biblio->biblio_contributors[1] as $author){
+    $authors[] = $author['name'];
+  }
+  switch(count($authors)){
+    case 0:
+      $author_string = 'Unknown author';
+      break;
+    case 1:
+      $author_string = $authors[0];
+      break;
+    case 2:
+      $author_string = $authors[0] . ' & ' . $authors[1];
+      break;
+    case 3:
+      $author_string = $authors[0] . ', ' . $authors[1] . ' & ' . $authors[2];
+      break;
+    default:
+      $author_string = $authors[0] . ' et al';
+  }
+  $ref_string = $author_string . ' (' . $biblio->biblio_year . ') ' . $biblio->title;
+  if($data['page_number'] != ''){
+    $content .= l($ref_string . ': ' . $page_number, 'node/' . $nid . '<br/>');
+  }else{
+    $content .= l($ref_string, 'node/' . $nid) . '<br/>';
+  }
+  return $content;
+}
+
+function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL) {
   //Get parent of tid if tid is set
   if ($root != 0  && $is_block == FALSE) {
   	$parent = taxonomy_get_parents($root);
@@ -194,7 +211,7 @@ function taxonlist_list($vid=10, $root=0, $is_block=FALSE) {
   	$return .= '<br/>';
   }
   
-  $tree = taxonomy_get_tree($vid, $root);
+  $tree = taxonomy_get_tree($vid, $root, -1, $depth);
 
   foreach ($tree as $term) {
   	$term_data = taxonlist_fetch_itis($term->tid);
@@ -240,6 +257,7 @@ function taxonlist_fetch_itis($tid) {
   $return['ref_url']        = $node->field_itis_em_url[0]['value'];
   $return['type_taxon']     = $node->field_type_taxon[0][59];
   $return['common_array']   = $node->field_vernacular_name;
+  $return['type_ref_array'] = $node->field_type_references;
   
   $return['nid']            = $node->nid;
 
