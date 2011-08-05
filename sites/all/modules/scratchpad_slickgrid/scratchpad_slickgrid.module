@@ -115,9 +115,7 @@ function scratchpad_slickgrid_nodeapi(&$node, $op){
 
 function scratchpad_slickgrid_reset_views_batch_page($node_type){
   $view_name = 'slickgrid_' . $node_type;
-  dd($view_name);
   if($view = views_get_view($view_name)){
-  	dd($view);
     drupal_set_message(t('Slickgrid cache has been reset.'));
     views_batch_page_cache_clear($view);
   }
