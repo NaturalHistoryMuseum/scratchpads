@@ -187,21 +187,26 @@ function _publication_get_sections_xml(&$publication_node, $vid, $section_node =
   }else{
     $this_node = $publication_node;
   }
-  foreach($this_node->field_publication_section as $section){
+  foreach($this_node->field_publication_section as $section){  	
     if($section['nid']){
       $child_node = _publication_get_child_node($section['nid'], $vid);
-      if(isset($publication_node->taxon_treatment_sections[$section['nid']])){
-        $section_xml .= _publication_get_treatment_xml($child_node, $publication_node, $vid);
-      }else{
+
+      
+      if(isset($this_node->taxon_treatment_sections[$section['nid']])){
+        $section_xml .= _publication_get_treatment_xml($child_node, $this_node, $vid);        
+      }else{      	
         if($child_node->type == 'publication_taxon_description'){
           foreach($this_node->taxonomy as $this_tid => $value){
-            $section_xml .= _publication_get_treatment_sections($publication_node, $child_node, $vid, $this_tid);
+            $section_xml .= _publication_get_treatment_sections($this_node, $child_node, $vid, $this_tid);
             break;
           }
         }else if($child_node->type == 'publication_taxon_section' || $child_node->type == 'publication_section'){
+        	
+
+        	
           $section_xml .= '
       <' . $tag . ' sec-type="' . $child_node->title . '">
-        <' . $title . '>' . $child_node->title . '</' . $title . '>' . trim(_filter_autop($child_node->body)) . _publication_get_sections_xml($publication_node, $vid, $child_node, $tag) . '
+        <' . $title . '>' . $child_node->title . '</' . $title . '>' . trim(_filter_autop($child_node->body)) . _publication_get_sections_xml($this_node, $vid, $child_node, $tag) . '
       </' . $tag . '>';
         }
       }
