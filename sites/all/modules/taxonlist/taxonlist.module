@@ -41,9 +41,9 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
   switch($op){
     case 'list':
       $blocks['taxonlist']['info'] = t('Checklist');
-      $blocks['taxonlist']['cahce'] = BLOCK_NO_CACHE;
-      $blocks['nomenclature'] = t('Nomenclature');
-      $blocks['nomenclature'] = BLOCK_NO_CACHE;
+      $blocks['taxonlist']['cache'] = BLOCK_NO_CACHE;
+      $blocks['nomenclature']['info'] = t('Nomenclature');
+      $blocks['nomenclature']['cache'] = BLOCK_NO_CACHE;
       return $blocks;
     case 'configure':
       $form['taxonlist_block_depth'] = array(
@@ -88,7 +88,11 @@ function taxonlist_block_view(){
     }
   }
   $block['content'] = $content;
-  $block['subject'] = t('Checklist of ') . $term->name;
+  
+  //Is this block a bona fide checklist or a dull list of synonyms?
+  $block_settings = variable_get('taxonlist_block_settings', array());
+  if ($block_settings['synonyms_only']) { $block['subject'] = t('Synonyms of ') . $term->name; }
+  else { $block['subject'] = t('Checklist of ') . $term->name; }
   return $block;
 }
 
