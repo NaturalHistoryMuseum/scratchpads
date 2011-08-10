@@ -13,8 +13,28 @@ function taxonlist_menu(){
         'access content'
       ),
       'type' => MENU_CALLBACK
-    )
+    ),
+    
+    'admin/settings/taxonlist' => array(
+      'title'       => 'Taxonlist Settings',
+      'description' => 'Change display of checklists and nomenclature',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('taxonlist_admin_settings'),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+    ),
   );
+}
+
+function taxonlist_admin_settings() {
+  $form['taxonlist_block_settings'] = array(
+    '#type'          => 'checkboxes',
+    '#title'         => t('Checklist block settings'),
+    '#options'       => array('synonyms_only' => 'Only show synonyms'),
+    '#default_value' => variable_get('taxonlist_block_settings', array()),
+  );
+  
+  return system_settings_form($form);
 }
 
 function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
@@ -187,7 +207,11 @@ function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
   return $content;
 }
 
-function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL) {
+function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL, $synonyms_only = FALSE) {
+  //Should we only display invalid or not accepted names?
+  $block_settings = variable_get('taxonlist_block_settings', array());
+  if ($block_settings['synonyms_only']) { $synonyms_only = TRUE;}
+	
   //Get parent of tid if tid is set
   if ($root != 0  && $is_block == FALSE) {
   	$parent = taxonomy_get_parents($root);
@@ -224,16 +248,26 @@ function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL) {
 
   foreach ($tree as $term) {
   	$term_data = taxonlist_fetch_itis($term->tid);
-  	$term_name = taxonlist_format_name($term_data);
-
-  	//Add indentation
-  	$indent_string = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-  	if ($is_block) {$return .= $indent_string;}
-  	for ($i=0; $i < $term->depth; $i++) {$return .= $indent_string;}
+  	if  ($synonyms_only == TRUE) {
+  	  if ($term_data['usage'] == 'not accepted' || $term_data['usage'] == 'invalid') {
+  	  	$term_name = taxonlist_format_name($term_data);
+  	  } else {
+  	  	$term_name = '';
+  	  }
+  	} else {
+  	  $term_name = taxonlist_format_name($term_data);
+  	}
   	
-  	//Return name
-  	$return .= l($term_name, 'taxonomy/term/'.$term->tid, array('html' => TRUE));
-  	$return .= '<br/>';
+  	if ($term_name != '') {
+  	  //Add indentation
+  	  $indent_string = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+  	  if ($is_block) {$return .= $indent_string;}
+  	  for ($i=0; $i < $term->depth; $i++) {$return .= $indent_string;}
+  	
+  	  //Return name
+  	  $return .= l($term_name, 'taxonomy/term/'.$term->tid, array('html' => TRUE));
+  	  $return .= '<br/>';
+  	}
   }
   return $return;
 }
