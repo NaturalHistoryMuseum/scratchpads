@@ -123,8 +123,9 @@ function taxonlist_nomenclature_block_view(){
     //Type Taxon
     if ($data['type_taxon'] != '') {
       $content .= '<b>Type Taxon</b><br/>';
-      $data = taxonlist_fetch_itis($data['type_taxon']);
-      $content .= l(taxonlist_format_name($data), 'taxonomy/term/'.$term->tid, array('html' => TRUE));
+      $data2 = taxonlist_fetch_itis($data['type_taxon']);
+      $content .= l(taxonlist_format_name($data2), 'taxonomy/term/'.$data['type_taxon'], array('html' => TRUE));
+      $content .= '<br/><br/>';
     }
     
     //Vernacular Names
