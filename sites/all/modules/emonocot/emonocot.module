@@ -1120,7 +1120,7 @@ function emonocot_itis_field_info(){
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
-      'text_processing' => 1
+      'text_processing' => 0,
     ),
     array(
       'label' => 'Other Reference',
@@ -1130,7 +1130,7 @@ function emonocot_itis_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textfield',
       'weight' => 20,
-      'description' => 'For use when the reference is not in the bibliography. NOT RECCOMENDED.',
+      'description' => 'Text citation. For use when the reference is not in the bibliography. NOT RECCOMENDED.',
     ),
     array(
       'label' => 'Other Reference Link',
@@ -1142,7 +1142,7 @@ function emonocot_itis_field_info(){
       'weight' => 40,
       'required' => 0,
       'locked' => 0,
-      'description' => t('URL of reference in BHL or other online repository'),
+      'description' => t('URL of reference in BHL or other online repository. Make sure you have enterred the citation above.'),
       'text_processing' => 0
     ),
     array (
@@ -1165,7 +1165,7 @@ function emonocot_itis_field_info(){
       'type' => 'nodereference',
       'widget_type' => 'nodereference_autocomplete',
       'change' => 'Change basic information',
-      'weight' => '10',
+      'weight' => '91',
       'autocomplete_match' => 'contains',
       'size' => '60',
       'description' => 'Start typing the title of the reference you want.',
@@ -1459,4 +1459,8 @@ function emonocot_mado_config(){
 
 function emonocot_views_api() {
   return array('api' => 2.0);
+}
+
+function emonocot_views_default_views_alter(&$views) {
+  print_r($views);exit;
 }

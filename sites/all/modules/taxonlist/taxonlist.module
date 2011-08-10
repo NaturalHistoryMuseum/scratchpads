@@ -33,7 +33,7 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
       );
       return $form;
     case 'save':
-      if($edit['taxonlist_block_depth'] = ''){
+      if($edit['taxonlist_block_depth'] == ''){
         variable_set('taxonlist_block_depth', NULL);
       }else{
         variable_set('taxonlist_block_depth', (int)$edit['taxonlist_block_depth']);
@@ -119,6 +119,14 @@ function taxonlist_nomenclature_block_view(){
       }
       $content .= '<br/>';
     }
+    
+    //Type Taxon
+    if ($data['type_taxon'] != '') {
+      $content .= '<b>Type Taxon</b><br/>';
+      $data = taxonlist_fetch_itis($data['type_taxon']);
+      $content .= l(taxonlist_format_name($data), 'taxonomy/term/'.$term->tid, array('html' => TRUE));
+    }
+    
     //Vernacular Names
     if($data['common_array'][0]['value'] != ''){
       $plural = '';
@@ -170,7 +178,7 @@ function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
       $author_string = $authors[0] . ' et al';
   }
   $ref_string = $author_string . ' (' . $biblio->biblio_year . ') ' . $biblio->title;
-  if($data['page_number'] != ''){
+  if($page_number != ''){
     $content .= l($ref_string . ': ' . $page_number, 'node/' . $nid . '<br/>');
   }else{
     $content .= l($ref_string, 'node/' . $nid) . '<br/>';
@@ -255,7 +263,7 @@ function taxonlist_fetch_itis($tid) {
   $return['etymology']      = $node->field_itis_em_etymology[0]['value'];
   $return['bad_ref']        = $node->field_itis_em_other_ref[0]['value'];
   $return['ref_url']        = $node->field_itis_em_url[0]['value'];
-  $return['type_taxon']     = $node->field_type_taxon[0][59];
+  $return['type_taxon']     = $node->field_type_taxon[0]['value'];
   $return['common_array']   = $node->field_vernacular_name;
   $return['type_ref_array'] = $node->field_type_references;
   
