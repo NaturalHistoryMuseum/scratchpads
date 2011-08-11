@@ -90,6 +90,9 @@ function emonocot_form_alter(&$form, &$form_state){
       unset($form[$em_spm_group['group_name']]);
     }
   }
+  if($form['#id'] == 'node-form' && $form['type']['#value'] == 'darwincorelocation'){
+    drupal_add_js(drupal_get_path('module', 'emonocot').'/em_darwincorelocation.js', 'module');
+  }
 }
 
 function emonocot_node_page_default(){
