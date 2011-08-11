@@ -2,13 +2,9 @@
 
 function taxonlist_menu(){
   return array(
-    'checklist/%/%' => array(
+    'checklist' => array(
       'title' => 'Checklist',
       'page callback' => 'taxonlist_page',
-      'page arguments' => array(
-        0,
-        1
-      ),
       'access arguments' => array(
         'access content'
       ),
@@ -70,8 +66,22 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
   }
 }
 
-function taxonlist_page($vid, $tid = 0){
-  return taxonlist_list($vid, $tid);
+function taxonlist_page($vid, $tid=0){
+  $title = '';
+  if ($tid == 0) {
+  	$vocab = taxonomy_vocabulary_load($vid);
+  	$title = $vocab->name;
+  } else {
+  	$term  = taxonomy_get_term($tid);
+  	$title = $term->name;
+  }
+  //Modify the title
+  drupal_set_title('Checklist of '.$title);
+	
+  //Generate the content
+  $content  = l('Complete checklist', 'checklist/'.$vid).'<br/><br/>';
+  $content .= taxonlist_list($vid, $tid);
+  return $content;
 }
 
 function taxonlist_block_view(){
@@ -82,14 +92,15 @@ function taxonlist_block_view(){
     //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
     $term = tinytax_taxonomy_get_term($tid);
     $vid = $term->vid;
-    $content = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
+    $content  = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
+    $content .= '<br/>'.l('View Checklist', 'checklist/'.$vid.'/'.$tid);
     $content .= '<br/><br/>';
     //If the user has permissions then provide a link to edit the itis_term
-    if (user_access('administer taxonomy')) {
-      $content .= '<span style="font-size:smaller;">' . l('Edit classification', 'admin/content/taxonomy/edit/tui/' . $vid) . '</span><br/>';
-    }
     if (user_access('administer site configuration')) {
       $content .= '<span style="font-size:smaller;">' . l('Configure this panel', 'admin/settings/taxonlist') . '</span><br/>';
+    }
+    if (user_access('administer taxonomy')) {
+      $content .= '<span style="font-size:smaller;">' . l('Edit classification', 'admin/content/taxonomy/edit/tui/' . $vid) . '</span><br/>';
     }
   }
   $block['content'] = $content;
@@ -217,20 +228,25 @@ function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
 }
 
 function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL, $synonyms_only = FALSE) {
+	
   //For synonyms over-ride the depth
   if ($synonyms_only == TRUE) {
 	$depth = 1;	
   }
 	
   //Should we only display invalid or not accepted names?
-  $block_settings = variable_get('taxonlist_block_settings', array());
-  if ($block_settings['synonyms_only']) { $synonyms_only = TRUE;}
-	
+  if ($is_block == TRUE) {
+    $block_settings = variable_get('taxonlist_block_settings', array());
+    if ($block_settings['synonyms_only']) { $synonyms_only = TRUE;}
+  }
+  
   //Get parent of tid if tid is set
   if ($root != 0  && $is_block == FALSE) {
   	$parent = taxonomy_get_parents($root);
-  	$keys = array_keys($parent);
-  	$root = $keys[0];  //It's a classification so we can assume only one parent
+  	if ($parent) {
+  	  $keys = array_keys($parent);
+  	  $root = $keys[0];  //It's a classification so we can assume only one parent
+  	}
   }
   
   $return = '';
