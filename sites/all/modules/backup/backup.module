@@ -44,7 +44,7 @@ function backup_form(){
     '#type' => 'submit',
     '#value' => t('Backup this site'),
     '#attributes' => array(
-      'onclick' => 'this.value=\'' . t('Creating the backup. Please stand by.') . '\';this.disabled=1;return true;'
+      'onclick' => 'this.value=\'' . t('Creating the backup. Please stand by.') . '\';if(!navigator.userAgent.toLowerCase().indexOf(\'chrome\')){this.disabled=1;}return true;'
     )
   );
   $form["backup_text"] = array(
