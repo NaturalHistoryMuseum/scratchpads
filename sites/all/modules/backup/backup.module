@@ -36,25 +36,26 @@ function backup_menu(){
  * Form
  */
 function backup_form(){
-  $form = array();
-  $form['help'] = array(
-    '#value' => theme('advanced_help_topic', 'backup', 'backup')
-  );
-  $form["backup"] = array(
-    '#type' => 'submit',
-    '#value' => t('Backup this site'),
+  $form = array(
     '#attributes' => array(
-      'onclick' => 'this.value=\'' . t('Creating the backup. Please stand by.') . '\';if(!navigator.userAgent.toLowerCase().indexOf(\'chrome\')){this.disabled=1;}return true;'
+      'onsubmit' => "$('#edit-backup').val('" . t('Creating the backup. Please stand by.') . "');$('#edit-backup').attr('disabled', true);"
+    ),
+    'help' => array(
+      '#value' => theme('advanced_help_topic', 'backup', 'backup')
+    ),
+    'backup' => array(
+      '#type' => 'submit',
+      '#value' => t('Backup this site')
+    ),
+    'backup_text' => array(
+      '#value' => '<p>' . t('NOTE: It may take some time for the backup to complete.') . '</p>'
+    ),
+    'previous_backups' => array(
+      '#type' => 'fieldset',
+      '#title' => t('Previous backup'),
+      '#collapsed' => 1,
+      '#collapsible' => 1
     )
-  );
-  $form["backup_text"] = array(
-    '#value' => '<p>' . t('NOTE: It may take some time for the backup to complete.') . '</p>'
-  );
-  $form['previous_backups'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Previous backup'),
-    '#collapsed' => 1,
-    '#collapsible' => 1
   );
   $previous_backups = previous_backup_files();
   $previous_backups_text = '';
@@ -108,7 +109,7 @@ function backup_form_submit($form, &$form_state){
  * This function backs up our database.
  *
  * @param string $db_file This is set to the name of the file which holds
- *  the database.
+ * the database.
  *
  * @param string $prefix_dir The directory name to prefix to the backup.
  * 
@@ -159,12 +160,12 @@ function backup_database(&$db_file, $prefix_dir = ""){
 
 /**
  * This function backs up our file system under DOCUMENT_ROOT, which also
- *  includes the database dump.
+ * includes the database dump.
  *
  * @param string $db_file The name of our database dump
  *
  * @param string $backup_file This is set to the name of the main backup
- *  file which is created.
+ * file which is created.
  *
  * @param string $prefix_dir The directory name to prefix to the backup.
  * 
