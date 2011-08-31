@@ -36,7 +36,7 @@ function csv_import_classification_import_form(){
           1 => t('Parent/Child'),
           2 => t('Full hierarchy')
         ),
-        '#description' => t('Please select which template was used to create your CSV file').theme('advanced_help_topic', 'csv_import', 'filetypes')
+        '#description' => t('Please select which template was used to create your file').theme('advanced_help_topic', 'csv_import', 'filetypes')
       ),
       'submit' => array(
         '#type' => 'submit',
