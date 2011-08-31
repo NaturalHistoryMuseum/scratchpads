@@ -18,13 +18,13 @@ function csv_import_classification_import_form(){
   return array(
     'file' => array(
       '#type' => 'fieldset',
-      '#title' => 'CSV File',
-      '#description' => 'Import from a CSV, Tab separated or XLS file in a number of different formats.'.theme('advanced_help_topic', 'csv_import', 'overview'), // FIXME - Add link to template files.
+      '#title' => 'CSV/Tab delimited file',
+      '#description' => 'Import from a CSV or Tab delimited file in a number of different formats.'.theme('advanced_help_topic', 'csv_import', 'overview'), // FIXME - Add link to template files.
       '#collapsed' => TRUE,
       '#collapsible' => TRUE,
       'csv-file' => array(
         '#type' => 'file',
-        '#title' => t('Upload a CSV file containing your complete classification')
+        '#title' => t('Upload a CSV/Tab delimited file containing your complete classification')
       ),
       'csv-file-type' => array(
         '#type' => 'select',
@@ -40,8 +40,8 @@ function csv_import_classification_import_form(){
       ),
       'submit' => array(
         '#type' => 'submit',
-        '#title' => t('Import from CSV file'),
-        '#value' => t('Import from CSV file'),
+        '#title' => t('Import file'),
+        '#value' => t('Import file'),
         '#submit' => array('csv_import_submit'),
         '#validate' => array('csv_import_validate')
       )
@@ -53,7 +53,7 @@ function csv_import_classification_import_form(){
  * Implementation of hook_classification_import_help
  */
 function csv_import_classification_import_help(){
-  return t('CSV File allows you to import your classification from a number of different file formats.  Templates for these file formats are provided on the help section of the Scratchpad site.');
+  return t('CSV/Tab delimited file allows you to import your classification from a number of different file formats.  Templates for these file formats are provided on the help section of your site.');
 }
 
 /**

@@ -1,13 +1,16 @@
-<p>The CSV file import supports importing data that you have already created
+<p>The CSV/Tab delimited file import supports importing data that you have already created
 using a tool like Excel or Openoffice.  We currently support two different
 <a href="&topic:csv_import/filetypes&">file formats</a>.  This import mechanism
 is only intended for those users who work on a group not well covered by the
 Catalogue of Life and other import sources, or for those users who are advanced
 taxonomists, working at the very cutting edge of taxonomy.</p><p>Files should
-be created as either comma-delimited or tab-delimitted files.  Cells may include
+be created as either comma-delimited or tab-delimited files.  Cells may include
 quotes around the text within them (this is necessary if using the
-comma-delimited format, and a cell contains a comma).  Most of the time the
-default settings of your Excel or Openoffice should suffice.</p><p>Once a file
+comma-delimited format, and a cell contains a comma).</p><p>Text needs to be 
+encoded as UTF-8, which is not possible by using Excel. So if you have created 
+a comma- or tab-delimited using Excel you need to open this file in Word, save 
+it as 'Plain text (*.txt)', which opens a dialog box in which you can select 
+'other encoding' and choose 'Unicode (UTF-8)'.</p><p>Once a file
 has been created, you may test the import on the
 <a href="http://sandbox.scratchpads.eu" target="_blank">Scratchpad sandbox</a>
 first, or simply go ahead and import it into your site.</p>
