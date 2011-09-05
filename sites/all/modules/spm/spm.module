@@ -298,151 +298,223 @@ function spm_node_import_fields($type){
   $allowed_values = array();
   $fields['GeneralDescription'] = array(
     'title' => t('General Description'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => '',
+    'default_value' => ''
   );
   $fields['Biology'] = array(
     'title' => t('Biology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['ConservationStatus'] = array(
     'title' => t('Conservation Status'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Legislation'] = array(
     'title' => t('Legislation'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Management'] = array(
     'title' => t('Management'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Procedures'] = array(
     'title' => t('Procedures'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Threats'] = array(
     'title' => t('Threats'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Trends'] = array(
     'title' => t('Trends'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Behaviour'] = array(
     'title' => t('Behaviour'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Cytology'] = array(
     'title' => t('Cytology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['DiagnosticDescription'] = array(
     'title' => t('Diagnostic Description'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Genetics'] = array(
     'title' => t('Genetics'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Growth'] = array(
     'title' => t('Growth'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['LookAlikes'] = array(
     'title' => t('Look Alikes'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['MolecularBiology'] = array(
     'title' => t('Molecular Biology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Morphology'] = array(
     'title' => t('Morphology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Physiology'] = array(
     'title' => t('Physiology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Size'] = array(
     'title' => t('Size'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['TaxonBiology'] = array(
     'title' => t('Taxon Biology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Associations'] = array(
     'title' => t('Associations'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
-  $fields['Cyclicty'] = array(
+  $fields['Cyclicity'] = array(
     'title' => t('Cyclicity'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Dispersal'] = array(
     'title' => t('Dispersal'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Distribution'] = array(
     'title' => t('Distribution'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Ecology'] = array(
     'title' => t('Ecology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Habitat'] = array(
     'title' => t('Habitat'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['LifeCycle'] = array(
     'title' => t('Life Cycle'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['LifeExpectancy'] = array(
     'title' => t('Life Expectancy'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Migration'] = array(
     'title' => t('Migration'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['TrophicStrategy'] = array(
     'title' => t('Trophic Strategy'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['PopulationBiology'] = array(
     'title' => t('Population Biology'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Reproduction'] = array(
     'title' => t('Reproduction'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Evolution'] = array(
     'title' => t('Evolution'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Phylogeny'] = array(
     'title' => t('Phylogeny'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Diseases'] = array(
     'title' => t('Diseases'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['RiskStatement'] = array(
     'title' => t('Risk Statement'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   $fields['Uses'] = array(
     'title' => t('Uses'),
-    'group' => t('SPM Core')
+    'group' => t('SPM Core'),
+    'allow_empty' => TRUE,
+    'default_value' => ''
   );
   return $fields;
 }
-
 
 function spm_node_import_fields_alter(&$fields, $type){
 /** Do we need this?
@@ -454,5 +526,5 @@ function spm_node_import_fields_alter(&$fields, $type){
         unset($fields[$key]);
       }
     }
-  }*/
+ */
 }
