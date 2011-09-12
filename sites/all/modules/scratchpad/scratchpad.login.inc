@@ -6,6 +6,7 @@ function scratchpad_admin_openids(){
     'http://vbrant.eu/users/dave-roberts/openid' => 'Dave Roberts (http://vbrant.eu/users/dave-roberts/openid)',
     'http://edwbaker.myopenid.com/' => 'Edward Baker (http://edwbaker.myopenid.com)',
     'https://me.yahoo.com/milichia#2260b' => 'Irina Brake (https://me.yahoo.com/milichia#2260b)',
+    'http://vbrant.eu/user/14/identity' => 'Isa Vandevelde (http://vbrant.eu/user/14/identity)',
     'http://laurencelivermore.myopenid.com/' => 'Laurence Livermore (http://laurencelivermore.myopenid.com/)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
     'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
