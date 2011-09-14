@@ -50,6 +50,15 @@ function scratchpad_form_user_login_alter(&$form, &$form_state){
 }
 
 /**
+ * Implementation of hook_perm().
+ */
+function scratchpad_perm(){
+  return array(
+    'view scratchpad data'
+  );
+}
+
+/**
  * Scratchpad validate
  */
 function scratchpad_logins_validate($form, &$form_state){
@@ -161,7 +170,7 @@ function scratchpad_menu(){
       'title' => 'Table',
       'page callback' => 'scratchpad_list_scratchpads_table',
       'access arguments' => array(
-        'SCRATCHPADIFY'
+        'view scratchpad data'
       ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
@@ -170,7 +179,7 @@ function scratchpad_menu(){
       'title' => 'Emails',
       'page callback' => 'scratchpad_list_scratchpads_emails',
       'access arguments' => array(
-        'SCRATCHPADIFY'
+        'view scratchpad data'
       ),
       'file' => 'scratchpad.list.inc',
       'type' => MENU_LOCAL_TASK
