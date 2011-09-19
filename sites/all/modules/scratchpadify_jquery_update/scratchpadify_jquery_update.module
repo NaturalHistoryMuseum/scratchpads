@@ -26,6 +26,9 @@ function scratchpadify_jquery_update_preprocess_page(&$variables){
     $replacements = scratchpadify_jquery_update_get_replacements();
     $variables['scripts'] = str_replace(array_keys($replacements), array_values($replacements), $variables['scripts']);
   }
+  if(module_exists('jsalter')){
+    $variables['scripts'] = jsalter_get_js();
+  }
 }
 
 /**
