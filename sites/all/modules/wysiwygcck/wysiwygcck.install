@@ -1,0 +1,10 @@
+<?php
+// $Id: wysiwygcck.install,v 1.1 2008/12/21 00:26:49 effulgentsia Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function wysiwygcck_install() {
+  // We need our hook_form_alter() to run after wysiwyg.module's hook_form_alter().
+  db_query("UPDATE {system} SET weight = %d WHERE name = '%s' AND type = '%s'", 1, 'wysiwygcck', 'module');
+}

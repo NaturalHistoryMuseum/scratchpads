@@ -1,0 +1,29 @@
+<?php
+// $Id: wysiwygcck.module $
+
+/**
+ * @file
+ * Fixes some integration issues when using a wysiwyg enabled multi-valued CCK text field.
+ */
+ 
+/**
+ * Implementation of hook_form_alter().
+ */
+function wysiwygcck_form_alter(&$form, &$form_state) {
+  $form['#after_build'][] = 'wysiwygcck_process_form';
+}
+
+/**
+ * Process a form.
+ * This runs after wysiwyg_process_form(), because we set this module's weight to 1 during install.
+ * If during wysiwyg_process_form(), wysiwyg.init.js was added, it means we're on a page that's using
+ * a wysiwyg editor.
+ */
+function wysiwygcck_process_form(&$form) {
+  $javascript = drupal_add_js();
+  if (isset($javascript['core'][drupal_get_path('module', 'wysiwyg') . '/wysiwyg.init.js'])) {
+    drupal_add_js(drupal_get_path('module', 'wysiwygcck') . '/wysiwygcck.init.js', 'core');
+    drupal_add_js(drupal_get_path('module', 'wysiwygcck') . '/wysiwygcck.js');
+  }
+  return $form;
+}

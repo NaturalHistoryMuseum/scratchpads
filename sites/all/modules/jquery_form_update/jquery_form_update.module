@@ -1,0 +1,35 @@
+<?php
+// $Id: jquery_form_update.module,v 1.1 2008/12/20 21:03:57 effulgentsia Exp $
+
+/**
+ * @file
+ * Updates the jquery.form.js plugin used by Drupal to version 2.16.
+ */
+ 
+/**
+ * Implementation of hook_js_alter().
+ */
+function jquery_form_update_js_alter(&$aJavascript, $sScope = 'header') {
+  // The jsregistry module is a more generic way of overriding any core
+  // or module javascript file. If that module is enabled, it will handle
+  // the replacement of jquery.form.js simply by virtue of it being in 
+  // this module's misc folder. However, in order to allow this module to
+  // be used without requiring jsregistry, we more or less copy
+  // jsregistry's hook_js_alter() implementation, but limit it to just the 
+  // jquery.form.js file. 
+  if (!module_exists('jsregistry')) {
+    $aRegistry = array(
+      'misc/jquery.form.js' => drupal_get_path('module', 'jquery_form_update') . '/misc/jquery.form.js',
+    );
+    foreach ($aJavascript as $sType => $aJavascriptForType) {
+      if (!in_array($sType, array('setting', 'inline'))) {
+        $aAlteredJavascriptForType = array();
+        foreach ($aJavascriptForType as $sFile => $aInfo) {
+          $sAltFile = isset($aRegistry[$sFile]) ? $aRegistry[$sFile] : $sFile;
+          $aAlteredJavascriptForType[$sAltFile] = $aInfo;
+        }
+        $aJavascript[$sType] = $aAlteredJavascriptForType;
+      }
+    }
+  }
+}
