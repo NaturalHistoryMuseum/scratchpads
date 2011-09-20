@@ -1379,16 +1379,6 @@ function emonocot_block_task_list(){
   return $output;
 }
 
-function emonocot_node_import_fields_alter(&$fields, $type){
-  if($type == 'node:spm'){
-    $em_spm_fields = emonocot_spm_field_info();
-    foreach($em_spm_fields as $em_spm_field){
-      $ni_field_name = 'cck:' . $em_spm_field['field_name'] . ':value';
-      $fields[$ni_field_name]['group'] = 'eMonocot SPM extension';
-    }
-  }
-}
-
 function emonocot_taxonomy($op, $type, $vocabulary){
   if($op == 'insert' && $type == 'vocabulary'){
   	//Define the default taxon page layout
