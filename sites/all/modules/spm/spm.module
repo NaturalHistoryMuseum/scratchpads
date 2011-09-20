@@ -146,6 +146,10 @@ function spm_form(&$node){
       '#prefix' => '<div id="fragment-' . $header_id . '">',
       '#suffix' => '</div>'
     );
+    if(!is_array($spm_fields[$header_id])){
+    	watchdog('spm_fields', $header_id);
+    	watchdog('spm_fields', print_r($spm_fields, 1));
+    }
     foreach($spm_fields[$header_id] as $field_id => $field){
       $form['tabs'][$header_id][$field_id . '_wrapper'] = array(
         $field_id => array(
