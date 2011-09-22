@@ -10,26 +10,30 @@ function taxonlist_menu(){
       ),
       'type' => MENU_CALLBACK
     ),
-    
     'admin/settings/taxonlist' => array(
-      'title'       => 'Taxonlist Settings',
+      'title' => 'Taxonlist Settings',
       'description' => 'Change display of checklists and nomenclature',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('taxonlist_admin_settings'),
-      'access arguments' => array('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM,
-    ),
+      'page arguments' => array(
+        'taxonlist_admin_settings'
+      ),
+      'access arguments' => array(
+        'administer site configuration'
+      ),
+      'type' => MENU_NORMAL_ITEM
+    )
   );
 }
 
-function taxonlist_admin_settings() {
+function taxonlist_admin_settings(){
   $form['taxonlist_block_settings'] = array(
-    '#type'          => 'checkboxes',
-    '#title'         => t('Checklist block settings'),
-    '#options'       => array('synonyms_only' => 'Only show synonyms'),
-    '#default_value' => variable_get('taxonlist_block_settings', array()),
+    '#type' => 'checkboxes',
+    '#title' => t('Checklist block settings'),
+    '#options' => array(
+      'synonyms_only' => 'Only show synonyms'
+    ),
+    '#default_value' => variable_get('taxonlist_block_settings', array())
   );
-  
   return system_settings_form($form);
 }
 
@@ -43,10 +47,10 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
       return $blocks;
     case 'configure':
       $form['taxonlist_block_depth'] = array(
-        '#type'          => 'textfield',
-        '#title'         => t('Depth of heirarchy to show. Leave blank for complete hierarchy.'),
+        '#type' => 'textfield',
+        '#title' => t('Depth of heirarchy to show. Leave blank for complete hierarchy.'),
         '#default_value' => variable_get('taxonlist_block_depth', 3),
-        '#description'   => t('This will be overriden if the checklist box is set to show synonyms only'),
+        '#description' => t('This will be overriden if the checklist box is set to show synonyms only')
       );
       return $form;
     case 'save':
@@ -66,20 +70,19 @@ function taxonlist_block($op = 'list', $delta = 'taxonlist', $edit = array()){
   }
 }
 
-function taxonlist_page($vid, $tid=0){
+function taxonlist_page($vid, $tid = 0){
   $title = '';
-  if ($tid == 0) {
-  	$vocab = taxonomy_vocabulary_load($vid);
-  	$title = $vocab->name;
-  } else {
-  	$term  = taxonomy_get_term($tid);
-  	$title = $term->name;
+  if($tid == 0){
+    $vocab = taxonomy_vocabulary_load($vid);
+    $title = $vocab->name;
+  }else{
+    $term = taxonomy_get_term($tid);
+    $title = $term->name;
   }
   //Modify the title
-  drupal_set_title('Checklist of '.$title);
-	
+  drupal_set_title('Checklist of ' . $title);
   //Generate the content
-  $content  = l('Complete checklist', 'checklist/'.$vid).'<br/><br/>';
+  $content = l('Complete checklist', 'checklist/' . $vid) . '<br/><br/>';
   $content .= taxonlist_list($vid, $tid);
   return $content;
 }
@@ -92,23 +95,25 @@ function taxonlist_block_view(){
     //$tid = db_result(db_query('SELECT parent FROM {term_hierarchy} WHERE tid = %d', arg(2)));
     $term = tinytax_taxonomy_get_term($tid);
     $vid = $term->vid;
-    $content  = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
-    $content .= '<br/>'.l('View Checklist', 'checklist/'.$vid.'/'.$tid);
+    $content = taxonlist_list($vid, $tid, TRUE, variable_get('taxonlist_block_depth', NULL));
+    $content .= '<br/>' . l('View Checklist', 'checklist/' . $vid . '/' . $tid);
     $content .= '<br/><br/>';
     //If the user has permissions then provide a link to edit the itis_term
-    if (user_access('administer site configuration')) {
+    if(user_access('administer site configuration')){
       $content .= '<span style="font-size:smaller;">' . l('Configure this panel', 'admin/settings/taxonlist') . '</span><br/>';
     }
-    if (user_access('administer taxonomy')) {
+    if(user_access('administer taxonomy')){
       $content .= '<span style="font-size:smaller;">' . l('Edit classification', 'admin/content/taxonomy/edit/tui/' . $vid) . '</span><br/>';
     }
   }
   $block['content'] = $content;
-  
   //Is this block a bona fide checklist or a dull list of synonyms?
   $block_settings = variable_get('taxonlist_block_settings', array());
-  if ($block_settings['synonyms_only']) { $block['subject'] = t('Synonyms of ') . $term->name; }
-  else { $block['subject'] = t('Checklist of ') . $term->name; }
+  if($block_settings['synonyms_only']){
+    $block['subject'] = t('Synonyms of ') . $term->name;
+  }else{
+    $block['subject'] = t('Checklist of ') . $term->name;
+  }
   return $block;
 }
 
@@ -159,15 +164,15 @@ function taxonlist_nomenclature_block_view(){
       }
       $content .= '<br/>';
     }
-    
     //Type Taxon
-    if ($data['type_taxon'] != '') {
+    if($data['type_taxon'] != ''){
       $content .= '<b>Type Taxon</b><br/>';
       $data2 = taxonlist_fetch_itis($data['type_taxon']);
-      $content .= l(taxonlist_format_name($data2), 'taxonomy/term/'.$data['type_taxon'], array('html' => TRUE));
+      $content .= l(taxonlist_format_name($data2), 'taxonomy/term/' . $data['type_taxon'], array(
+        'html' => TRUE
+      ));
       $content .= '<br/><br/>';
     }
-    
     //Vernacular Names
     if($data['common_array'][0]['value'] != ''){
       $plural = '';
@@ -195,7 +200,7 @@ function taxonlist_nomenclature_block_view(){
   return $block;
 }
 
-function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
+function taxonlist_get_biblio_ref_from_nid($nid, $page_number = ''){
   $biblio = node_load($nid);
   $content = '';
   $authors = array();
@@ -227,181 +232,208 @@ function taxonlist_get_biblio_ref_from_nid($nid, $page_number=''){
   return $content;
 }
 
-function taxonlist_list($vid=10, $root=0, $is_block=FALSE, $depth=NULL, $synonyms_only = FALSE) {
-	
+function taxonlist_list($vid = 10, $root = 0, $is_block = FALSE, $depth = NULL, $synonyms_only = FALSE){
   //For synonyms over-ride the depth
-  if ($synonyms_only == TRUE) {
-	$depth = 1;	
+  if($synonyms_only == TRUE){
+    $depth = 1;
   }
-	
   //Should we only display invalid or not accepted names?
-  if ($is_block == TRUE) {
+  if($is_block == TRUE){
     $block_settings = variable_get('taxonlist_block_settings', array());
-    if ($block_settings['synonyms_only']) { $synonyms_only = TRUE;}
+    if($block_settings['synonyms_only']){
+      $synonyms_only = TRUE;
+    }
   }
-  
   //Get parent of tid if tid is set
-  if ($root != 0  && $is_block == FALSE) {
-  	$parent = taxonomy_get_parents($root);
-  	if ($parent) {
-  	  $keys = array_keys($parent);
-  	  $root = $keys[0];  //It's a classification so we can assume only one parent
-  	}
+  if($root != 0 && $is_block == FALSE){
+    $parent = taxonomy_get_parents($root);
+    if($parent){
+      $keys = array_keys($parent);
+      $root = $keys[0]; //It's a classification so we can assume only one parent
+    }
   }
-  
   $return = '';
-  
   //If we have a block add the current term only
-  if ($is_block) {
-  	$initial_term = taxonomy_get_term($root);
-  	$initial_term_data = taxonlist_fetch_itis($root);
-  	
-  	//Is this name valid? If not go up one level and only show original below
-  	if ($initial_term_data['usage'] == 'not accepted' || $initial_term_data['usage'] == 'invalid') {
-  	  $return .= '<p>The current term is '.$initial_term_data['usage'].'. This checklist starts with the currently correct name.</p><br/>';
-  		
-  	  $parent = taxonomy_get_parents($root);
-  	  $keys = array_keys($parent);
-  	  $root = $keys[0];
-  	  $initial_term = taxonomy_get_term($root);
-  	  $initial_term_data = taxonlist_fetch_itis($root);
-  	}
-  	
-  	$initial_term_name = taxonlist_format_name($initial_term_data);
-
-  	  $return .= l($initial_term_name, 'taxonomy/term/'.$initial_term->tid, array('html' => TRUE));
-
-  	$return .= '<br/>';
+  if($is_block){
+    $initial_term = taxonomy_get_term($root);
+    $initial_term_data = taxonlist_fetch_itis($root);
+    //Is this name valid? If not go up one level and only show original below
+    if($initial_term_data['usage'] == 'not accepted' || $initial_term_data['usage'] == 'invalid'){
+      $return .= '<p>The current term is ' . $initial_term_data['usage'] . '. This checklist starts with the currently correct name.</p><br/>';
+      $parent = taxonomy_get_parents($root);
+      $keys = array_keys($parent);
+      $root = $keys[0];
+      $initial_term = taxonomy_get_term($root);
+      $initial_term_data = taxonlist_fetch_itis($root);
+    }
+    $initial_term_name = taxonlist_format_name($initial_term_data);
+    $return .= l($initial_term_name, 'taxonomy/term/' . $initial_term->tid, array(
+      'html' => TRUE
+    ));
+    $return .= '<br/>';
   }
-  
   $tree = taxonomy_get_tree($vid, $root, -1, $depth);
-
-  foreach ($tree as $term) {
-  	$term_data = taxonlist_fetch_itis($term->tid);
-  	if  ($synonyms_only == TRUE) {
-  	  if ($term_data['usage'] == 'not accepted' || $term_data['usage'] == 'invalid') {
-  	  	$term_name = taxonlist_format_name($term_data);
-  	  } else {
-  	  	$term_name = '';
-  	  }
-  	} else {
-  	  $term_name = taxonlist_format_name($term_data);
-  	}
-  	
-  	if ($term_name != '') {
-  	  //Add indentation
-  	  $indent_string = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-  	  if ($is_block) {$return .= $indent_string;}
-  	  for ($i=0; $i < $term->depth; $i++) {$return .= $indent_string;}
-  	
-  	  //Return name
-  	  $return .= l($term_name, 'taxonomy/term/'.$term->tid, array('html' => TRUE));
-  	  $return .= '<br/>';
-  	}
+  foreach($tree as $term){
+    $term_data = taxonlist_fetch_itis($term->tid);
+    if($synonyms_only == TRUE){
+      if($term_data['usage'] == 'not accepted' || $term_data['usage'] == 'invalid'){
+        $term_name = taxonlist_format_name($term_data);
+      }else{
+        $term_name = '';
+      }
+    }else{
+      $term_name = taxonlist_format_name($term_data);
+    }
+    if($term_name != ''){
+      //Add indentation
+      $indent_string = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+      if($is_block){
+        $return .= $indent_string;
+      }
+      for($i = 0; $i < $term->depth; $i++){
+        $return .= $indent_string;
+      }
+      //Return name
+      $return .= l($term_name, 'taxonomy/term/' . $term->tid, array(
+        'html' => TRUE
+      ));
+      $return .= '<br/>';
+    }
   }
   return $return;
 }
 
-
-function taxonlist_fetch_itis($tid) {
+function taxonlist_fetch_itis($tid){
   //Is there an itis_term node associated with this tid?
   $sql = "SELECT nid FROM term_node INNER JOIN term_data ON term_node.tid = term_data.tid WHERE term_node.tid = %d;";
   $result = db_fetch_object(db_query($sql, $tid));
   $node = node_load($result->nid, NULL, TRUE);
   //Extract the required from the node
   $return = array();
-  $return['rank']           = $node->field_rank_name[0]['value'];
-  $return['unit1']          = $node->field_unit_name1[0]['value'];
-  $return['unit2']          = $node->field_unit_name2[0]['value'];
-  $return['unit3']          = $node->field_unit_name3[0]['value'];
-  $return['unit4']          = $node->field_unit_name4[0]['value'];
-  $return['ind1']           = $node->field_unit_ind1[0]['value'];
-  $return['ind2']           = $node->field_unit_ind2[0]['value'];
-  $return['ind3']           = $node->field_unit_ind3[0]['value'];
-  $return['ind4']           = $node->field_unit_ind4[0]['value'];
-  $return['usage']          = $node->field_usage[0]['value'];
-  $return['accepted_name']  = $node->field_accepted_name[0]['value'];
+  $return['rank'] = $node->field_rank_name[0]['value'];
+  $return['unit1'] = $node->field_unit_name1[0]['value'];
+  $return['unit2'] = $node->field_unit_name2[0]['value'];
+  $return['unit3'] = $node->field_unit_name3[0]['value'];
+  $return['unit4'] = $node->field_unit_name4[0]['value'];
+  $return['ind1'] = $node->field_unit_ind1[0]['value'];
+  $return['ind2'] = $node->field_unit_ind2[0]['value'];
+  $return['ind3'] = $node->field_unit_ind3[0]['value'];
+  $return['ind4'] = $node->field_unit_ind4[0]['value'];
+  $return['usage'] = $node->field_usage[0]['value'];
+  $return['accepted_name'] = $node->field_accepted_name[0]['value'];
   $return['unaccep_reason'] = $node->field_unacceptability_reason[0]['value'];
-  $return['author']         = $node->field_taxon_author[0]['value'];
-  $return['reference']      = $node->field_reference[0]['nid'];
-  $return['page_number']    = $node->field_page_number[0]['value'];
-  $return['etymology']      = $node->field_itis_em_etymology[0]['value'];
-  $return['bad_ref']        = $node->field_itis_em_other_ref[0]['value'];
-  $return['ref_url']        = $node->field_itis_em_url[0]['value'];
-  $return['type_taxon']     = $node->field_type_taxon[0]['value'];
-  $return['common_array']   = $node->field_vernacular_name;
+  $return['author'] = $node->field_taxon_author[0]['value'];
+  $return['reference'] = $node->field_reference[0]['nid'];
+  $return['page_number'] = $node->field_page_number[0]['value'];
+  $return['etymology'] = $node->field_itis_em_etymology[0]['value'];
+  $return['bad_ref'] = $node->field_itis_em_other_ref[0]['value'];
+  $return['ref_url'] = $node->field_itis_em_url[0]['value'];
+  $return['type_taxon'] = $node->field_type_taxon[0]['value'];
+  $return['common_array'] = $node->field_vernacular_name;
   $return['type_ref_array'] = $node->field_type_references;
-  
-  $return['nid']            = $node->nid;
-
+  $return['nid'] = $node->nid;
   return $return;
 }
 
-function taxonlist_format_name($data, $higher_prefix = TRUE, $indicate_synonyms = TRUE) {
+function taxonlist_format_name($data, $higher_prefix = TRUE, $indicate_synonyms = TRUE){
   $author = $data['author'];
-  if ($higher_prefix == TRUE) { $rank = $data['rank'].': '; } else { $rank = ''; }
-  
-  switch ($data['rank']) {
-  	case 'Subgenus':
-  	  $data['unit2'] = '<i>('.$data['unit2'].')</i>&nbsp;';
-  	case 'Genus':
-  	  $data['unit1'] = '<i>'.$data['unit1'].'</i>&nbsp;';
-  	  $name = $data['ind1'].$data['unit1'].$data['ind2'].$data['unit2'].$data['ind3'].$data['unit3'].$data['ind4'].$data['unit4'].$author;
-  	  break;
-  	case 'Species':
-  	  if ($data['unit3']) { 
-  	  	//Put that subgenus in brackets
-  	    $data['unit2'] = '(' . $data['unit2'] . ')';
-  	  }
-  	  $data['unit1'] = '<i>'.$data['unit1'].'</i>&nbsp;';
-  	  $data['unit2'] = '<i>'.$data['unit2'].'</i>&nbsp;';
-  	  $data['unit3'] = '<i>'.$data['unit3'].'</i>&nbsp;';
-  	  $data['unit4'] = '<i>'.$data['unit4'].'</i>&nbsp;';
-  	  if ($data['ind1']) {$data['ind1'] .= '&nbsp;';} else {$data['ind1'] = '';}
-      if ($data['ind2']) {$data['ind2'] .= '&nbsp;';} else {$data['ind2'] = '';}
-      if ($data['ind3']) {$data['ind3'] .= '&nbsp;';} else {$data['ind3'] = '';}
-      if ($data['ind4']) {$data['ind4'] .= '&nbsp;';} else {$data['ind4'] = '';}
-
-      $name = $data['ind1'].$data['unit1'].$data['ind2'].$data['unit2'].$data['ind3'].$data['unit3'].$data['ind4'].$data['unit4'].$author;
-  	  break;
-  	case 'Subspecies':
-  	  if ($data['unit4']) { 
-  	  	//Put that subgenus in brackets
-  	    $data['unit2'] = '(' . $data['unit2'] . ')';
-  	  }
-  	  $data['unit1'] = '<i>'.$data['unit1'].'</i>&nbsp;';
-  	  $data['unit2'] = '<i>'.$data['unit2'].'</i>&nbsp;';
-  	  $data['unit3'] = '<i>'.$data['unit3'].'</i>&nbsp;';
-  	  $data['unit4'] = '<i>'.$data['unit4'].'</i>&nbsp;';
-  	  if ($data['ind1']) {$data['ind1'] .= '&nbsp;';} else {$data['ind1'] = '';}
-      if ($data['ind2']) {$data['ind2'] .= '&nbsp;';} else {$data['ind2'] = '';}
-      if ($data['ind3']) {$data['ind3'] .= '&nbsp;';} else {$data['ind3'] = '';}
-      if ($data['ind4']) {$data['ind4'] .= '&nbsp;';} else {$data['ind4'] = '';}
-
-      $name = $data['ind1'].$data['unit1'].$data['ind2'].$data['unit2'].$data['ind3'].$data['unit3'].$data['ind4'].$data['unit4'].$author;
-  	  break;
-  	case 'Superfamily':
-  	case 'Family':
-  	case 'Subfamily':
-  	case 'Tribe':
-  	case 'Subtribe':
-  	  $name = '<b>' . $rank . '<span style="text-transform:uppercase;">'. $data['unit1'] . '&nbsp'. $author . '</span></b>';
-  	  break;
-  	case 'Kingdom':
-  	case 'Subkingdom':
-  	  $name = $data['ind1'].$data['unit1'].$data['ind2'].$data['unit2'].$data['ind3'].$data['unit3'].$data['ind4'].$data['unit4'];
-  	  $name = '<span style="font-size:larger;"><b>' . $rank . '<span style="text-transform:uppercase;"> '. $name . '</span></b>&nbsp;' . $author .'</span>';
-  	  break;
+  if($higher_prefix == TRUE){
+    $rank = $data['rank'] . ': ';
+  }else{
+    $rank = '';
   }
-
+  switch($data['rank']){
+    case 'Subgenus':
+      $data['unit2'] = '<i>(' . $data['unit2'] . ')</i>&nbsp;';
+    case 'Genus':
+      $data['unit1'] = '<i>' . $data['unit1'] . '</i>&nbsp;';
+      $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'] . $author;
+      break;
+    case 'Species':
+      if($data['unit3']){
+        //Put that subgenus in brackets
+        $data['unit2'] = '(' . $data['unit2'] . ')';
+      }
+      $data['unit1'] = '<i>' . $data['unit1'] . '</i>&nbsp;';
+      $data['unit2'] = '<i>' . $data['unit2'] . '</i>&nbsp;';
+      $data['unit3'] = '<i>' . $data['unit3'] . '</i>&nbsp;';
+      $data['unit4'] = '<i>' . $data['unit4'] . '</i>&nbsp;';
+      if($data['ind1']){
+        $data['ind1'] .= '&nbsp;';
+      }else{
+        $data['ind1'] = '';
+      }
+      if($data['ind2']){
+        $data['ind2'] .= '&nbsp;';
+      }else{
+        $data['ind2'] = '';
+      }
+      if($data['ind3']){
+        $data['ind3'] .= '&nbsp;';
+      }else{
+        $data['ind3'] = '';
+      }
+      if($data['ind4']){
+        $data['ind4'] .= '&nbsp;';
+      }else{
+        $data['ind4'] = '';
+      }
+      $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'] . $author;
+      break;
+    case 'Subspecies':
+      if($data['unit4']){
+        //Put that subgenus in brackets
+        $data['unit2'] = '(' . $data['unit2'] . ')';
+      }
+      $data['unit1'] = '<i>' . $data['unit1'] . '</i>&nbsp;';
+      $data['unit2'] = '<i>' . $data['unit2'] . '</i>&nbsp;';
+      $data['unit3'] = '<i>' . $data['unit3'] . '</i>&nbsp;';
+      $data['unit4'] = '<i>' . $data['unit4'] . '</i>&nbsp;';
+      if($data['ind1']){
+        $data['ind1'] .= '&nbsp;';
+      }else{
+        $data['ind1'] = '';
+      }
+      if($data['ind2']){
+        $data['ind2'] .= '&nbsp;';
+      }else{
+        $data['ind2'] = '';
+      }
+      if($data['ind3']){
+        $data['ind3'] .= '&nbsp;';
+      }else{
+        $data['ind3'] = '';
+      }
+      if($data['ind4']){
+        $data['ind4'] .= '&nbsp;';
+      }else{
+        $data['ind4'] = '';
+      }
+      $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'] . $author;
+      break;
+    case 'Superfamily':
+    case 'Family':
+    case 'Subfamily':
+    case 'Tribe':
+    case 'Subtribe':
+      $name = '<b>' . $rank . '<span style="text-transform:uppercase;">' . $data['unit1'] . '&nbsp' . $author . '</span></b>';
+      break;
+    case 'Kingdom':
+    case 'Subkingdom':
+      $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'];
+      $name = '<span style="font-size:larger;"><b>' . $rank . '<span style="text-transform:uppercase;"> ' . $name . '</span></b>&nbsp;' . $author . '</span>';
+      break;
+  }
   //Handle synonyms
-  if ($indicate_synonyms == TRUE) { $syn_string = '= '; }
-  else { $syn_string = ''; }
-  
-  switch ($data['usage']) {
-  	case 'not accepted':
-  	case 'invalid':
-  		$name = '<span style="color:red">'.$syn_string.$name.'</span>';
+  if($indicate_synonyms == TRUE){
+    $syn_string = '= ';
+  }else{
+    $syn_string = '';
+  }
+  switch($data['usage']){
+    case 'not accepted':
+    case 'invalid':
+      $name = '<span style="color:red">' . $syn_string . $name . '</span>';
   }
   return $name;
 }

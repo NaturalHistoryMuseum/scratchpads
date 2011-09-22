@@ -91,7 +91,7 @@ function emonocot_form_alter(&$form, &$form_state){
     }
   }
   if($form['#id'] == 'node-form' && $form['type']['#value'] == 'darwincorelocation'){
-    drupal_add_js(drupal_get_path('module', 'emonocot').'/em_darwincorelocation.js', 'module');
+    drupal_add_js(drupal_get_path('module', 'emonocot') . '/em_darwincorelocation.js', 'module');
   }
 }
 
@@ -259,10 +259,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -1,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     //Misc
     array(
@@ -292,10 +292,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -51,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Phenology',
@@ -325,10 +325,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -41,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Pollination',
@@ -357,10 +357,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -31,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Anatomy',
@@ -389,10 +389,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -21,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Cytogenetics',
@@ -421,10 +421,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -11,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Fossil Record',
@@ -453,10 +453,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'weight' => -1,
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'General Description Reference',
@@ -471,10 +471,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'GeneralDescription_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Biology Reference',
@@ -489,10 +489,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Biology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Conservation Status Reference',
@@ -507,10 +507,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'ConservationStatus_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Legislation Reference',
@@ -525,10 +525,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Legislation_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Management Reference',
@@ -543,10 +543,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Management_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Procedures Reference',
@@ -561,10 +561,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Procedures_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Threats Reference',
@@ -579,10 +579,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Threats_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Trends Reference',
@@ -597,10 +597,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Trends_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Behaviour Reference',
@@ -615,10 +615,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Behaviour_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Cytology Reference',
@@ -633,10 +633,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Cytology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Diagnostic Description Reference',
@@ -651,10 +651,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'DiagnosticDescription_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Genetics Reference',
@@ -669,10 +669,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Genetics_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Growth Reference',
@@ -687,10 +687,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Growth_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Look Alikes Reference',
@@ -705,10 +705,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'LookAlikes_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Molecular Biology Reference',
@@ -723,10 +723,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'MolecularBiology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Morphology Reference',
@@ -741,10 +741,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Morphology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Physiology Reference',
@@ -759,10 +759,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Physiology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Size Reference',
@@ -777,10 +777,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Size_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Taxon Biology Reference',
@@ -795,10 +795,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'TaxonBiology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Associations Reference',
@@ -813,10 +813,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Associations_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Cyclicity)',
@@ -831,10 +831,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Cyclicity_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Dispersal)',
@@ -849,10 +849,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Dispersal_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Distribution)',
@@ -867,10 +867,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Distribution_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Ecology)',
@@ -885,10 +885,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Ecology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Habitat)',
@@ -903,10 +903,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Habitat_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Life Cycle)',
@@ -921,10 +921,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'LifeCycle_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Life Expectancy)',
@@ -939,10 +939,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'LifeExpectancy_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Migration)',
@@ -957,10 +957,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Migration_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Trophic Startegy)',
@@ -975,10 +975,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'TrophicStrategy_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Population Biology)',
@@ -993,10 +993,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'PopulationBiology_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Reproduction)',
@@ -1011,10 +1011,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Reproduction_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Evolution)',
@@ -1029,10 +1029,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Evolution_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Phylogeny)',
@@ -1047,10 +1047,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Phylogeny_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Diseases)',
@@ -1065,10 +1065,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Diseases_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Risk Statement)',
@@ -1083,10 +1083,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'RiskStatement_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     ),
     array(
       'label' => 'Reference (Uses)',
@@ -1101,10 +1101,10 @@ function emonocot_spm_field_info(){
       'widget_module' => 'nodereference',
       'parent_wrapper' => 'Uses_wrapper',
       'display_settings' => array(
-        'full' => array (
-          'format' => 'bibliographic_citation',
-        ),
-      ),
+        'full' => array(
+          'format' => 'bibliographic_citation'
+        )
+      )
     )
   );
 }
@@ -1123,7 +1123,7 @@ function emonocot_itis_field_info(){
       'required' => 0,
       'locked' => 0,
       'description' => t(''),
-      'text_processing' => 0,
+      'text_processing' => 0
     ),
     array(
       'label' => 'Other Reference',
@@ -1133,7 +1133,7 @@ function emonocot_itis_field_info(){
       'type' => 'text',
       'widget_type' => 'text_textfield',
       'weight' => 20,
-      'description' => 'Text citation. For use when the reference is not in the bibliography. NOT RECCOMENDED.',
+      'description' => 'Text citation. For use when the reference is not in the bibliography. NOT RECCOMENDED.'
     ),
     array(
       'label' => 'Other Reference Link',
@@ -1148,7 +1148,7 @@ function emonocot_itis_field_info(){
       'description' => t('URL of reference in BHL or other online repository. Make sure you have enterred the citation above.'),
       'text_processing' => 0
     ),
-    array (
+    array(
       'label' => 'Type Taxon',
       'field_name' => 'field_type_taxon',
       'type_name' => 'itis_term',
@@ -1158,10 +1158,9 @@ function emonocot_itis_field_info(){
       'change' => 'Change basic information',
       'weight' => '90',
       'vid' => 0,
-      'description' => 'For ranks where the type is not a specimen.',
+      'description' => 'For ranks where the type is not a specimen.'
     ),
-    
-    array (
+    array(
       'label' => 'Type References (e.g. neotype/lectotype designations)',
       'type_name' => 'itis_term',
       'field_name' => 'field_type_references',
@@ -1175,33 +1174,28 @@ function emonocot_itis_field_info(){
       'group' => 'group_scientificname',
       'required' => 0,
       'multiple' => '1',
-      'referenceable_types' => 
-      array (
-        'biblio' => 'biblio',
+      'referenceable_types' => array(
+        'biblio' => 'biblio'
       ),
       'advanced_view' => 'biblio_nodes',
       'module' => 'nodereference',
       'widget_module' => 'nodereference',
-      'columns' => 
-      array (
-        'nid' => 
-        array (
+      'columns' => array(
+        'nid' => array(
           'type' => 'int',
           'unsigned' => true,
           'not null' => false,
-          'index' => true,
-        ),
+          'index' => true
+        )
       ),
-      'display_settings' => 
-      array (
-        'full' => 
-        array (
+      'display_settings' => array(
+        'full' => array(
           'format' => 'default',
-          'exclude' => 0,
-        ),
-      ),
-    ),
- );
+          'exclude' => 0
+        )
+      )
+    )
+  );
 }
 
 function emonocot_image_field_info(){
@@ -1218,7 +1212,7 @@ Flower',
       'widget_module' => 'optionwidgets',
       'type_name' => 'image'
     ),
-    array (
+    array(
       'label' => 'Location',
       'field_name' => 'field_img_location',
       'type' => 'nodereference',
@@ -1228,11 +1222,10 @@ Flower',
       'size' => 60,
       'required' => 0,
       'multiple' => '0',
-      'referenceable_types' => 
-        array (
-          'darwincorelocation' => 'darwincorelocation',
-        ),
-      ),
+      'referenceable_types' => array(
+        'darwincorelocation' => 'darwincorelocation'
+      )
+    )
   );
 }
 
@@ -1381,11 +1374,10 @@ function emonocot_block_task_list(){
 
 function emonocot_taxonomy($op, $type, $vocabulary){
   if($op == 'insert' && $type == 'vocabulary'){
-  	//Define the default taxon page layout
+    //Define the default taxon page layout
     db_query("INSERT INTO {mado} (identifier, blocks) VALUES (%d, '%s')", $vocabulary['vid'], serialize(emonocot_mado_config()));
-    
     //Let's add the associated apache_solr block
-    $new_block = 'im_vid_'.$vocabulary['vid'];
+    $new_block = 'im_vid_' . $vocabulary['vid'];
     $blocks = unserialize(variable_get('apachesolr_enabled_facets', array()));
     $blocks['apachesolr_search'][$new_block] = $new_block;
     variable_set('apachesolr_enabled_facets', $blocks);
@@ -1397,63 +1389,52 @@ function emonocot_taxonomy($op, $type, $vocabulary){
 
 function emonocot_mado_config(){
   $mado = array(
-      'block-taxonlist/nomenclature' => Array
-        (
-            '#type' => 'block',
-            '#name' => 'taxonlist/nomenclature',
-            '#scroll' => 1,
-            '#css' => 'mado_block_2',
-        ),
-
- 
-
-    'block-taxonlist/taxonlist' => Array
-        (
-            '#type' => 'block',
-            '#name' => 'taxonlist/taxonlist',
-            '#scroll' => 1,
-            '#css' => 'mado_block_2',
-        ),
-        
-     'view-spec_image_types' => Array
-        (
-            '#type' => 'view',
-            '#name' => 'spec_image_types',
-            '#scroll' => 1,
-            '#css' => mado_block,
-        ),
-
-    'view-spm' => Array
-        (
-            '#type' => 'view',
-            '#name' => 'spm',
-            '#scroll' => 0,
-            '#css' => 'mado_block',
-        ),
-
-    'view-specimen_table' => Array
-        (
-            '#type' => 'view',
-            '#name' => 'specimen_table_em',
-            '#scroll' => 0,
-            '#css' => 'mado_block',
-        ),
-
-    'view-biblio_table' => Array
-        (
-            '#type' => 'view',
-            '#name' => 'biblio_table',
-            '#scroll' => 0,
-            '#css' => 'mado_block',
-        ),
+    'block-taxonlist/nomenclature' => Array(
+      '#type' => 'block',
+      '#name' => 'taxonlist/nomenclature',
+      '#scroll' => 1,
+      '#css' => 'mado_block_2'
+    ),
+    'block-taxonlist/taxonlist' => Array(
+      '#type' => 'block',
+      '#name' => 'taxonlist/taxonlist',
+      '#scroll' => 1,
+      '#css' => 'mado_block_2'
+    ),
+    'view-spec_image_types' => Array(
+      '#type' => 'view',
+      '#name' => 'spec_image_types',
+      '#scroll' => 1,
+      '#css' => mado_block
+    ),
+    'view-spm' => Array(
+      '#type' => 'view',
+      '#name' => 'spm',
+      '#scroll' => 0,
+      '#css' => 'mado_block'
+    ),
+    'view-specimen_table' => Array(
+      '#type' => 'view',
+      '#name' => 'specimen_table_em',
+      '#scroll' => 0,
+      '#css' => 'mado_block'
+    ),
+    'view-biblio_table' => Array(
+      '#type' => 'view',
+      '#name' => 'biblio_table',
+      '#scroll' => 0,
+      '#css' => 'mado_block'
+    )
   );
   return $mado;
 }
 
-function emonocot_views_api() {
-  return array('api' => 2.0);
+function emonocot_views_api(){
+  return array(
+    'api' => 2.0
+  );
 }
 
-function emonocot_views_default_views_alter(&$views) {
-//  print_r($views);exit;
+function emonocot_views_default_views_alter(&$views){
+  //  print_r($views);exit;
 }
