@@ -17,7 +17,7 @@
                 <div id="header">
                     <div class="head-row1">
                         <div class="col1">
-                            <?php $logo = drupal_get_path('theme', 'emonocot_sp') . '/logo.png'; ?>
+                            <?php $logo = base_path().drupal_get_path('theme', 'emonocot_sp') . '/logo.png'; ?>
                                 <p align="center"><img src="<?php print($logo) ?>" alt="<?php print t('Home') ?>" border="0" class="logo" /><br /></p>
                             
                             <?php if ($site_name) : ?>
