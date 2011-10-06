@@ -11,7 +11,7 @@ define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint
  */
 function wcm_import_classification_import_form(){
   drupal_add_css(drupal_get_path('module', 'wcm_import') . '/wcm_import.css');
-  $wcm_service_status = strlen(file_get_contents('http://129.67.24.160/latest/checklist/endpoint?scratchpad='.$base_url, 0, stream_context_create(array(
+  $wcm_service_status = strlen(file_get_contents('http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url, 0, stream_context_create(array(
     'http' => array(
       'timeout' => 3
     )
