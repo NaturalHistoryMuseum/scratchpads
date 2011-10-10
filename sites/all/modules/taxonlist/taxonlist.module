@@ -350,6 +350,10 @@ function taxonlist_format_name($data, $higher_prefix = TRUE, $indicate_synonyms 
       $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'] . $author;
       break;
     case 'Species':
+    case 'Variery':
+    case 'Subvariety':
+    case 'Form':
+    case 'Subform':
       if($data['unit3']){
         //Put that subgenus in brackets
         $data['unit2'] = '(' . $data['unit2'] . ')';
@@ -416,10 +420,13 @@ function taxonlist_format_name($data, $higher_prefix = TRUE, $indicate_synonyms 
     case 'Subfamily':
     case 'Tribe':
     case 'Subtribe':
+    case 'Section':
       $name = '<b>' . $rank . '<span style="text-transform:uppercase;">' . $data['unit1'] . '&nbsp' . $author . '</span></b>';
       break;
     case 'Kingdom':
     case 'Subkingdom':
+    case 'Division':
+    case 'Subdivision':
       $name = $data['ind1'] . $data['unit1'] . $data['ind2'] . $data['unit2'] . $data['ind3'] . $data['unit3'] . $data['ind4'] . $data['unit4'];
       $name = '<span style="font-size:larger;"><b>' . $rank . '<span style="text-transform:uppercase;"> ' . $name . '</span></b>&nbsp;' . $author . '</span>';
       break;
