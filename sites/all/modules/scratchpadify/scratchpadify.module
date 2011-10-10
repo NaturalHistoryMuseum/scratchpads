@@ -656,7 +656,7 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
       $terms[$term->vid][] = $term;
     }
   }
-  $return_html = '<div class="scratchpadify-terms">';
+  $return_html = '';
   $vocabularies = taxonomy_get_vocabularies();
   foreach($terms as $vid => $terms){
     $vocabulary = $vocabularies[$vid];
@@ -667,7 +667,9 @@ function scratchpadify_link($type, $node = NULL, $teaser = FALSE){
     }
     $return_html .= implode("; ", $terms_array) . '</span></p>';
   }
-  $return_html .= '</div>';
+  if($return_html){
+    $return_html = '<div class="scratchpadify-terms">'.$return_html.'</div>';
+  }
   $links = array();
   $links[] = array(
     'title' => $return_html,
