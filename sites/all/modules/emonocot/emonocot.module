@@ -1149,6 +1149,14 @@ function emonocot_itis_field_info(){
       'text_processing' => 0
     ),
     array(
+      'label' => 'WCM-ID',
+      'field_name' => 'field_id',
+      'type_name' => 'itis_term',
+      'type' => 'text',
+      'widget_type' => 'text_textfield',
+      'description' => t('The LSID from the World Checklist of Monocots. Only change this if you know what this means, and the implications.'),
+    ),
+    array(
       'label' => 'Type Taxon',
       'field_name' => 'field_type_taxon',
       'type_name' => 'itis_term',
