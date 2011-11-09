@@ -139,7 +139,7 @@ function tcs_import_batch_download_data($urls, $vid, $total = 1000000, &$context
   @unlink($url_or_file);
   // Update our progress information.
   $num_names_saved = db_result(db_query("SELECT COUNT(*) FROM {classification_import_temp} WHERE vid = %d", $vid));
-  $context['sandbox']['progress'] = $num_names_saved / $context['sandbox']['max'];
+  $context['sandbox']['progress'] = $num_names_saved / ($context['sandbox']['max'] ? $context['sandbox']['max'] : 1);
   // Set the message
   $context['message'] = t('Downloaded %numnames names of approximately %totalnames', array(
     '%numnames' => $num_names_saved,
