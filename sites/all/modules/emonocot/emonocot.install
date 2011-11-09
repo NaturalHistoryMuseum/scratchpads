@@ -127,3 +127,17 @@ function emonocot_uninstall_itis_fields(){
     content_field_instance_delete($field['field_name'], $field['type_name']);
   }
 }
+
+function emonocot_update_6101(){
+  //Include the WCM LSID when importing classifications 	
+  module_load_include('inc', 'content', 'includes/content.crud');
+  $field =  array(
+    'label' => 'WCM-ID',
+    'field_name' => 'field_id',
+    'type_name' => 'itis_term',
+    'type' => 'text',
+    'widget_type' => 'text_textfield',
+    'description' => t('The LSID from the World Checklist of Monocots. Only change this if you know what this means, and the implications.'),
+  );
+  content_field_instance_create($field);
+}

@@ -1,11 +1,16 @@
 <?php
 //Testing URL
-//define('WCM_IMPORT_QUERY_URL', 'http://129.67.24.160/latest/checklist/endpoint?scratchpad='.$base_url.'&function=search&search=');
-//define('WCM_IMPORT_REQUEST_URL', 'http://129.67.24.160/latest/checklist/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
+//define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor?scratchpad='.$base_url.'&function=search&search=');
+//define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor?scratchpad='.$base_url.'&function=details_tcs&id=');
+
+//Another testing URL
+define('WCM_IMPORT_QUERY_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
+define('WCM_IMPORT_REQUEST_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
 
 //Actual WCM URL
-define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
-define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
+//define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
+//define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
+
 /**
  * Implementation of hook_classification_import_form
  */
