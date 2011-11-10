@@ -238,8 +238,11 @@ function _tinytax_list_blocks(){
   $blocks = array();
   foreach($vocabularies as $vocabulary){
     if($vocabulary->module == 'taxonomy'){
-      $blocks['tinytax-' . $vocabulary->vid]['info'] = t('Tinytax Block for @vocabulary', array(
-        '@vocabulary' => check_plain($vocabulary->name)
+      $blocks['tinytax-' . $vocabulary->vid] = array(
+        'info' => t('Tinytax Block for @vocabulary', array(
+          '@vocabulary' => check_plain($vocabulary->name)
+        ),
+        'cache' => BLOCK_CACHE_PER_PAGE
       ));
     }
   }
