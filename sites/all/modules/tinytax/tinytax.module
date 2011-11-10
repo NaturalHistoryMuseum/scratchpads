@@ -241,9 +241,9 @@ function _tinytax_list_blocks(){
       $blocks['tinytax-' . $vocabulary->vid] = array(
         'info' => t('Tinytax Block for @vocabulary', array(
           '@vocabulary' => check_plain($vocabulary->name)
-        ),
+        )),
         'cache' => BLOCK_CACHE_PER_PAGE
-      ));
+      );
     }
   }
   return $blocks;
