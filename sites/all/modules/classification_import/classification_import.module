@@ -175,7 +175,7 @@ function classification_import_load_terms($vid, &$context){
     // Finally clear the table.  We do this here, rather than in the finished
     // function, as here we have the value of vid (don't want to rely on getting
     // it from the URL).
-    //db_query("DELETE FROM {classification_import_temp} WHERE vid = %d", $vid);
+    db_query("DELETE FROM {classification_import_temp} WHERE vid = %d", $vid);
   }else{
     $context['finished'] = $context['sandbox']['progress'];
   }
@@ -239,7 +239,7 @@ function classification_import_load_terms_help(&$data, $vid){
       $data[] = $row['id'];
     }
     // We delete this entry from the table - progress could be counted from this
-    //db_query("DELETE FROM {classification_import_temp} WHERE id = %d", $id);
+    db_query("DELETE FROM {classification_import_temp} WHERE id = %d", $id);
     // Delete the status message which get in the way.
     drupal_get_messages('status');
     $additional_message = '<p>' . t('Imported') . ': ' . $form_state['values']['name'] . '</p>';
