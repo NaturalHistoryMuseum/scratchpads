@@ -48,7 +48,7 @@ function tcs_import_classification_import_help(){
 function tcs_fgc($filename){
   $ctx = stream_context_create(array(
     'http' => array(
-      'timeout' => 30
+      'timeout' => 300
     )
   ));
   return file_get_contents($filename, 0, $ctx);

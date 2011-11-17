@@ -1,0 +1,43 @@
+<?php
+
+// $Id$
+/**
+ * @file
+ * Add Google Scholar metatags to Biblio node pages
+ */
+function biblio_scholar_preprocess_node($variables){
+  if($variables['type'] == 'biblio'){
+    drupal_set_html_head('<meta name="citation_title" content="' . $variables['title'] . '"/>');
+    //Sort out the authors
+    foreach($variables['biblio_contributors'][1] as $author){
+      drupal_set_html_head('<meta name="citation_author" content="' . $author['name'] . '"/>');
+    }
+    if($variables['biblio_year'] != ''){
+      drupal_set_html_head('<meta name="citation_publication_date" content="' . $variables['biblio_year'] . '"/>');
+    }
+    if($variables['biblio_secondary_title'] != ''){
+      drupal_set_html_head('<meta name="citation_journal_title" content="' . $variables['biblio_secondary_title'] . '"/>');
+    }
+    if($variables['biblio_volume'] != ''){
+      drupal_set_html_head('<meta name="citation_volume" content="' . $variables['biblio_volume'] . '"/>');
+    }
+    if($variables['biblio_issue'] != ''){
+      drupal_set_html_head('<meta name="citation_issue" content="' . $variables['biblio_issue'] . '"/>');
+    }
+    if($variables['biblio_isbn'] != ''){
+      drupal_set_html_head('<meta name="citation_isbn" content="' . $variables['biblio_isbn'] . '"/>');
+    }
+    if($variables['biblio_issn'] != ''){
+      drupal_set_html_head('<meta name="citation_issn" content="' . $variables['biblio_issn'] . '"/>');
+    }
+    if(!empty($variables['files'])){
+      foreach($variables['files'] as $file){
+        if(substr($file->filepath, -3) == 'pdf'){
+          drupal_set_html_head('<meta name="citation_pdf_url" content="' . url($file->filepath, array(
+            'absolute'
+          )) . '"/>');
+        }
+      }
+    }
+  }
+}
