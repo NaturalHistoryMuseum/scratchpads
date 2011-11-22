@@ -713,6 +713,12 @@ style="border-width: 0pt;" src="' . base_path() . drupal_get_path('module', 'scr
 }
 
 function scratchpadify_init(){
+  if(preg_match('|\.m[1-9]\.|', $_SERVER['SERVER_NAME'], $matches)){
+    global $base_url;
+    $canonical = $base_url . request_uri();
+    $canonical = str_replace($matches[0], '.', $canonical);
+    drupal_set_html_head('<link rel="canonical" href="'.$canonical.'"/>');
+  }
   // Always add the CSS & JS
   drupal_add_css(drupal_get_path('module', 'scratchpadify') . '/scratchpadify.css');
   drupal_add_js(drupal_get_path('module', 'scratchpadify') . '/scratchpadify.js');
