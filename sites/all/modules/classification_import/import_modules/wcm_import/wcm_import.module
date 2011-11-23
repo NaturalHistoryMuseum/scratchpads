@@ -1,6 +1,7 @@
 <?php
 
 //Testing URL
+global $base_url;
 define('WCM_IMPORT_QUERY_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
 define('WCM_IMPORT_REQUEST_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
 
