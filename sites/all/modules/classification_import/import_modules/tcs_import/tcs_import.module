@@ -51,7 +51,7 @@ function tcs_fgc($filename){
       'timeout' => 300
     )
   ));
-  return file_get_contents($filename, 0, $ctx);
+  return trim(file_get_contents($filename, 0, $ctx));
 }
 
 /**

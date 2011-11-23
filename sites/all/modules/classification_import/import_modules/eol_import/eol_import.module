@@ -84,7 +84,7 @@ function eol_import_autocomplete(){
   if(isset($_POST['eol-name'])){
     $url = EOL_IMPORT_QUERY_URL . urlencode($_POST['eol-name']);
     //$eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
-    $eol_xml = file_get_contents($url);
+    $eol_xml = trim(file_get_contents($url));
     if($eol_xml){
       $eol_xml = new SimpleXMLElement($eol_xml);
       $num_results = count($eol_xml->value);
@@ -120,17 +120,21 @@ function eol_import_autocomplete(){
   }elseif(arg(1)){    
     $url = EOL_IMPORT_QUERY_URL . urlencode(arg(1));
     //$eol_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
-    $eol_xml = file_get_contents($url);
-    if($eol_xml){
-      $eol_xml = new SimpleXMLElement($eol_xml);
-      $num_results = count($eol_xml->value);
-      $matches = array();
-      for($i = 0; $i < $num_results; $i++){
-        $name = $eol_xml->value[$i]->canonical_form;
-        $matches[check_plain($name)] = check_plain($name);
+    $eol_xml = trim(file_get_contents($url));
+    try{
+      if($eol_xml){
+        $eol_xml = new SimpleXMLElement($eol_xml);
+        $num_results = count($eol_xml->value);
+        $matches = array();
+        for($i = 0; $i < $num_results; $i++){
+          $name = $eol_xml->value[$i]->canonical_form;
+          $matches[check_plain($name)] = check_plain($name);
+        }
+        echo json_encode($matches);
+        return;
       }
-      echo json_encode($matches);
-      return;
+    } catch(Exception $e){
+      ; // Do nothing, we output an empty array.
     }
   }
   echo json_encode(array());
