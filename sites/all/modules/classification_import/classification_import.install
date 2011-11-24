@@ -41,7 +41,8 @@ function classification_import_schema(){
           'length' => 255
         ),
         'data' => array(
-          'type' => 'text'
+          'type' => 'text',
+          'size' => 'big'
         )
       ),
       'primary key' => array(
@@ -125,4 +126,13 @@ function classification_import_update_6101(){
   }
   // Rejoice!
   return $ret;
+}
+
+/**
+ * Update to extend the length of the data field.
+ */
+function classification_import_update_6102(){
+  return array(
+    update_sql('ALTER TABLE {classification_import_temp} CHANGE data data LONGTEXT')
+  );
 }
