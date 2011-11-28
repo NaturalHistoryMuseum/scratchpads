@@ -169,7 +169,7 @@ function _tcs_import_batch_import_process_helper($url){
     // helped fix the issue we were having where not all the names from a tree
     // were downloaded.
     $url_to_download = 'http://fencedine.myspecies.info/?url=' . urlencode($url) . '&somethingelse';
-    $url_to_download = $url; // Still having problems with Fencedine script.
+    //$url_to_download = $url; // Still having problems with Fencedine script.
   }else{
     $url_to_download = $url;
   }
@@ -238,6 +238,7 @@ function _tcs_import_import_concept_xml($xml){
       );
     }
     if(is_array($data['taxonrelationships']['taxonrelationship'])){
+      $name_saved = FALSE;
       foreach($data['taxonrelationships']['taxonrelationship'] as $relationship){
         if(strtolower($relationship['type']) == 'is child taxon of'){
           if(isset($relationship['totaxonconcept']['linktype']) && $relationship['totaxonconcept']['linktype'] == 'external'){
@@ -255,6 +256,7 @@ function _tcs_import_import_concept_xml($xml){
               }
             }
           }
+          $name_saved = TRUE;
           tcs_classification_import_save_data($data['name'], $new_parent_name, $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
            // Also update any terms whose parent is set as
         }elseif(strtolower($relationship['type']) == 'is parent taxon of'){
@@ -297,6 +299,12 @@ function _tcs_import_import_concept_xml($xml){
             watchdog('classification_import', 'Failed to import an internal synonym');
           }
         }
+      }
+      if(!$name_saved){
+        // We have a name, but have not saved it.  This is most likely the result
+        // of a name at the very root of a tree.
+        //tcs_classification_import_save_data($name, $parent, $data, $vid, $ref, $url)
+        tcs_classification_import_save_data($data['name'], '', $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
       }
     }
   }else{

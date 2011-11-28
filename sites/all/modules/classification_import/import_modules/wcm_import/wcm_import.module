@@ -1,20 +1,18 @@
 <?php
-
 //Testing URL
 global $base_url;
-define('WCM_IMPORT_QUERY_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
-define('WCM_IMPORT_REQUEST_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
+define('WCM_IMPORT_QUERY_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?scratchpad=' . urlencode($base_url) . '&function=search&search=');
+define('WCM_IMPORT_REQUEST_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?function=details_tcs&id=%s&scratchpad=' . str_replace('%', '%%', urlencode($base_url)));
 
 //Actual WCM URL
 //define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
 //define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
-
 /**
  * Implementation of hook_classification_import_form
  */
 function wcm_import_classification_import_form(){
   drupal_add_css(drupal_get_path('module', 'wcm_import') . '/wcm_import.css');
-  $wcm_service_status = strlen(file_get_contents('http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url, 0, stream_context_create(array(
+  $wcm_service_status = strlen(file_get_contents('http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad=' . $base_url, 0, stream_context_create(array(
     'http' => array(
       'timeout' => 3
     )
@@ -124,7 +122,7 @@ function wcm_import_autocomplete(){
       'data' => drupal_render($form)
     ));
     return;
-  }elseif(arg(1)){    
+  }elseif(arg(1)){
     $url = WCM_IMPORT_QUERY_URL . urlencode(arg(1));
     //$wcm_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
     $wcm_xml = file_get_contents($url);
@@ -194,7 +192,7 @@ function wcm_import_classification_import_help(){
  */
 function wcm_import_validate($form, &$form_state){
   // Lets just check that the wcm-import-id is set in #post, and that it is
-  // numeric (is this likely to change Patrick?).
+// numeric (is this likely to change Patrick?).
 /*  if(!(isset($form_state['clicked_button']['#post']['wcm-import-id']) && count(explode("|", $form_state['clicked_button']['#post']['wcm-import-id'])) == 2)){
     form_set_error('wcm-name', t('Please ensure you select a classification to import.  Press "Search" again, and select one from the list that should appear below.'));
   }*/
@@ -211,7 +209,7 @@ function wcm_import_submit($form, $form_state){
         'tcs_import_batch_download_data',
         array(
           array(
-            WCM_IMPORT_REQUEST_URL . $parts[0]
+            sprintf(WCM_IMPORT_REQUEST_URL, urlencode($parts[0]))
           ),
           arg(4),
           $parts[1]
