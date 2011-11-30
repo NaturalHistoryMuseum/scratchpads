@@ -297,12 +297,12 @@ function theme_tinytax_view_blocks($delta){
   }
   if(count($parents) + count($children) === 0){
     $tid = variable_get('tinytax-' . $delta, FALSE);
-    if(!$tid){
+    if(!$tid && $tid != 0){
       $tid = _tinytax_first_term_with_many_children($delta);
     }else{
       // Make sure this term exists, else we delete the variable
       $term = tinytax_taxonomy_get_term($tid);
-      if(!$term){
+      if(!$term && $tid !=0){
         variable_del('tinytax-' . $delta);
         $tid = _tinytax_first_term_with_many_children($delta);
       }
@@ -318,6 +318,10 @@ function theme_tinytax_view_blocks($delta){
     }
     $parents = array_reverse($parents);
     $children = tinytax_taxonomy_get_children($tid, $delta);
+  }
+  if($tid == 0){
+    $parents = $children;
+    $children = array();
   }
   $block['content'] = theme('tinytax_term_list', $parents, $children, $delta);
   // Load the Javascript and CSS
@@ -412,11 +416,11 @@ function _theme_tinytax_term_list_link($term, $vid){
     }
   }
   // if this term has a child which is used!
-  if(function_exists('leftandright_descendant_used')){
+  /*if(function_exists('leftandright_descendant_used')){
     if(leftandright_descendant_used($term->tid)){
       $class = 'tinytaxused';
     }
-  }
+  }*/
   if($term->tid == $active_tid){
     if(strlen($class)){
       $class .= ' active';
