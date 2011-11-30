@@ -48,7 +48,7 @@ function tcs_import_classification_import_help(){
 function tcs_fgc($filename){
   $ctx = stream_context_create(array(
     'http' => array(
-      'timeout' => 300
+      'timeout' => 30
     )
   ));
   return trim(file_get_contents($filename, 0, $ctx));
@@ -298,6 +298,37 @@ function _tcs_import_import_concept_xml($xml){
             // the near future.
             watchdog('classification_import', 'Failed to import an internal synonym');
           }
+        }elseif(strtolower($relationship['type']) == 'is synonym for'){
+          // We have here either a vernacular name, or a synonym.
+          // Lets get the list of vernacular names first, and check if this URL is in
+          // it
+          $vernacular_urls = _tcs_import_set_and_get_variable('vernacular_urls');
+          $synonym_urls = _tcs_import_set_and_get_variable('synonym_urls');
+          if(isset($vernacular_urls[_tcs_import_set_and_get_variable('url')])){
+            // We have a vernacular name.  We need to load the original term from the 
+            // import table, and add a vernacular name to it.
+            $other_data = unserialize(db_result(db_query("SELECT data FROM {classification_import_temp} WHERE url = '%s'", $vernacular_urls[_tcs_import_set_and_get_variable('url')])));
+            if(!isset($other_data['vernacular_name'])){
+              $other_data['vernacular_name'] = array();
+            }
+            $other_data['vernacular_name'][] = $data['name'];
+            db_query("UPDATE {classification_import_temp} SET data = '%s' WHERE url = '%s'", serialize($other_data), $vernacular_urls[_tcs_import_set_and_get_variable('url')]);
+            // Finally unset the URL from the vernacular_urls array
+            unset($vernacular_urls[_tcs_import_set_and_get_variable('url')]);
+            _tcs_import_set_and_get_variable('vernacular_urls', $vernacular_urls);
+          }else if(isset($synonym_urls[_tcs_import_set_and_get_variable('url')])){
+            // Finally unset the URL from the vernacular_urls array
+            $row = db_fetch_array(db_query("SELECT name, data FROM {classification_import_temp} WHERE url = '%s'", $synonym_urls[_tcs_import_set_and_get_variable('url')]));
+            // Append some of the data from the valid name, to the invalid one
+            $valid_data = unserialize($row['data']);
+            $data['rank'] = $valid_data['rank'];
+            $data['usage'] = 'invalid';
+            $data['accepted_name'] = $valid_data['canonicalname'];
+            tcs_classification_import_save_data($data['name'], $row['name'], $data, _tcs_import_set_and_get_variable('vid'), $data['id'], _tcs_import_set_and_get_variable('url'));
+            unset($synonym_urls[_tcs_import_set_and_get_variable('url')]);
+            _tcs_import_set_and_get_variable('synonym_urls', $synonym_urls);
+          }
+          $name_saved = TRUE;
         }
       }
       if(!$name_saved){

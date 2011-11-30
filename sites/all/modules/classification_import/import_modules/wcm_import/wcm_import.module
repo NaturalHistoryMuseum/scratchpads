@@ -88,8 +88,8 @@ function wcm_import_menu(){
 function wcm_import_autocomplete(){
   if(isset($_POST['wcm-name'])){
     $url = WCM_IMPORT_QUERY_URL . urlencode($_POST['wcm-name']);
-    //$wcm_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
-    $wcm_xml = file_get_contents($url);
+    $wcm_xml = file_get_contents('http://fencedine.myspecies.info/?url=' . urlencode($url));
+    //$wcm_xml = file_get_contents($url);
     if($wcm_xml){
       $wcm_xml = new SimpleXMLElement($wcm_xml);
       $num_results = count($wcm_xml->value);
