@@ -6,8 +6,9 @@ global $base_url;
 //define('WCM_IMPORT_REQUEST_URL', 'http://test.e-monocot.org/wcsTaxonExtractor/endpoint?function=details_tcs&id=%s&scratchpad=' . str_replace('%', '%%', urlencode($base_url)));
 
 //Actual WCM URL
-define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=search&search=');
-define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.$base_url.'&function=details_tcs&id=');
+define('WCM_IMPORT_QUERY_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?scratchpad='.urlencode($base_url).'&function=search&search=');
+define('WCM_IMPORT_REQUEST_URL', 'http://apps.kew.org/wcsTaxonExtractor/endpoint?function=details_tcs&id=%s&scratchpad=' . str_replace('%', '%%', urlencode($base_url)));
+
 /**
  * Implementation of hook_classification_import_form
  */
