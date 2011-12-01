@@ -33,7 +33,7 @@ function wcm_import_classification_import_form(){
       'wcm-status' => array(
         '#weight' => -10,
         '#type' => 'markup',
-        '#value' => $wcm_service_status ? '<div class="message status"><p>The WCM classification service appears to be running.</p></div>' : '<div class="message error"><p>The WCM classification service (<a href="http://services.eol.org/lifedesk/service.php">http://services.eol.org/lifedesk/service.php</a>) does not appear to be running.  Please try again later.</p></div>'
+        '#value' => $wcm_service_status ? '<div class="message status"><p>The WCM classification service appears to be running.</p></div>' : '<div class="message error"><p>The WCM classification service (http://apps.kew.org/wcsTaxonExtractor/endpoint) does not appear to be running.  Please try again later.</p></div>'
       ),
       'wcm-search' => array(
         '#type' => 'button',
