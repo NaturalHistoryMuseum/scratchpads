@@ -83,9 +83,9 @@ function plupload_admin_settings(){
  */
 function plupload_upload_page(){
   $path = drupal_get_path('module', 'plupload');
-  drupal_add_js($path . '/plupload/src/javascript/plupload.js');
-  drupal_add_js($path . '/plupload/src/javascript/plupload.html5.js');
-  drupal_add_js($path . '/plupload/src/javascript/jquery.plupload.queue.js');
+  drupal_add_js($path . '/plupload/js/plupload.js');
+  drupal_add_js($path . '/plupload/js/plupload.html5.js');
+  drupal_add_js($path . '/plupload/js/jquery.plupload.queue/jquery.plupload.queue.js');
   drupal_add_css($path . '/plupload.queue.css');
   $script = <<<__RSD__
 // Convert divs to queue widgets when the DOM is ready
