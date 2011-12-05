@@ -130,7 +130,7 @@ function plupload_pernode(){
   if(strpos($content_type, "multipart") !== false){
     if(isset($_FILES['file']['tmp_name']) && is_uploaded_file($_FILES['file']['tmp_name'])){
       // Open temp file
-      $out = fopen($targetDir . DIRECTORY_SEPARATOR . $file_name, $chunk == 0 ? "wb" : "ab");
+      $out = fopen($temp_directory . DIRECTORY_SEPARATOR . $file_name, $chunk == 0 ? "wb" : "ab");
       if($out){
         // Read binary input stream and append it to temp file
         $in = fopen($_FILES['file']['tmp_name'], "rb");
@@ -172,11 +172,11 @@ function plupload_pernode(){
  * Helper wrapper around the cck code to create a node of this type.
  * Largely copied from imagefield_import.module
  * @param $temp_filename 
- *   string path to the file
+ * string path to the file
  * @param $name
- *   string name to use for the file
+ * string name to use for the file
  * @return $node
- *   a node object.
+ * a node object.
  */
 function plupload_imagefield_create_node_from($temp_filepath, $file_name){
   // Only get files from Drupal's tmp directory.
