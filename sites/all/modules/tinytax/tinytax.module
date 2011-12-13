@@ -456,7 +456,7 @@ function _theme_tinytax_term_list_link($term, $vid){
       )
     ));
   }else{
-    $return_string .= $term->name;
+    $return_string .= check_plain($term->name);
   }
   $num_children = 0;
   if(variable_get('tinytax-' . $vid . '-showchildren', 1)){
