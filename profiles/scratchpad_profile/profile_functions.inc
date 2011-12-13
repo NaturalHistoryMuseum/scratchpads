@@ -136,7 +136,7 @@ function scratchpad_profile_set_settings(){
   variable_set('apachesolr_host', 'web-scratchpad-solr.nhm.ac.uk');
   variable_set('apachesolr_port', 80);
   variable_set('apachesolr_cron_limit', 200);
-  variable_set('apachesolr_path', '/solr');
+  variable_set('apachesolr_path', '/solr/scratchpads1');
   variable_set('apachesolr_rows', 25);
   variable_set('apachesolr_failure', 'show_error');
   variable_set('apachesolr_search_make_default', 1);
