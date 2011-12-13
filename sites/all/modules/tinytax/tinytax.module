@@ -444,9 +444,9 @@ function _theme_tinytax_term_list_link($term, $vid){
   $return_string .= ' ';
   if(substr($term->tid, 0, 3) != 'vid'){
     if(variable_get('tinytax_hide_invalid-tinytax-' . $term->vid, 0) !== 2 && isset($term->usage) && (strtolower($term->usage) == 'invalid' || strtolower($term->usage) == 'not accepted')){
-      $link_text = '<span style="color:red;">' . $term->name . '</span>';
+      $link_text = '<span style="color:red;">' . check_plain($term->name) . '</span>';
     }else{
-      $link_text = $term->name;
+      $link_text = check_plain($term->name);
     }
     $return_string .= l($link_text, 'taxonomy/term/' . $term->tid, array(
       'html' => TRUE,
