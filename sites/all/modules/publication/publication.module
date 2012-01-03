@@ -53,7 +53,7 @@ function publication_content_is_empty(){
  * @param string $key
  */
 function publication_is_og_key($key){
-	return (strpos($key, 'og_') !== false);
+  return (strpos($key, 'og_') !== false);
 }
 
 /**
@@ -695,11 +695,6 @@ function publication_menu_alter(&$items){
   $items['node/%node/og/forum']['access arguments'] = array(
     1
   );
-  $items['node/%node/track']['access callback'] = 'publication_tab_access';
-  $items['node/%node/track']['access arguments'] = array(
-    1,
-    'access statistics'
-  );
   $items['node/%node/clone']['access callback'] = 'publication_tab_access';
   $items['node/%node/clone']['access arguments'] = array(
     1,
@@ -712,7 +707,6 @@ function publication_menu_alter(&$items){
     1,
     'og_broadcast_access'
   );
-  return $items;
 }
 
 /**
@@ -725,7 +719,7 @@ function publication_menu_alter(&$items){
  * @author Ben Scott
  */
 function publication_tab_access($node, $access_arguments = 'access content', $access_callback = 'user_access'){
-  if($node->type != 'publication'){return $access_callback($access_arguments);}
+  if(!is_object($node) || $node->type != 'publication'){return $access_callback($access_arguments);}
   return false;
 }
 
@@ -937,6 +931,7 @@ function publication_menu_node_load($nid){
 }
 
 function publication_access_callback($operation, $node = NULL){
+  if(is_object($node) && $node->type != 'publication'){return FALSE;}
   switch($operation){
     case 'export':
     case 'edit':
