@@ -301,3 +301,12 @@ function publication_update_6104(){
   return $ret;
 }
 
+/**
+ * Run an update simply to clear the menu.
+ */
+function publication_update_6105(){
+  $ret = array();
+  menu_rebuild();
+  return $ret;
+}
+
