@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_table_plugin_style.inc,v 1.2 2009/02/18 18:23:43 dww Exp $
 
 /**
  * @file

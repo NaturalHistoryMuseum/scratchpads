@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_handler_field_issue_queue_link.inc,v 1.3 2009/08/01 03:43:47 dww Exp $
 
 
 /**

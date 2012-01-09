@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_search_all.view.php,v 1.1 2009/06/18 03:38:43 dww Exp $
 
 /**
  * @file
@@ -150,6 +149,37 @@ $fields = array(
     'field' => 'name',
     'relationship' => 'assigned',
   ),
+  'created' => array(
+    'label' => 'Created',
+    'alter' => array(
+      'alter_text' => 0,
+      'text' => '',
+      'make_link' => 0,
+      'path' => '',
+      'link_class' => '',
+      'alt' => '',
+      'prefix' => '',
+      'suffix' => '',
+      'target' => '',
+      'help' => '',
+      'trim' => 0,
+      'max_length' => '',
+      'word_boundary' => 1,
+      'ellipsis' => 1,
+      'html' => 0,
+      'strip_tags' => 0,
+    ),
+    'empty' => '',
+    'hide_empty' => 0,
+    'empty_zero' => 0,
+    'date_format' => 'raw time ago',
+    'custom_date_format' => '',
+    'exclude' => 0,
+    'id' => 'created',
+    'table' => 'node',
+    'field' => 'created',
+    'relationship' => 'none',
+  ),
 );
 if (module_exists('search')) {
   $fields['score'] = array(
@@ -171,6 +201,7 @@ if (module_exists('search')) {
   );
 }
 $handler->override_option('fields', $fields);
+$sorts = array();
 $sorts['last_comment_timestamp'] = array(
   'order' => 'DESC',
   'granularity' => 'second',
@@ -346,6 +377,7 @@ $filters = array(
   ),
 );
 if (module_exists('search')) {
+  $search_filter = array();
   $search_filter['keys'] = array(
     'operator' => 'optional',
     'value' => '',
@@ -394,6 +426,7 @@ $handler->override_option('style_options', array(
     'new_comments' => 'comment_count',
     'last_comment_timestamp' => 'last_comment_timestamp',
     'name' => 'name',
+    'created' => 'created',
     'score' => 'score',
   ),
   'info' => array(
@@ -403,7 +436,7 @@ $handler->override_option('style_options', array(
     ),
     'title' => array(
       'sortable' => 1,
-      'separator' => '',
+      'separator' => ' ',
     ),
     'timestamp' => array(
       'separator' => '',
@@ -436,6 +469,10 @@ $handler->override_option('style_options', array(
       'separator' => '',
     ),
     'name' => array(
+      'sortable' => 1,
+      'separator' => '',
+    ),
+    'created' => array(
       'sortable' => 1,
       'separator' => '',
     ),

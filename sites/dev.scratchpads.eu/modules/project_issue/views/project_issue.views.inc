@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue.views.inc,v 1.9 2009/06/18 03:48:53 dww Exp $
 
 /**
  * @file
@@ -114,7 +113,7 @@ function project_issue_views_data() {
       'click sortable' => TRUE,
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort',
+      'handler' => 'project_issue_handler_sort_issue_priority_weight',
       'help' => t("Sort by the issue's priority."),
     ),
     'filter' => array(
@@ -219,6 +218,9 @@ function project_issue_views_handlers() {
       ),
       'project_issue_handler_filter_issue_version' => array(
         'parent' => 'views_handler_filter_in_operator',
+      ),
+      'project_issue_handler_sort_issue_priority_weight' => array(
+        'parent' => 'views_handler_sort',
       ),
     ),
   );

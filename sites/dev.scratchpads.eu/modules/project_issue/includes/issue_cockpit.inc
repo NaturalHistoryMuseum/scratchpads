@@ -1,5 +1,4 @@
 <?php
-// $Id: issue_cockpit.inc,v 1.6 2009/05/06 23:43:34 dww Exp $
 
 /**
  * Form builder for the search box in the issue cockpit block.
@@ -74,8 +73,9 @@ function template_preprocess_project_issue_issue_cockpit(&$vars) {
     }
 
     $vars['issue_subscribe'] = l(t('Subscribe via e-mail'), 'project/issues/subscribe-mail/'. $node->project['uri'], array('query' => drupal_get_destination()));
-    $vars['issue_statistics'] = l(t('Issue statistics'), 'project/issues/statistics/'. $node->project['uri']);
+    if (user_access('access issue statistics')) {
+      $vars['issue_statistics'] = l(t('Issue statistics'), 'project/issues/statistics/' . $node->project['uri']);
+    }
     $vars['oldest'] = db_result(db_query(db_rewrite_sql('SELECT min(n.created) FROM {node} n INNER JOIN {project_issues} i ON n.nid = i.nid WHERE n.status = 1 AND i.pid = %d AND i.sid IN '. $open_states), $node->nid));
   }
 }
-

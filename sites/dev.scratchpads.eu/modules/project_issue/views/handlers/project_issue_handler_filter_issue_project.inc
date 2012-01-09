@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_handler_filter_issue_project.inc,v 1.2 2009/02/07 04:53:34 dww Exp $
 
 /**
  * Filter issues by the project they are associated with.

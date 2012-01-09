@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_generate.inc,v 1.13 2009/03/21 18:50:17 thehunmonkgroup Exp $
 
 // If not in 'safe mode', increase the maximum execution time.
 if (!ini_get('safe_mode')) {
@@ -199,7 +198,7 @@ function _project_issue_generate_get_field($field, $pool_size = 100) {
       return array_keys(project_issue_category());
 
     case 'priorities':
-      return project_issue_priority();
+      return project_issue_priorities();
 
     case 'users':
       // Determine what role ids have permission to create project_issue nodes.

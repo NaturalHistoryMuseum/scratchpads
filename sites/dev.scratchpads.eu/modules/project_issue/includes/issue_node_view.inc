@@ -1,5 +1,4 @@
 <?php
-// $Id: issue_node_view.inc,v 1.1 2009/06/18 03:28:55 dww Exp $
 
 /**
  * @file
@@ -79,7 +78,7 @@ function _project_issue_view($node, $teaser = FALSE, $page = FALSE) {
     }
 
     $node->content['project_issue_summary'] = array(
-      '#value' => theme('project_issue_summary', $current_data, project_issue_internal_links($node)),
+      '#value' => theme('project_issue_summary', $current_data, project_issue_internal_links($node), $node),
       '#weight' => -5,
     );
 
@@ -94,16 +93,16 @@ function _project_issue_view($node, $teaser = FALSE, $page = FALSE) {
 }
 
 /**
- * Themes the metadata table and internal page links for issue nodes.
+ * Theme template preprocess to declare variables for the issue summary.
  *
- * @param $current_data
- *   An array of current issue data for the metadata table.
- * @param $summary_links
- *   An array of internal page links.
- * @return
- *   An HTML string of the summary section.
+ * The theme/ template defines the markup for the metadata table and internal
+ * page links when viewing issue nodes.
  */
-function theme_project_issue_summary($current_data, $summary_links) {
+function template_preprocess_project_issue_summary(&$vars) {
+  $current_data = $vars['current_data'];
+  $summary_links = $vars['summary_links'];
+  $issue_node = $vars['issue_node'];
+
   $allowed_tags = array('a', 'em', 'strong', 'div', 'span');
   // Fields that should be rendered as plain text, not filtered HTML.
   $plain_fields = array('title', 'pid', 'rid');
@@ -120,15 +119,11 @@ function theme_project_issue_summary($current_data, $summary_links) {
     }
     $rows[] = $row;
   }
+  $vars['summary_table'] = theme('table', array(), $rows);
 
-  $output = '<div id="project-summary-container" class="clear-block">';
-  $output .= '<div id="project-issue-summary-table" class="summary">'. theme('table', array(), $rows) .'</div>';
   if (!empty($summary_links)) {
-    $output .= '<div id="project-issue-summary-links">'. theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links')) .'</div>';
+    $vars['jump_links'] = theme('item_list', $summary_links, t('Jump to:'), 'ul', array('class' => 'internal-links'));
   }
-  $output .= '</div>';
-
-  return $output;
 }
 
 /**
@@ -176,6 +171,9 @@ function project_issue_internal_links($node) {
       $links[] = l(t('Add new comment'), "node/$node->nid", array('fragment' => "comment-form"));
     }
   }
+
+  // Allow modules to alter via hook_project_issue_internal_links_alter().
+  drupal_alter('project_issue_internal_links', $links, $node);
 
   return $links;
 }

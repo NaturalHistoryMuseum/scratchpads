@@ -1,6 +1,5 @@
 #!/usr/bin/php
 <?php
-// $Id: project-issue-cron.php,v 1.3 2009/01/20 18:38:04 dww Exp $
 
 
 /**
@@ -26,11 +25,11 @@
 // The root of your Drupal installation, so we can properly bootstrap
 // Drupal. This should be the full path to the directory that holds
 // your index.php file, the "includes" subdirectory, etc.
-define('DRUPAL_ROOT', '/usr/share/drupal6');
+define('DRUPAL_ROOT', '');
 
 // The name of your site. Required so that when we bootstrap Drupal in
 // this script, we find the right settings.php file in your sites folder.
-define('SITE_NAME', 'dev.scratchpads.eu');
+define('SITE_NAME', '');
 
 
 // ------------------------------------------------------------

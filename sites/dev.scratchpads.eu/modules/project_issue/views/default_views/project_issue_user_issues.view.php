@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_user_issues.view.php,v 1.1 2009/06/18 03:38:43 dww Exp $
 
 /**
  * @file
@@ -129,7 +128,23 @@ $fields = array(
     'field' => 'new_comments',
     'relationship' => 'none',
   ),
-  'last_comment_timestamp' => array(
+);
+if (function_exists('tracker2_views_api')) {
+  $last_update_field = 'changed';
+  $fields['changed'] = array(
+    'label' => 'Last updated',
+    'date_format' => 'raw time ago',
+    'custom_date_format' => '',
+    'exclude' => 0,
+    'id' => 'changed',
+    'table' => 'tracker2_user',
+    'field' => 'changed',
+    'relationship' => 'none',
+  );
+}
+else {
+  $last_update_field = 'last_comment_timestamp';
+  $fields['last_comment_timestamp'] = array(
     'label' => 'Last updated',
     'date_format' => 'raw time ago',
     'custom_date_format' => '',
@@ -138,18 +153,49 @@ $fields = array(
     'table' => 'node_comment_statistics',
     'field' => 'last_comment_timestamp',
     'relationship' => 'none',
+  );
+}
+$fields['name'] = array(
+  'label' => 'Assigned to',
+  'link_to_user' => 1,
+  'overwrite_anonymous' => 1,
+  'anonymous_text' => '',
+  'exclude' => 0,
+  'id' => 'name',
+  'table' => 'users',
+  'field' => 'name',
+  'relationship' => 'assigned',
+);
+$fields['created'] = array(
+  'label' => 'Created',
+  'alter' => array(
+    'alter_text' => 0,
+    'text' => '',
+    'make_link' => 0,
+    'path' => '',
+    'link_class' => '',
+    'alt' => '',
+    'prefix' => '',
+    'suffix' => '',
+    'target' => '',
+    'help' => '',
+    'trim' => 0,
+    'max_length' => '',
+    'word_boundary' => 1,
+    'ellipsis' => 1,
+    'html' => 0,
+    'strip_tags' => 0,
   ),
-  'name' => array(
-    'label' => 'Assigned to',
-    'link_to_user' => 1,
-    'overwrite_anonymous' => 1,
-    'anonymous_text' => '',
-    'exclude' => 0,
-    'id' => 'name',
-    'table' => 'users',
-    'field' => 'name',
-    'relationship' => 'assigned',
-  ),
+  'empty' => '',
+  'hide_empty' => 0,
+  'empty_zero' => 0,
+  'date_format' => 'raw time ago',
+  'custom_date_format' => '',
+  'exclude' => 0,
+  'id' => 'created',
+  'table' => 'node',
+  'field' => 'created',
+  'relationship' => 'none',
 );
 if (module_exists('search')) {
   $fields['score'] = array(
@@ -161,7 +207,7 @@ if (module_exists('search')) {
     'separator' => ',',
     'prefix' => '',
     'suffix' => '',
-    'alternate_sort' => 'last_comment_timestamp',
+    'alternate_sort' => $last_update_field,
     'alternate_order' => 'desc',
     'exclude' => 0,
     'id' => 'score',
@@ -196,14 +242,28 @@ $handler->override_option('arguments', array(
     'validate_user_roles' => array('2' => 2),
   ),
 ));
-$sorts['last_comment_timestamp'] = array(
-  'order' => 'DESC',
-  'granularity' => 'second',
-  'id' => 'last_comment_timestamp',
-  'table' => 'node_comment_statistics',
-  'field' => 'last_comment_timestamp',
-  'relationship' => 'none',
-);
+$last_update_sort = array();
+if (function_exists('tracker2_views_api')) {
+  $last_update_sort['changed'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'changed',
+    'table' => 'tracker2_user',
+    'field' => 'changed',
+    'relationship' => 'none',
+  );
+}
+else {
+  $last_update_sort['last_comment_timestamp'] = array(
+    'order' => 'DESC',
+    'granularity' => 'second',
+    'id' => 'last_comment_timestamp',
+    'table' => 'node_comment_statistics',
+    'field' => 'last_comment_timestamp',
+    'relationship' => 'none',
+  );
+}
+$sorts = $last_update_sort;
 if (module_exists('search')) {
   $sorts['score'] = array(
     'order' => 'DESC',
@@ -215,20 +275,6 @@ if (module_exists('search')) {
 }
 $handler->override_option('sorts', $sorts);
 $filters = array(
-  'status_extra' => array(
-    'operator' => '=',
-    'value' => '',
-    'group' => '0',
-    'exposed' => FALSE,
-    'expose' => array(
-      'operator' => FALSE,
-      'label' => '',
-    ),
-    'id' => 'status_extra',
-    'table' => 'node',
-    'field' => 'status_extra',
-    'relationship' => 'none',
-  ),
   'pid' => array(
     'operator' => 'in',
     'value' => '',
@@ -315,7 +361,42 @@ $filters = array(
     'relationship' => 'none',
   ),
 );
+$published_filter = array();
+if (function_exists('tracker2_views_api')) {
+  $published_filter['published'] = array(
+    'operator' => '=',
+    'value' => '1',
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'published',
+    'table' => 'tracker2_user',
+    'field' => 'published',
+    'relationship' => 'none',
+  );
+}
+else {
+  $published_filter['status_extra'] = array(
+    'operator' => '=',
+    'value' => '',
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'status_extra',
+    'table' => 'node',
+    'field' => 'status_extra',
+    'relationship' => 'none',
+  );
+}
+$filters = $published_filter + $filters;
 if (module_exists('search')) {
+  $search_filter = array();
   $search_filter['keys'] = array(
     'operator' => 'optional',
     'value' => '',
@@ -362,8 +443,9 @@ $handler->override_option('style_options', array(
     'version' => 'version',
     'comment_count' => 'comment_count',
     'new_comments' => 'comment_count',
-    'last_comment_timestamp' => 'last_comment_timestamp',
+    $last_update_field => $last_update_field,
     'name' => 'name',
+    'created' => 'created',
     'score' => 'score',
   ),
   'info' => array(
@@ -373,7 +455,7 @@ $handler->override_option('style_options', array(
     ),
     'title' => array(
       'sortable' => 1,
-      'separator' => '',
+      'separator' => ' ',
     ),
     'timestamp' => array(
       'separator' => '',
@@ -401,11 +483,15 @@ $handler->override_option('style_options', array(
     'new_comments' => array(
       'separator' => '',
     ),
-    'last_comment_timestamp' => array(
+    $last_update_field => array(
       'sortable' => 1,
       'separator' => '',
     ),
     'name' => array(
+      'sortable' => 1,
+      'separator' => '',
+    ),
+    'created' => array(
       'sortable' => 1,
       'separator' => '',
     ),
@@ -414,7 +500,7 @@ $handler->override_option('style_options', array(
       'separator' => '',
     ),
   ),
-  'default' => module_exists('search') ? 'score' : 'last_comment_timestamp',
+  'default' => module_exists('search') ? 'score' : $last_update_field,
 ));
 $handler = $view->new_display('page', 'Page', 'page_1');
 $handler->override_option('path', 'project/issues/user');
@@ -457,4 +543,177 @@ $handler->override_option('displays', array(
   'default' => 0,
 ));
 $handler->override_option('sitename_title', FALSE);
-
+$handler = $view->new_display('block', 'Block', 'block_1');
+$handler->override_option('relationships', array(
+  'pid' => array(
+    'label' => 'Project node',
+    'required' => 1,
+    'id' => 'pid',
+    'table' => 'project_issues',
+    'field' => 'pid',
+  ),
+));
+$handler->override_option('fields', array(
+  'project_issue_queue' => array(
+    'label' => '',
+    'alter' => array(
+      'alter_text' => 1,
+      'text' => '<div class="project-title">[project_issue_queue]</div>',
+    ),
+    'link_type' => 'issues',
+    'id' => 'project_issue_queue',
+    'table' => 'node',
+    'field' => 'project_issue_queue',
+    'relationship' => 'pid',
+  ),
+  'title' => array(
+    'label' => '',
+    'link_to_node' => 1,
+    'id' => 'title',
+    'table' => 'node',
+    'field' => 'title',
+    'relationship' => 'none',
+  ),
+  'priority' => array(
+    'label' => '',
+    'exclude' => 1,
+    'id' => 'priority',
+    'table' => 'project_issues',
+    'field' => 'priority',
+    'relationship' => 'none',
+  ),
+  'category' => array(
+    'label' => '',
+    'exclude' => 1,
+    'id' => 'category',
+    'table' => 'project_issues',
+    'field' => 'category',
+    'relationship' => 'none',
+  ),
+  'sid' => array(
+    'label' => '',
+    'alter' => array(
+      'alter_text' => 1,
+      'text' => '<div class="status-line"><span class="status">[sid]</span> | <span class="priority">[priority]</span> | <span class="category">[category]</span></div>',
+    ),
+    'id' => 'sid',
+    'table' => 'project_issues',
+    'field' => 'sid',
+    'relationship' => 'none',
+  ),
+  'new_comments' => array(
+    'label' => '',
+    'alter' => array(
+      'alter_text' => 1,
+      'text' => '[new_comments] new',
+    ),
+    'hide_empty' => 1,
+    'link_to_comment' => 1,
+    'exclude' => 1,
+    'id' => 'new_comments',
+    'table' => 'node',
+    'field' => 'new_comments',
+    'relationship' => 'none',
+  ),
+  'timestamp' => array(
+    'label' => '',
+    'alter' => array(),
+    'link_to_node' => 0,
+    'comments' => 0,
+    'exclude' => 1,
+    'hide_empty' => 1,
+    'id' => 'timestamp',
+    'table' => 'history_user',
+    'field' => 'timestamp',
+    'relationship' => 'none',
+  ),
+  'comment_count' => array(
+    'label' => '',
+    'alter' => array(
+      'alter_text' => 1,
+      'text' => '<div class="comment-info">[comment_count] replies [new_comments] [timestamp]</div>',
+    ),
+    'id' => 'comment_count',
+    'table' => 'node_comment_statistics',
+    'field' => 'comment_count',
+    'relationship' => 'none',
+  ),
+));
+$handler->override_option('sorts', $last_update_sort);
+$filters = $published_filter + array(
+  'sid' => array(
+    'operator' => 'in',
+    'value' => array(
+      'Open' => 'Open',
+    ),
+    'group' => '0',
+    'exposed' => FALSE,
+    'expose' => array(
+      'operator' => FALSE,
+      'label' => '',
+    ),
+    'id' => 'sid',
+    'table' => 'project_issues',
+    'field' => 'sid',
+    'override' => array(
+      'button' => 'Use default',
+    ),
+    'relationship' => 'none',
+  ),
+);
+$handler->override_option('filters', $filters);
+$handler->override_option('items_per_page', 10);
+$handler->override_option('use_pager', '0');
+$handler->override_option('use_more', 1);
+$handler->override_option('use_more_always', 0);
+$handler->override_option('style_options', array(
+  'grouping' => '',
+  'override' => 1,
+  'sticky' => 0,
+  'order' => 'asc',
+  'columns' => array(
+    'project_issue_queue' => 'project_issue_queue',
+    'title' => 'project_issue_queue',
+    'priority' => 'project_issue_queue',
+    'category' => 'project_issue_queue',
+    'sid' => 'project_issue_queue',
+    'new_comments' => 'project_issue_queue',
+    'timestamp' => 'project_issue_queue',
+    'comment_count' => 'project_issue_queue',
+  ),
+  'info' => array(
+    'project_issue_queue' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'title' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'priority' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'category' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'sid' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'new_comments' => array(
+      'separator' => '',
+    ),
+    'comment_count' => array(
+      'sortable' => 0,
+      'separator' => '',
+    ),
+    'timestamp' => array(
+      'separator' => '',
+    ),
+  ),
+  'default' => '-1',
+));
+$handler->override_option('block_description', '');
+$handler->override_option('block_caching', -1);

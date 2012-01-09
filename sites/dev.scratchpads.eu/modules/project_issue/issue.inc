@@ -1,5 +1,4 @@
 <?php
-// $Id: issue.inc,v 1.354 2009/06/18 03:28:55 dww Exp $
 
 
 /**
@@ -139,6 +138,17 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
     }
     // Always let the person replying assign it to themselves.
     $assigned[$user->uid] = $user->name;
+
+    // See if the current user is an issue maintainer for the current project.
+    $project = node_load($node->project_issue['pid']);
+    $maintainers = $project->project['maintainers'];
+    if (!empty($maintainers[$user->uid]['permissions']['maintain issues'])) {
+      foreach ($maintainers as $uid => $maintainer) {
+        if (!empty($maintainer['permissions']['maintain issues'])) {
+          $assigned[$uid] = $maintainer['name'];
+        }
+      }
+    }
   }
 
   if (user_access('assign and be assigned project issues')) {
@@ -154,90 +164,44 @@ function project_issue_project_issue_assignees(&$assigned, $node) {
       $assigned[$assignee->uid] = $assignee->name;
     }
   }
+
 }
 
 // Support stuff
 
 /**
- * Return information about project issue state values.
- *
- * @param $sid
- *   Integer state id to return information about, or 0 for all states.
- * @param $restrict
- *   Boolean to determine if states should be restricted based on the
- *   permissions of the current user or $account if that parameter
- *   is provided.
- * @param $is_author
- *   Boolean that indicates if the current user is the author of the
- *   issue, which can potentially grant a wider selection of states.
- * @param $current_sid
- *   The current integer state id for the issue.
- * @param $defaults
- *   Boolean to request the states used for default issue queries.
- * @param $account
- *   Account of a user to pass to user_access() for access checking.
- *   This parameter will have no effect unless $restrict is also
- *   set to TRUE.
+ * Return all available issue priorities, sorted by weight.
  *
  * @return
- *   An array of states (sid as key, name as value) that match the
- *   given filters, or the name of the requested state.
- *   NOTE: The state name returned is raw text, and should be filtered via
- *   check_plain() or filter_xss() before being printed as HTML output.
+ *   An array of priorities keyed by id.
  */
-function project_issue_state($sid = 0, $restrict = false, $is_author = false, $current_sid = 0, $defaults = false, $account = NULL) {
-  static $options;
-
-  if (!$options) {
-    $result = db_query('SELECT * FROM {project_issue_state} ORDER BY weight');
-    while ($state = db_fetch_object($result)) {
-      $options[] = $state;
+function project_issue_priorities() {
+  static $priorities;
+  if (!isset($priorities)) {
+    $result = db_query('SELECT priority, name FROM {project_issue_priority} ORDER BY weight');
+    while ($object = db_fetch_object($result)) {
+      $priorities[$object->priority] = $object->name;
     }
   }
-
-  foreach($options as $state) {
-    if ($restrict) {
-      // Check if user has access,
-      // or if status is default status and therefore available to all,
-      // or if user is original issue author and author has access,
-      // or if the issue is already in a state, even if the user doesn't have
-      //   access to that state themselves.
-      if (user_access('set issue status '. str_replace("'", "", $state->name), $account)
-          || user_access('administer projects', $account)
-          || ($state->sid == variable_get('project_issue_default_state', 1))
-          || ($state->author_has && $is_author)
-          || ($state->sid == $current_sid) ) {
-        $states[$state->sid] = $state->name;
-      }
-    }
-    else if ($defaults) {
-      if ($state->default_query) {
-        $states[$state->sid] = $state->name;
-      }
-    }
-    else {
-      $states[$state->sid] = $state->name;
-    }
-  }
-
-  return $sid ? $states[$sid] : $states;
+  return $priorities;
 }
 
 /**
- * Return an array of state ids that should be used for default queries.
+ * Return the name of a priority for a given id.
+ *
+ * @param $priority
+ *   The id of the priority.
+ * @return
+ *   The name of the priority.
  */
-function project_issue_default_states() {
-  static $defaults;
-  if (empty($defaults)) {
-    $states = project_issue_state(0, false, false, 0, true);
-    $defaults = !empty($states) ? array_keys($states) : array(1, 2, 4);
+function project_issue_priority($priority) {
+  $priorities = project_issue_priorities();
+  if ($priority && array_key_exists($priority, $priorities)) {
+    return $priorities[$priority];
   }
-  return $defaults;
-}
-
-function project_issue_priority($priority = 0) {
-  $priorities = array(1 => t('critical'), t('normal'), t('minor'));
-  return $priority ? $priorities[$priority] : $priorities;
+  else {
+    return t('[deleted priority]');
+  }
 }
 
 function project_issue_category($category = 0, $plural = 1) {

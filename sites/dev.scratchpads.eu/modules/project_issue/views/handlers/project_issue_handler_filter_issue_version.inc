@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_handler_filter_issue_version.inc,v 1.11 2010/01/17 00:22:44 dww Exp $
 
 
 /**

@@ -1,5 +1,4 @@
 <?php
-// $Id: subscribe.inc,v 1.1 2009/06/18 03:24:59 dww Exp $
 
 function project_issue_subscribe($form_state, $project_nid = 0) {
   global $user;
@@ -108,6 +107,14 @@ function theme_project_issue_subscribe($form) {
 
   $output = '';
 
+  if (empty($form['#project'])) {
+    $output .= project_issue_query_result_links();
+  }
+  else {
+    $project = $form['#project']['#value'];
+    $output .= project_issue_query_result_links($project->project['uri']);
+  }
+
   if (!isset($form['single'])) {
     $levels = array(0 => t('None'), 1 => t('Own issues'), 2 => t('All issues'));
     $headers = array_merge(array(t('Project')), $levels);
@@ -125,7 +132,7 @@ function theme_project_issue_subscribe($form) {
       }
       $rows[] = $row;
     }
-    $output = theme('table', $headers, $rows);
+    $output .= theme('table', $headers, $rows);
   }
 
   $output .= drupal_render($form);

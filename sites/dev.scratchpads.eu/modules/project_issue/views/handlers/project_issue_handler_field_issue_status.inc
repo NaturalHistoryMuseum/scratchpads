@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_handler_field_issue_status.inc,v 1.2 2009/01/20 18:38:04 dww Exp $
 
 
 /**

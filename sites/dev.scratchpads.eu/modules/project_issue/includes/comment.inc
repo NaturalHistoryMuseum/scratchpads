@@ -1,5 +1,4 @@
 <?php
-// $Id: comment.inc,v 1.156 2010/01/17 00:26:58 dww Exp $
 
 function project_issue_comment(&$arg, $op) {
   // $arg can be a comment object, or a form or form_values.
@@ -83,7 +82,7 @@ function project_issue_comment(&$arg, $op) {
       // We should also invalidate the block cache for whatever project is now
       // used for this issue, since we might be deleting a comment that moved
       // an issue from one project to another.
-      $affected_projects[$current_data->pid] = 1;      
+      $affected_projects[$current_data->pid] = 1;
       break;
 
     case 'view':
@@ -110,8 +109,9 @@ function project_issue_comment(&$arg, $op) {
   // If there are any affected projects, invalidate the block cache for those.
   if (!empty($affected_projects)) {
     foreach ($affected_projects as $pid => $value) {
-      $cid = 'project_issue_cockpit_block:'. $pid;
-      cache_clear_all($cid, 'cache');
+      // Block could be cached for different permissions, try both.
+      cache_clear_all('project_issue_cockpit_block:0:'. $pid, 'cache');
+      cache_clear_all('project_issue_cockpit_block:1:'. $pid, 'cache');
     }
   }
 }
@@ -150,11 +150,6 @@ function project_issue_form_comment_form_alter(&$form, &$form_state) {
   else {
     $next_id = db_result(db_query('SELECT last_comment_id FROM {project_issues} WHERE nid = %d', $form['nid']['#value'])) + 1;
     $subject = "#$next_id";
-    // Clobber the comment signature for new followups if necessary.
-    // TODO: Revamp this for Drupal 6.
-    if (!variable_get('project_issue_show_comment_signatures', 0)) {
-      $form['comment_filter']['comment']['#default_value'] = '';
-    }
   }
   $form['subject'] = array(
     '#type' => 'value',
@@ -315,6 +310,12 @@ function project_issue_form_comment_validate($form, &$form_state) {
   if (!empty($form_state['rebuild'])) {
     return;
   }
+
+  // Only validate metadata changes on new followups.
+  if (isset($form_state['values']['cid'])) {
+    return;
+  }
+
   $values = $form_state['values'];
   $project_info = $form_state['values']['project_info'];
   $nid = $values['nid'];
@@ -331,11 +332,6 @@ function project_issue_form_comment_validate($form, &$form_state) {
   // adjusting the filename before comment upload saves it (module weighting)
   // TODO: is this still true?
   project_issue_change_comment_upload_path($values);
-
-  // Only validate metadata changes on new followups.
-  if (isset($values['cid'])) {
-    return;
-  }
 
   // Make sure project is current here -- it may have changed when posted.
   if (isset($project_info['pid'])) {
@@ -570,8 +566,10 @@ function project_issue_update_by_comment($comment_data, $op) {
   // the updates to the issue with the latest available published comment.
   $comment_data = project_issue_get_newest_comment($comment_data);
 
+  $priority_weight = db_result(db_query('SELECT weight FROM {project_issue_priority} WHERE priority = %d', $comment_data->priority));
+
   // Update the issue data to reflect the new final states.
-  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $comment_data->nid);
+  db_query("UPDATE {project_issues} SET pid = %d, category = '%s', component = '%s', priority = %d, rid = %d, assigned = %d, sid = %d, priority_weight = %d WHERE nid = %d", $comment_data->pid, $comment_data->category, $comment_data->component, $comment_data->priority, $comment_data->rid, $comment_data->assigned, $comment_data->sid, $priority_weight, $comment_data->nid);
 
   // Update the issue title.
   $node = node_load($comment_data->nid, NULL, TRUE);  // Don't use cached since we changed data above.

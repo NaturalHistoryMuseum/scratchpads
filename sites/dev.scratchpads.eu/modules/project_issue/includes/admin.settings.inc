@@ -1,5 +1,4 @@
 <?php
-// $Id: admin.settings.inc,v 1.2 2009/04/04 06:30:21 dww Exp $
 
 /**
  * @file

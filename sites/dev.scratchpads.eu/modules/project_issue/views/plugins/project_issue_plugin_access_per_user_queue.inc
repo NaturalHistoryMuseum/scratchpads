@@ -1,5 +1,4 @@
 <?php
-// $Id: project_issue_plugin_access_per_user_queue.inc,v 1.1 2009/03/23 17:24:53 dww Exp $
 
 /**
  * Validate whether an argument is a real user and return 403 if not.

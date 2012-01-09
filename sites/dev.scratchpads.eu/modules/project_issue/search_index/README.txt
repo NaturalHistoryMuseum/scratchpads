@@ -1,4 +1,3 @@
-$Id: README.txt,v 1.1 2009/02/23 23:28:23 dww Exp $
 
 This directory contains the project_issue_search_index module.  If
 your site is running the core search module and regularly indexes all

@@ -1,0 +1,559 @@
+<?php
+
+include_once drupal_get_path('module', 'project') . '/project.test';
+
+class ProjectIssueWebTestCase extends ProjectWebTestCase {
+
+  function setUp() {
+    // Setup the required modules for all tests.
+    $modules = func_get_args();
+    $modules = array_merge(array('project_issue', 'views', 'comment', 'comment_upload', 'upload'), $modules);
+    // We can't call parent::setUp() with a single array argument, so we need
+    // this ugly call_user_func_array().
+    call_user_func_array(array('ProjectIssueWebTestCase', 'parent::setUp'), $modules);
+    variable_set('comment_preview_project_issue', FALSE);
+  }
+
+  /**
+   * Create an Issue node.
+   *
+   * @param stdClass $project
+   *   A project node.
+   * @param array $edit
+   *   An array of form values, passed to drupalPost. Optional
+   * @return
+   *   An issue node.
+   */
+  function createIssue($project, $edit = array()) {
+    // If people are lazy and don't want to specify any of these, provide a
+    // default.
+    $edit += array(
+      'title' => $this->randomName(8),
+      'body' => $this->randomName(64),
+      'component' => 'Code',
+      'category' => 'bug',
+    );
+
+    $this->drupalPost('node/add/project-issue/' . $project->project['uri'], $edit, t('Save'));
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Issue', '%title' => $edit["title"])), t('Issue created.'));
+
+    return $this->drupalGetNodeByTitle($edit['title']);
+  }
+
+  function createIssueComment($issue, $edit = array()) {
+    $edit += array('comment' => $this->randomName(64));
+    $this->drupalPost('comment/reply/' . $issue->nid, $edit, t('Save'));
+    return $edit;
+  }
+
+  /**
+   * Make sure issue metadata matches up to what it's intended to be.
+   *
+   * @param array $metadata
+   *   Associative array of expected issue metadata field names and values.
+   * @param $nid
+   *   Optional integer node ID of the issue to check metadata fields for.
+   */
+  function assertIssueMetadata($metadata, $nid = NULL, $message = NULL) {
+    $pass = TRUE;
+    if ($nid) {
+      $this->drupalGet('node/' . $nid);
+    }
+    if (!$message) {
+      $message = t('Issue metadata matches');
+    }
+    foreach ($this->xpath("//div[@id='project-issue-summary-table']/table//tr") as $row) {
+      $key = strtolower(trim((string)$row->td[0], ':'));
+      if (isset($metadata[$key])) {
+        if (strtolower($metadata[$key]) != strtolower((string)$row->td[1])) {
+          $pass = FALSE;
+        }
+      }
+    }
+    if ($pass) {
+      $this->pass($message);
+    }
+    else {
+      $this->fail($message);
+    }
+  }
+}
+
+class ProjectIssueCreationTestCase extends ProjectIssueWebTestCase {
+  protected $maintain_user;
+  protected $power_user;
+  protected $auth_user;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Project issue creation',
+      'description' => 'Test creating an issue.',
+      'group' => 'Project Issue',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+
+    $perms = array('create full projects', 'create project issues', 'access project issues', 'access projects');
+    $this->maintain_user = $this->drupalCreateUser(array_merge($perms, array('edit own project issues')));
+    $this->power_user = $this->drupalCreateUser(array_merge($perms, array('edit any project issues')));
+    $this->auth_user = $this->drupalCreateUser($perms);
+    $this->drupalLogin($this->maintain_user);
+  }
+
+  /**
+   * Test the creation of project issues and the display of issue properties.
+   */
+  function testProjectIssueCreation() {
+    $project = $this->createProject();
+
+    // Test project issue node form fields.
+    $this->drupalGet('node/add/project-issue/' . $project->project['uri']);
+    $this->assertText(t('Create Issue'));
+
+    $issue = $this->createIssue($project, array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature',
+      'priority' => 1,
+      'assigned' => $this->maintain_user->uid,
+    ));
+
+    $this->assertText($issue->title, t('Title found'));
+    $this->assertText($issue->body, t('Body found'));
+    $issue = $this->createIssue($project, array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature',
+      'priority' => 1,
+      'assigned' => $this->maintain_user->uid,
+    ));
+    $this->assertIssueMetadata(array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature request',
+      'priority' => 'critical',
+      'assigned' => $this->maintain_user->name,
+    ));
+
+    // Now, test editing rights for various kinds of users.
+    $this->drupalLogin($this->maintain_user);
+    $this->drupalGet("node/$issue->nid/edit");
+    $this->assertResponse(200, t('A user with "edit own project issues" can access the edit tab for an issue she owns.'));
+
+    $this->drupalLogin($this->auth_user);
+    $this->drupalGet("node/$issue->nid/edit");
+    $this->assertResponse(403, t('A user with no issue editing permissions is denied access to the edit tab for an issue.'));
+
+    $this->drupalLogin($this->power_user);
+    $this->drupalGet("node/$issue->nid/edit");
+    $this->assertResponse(200, t('A user with "edit any project issues" can access the edit tab for an issue she does not own.'));
+
+    // Create an issue owned by the power user.
+    $power_issue = $this->createIssue($project, array(
+      'component' => 'Miscellaneous',
+      'category' => 'feature',
+      'priority' => 1,
+    ));
+
+    $this->drupalLogin($this->maintain_user);
+    $this->drupalGet("node/$power_issue->nid/edit");
+    $this->assertResponse(403, t('A user with "edit own project issues" is denied access to the edit tab for an issue she does not own.'));
+  }
+}
+
+class ProjectIssueCommentTestCase extends ProjectIssueWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Project issue comment',
+      'description' => 'Test commenting on an issue.',
+      'group' => 'Project Issue',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+
+    $maintain_user = $this->drupalCreateUser(array('create full projects', 'create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($maintain_user);
+  }
+
+  /**
+   * Test the creation of issue metadata.
+   */
+  function testProjectIssueMetadata() {
+    $project = $this->createProject();
+    // Test project issue node form fields.
+    $issue = $this->createIssue($project);
+    $html = $this->drupalGet('comment/reply/' . $issue->nid);
+    $this->parse();
+    // Let's iterate over all the forms.
+    $forms = $this->xpath('//form');
+    $form = $forms[0];
+    // We try to set the fields of this form as specified in $edit.
+    $post = $upload = $edit = array();
+    $this->handleForm($post, $edit, $upload, NULL, $form);
+    $map = array(
+      'priority' => 'priority',
+      'category' => 'category',
+      'component' => 'project_info[component]',
+      'assigned' => 'project_info[assigned]',
+      'pid' => 'project_info[pid]',
+    );
+    foreach ($map as $issue_key => $post_key) {
+      $this->assertEqual($issue->project_issue[$issue_key], $post[$post_key], t('Making sure comment form is correct.'));
+    }
+  }
+
+  /**
+   * Test the creation of issue comments.
+   */
+  function testProjectIssueComment() {
+    $project = $this->createProject();
+    // Test project issue node form fields.
+    $issue = $this->createIssue($project);
+    $comment = $this->createIssueComment($issue);
+    $this->assertText($comment['comment'], t('Body found'));
+  }
+}
+
+class ProjectIssuePriorityTestCase extends ProjectIssueWebTestCase {
+  /**
+   * A user who can maintain project issue administrative settings, projects, and create issues.
+   */
+  protected $maintain_user;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Project issue priority',
+      'description' => 'Test issue priority settings and functionality.',
+      'group' => 'Project Issue',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+
+    $this->maintain_user = $this->drupalCreateUser(array('administer projects', 'create full projects', 'create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($this->maintain_user);
+  }
+
+  /**
+   * Assert that the priorities are stored and displayed correctly.
+   *
+   * This function will take an array of priorities keyed by their priority ID,
+   * with each item being an array with they keys 'name' and 'weight'.
+   */
+  function assertAdminPrioritiesForm($values) {
+    $pass = TRUE;
+    $this->drupalGet('admin/project/project-issue-priority');
+    $forms = $this->xpath('//form');
+    $form = $forms[0];
+
+    $post = $edit = $upload = array();
+    $this->handleForm($post, $edit, $upload, NULL, $form);
+
+    foreach ($values as $key => $priority) {
+      $result = $this->assertEqual($post["priority[$key][name]"], $priority['name'], t('The name for the priority is correct.'));
+      $result = $this->assertEqual($post["priority[$key][weight]"], $priority['weight'], t('The weight for the priority is correct.'));
+    }
+  }
+
+  /**
+   * Test the project issue priority admin form.
+   */
+  function testProjectIssuePrioritySettings() {
+    // This matches the defaults setup in project_issue_install().
+    $default_priority_order = array(
+      1 => array(
+        'name' => 'critical',
+        'weight' => 1,
+      ),
+      2 => array(
+        'name' => 'normal',
+        'weight' => 2,
+      ),
+      3 => array(
+        'name' => 'minor',
+        'weight' => 3,
+      ),
+    );
+    $this->assertAdminPrioritiesForm($default_priority_order);
+
+    // Test reordering ability
+    $edit = array();
+    $edit['priority[1][weight]'] = -2;
+    $edit['priority[2][weight]'] = -3;
+    $edit['priority[3][weight]'] = -1;
+    $this->drupalPost('admin/project/project-issue-priority', $edit, t('Save'));
+
+    // Check new values
+    $priorities = array(
+      1 => array(
+        'name' => 'critical',
+        'weight' => 1,
+      ),
+      2 => array(
+        'name' => 'normal',
+        'weight' => 0,
+      ),
+      3 => array(
+        'name' => 'minor',
+        'weight' => 2,
+      ),
+    );
+    $this->assertAdminPrioritiesForm($priorities);
+
+    // Add a new priority, and check the form results
+    $edit = array();
+    $edit['priority[0][name]'] = $this->randomName(8);
+    $this->drupalPost('admin/project/project-issue-priority', $edit, t('Save'));
+
+    // Check new values
+    $priorities = array(
+      1 => array(
+        'name' => 'critical',
+        'weight' => 1,
+      ),
+      2 => array(
+        'name' => 'normal',
+        'weight' => 0,
+      ),
+      3 => array(
+        'name' => 'minor',
+        'weight' => 2,
+      ),
+      4 => array(
+        'name' => $edit['priority[0][name]'],
+        'weight' => 3,
+      ),
+    );
+    $this->assertAdminPrioritiesForm($priorities);
+
+    // Test deleting a priority without any issues.
+    $this->drupalGet('admin/project/project-issue-priority/delete/4');
+    $this->assertNoText('Reassign priority', t('Issue confirm form is displayed properly.'));
+    $this->drupalPost('admin/project/project-issue-priority/delete/4', array(), t('Delete'));
+    $this->assertText('Project issue priority '. $edit['priority[0][name]'] .' deleted.', t('Project issue priority has been deleted.'));
+
+    // Test that a custom priority can be assinged to an issue and is displayed correctly.
+    $edit = array();
+    $edit['priority[0][name]'] = $priority_name = $this->randomName(8);
+    $this->drupalPost('admin/project/project-issue-priority', $edit, t('Save'));
+    $project = $this->createProject();
+
+    $edit = array();
+    $edit['priority'] = '5';
+    $issue = $this->createIssue($project, $edit);
+
+    // Check that the issue priority is displayed correctly.
+    $this->assertIssueMetadata(array('priority' => $priority_name), $issue->nid, t('Custom issue priority is displyed correctly'));
+
+    // Delete the priority
+    $this->drupalGet('admin/project/project-issue-priority/delete/5');
+    $this->assertText('Reassign priority', t('Issue confirm form is displayed properly.'));
+
+    $edit = array();
+    $edit['new_pid'] = 2;
+    $this->drupalPost(NULL, $edit, t('Delete'));
+    $this->assertText('Project issue priority '. $priority_name .' deleted.', t('Issue priority was deleted'));
+
+    $this->assertIssueMetadata(array('priority' => 'normal'), $issue->nid);
+
+    $edit = array();
+    $edit['priority[1][weight]'] = -3;
+    $edit['priority[2][weight]'] = -2;
+    $edit['priority[3][weight]'] = -1;
+    $this->drupalPost('admin/project/project-issue-priority', $edit, t('Save'));
+
+    $priorities = array(
+      1 => array(
+        'name' => 'critical',
+        'weight' => 0,
+      ),
+      2 => array(
+        'name' => 'normal',
+        'weight' => 1,
+      ),
+      3 => array(
+        'name' => 'minor',
+        'weight' => 2,
+      ),
+    );
+    $this->assertAdminPrioritiesForm($priorities);
+
+    $edit = array();
+    $edit['priority'] = 1;
+    $edit['title'] = $critical_title = $this->randomName(8);
+    $critical_issue = $this->createIssue($project, $edit);
+
+    $edit = array();
+    $edit['priority'] = 3;
+    $edit['title'] = $minor_title = $this->randomName(8);
+    $minor_issue = $this->createIssue($project, $edit);
+
+    $this->drupalGet('project/issues/'. $project->project['uri']);
+    $this->clickLink(t('Priority'));
+
+    // Check that views handler
+//    @TODO This code is not working yet but is quite important
+//    $rows = $this->xpath("//table[@class='project-issue']/tr");
+//    debug((string)$rows[0]->td[0]);
+//
+//    $this->assertEqual((string)$rows[0], $minor_issue->title);
+//    $this->assertEqual((string)$rows[1], $issue->title);
+//    $this->assertEqual((string)$rows[2], $critical_issue->title);
+  }
+}
+
+class ProjectIssueMaintainersTestCase extends ProjectIssueWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Project Issue maintainers functionality',
+      'description' => 'Test Project Issue module maintainers access control system.',
+      'group' => 'Project Issue'
+    );
+  }
+
+  function setUp() {
+    parent::setUp('project_issue');
+
+    $this->owner = $this->drupalCreateUser(array('access project issues', 'create project issues', 'create full projects', 'access user profiles', 'access projects'));
+    $this->maintainer = $this->drupalCreateUser(array('create project issues', 'access project issues', 'access projects'));
+    $this->drupalLogin($this->owner);
+  }
+
+  function assertSelectFieldOptions($name, $options = array()) {
+    $options = drupal_map_assoc($options);
+
+    $elements = $this->xpath('//select[@name="' . $name . '"]/option');
+    foreach ($elements as $element) {
+      $element = (string) $element;
+      if (in_array($element, $options)) {
+        $this->assert('pass', t('The option %option was found.', array('%option' => $element)));
+        unset($options[$element]);
+      }
+      else {
+        $this->assert('fail', t('The option %option was found, but not expected.', array('%option' => $element)));
+      }
+    }
+    if (!empty($options)) {
+      foreach ($options as $option) {
+        $this->assert('fail', t('The option %option was expected, but not found.', array('%option' => $option)));
+      }
+    }
+  }
+
+  /**
+   * Test maintainer permissions.
+   */
+  function testProjectIssueMaintainerPermissions() {
+    // Create project, make sure Maintainers link is shown
+    $project = $this->createProject();
+
+    // Check the maintainers tab is shown and owner is included correctly
+    $this->drupalGet("node/$project->nid/maintainers");
+    $this->assertFieldDisabled("maintainers[{$this->owner->uid}][permissions][maintain issues]", 'Checkbox is disabled for project owner');
+    $this->assertFieldCheckedByName("maintainers[{$this->owner->uid}][permissions][maintain issues]", 'Owners permissions are automatically granted');
+
+    // Check the maintainers list is shown correctly first
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->owner->name));
+
+    // Verify that other users do not have access
+    $this->drupalLogin($this->maintainer);
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->maintainer->name));
+
+    // Add a new user and verify that they are added:
+    // Login as owner
+    $this->drupalLogin($this->owner);
+    // Add new user
+    $edit = array();
+    $edit['new_maintainer[user]'] = $this->maintainer->name;
+    $edit['new_maintainer[permissions][maintain issues]'] = TRUE;
+    $this->drupalPost("node/$project->nid/maintainers", $edit, t('Update'));
+    $this->assertFieldCheckedByName("maintainers[{$this->maintainer->uid}][permissions][maintain issues]", 'Permissions stored correctly.');
+
+    // Test that owner can assign issues
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->owner->name, $this->maintainer->name));
+
+    // Test that maintainer can now assign issues
+    $this->drupalLogin($this->maintainer);
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->owner->name, $this->maintainer->name));
+
+    // Remove permissions and check 
+    $this->drupalLogin($this->owner);
+    $this->drupalGet("node/$project->nid/maintainers/delete/{$this->maintainer->uid}");
+    $this->drupalPost(NULL, array(), t('Delete'));
+    // Make sure that the user was deleted
+    $this->drupalGet("node/$project->nid/maintainers");
+    $this->assertNoLink($this->maintainer->name, 0, 'Maintainer correctly removed from form.');
+
+    // Verify that users do not show up in the maintainers list
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->owner->name));
+
+    $this->drupalLogin($this->maintainer);
+    $this->drupalGet("node/add/project-issue/$project->nid");
+    $this->assertSelectFieldOptions('assigned', array(t('Unassigned'), $this->maintainer->name));
+  }
+}
+
+class ProjectIssueStatisticsTestCase extends ProjectIssueWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Project Issue statistics',
+      'description' => 'Test Project Issue statistics functionality.',
+      'group' => 'Project Issue'
+    );
+  }
+
+  function setUp() {
+    parent::setUp('project_issue');
+  }
+
+  /**
+   * Test the "access project issues" permission.
+   */
+  function testProjectIssueStatisticsPermissions() {
+      $project_node = $this->createProject();
+
+      $userA = $this->drupalCreateUser(array('access projects', 'access project issues', 'create project issues', 'access administration pages', 'administer blocks'));
+      $userB = $this->drupalCreateUser(array('access projects', 'access project issues', 'access issue statistics'));
+
+      $this->drupalLogin($userA);
+      $this->createIssue($project_node);
+
+      // Add the issue cockpit block to the right sidebar so we verify whether
+      // or not the issue statistics link is shown.
+      $this->drupalGet('admin/build/block');
+      $edit = array(
+        'project_issue_issue_cockpit[region]' => 'right',
+      );
+      $this->drupalPost(NULL, $edit, t('Save blocks'));
+
+      // Verify that a user without "access issue statistics" permission does
+      // not have access to the statistics pages.
+      $this->drupalGet('project/issues');
+      $this->assertNoLink(t('Statistics'), t('No link to the statistics page on the issue queue for a user without "access issue statistics".'));
+      $this->drupalGet('node/' . $project_node->nid);
+      $this->assertNoLink(t('Issue statistics'), t('No link to the statistics page in the issue cockpit if the user does not have "access issue statistics".'));
+      $this->drupalGet('project/issues/statistics');
+      $this->assertResponse(403, t('A user without "access issue statistics" does not have access to the global statistics page.'));
+      $this->drupalGet('project/issues/statistics/' . $project_node->nid);
+      $this->assertResponse(403, t('A user without "access issue statistics" does not have access to a project-specific statistics page.'));
+
+      // Verify that a user with "access issue statistics" permission does have
+      // access to the statistics pages.
+      $this->drupalLogin($userB);
+      $this->drupalGet('project/issues');
+      $this->assertLink(t('Statistics'), 0, t('Link to the statistics page exists for a user with "access issue statistics".'));
+      $this->drupalGet('node/' . $project_node->nid);
+      $this->assertLink(t('Issue statistics'), 0, t('Issue cockpit has a link to the statistics page for a user with "access issue statistics".'));
+      $this->drupalGet('project/issues/statistics');
+      $this->assertResponse(200, t('A user with "access issue statistics" can access the global statistics page.'));
+      $this->drupalGet('project/issues/statistics/' . $project_node->nid);
+      $this->assertResponse(200, t('A user with "access issue statistics" can access a project-specific statistics page.'));
+  }
+}

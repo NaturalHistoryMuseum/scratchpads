@@ -1,5 +1,4 @@
 <?php
-// $Id: cron.inc,v 1.6 2009/03/21 18:50:18 thehunmonkgroup Exp $
 
 
 /**
