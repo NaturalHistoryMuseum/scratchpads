@@ -1,6 +1,5 @@
 #!/usr/bin/php
 <?php
-// $Id: project-issue-cron.php,v 1.3 2009/01/20 18:38:04 dww Exp $
 
 
 /**

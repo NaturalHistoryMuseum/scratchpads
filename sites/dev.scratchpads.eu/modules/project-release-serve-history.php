@@ -1,6 +1,5 @@
 <?php
 
-// $Id: project-release-serve-history.php,v 1.14 2010/01/16 19:59:13 dww Exp $
 
 /**
  * @file

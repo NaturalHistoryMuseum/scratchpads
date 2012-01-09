@@ -19,16 +19,16 @@
 // ------------------------------------------------------------
 
 // Root of the directory tree for the XML history files.
-define('HISTORY_ROOT', '');
+define('HISTORY_ROOT', '/var/lib/drupal6/default/files/release-history/');
 
 // The root of your Drupal installation, so we can properly bootstrap
 // Drupal. This should be the full path to the directory that holds
 // your index.php file, the "includes" subdirectory, etc.
-define('DRUPAL_ROOT', '');
+define('DRUPAL_ROOT', '/usr/share/drupal6');
 
 // The name of your site. Required so that when we bootstrap Drupal in
 // this script, we find the right settings.php file in your sites folder.
-define('SITE_NAME', '');
+define('SITE_NAME', 'dev.scratchpads.eu');
 
 
 // ------------------------------------------------------------
@@ -182,9 +182,6 @@ function project_release_history_generate_all($project_id = 0) {
  */
 function project_release_history_generate_project_xml($project_nid, $api_tid = NULL) {
   $api_vid = _project_release_get_api_vid();
-  /// @todo: This is a drupal.org-specific hack.
-  /// @see http://drupal.org/node/1003764
-  $is_profile = FALSE;
 
   if (isset($api_tid)) {
     // Restrict output to a specific API compatibility term.
@@ -262,11 +259,6 @@ function project_release_history_generate_project_xml($project_nid, $api_tid = N
   $term_query = db_query("SELECT v.name AS vocab_name, v.vid, td.name AS term_name, td.tid FROM {term_node} tn INNER JOIN {term_data} td ON tn.tid = td.tid INNER JOIN {vocabulary} v ON td.vid = v.vid WHERE tn.vid = %d", $project->vid);
   $xml_terms = '';
   while ($term = db_fetch_object($term_query)) {
-    /// @todo: This is a drupal.org-specific hack.
-    /// @see http://drupal.org/node/1003764
-    if ($term->term_name == 'Installation profiles') {
-      $is_profile = TRUE;
-    }
     $xml_terms .= '   <term><name>'. check_plain($term->vocab_name) .'</name>';
     $xml_terms .= '<value>'. check_plain($term->term_name) ."</value></term>\n";
   }
