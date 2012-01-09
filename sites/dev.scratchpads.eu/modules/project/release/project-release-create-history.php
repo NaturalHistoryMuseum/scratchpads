@@ -1,7 +1,6 @@
 #!/usr/bin/php
 <?php
 
-// $Id: project-release-create-history.php,v 1.29 2010/01/17 00:00:11 dww Exp $
 
 /**
  * @file
@@ -20,22 +19,18 @@
 // ------------------------------------------------------------
 
 // Root of the directory tree for the XML history files.
-define('HISTORY_ROOT', '/var/lib/drupal6/default/files/release-history/');
+define('HISTORY_ROOT', '');
 
 // The root of your Drupal installation, so we can properly bootstrap
 // Drupal. This should be the full path to the directory that holds
 // your index.php file, the "includes" subdirectory, etc.
-define('DRUPAL_ROOT', '/usr/share/drupal6');
+define('DRUPAL_ROOT', '');
 
 // The name of your site. Required so that when we bootstrap Drupal in
 // this script, we find the right settings.php file in your sites folder.
-define('SITE_NAME', 'dev.scratchpads.eu');
+define('SITE_NAME', '');
 
-$_SERVER['db_type']   = 'mysqli';
-$_SERVER['db_name']   = 'devscratchpadseu';
-$_SERVER['db_user']   = 'devscratchpadse';
-$_SERVER['db_passwd'] = 'wievahcahpeefijaokoh';
-$_SERVER['db_host']   = 'localhost';
+
 // ------------------------------------------------------------
 // Initialization
 // (Real work begins here, nothing else to customize)
@@ -187,6 +182,9 @@ function project_release_history_generate_all($project_id = 0) {
  */
 function project_release_history_generate_project_xml($project_nid, $api_tid = NULL) {
   $api_vid = _project_release_get_api_vid();
+  /// @todo: This is a drupal.org-specific hack.
+  /// @see http://drupal.org/node/1003764
+  $is_profile = FALSE;
 
   if (isset($api_tid)) {
     // Restrict output to a specific API compatibility term.
@@ -264,6 +262,11 @@ function project_release_history_generate_project_xml($project_nid, $api_tid = N
   $term_query = db_query("SELECT v.name AS vocab_name, v.vid, td.name AS term_name, td.tid FROM {term_node} tn INNER JOIN {term_data} td ON tn.tid = td.tid INNER JOIN {vocabulary} v ON td.vid = v.vid WHERE tn.vid = %d", $project->vid);
   $xml_terms = '';
   while ($term = db_fetch_object($term_query)) {
+    /// @todo: This is a drupal.org-specific hack.
+    /// @see http://drupal.org/node/1003764
+    if ($term->term_name == 'Installation profiles') {
+      $is_profile = TRUE;
+    }
     $xml_terms .= '   <term><name>'. check_plain($term->vocab_name) .'</name>';
     $xml_terms .= '<value>'. check_plain($term->term_name) ."</value></term>\n";
   }
@@ -275,28 +278,23 @@ function project_release_history_generate_project_xml($project_nid, $api_tid = N
   $joins = array();
   $where = array();
   $parameters = array();
-  // TODO: This is broken for N files per release node.
   $fields = array(
     'n.nid',
     'n.vid',
-    'f.filepath',
-    'f.filesize',
-    'f.timestamp',
-    'prf.filehash',
     'prn.rebuild',
     'prn.version',
     'prn.version_major',
     'prn.version_minor',
     'prn.version_patch',
     'prn.version_extra',
+    'prn.version_extra_weight',
+    'prn.version_extra_delta',
     'prn.tag',
     'n.title',
     'n.status',
   );
 
   $joins[] = "INNER JOIN {project_release_nodes} prn ON n.nid = prn.nid";
-  $joins[] = "INNER JOIN {project_release_file} prf ON n.nid = prf.nid";
-  $joins[] = "INNER JOIN {files} f ON prf.fid = f.fid";
   $where[] = "prn.pid = '%d'";
   $parameters[] = $project->nid;
 
@@ -345,12 +343,21 @@ function project_release_history_generate_project_xml($project_nid, $api_tid = N
         $xml .= "  <$vers_type>". check_plain($release->$vers_type) ."</$vers_type>\n";
       }
     }
+
+    // Need to fetch list of files for this release
+    $files_query = db_query("SELECT prf.filehash, f.filepath, f.filesize, f.timestamp FROM {project_release_file} prf INNER JOIN {files} f on prf.fid = f.fid WHERE prf.nid = %d ORDER BY prf.weight", $release->nid);
+
+    $files = array();
+    while ($file = db_fetch_object($files_query)) {
+      $files[] = $file;
+    }
+
     if ($release->status) {
       // Published, so we should include the links.
       $xml .= "  <status>published</status>\n";
       $xml .= '  <release_link>'. prch_url("node/$release->nid") ."</release_link>\n";
-      if (!empty($release->filepath)) {
-        $download_link = theme('project_release_download_link', $release->filepath, NULL, TRUE);
+      if (!empty($files[0]->filepath)) {
+        $download_link = theme('project_release_download_link', $files[0]->filepath, NULL, TRUE);
         $xml .= '  <download_link>'. $download_link['href'] ."</download_link>\n";
       }
     }
@@ -358,15 +365,67 @@ function project_release_history_generate_project_xml($project_nid, $api_tid = N
       $xml .= "  <status>unpublished</status>\n";
     }
     // We want to include the rest of these regardless of the status.
-    if (!empty($release->timestamp)) {
-      $xml .= '  <date>'. check_plain($release->timestamp) ."</date>\n";
+    if (!empty($files[0]->timestamp)) {
+      $xml .= '  <date>'. check_plain($files[0]->timestamp) ."</date>\n";
     }
-    if (!empty($release->filehash)) {
-      $xml .= '  <mdhash>'. check_plain($release->filehash) ."</mdhash>\n";
+    if (!empty($files[0]->filehash)) {
+      $xml .= '  <mdhash>'. check_plain($files[0]->filehash) ."</mdhash>\n";
     }
-    if (isset($release->filesize)) {
-      $xml .= '  <filesize>'. check_plain($release->filesize) ."</filesize>\n";
+    if (isset($files[0]->filesize)) {
+      $xml .= '  <filesize>'. check_plain($files[0]->filesize) ."</filesize>\n";
     }
+
+    $xml .= "  <files>\n";
+    foreach ($files as $file) {
+      $xml .= "   <file>\n";
+      if ($release->status && !empty($file->filepath)) {
+        $download_link = theme('project_release_download_link', $file->filepath, NULL, TRUE);
+        $xml .= '    <url>' . $download_link['href'] . "</url>\n";
+      }
+      if (!empty($file->filepath)) {
+        $file_parts = explode('.', basename($file->filepath));
+        $archive_type = array_pop($file_parts);
+        // See if the previous extension is '.tar' and if so, add that, so we
+        // see 'tar.gz' or 'tar.bz2' instead of just 'gz' or 'bz2'.
+        $previous_ext = array_pop($file_parts);
+        if ($previous_ext == 'tar') {
+          $archive_type = $previous_ext . '.' . $archive_type;
+        }
+        else {
+          // Put it back on the array, so our profile logic below still works.
+          array_push($file_parts, $previous_ext);
+        }
+        $xml .= '    <archive_type>' . $archive_type . "</archive_type>\n";
+
+        /// @todo: This is a drupal.org-specific hack.
+        /// @see http://drupal.org/node/1003764
+        if ($is_profile) {
+          $variant_chunk = array_pop($file_parts);
+          if (strrpos($variant_chunk, 'no-core') !== FALSE) {
+            $variant = 'projects';
+          }
+          elseif (strrpos($variant_chunk, 'core') !== FALSE) {
+            $variant = 'full';
+          }
+          else {
+            $variant = 'profile-only';
+          }
+          $xml .= '    <variant>' . $variant . "</variant>\n";
+        }
+      }
+      if (!empty($file->filehash)) {
+        $xml .= '    <md5>' . check_plain($file->filehash) . "</md5>\n";
+      }
+      if (isset($file->filesize)) {
+        $xml .= '    <size>' . check_plain($file->filesize) . "</size>\n";
+      }
+      if (!empty($file->timestamp)) {
+        $xml .= '    <filedate>' . check_plain($file->timestamp) . "</filedate>\n";
+      }
+      $xml .= "   </file>\n";
+    }
+    $xml .= "  </files>\n";
+
     $term_query = db_query("SELECT v.name AS vocab_name, v.vid, td.name AS term_name, td.tid FROM {term_node} tn INNER JOIN {term_data} td ON tn.tid = td.tid INNER JOIN {vocabulary} v ON td.vid = v.vid WHERE tn.vid = %d AND v.vid != %d", $release->vid, $api_vid);
     $xml_terms = '';
     while ($term = db_fetch_object($term_query)) {
@@ -515,7 +574,7 @@ function project_list_generate() {
       $xml_api_terms = '';
       while ($api_term = db_fetch_object($term_query)) {
         $xml_api_terms .= '   <api_version>'. check_plain($api_term->term_name) ."</api_version>\n";
-      }      
+      }
       if (!empty($xml_api_terms)) {
         $xml .= "  <api_versions>\n". $xml_api_terms ."  </api_versions>\n";
       }
@@ -536,7 +595,7 @@ function project_list_generate() {
 
 /**
  * Wrapper function for watchdog() to log notice messages.
- * 
+ *
  * @param $notice
  *   An associative array with 'message' and 'args' keys for the notice message
  *   and any arguments respectively.
@@ -609,7 +668,8 @@ function _release_sort($a, $b) {
     'rebuild' => -1,
     'version_minor' => 1,
     'version_patch' => 1,
-    'timestamp' => 1,
+    'version_extra_weight' => 1,
+    'version_extra_delta' => 1,
   );
   foreach ($fields as $field => $sign) {
     if (!isset($a->$field) && !isset($b->$field)) {

@@ -1,5 +1,5 @@
 <?php
-// $Id: project-release-serve-history.php,v 1.14 2010/01/16 19:59:13 dww Exp $
+
 
 /**
  * @file
@@ -20,20 +20,20 @@
 /**
  * Required configuration: directory tree for the XML history files.
  */
-define('HISTORY_ROOT', '/var/lib/drupal6/default/files/release-history/');
+define('HISTORY_ROOT', '');
 
 /**
  * Required configuration: location of your Drupal installation for
  * bootstrapping and recording usage statistics.
  */
-define('DRUPAL_ROOT', '/usr/share/drupal6');
+define('DRUPAL_ROOT', '');
 
 /**
  * Required configuration: name of your site.
  *
  * Needed to find the right settings.php file to bootstrap Drupal with.
  */
-define('SITE_NAME', 'dev.scratchpads.eu');
+define('SITE_NAME', '');
 
 
 /**

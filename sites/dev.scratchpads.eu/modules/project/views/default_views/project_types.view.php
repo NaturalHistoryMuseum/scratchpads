@@ -1,5 +1,4 @@
 <?php
-// $Id: project_types.view.php,v 1.1 2009/11/25 16:44:51 dww Exp $
 
 /**
  * @file

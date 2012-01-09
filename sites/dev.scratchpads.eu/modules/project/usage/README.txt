@@ -14,4 +14,3 @@ This module was written by:
 - Andrew Morton (http://drupal.org/user/34869) "drewish"
 - Derek Wright (http://drupal.org/user/46549) "dww"
 
-$Id: README.txt,v 1.2 2008/10/24 02:56:05 dww Exp $

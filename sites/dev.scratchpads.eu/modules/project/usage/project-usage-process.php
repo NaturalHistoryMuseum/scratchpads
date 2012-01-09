@@ -1,6 +1,5 @@
 #!/usr/bin/php
 <?php
-// $Id: project-usage-process.php,v 1.7 2009/08/07 15:42:32 dww Exp $
 
 
 /**

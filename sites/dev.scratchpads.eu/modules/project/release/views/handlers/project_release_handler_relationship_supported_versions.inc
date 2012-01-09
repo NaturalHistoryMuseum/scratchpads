@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_relationship_supported_versions.inc,v 1.1 2009/08/06 00:53:31 dww Exp $
 
 /**
  * Views handler for relationships between releases and supported version info.

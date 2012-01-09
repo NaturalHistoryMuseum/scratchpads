@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_filter_project_release_api_version.inc,v 1.3 2009/02/04 01:18:19 dww Exp $
 
 
 /**

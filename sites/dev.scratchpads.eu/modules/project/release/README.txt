@@ -35,5 +35,4 @@ http://drupal.org/node/58066
 http://drupal.org/node/75053
 http://drupal.org/node/86694
 
-$Id: README.txt,v 1.4 2007/08/22 16:30:52 thehunmonkgroup Exp $
-$Name: DRUPAL-6--1-0-ALPHA4 $
+$Name$

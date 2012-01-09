@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_field_download_table.inc,v 1.1 2009/01/13 17:47:09 dww Exp $
 
 
 /**

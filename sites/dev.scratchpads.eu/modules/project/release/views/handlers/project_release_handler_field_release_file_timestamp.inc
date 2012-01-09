@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_field_release_file_timestamp.inc,v 1.2 2009/12/08 17:24:14 dww Exp $
 
 class project_release_handler_field_release_file_timestamp extends views_handler_field_date {
   function option_definition() {

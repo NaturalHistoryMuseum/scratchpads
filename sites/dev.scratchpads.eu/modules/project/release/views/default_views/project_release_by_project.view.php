@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_by_project.view.php,v 1.1 2009/11/25 16:53:46 dww Exp $
 
 /**
  * @file
@@ -64,9 +63,10 @@ $handler->override_option('arguments', array(
     'wildcard' => 'all',
     'wildcard_substitution' => 'All',
     'title' => 'Releases for %1',
+    'breadcrumb' => 'project',
     'default_argument_type' => 'fixed',
     'default_argument' => '',
-    'validate_type' => 'node',
+    'validate_type' => 'project_nid',
     'validate_fail' => 'empty',
     'break_phrase' => 0,
     'not' => 0,
@@ -76,17 +76,6 @@ $handler->override_option('arguments', array(
     'relationship' => 'none',
     'default_argument_fixed' => '',
     'default_argument_php' => '',
-    'validate_argument_node_type' => array(
-      'project_project' => 'project_project',
-    ),
-    'validate_argument_type' => 'tid',
-    'validate_argument_php' => '',
-    'validate_argument_node_access' => 1,
-    'validate_argument_nid_type' => 'nid',
-    'default_options_div_prefix' => '',
-    'validate_argument_project_term_vocabulary' => array(
-      '1' => 0,
-    ),
   ),
 ));
 $handler->override_option('filters', array(

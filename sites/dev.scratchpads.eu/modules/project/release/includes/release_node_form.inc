@@ -1,5 +1,4 @@
 <?php
-// $Id: release_node_form.inc,v 1.11 2010/01/30 02:33:40 dww Exp $
 
 /**
  * @file
@@ -24,7 +23,7 @@ function _project_release_form(&$release, &$form_state) {
     }
     // Make sure this user should have permissions to add releases for
     // the requested project
-    if (!project_check_admin_access($project)) {
+    if (!project_user_access($project, 'administer releases')) {
       drupal_access_denied();
       module_invoke_all('exit');
       exit;
@@ -70,6 +69,10 @@ function _project_release_form(&$release, &$form_state) {
   // preview, and submit.
   $form['rel_id']['version']['#parents'] = array('project_release', 'version');
 
+  $tag = isset($release->project_release['tag']) ? $release->project_release['tag'] : '';
+  _project_release_form_add_text_element($form['rel_id']['tag'], t('Tag'), $tag, $is_edit, $admin, TRUE, 40, 255);
+  $form['rel_id']['tag']['#parents'] = array('project_release', 'tag');
+
   $form['project_release'] = array(
     '#type' => 'fieldset',
     '#tree' => TRUE,
@@ -90,7 +93,6 @@ function _project_release_form(&$release, &$form_state) {
     '#value' => $pid,
   );
 
-  $form['validate_version'] = array('#type' => 'value', '#value' => 1);
   _project_release_form_add_version_element($form, $release, $modify, $format, 'major', t('Major'));
   _project_release_form_add_version_element($form, $release, $modify, $format, 'minor', t('Minor'));
   _project_release_form_add_version_element($form, $release, $modify, $format, 'patch', t('Patch-level'));
@@ -167,10 +169,6 @@ function _project_release_form(&$release, &$form_state) {
   $form['body_field'] = node_body_field($release, t('Release notes'), !$admin);
   // Add a description to the body field.
   $form['body_field']['body']['#description'] = t('Enter a description of this release, such as a list of the major changes or updates.');
-
-  $tag = isset($release->project_release['tag']) ? $release->project_release['tag'] : '';
-  _project_release_form_add_text_element($form['tag']['tag'], t('Tag'), $tag, $is_edit, $admin, TRUE, 40, 255);
-  $form['tag']['tag']['#parents'] = array('project_release', 'tag');
 
   // Add a custom validation function.
   $form['#validate'][] = 'project_release_node_form_validate';
@@ -284,24 +282,41 @@ function _project_release_form_add_text_element(&$form, $title, $value, $is_edit
  */
 function _project_release_node_form_validate(&$form, &$form_state) {
   global $user;
-  $project_release = $form_state['values']['project_release'];
-  if (!empty($form_state['values']['validate_version'])) {
-    if (!isset($project_release['version_major']) && !isset($project_release['version_minor']) &&
-        !isset($project_release['version_patch']) &&
-        (!($project_release['version_extra']) || $project_release['version_extra'] === '')) {
-      form_set_error('project_release][version_major', t('You must fill in some version information.'));
-      // TODO: find a better form value to mark as the error?
+
+  // In some cases, the values we need to validate will be in
+  // $form_state['storage'] but not yet in $form_state['values']. For example,
+  // when the cvs.module is enabled and it has altered the release node form
+  // to turn it into a multi-step form, its submit handler will move the
+  // values from $form_state['storage'] to $form_state['values'] but that
+  // happens after we get a chance to validate everything. So, if there are
+  // values in $form_state['storage']['project_release'] we need to validate
+  // those to be safe.
+  if (!empty($form_state['storage']['project_release'])) {
+    $project_release = $form_state['storage']['project_release'];
+  }
+  elseif (!empty($form_state['values']['project_release'])) {
+    $project_release = $form_state['values']['project_release'];
+  }
+  else {
+    form_set_error('project_release][version_major', t('You must fill in some version information.'));
+    // TODO: find a better form value to mark as the error?
+    return;
+  }
+  if (!isset($project_release['version_major']) && !isset($project_release['version_minor']) &&
+      !isset($project_release['version_patch']) &&
+      (!($project_release['version_extra']) || $project_release['version_extra'] === '')) {
+    form_set_error('project_release][version_major', t('You must fill in some version information.'));
+    // TODO: find a better form value to mark as the error?
+  }
+  foreach (array('version_major' => t('Major version number'), 'version_minor' => t('Minor version number')) as $field => $name) {
+    $val = $project_release[$field];
+    if (isset($val) && $val !== '' && !is_numeric($val)) {
+      form_set_error("project_release][$field", t('%name must be a number.', array('%name' => $name)));
     }
-    foreach (array('version_major' => t('Major version number'), 'version_minor' => t('Minor version number')) as $field => $name) {
-      $val = $project_release[$field];
-      if (isset($val) && $val !== '' && !is_numeric($val)) {
-        form_set_error("project_release][$field", t('%name must be a number.', array('%name' => $name)));
-      }
-    }
-    $val = $project_release['version_patch'];
-    if (isset($val) && $val !== '' && !is_numeric($val) && $val != 'x') {
-      form_set_error('project_release][version_patch', t("Patch-level version number must be numeric or the letter 'x'."));
-    }
+  }
+  $val = $project_release['version_patch'];
+  if (isset($val) && $val !== '' && !is_numeric($val) && $val != 'x') {
+    form_set_error('project_release][version_patch', t("Patch-level version number must be numeric or the letter 'x'."));
   }
 
   $validators = array(
@@ -330,13 +345,13 @@ function _project_release_node_form_validate(&$form, &$form_state) {
     }
   }
 
-  // With cvs.module installed, this validation is already handled.
-  // We only want to do it here if we're *not* doing the N-page form...
-  if (!empty($form_state['values']['validate_version']) && !isset($form_state['values']['nid'])) {
+  if (!isset($form_state['values']['nid'])) {
     $version = (object) $project_release;
-    if (project_release_exists($version)) {
+    $version->pid = $form['project']['#value']->nid;
+    $existing_nid = project_release_exists($version);
+    if (!empty($existing_nid)) {
       // TODO: is there a better form element to mark with this error?
-      form_set_error('project_release][version_patch', t('This version already exists for this project.'));
+      form_set_error('project_release][version_patch', t('This version <a href="@release_url">already exists</a> for this project.', array('@release_url' => url('node/' . $existing_nid))));
     }
   }
 

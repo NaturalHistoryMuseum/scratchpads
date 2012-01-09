@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_filter_release_node_nid.inc,v 1.1 2009/08/06 00:53:31 dww Exp $
 
 /**
  * Views filter handler for matching project release nodes.

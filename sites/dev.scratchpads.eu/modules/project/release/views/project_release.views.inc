@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release.views.inc,v 1.13 2009/12/01 09:19:32 dww Exp $
 
 /**
  * @file
@@ -49,7 +48,7 @@ function project_release_views_data() {
     ),
     // Information for accepting a pid as an argument
     'argument' => array(
-      'handler' => 'views_handler_argument_node_nid',
+      'handler' => 'project_handler_argument_project_nid',
       'name field' => 'title',
       'numeric' => TRUE,
       'validate type' => 'nid',
@@ -262,6 +261,25 @@ function project_release_views_data() {
     ),
   );
 
+  // version_extra_delta
+  $data['project_release_nodes']['version_extra_delta'] = array(
+    'title' => t('Extra version delta value'),
+    'help' => t('The sorting number for the extra version information for this release.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+
   // version_api_tid
   if (module_exists('taxonomy')) {
     $vocabulary = taxonomy_vocabulary_load(_project_release_get_api_vid());
@@ -387,6 +405,20 @@ function project_release_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
+  $data['project_release_file']['weight'] = array(
+    'title' => t('Release file weight'),
+    'help' => t('The weight of a file attached to a release node.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+  );
 
   $data['project_release_supported_versions']['table']['group']  = t('Project release');
   // We only want to JOIN on this table via explicit relationships.
@@ -408,6 +440,17 @@ function project_release_views_data() {
       'base' => 'node',
       'handler' => 'views_handler_relationship',
       'label' => t('Project node'),
+    ),
+  );
+  $data['project_release_supported_versions']['tid'] = array(
+    'title' => t('Supported API Compatibility term'),
+    'help' => t('The term ID of a supported API compatibility version.'),
+    'field' => array(
+      'handler' => 'views_handler_field_taxonomy',
+      'click sortable' => FALSE,
+    ),
+    'filter' => array(
+      'handler' => 'project_release_handler_filter_version_api_tid',
     ),
   );
   $data['project_release_supported_versions']['supported'] = array(

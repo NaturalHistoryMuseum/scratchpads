@@ -1,5 +1,4 @@
 <?php
-// $Id: project.views.inc,v 1.5 2009/02/16 22:43:15 dww Exp $
 
 
 /**
@@ -76,26 +75,6 @@ function project_views_data() {
     'field' => array(
       'group' => t('Project'),
       'handler' => 'views_handler_field_url',
-      'click sortable' => TRUE,
-     ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_string',
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_string',
-    ),
-  );
-
-  // cvs
-  $data['project_projects']['cvs'] = array(
-    'title' => t('CVS directory'),
-    'help' => t("The project's cvs directory."),
-    'field' => array(
-      'group' => t('Project'),
-      //'handler' => 'views_handler_field_node',
       'click sortable' => TRUE,
      ),
     'sort' => array(
@@ -189,6 +168,27 @@ function project_views_data() {
     ),
   );
 
+  // sandbox
+  $data['project_projects']['sandbox'] = array(
+    'title' => t('Project status'),
+    'help' => t('Filters full projects from sandbox projects.'),
+    'field' => array(
+      'group' => t('Project'),
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'label' => t('Project status'),
+      'handler' => 'project_handler_filter_project_status',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+
   return $data;
 }
 
@@ -261,6 +261,9 @@ function project_views_handlers() {
       'path' => drupal_get_path('module', 'project') .'/views/handlers',
     ),
     'handlers' => array(
+      'project_handler_argument_project_nid' => array(
+        'parent' => 'views_handler_argument_node_nid',
+      ),
       'project_handler_argument_term_node_tid_depth_project' => array(
         'parent' => 'views_handler_argument_term_node_tid',
       ),
@@ -270,8 +273,8 @@ function project_views_handlers() {
       'project_handler_filter_project_sort_method' => array(
         'parent' => 'views_handler_filter',
       ),
-      'project_handler_filter_project_type_vid' => array(
-        'parent' => 'views_handler_filter_in_operator',
+      'project_handler_filter_project_status' => array(
+        'parent' => 'views_handler_filter_boolean_operator',
       ),
       'project_handler_filter_project_type_vid' => array(
         'parent' => 'views_handler_filter_in_operator',
@@ -358,6 +361,14 @@ function project_views_plugins() {
         'title' => t('Project node'),
         'handler' => 'project_plugin_argument_validate_project_nid',
         'path' => drupal_get_path('module', 'project') .'/views/plugins',
+      ),
+    ),
+    'argument default' => array(
+      'project_plugin_argument_default_project_type' => array(
+        'title' => t('Project type from URL'),
+        'handler' => 'project_plugin_argument_default_project_type',
+        'path' => $project_path . '/views/plugins',
+        'parent' => 'fixed', // so that the parent class is included
       ),
     ),
   );

@@ -1,5 +1,4 @@
 <?php
-// $Id: project.inc,v 1.147 2009/11/25 16:38:15 dww Exp $
 
 /**
  * Implementation of hook_form().
@@ -8,10 +7,15 @@ function project_project_form($node, $form_state) {
   global $user;
   project_project_set_breadcrumb($node);
 
+  $form = array();
+
+  // Set an #after_build where we load JS used for this form so that the JS is
+  // always loaded, even when the form is cached (e.g. after a validation
+  // failure).
+  $form['#after_build'] = array('project_project_form_after_build');
+
   /* Project taxonomy */
   if (project_use_taxonomy()) {
-    // Since this form is used relatively infrequently, don't allow the js to be aggregated.
-    drupal_add_js(drupal_get_path('module', 'project') .'/project.js', 'module', 'header', FALSE, TRUE, FALSE);
     $project_type_vid = _project_get_vid();
     $tree = taxonomy_get_tree($project_type_vid);
     $top_level = array();
@@ -79,15 +83,28 @@ function project_project_form($node, $form_state) {
       '#required' => TRUE,
     );
     $select_size = max(5, 2*count($top_level));
-    foreach ($options as $tid => $values) {
-      $form['project_taxonomy']["tid_$tid"] = array(
-        '#title' => t('!type categories', array('!type' => $top_level[$tid])),
-        '#type' => 'select',
-        '#multiple' => TRUE,
-        '#options' => $values,
-        '#default_value' => $current_options,
-        '#attributes' => array('size' => min($select_size, count($values))),
-      );
+    foreach (array_keys($top_level) as $tid) {
+      if (isset($options[$tid])) {
+        $values = $options[$tid];
+        $form['project_taxonomy']["tid_$tid"] = array(
+          '#title' => t('@type categories', array('@type' => $top_level[$tid])),
+          '#type' => 'select',
+          '#multiple' => TRUE,
+          '#options' => $values,
+          '#default_value' => $current_options,
+          '#attributes' => array('size' => min($select_size, count($values))),
+        );
+      }
+      else {
+        // provide a div for all top-level terms so that outside elements
+        // (vocabularies) can be shifted into the project taxonomy fieldset
+        // in the same paradigm as the modules sub-terms
+        $form['project_taxonomy']["tid_$tid"] = array(
+          '#type' => 'item',
+          '#value' => '',
+          '#id' => 'edit-tid-' . $tid,
+        );
+      }
     }
   }
 
@@ -102,7 +119,7 @@ function project_project_form($node, $form_state) {
   );
   $form['project_node']['title'] = array(
     '#type' => 'textfield',
-    '#title' => t('Full project name'),
+    '#title' => t('Project title'),
     '#default_value' => isset($node->title) ? $node->title : NULL,
     '#maxlength' => 128,
     '#required' => TRUE,
@@ -116,6 +133,53 @@ function project_project_form($node, $form_state) {
   // concerned, but the value shows up in the $node->project array for
   // validation and submission as far as FAPI is concerned.
   $form['project_node']['project'] = array('#tree' => TRUE);
+
+  // Setup sandbox checkbox for new projects
+  if (!isset($node->nid)) {
+    // Check permissions and set sandbox value and form element status
+    if (user_access('create sandbox projects') && !user_access('create full projects')) {
+      // Force sandbox, disable checkbox
+      $is_sandbox = isset($node->project['sandbox']) ? $node->project['sandbox'] : TRUE;
+      $disabled = TRUE;
+    }
+    elseif (!user_access('create sandbox projects') && user_access('create full projects')) {
+      // Force full project, disable checkbox
+      $is_sandbox = isset($node->project['sandbox']) ? $node->project['sandbox'] : FALSE;
+      $disabled = TRUE;
+    }
+    elseif ((user_access('create sandbox projects') && user_access('create full projects')) || user_access('administer projects')) {
+      // User has full permissions, allow checkbox, use default sandbox value
+      $is_sandbox = variable_get('project_sandbox_default', FALSE);
+      $disabled = FALSE;
+    }
+    $form['project_node']['project']['sandbox'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Sandbox'),
+      '#default_value' => $is_sandbox,
+      '#description' => '', // @TODO need a good generic description of sandboxes
+      '#disabled' => $disabled,
+    );
+  }
+  else {
+    $is_sandbox = $node->project['sandbox'];
+    $form['project_node']['project']['sandbox'] = array(
+      '#type' => 'value',
+      '#value' => $is_sandbox,
+    );
+    if ($is_sandbox) {
+      $form['project_node']['project']['sandbox_help'] = array(
+        '#type' => 'markup',
+        '#value' => t('This project is currently a sandbox.'),
+        '#prefix' => '<div>', // Required to show up in fieldset, see http://api.drupal.org/api/drupal/developer--topics--forms_api_reference.html/6#markup
+        '#suffix' => '</div>',
+      );
+      if (project_promote_project_access($node)) {
+        $form['project_node']['project']['sandbox_help']['#value'] = t('This project is currently a sandbox. <a href="!url">Promote this project</a>', array('!url' => url("node/$node->nid/edit/promote")));
+      }
+    }
+
+  }
+
   $form['project_node']['project']['uri'] = array(
     '#type' => 'textfield',
     '#title' => t('Short project name'),
@@ -123,9 +187,36 @@ function project_project_form($node, $form_state) {
     '#size' => 40,
     '#maxlength' => 50,
     '#description' => (variable_get('project_enable_alias', TRUE)) ? t('This will be used to generate a /project/&lt;shortname&gt;/ URL for your project.') : '',
-    '#required' => TRUE,
+    // Only mark this item required if the project is not a sandbox, and it has
+    // already been created, since project.js will mark it as required
+    // automatically if it's a new project. This is safe to mark as not required
+    // since project_project_validate() checks that this value is not empty.
+    '#required' => (!$is_sandbox && isset($node->nid)) ? TRUE : FALSE,
   );
-  $form['project_node']['body_field'] = node_body_field($node, t('Full description'), 1);
+  // Updating of the uri has been disabled.
+  if (!variable_get('project_allow_uri_update', TRUE)) {
+    // For new projects, allow editing for initial submission, and warn the
+    // user that the field will not be editable afterwards.
+    if (empty($node->nid)) {
+      $form['project_node']['project']['uri']['#description'] .= ' '. t('You may not edit this value after your project has been saved.');
+    }
+    // Convert the form element to an item so it's not editable.  #value
+    // and #input need to be set explicitly so the uri value will be passed
+    // to the submit handler.
+    else {
+      $form['project_node']['project']['uri']['#type'] = 'item';
+      $form['project_node']['project']['uri']['#value'] = $node->project['uri'];
+      $form['project_node']['project']['uri']['#input'] = TRUE;
+    }
+  }
+
+  // If project is a sandbox, and it is an existing node, and we are
+  // auto-generating the short name, disable the short name field
+  if (variable_get('project_sandbox_numeric_shortname', FALSE) && $is_sandbox && isset($node->nid)) {
+    $form['project_node']['project']['uri']['#disabled'] = TRUE;
+  }
+
+  $form['project_node']['body_field'] = node_body_field($node, t('Description'), 1);
 
   $form['project'] = array(
     '#type' => 'fieldset',
@@ -174,14 +265,6 @@ function project_project_form($node, $form_state) {
     '#maxlength' => 255,
     '#description' => t('Link to changelog.'),
   );
-  $form['project']['cvs'] = array(
-    '#type' => 'textfield',
-    '#title' => t('CVS tree'),
-    '#default_value' => isset($node->project['cvs']) ? $node->project['cvs'] : NULL,
-    '#size' => 40,
-    '#maxlength' => 255,
-    '#description' => t('Link to webcvs/viewcvs.'),
-  );
   $form['project']['demo'] = array(
     '#type' => 'textfield',
     '#title' => t('Demo site'),
@@ -190,6 +273,23 @@ function project_project_form($node, $form_state) {
     '#maxlength' => 255,
     '#description' => t('Link to a live demo.'),
   );
+
+  return $form;
+}
+
+/**
+ * After-build callback for the project_project node form.
+ *
+ * Add JS for use on the project_project form because with the form cached
+ * the main form function isn't called again (and so JS isn't loaded).
+ */
+function project_project_form_after_build($form, &$form_state) {
+  // Since this form is used infrequently, don't allow the js to be aggregated.
+  drupal_add_js(drupal_get_path('module', 'project') .'/project.js', 'module', 'header', FALSE, TRUE, FALSE);
+
+  // The sandbox JS logic depends on a setting, so we need to pass that down
+  // to the JS here as well.
+  drupal_add_js(array('project' => array('project_sandbox_numeric_shortname' => variable_get('project_sandbox_numeric_shortname', FALSE))), 'setting');
 
   return $form;
 }
@@ -214,40 +314,14 @@ function project_project_validate(&$node) {
   }
 
   // Validate uri.
-  if (empty($node->project['uri'])) {
-    form_set_error('project][uri', t('A short project name is required.'));
-  }
-  else {
-    // Make sure uri only includes valid characters
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $node->project['uri'])) {
-      form_set_error('project][uri', t('Please only use alphanumerical characters for the project name.'));
-    }
-
-    // Make sure uri isn't already in use, or reserved.  Includes all X from
-    // project/issues/X paths used in project_issues module
-    $reserved_names = array('user', 'issues', 'releases', 'rss', 'subscribe-mail', 'search', 'add', 'update_project', 'statistics', 'comments', 'autocomplete', 'cvs', 'developers', 'usage');
-    if (project_use_taxonomy()) {
-      $terms = taxonomy_get_tree(_project_get_vid());
-      foreach ($terms as $i => $term) {
-        if ($term->depth == 0) {
-          $reserved_names[] = strtolower($term->name);
-        }
-      }
-    }
-    if (in_array(strtolower($node->project['uri']), $reserved_names)) {
-      form_set_error('project][uri', t('This project name is reserved.'));
-    }
-    $existing_nid = project_get_nid_from_uri($node->project['uri']);
-    if (!empty($existing_nid) && $existing_nid != $node->nid) {
-      form_set_error('project][uri', t('This project name is already in use.'));
-    }
+  if ($error = project_validate_project_shortname($node)) {
+    form_set_error('project][uri', $error);
   }
 
   // Make sure all URL fields actually contain URLs.
   $fields = array(
     'homepage' => t('Homepage'),
     'changelog' => t('Changelog'),
-    'cvs' => t('CVS tree'),
     'demo' => t('Demo site'),
   );
   foreach ($fields as $uri => $name) {
@@ -255,28 +329,14 @@ function project_project_validate(&$node) {
       form_set_error("project][$uri", t('The %field field is not a valid URL.', array('%field' => $name)));
     }
   }
-
-  // Validate the project-specific sub-categories, if any...
-  if (project_use_taxonomy() && isset($node->project_type)) {
-    $tree = taxonomy_get_tree(_project_get_vid());
-    $top_level = array();
-    foreach ($tree as $i => $term) {
-      if ($term->parents[0] == 0) {
-        $top_level[$term->tid] = $term->name;
-      }
-    }
-    foreach ($top_level as $tid => $name) {
-      if ($node->project_type != $tid) {
-        $tid_field = 'tid_' . $tid;
-        if (!empty($node->$tid_field)) {
-          form_set_error($tid, t('Project type %project_type was selected, you can not use values from %invalid_type categories', array('%project_type' => $top_level[$node->project_type], '%invalid_type' => $top_level[$tid])));
-        }
-      }
-    }
-  }
 }
 
 function project_project_set_breadcrumb($node = NULL, $extra = NULL) {
+  $breadcrumb = project_project_get_breadcrumb($node, $extra);
+  drupal_set_breadcrumb($breadcrumb);
+}
+
+function project_project_get_breadcrumb($node = NULL, $extra = NULL) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
 
@@ -303,7 +363,7 @@ function project_project_set_breadcrumb($node = NULL, $extra = NULL) {
   if (!empty($node->nid) && project_use_taxonomy()) {
     $result = db_query(db_rewrite_sql('SELECT t.tid, t.* FROM {term_data} t INNER JOIN {term_hierarchy} h ON t.tid = h.tid INNER JOIN {term_node} r ON t.tid = r.tid WHERE h.parent = %d AND t.vid = %d AND r.vid = %d', 't', 'tid'), 0, _project_get_vid(), $node->vid);
     if ($term = db_fetch_object($result)) {
-      $breadcrumb[] = l($term->name, 'project/'. $term->name);
+      $breadcrumb[] = l($term->name, project_term_path($term));
     }
   }
 
@@ -313,8 +373,7 @@ function project_project_set_breadcrumb($node = NULL, $extra = NULL) {
   elseif ($extra && !empty($node)) {
     $breadcrumb[] = l($node->title, 'node/'. $node->nid);
   }
-
-  drupal_set_breadcrumb($breadcrumb);
+  return $breadcrumb;
 }
 
 function project_project_view($node, $teaser = false, $page = false) {
@@ -381,6 +440,19 @@ function project_project_view($node, $teaser = false, $page = false) {
 function project_project_nodeapi(&$node, $op, $arg) {
   $language = isset($node->language) ? $node->language : '';
   switch ($op) {
+    case 'presave':
+      // Remove terms from vocabularies that have associations for other
+      // project types.
+      if (!empty($node->taxonomy)) {
+        foreach ($node->taxonomy as $vid => $terms) {
+          $associated = variable_get('project_type_associated_tid_' . $vid, FALSE);
+          if ($associated && $associated != $node->project_type) {
+            unset($node->taxonomy[$vid]);
+          }
+        }
+      }
+      break;
+
     case 'insert':
       _project_save_taxonomy($node);
       if (module_exists('path') && variable_get('project_enable_alias', TRUE)) {
@@ -399,13 +471,27 @@ function project_project_nodeapi(&$node, $op, $arg) {
 }
 
 function project_project_insert($node) {
-  db_query("INSERT INTO {project_projects} (nid, uri, homepage, changelog, cvs, demo, screenshots, documentation, license) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", $node->nid, $node->project['uri'], $node->project['homepage'], $node->project['changelog'], $node->project['cvs'], $node->project['demo'], $node->project['screenshots'], $node->project['documentation'], $node->project['license']);
+  // Auto generate the short name (uri) if necessary. We have to do this here,
+  // since we need the node ID to exist before storing the short name.
+  if (variable_get('project_sandbox_numeric_shortname', FALSE) && $node->project['sandbox']) {
+    $node->project['uri'] = $node->nid;
+  }
+  db_query("INSERT INTO {project_projects} (nid, uri, homepage, changelog, demo, screenshots, documentation, license, sandbox) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d)", $node->nid, $node->project['uri'], $node->project['homepage'], $node->project['changelog'], $node->project['demo'], $node->project['screenshots'], $node->project['documentation'], $node->project['license'], $node->project['sandbox']);
 //  project_release_scan_directory($node->project['uri']);
+  $perms = array_fill_keys(array_keys(project_permission_load($node)), 1);
+  project_maintainer_save($node->nid, $node->uid, $perms);
 }
 
 function project_project_update($node) {
-  db_query("UPDATE {project_projects} SET uri = '%s', homepage = '%s', changelog = '%s', cvs = '%s', demo = '%s', screenshots = '%s', documentation = '%s', license = '%s' WHERE nid = %d", $node->project['uri'], $node->project['homepage'], $node->project['changelog'], $node->project['cvs'], $node->project['demo'], $node->project['screenshots'], $node->project['documentation'], $node->project['license'], $node->nid);
+  // Auto generate the short name (uri) if necessary. We have to do this here,
+  // since we need the node ID to exist before storing the short name.
+  if (variable_get('project_sandbox_numeric_shortname', FALSE) && $node->project['sandbox']) {
+    $node->project['uri'] = $node->nid;
+  }
+  db_query("UPDATE {project_projects} SET uri = '%s', homepage = '%s', changelog = '%s', demo = '%s', screenshots = '%s', documentation = '%s', license = '%s', sandbox = %d WHERE nid = %d", $node->project['uri'], $node->project['homepage'], $node->project['changelog'], $node->project['demo'], $node->project['screenshots'], $node->project['documentation'], $node->project['license'], $node->project['sandbox'], $node->nid);
 //  project_release_scan_directory($node->project['uri']);
+  $perms = array_fill_keys(array_keys(project_permission_load($node)), 1);
+  project_maintainer_save($node->nid, $node->uid, $perms);
 }
 
 function project_project_delete($node) {
@@ -514,9 +600,6 @@ function project_get_project_link_info($node = NULL) {
     'type' => 'inline',
   );
   $links = array();
-  if (!empty($node->project['cvs'])) {
-    $links['browse_repository'] = l(t('Browse the CVS repository'), $node->project['cvs']);
-  }
 
   if (project_use_cvs($node)) {
     $links['view_cvs_messages'] = l(t('View CVS messages'), 'project/cvs/'. $node->nid);
@@ -529,3 +612,155 @@ function project_get_project_link_info($node = NULL) {
   return $all_links;
 }
 
+/**
+ * Page callback for promote subtab.
+ */
+function project_promote_project_page($node) {
+  project_project_set_breadcrumb($node);
+  drupal_set_title(check_plain($node->title));
+  return drupal_get_form('project_promote_project_form', $node);
+}
+
+/**
+ * Form callback for project promote form.
+ */
+function project_promote_project_form($form_state, $project) {
+  $form = array();
+
+  $form['help'] = array(
+    '#type' => 'markup',
+    '#value' => t('You are about to promote the project %project_name to a full project. This action is not reversible.', array('%project_name' => $project->title)),
+  );
+
+  $form['confirm'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('I understand that this action cannot be undone and wish to proceed anyway'),
+    '#default_value' => FALSE,
+    '#description' => t('Please confirm that you understand the implications of promoting this project.')
+  );
+
+  // Only show the shortname field if it's auto-generated for sandbox projects.
+  if (variable_get('project_sandbox_numeric_shortname', FALSE)) {
+    // Unset this in case the user cancels on the confirm form so we don't leak
+    // this into the $_SESSION permanently. Also ensures we start clean.
+    unset($_SESSION['project_promote_project_shortname']);
+    $form['shortname'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Short project name'),
+      '#default_value' => isset($project->project['uri']) ? $project->project['uri'] : NULL,
+      '#size' => 40,
+      '#maxlength' => 50,
+      '#description' => (variable_get('project_enable_alias', TRUE)) ? t('This will be used to generate a /project/&lt;shortname&gt;/ URL for your project.') : '',
+      '#required' => TRUE,
+    );
+  }
+
+  // Update help text if the user is not allowed to update the short name at a
+  // later time. 
+  if (!variable_get('project_allow_uri_update', TRUE)) {
+      $form['shortname']['#description'] .= ' '. t('You may not edit this value after the project has been promoted.');
+  }
+
+  $form['pid'] = array('#type' => 'value', '#value' => $project->nid);
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Promote to full project'),
+    '#weight' => 45,
+  );
+
+  return $form;
+}
+
+/**
+ * Validation handler for project promote form.
+ */
+function project_promote_project_form_validate($form, &$form_state) {
+  if ($form_state['values']['confirm'] == 0) {
+    form_set_error('confirm', t('Please check the confirmation checkbox before promoting this project'));
+  }
+  // Only validate the short name if it is relevant, and included in the
+  // original form.
+  if (variable_get('project_sandbox_numeric_shortname', FALSE)) {
+    $project = node_load($form_state['values']['pid']);
+    $project->project['sandbox'] = 0;
+    $project->project['uri'] = $form_state['values']['shortname'];
+    if ($error = project_validate_project_shortname($project)) {
+      form_set_error('shortname', $error);
+    }
+  }
+}
+
+/**
+ * Submit handler for project promote form. Redirects to a confirm form.
+ */
+function project_promote_project_form_submit($form, &$form_state) {
+  if (isset($form_state['values']['shortname'])) {
+    $_SESSION['project_promote_project_shortname'] = $form_state['values']['shortname'];
+  }
+  $form_state['redirect'] = 'node/' . $form_state['values']['pid'] . '/edit/promote/confirm';
+}
+
+/**
+ * Build a confirmation form for promoting sandbox projects to full projects.
+ */
+function project_promote_project_confirm_form($form_state, $project) {
+  if (empty($project)) {
+    drupal_set_message(t('Error: you cannot confirm promoting a sandbox to a full project without specifying the project.'), 'error');
+    return drupal_goto();
+  }
+  $form['nid'] = array(
+    '#type' => 'value',
+    '#value' => $project->nid,
+  );
+
+  if (isset($_SESSION['project_promote_project_shortname'])) {
+    $shortname = $_SESSION['project_promote_project_shortname'];
+    // Note: we can't unset this value from the $_SEESSION here, or this form
+    // element won't be included when building the form during submission. So,
+    // we'll unset once we actually submit the confirm form.
+  }
+  else {
+    $shortname = $project->project['uri'];
+  }
+  $form['shortname'] = array(
+    '#type' => 'value',
+    '#value' => $shortname,
+  );
+
+  // If the shortname can't otherwise be changed, make sure they understand
+  // this is *really* permanent once they press "Promote".
+  if (!variable_get('project_allow_uri_update', TRUE)) {
+    $confirm_text = t('The project will use the shortname %shortname which can not be changed later. Furthermore, once a project is promoted, it can not be turned back into a sandbox.', array('%shortname' => $shortname));
+  }
+  else {
+    $confirm_text = t('Once a project is promoted, it can not be turned back into a sandbox.');
+  }
+  return confirm_form(
+    $form,
+    t('Are you sure you want to promote %title from a sandbox to a full project with the shortname %shortname?', array('%title' => $project->title, '%shortname' => $shortname)),
+    'node/' . $project->nid . '/edit/promote',
+    $confirm_text, t('Promote'), t('Cancel')
+  );
+}
+
+/**
+ * Submit handler for project promote form.
+ */
+function project_promote_project_confirm_form_submit($form, &$form_state) {
+  $project = node_load($form_state['values']['nid']);
+  $project->project['sandbox'] = 0;
+
+  unset($_SESSION['project_promote_project_shortname']);
+  // Only update the shortname if it is relevant, and included in the original
+  // form.
+  if (variable_get('project_sandbox_numeric_shortname', FALSE)) {
+    $project->project['uri'] = $form_state['values']['shortname'];
+  }
+
+  node_save($project);
+  drupal_set_message(t('The project %project_name has been promoted to a full project.', array('%project_name' => $project->title)));
+  $form_state['redirect'] = 'node/' . $project->nid;
+
+  // Notify that this promotion has occurred.
+  module_invoke_all('project_promote_sandbox', $project);
+}

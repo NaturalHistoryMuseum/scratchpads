@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_filter_version_api_tid.inc,v 1.1 2009/11/28 21:11:47 dww Exp $
 
 /**
  * Filter release nodes based on their API compatibility term.

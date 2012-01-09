@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release.module,v 1.152 2010/01/30 02:43:24 dww Exp $
 
 define('PROJECT_RELEASE_DEFAULT_VERSION_FORMAT', '!major%minor%patch#extra');
 define('PROJECT_RELEASE_FILE_EXTENSIONS', 'zip gz tar bz2 rar tgz tar.gz dmg rpm deb');
@@ -40,8 +39,8 @@ function project_release_menu() {
     'title' => 'Releases',
     'page callback' => 'project_release_project_edit_releases',
     'page arguments' => array(1),
-    'access callback' => 'node_access',
-    'access arguments' => array('update', 1),
+    'access callback' => 'project_release_project_settings_form_access',
+    'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/project_edit_releases.inc',
   );
@@ -90,6 +89,18 @@ function project_release_menu_alter(&$callbacks) {
 }
 
 /**
+ * Access callback for node/%project_node/edit/releases subtab.
+ */
+function project_release_project_settings_form_access($node) {
+  if (!variable_get('project_release_sandbox_allow_release', TRUE) && $node->project['sandbox'] && $node->project_release['releases'] == 0) {
+    return FALSE;
+  }
+  else {
+    return project_user_access($node, 'administer releases');
+  }
+}
+
+/**
  * @defgroup project_release_node Drupal node-type related hooks
  */
 
@@ -120,7 +131,7 @@ function project_release_access($op, $node, $account) {
       // We can't just use project_project_access() here, since we
       // need to check access to the project itself, not the release
       // node, so we use the helper method and pass the project id.
-      return project_check_admin_access($node->project_release['pid']);
+      return project_user_access($node->project_release['pid'], 'administer releases');
     case 'delete':
       // No one should ever delete a release node, only unpublish it.
       return FALSE;
@@ -139,6 +150,55 @@ function project_release_node_info() {
       'description' => t('A release of a project with a specific version number.'),
      ),
   );
+}
+
+/**
+ * Implement hook_project_permission_info()
+ *
+ * This advertises an 'Administer releases' permission if the site is
+ * configured to allow sandboxes to have releases, if the project is not a
+ * sandbox, or if the project already has releases enabled.
+ */
+function project_release_project_permission_info($project = NULL) {
+  if (variable_get('project_release_sandbox_allow_release', TRUE) || empty($project->project['sandbox']) || !empty($project->project_release['releases'])) {
+    return array(
+      'administer releases' => array(
+        'title' => t('Administer releases'),
+        'description' => t('Allows a user to create and update releases, and to control which branches are recommended or supported.'),
+      ),
+    );
+  }
+}
+
+/**
+ * Implement hook_project_maintainer_save()
+ */
+function project_release_project_maintainer_save($nid, $uid, $permissions = array()) {
+  db_query("UPDATE {project_release_project_maintainer} SET administer_releases = %d WHERE nid = %d AND uid = %d", !empty($permissions['administer releases']), $nid, $uid);
+  if (!db_affected_rows()) {
+    // If we didn't have a record to update, add this as a new maintainer.
+    db_query("INSERT INTO {project_release_project_maintainer} (nid, uid, administer_releases) VALUES (%d, %d, %d)", $nid, $uid, !empty($permissions['administer releases']));
+  }
+}
+
+/**
+ * Implement hook_project_maintainer_remove()
+ */
+function project_release_project_maintainer_remove($nid, $uid) {
+  db_query("DELETE FROM {project_release_project_maintainer} WHERE nid = %d and uid = %d", $nid, $uid);
+}
+
+/**
+ * Implement hook_project_maintainer_project_load()
+ */
+function project_release_project_maintainer_project_load($nid, &$maintainers) {
+  $query = db_query('SELECT u.uid, u.name, prpm.administer_releases FROM {project_release_project_maintainer} prpm INNER JOIN {users} u ON prpm.uid = u.uid WHERE prpm.nid = %d', $nid);
+  while ($maintainer = db_fetch_object($query)) {
+    if (empty($maintainers[$maintainer->uid])) {
+      $maintainers[$maintainer->uid]['name'] = $maintainer->name;
+    }
+    $maintainers[$maintainer->uid]['permissions']['administer releases'] = $maintainer->administer_releases;
+  }
 }
 
 /**
@@ -167,7 +227,7 @@ function project_release_node_form_validate(&$form, &$form_state) {
 function project_release_load($node) {
   $additions = db_fetch_array(db_query("SELECT * FROM {project_release_nodes} WHERE nid = %d", $node->nid));
   // Add in file info.
-  $file_info = db_query("SELECT f.*, prf.filehash FROM {project_release_file} prf INNER JOIN {files} f ON prf.fid = f.fid WHERE prf.nid = %d", $node->nid);
+  $file_info = db_query("SELECT f.*, prf.filehash, prf.weight FROM {project_release_file} prf INNER JOIN {files} f ON prf.fid = f.fid WHERE prf.nid = %d", $node->nid);
   $files = array();
   while ($file = db_fetch_object($file_info)) {
     $files[$file->fid] = $file;
@@ -371,7 +431,7 @@ function project_release_check_supported_versions($pid, $tid, $major, $delete) {
  * @see project_release_release_nodeapi()
  */
 function project_release_compute_update_status($pid, $api_tid, $major) {
-  $latest_release = $recommended_release = $latest_security_release = 0;  
+  $latest_release = $recommended_release = $latest_security_release = 0;
   $nid_update_map = array();
   $query = project_release_query_releases_by_branch($pid, $api_tid, $major);
   while ($release = db_fetch_object($query)) {
@@ -609,7 +669,7 @@ function project_release_view($node, $teaser = FALSE, $page = FALSE) {
   }
 
   // Display packaging errors to admins.
-  if (project_check_admin_access($node->project_release['pid'])) {
+  if (project_user_access($node->project_release['pid'], 'administer releases')) {
     $rows = array();
     $result = db_query('SELECT * FROM {project_release_package_errors} WHERE nid = %d', $node->nid);
     $error = db_fetch_object($result);
@@ -630,7 +690,7 @@ function project_release_view($node, $teaser = FALSE, $page = FALSE) {
 }
 
 function project_release_load_file($fid) {
-  return db_fetch_object(db_query("SELECT f.*, prf.filehash FROM {project_release_file} prf INNER JOIN {files} f ON prf.fid = f.fid WHERE f.fid = %d", $fid));
+  return db_fetch_object(db_query("SELECT f.*, prf.filehash, prf.weight FROM {project_release_file} prf INNER JOIN {files} f ON prf.fid = f.fid WHERE f.fid = %d", $fid));
 }
 
 function theme_project_release_download_file($file, $download_link = TRUE) {
@@ -690,7 +750,7 @@ function project_release_get_releases($project, $nodes = TRUE, $sort_by = 'versi
   $where = '';
   $join = '';
   $args = array($project->nid);
-  if (!project_check_admin_access($project)) {
+  if (!project_user_access($project, 'administer releases')) {
     if (!empty($rids)) {
       $where = "AND (n.status = %d OR n.nid IN (". db_placeholders($rids) ."))";
       $args[] = 1;
@@ -757,6 +817,15 @@ function project_release_form_alter(&$form, &$form_state, $form_id) {
   }
   if ($form_id == 'project_release_node_form') {
     return project_release_alter_release_form($form, $form_state);
+  }
+  if ($form_id == 'project_settings_form') {
+    return project_release_alter_project_settings_form($form, $form_state);
+  }
+  if ($form_id == 'project_promote_project_form') {
+    return project_release_alter_project_promote_form($form, $form_state);
+  }
+  if ($form_id == 'project_promote_project_confirm_form') {
+    return project_release_alter_project_promote_confirm_form($form, $form_state);
   }
 }
 
@@ -837,6 +906,74 @@ function project_release_alter_release_form(&$form, &$form_state) {
   $form['buttons']['submit']['#submit'][] = 'project_release_node_submit';
 }
 
+/**
+ * Alters the project settings form.
+ */
+function project_release_alter_project_settings_form(&$form, &$form_state) {
+  $form['sandbox']['project_release_sandbox_allow_release'] = array(
+    '#title' => t('Enable releases for sandboxed projects'),
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('project_release_sandbox_allow_release', TRUE),
+    '#description' => t('If checked, projects marked as sandboxes will be permitted to have releases associated with them.'),
+  );
+}
+
+/**
+ * Alters the form for promoting a project from sandbox to a full project.
+ */
+function project_release_alter_project_promote_form(&$form, &$form_state) {
+  // Unset this in case the user cancels on the confirm form so we don't leak
+  // this into the $_SESSION permanently. Also ensures we start clean.
+  unset($_SESSION['project_promote_project_releases']);
+  if (!variable_get('project_release_sandbox_allow_release', TRUE)) {
+    $node = node_load($form['pid']['#value']);
+    $form['releases'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable releases'),
+      '#return_value' => 1,
+      '#weight' => 10,
+      '#default_value' => $node->project_release['releases'],
+      '#description' => t('Allow releases of this project with specific versions. This can be changed later.'),
+    );
+    $form['#submit'][] = 'project_release_project_promote_form_submit';
+  }
+}
+
+/**
+ * Submit handler for project promote form.
+ *
+ * This just saves the value of the 'Enable releases' checkbox into the
+ * SESSION so it can persist when building the confirm form.
+ */
+function project_release_project_promote_form_submit($form, &$form_state) {
+  if (isset($form_state['values']['releases'])) {
+    $_SESSION['project_promote_project_releases'] = $form_state['values']['releases'];
+  }
+}
+
+/**
+ * Alters the confirm form for promoting sandbox into a full project.
+ */
+function project_release_alter_project_promote_confirm_form(&$form, &$form_state) {
+  if (isset($_SESSION['project_promote_project_releases'])) {
+    $form['releases'] = array(
+      '#type' => 'value',
+      '#value' => $_SESSION['project_promote_project_releases'],
+    );
+    // Note: we can't unset this value from the $_SEESSION here, or this form
+    // element won't be included when building the form during submission. So,
+    // we'll unset once we actually submit the confirm form.
+  }
+  $form['#submit'][] = 'project_release_project_promote_confirm_form_submit';
+}
+
+/**
+ * Submit handler for project promote confirm form.
+ */
+function project_release_project_promote_confirm_form_submit($form, &$form_state) {
+  db_query("UPDATE {project_release_projects} SET releases = %d WHERE nid = %d", $form_state['values']['releases'], $form_state['values']['nid']);
+  unset($_SESSION['project_promote_project_releases']);
+}
 
 /**
  * @defgroup project_release_nodeapi Node API hooks
@@ -901,7 +1038,8 @@ function project_release_project_nodeapi_load(&$node) {
  * Insert release information about a project node.
  */
 function project_release_project_nodeapi_insert(&$node) {
-  db_query("INSERT INTO {project_release_projects} (nid, releases, version_format) VALUES (%d, %d, '%s')", $node->nid, 1, '');
+  $releases = (!variable_get('project_release_sandbox_allow_release', TRUE) && $node->project['sandbox']) ? 0 : 1;
+  db_query("INSERT INTO {project_release_projects} (nid, releases, version_format) VALUES (%d, %d, '%s')", $node->nid, $releases, '');
 }
 
 /**
@@ -1033,7 +1171,7 @@ function project_release_get_current_recommended($project_nid, $api_tid, $recomm
  * with the highest version string that doesn't have a "version_extra" field
  * (e.g. "beta1"). If all releases on the given branch have "extra", then the
  * recommended release will be the same as the latest release.
- * 
+ *
  * @param $project_nid
  *   The node ID of the project to find the latest and recommended releases of.
  * @param $api_tid
@@ -1230,7 +1368,7 @@ function project_release_project_page_link_alter(&$links, $node) {
     ),
   );
 
-  if (project_check_admin_access($node->nid)) {
+  if (project_user_access($node->nid, 'administer releases')) {
     $links['project_release']['links']['add_new_release'] = l(t('Add new release'), 'node/add/project_release/'. $node->nid);
     $links['project_release']['links']['administer_releases'] = l(t('Administer releases'), 'node/'. $node->nid .'/edit/releases');
   }
@@ -1663,7 +1801,21 @@ function _project_release_get_release_type_vid() {
   return variable_get('project_release_release_type_vid', '');
 }
 
+/**
+ * Determine if a release already exists with the given version.
+ *
+ * @param stdClass $version
+ *   An object containing fields that define the version for a release. Must
+ *   include 'pid', the project node ID. Can also include 'version_api_tid',
+ *   'version_major', 'version_minor', 'version_patch', 'version_extra',
+ *   and/or 'version' (the full version string itself).
+ *
+ * @return integer
+ *   The node ID of an existing release with the given version information, or
+ *   FALSE if no such release already exists.
+ */
 function project_release_exists($version) {
+  $values = array();
   $fields = array('version_major', 'version_minor', 'version_patch', 'version_api_tid');
   foreach ($fields as $field) {
     if (isset($version->$field) && is_numeric($version->$field)) {
@@ -1691,7 +1843,7 @@ function project_release_exists($version) {
     return false;
   }
 
-  $sql = 'SELECT COUNT(*) FROM {project_release_nodes} WHERE pid = %d';
+  $sql = 'SELECT nid FROM {project_release_nodes} WHERE pid = %d';
   if (!empty($types)) {
     foreach ($types as $field => $type) {
       $sql .= " AND $field = $type";
@@ -2106,7 +2258,7 @@ function theme_project_release_update_status_icon($status) {
  */
 function project_release_preprocess_views_view_table($variables) {
   $view = $variables['view'];
-  if ($view->plugin_name == 'project_release_table') {  
+  if ($view->plugin_name == 'project_release_table') {
     // TODO: this is a hack, we want something more flexible.
     $needs_status_column = FALSE;
     foreach ($view->result as $num => $result) {
@@ -2125,3 +2277,23 @@ function project_release_preprocess_views_view_table($variables) {
   }
 }
 
+/**
+ * Implement hook_views_default_views_alter().
+ */
+function project_release_views_default_views_alter(&$views) {
+  $path = drupal_get_path('module', 'project_release');
+  require_once("$path/views/project_release.views_default.inc");
+  _project_release_views_default_views_alter($views);
+}
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ */
+function project_release_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'sampler') {
+    switch ($plugin) {
+      case 'metric':
+        return 'metrics';
+    }
+  }
+}

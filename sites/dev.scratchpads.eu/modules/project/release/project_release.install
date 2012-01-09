@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release.install,v 1.30 2010/01/30 02:33:40 dww Exp $
 
 function project_release_install() {
   // Create the database tables.
@@ -7,6 +6,13 @@ function project_release_install() {
 
   // Make this module heavier than the default module weight.
   db_query("UPDATE {system} SET weight = %d WHERE name = 'project_release'", 2);
+}
+
+/**
+ * Implement hook_enable().
+ */
+function project_release_enable() {
+  project_release_add_missing_projects();
 }
 
 /**
@@ -168,6 +174,19 @@ function project_release_schema() {
         'length' => 32,
         'not null' => TRUE,
         'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => 'Weight of this file in relation to other files in this release.',
+      ),
+      'downloads' => array(
+        'description' => 'Number of times this file has been downloaded. This value is updated by site specific means.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
       ),
     ),
     'primary key' => array('fid'),
@@ -344,7 +363,47 @@ function project_release_schema() {
       'expire' => array('expire')
     ),
   );
+
+  $schema['project_release_project_maintainer'] = array(
+    'description' => t('Users who have various per-project maintainer permissions.'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t('Foreign key: {project_projects}.nid of the project.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => t('Foreign key: {users}.uid of a user with any project maintainer permissions.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'administer_releases' => array(
+        'description' => t('Can this user create and administer releases for the given project.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid', 'uid'),
+  );
+
   return $schema;
+}
+
+/**
+ * Check for existing project nodes that do not have an entry in the
+ * {project_release_projects} table, and add them.
+ */
+function project_release_add_missing_projects() {
+  $projects = db_query("SELECT n.nid FROM {node} n LEFT JOIN {project_release_projects} prp ON n.nid = prp.nid WHERE n.type = 'project_project' AND prp.nid IS NULL");
+  while ($project = db_fetch_object($projects)) {
+    db_query("INSERT INTO {project_release_projects} (nid) VALUES (%d)", $project->nid);
+  }
 }
 
 /**
@@ -686,5 +745,85 @@ function project_release_update_6009() {
   else {
     $ret['#finished'] = $_SESSION['project_release_update_6009'] / $_SESSION['project_release_update_6009_max'];
   }
+  return $ret;
+}
+
+/**
+ * Add the {project_release_project_maintainer} table.
+ */
+function project_release_update_6010() {
+  $ret = array();
+
+  $table = array(
+    'description' => t('Users who have various per-project maintainer permissions.'),
+    'fields' => array(
+      'nid' => array(
+        'description' => t('Foreign key: {project_projects}.nid of the project.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => t('Foreign key: {users}.uid of a user with any project maintainer permissions.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'administer_releases' => array(
+        'description' => t('Can this user create and administer releases for the given project.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid', 'uid'),
+  );
+  db_create_table($ret, 'project_release_project_maintainer', $table);
+
+  // Initially populate the table so that every project owner has full
+  // powers on their own projects.
+  $ret[] = update_sql("INSERT INTO {project_release_project_maintainer} (nid, uid, administer_releases) SELECT nid, uid, 1 FROM {node} WHERE type = 'project_project'");
+
+  // If CVS module is enabled, also populate the table from the
+  // {cvs_project_maintainers} table so that anyone with CVS access
+  // who is not the project owner can administer releases.
+  if (module_exists('cvs')) {
+    $ret[] = update_sql("INSERT INTO {project_release_project_maintainer} (nid, uid, administer_releases) SELECT cpm.nid, cpm.uid, 1 FROM {cvs_project_maintainers} cpm INNER JOIN {node} n ON cpm.nid = n.nid WHERE cpm.uid != n.uid");
+  }
+
+  return $ret;
+}
+
+/**
+ * Add the 'weight' column to {project_release_file}.
+ */
+function project_release_update_6011() {
+  $ret = array();
+  $spec = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'size' => 'tiny',
+    'description' => 'Weight of this file in relation to other files in this release.',
+  );
+  db_add_field($ret, 'project_release_file', 'weight', $spec);
+  return $ret;
+}
+
+/**
+ * Add the 'downloads' column to {project_release_file}.
+ */
+function project_release_update_6012() {
+  $ret = array();
+  $spec = array(
+    'description' => 'Number of times this file has been downloaded. This value is updated by site specific means.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field($ret, 'project_release_file', 'downloads', $spec);
   return $ret;
 }

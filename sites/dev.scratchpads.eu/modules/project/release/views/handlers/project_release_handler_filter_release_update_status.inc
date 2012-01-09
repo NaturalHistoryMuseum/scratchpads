@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_filter_release_update_status.inc,v 1.1 2009/11/26 22:42:55 dww Exp $
 
 /**
  * Filter release nodes based on their update status.

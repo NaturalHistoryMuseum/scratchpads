@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_field_release_update_status.inc,v 1.2 2009/11/30 23:34:25 dww Exp $
 
 /**
  * Field handler to display the current update status of a release.

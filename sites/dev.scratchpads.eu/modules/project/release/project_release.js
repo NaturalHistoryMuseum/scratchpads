@@ -1,4 +1,3 @@
-/* $Id: project_release.js,v 1.4 2010/01/17 01:03:58 dww Exp $ */
 
 // IE doesn't support hiding or disabling select options, so we have to rebuild the list. :(
 Drupal.projectReleaseRebuildSelect = function() {

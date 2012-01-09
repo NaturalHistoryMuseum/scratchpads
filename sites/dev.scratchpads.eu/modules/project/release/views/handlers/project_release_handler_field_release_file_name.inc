@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_handler_field_release_file_name.inc,v 1.1 2009/11/30 09:40:25 dww Exp $
 
 /**
  * Field handler for release files that honors project_release_download_link.

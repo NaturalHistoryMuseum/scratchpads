@@ -1,5 +1,4 @@
 <?php
-// $Id: project_release_download_table.view.php,v 1.4 2009/12/03 01:53:10 dww Exp $
 
 $view = new view;
 $view->name = 'project_release_download_table';
@@ -64,7 +63,7 @@ $handler->override_option('fields', array(
     'label' => 'Downloads',
     'alter' => array(
       'alter_text' => 1,
-      'text' => 'Download <span class="filesize">([files-size])</span>',
+      'text' => '[files-ext] <span class="filesize">([files-size])</span>',
       'make_link' => 0,
       'path' => '',
       'link_class' => '',
@@ -86,9 +85,10 @@ $handler->override_option('fields', array(
     'type' => 'separator',
     'separator' => ' | ',
     'link_to_file' => 1,
-    'max_files' => '1',
-    'file_sort' => 'fid',
-    'file_sort_order' => 'DESC',
+    'max_files' => '2',
+    'max_weight' => '1',
+    'file_sort' => 'weight',
+    'file_sort_order' => 'ASC',
     'exclude' => 0,
     'id' => 'files',
     'table' => 'project_release_nodes',
@@ -120,7 +120,7 @@ $handler->override_option('fields', array(
     'empty_zero' => 0,
     'date_format' => 'custom',
     'custom_date_format' => 'Y-M-d',
-    'file_order' => 'MAX',
+    'file_order' => 'MIN',
     'exclude' => 0,
     'id' => 'file_timestamp',
     'table' => 'project_release_nodes',
@@ -423,7 +423,7 @@ $handler->override_option('fields', array(
     'label' => 'Downloads',
     'alter' => array(
       'alter_text' => 1,
-      'text' => 'Download <span class="filesize">([files-size])</span>',
+      'text' => '[files-ext] <span class="filesize">([files-size])</span>',
       'make_link' => 0,
       'path' => '',
       'link_class' => '',
@@ -445,9 +445,10 @@ $handler->override_option('fields', array(
     'type' => 'separator',
     'separator' => ' | ',
     'link_to_file' => 1,
-    'max_files' => '1',
-    'file_sort' => 'fid',
-    'file_sort_order' => 'DESC',
+    'max_files' => '2',
+    'max_weight' => '1',
+    'file_sort' => 'weight',
+    'file_sort_order' => 'ASC',
     'exclude' => 0,
     'id' => 'files',
     'table' => 'project_release_nodes',
@@ -479,7 +480,7 @@ $handler->override_option('fields', array(
     'empty_zero' => 0,
     'date_format' => 'custom',
     'custom_date_format' => 'Y-M-d',
-    'file_order' => 'MAX',
+    'file_order' => 'MIN',
     'exclude' => 0,
     'id' => 'file_timestamp',
     'table' => 'project_release_nodes',

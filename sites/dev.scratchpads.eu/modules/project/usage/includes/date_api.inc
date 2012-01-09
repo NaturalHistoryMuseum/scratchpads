@@ -1,5 +1,4 @@
 <?php
-// $Id: date_api.inc,v 1.2 2009/04/11 22:42:34 dww Exp $
 
 /**
  * @file

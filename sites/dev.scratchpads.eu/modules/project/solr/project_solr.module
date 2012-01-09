@@ -1,5 +1,4 @@
 <?php
-// $Id: project_solr.module,v 1.62 2009/09/22 21:52:30 dww Exp $
 
 //----------------------------------------
 // Core hooks
@@ -25,6 +24,13 @@ function project_solr_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_NORMAL_ITEM,
   );
+  $items['project/%project_type/categories'] = array(
+    'title' => 'Categories',
+    'page callback' => 'project_solr_category_page',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
   return $items;
 }
 
@@ -40,6 +46,18 @@ function project_solr_theme() {
         'options' => '',
         'active' => FALSE,
         'num_found' => NULL,
+      ),
+    ),
+    'project_solr_category_page' => array(
+      'arguments' => array(
+        'project_type' => NULL,
+        'categories' => array(),
+        'version_form' => NULL,
+      ),
+    ),
+    'project_solr_category_list' => array(
+      'arguments' => array(
+        'items' => array(),
       ),
     ),
   );
@@ -87,6 +105,23 @@ function project_solr_reindex_projects($form, $form_state) {
 //----------------------------------------
 
 /**
+ * Implementation of hook_apachesolr_facets().
+ */
+function project_solr_apachesolr_facets() {
+  $facets = array();
+  if (module_exists('project_usage')) {
+    $facets = array(
+      'sort_most_installed' => array(
+        'info' => t('Most installed'),
+        'facet_field' => 'sis_project_release_usage',
+        'direction' => 'desc',
+      ),
+    );
+  }
+  return $facets;
+}
+
+/**
  * Implementation of hook_apachesolr_update_index().
  *
  * This adds information about releases for the project to the Solr document
@@ -101,8 +136,12 @@ function project_solr_apachesolr_update_index(&$document, $node) {
   if (!empty($node->project['uri'])) {
     $document->ss_project_uri = $node->project['uri'];
   }
+  if (!empty($node->project)) {
+    // The initial "bs" is for boolean/single.
+    $document->bs_project_sandbox = !empty($node->project['sandbox']) ? '1' : '0';
+  }
   if (module_exists('project_release') && !empty($node->project_release['releases'])) {
-    $document->is_project_has_releases = 1;
+    $document->bs_project_has_releases = '1';
 
     $max_filetime = 0;
     $max_official_filetime = 0;
@@ -136,8 +175,10 @@ function project_solr_apachesolr_update_index(&$document, $node) {
         }
       }
     }
+    // Set Latest Activity to be the last file update time for the newest release on the project.
     $document->ds_project_latest_activity = apachesolr_date_iso($max_filetime);
     if (!empty($max_official_filetime)) {
+      // Set Latest Release to be the last file update time for an official release on the project.
       $document->ds_project_latest_release = apachesolr_date_iso($max_official_filetime);
     }
     
@@ -156,6 +197,79 @@ function project_solr_apachesolr_update_index(&$document, $node) {
   }
 }
 
+/**
+ * Implementation of hook_apachesolr_modify_query().
+ *
+ * Extract all of the project-type-related filters, which will be present
+ * in the url in the format im_vid_X:Y im_vid_X:Z, and turn them into a
+ * relevant subquery of the format (im_vid_X:Y OR im_vid_X:Z). This is done to
+ * allow searching for results matching any of Y or Z inside of vocabulary X.
+ * e.g. Return all themes that are Fixed OR Fluid.
+ */
+function project_solr_apachesolr_modify_query(&$query, &$params) {
+  $filter_set = array();
+  // Grab vids for all project-type-related vocabularies
+  $vocabs = project_get_related_tids_map(TRUE);
+  $project_type_related_vids = array_keys($vocabs);
+
+  foreach ($query->get_filters() as $filter) {
+    // Grab any project-type-related filters (im_vid_X filters).
+    if (preg_match('/^im_vid_(.*)$/', $filter['#name'], $matches)) {
+      if (in_array($matches[1], $project_type_related_vids)) {
+        $filter_set[$filter['#name']][] = $filter['#value'];
+        $query->remove_filter($filter['#name'], $filter['#value']);
+      }
+    }
+  }
+  // Add the project-type-related filters back as an OR list.
+  foreach ($filter_set as $name => $filters) {
+    $tid_query = apachesolr_drupal_query();
+    foreach ($filters as $value) {  
+      $tid_query->add_filter($name, $value);
+    }
+    $query->add_subquery($tid_query, 'OR');
+  }
+
+  // If we don't have any explicit filter for the sandbox status projects,
+  // add an explicit exclusion for sandbox projects or their related content
+  // (e.g. issues from sandbox projects). We want this for all solr queries.
+  if (!$query->get_filters('bs_project_sandbox')) {
+    // If not defined, we want to *hide* sandboxes (to match the
+    // #default_value for the exposed filter), hence 1, with the third
+    // 'exclude' parameter set to TRUE (inverts the sense of the filter).
+    $query->add_filter('bs_project_sandbox', '1', TRUE);
+
+    // As we're building the query for the project browsing pages, we try to
+    // add this filter to hide projects without releases, but only if the
+    // query already has a filter that hides sandboxes. The default filter
+    // above to exclude sandbox content won't have been added yet, so we won't
+    // have the filter for releases, either, unless we add it here ourselves
+    // (but only if we're building a query for project nodes).
+    if ($query->has_filter('type', 'project_project') && module_exists('project_release')) {
+      $query->add_filter('bs_project_has_releases', '1');
+    }
+  }
+}
+
+/**
+ * Implementation of hook_apachesolr_prepare_query().
+ * 
+ * This just adds an alias to allow the im_project_release_api_tids to present
+ * itself as something different in the url. In the default case, instead of
+ * im_project_release_api_tids displaying in the url, api_version will display
+ * in the url, making the url more user-friendly.
+ */
+function project_solr_apachesolr_prepare_query(&$query, &$params) {
+  if (module_exists('project_release')) {
+    // Add a human-readable alias for the release filter.
+    $query->add_field_aliases(array('im_project_release_api_tids' => variable_get('project_solr_project_release_api_tids_alias', 'api_version')));
+  }
+  // Only add the project-specific sort if the query is filtering on projects.
+  if ($query->has_filter('type', 'project_project')) {
+    project_solr_add_sorts($query);
+  }
+}
+
 //----------------------------------------
 // Page callbacks
 //----------------------------------------
@@ -164,10 +278,9 @@ function project_solr_apachesolr_update_index(&$document, $node) {
  * Summary project browsing page.
  */
 function project_solr_browse_summary_page() {
-  $vid = _project_get_vid();
-  $tree = taxonomy_get_tree($vid, 0, -1, 1);
   $items = array();
-  foreach ($tree as $term) {
+  $project_types = project_get_project_types();
+  foreach ($project_types as $term) {
     $items[] = theme('project_type', $term);
   }
   drupal_set_title(t('Project types'));
@@ -178,15 +291,15 @@ function project_solr_browse_page($term_name) {
   try {
     $output = '';
 
-    $parent_term = db_fetch_object(db_query("SELECT t.tid, t.name, t.description FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) = LOWER('%s')", _project_get_vid(), $term_name));
+    $project_type = db_fetch_object(db_query("SELECT t.tid, t.name, t.description FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) = LOWER('%s')", _project_get_vid(), $term_name));
 
-    if (!$parent_term) {
+    if (!$project_type) {
       // XXX: this is the Drupal 5 way...
       return drupal_not_found();
     }
-    drupal_set_title(check_plain($parent_term->name));
-    if (!empty($parent_term->description)) {
-      $output .= theme('project_type_description', $parent_term);
+    drupal_set_title(check_plain($project_type->name));
+    if (!empty($project_type->description)) {
+      $output .= theme('project_type_description', $project_type);
     }
 
     $text_query = isset($_GET['text']) ? $_GET['text'] : '';
@@ -194,19 +307,17 @@ function project_solr_browse_page($term_name) {
 
     $sort = isset($_GET['solrsort']) ? check_plain($_GET['solrsort']) : '';
 
-    // Validate sort parameter
+    // Validate sort parameter.
     if ((!isset($sort) || !preg_match('/^([a-z0-9_]+ (asc|desc)(,)?)+$/i', $sort)) && empty($text_query)) {
       $sort = variable_get('project_solr_default_sort', 'sort_title asc');
     }
 
     include_once drupal_get_path('module', 'project_solr') .'/ProjectSolrQuery.php';
 
-    $query = new ProjectSolrQuery(apachesolr_get_solr(), $text_query, $filters, $sort);
+    $query = new ProjectSolrQuery(apachesolr_get_solr(), $text_query, $filters, $sort, 'project/' . drupal_strtolower($project_type->name));
     if (is_null($query)) {
       throw new Exception(t('Could not construct a Solr query.'));
     }
-
-    $query->add_field_aliases(array('im_project_release_api_tids' => 'drupal_core'));
 
     $params = array(
       'fl' => 'id,nid,title,body,format,comment_count,type,created,changed,score,url,uid,name,sis_project_release_usage,ds_project_latest_release,ds_project_latest_activity',
@@ -227,6 +338,30 @@ function project_solr_browse_page($term_name) {
     // This is the object that does the communication with the solr server.
     $solr = apachesolr_get_solr();
 
+    // We add add_filter() parameters here to include all the constant
+    // filters for the query -- project nodes of the given top-level type that
+    // have releases (if project_release is enabled).
+    // We use add_filter() rather than $params['fq'] so that our filters
+    // are correctly passed to anything that uses our cached query.
+    $query->add_filter('type', 'project_project');
+    $query->add_filter('im_vid_'. _project_get_vid(), $project_type->tid);
+    // We can only filter on bs_project_has_releases for just official projects,
+    // since sandbox projects can never have releases.
+    if (module_exists('project_release') && $query->has_filter('bs_project_sandbox', '0')) {
+      $query->add_filter('bs_project_has_releases', '1');
+    }
+
+    // Allow modules to alter the query prior to statically caching it.
+    // This can e.g. be used to add available sorts.
+    foreach (module_implements('apachesolr_prepare_query') as $module) {
+      $function_name = $module . '_apachesolr_prepare_query';
+      $function_name($query, $params, 'project_solr_browse_page');
+    }
+
+    // Cache the built query. Since all the built queries go through
+    // this process, all the hook_invocations will happen later.
+    apachesolr_current_query($query);
+
     // This hook allows modules to modify the query and params objects.
     apachesolr_modify_query($query, $params, 'project_solr');
     if (!$query) {
@@ -241,25 +376,15 @@ function project_solr_browse_page($term_name) {
       $params['sort'] = $sort['#name'] .'_'. $first_filter['#value'] .'  '. $sort['#direction'];
     }
 
-    // We add 'fq' (filter query) parameters here to include all the constant
-    // filters for the query -- project nodes of the given top-level type that
-    // have releases (if project_release is enabled).
-    $fq[] = 'type:project_project';
-    $fq[] = 'im_vid_'. _project_get_vid() .':'. $parent_term->tid;
-    if (module_exists('project_release')) {
-      $fq[] = 'is_project_has_releases:1';
-    }
-    $params['fq'][] = '('. implode(' AND ', $fq) .')';
-
     $response = $solr->search($query->get_query_basic(), $params['start'], $params['rows'], $params);
 
     // The response is cached so that it is accessible to the blocks and anything
     // else that needs it beyond the initial search.
     $total = $response->response->numFound;
+    apachesolr_static_response_cache($response);
+    apachesolr_has_searched(TRUE);
 
-    project_solr_response_cache(array($query, $response, $parent_term));
-
-    // Set breadcrumb
+    // Set breadcrumb.
     $breadcrumb = menu_get_active_breadcrumb();
     drupal_set_breadcrumb($breadcrumb);
 
@@ -278,6 +403,7 @@ function project_solr_browse_page($term_name) {
 
     $output .= '</div>'; // id="project-overview"
     $output .= theme('pager', NULL, $params['rows'], 0);
+    $output = drupal_get_form('project_solr_browse_projects_form', $project_type, 'project/' . drupal_strtolower($project_type->name)) . $output;
   }
   catch (Exception $e) {
     watchdog('Apache Solr', $e->getMessage(), NULL, WATCHDOG_ERROR);
@@ -287,52 +413,101 @@ function project_solr_browse_page($term_name) {
   return $output;
 }
 
-function project_solr_response_cache($set = FALSE) {
-  static $cache = NULL;
-  if ($set !== FALSE) {
-    $cache = $set;
-  }
-  return $cache;
-}
-
 //----------------------------------------
 // Blocks
 //----------------------------------------
 
 /**
  * Implementation of hook_block().
+ *
+ * @see project_solr_block_info()
+ * @see project_solr_block_view()
  */
 function project_solr_block($op = 'list', $delta = 0, $edit = array()) {
-  if ($op == 'list') {
-    return array(
-      'project_solr_categories' => array(
-        'info' => t('Project: categories'),
-        'cache' => BLOCK_CACHE_PER_PAGE,
-      ),
-      'project_solr_order' => array(
-        'info' => t('Project: ordering'),
-        'cache' => BLOCK_CACHE_PER_PAGE,
-      ),
-      'project_solr_compability' => array(
-        'info' => t('Project: core compatibility'),
-        'cache' => BLOCK_CACHE_PER_PAGE,
-      ),
-      'project_solr_text' => array(
-        'info' => t('Project: text search'),
-        'cache' => BLOCK_CACHE_PER_PAGE,
-      ),
+  // Instead of a monolithic function, split out this code into separate
+  // functions for each operation (which we're going to need when we port to
+  // D7, anyway).
+  switch ($op) {
+    case 'list':
+      return project_solr_block_info();
+
+    case 'view':
+      return project_solr_block_view($delta);
+
+  }
+}
+
+/**
+ * Declare all the blocks provided by project_solr.
+ *
+ * @see project_solr_block()
+ */
+function project_solr_block_info() {
+  $blocks = array(
+    'project_solr_categories' => array(
+      'info' => t('Project Solr: categories'),
+      'cache' => BLOCK_CACHE_PER_PAGE,
+    ),
+    'project_solr_text' => array(
+      'info' => t('Project Solr: text search'),
+      'cache' => BLOCK_CACHE_PER_PAGE,
+    ),
+  );
+  if (module_exists('project_release')) {
+    $blocks['project_solr_compability'] = array(
+      'info' => t('Project Solr: core compatibility'),
+      'cache' => BLOCK_CACHE_PER_PAGE,
     );
   }
+  return $blocks;
+}
 
-  if ($op == 'view' && ($search = project_solr_response_cache())) {
-    list($query, $response, $parent_term) = $search;
+/**
+ * Render the content for the requested project_solr block.
+ *
+ * @param $delta
+ *   The block delta for the block to render (the key from the array returned
+ *   by project_solr_block_info()).
+ *
+ * @see project_solr_block()
+ * @see project_solr_block_info()
+ */
+function project_solr_block_view($delta) {
+  // None of these blocks make sense unless there's been a solr search.
+  if (!apachesolr_has_searched()) {
+    return;
+  }
 
-    if ($delta == 'project_solr_categories') {
+  $response = apachesolr_static_response_cache();
+  $query = apachesolr_current_query();
+
+  switch ($delta) {
+    case 'project_solr_categories':
+      // Find the parent term for this query.
+      $project_vid = _project_get_vid();
+      if (isset($response->responseHeader->params->fq)) {
+        foreach ($response->responseHeader->params->fq as $query_snippet) {
+          if (preg_match('/^im_vid_'. _project_get_vid() .':(.*)$/', $query_snippet, $matches)) {
+            $tid = trim($matches[1]);
+            $term = taxonomy_get_term($tid);
+            if ($term->vid == $project_vid) {
+              $project_type = $term;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!isset($project_type)) {
+        // This facet cannot process generic queries.
+        return;
+      }
+
       $facet = 'im_vid_'.  _project_get_vid();
       $terms = array();
 
       // Get the terms at the current depth.
-      $current_tid = $parent_term->tid;
+      $current_tid = $project_type->tid;
       foreach ($query->get_filters() as $filter) {
         if ($filter['#name'] == 'tid') {
           $current_tid = $filter['#value'];
@@ -353,8 +528,8 @@ function project_solr_block($op = 'list', $delta = 0, $edit = array()) {
         $unclick_link = '';
         $term = taxonomy_get_term($tid);
         $new_query = clone $query;
-        
-        $path = 'project/' . drupal_strtolower($parent_term->name);
+
+        $path = $new_query->get_path();
         $options = array();
         if ($active) {
           $new_query->remove_filter('tid', $term->tid);
@@ -392,76 +567,262 @@ function project_solr_block($op = 'list', $delta = 0, $edit = array()) {
           'content' => theme('apachesolr_facet_list', $terms, 200),
         );
       }
-      return;
-    }
-    else if ($delta == 'project_solr_order') {
-      $sorts = $query->default_sorts();
-      $solrsort = $query->get_solrsort();
+      break;
 
-      $sort_links = array();
-      $path = 'project/' . drupal_strtolower($parent_term->name);
-      $new_query = clone $query;
-      $toggle = array('asc' => 'desc', 'desc' => 'asc');
-      foreach ($sorts as $name => $sort) {
-        $active = $solrsort['#name'] == $name;
-        $direction = $active ? $solrsort['#direction'] : '';
-        $new_direction = $active ? $toggle[$direction] : $sort['default'];
-        $new_query->set_solrsort($name, $new_direction);
-        $sort_links[] = theme('apachesolr_sort_link', $sort['title'], $path, array('query' => $new_query->get_url_queryvalues()), $active, $direction);
+    case 'project_solr_compability':
+      if (module_exists('project_release')) {
+        $facet = 'im_project_release_api_tids';
+        $terms = array();
+        $active_terms = project_release_compatibility_list();
+
+        $active_term_counts = array();
+        if (isset($response->facet_counts->facet_fields->$facet)) {
+          foreach ($response->facet_counts->facet_fields->$facet as $tid => $count) {
+            if (!empty($active_terms[$tid])) {
+              $active_term_counts[$tid] = $count;
+            }
+          }
+        }
+
+        foreach ($active_terms as $tid => $term_name) {
+          if (!empty($active_term_counts[$tid])) {
+            $active = $query->has_filter('im_project_release_api_tids', $tid);
+            $new_query = clone $query;
+            $path = $new_query->get_path();
+            $new_query->remove_filter('im_project_release_api_tids', $term->tid);
+            $options = array();
+            if ($active) {
+              $options['query'] = $new_query->get_url_queryvalues();
+              $link = theme('apachesolr_unclick_link', $term_name, $path, $options);
+            }
+            else {
+              $new_query->add_filter('im_project_release_api_tids', $tid);
+              $options['query'] = project_solr_append_api_term($new_query->get_url_queryvalues(), $tid);
+              $link = theme('project_solr_no_count_facet_link', $term_name, $path, $options, $active, $response->response->numFound);
+            }
+            $terms[$term_name] = $link;
+          }
+        }
+
+        if (!empty($terms)) {
+          return array(
+            'subject' => t('Filter by compatibility'),
+            'content' => theme('apachesolr_facet_list', $terms, 200),
+          );
+        }
       }
+      break;
+
+    case 'project_solr_text':
       return array(
-        'subject' => t('Sort by'),
-        'content' => theme('apachesolr_sort_list', $sort_links),
+        'subject' => t('Search @project_type', array('@project_type' => $query->get_query_basic())),
+        'content' => drupal_get_form('project_sort_freetext', $query->get_path()),
       );
+
+  }
+}
+
+/**
+ * Build project browsing navigation form.
+ */
+function project_solr_browse_projects_form(&$form_state, $project_type, $path) {
+  drupal_add_css(drupal_get_path('module', 'project_solr') .'/project_solr.css');
+  $response = apachesolr_static_response_cache();
+  $query = apachesolr_current_query();
+
+  $text = $query->get_keys();
+
+  // Get the terms at the current depth.
+  $current_tid = '';
+  foreach ($query->get_filters() as $field) {
+    if ($field['#name'] == 'tid') {
+      $current_tid = $field['#value'];
+      break;
     }
-    else if (module_exists('project_release') && $delta == 'project_solr_compability') {
-      $vid = _project_release_get_api_vid();
-      $facet = 'im_project_release_api_tids';
+  }
+
+  // Create a drop-down for sub-terms of primary project terms.
+  $tree = taxonomy_get_tree(_project_get_vid(), $project_type->tid, -1, 1);
+  foreach ($tree as $term) {
+    $terms[$term->tid] = $term->name;
+  }
+  if (!empty($terms)) {
+    $vocab = taxonomy_vocabulary_load(_project_get_vid());
+    asort($terms);
+    $terms = array('' => t('- Any -')) + $terms;
+    $form['tid'] = array(
+      '#type' => 'select',
+      '#options' => $terms,
+      '#title' => t('@type categories', array('@type' => $project_type->name)),
+      '#default_value' => $current_tid,
+    );
+  }
+
+  // Add the version selection field to our form.
+  $form['api_version'] = project_solr_get_api_version_field($query);
+
+  // Retrieve all the vocabularies related to project so that the facets can be built.
+  $vocabs = project_get_related_tids_map(TRUE);
+  foreach ($vocabs as $vid => $vocab) {
+    if ($project_type->tid == variable_get('project_type_associated_tid_' . $vid, NULL)) {
+      $selected = array();
+      // Extract selected values from our filters.
+      foreach ($query->get_filters() as $filter) {
+        if ($filter['#name'] == 'im_vid_'. $vid) {
+          $selected[] = $filter['#value'];
+        }
+      }
+
+      // Build checkbox items for all terms in related vocabularies.
       $terms = array();
-      $active_terms = array_reverse(project_release_compatibility_list(FALSE), TRUE);
-
-      $active_term_counts = array();
-      foreach ($response->facet_counts->facet_fields->$facet as $tid => $count) {
-        if (!empty($active_terms[$tid])) {
-          $active_term_counts[$tid] = $count;
-        }
+      $project_types = project_get_project_types();
+      foreach ($project_types as $term) {
+        $terms[$term->tid] = $term->name;
       }
+      asort($terms);
 
-      foreach ($active_terms as $tid => $term_name) {
-        if (!empty($active_term_counts[$tid])) {
-          $active = $query->has_filter('im_project_release_api_tids', $tid);
-          $path = 'project/' . drupal_strtolower($parent_term->name);
-          $new_query = clone $query;
-          $new_query->remove_filter('im_project_release_api_tids', $term->tid);
-          $options = array();
-          if ($active) {
-            $options['query'] = $new_query->get_url_queryvalues();
-            $link = theme('apachesolr_unclick_link', $term_name, $path, $options);
-          }
-          else {
-            $new_query->add_filter('im_project_release_api_tids', $tid);
-            $options['query'] = project_solr_append_api_term($new_query->get_url_queryvalues(), $tid);
-            $link = theme('project_solr_no_count_facet_link', $term_name, $path, $options, $active, $response->response->numFound);
-          }
-          $terms[$term_name] = $link;
-        }
-      }
-
-      if (!empty($terms)) {
-        return array(
-          'subject' => t('Filter by compatibility'),
-          'content' => theme('apachesolr_facet_list', $terms, 200),
-        );
-      }
-      return;
-    }
-    else if ($delta == 'project_solr_text') {
-      return array(
-        'subject' => t('Search @project_type', array('@project_type' => drupal_strtolower($parent_term->name))),
-        'content' => drupal_get_form('project_sort_freetext'),
+      $form['im_vid_' . $vid] = array(
+        '#title' => t($vocab->name),
+        '#type' => 'checkboxes',
+        '#options' => $terms,
+        '#default_value' => $selected,
       );
     }
   }
+
+  // Add the project sandbox fields. Solr allows use of 0 and 1 to match false and true.
+  $form['bs_project_sandbox'] = array(
+    '#title' => t('Status'),
+    '#type' => 'select',
+    '#options' => array(
+      '0' => t('Full projects'),
+      '[* TO *]' => t('All projects'),
+      '1' => t('Only sandbox projects'),
+    ),
+    '#default_value' => '0',
+  );
+
+  // Extract the project sandbox value from our filters.
+  if ($filters = $query->get_filters('bs_project_sandbox')) {
+    // There can be only one.
+    $filter = end($filters);
+    $form['bs_project_sandbox']['#default_value'] = $filter['#value'];
+  }
+
+  $form['bs_project_sandbox']['#access'] = variable_get('project_solr_show_sandbox_ui', FALSE);
+
+  $form['text'] = array(
+    '#title' => t('Search @project_type', array('@project_type' => $project_type->name)),
+    '#type' => 'textfield',
+    '#default_value' => $text,
+    '#size' => 20,
+  );
+
+  // Add the sort selection field to our form.
+  $form['solrsort'] = project_solr_get_solrsort_field();
+
+  $form['path'] = array(
+    '#type' => 'value',
+    '#value' => $path,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+  return $form;
+}
+
+/**
+ * Return a Form API array for a sort selector field.
+ * 
+ * @param string $label
+ *   Optional form label for the sort selector field.
+ *
+ * @return
+ *   Form array for the sort selector field.
+ */
+function project_solr_get_solrsort_field($label = NULL) {
+  // Pull the current query, so that we can default the sorts
+  // and provide an accurate list of available sorting methods.
+  $query = apachesolr_current_query();
+
+  // Pull the currently selected sort.
+  $solrsort = $query->get_solrsort();
+
+  // Pull all of the available sorts and create an options array.
+  $options = array();
+  $available_sorts = $query->get_available_sorts();
+  foreach ($available_sorts as $name => $field) {
+    $options[$name . ' ' . $field['default']] = $field['title'];
+  }
+
+  if (!isset($label)) {
+    $label = t('Sort by');
+  }
+
+  return array(
+    '#title' => $label,
+    '#type' => 'select',
+    '#default_value' => $solrsort['#name'] . ' ' . $solrsort['#direction'],
+    '#options' => $options,
+  );
+}
+
+function project_solr_browse_projects_form_submit($form, &$form_state) {
+  include_once drupal_get_path('module', 'project_solr') .'/ProjectSolrQuery.php';
+  $query = new ProjectSolrQuery(apachesolr_get_solr(), $form_state['values']['text'], '', '', $form_state['values']['path']);
+
+  if (!empty($form_state['values']['tid'])) {
+    $query->add_filter('tid', $form_state['values']['tid']);
+  }
+
+  if (!empty($form_state['values']['api_version'])) {
+    $query->add_filter(variable_get('project_solr_project_release_api_tids_alias', 'api_version'), $form_state['values']['api_version']);
+  }
+
+  // Loop over all project-related vocabularies and create filters
+  // for any values that have been posted.
+  $vocabs = project_get_related_tids_map(TRUE);
+  foreach ($vocabs as $vid => $vocab) {
+    $values = array_filter($form_state['values']['im_vid_' . $vid]);
+    if (!empty($values)) {
+      foreach($values as $value) {
+        $query->add_filter('im_vid_'. $vid, $value);
+      }
+    }
+  }
+
+  // Rewrite solrsort parameter with API version tid, if necessary.
+  $solrsort = explode(' ', $form_state['values']['solrsort']);  
+  if (module_exists('project_release') && !empty($form_state['values']['api_version'])) {    
+    if ($solrsort[0] == 'ds_project_latest_release' || $solrsort[0] == 'ds_project_latest_activity') {
+      $solrsort[0] .= '_'. $form_state['values']['api_version'];
+    }
+  }
+
+  if ($solrsort[0] == '' && empty($form_state['values']['text'])) {
+    drupal_set_message(t('No search text submitted for a relevancy sort.  The default sorting method was used instead.'));
+  }
+
+  // Add the project sandbox filter.
+  $query->add_filter('bs_project_sandbox', $form_state['values']['bs_project_sandbox']);
+
+  // Add all project-specific sorts so that the sort set in set_solrsort() will
+  // work as intended.
+  project_solr_add_sorts($query, variable_get('project_solr_project_release_api_tids_alias', 'api_version'));
+  $query->set_solrsort($solrsort[0], $solrsort[1]);
+  $query_values = $query->get_url_queryvalues();
+  if (!empty($form_state['values']['text'])) {
+    $query_values['text'] = $query->get_query_basic();
+  }
+  // By setting this as an array, FAPI is going to hand it to drupal_goto().
+  // drupal_goto() itself doesn't care about the keys, but we define them here
+  // to make the code more self-documenting, especially if people are trying
+  // to alter this form (e.g. in drupalorg_search.module).
+  $form_state['redirect'] = array(
+    'path' => $query->get_path(),
+    'query' => $query_values,
+  );
 }
 
 /**
@@ -481,22 +842,16 @@ function project_solr_append_api_term($values, $tid) {
 /**
  * Form callback; display a free text form.
  */
-function project_sort_freetext() {
-  list($query, $response, $parent_term) = project_solr_response_cache();
-
+function project_sort_freetext(&$form_state, $base_path) {
   $form = array();
   $form['text'] = array(
     '#type' => 'textfield',
-    '#default_value' => $_GET['querypath'],
+    '#default_value' => $_GET['text'],
     '#size' => 20,
   );
   $form['path'] = array(
     '#type' => 'value',
-    '#value' => 'project/' . drupal_strtolower($parent_term->name),
-  );
-  $form['query'] = array(
-    '#type' => 'value',
-    '#value' => $query,
+    '#value' => $base_path,
   );
   $form['submit'] = array(
     '#type' => 'submit',
@@ -509,11 +864,194 @@ function project_sort_freetext() {
  * Submit handler for project_sort_freetext().
  */
 function project_sort_freetext_submit($form, &$form_state) {
-  $query = $form_state['values']['query'];
-  $queryvalues = $query->get_url_queryvalues();
+  if ($query = apachesolr_current_query()) {
+    $queryvalues = $query->get_url_queryvalues();
+  }
+  else {
+    $queryvalues = array();
+  }
   $queryvalues['text'] = $form_state['values']['text'];
   unset($queryvalues['solrsort']);
   $form_state['redirect'] = array($form_state['values']['path'], $queryvalues);
+}
+
+//----------------------------------------
+// Public helper methods
+//----------------------------------------
+
+/**
+ * Build and execute a Solr query to find project nodes.
+ *
+ * @param string $base_path
+ *   The base path to use for the Solr query.
+ * @param array $filters
+ *   Optional array of Solr filters to add to the query.
+ *
+ * @return
+ *   An ApacheSolr $query object.
+ */
+function project_solr_run_project_query($base_path, $filters = array()) {
+  $filterstring = isset($_GET['filters']) ? $_GET['filters'] : '';
+  $query = apachesolr_drupal_query('', $filterstring, '', $base_path);  
+
+  // Figure out all the fields we need to use as facets.
+  // First handle all the implicit filters we're going to add ourselves.
+  $facet_fields = array(
+    'type',
+    'im_project_release_api_tids',
+  );
+  // Now add any fields used for optional filters from our caller.
+  if (!empty($filters)) {
+    foreach ($filters as $filter) {
+      $facet_fields[] = $filter['key'];
+    }
+  }
+
+  $params = array(
+    // The fields to return.
+    'fl' => 'id,nid,title',
+    'start' => 0,
+    'rows' => 5,  // TODO: make this configurable.
+    'facet.field' => $facet_fields,
+    // Filters are set below via explicit calls to add_filter() rather than 
+    // here in the $params array. This is because any filters passed to 
+    // apachesolr_drupal_query() will override filters set via the $params
+    // array during the prepare_query() invocation.
+    'fq' => array(),
+    'facet' => 'true',
+    'facet.mincount' => 1,
+    'facet.sort' => 'true',
+    'sort' => variable_get('project_solr_default_sort', 'sort_title asc'),
+  );
+
+  apachesolr_search_add_facet_params($params, $query);
+
+  // Allow modules to alter the query prior to statically caching it.
+  // This can e.g. be used to add available sorts.
+  foreach (module_implements('apachesolr_prepare_query') as $module) {
+    $function_name = $module . '_apachesolr_prepare_query';
+    $function_name($query, $params, 'project_solr_run_project_query');
+  }
+
+  // We add our fields after the prepare_query() because prepare_query()
+  // generates a call to parse_filters() which destroys anything that
+  // does not get passed into the query on construction.
+  // We explicitly filter the blocks to only show projects with the right
+  // category. These values are not passed in the url, so we add them here
+  // ourselves to ensure we only get the content we want.
+  $query->add_filter('type', 'project_project');
+
+  if (!empty($filters)) {
+    foreach ($filters as $filter) {
+      $query->add_filter($filter['key'], $filter['value']);
+    }
+  }
+
+  // Cache the built query. Since all the built queries go through
+  // this process, all the hook_invocations will happen later.
+  apachesolr_current_query($query);
+
+  // This hook allows modules to modify the query and params objects.
+  apachesolr_modify_query($query, $params, 'project_solr_run_project_query');
+
+  $solr = apachesolr_get_solr();
+  $response = $solr->search($query->get_query_basic(), $params['start'], $params['rows'], $params);
+
+  apachesolr_static_response_cache($response);
+  apachesolr_has_searched(TRUE);
+
+  return $query;
+}
+
+/**
+ * Return a Form API array for an API version selector field.
+ * 
+ * @param object $query
+ *   An existing query object that we can check for existing filters.
+ * @param string $label
+ *   Optional form label for the version selector field.
+ *
+ * @return
+ *   Form array for the API version selector field.
+ */
+function project_solr_get_api_version_field($query, $label = NULL) {
+  if (module_exists('project_release')) {
+    $current_tid = '';
+    $terms = array();
+    $active_terms = project_release_compatibility_list();
+    foreach ($active_terms as $tid => $term_name) {
+      $active = $query->has_filter('im_project_release_api_tids', $tid);
+      if ($active) {
+        $current_tid = $tid;
+      }
+      $terms[$tid] = $term_name;
+    }
+    if (!empty($terms)) {
+      $terms = array('' => t('- Any -')) + $terms;
+      if (!isset($label)) {
+        $label = t('Filter by compatibility');
+      }
+      return array(
+        '#title' => $label,
+        '#type' => 'select',
+        '#options' => $terms,
+        '#default_value' => $current_tid,
+      );
+    }
+  }
+}
+
+/**
+ * Adds project-specific sorts to the query object
+ * 
+ * Adds project-specific sorts to the query object to allow all queries to 
+ * leverage project-specific sorting if relevant. This is necessary to allow
+ * site-wide search to sort by any project-specific sorting method. This is
+ * called by hook_prepare_query() to add the sorts into all queries, but
+ * separated out so that a hook_prepare_query() invocation is not necessary
+ * if only the project sorts are desired. We filter the list of sorts to only
+ * provide meaningful options for Latest release and Recent activity so that
+ * we don't end up with multiple sorts with the same name. This is particularly
+ * relevant for how the sorts display in the apachesolr generated sort block.
+ * 
+ * @param object &$query
+ *   An existing query object to add sorts into.
+ * @param string $api_filter
+ *   A string representing the name of the filter where our version tids will
+ *   be located. This is necessary since, at times, both the base string name
+ *   im_project_release_api_tids and the alias are passed in.
+ *   
+ * @see apachesolr_block
+ */
+function project_solr_add_sorts(&$query, $api_filter = 'im_project_release_api_tids') {
+  if (module_exists('project_release')) {
+    // Pull any existing filter on version.
+    $versions = $query->get_filters($api_filter);
+    $tids = array();
+    foreach ($versions as $version) {
+      $tids[] = $version['#value'];
+    }
+    // If we have no version selected, only present the base sorts.
+    if (empty($tids)) {
+      $query->set_available_sort('ds_project_latest_release', array('title' => t('Last release'), 'default' => 'desc'));
+      $query->set_available_sort('ds_project_latest_activity', array('title' => t('Last build'), 'default' => 'desc'));
+    }
+    else {
+      // If we have versions selected, only present sorts for our selected
+      // versions. Traditionally, this will only be one version, but this
+      // allows for multiple potential versions to be selected.
+      $active_terms = project_release_compatibility_list();
+      foreach ($tids as $tid) {
+        if (isset($active_terms[$tid])) {
+          $query->set_available_sort('ds_project_latest_release_' . $tid, array('title' => t('Last release'), 'default' => 'desc'));
+          $query->set_available_sort('ds_project_latest_activity_' . $tid, array('title' => t('Last build'), 'default' => 'desc'));
+        }
+      }
+    }
+  }
+  if (module_exists('project_usage')) {
+    $query->set_available_sort('sis_project_release_usage', array('title' => t('Most installed'), 'default' => 'desc'));
+  }
 }
 
 //----------------------------------------
@@ -521,7 +1059,7 @@ function project_sort_freetext_submit($form, &$form_state) {
 //----------------------------------------
 
 /**
- * Perform the business logic to 
+ * Perform the business logic to render search results for project-related searches.
  */
 function project_solr_render_search_result($result) {
   $project = node_load($result->nid);
@@ -554,5 +1092,196 @@ function theme_project_solr_no_count_facet_link($facet_text, $path, $options = a
   }
   $options['attributes']['class'] = implode(' ', $options['attributes']['class']);
   return apachesolr_l($facet_text,  $path, $options);
+}
+
+//----------------------------------------
+// Version-selector form
+//----------------------------------------
+
+/**
+ * This generates a form containing version selection and a submit button.
+ * 
+ * Generate a form with a version selection to allow filtering page content
+ * based on the API compatibility version. Also includes path to allow the
+ * form to potentially submit to other urls if desired.
+ * 
+ * @param string $path
+ *   The base path to which the version form will redirect.
+ * @param string $label
+ *   An optional label for the form element.
+ */
+function project_solr_version_form(&$form_state, $path, $label = NULL) {
+  $query = apachesolr_current_query();
+
+  $form = array(
+    '#attributes' => array('class' => 'clear-block'),
+  );
+
+  // Add version select field to our form.
+  $version_alias = variable_get('project_solr_project_release_api_tids_alias', 'api_version');
+
+  $form[$version_alias] = project_solr_get_api_version_field($query, $label);
+
+  $form['path'] = array(
+    '#type' => 'value',
+    '#value' => $path,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+  return $form;
+}
+
+/**
+ * Create a query with the right version filter and redirect to the right page.
+ * 
+ * Create a new query, add any version filtering if it was selected in the
+ * form, and redirect back to the relevant page with the appropriate filter
+ * string.
+ */
+function project_solr_version_form_submit($form, &$form_state) {
+  // We create a new query with our base path so that we don't need to remove
+  // any existing drupal_core selection, and so that the implict type and 
+  // module tid filters don't end up in the url string.
+  $query = apachesolr_drupal_query('', '', '', $form_state['values']['path']);
+
+  $version_alias = variable_get('project_solr_project_release_api_tids_alias', 'api_version');
+
+  if (!empty($form_state['values'][$version_alias])) {
+    $query->add_filter($version_alias, $form_state['values'][$version_alias]);
+  }
+
+  $form_state['redirect'] = array($query->get_path(), $query->get_url_queryvalues());
+}
+
+//----------------------------------------
+// Category page and related functions
+//----------------------------------------
+
+/**
+ * Page callback for the listing of per-type categories.
+ *
+ * @param $project_type
+ *   Fully-loaded taxonomy term object for the project type.
+ *
+ * @return
+ *   Rendered page output for the project/%project_type/categories pages.
+ */
+function project_solr_category_page($project_type) {
+  $tree = taxonomy_get_tree(_project_get_vid(), $project_type->tid);
+  if (empty($tree)) {
+    return drupal_not_found();
+  }
+
+  drupal_set_title(t('@project_type categories', array('@project_type' => $project_type->name)));
+
+  $categories = array();
+  foreach ($tree as $category_term) {
+    $items = project_solr_fetch_category_items($project_type, $category_term);
+    if (!empty($items)) {
+      $categories[$category_term->tid] = array(
+        'title' => check_plain($category_term->name),
+        'items' => $items,
+      );
+    }
+  }
+
+  $search_path = 'project/' . drupal_strtolower($project_type->name) . '/categories';
+  $version_form = drupal_get_form('project_solr_version_form', $search_path);
+
+  return theme('project_solr_category_page', $project_type, $categories, $version_form);
+}
+
+/**
+ * Render the markup for the per-project type categories landing pages.
+ *
+ * @param $project_type
+ *   Fully-loaded taxonomy term object for the project type.
+ * @param $categories
+ *   Nested array of information about categories and projects. The keys are
+ *   the taxonomy term IDs (tids) of each category for the given project_type
+ *   that has projects associtated with it. The values are arrays with the
+ *   keys 'title' for the human-readable (and sanitized) titles of each
+ *   category, and 'items', which is an array of project links from the
+ *   projects in the category.
+ * @param $version_form
+ *   Optional rendered HTML of a version selector form to restrict results to
+ *   a given API compatibility term.
+ */
+function theme_project_solr_category_page($project_type, $categories, $version_form = '') {
+  $output = '';
+  if (!empty($version_form)) {
+    $output .= $version_form;
+  }
+  // TODO: This could probably use more slickness, a grid with multiple
+  // columns, etc. http://drupal.org/node/888144
+  foreach ($categories as $tid => $category) {
+    $output .= '<h2 class="category">' . $category['title'] . '</h2>';
+    $output .= theme('project_solr_category_list', $category['items']);
+  }
+  return $output;
+}
+
+/**
+ * Gather the items for a given project category.
+ *
+ * @param $project_type
+ *   The fully-loaded taxonomy term for the project type.
+ * @param $category_term
+ *   The fully-loaded taxonomy term for the category.
+ *
+ * @return
+ *   Array of projects from the given category.
+ */
+function project_solr_fetch_category_items($project_type, $category_term) {
+  $filters = array();
+  $filters[] = array(
+    'key' => 'tid',
+    'value' => $category_term->tid,
+  );
+  $base_path = 'project/' . drupal_strtolower($project_type->name);
+  $query = project_solr_run_project_query($base_path, $filters);
+
+  $query_values = $query->get_url_queryvalues();
+
+  $response = apachesolr_static_response_cache();
+
+  $items = array();
+  if ($response->response->numFound > 0) {
+    foreach ($response->response->docs as $doc) {
+      $items[] = l($doc->title, 'node/' . $doc->nid);
+    }
+  }
+
+  if ($items) {
+    // Add the "more" link.
+    $items[] = array(
+      'data' => l(t('More @category', array('@category' => $category_term->name)), $query->get_path(), array('query' => $query_values)),
+      'class' => 'more',
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Render the final markup for a list of projects from a given category.
+ *
+ * @param array $items
+ *   Array of links to projects in a given category.
+ *
+ * @return
+ *   Formatted HTML markup for the list of project in a category.
+ *
+ * @see theme_project_solr_category_page()
+ * @see theme_item_list()
+ */
+function theme_project_solr_category_list($items = array()) {
+  $output = '';
+  if (!empty($items)) {
+    $output .= theme('item_list', $items);
+  }
+  return $output;
 }
 
