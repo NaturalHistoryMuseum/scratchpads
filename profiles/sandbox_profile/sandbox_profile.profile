@@ -12,7 +12,6 @@ require_once (dirname(__FILE__) . '/../scratchpad_profile/scratchpad_profile.pro
  * Note, this profile was renamed to avoid a conflict with the module of the
  * same name.
  */
-
 /**
  * Details about this module
  * 
@@ -32,8 +31,11 @@ function sandbox_profile_profile_details(){
  */
 function sandbox_profile_profile_modules(){
   // FIXME: Remove scratchapdify_help once it is added to the scratchpad module.
-  $modules = array_merge(scratchpad_profile_profile_modules(), array('sandbox', 'scratchpadify_help'));
-  unset($modules[array_search('boost',$modules)]);
+  $modules = array_merge(scratchpad_profile_profile_modules(), array(
+    'sandbox',
+    'scratchpadify_help'
+  ));
+  unset($modules[array_search('boost', $modules)]);
   return $modules;
 }
 
@@ -43,51 +45,66 @@ function sandbox_profile_profile_modules(){
  * hook_profile_tasks
  */
 function sandbox_profile_profile_tasks(&$task, $url){
-  require_once("./profiles/scratchpad_profile/scratchpad_profile.profile");
+  require_once ("./profiles/scratchpad_profile/scratchpad_profile.profile");
   if($task == 'profile'){
     scratchpad_profile_profile_tasks_1();
-
     // Set the last reported variable, so that this site doesn't
     // get included in the sites list.
-    variable_set('scratchpad_last_reported',10000000000000000000);
+    variable_set('scratchpad_last_reported', 10000000000000000000);
     $node = new stdClass();
     $node->type = 'profile';
     $node->uid = 2;
-    $node->field_title = array(array('value'=>'Mr/Mrs/Miss'));
-    $node->field_givennames = array(array('value'=>'Scratchpad'));
-    $node->field_familyname = array(array('value'=>'Tester'));
+    $node->field_title = array(
+      array(
+        'value' => 'Mr/Mrs/Miss'
+      )
+    );
+    $node->field_givennames = array(
+      array(
+        'value' => 'Scratchpad'
+      )
+    );
+    $node->field_familyname = array(
+      array(
+        'value' => 'Tester'
+      )
+    );
     $node->title = "Scratchpad Tester";
-    $node->auto_nodetitle_applied = TRUE;  
-    $node->field_institution = array(array('value'=>'My Institution'));
-    $node->field_taxonomicinterest = array(array('value'=>'Life'));
+    $node->auto_nodetitle_applied = TRUE;
+    $node->field_institution = array(
+      array(
+        'value' => 'My Institution'
+      )
+    );
+    $node->field_taxonomicinterest = array(
+      array(
+        'value' => 'Life'
+      )
+    );
     node_save($node);
-    $values = array('values'=>array('gmapkey'=>'INSERT KEY HERE'));
+    $values = array(
+      'values' => array(
+        'gmapkey' => 'INSERT KEY HERE'
+      )
+    );
     scratchpad_gmapkey_submit(array(), $values);
-        
-    variable_set('site_mission',"<p>The purpose of this site is to allow Scratchpad maintainers and users a chance to practice what they daren't do on their own site.  The site is automatically updated every six hours, wiping clean any of the changes that have been made to it.  For that reason, there is no need to worry about making any changes that will break this site, that is what it is here for.  We have provided a default password for this site, please login, and try out the features of the site.</p><h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>");
-  
+    variable_set('site_mission', "<p>The purpose of this site is to allow Scratchpad maintainers and users a chance to practice what they daren't do on their own site.  The site is automatically updated every six hours, wiping clean any of the changes that have been made to it.  For that reason, there is no need to worry about making any changes that will break this site, that is what it is here for.  We have provided a default password for this site, please login, and try out the features of the site.</p><h1><b>Username:</b> test<br/><b>Password:</b> pass</h1>");
     scratchpad_profile_profile_tasks_2();
     // Change the cache back to "disabled"
     variable_set('cache', 0);
-    
     // Set user_register variable (which is set in ..._tasks_2) back to 1
     variable_set('user_register', 1);
-    
     // N.B. The following is normally executed by tasks_3, but we don't want an
     // automatic password, nor do we want the mail message being sent.
     db_query("UPDATE {users} SET pass = MD5('pass') , status = 1 WHERE uid = 2");
-    
     // Following is for Aegir.  Note, this is set in the sandbox module, so if
     // changed here, it should be changed there too.
     variable_set('site_name', 'Scratchpad Sandbox');
     variable_set('site_mail', 'scratchpad@mailinator.com');
     db_query("UPDATE {users} SET mail = 'scratchpad@mailinator.com', name = 'test', pass = MD5('pass') WHERE uid = 2");
-    
     // Accept the legal form (otherwise causes issues)
     db_query("INSERT INTO {legal_accepted} (legal_id, uid, tc_id, accepted) VALUES (1, 2, 1, NOW())");
-    
     // Almost there, insert the default data for the Sandbox.
-    
     // Taxonomy ----------------------------------------------------------------
     db_query("INSERT INTO {term_synonym} (`tsid`, `tid`, `name`) VALUES
       (1, 664, 'Primates'),
@@ -1027,7 +1044,6 @@ function sandbox_profile_profile_tasks(&$task, $url){
       (662, 13, 'Tarsius syrichta (Linnaeus, 1758)', NULL, 0),
       (663, 13, 'Philippine tarsier', NULL, 0);");
     db_query("INSERT INTO {vocabulary} (vid, name, relations, hierarchy, multiple, required, tags, module) VALUES (13, 'Primates', 1,1,1,0,0,'taxonomy')");
-    
     db_query("INSERT INTO {term_hierarchy} (`tid`, `parent`) VALUES
       (664, 0),
       (665, 664),
@@ -1639,30 +1655,28 @@ function sandbox_profile_profile_tasks(&$task, $url){
       (660, 653),
       (661, 660),
       (662, 653),
-      (663, 662);");    
-    
+      (663, 662);");
     db_query("TRUNCATE {term_lowername}");
     db_query("INSERT INTO {term_lowername} (tid, lowername) SELECT tid, LOWER(name) FROM {term_data}");
-    
     $types = node_get_types();
     unset($types['darwincore']);
-    db_query("INSERT INTO `vocabulary_node_types` (`vid`, `type`) VALUES (13, '".implode("'),(13, '", array_keys($types))."');");
-    
-    variable_set('mado_vocabularies', array(13=>1));
-    variable_set('classification_scratchpads', array(13=>13));
-
-    module_load_include('admin.inc','block');
+    db_query("INSERT INTO `vocabulary_node_types` (`vid`, `type`) VALUES (13, '" . implode("'),(13, '", array_keys($types)) . "');");
+    variable_set('mado_vocabularies', array(
+      13 => 1
+    ));
+    variable_set('classification_scratchpads', array(
+      13 => 13
+    ));
+    module_load_include('admin.inc', 'block');
     block_admin_display();
     $region = system_default_region(variable_get('theme_default', 'garland'));
     db_query("UPDATE {blocks} SET status = 1, weight = -100, theme = 'garland', region = '%s' WHERE delta = 'tinytax-13'", $region);
-    
     scratchpad_profile_set_theme('garland');
     $task = 'profile-finished';
     // Finally, truncate the authmap table to ensure we can't login as the admin
     // user
     db_query('TRUNCATE {authmap}');
-    
     // Finally finally, we create a file to mark this sandbox as "installed".
-    file_put_contents(file_directory_path().'/sandbox_installed', 'INSTALLED');
+    file_put_contents(file_directory_path() . '/sandbox_installed', 'INSTALLED');
   }
 }
