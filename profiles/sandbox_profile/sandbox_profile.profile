@@ -1667,6 +1667,8 @@ function sandbox_profile_profile_tasks(&$task, $url){
     variable_set('classification_scratchpads', array(
       13 => 13
     ));
+    // Don't index this site
+    variable_set('apachesolr_read_only', 1);
     module_load_include('admin.inc', 'block');
     block_admin_display();
     $region = system_default_region(variable_get('theme_default', 'garland'));
