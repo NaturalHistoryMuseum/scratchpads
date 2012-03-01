@@ -584,6 +584,7 @@ function drush_hostmaster_scratchpad_pre_hosting_task(){
     $task->options['institution'] = $task->ref->institution;
     $task->options['site_title'] = $task->ref->site_title;
     $task->options['client_email'] = $client->name;
+    $task->options['country'] = $task->ref->country;
     $task->options['taxonomic_scope'] = $task->ref->taxonomic_scope;
   }
 }
