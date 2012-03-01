@@ -371,13 +371,6 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
         'class' => 'subdomain'
       )
     ),
-    'mission_statement' => array(
-      '#title' => t('Mission statement'),
-      '#description' => t('A description of your site, including what information a user of your site is likely to find there. By default the mission statement will appear on the front page of your site (although this can be changed later).'),
-      '#type' => 'textarea',
-      '#resizable' => FALSE,
-      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
-    ),
     'googleapi' => array(
       '#title' => t('Google API key'),
       '#description' => '<p>Go to the <a href="http://code.google.com/apis/maps/signup.html" target="_blank"><strong>Google API key signup page</strong></a>, check the terms &amp; conditions, enter the URL for your new Scratchpad ("xyz.myspecies.info") and click on the \'Generate API key\' button. Sign into an existing Google Account or create a new one. If you are now back on the Sign up page you will have to reenter the data to generate the API key. You will now see a page with several versions of the API key. Copy the first version under \'Your key is:\' and paste it in the field above.</p>',
@@ -434,6 +427,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   unset($form['site']['title']);
   // Set the weight of the button
   $form['submit']['#weight'] = 1000;
+  $form['submit']['#disabled'] = TRUE;
   // Add validate
   $form['#validate'] = array_merge((is_array($form['#validate']) ? $form['#validate'] : array()), array(
     'hostmaster_scratchpad_form_validate'
