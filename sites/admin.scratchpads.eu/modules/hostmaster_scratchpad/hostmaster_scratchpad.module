@@ -69,6 +69,9 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   }
   $form['#theme'] = 'hostmaster_scratchpad_application_form';
   if(!isset($user->roles[ADMIN_RID])){
+    $form['come_back_later'] = array(
+      '#value' => '<div class="messages error"><p>Application for a Scratchpad is currently closed, please come back on Monday when you will be able to apply for a new Beta release of Scratchpads 2.0</p></div>'
+    );
     $form['client'] = array(
       '#type' => 'fieldset',
       '#title' => t('About you'),
@@ -394,12 +397,11 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
     $form['about_scratchpad']['profile'] = array(
       '#type' => 'select',
       '#title' => t('Scratchpad type'),
-      '#default_value' => SCRATCHPAD_PROFILE_NID,
+      '#default_value' => SCRATCHPAD_2_PROFILE_NID,
       '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
       '#options' => array(
         SCRATCHPAD_2_PROFILE_NID => t('Standard Scratchpad 2 (http://scratchpads.eu)')
-      )//EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
-      
+      ) //EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
     );
     $form['site']['platform'] = array(
       '#type' => 'hidden',
@@ -439,12 +441,7 @@ function hostmaster_scratchpad_form_validate($form, &$form_state){
     form_set_error('title', 'The domain you have chosen is already in use');
   }
   // Only validate if we are trying to create a Scratchpad
-  if($form_state['values']['profile'] == SCRATCHPAD_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_PROFILE_NID){
-    // Next check the Google Map API key is the correct length (or roughly)
-    $gapi_length = strlen(trim($form_state['values']['googleapi']));
-    if($gapi_length < 80 || $gapi_length > 90){
-      form_set_error('googleapi', 'Your Google Map API key does not look to be valid, please ensure it is correct.');
-    }
+  if($form_state['values']['profile'] == SCRATCHPAD_2_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_2_PROFILE_NID){
     // Next, check the domain name resolves to Quartz
     // If we have dots, then it is not a subdomain of myspecies.info - we need to check it.
     if(strpos($form_state['values']['title'], '.')){
@@ -491,7 +488,7 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
         break;
     }
   }// Only do this if the profile is a Scratchpad one (1 or 2)
-else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
+else if($node->type == 'site' && ($node->profile == SCRATCHPAD_2_PROFILE_NID || $node->profile == EMONOCOT_2_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);
@@ -502,7 +499,7 @@ else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $n
       case 'insert':
       case 'update':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE vid = %d', $node->nid, $node->vid);
-        db_query("INSERT INTO {hostmaster_scratchpad} (nid, vid, client_title, institution, country, site_title, taxonomic_scope, googleapi, clustrmaphtml, mission_statement, comments) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", array(
+        db_query("INSERT INTO {hostmaster_scratchpad} (nid, vid, client_title, institution, country, site_title, taxonomic_scope, comments) VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s', '%s')", array(
           $node->nid,
           $node->vid,
           $node->client_title,
@@ -510,9 +507,6 @@ else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $n
           $node->country,
           $node->site_title,
           $node->taxonomic_scope,
-          $node->googleapi,
-          $node->clustrmaphtml,
-          $node->mission_statement,
           $node->comments
         ));
         break;
@@ -550,14 +544,6 @@ else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $n
             '#title' => t('Taxonomic scope'),
             '#value' => $node->taxonomic_scope
           );
-          if(trim($node->mission_statement)){
-            $node->content['info']['mission_statement'] = array(
-              '#weight' => 1001,
-              '#type' => 'item',
-              '#title' => t('Mission statement'),
-              '#value' => $node->mission_statement
-            );
-          }
           if(trim($node->comments)){
             $node->content['info']['comments'] = array(
               '#weight' => 1000,
@@ -584,9 +570,6 @@ function drush_hostmaster_scratchpad_pre_hosting_task(){
     $task->options['institution'] = $task->ref->institution;
     $task->options['site_title'] = $task->ref->site_title;
     $task->options['client_email'] = $client->name;
-    $task->options['googleapi'] = $task->ref->googleapi;
-    $task->options['clustrmaphtml'] = $task->ref->clustrmaphtml;
-    $task->options['mission_statement'] = $task->ref->mission_statement;
     $task->options['taxonomic_scope'] = $task->ref->taxonomic_scope;
   }
 }
