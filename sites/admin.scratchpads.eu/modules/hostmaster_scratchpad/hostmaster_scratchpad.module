@@ -8,6 +8,22 @@ define('SCRATCHPAD_2_PROFILE_NID', 3054);
 define('ADMIN_RID', 4);
 define('EMONOCOT_2_PROFILE_NID', 3054);
 
+function hostmaster_scratchpad_menu(){
+  return array(
+    'hosting-signup-restricted' => array(
+      'title' => t('Signup temporarily restricted'),
+      'page callback' => 'hostmaster_scratchpad_signup_restricted',
+      'access arguments' => array(
+        'access hosting signup form'
+      )
+    )
+  );
+}
+
+function hostmaster_scratchpad_signup_restricted(){
+  return '<h1>Restricted</h1>';
+}
+
 /**
  * Implementation of hook_mail_alter().
  */
