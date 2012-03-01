@@ -2,10 +2,12 @@
 /**
  * Define an array of Scratchpad profile node IDs
  */
+define('ADMIN_RID', 4);
+define('SCRATCHPAD_PLATFORM', 5);
 define('SCRATCHPAD_PROFILE_NID', 691);
 define('EMONOCOT_PROFILE_NID', 1754);
+define('SCRATCHPAD_2_PLATFORM', 1414);
 define('SCRATCHPAD_2_PROFILE_NID', 3054);
-define('ADMIN_RID', 4);
 define('EMONOCOT_2_PROFILE_NID', 3054);
 
 function hostmaster_scratchpad_menu(){
@@ -418,7 +420,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
     );
     $form['site']['platform'] = array(
       '#type' => 'hidden',
-      '#value' => 5
+      '#value' => SCRATCHPAD_2_PLATFORM
     );
     $form['site']['site_language'] = array(
       '#type' => 'hidden',
