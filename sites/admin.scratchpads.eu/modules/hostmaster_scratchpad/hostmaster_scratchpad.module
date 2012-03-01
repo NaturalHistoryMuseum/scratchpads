@@ -4,7 +4,9 @@
  */
 define('SCRATCHPAD_PROFILE_NID', 691);
 define('EMONOCOT_PROFILE_NID', 1754);
+define('SCRATCHPAD_2_PROFILE_NID', 3054);
 define('ADMIN_RID', 4);
+define('EMONOCOT_2_PROFILE_NID', 3054);
 
 /**
  * Implementation of hook_mail_alter().
@@ -370,18 +372,6 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
       '#attributes' => array(
         'class' => 'subdomain'
       )
-    ),
-    'googleapi' => array(
-      '#title' => t('Google API key'),
-      '#description' => '<p>Go to the <a href="http://code.google.com/apis/maps/signup.html" target="_blank"><strong>Google API key signup page</strong></a>, check the terms &amp; conditions, enter the URL for your new Scratchpad ("xyz.myspecies.info") and click on the \'Generate API key\' button. Sign into an existing Google Account or create a new one. If you are now back on the Sign up page you will have to reenter the data to generate the API key. You will now see a page with several versions of the API key. Copy the first version under \'Your key is:\' and paste it in the field above.</p>',
-      '#type' => 'textfield',
-      '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE
-    ),
-    'clustrmaphtml' => array(
-      '#title' => t('ClustrMap HTML'),
-      '#description' => '<p>Note, this is not required. <a href="http://clustrmaps.com/admin/register.php" target="_blank"><strong>ClustrMap signup page</strong></a></p>',
-      '#type' => 'textarea',
-      '#resizable' => FALSE
     )
   );
   $form['comments_fieldset'] = array(
@@ -407,9 +397,9 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
       '#default_value' => SCRATCHPAD_PROFILE_NID,
       '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
       '#options' => array(
-        SCRATCHPAD_PROFILE_NID => t('Standard Scratchpad (http://scratchpads.eu)'),
-        EMONOCOT_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
-      )
+        SCRATCHPAD_2_PROFILE_NID => t('Standard Scratchpad 2 (http://scratchpads.eu)')
+      )//EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
+      
     );
     $form['site']['platform'] = array(
       '#type' => 'hidden',
@@ -443,7 +433,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
  */
 function hostmaster_scratchpad_form_validate($form, &$form_state){
   // Check that the title isn't already in use.
-  $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : $form_state['values']['title'] . '.myspecies.info'; 
+  $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : $form_state['values']['title'] . '.myspecies.info';
   if(db_result(db_query("SELECT COUNT(*) FROM node n, hosting_site h WHERE h.nid = n.nid AND (h.status = 1 OR h.status = 0) AND type = 'site' AND n.title = '%s'", $site_url))){
     // Site URL already in use.
     form_set_error('title', 'The domain you have chosen is already in use');
@@ -492,15 +482,16 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     switch($op){
       case 'presave':
         // Get the user from the email
-        $client_user = user_load(array('mail' => $node->email));
+        $client_user = user_load(array(
+          'mail' => $node->email
+        ));
         if($client_user){
           $node->uid = $client_user->uid;
         }
         break;
     }
-  }
-  // Only do this if the profile is a Scratchpad one (1 or 2)
-  else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
+  }// Only do this if the profile is a Scratchpad one (1 or 2)
+else if($node->type == 'site' && ($node->profile == SCRATCHPAD_PROFILE_NID || $node->profile == EMONOCOT_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);
