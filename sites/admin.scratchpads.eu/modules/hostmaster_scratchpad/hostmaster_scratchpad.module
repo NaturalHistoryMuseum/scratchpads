@@ -8,7 +8,7 @@ define('SCRATCHPAD_PROFILE_NID', 691);
 define('EMONOCOT_PROFILE_NID', 1754);
 define('SCRATCHPAD_2_PLATFORM', 1414);
 define('SCRATCHPAD_2_PROFILE_NID', 3054);
-define('EMONOCOT_2_PROFILE_NID', 3054);
+define('EMONOCOT_2_PROFILE_NID', 3129);
 
 function hostmaster_scratchpad_menu(){
   return array(
@@ -438,8 +438,9 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
       '#default_value' => SCRATCHPAD_2_PROFILE_NID,
       '#description' => t('Only change this value if you know that you require a specific Scratchpad version'),
       '#options' => array(
-        SCRATCHPAD_2_PROFILE_NID => t('Standard Scratchpad 2.0 (http://scratchpads.eu)')
-      ) //EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad (http://e-monocot.org)')
+        SCRATCHPAD_2_PROFILE_NID => t('Standard Scratchpad 2.0 (http://scratchpads.eu)'),
+        EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad 2.0 (http://e-monocot.org)')
+      )
     );
     $form['site']['platform'] = array(
       '#type' => 'hidden',
