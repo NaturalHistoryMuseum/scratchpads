@@ -381,6 +381,12 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
           'ZM' => 'Zambia',
           'ZW' => 'Zimbabwe'
         )
+      ),
+      'terms_and_conditions' => array(
+        '#title' => 'Terms and conditions',
+        '#type' => 'checkbox',
+        '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
+        '#description' => 'I agree to be bound by the Scratchpads terms of use. http://scratchpads.eu/terms-of-use'
       )
     );
   }
