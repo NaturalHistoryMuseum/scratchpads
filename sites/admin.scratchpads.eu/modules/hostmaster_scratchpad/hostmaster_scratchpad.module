@@ -457,10 +457,6 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   }
   unset($form['site']['title']);
   // Set the weight of the button
-  $form['submit_agree'] = array(
-    '#weight' => 999,
-    '#value' => '<p>By clicking signup below, you agree to be bound by the Scratchpads Terms and Conditions of use.</p>'
-  );
   $form['submit']['#weight'] = 1000;
   // Add validate
   $form['#validate'] = array_merge((is_array($form['#validate']) ? $form['#validate'] : array()), array(
