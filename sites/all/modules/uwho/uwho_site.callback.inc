@@ -75,5 +75,8 @@ function uwho_site_callback(){
   if(isset($decrypted['redirect']) && $decrypted['redirect']){
     drupal_goto($decrypted['redirect']);
   }
+  if(isset($_GET['redirect']) && $_GET['redirect']){
+    drupal_goto($_GET['redirect']);
+  }
   drupal_goto(variable_get('uwho_site_redirect_path', ''));
 }
