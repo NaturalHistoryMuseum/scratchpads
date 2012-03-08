@@ -25,3 +25,33 @@ table.project-issue td{
 .content p{
  margin-bottom:8px !important;
 }
+
+.project-issue tr.state-1, .project-issue-status-1 a{
+  /* ACTIVE */
+  background-color:white !important;
+}
+.project-issue tr.state-13, .project-issue-status-13 a{
+  /* NEEDS WORK */
+  background-color:#FFC9C9 !important;
+}
+.project-issue tr.state-2, .project-issue-status-2 a{
+  /* FIXED */
+  background-color:#C0FFC0 !important;
+}
+.project-issue tr.state-17, .project-issue-status-17 a{
+  /* FIXED - REQUIRES TESTING */
+  background-color:#80b7ff !important;
+}
+.project-issue tr.state-4, .project-issue-status-4 a,
+.project-issue tr.state-16, .project-issue-status-16 a,
+.project-issue tr.state-15, .project-issue-status-15 a{
+  /* POSTPONED (all types) */
+  background-color:#DDDDFF !important;
+}
+.project-issue tr.state-6, .project-issue-status-6 a,
+.project-issue tr.state-3, .project-issue-status-3 a,
+.project-issue tr.state-5, .project-issue-status-5 a,
+.project-issue tr.state-7, .project-issue-status-7 a{
+  /* CLOSED (all types) */
+  background-color:#C0FFC0 !important;
+}
