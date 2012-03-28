@@ -18,6 +18,7 @@ Drupal.hostmaster_tweak.do_search = function(copy){
 
 Drupal.behaviors.hostmaster_tweak = function(context){
   $('#edit-profile-3054', context).attr('checked', 'checked');
+  $('#edit-platform-1414').attr('checked', 'checked');
   $('#edit-title', context).keyup(function(){
     Drupal.hostmaster_tweak.do_search(false);
     return false;
