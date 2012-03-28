@@ -8,8 +8,8 @@ Drupal.hostmaster_tweak.do_search = function(copy){
   }
   if(domain.length>10){
     if(domain.substring(domain.length-10) == 'taxon.name'){
-      $('#edit-profile-696').attr('checked', 'checked');
-      $('#edit-platform-767').attr('checked', 'checked');
+      $('#edit-profile-3475').attr('checked', 'checked');
+      $('#edit-platform-3472').attr('checked', 'checked');
       $('#edit-db-server-721').attr('checked', 'checked');
     }    
   }
@@ -17,7 +17,7 @@ Drupal.hostmaster_tweak.do_search = function(copy){
 }
 
 Drupal.behaviors.hostmaster_tweak = function(context){
-  $('#edit-profile-691', context).attr('checked', 'checked');
+  $('#edit-profile-3054', context).attr('checked', 'checked');
   $('#edit-title', context).keyup(function(){
     Drupal.hostmaster_tweak.do_search(false);
     return false;
