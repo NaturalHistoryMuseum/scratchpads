@@ -51,7 +51,9 @@ function mado_front_page(){
     if($id == 'divider'){
       $before_divider = FALSE;
     }
-    $output .= theme('mado_block', $block, $id, $before_divider);
+    if($before_divider || user_access('mado sort')){
+      $output .= theme('mado_block', $block, $id, $before_divider);
+    }
   }
   $output .= '</div>';
   // Blank title
