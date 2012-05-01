@@ -97,8 +97,16 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
       'client_title' => array(
         '#title' => t('Title'),
         '#required' => isset($user->roles[ADMIN_RID]) ? FALSE : TRUE,
-        '#type' => 'textfield',
-        '#description' => t('Mr/Mrs/Dr/Professor/Vicar')
+        '#type' => 'select',
+        '#options' => array(
+          'Mr' => 'Mr',
+          'Mrs' => 'Mrs',
+          'Miss' => 'Miss',
+          'Ms' => 'Ms',
+          'Dr' => 'Dr',
+          'Prof.' => 'Prof',
+          'Other' => 'Other'
+        )
       ),
       'client_name' => array(
         '#title' => t('Full name'),
