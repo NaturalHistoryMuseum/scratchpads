@@ -55,7 +55,7 @@ function hostmaster_scratchpad_form_site_node_form_alter(&$form, $form_state){
  * Implementation of hook_form_FORM_ID_alter
  */
 function hostmaster_scratchpad_form_hosting_signup_form_alter(&$form, $form_state){
-  // Check whether we have access to the normal create site page.  If we do, we
+  // Check whether we have access to the normal create site page. If we do, we
   // should be there instead of here.
   if(user_access('create site') && arg(0) == 'hosting' && arg(1) == 'signup'){
     drupal_goto('node/add/site');
@@ -438,7 +438,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   );
   // We need to set some values here if the user isn't a trusted one.
   if(!isset($user->roles[ADMIN_RID])){
-    // Set the default profile.  Note, this will need updating, or a nice way
+    // Set the default profile. Note, this will need updating, or a nice way
     // of setting the default profile for anon is required.
     unset($form['site']['profile']);
     $form['about_scratchpad']['profile'] = array(
@@ -499,7 +499,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
  */
 function hostmaster_scratchpad_form_validate($form, &$form_state){
   // Check that the title isn't already in use.
-  $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : $form_state['values']['title'] . '.myspecies.info';
+  $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : trim($form_state['values']['title']) . '.myspecies.info';
   if(db_result(db_query("SELECT COUNT(*) FROM node n, hosting_site h WHERE h.nid = n.nid AND (h.status = 1 OR h.status = 0) AND type = 'site' AND n.title = '%s'", $site_url))){
     // Site URL already in use.
     form_set_error('title', 'The domain you have chosen is already in use');
@@ -507,14 +507,15 @@ function hostmaster_scratchpad_form_validate($form, &$form_state){
   // Only validate if we are trying to create a Scratchpad
   if($form_state['values']['profile'] == SCRATCHPAD_2_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_2_PROFILE_NID){
     // Next, check the domain name resolves to Quartz
-    // If we have dots, then it is not a subdomain of myspecies.info - we need to check it.
+    // If we have dots, then it is not a subdomain of myspecies.info - we need
+    // to check it.
     if(strpos($form_state['values']['title'], '.')){
       // We have a new domain, lets check it's pointing at Quartz
       if(gethostbyname($form_state['values']['title']) !== gethostbyname('quartz.nhm.ac.uk')){
         form_set_error('title', 'The domain name you have entered is not pointing at our server:<ul><li>' . $form_state['values']['title'] . ' = ' . gethostbyname($form_state['values']['title']) . '</li><li>quartz.nhm.ac.uk = ' . gethostbyname('quartz.nhm.ac.uk') . '</li></ul>');
       }
     }else{
-      $form_state['values']['subdomain'] .= '.myspecies.info';
+      $form_state['values']['subdomain'] = trim($form_state['values']['subdomain']) . '.myspecies.info';
     }
     // Also check that the domain name is unique.
     if(db_result(db_query("SELECT COUNT(*) FROM {node} n, {hosting_site} h WHERE n.nid = h.nid AND title = '%s' AND type = 'site' AND h.status != -2", $form_state['values']['subdomain']))){
@@ -529,7 +530,7 @@ function hostmaster_scratchpad_form_validate($form, &$form_state){
 function hostmaster_scratchpad_form_submit($form, &$form_state){
   // Lets simply save the values to the table - easy!
   // If we have don't have dots, then we need to add .myspecies.info
-  //form_set_value
+  // form_set_value
   if(!strpos($form_state['values']['title'], '.')){
     form_set_value($form['about_scratchpad']['title'], $form_state['values']['title'] . '.myspecies.info', $form_state);
   }
@@ -551,8 +552,8 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
         }
         break;
     }
-  }// Only do this if the profile is a Scratchpad one (1 or 2)
-else if($node->type == 'site' && ($node->profile == SCRATCHPAD_2_PROFILE_NID || $node->profile == EMONOCOT_2_PROFILE_NID)){
+  }  // Only do this if the profile is a Scratchpad one (1 or 2)
+  else if($node->type == 'site' && ($node->profile == SCRATCHPAD_2_PROFILE_NID || $node->profile == EMONOCOT_2_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);
@@ -656,7 +657,7 @@ function hostmaster_scratchpad_theme(){
  * Theme for the above form
  */
 function theme_hostmaster_scratchpad_application_form($form){
-  //drupal_set_message(print_r($form, 1));
+  // drupal_set_message(print_r($form, 1));
   if(isset($form['logout_to_see_form'])){return drupal_render_form($form['#id'], $form);}
   drupal_add_css(drupal_get_path('module', 'hostmaster_scratchpad') . '/hostmaster_scratchpad.css');
   $options = array();
