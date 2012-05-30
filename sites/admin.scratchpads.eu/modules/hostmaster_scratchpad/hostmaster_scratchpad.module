@@ -3,10 +3,12 @@
  * Define an array of Scratchpad profile node IDs
  */
 define('ADMIN_RID', 4);
+// Platforms
 define('SCRATCHPAD_PLATFORM', 5);
+define('SCRATCHPAD_2_PLATFORM', 3914);
+// Profiles
 define('SCRATCHPAD_PROFILE_NID', 691);
 define('EMONOCOT_PROFILE_NID', 1754);
-define('SCRATCHPAD_2_PLATFORM', 1414);
 define('SCRATCHPAD_2_PROFILE_NID', 3054);
 define('SCRATCHPAD_2_TRAINING_PROFILE_NID', 3475);
 define('EMONOCOT_2_PROFILE_NID', 3129);
@@ -553,7 +555,7 @@ function hostmaster_scratchpad_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
         break;
     }
   }  // Only do this if the profile is a Scratchpad one (1 or 2)
-  else if($node->type == 'site' && ($node->profile == SCRATCHPAD_2_PROFILE_NID || $node->profile == EMONOCOT_2_PROFILE_NID)){
+else if($node->type == 'site' && ($node->profile == SCRATCHPAD_2_PROFILE_NID || $node->profile == EMONOCOT_2_PROFILE_NID)){
     switch($op){
       case 'delete':
         db_query('DELETE FROM {hostmaster_scratchpad} WHERE nid = %d', $node->nid);

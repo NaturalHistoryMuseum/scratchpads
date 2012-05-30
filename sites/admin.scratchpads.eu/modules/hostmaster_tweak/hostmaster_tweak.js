@@ -9,8 +9,6 @@ Drupal.hostmaster_tweak.do_search = function(copy){
   if(domain.length>10){
     if(domain.substring(domain.length-10) == 'taxon.name'){
       $('#edit-profile-3475').attr('checked', 'checked');
-      $('#edit-platform-3472').attr('checked', 'checked');
-      $('#edit-db-server-721').attr('checked', 'checked');
     }    
   }
   return false;
@@ -18,7 +16,7 @@ Drupal.hostmaster_tweak.do_search = function(copy){
 
 Drupal.behaviors.hostmaster_tweak = function(context){
   $('#edit-profile-3054', context).attr('checked', 'checked');
-  $('#edit-platform-1414').attr('checked', 'checked');
+  $('#edit-platform-3914').attr('checked', 'checked');
   $('#edit-title', context).keyup(function(){
     Drupal.hostmaster_tweak.do_search(false);
     return false;
