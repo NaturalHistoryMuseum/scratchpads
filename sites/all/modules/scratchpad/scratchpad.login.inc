@@ -9,6 +9,7 @@ function scratchpad_admin_openids(){
     'http://vbrant.eu/users/isa-vandevelde/openid' => 'Isa Vandevelde (http://vbrant.eu/users/isa-vandevelde/openid)',
     'http://vbrant.eu/users/laurence-livermore/openid' => 'Laurence Livermore (http://vbrant.eu/users/laurence-livermore/openid)',
     'http://openid.simon.rycroft.name/' => 'Simon Rycroft (http://openid.simon.rycroft.name/)',
+    'http://vbrant.eu/users/vince-smith/openid' => 'Vince Smith (http://vbrant.eu/users/vince-smith/openid)',
     'http://vsmithuk.myopenid.com/' => 'Vincent Smith (http://vsmithuk.myopenid.com)'
   );
 }
