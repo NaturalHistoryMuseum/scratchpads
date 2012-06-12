@@ -273,8 +273,7 @@ function template_preprocess_femail_forums(&$variables){
       }else{
         // This should be set, we need to warn the admin
         watchdog('femail', 'Femail address not set %term_id', array(
-          '%term_id',
-          $variables['tid']
+          '%term_id' => $variables['tid']
         ));
       }
     }
