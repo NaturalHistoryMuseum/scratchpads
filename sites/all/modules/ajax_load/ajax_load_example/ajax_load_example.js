@@ -1,4 +1,3 @@
-// $Id: ajax_load_example.js,v 1.2 2009/09/20 14:01:06 markuspetrux Exp $
 
 (function ($) {
 

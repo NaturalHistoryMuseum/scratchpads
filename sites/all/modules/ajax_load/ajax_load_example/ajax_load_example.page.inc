@@ -1,5 +1,4 @@
 <?php
-// $Id: ajax_load_example.page.inc,v 1.1 2008/12/17 20:01:54 nedjo Exp $
 
 /**
  * @file
