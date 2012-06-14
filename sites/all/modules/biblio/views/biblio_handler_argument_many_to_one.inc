@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_argument_many_to_one.inc,v 1.1.2.1 2010/05/13 02:31:00 rjerome Exp $
 
 /**
  * Argument handler for 'associated tables'. (Used for types, authors, keywords)

@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.views_default.inc,v 1.1.2.2 2009/09/29 01:22:38 rjerome Exp $
 /**
  * @file
  * Contains default views on behalf of the biblio module.

@@ -15,7 +15,6 @@
 
 // Modified for use in biblio by Ron Jerome
 //
-// $Id: biblio_style_ama.inc,v 1.1.2.17 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -40,13 +39,14 @@ function biblio_style_ama_author_options() {
     'numberOfAuthorsTriggeringEtAl'     => 6,
     'includeNumberOfAuthors'            => 3,
     'customStringAfterFirstAuthors'     => ', et al.',
-    'encodeHTML'                        => true
+    'encodeHTML'                        => TRUE
   );
 
   return $author_options;
 }
 
-function biblio_style_ama($node, $base = 'biblio', $inline = false) {
+function biblio_style_ama($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $markupPatternsArray = array("italic-prefix" => "<i>",
                                "italic-suffix" => "<\/i>",
                                "endash" => '-');
@@ -127,7 +127,7 @@ function biblio_style_ama($node, $base = 'biblio', $inline = false) {
         $output .= theme_biblio_page_number($node->biblio_pages, $markupPatternsArray["endash"]); // function 'formatPageInfo()' is defined in 'cite.inc.php'
       }
 
-      if ($row['online_publication'] == "yes") // this record refers to an online article
+      if (isset($node->online_publication)) // this record refers to an online article
       {
         // append an optional string (given in 'online_citation') plus the current date and the DOI (or URL):
 
@@ -209,7 +209,7 @@ function biblio_style_ama($node, $base = 'biblio', $inline = false) {
           'numberOfAuthorsTriggeringEtAl'     => 6,
           'includeNumberOfAuthors'            => 3,
           'customStringAfterFirstAuthors'     => ' et al.',
-          'encodeHTML'                        => true
+          'encodeHTML'                        => TRUE
         );
 
         $editor = theme('biblio_format_authors', $node->biblio_contributors[2], $editor_options, $inline);

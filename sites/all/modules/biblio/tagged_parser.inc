@@ -1,5 +1,4 @@
 <?php
-// $Id: tagged_parser.inc,v 1.8.2.22 2010/10/19 20:24:04 rjerome Exp $
 /**
  *   Copyright (C) 2006  Ron Jerome
  *

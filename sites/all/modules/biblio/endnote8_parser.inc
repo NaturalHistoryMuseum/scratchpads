@@ -1,5 +1,4 @@
 <?php
-// $Id: endnote8_parser.inc,v 1.10.2.26 2010/10/13 16:52:03 rjerome Exp $
 function en8_startElement($parser, $name, $attrs) {
   global $node, $element, $contributors, $contrib_count, $titles, $periodical, $dates, $urls, $keyword_count, $font_attr;
   switch ($name) {
@@ -133,7 +132,7 @@ function en8_endElement($parser, $name) {
 }
 function en8_characterData($parser, $data) {
   global $node, $element, $contributors, $contrib_count, $dates, $urls, $keyword_count;
-  if (trim($data)) {
+  if (trim(htmlspecialchars_decode($data))) {
     switch ($element) {
         //Author information
       case 'author' :

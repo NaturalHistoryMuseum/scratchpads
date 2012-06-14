@@ -6,7 +6,6 @@
 //
 // Modified for use in biblio by Ron Jerome
 //
-// $Id: biblio_style_mla.inc,v 1.7.2.16 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -25,13 +24,13 @@ function biblio_style_mla_author_options() {
     'AuthorsInitialsDelimFirstAuthor' => ', ',     //7
     'AuthorsInitialsDelimStandard'=> ' ',         //8
     'betweenInitialsDelim' => '. ',               //9
-    'initialsBeforeAuthorFirstAuthor' => false,   //10
-    'initialsBeforeAuthorStandard' => true,       //11
+    'initialsBeforeAuthorFirstAuthor' => FALSE,   //10
+    'initialsBeforeAuthorStandard' => TRUE,       //11
     'shortenGivenNames' => FALSE,                 //12
     'numberOfAuthorsTriggeringEtAl' => 3,         //13
     'includeNumberOfAuthors' => 1,                //14
     'customStringAfterFirstAuthors' => ', et al.',//15
-    'encodeHTML' => true
+    'encodeHTML' => TRUE
   );
 
   return $author_options;
@@ -47,12 +46,12 @@ function biblio_style_mla_author_options() {
  *   The base URL of the biblio module (defaults to /biblio)
  * @param $inline
  *   A logical value indicating if this is being rendered within the
- *   Drupal framwork (false) or we are just passing back the html (true)
+ *   Drupal framwork (FALSE) or we are just passing back the html (TRUE)
  * @return
  *   The styled biblio entry
  */
-function biblio_style_mla($node, $base = 'biblio', $inline = false) {
-
+function biblio_style_mla($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $author_options = biblio_style_mla_author_options();
   $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
   //if (empty($authors)) $authors = theme('biblio_authors', $node->biblio_contributors[5], 'mla', 5, $inline);  // if no authors substitute corp author if available
@@ -110,7 +109,7 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
         $output .= " (".$node->biblio_year . ")";
       }
       // FIXME do something with the online pubs section
-      if ($node->online_publication == "yes") // this record refers to an online article
+      if (FALSE /*$node->online_publication == "yes"*/) // this record refers to an online article
       {
         // instead of any pages info (which normally doesn't exist for online publications) we append
         // an optional string (given in 'online_citation') plus the current date and the DOI (or URL):
@@ -179,8 +178,8 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
           if (!empty($authors))  $output .= " ";
 
           //$output .= '"<i>' ;
-          $output .= '"<span class="biblio-title-mla">';
-          $url = biblio_get_title_url_info($node, $base, $inline);
+          $output .= '<span class="biblio-title-mla">';
+          $url = biblio_get_title_url_info($node);
           $output .= l($node->title, $url['link'], $url['options']);
           $output .= "</span>";
          // $output .= '</i>';
@@ -204,13 +203,13 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
             'AuthorsInitialsDelimFirstAuthor' => ' ',     //7
             'AuthorsInitialsDelimStandard'=> ' ',         //8
             'betweenInitialsDelim' => '. ',               //9
-            'initialsBeforeAuthorFirstAuthor' => true,   //10
-            'initialsBeforeAuthorStandard' => true,       //11
-            'shortenGivenNames' => false,                 //12
+            'initialsBeforeAuthorFirstAuthor' => TRUE,   //10
+            'initialsBeforeAuthorStandard' => TRUE,       //11
+            'shortenGivenNames' => FALSE,                 //12
             'numberOfAuthorsTriggeringEtAl' => 3,         //13
             'includeNumberOfAuthors' => 1,                //14
             'customStringAfterFirstAuthors' => ', et al.',//15
-            'encodeHTML' => true
+            'encodeHTML' => TRUE
           );
           $editor = theme('biblio_format_authors', $node->biblio_contributors[2], $editor_options, $inline);
           _period_if_needed($output);
@@ -339,7 +338,7 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
         $output .= '</i>';
       }
 
-      if (count($node->biblio_contributors[2]))      // editor (if different from author, see note above regarding the check for ' (ed)' or ' (eds)')
+      if (isset($node->biblio_contributors[2]) && count($node->biblio_contributors[2]))      // editor (if different from author, see note above regarding the check for ' (ed)' or ' (eds)')
       {
 
         $editor_options = array(
@@ -348,13 +347,13 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
           'AuthorsInitialsDelimFirstAuthor' => ' ',     //7
           'AuthorsInitialsDelimStandard'=> ' ',         //8
           'betweenInitialsDelim' => '. ',               //9
-          'initialsBeforeAuthorFirstAuthor' => true,   //10
-          'initialsBeforeAuthorStandard' => true,       //11
-          'shortenGivenNames' => false,                 //12
+          'initialsBeforeAuthorFirstAuthor' => TRUE,   //10
+          'initialsBeforeAuthorStandard' => TRUE,       //11
+          'shortenGivenNames' => FALSE,                 //12
           'numberOfAuthorsTriggeringEtAl' => 3,         //13
           'includeNumberOfAuthors' => 1,                //14
           'customStringAfterFirstAuthors' => ', et al.',//15
-          'encodeHTML' => true
+          'encodeHTML' => TRUE
         );
         $editor = theme('biblio_format_authors', $node->biblio_contributors[2], $editor_options, $inline);
         _period_if_needed($output);
@@ -459,7 +458,7 @@ function biblio_style_mla($node, $base = 'biblio', $inline = false) {
         $output .= ", ".$node->biblio_year;
       }
 
-      if ($node->online_publication == "yes") // this record refers to an online article
+      if (isset($node->online_publication) && $node->online_publication == "yes") // this record refers to an online article
       {
         $today = date("j M. Y");
 

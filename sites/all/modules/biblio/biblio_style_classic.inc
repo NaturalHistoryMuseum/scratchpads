@@ -1,6 +1,5 @@
 <?PHP
 
-// $Id: biblio_style_classic.inc,v 1.8.2.14 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -25,7 +24,7 @@ function biblio_style_classic_author_options() {
     'numberOfAuthorsTriggeringEtAl'   =>  10,        //13
     'includeNumberOfAuthors'          =>  10,        //14
     'customStringAfterFirstAuthors'   =>  ', et al.',//15
-    'encodeHTML'                      =>  true
+    'encodeHTML'                      =>  TRUE
   );
   return $author_options;
 }
@@ -44,7 +43,8 @@ function biblio_style_classic_author_options() {
  * @return
  *   The styled biblio entry
  */
-function biblio_style_classic($node, $base = 'biblio', $inline = false) {
+function biblio_style_classic($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $author_options = biblio_style_classic_author_options();
   $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
   if (!empty ($node->biblio_citekey)&&(variable_get('biblio_display_citation_key',0))) {

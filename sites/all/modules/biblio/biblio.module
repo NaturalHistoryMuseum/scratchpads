@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.module,v 1.123.2.193 2010/11/03 13:51:28 rjerome Exp $
 /**
  *   biblio.module for Drupal
  *
@@ -315,7 +314,7 @@ function biblio_autocomplete($field, $string = '') {
 }
 function biblio_help_page() {
   $base = variable_get('biblio_base', 'biblio');
-  $text .= "<h3>". t('General:') ."</h3>";
+  $text = "<h3>". t('General:') ."</h3>";
   $text .= "<p>". t('By default, the !url page will list all of the entries in the database sorted by Year in descending order. If you wish to sort by "Title" or "Type",  you may do so by clicking on the appropriate links at the top of the page.  To reverse the sort order, simply click the link a second time.', array(
     '!url' => l('',
   $base
@@ -1377,9 +1376,9 @@ function biblio_form($node, $form_state) {
       '#weight' => 19
     );
     // embed filter form in "Full Text" fieldset, because it applies to the full text only
-    //$form['body_field']['format'] = filter_form($node->format, 20);
+    $form['body_field']['format'] = filter_form($node->format, 20);
   }
-  $form['format'] = filter_form($node->format, 20);
+  //$form['format'] = filter_form($node->format, 20);
 
   return $form;
 }
@@ -1393,6 +1392,7 @@ function biblio_form($node, $form_state) {
  * @return contributor fieldset form
  */
 function _biblio_contributor_widget($node, $fld, $auth_category, $biblio_type, $other_fieldset = FALSE) {
+  $init_count = variable_get('biblio_init_auth_count', 4);
   $fldname = $fld['name'];
   $type = str_replace('_', '-', $fldname);
   if (is_object($node)) {
@@ -1402,7 +1402,7 @@ function _biblio_contributor_widget($node, $fld, $auth_category, $biblio_type, $
     $contributors = $node['biblio_contributors'][$auth_category];
   }
 
-  $contributor_count = max(4, count($contributors));
+  $contributor_count = max($init_count, count($contributors));
 
   $ctypes = _biblio_get_auth_types($auth_category, $biblio_type);
   // if no author types are available skip this widget
@@ -1600,11 +1600,16 @@ function biblio_form_validate($form, & $form_state) {
       break;
     case t('Save'):
       if ($form_state['storage']['biblio_type'] == $form_state['values']['biblio_type'] ||
-         (!empty($form['#node']->biblio_type) && $form['#node']->biblio_type == $form_state['values']['biblio_type']))
-      {
+         (!empty($form['#node']->biblio_type) && $form['#node']->biblio_type == $form_state['values']['biblio_type'])) {
         unset ($form_state['storage']);
       }
       else {
+        // Clear validation errors that other modules might have set.
+        // This assumes that Biblio has a greater weight than those
+        // other modules.
+        form_set_error(NULL, '', TRUE);
+        drupal_get_messages('error');
+
         $form_state['storage']['biblio_type']  = $form_state['values']['biblio_type'];
         $form_state['submitted'] = TRUE;
         $form_state['rebuild'] = TRUE;
@@ -2074,15 +2079,9 @@ function _biblio_filter_replace_callback($matches, $op = '') {
   return $text;
 }
 function biblio_taxonomy($op, $type, $array = NULL) {
-  if ($op == 'delete' && $term['vid'] == variable_get('biblio_keyword_vocabulary', 0)) {
-    switch ($type) {
-      case 'term' :
-        break;
-      case 'vocabulary' :
-        variable_del('biblio_keyword_freetagging');
-        variable_del('biblio_keyword_vocabulary');
-        break;
-    }
+  if ($op == 'delete' && $type == 'vocabulary' && $array['vid'] == variable_get('biblio_keyword_vocabulary', -1)) {
+    variable_del('biblio_keyword_freetagging');
+    variable_del('biblio_keyword_vocabulary');
   }
 }
 
@@ -2428,4 +2427,13 @@ function biblio_get_title_url_info($node, $base = 'biblio', $inline = FALSE) {
                   array('attributes' => $new_window,
                         'html' => TRUE),
                 );
+}
+function biblio_node_export_node_alter(&$node, $original_node, $method) {
+  if ($method == 'export') {
+    foreach ($node->biblio_contributors as $cat => $authors) {
+      foreach ($authors as $key => $author) {
+        unset($node->biblio_contributors[$cat][$key]['cid']);
+      }
+    }
+  }
 }

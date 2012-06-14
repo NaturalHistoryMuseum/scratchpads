@@ -1,7 +1,6 @@
 <?php
 
 
-// $Id: biblio_style_apa.inc,v 1.9.2.20 2010/08/23 01:04:44 rjerome Exp $
 /**
  * Get the style information
  *
@@ -27,7 +26,7 @@ function biblio_style_apa_author_options() {
     'numberOfAuthorsTriggeringEtAl'   =>  6,         //13
     'includeNumberOfAuthors'          =>  6,         //14
     'customStringAfterFirstAuthors'   =>  ', et al.',//15
-    'encodeHTML'                      =>  true
+    'encodeHTML'                      =>  TRUE
   );
   return $author_options;
 }
@@ -47,6 +46,7 @@ function biblio_style_apa_author_options() {
  *   The styled biblio entry
  */
 function biblio_style_apa($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $author_options = biblio_style_apa_author_options();
   $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
   if (empty($authors) && count($node->biblio_contributors[5])) {// if no authors substitute corp author if available

@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.keywords.inc,v 1.6.2.19 2010/06/27 18:44:19 rjerome Exp $
 /**
  *   biblio.module for Drupal
  *
@@ -74,7 +73,7 @@ function biblio_update_keywords($node) {
 }
 
 function biblio_delete_orphan_keywords ($force = FALSE) {
-  if (variable_get('biblio_auto_orphaned_keyword_delete', 0) || $force) {
+  if (variable_get('biblio_keyword_orphan_autoclean', 0) || $force) {
     db_query('DELETE FROM {biblio_keyword_data} WHERE kid NOT IN (SELECT DISTINCT(kid) FROM {biblio_keyword})');
   }
 }

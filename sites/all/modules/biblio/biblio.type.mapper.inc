@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.type.mapper.inc,v 1.1.2.10 2010/10/19 20:24:04 rjerome Exp $
 function biblio_get_type_map($file_format, $default = FALSE) {
   if ($default) {
     switch ($file_format) {
@@ -33,6 +32,7 @@ function biblio_get_type_map($file_format, $default = FALSE) {
                 "Patent"                  => 119,
                 "Generic"                 => 129,
                 "Newspaper Article"       => 105,
+                "Magazine Article"        => 106,
                 "Web Page"                => 107,
                 "Film or Broadcast"       => 110,
                 "Artwork"                 => 112,
@@ -241,6 +241,7 @@ function biblio_get_type_names($file_format, $default = FALSE) {
                 "Patent"                  => "Patent",
                 "Generic"                 => "Generic",
                 "Newspaper Article"       => "Newspaper Article",
+                "Magazine Article"        => "Magazine Article",
                 "Web Page"                => "Web Page",
                 "Film or Broadcast"       => "Film or Broadcast",
                 "Artwork"                 => "Artwork",

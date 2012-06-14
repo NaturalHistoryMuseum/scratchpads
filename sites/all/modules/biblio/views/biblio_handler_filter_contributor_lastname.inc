@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_filter_contributor_lastname.inc,v 1.1.2.2 2010/10/12 01:02:05 rjerome Exp $
 /**
  * Filter handler for contributors
  */

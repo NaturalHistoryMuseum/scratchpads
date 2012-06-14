@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_filter_contributor_uid.inc,v 1.1.2.3 2010/11/06 00:20:14 rjerome Exp $
 /**
  * Filter handler for contributors
  */

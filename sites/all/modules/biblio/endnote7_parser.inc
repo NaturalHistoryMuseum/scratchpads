@@ -1,5 +1,4 @@
 <?php
-// $Id: endnote7_parser.inc,v 1.9.2.4 2008/05/12 01:03:37 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006  Ron Jerome

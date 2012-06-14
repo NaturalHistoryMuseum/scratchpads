@@ -1,6 +1,5 @@
 <?php
 
-// $Id: biblio_style_ieee.inc,v 1.8.2.16 2010/05/03 00:57:36 rjerome Exp $
 // by Jeffrey Dwoskin
 // A style closer to IEEE format
 // see http://standards.ieee.org/guides/style/section7.html#992
@@ -28,7 +27,7 @@ function biblio_style_ieee_author_options() {
     'numberOfAuthorsTriggeringEtAl'   =>  10,        //13
     'includeNumberOfAuthors'          =>  10,        //14
     'customStringAfterFirstAuthors'   =>  ', et al.',//15
-    'encodeHTML'                      =>  true
+    'encodeHTML'                      =>  TRUE
   );
   return $author_options;
 }
@@ -43,11 +42,12 @@ function biblio_style_ieee_author_options() {
  *   The base URL of the biblio module (defaults to /biblio)
  * @param $inline
  *   A logical value indicating if this is being rendered within the
- *   Drupal framwork (false) or we are just passing back the html (true)
+ *   Drupal framwork (FALSE) or we are just passing back the html (TRUE)
  * @return
  *   The styled biblio entry
  */
-function biblio_style_ieee($node, $base = 'biblio', $inline = false) {
+function biblio_style_ieee($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $author_options = biblio_style_ieee_author_options();
   $authors = theme('biblio_format_authors', $node->biblio_contributors[1], $author_options, $inline);
   if (!empty ($node->biblio_citekey)&&(variable_get('biblio_display_citation_key',0))) {

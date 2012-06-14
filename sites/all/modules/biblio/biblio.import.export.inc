@@ -1,6 +1,5 @@
 <?PHP
 
-// $Id: biblio.import.export.inc,v 1.7.2.90 2010/10/30 12:38:31 rjerome Exp $
 /**
  * @file
  * Functions that are used to import and export biblio data.
@@ -75,7 +74,10 @@ function biblio_import_form() {
         'marc'   => t('MARC'),
         'ris'    => t('RIS'),
     );
-    if (module_exists('biblio_pm')) $import_formats['pubmed'] = t('PubMed ID List');
+    if (module_exists('biblio_pm')) {
+      $import_formats['pubmed'] = t('PubMed ID List');
+      $import_formats['pubmed_xml'] = t('PubMed XML');
+    }
 
     $form['filetype'] = array (
       '#type' => 'select',
@@ -238,26 +240,27 @@ function biblio_import_form_submit($form, & $form_state) {
 
 function biblio_import_batch_operations($session_id, $user, $userid, $terms, &$context) {
   $limit = 10;
-  if (empty($context['sandbox'])) {
+
+  if (!isset($context['sandbox']['biblio'])) {
     // Initiate multistep processing.
     $context['results']['session_id'] = $session_id;
     $context['results']['userid']     = $userid;
     $context['results']['user']       = $user;
     $context['results']['terms']      = $terms;
     $context['sandbox']['progress']   = 0;
-    $context['sandbox']['current_id'] = 0;
+    $context['sandbox']['biblio']['current_id'] = 0;
     $context['results']['nids'] = array();
-    $context['sandbox']['max'] = db_result(db_query("SELECT COUNT(DISTINCT(id)) FROM {biblio_import_cache} WHERE session_id = '%s'", $session_id));
-    $context['sandbox']['itters'] = $context['sandbox']['max'] / $limit;
-    $context['sandbox']['eta'] = 0;
+    $context['sandbox']['biblio']['max'] = db_result(db_query("SELECT COUNT(DISTINCT(id)) FROM {biblio_import_cache} WHERE session_id = '%s'", $session_id));
+    $context['sandbox']['biblio']['itters'] = $context['sandbox']['biblio']['max'] / $limit;
+    $context['sandbox']['biblio']['eta'] = 0;
   }
 
-  if ($context['sandbox']['max'] == 0) {
+  if ($context['sandbox']['biblio']['max'] == 0) {
     return;
   }
 
   timer_start('biblio_import');
-  $result = db_query_range("SELECT id, data FROM {biblio_import_cache} WHERE id > %d AND session_id = '%s' ORDER BY id ASC", $context['sandbox']['current_id'], $session_id, 0, $limit);
+  $result = db_query_range("SELECT id, data FROM {biblio_import_cache} WHERE id > %d AND session_id = '%s' ORDER BY id ASC", $context['sandbox']['biblio']['current_id'], $session_id, 0, $limit);
   while ($row = db_fetch_array($result)) {
     if($node = unserialize(base64_decode($row['data']))) {
       $nid = biblio_save_node($node);
@@ -266,14 +269,14 @@ function biblio_import_batch_operations($session_id, $user, $userid, $terms, &$c
       }
     }
     $context['sandbox']['progress']++;
-    $context['sandbox']['current_id'] = $row['id'];
+    $context['sandbox']['biblio']['current_id'] = $row['id'];
   }
   $looptime = timer_stop('biblio_import');
-  $context['sandbox']['eta'] += $looptime['time'];
+  $context['sandbox']['biblio']['eta'] += $looptime['time'];
   $itters = $context['sandbox']['progress'] / $limit;
   if ($itters) {
-    $average_time = $context['sandbox']['eta'] / $itters;
-    $eta = (($context['sandbox']['itters'] * $average_time) - ($average_time * $itters)) / 1000;
+    $average_time = $context['sandbox']['biblio']['eta'] / $itters;
+    $eta = (($context['sandbox']['biblio']['itters'] * $average_time) - ($average_time * $itters)) / 1000;
     if ($eta >= 60) {
       $min = (int) $eta / 60;
     }
@@ -282,13 +285,13 @@ function biblio_import_batch_operations($session_id, $user, $userid, $terms, &$c
     }
     $sec = $eta % 60;
     $eta = sprintf("%d:%02d", $min, $sec);
-    $progress = sprintf("%d / %d", $context['sandbox']['progress'],  $context['sandbox']['max'] );
+    $progress = sprintf("%d / %d", $context['sandbox']['progress'],  $context['sandbox']['biblio']['max'] );
     $context['message'] = t('<br>Nodes saved: %progress <br> Time remaining: %eta min.<br>' , array('%progress' => $progress, '%eta' => $eta));
 
   }
   // Multistep processing : report progress.
-  if ($context['sandbox']['progress'] <= $context['sandbox']['max']) {
-    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  if ($context['sandbox']['progress'] <= $context['sandbox']['biblio']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['biblio']['max'];
   }
 }
 
@@ -439,7 +442,10 @@ function biblio_import($import_file, $type, $userid = 1, $terms = NULL, $batch_p
     case 'pubmed' :
       list($node_ids, $dups) = biblio_pm_biblio_import($import_file, $terms, $batch_proc, $session_id);
       break;
-      case 'csv' : // comma separated variable file
+    case 'pubmed_xml' :
+      list($node_ids, $dups) = biblio_pm_biblio_xml_import($import_file, $terms, $batch_proc, $session_id);
+      break;
+    case 'csv' : // comma separated variable file
       //        $file_content = @ file_get_contents($import_file->filepath);
       //        $parsed = biblio_csv_import($file_content, $node_template, $node_array);
       break;
@@ -689,7 +695,7 @@ function biblio_marc_import($file, $terms, $batch, $session_id) {
             break;
           case '650':
             foreach ($field->subfields() as $subject) {
-              $node['biblio_keywords'][] = $subject;
+              $node['biblio_keywords'][] = $subject[0];
             }
             break;
           case '100':
@@ -906,7 +912,7 @@ function biblio_save_node($node, $batch = FALSE, $session_id = NULL, $save_node 
       'status'   => in_array('status', $options),
   );
 
-  $node = (object) array_merge($node, $node_template);
+  $node = (object) array_merge((array)$node, $node_template);
   if(!isset($node->biblio_type)) {
     $node->biblio_type = 129; // default to misc if not set.
   }

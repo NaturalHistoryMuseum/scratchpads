@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_theme.inc,v 1.8.2.114 2010/10/20 01:48:59 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -574,9 +573,15 @@ function theme_biblio_author_link($author) {
   if (isset($_GET['sort'])) {
     $options['query']['sort'] = $_GET['sort'];
   }
+
   if (isset($_GET['order'])) {
     $options['query']['order'] = $_GET['order'];
   }
+
+  if (isset($author['drupal_uid']) && $author['drupal_uid'] > 0) {
+    $options['attributes']['class'] = 'biblio-local-author';
+  }
+
   if ($link_to_profile && $author['drupal_uid'] ) {
     return l(trim($author['name']), "user/".$author['drupal_uid']."/$base" );
   }
@@ -835,7 +840,11 @@ function theme_biblio_download_links($node = NULL) {
           $href = 'biblio/view/'.$node->nid;
         }
         else {
-          $href = file_create_url($file->filepath);
+          $alias = FALSE;
+          if (module_exists('filefield_paths')) {
+            $alias =  drupal_get_path_alias('filefield_paths/alias/' . $file->fid);
+          }
+          $href = ($alias) ?  $alias : file_create_url($file->filepath);
         }
         $text = $file->description ? $file->description : $file->filename;
         if ($file_count) $files .= '; ';
@@ -1010,7 +1019,7 @@ function _build_google_scholar_link($node) {
   $query = array();
 
   $query['btnG'] = 'Search+Scholar';
-  $query['as_q'] = '"'.str_replace(' ', '+', $node->title).'"'; // as_q = all the words
+  $query['as_q'] = '"' . str_replace(array(' ', '(', ')'), array('+'), $node->title) . '"'; // as_q = all the words
   $query['as_sauthors'] = $node->biblio_contributors[1][0]['lastname'];
   $query['as_occt'] = 'any';
   $query['as_epq'] = ''; // exact phrase

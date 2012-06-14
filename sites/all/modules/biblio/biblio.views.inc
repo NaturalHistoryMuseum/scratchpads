@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.views.inc,v 1.4.2.17 2010/05/13 02:31:00 rjerome Exp $
 function biblio_views_plugins() {
 // Not ready for prime time!!!
 //  return array(
@@ -85,6 +84,12 @@ function biblio_views_handlers() {
  */
       'biblio_handler_argument_many_to_one' => array(
         'parent' => 'views_handler_argument_many_to_one',
+      ),
+/*
+ *  Sort
+ */
+      'biblio_handler_sort_contributor_lastname' => array(
+        'parent' => 'views_handler_sort',
       ),
 
 
@@ -203,7 +208,8 @@ function biblio_views_data() {
   $data['table']['join'] = array(
     'node' => array(
       'left_field' => 'vid',
-      'field' => 'vid',
+      'field'      => 'vid',
+      'type'       => 'inner',
     ),
     'node_revision' => array(
       'left_field' => 'vid',
@@ -213,6 +219,12 @@ function biblio_views_data() {
     'biblio' => array(
       'field' => 'vid',
       'left_field' => 'vid',
+      'type'       => 'inner',
+    ),
+    'users' => array(
+      'left_table' => 'biblio_contributor_data',
+      'field' => 'cid',
+      'left_field' => 'cid',
     ),
   );
   $data['cid'] = array(
@@ -259,16 +271,27 @@ function biblio_views_data() {
       'left_field' => 'cid',
       'field' => 'cid',
     ),
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'drupal_uid',
+    ),
     );
   $data['drupal_uid'] =  array(
     'field'     => array('handler' => 'views_handler_field'),
     'filter'    => array('handler' => 'views_handler_filter'),
     'argument'  => array('handler' => 'views_handler_argument_numeric'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'users',
+      'base field' => 'uid',
+      'label' => t('user'),
+    ),
+
     'title'     => t('Drupal UserID'),
     'help'      => t('This is the Drupal user associated with the Biblio Author.')
   );
   $data['lastname'] =  array(
-    'sort'     => array('handler' => 'views_handler_sort'),
+    'sort'      => array('handler' => 'biblio_handler_sort_contributor_lastname'),
     'filter'    => array('handler' => 'biblio_handler_filter_contributor_lastname'),
     'argument'  => array('handler' => 'views_handler_argument_string'),
     'title'     => t('Author Lastname'),

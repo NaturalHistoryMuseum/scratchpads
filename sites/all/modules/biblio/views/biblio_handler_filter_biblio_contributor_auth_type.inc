@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_filter_biblio_contributor_auth_type.inc,v 1.1.2.1 2009/06/16 21:20:51 rjerome Exp $
 class biblio_handler_filter_biblio_contributor_auth_type extends views_handler_filter_in_operator {
 
   function construct() {

@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_field_biblio_keyword_kid.inc,v 1.1.2.2 2009/06/05 21:12:52 rjerome Exp $
 
 class biblio_handler_field_biblio_keyword_kid extends views_handler_field_prerender_list {
   function init(&$view, $options) {

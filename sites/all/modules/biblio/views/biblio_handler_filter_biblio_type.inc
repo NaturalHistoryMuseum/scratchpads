@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_filter_biblio_type.inc,v 1.1.2.2 2009/06/06 02:15:01 rjerome Exp $
 class biblio_handler_filter_biblio_type extends views_handler_filter_in_operator {
 
   function construct() {

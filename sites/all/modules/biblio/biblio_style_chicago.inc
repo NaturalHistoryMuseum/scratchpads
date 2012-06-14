@@ -10,7 +10,6 @@
 
 // Modified for use in biblio by Ron Jerome
 //
-// $Id: biblio_style_chicago.inc,v 1.4.2.14 2010/05/03 00:57:36 rjerome Exp $
 /**
  * Get the style information
  *
@@ -27,15 +26,15 @@ function biblio_style_chicago_author_options() {
     'BetweenAuthorsDelimStandard' =>', ',         //4
     'BetweenAuthorsDelimLastAuthor' => ', and ',  //5
     'AuthorsInitialsDelimFirstAuthor' => ', ',     //7
-    'AuthorsInitialsDelimStandard'=> ' ',         //8
+    'AuthorsInitialsDelimStandard' => ' ',         //8
     'betweenInitialsDelim' => '. ',               //9
-    'initialsBeforeAuthorFirstAuthor' => false,   //10
-    'initialsBeforeAuthorStandard' => true,       //11
+    'initialsBeforeAuthorFirstAuthor' => FALSE,   //10
+    'initialsBeforeAuthorStandard' => TRUE,       //11
     'shortenGivenNames' => FALSE,                 //12
     'numberOfAuthorsTriggeringEtAl' => 10,         //13
     'includeNumberOfAuthors' => 10,                //14
     'customStringAfterFirstAuthors' => ' et al.',//15
-    'encodeHTML' => true
+    'encodeHTML' => TRUE
   );
 
   return $author_options;
@@ -50,12 +49,12 @@ function biblio_style_chicago_author_options() {
  *   The base URL of the biblio module (defaults to /biblio)
  * @param $inline
  *   A logical value indicating if this is being rendered within the
- *   Drupal framwork (false) or we are just passing back the html (true)
+ *   Drupal framwork (FALSE) or we are just passing back the html (TRUE)
  * @return
  *   The styled biblio entry
  */
-function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
-
+function biblio_style_chicago($node, $base = 'biblio', $inline = FALSE) {
+  $output = '';
   $author_options = biblio_style_chicago_author_options();
   // $authors = theme('biblio_authors', $node->biblio_contributors[1], 'mla', 1, $inline);
 
@@ -72,7 +71,7 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
     case 102: //Journal Article
     case 105: //Newspaper Article
     case 106: //Magazine Article
-      if(!empty($authors)) {
+      if (!empty($authors)) {
         $output .= '<span class="biblio-authors">';
         $output .= $authors;
         if (!preg_match("/\. *$/", $authors)) $output .= ".";
@@ -118,7 +117,7 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
         $output .= theme_biblio_page_number($node->biblio_pages); // function 'formatPageInfo()' is defined in 'cite.inc.php'
       }
 
-      if ($node->online_publication == "yes") // this record refers to an online article
+      if (isset($node->online_publication)) // this record refers to an online article
       {
         // append an optional string (given in 'online_citation') plus the current date and the DOI (or URL):
 
@@ -165,7 +164,7 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
       break;
     case 101: //Book Chapter
     case 103: //Conference Paper
-      if(!empty($authors)) {
+      if (!empty($authors)) {
         $output .= '<span class="biblio-authors">';
         $output .= $authors;
         if (!preg_match("/\. *$/", $authors)) $output .= ".";
@@ -207,7 +206,7 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
           'numberOfAuthorsTriggeringEtAl'   => 10,
           'includeNumberOfAuthors'          => 10,
           'customStringAfterFirstAuthors'   => ' et al.',
-          'encodeHTML'                      => true
+          'encodeHTML'                      => TRUE
         );
 
         $editor = theme('biblio_format_authors', $node->biblio_contributors[2], $editor_options, $inline);
@@ -266,8 +265,8 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
         if (!empty($node->biblio_volume))      // series volume
         $output .= $node->biblio_volume;
 
-        if (!empty($node->biblio_issue))      // series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
-        $output .= ", no. " . $node->biblio_issue; // is it correct to format series issues similar to journal article issues?
+ //       if (!empty($node->biblio_issue))      // series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
+ //       $output .= ", no. " . $node->biblio_issue; // is it correct to format series issues similar to journal article issues?
       }
 
       if (!preg_match("/[?!.][ \"<i>]*$/", $output)) $output .= ".";
@@ -345,7 +344,7 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
           'numberOfAuthorsTriggeringEtAl'   => 10,
           'includeNumberOfAuthors'          => 10,
           'customStringAfterFirstAuthors'   => ' et al.',
-          'encodeHTML'                      => true
+          'encodeHTML'                      => TRUE
         );
 
         $editor = theme('biblio_format_authors', $node->biblio_contributors[2], $editor_options, $inline);
@@ -399,8 +398,8 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
         if (!empty($node->biblio_volume))      // series volume
         $output .= $node->biblio_volume;
 
-        if (!empty($node->biblio_issue))      // series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
-        $output .= ", no. " . $node->biblio_issue; // is it correct to format series issues similar to journal article issues?
+ //       if (!empty($node->biblio_issue))      // series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
+ //       $output .= ", no. " . $node->biblio_issue; // is it correct to format series issues similar to journal article issues?
       }
 
       if (!empty($node->thesis))      // thesis
@@ -429,39 +428,39 @@ function biblio_style_chicago($node, $base = 'biblio', $inline = false) {
       if (!empty($node->biblio_year))      // year
       $output .= ", ".$node->biblio_year;
 
-      if ($node->online_publication == "yes") // this record refers to an online article
-      {
-        // append an optional string (given in 'online_citation') plus the current date and the DOI (or URL):
-
-        $today = date("F j, Y");
-
-        if (!empty($node->online_citation))      // online_citation
-        {
-          if (!preg_match("/\. *$/", $output))  $output .= ".";
-
-          $output .= " " . $node->online_citation;
-        }
-
-        if (!empty($node->doi))      // doi
-        {
-          if (!preg_match("/\. *$/", $output)) $output .= ".";
-
-          if ($encodeHTML)
-          $output .= " " . encodeHTML("http://dx.doi.org/" . $node->doi) . " (accessed " . $today . ")";
-          else
-          $output .= " " . "http://dx.doi.org/" . $node->doi . " (accessed " . $today . ")";
-        }
-        elseif (!empty($node->biblio_url))      // url
-        {
-          if (!preg_match("/\. *$/", $output)) $output .= ".";
-
-          if ($encodeHTML)
-          $output .= " " . encodeHTML($node->biblio_url) . " (accessed " . $today . ")";
-          else
-          $output .= " " . $node->biblio_url . " (accessed " . $today . ")";
-        }
-
-      }
+//      if ($node->online_publication == "yes") // this record refers to an online article
+//      {
+//        // append an optional string (given in 'online_citation') plus the current date and the DOI (or URL):
+//
+//        $today = date("F j, Y");
+//
+//        if (!empty($node->online_citation))      // online_citation
+//        {
+//          if (!preg_match("/\. *$/", $output))  $output .= ".";
+//
+//          $output .= " " . $node->online_citation;
+//        }
+//
+//        if (!empty($node->doi))      // doi
+//        {
+//          if (!preg_match("/\. *$/", $output)) $output .= ".";
+//
+//          if ($encodeHTML)
+//          $output .= " " . encodeHTML("http://dx.doi.org/" . $node->doi) . " (accessed " . $today . ")";
+//          else
+//          $output .= " " . "http://dx.doi.org/" . $node->doi . " (accessed " . $today . ")";
+//        }
+//        elseif (!empty($node->biblio_url))      // url
+//        {
+//          if (!preg_match("/\. *$/", $output)) $output .= ".";
+//
+//          if ($encodeHTML)
+//          $output .= " " . encodeHTML($node->biblio_url) . " (accessed " . $today . ")";
+//          else
+//          $output .= " " . $node->biblio_url . " (accessed " . $today . ")";
+//        }
+//
+//      }
 
       if (!preg_match("/\. *$/", $output)) $output .= ".";
       break;

@@ -1,16 +1,13 @@
 <?php
-// $Id: biblio_handler_citation.inc,v 1.1.2.8 2010/05/12 01:31:36 rjerome Exp $
 class biblio_handler_citation extends views_handler_field {
 
   function init(&$view, $options) {
     parent::init($view, $options);
-    $this->additional_fields['vid'] = array('table' => 'biblio', 'field' => 'vid');
+   $this->additional_fields['nid'] = array('table' => 'node', 'field' => 'nid');
   }
 
   function query() {
     $this->add_additional_fields();
-    $this->field_alias = $this->aliases['vid'];
-    // add the biblio_type field as tid
   }
 
   function option_definition() {
@@ -32,10 +29,10 @@ class biblio_handler_citation extends views_handler_field {
   }
 
   function render($values) {
-    $node = node_load($values->nid);
+    $node = node_load($values->{$this->aliases['nid']});
     $base = variable_get('biblio_base', 'biblio');
     $inline = false;
-    
+
     if ($node->type == 'biblio') {
       return theme('biblio_entry', $node, $base, $this->options['style_name'], $inline);
     }

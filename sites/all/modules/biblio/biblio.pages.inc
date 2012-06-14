@@ -1,5 +1,4 @@
 <?PHP
-// $Id: biblio.pages.inc,v 1.1.2.119 2010/10/08 15:45:24 rjerome Exp $
 /**
  *
  *   Copyright (C) 2006-2008  Ron Jerome
@@ -296,6 +295,10 @@ function biblio_build_query($arg_list) {
           $terms[] = (int)$term;
           array_push($args, $type, (int)$term);
           $operator = NULL;
+//            $rss_info['title'] = t("Publications by " . $term[0]);
+//            $rss_info['description'] = t("These publications by %author are part of the works listed at %sitename", array('%author' => $term[0], '%sitename' => variable_get('site_name', 'Drupal')));
+//            $rss_info['link'] = '/author/' . $term[0];
+
           break;
         case 'keyword':
           $bkd++;
@@ -928,11 +931,12 @@ function _get_biblio_filters() {
   while ($tax = db_fetch_object($taxoresult)) {
     $pub_taxo["$tax->taxid"] = "$tax->vocab_name - $tax->termname";
   }
-  $author_select = isset($pub_authors) ? array('title' => t('Author'), 'options' => $pub_authors) : null;
-  $years_select  = isset($pub_years) ? array('title' => t('Year'), 'options' => array_unique($pub_years)) : null;
-  $type_select   = isset($pub_type)  ? array('title' => t('Type'), 'options' => array_unique($pub_type))  : null;
-  $tax_select    = isset($pub_taxo)  ? array('title' => t('Term'),'options' => array_unique($pub_taxo))  : null;
-  $keyword_select = isset($pub_keywords) ? array('title' => t('Keyword'), 'options' => $pub_keywords) : null;
+  
+  $author_select = count($pub_authors) > 1 ? array('title' => t('Author'), 'options' => $pub_authors) : null;
+  $years_select  = count($pub_years) > 1   ? array('title' => t('Year'), 'options' => array_unique($pub_years)) : null;
+  $type_select   = count($pub_type) > 1    ? array('title' => t('Type'), 'options' => array_unique($pub_type))  : null;
+  $tax_select    = count($pub_taxo) > 1    ? array('title' => t('Term'),'options' => array_unique($pub_taxo))  : null;
+  $keyword_select = count($pub_keywords) > 1 ? array('title' => t('Keyword'), 'options' => $pub_keywords) : null;
 
   $filters = array(
     'author'     => $author_select,
@@ -978,7 +982,7 @@ function biblio_form_filter() {
   }
 
   foreach ($filters as $key => $filter) {
-    if (count ($filter['options'])) {
+    if (isset($filter) && count($filter['options'])) {
       $names[$key] = check_plain($filter['title']);
       $form['filters']['status'][$key] = array('#type' => 'select', '#options' => $filter['options']);
     }
@@ -1269,7 +1273,7 @@ function _biblio_format_keyword($keyword) {
   $format    = l(trim($keyword->word), "$base/keyword/$keyword->kid" );
   $format   .= ' ('. $keyword->cnt . ') ' ;
   $path =  (ord(substr($_GET['q'],-1)) > 97) ? $_GET['q'] . "/" : substr($_GET['q'], 0, -1);
-  $edit_link = ' ['.l(t('edit'), $path . $keyword->kid . "/edit/" ).'] ';
+  $edit_link = ' ['.l(t('edit'), $path . $keyword->kid . "/edit" ).'] ';
   $format   .= (user_access('administer biblio')) ? $edit_link: '';
 
   return $format;

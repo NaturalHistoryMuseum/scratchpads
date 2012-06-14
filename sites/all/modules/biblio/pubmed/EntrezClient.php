@@ -1,5 +1,4 @@
 <?php
-// $Id: EntrezClient.php,v 1.1.2.3 2010/07/12 21:06:09 rjerome Exp $
 /**
  * @file EntrezClient.php
  * Provides Entrez client to retrieve items from the NCBI databases

@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_filter_biblio_keyword_kid.inc,v 1.1.2.2 2009/06/05 21:12:52 rjerome Exp $
 class biblio_handler_filter_biblio_keyword_kid extends views_handler_filter_many_to_one {
   function has_extra_options() { return TRUE; }
 

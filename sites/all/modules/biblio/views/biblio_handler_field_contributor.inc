@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_handler_field_contributor.inc,v 1.1.2.2 2009/06/15 18:26:42 rjerome Exp $
 class biblio_handler_field_contributor extends biblio_handler_field {
   function construct() {
     parent::construct();

@@ -10,6 +10,42 @@
 <h3>6.x-1.x-dev</h3>
 <b>New features</b>
 <ul>
+</ul>
+<b>Bugs fixed</b>
+<ul>
+</ul>
+<hr />
+
+<h3>6.x-1.17</h3>
+<b>New features</b>
+<ul>
+<li><a href="http://drupal.org/node/1140366">#1140366</a> Patch: PubMed XML Bulk Import</li>
+<li><a href="http://drupal.org/node/1018298">#1018298</a> Added: Highlighting local Authors (new css tag: biblio-local-author)</li>
+</ul>
+<b>Bugs fixed</b>
+<ul>
+<li><a href="http://drupal.org/node/1148470">#1148470</a> Fixed: Saving any records (could potenitally) create the maximum amount of (blank) contributors</li>
+<li><a href="http://drupal.org/node/1127514">#1127514</a> Patch removes issue numbers from (non journal) chicago style listings. </li>
+<li><a href="http://drupal.org/node/830770">#830770</a> Fixed: Biblio list output not showing filefield path aliases</li>
+<li><a href="http://drupal.org/node/1028504">#1028504</a> Partly revert commit #433528 (body_field format placement)</li>
+<li><a href="http://drupal.org/node/1015100">#1015100</a> Fixed: Small nit about $output in biblio_style_classic()</li>
+<li><a href="http://drupal.org/node/1021006">#1021006</a> Fixed: Undefined $term in function biblio_taxonomy()</li>
+<li><a href="http://drupal.org/node/1019586">#1019586</a> Fixed: Is there a way to turn off taxonomy filter option in biblio?</li>
+<li><a href="http://drupal.org/node/1018796">#1018796</a> Fixed: Warnings when bulk updating nodes</li>
+<li><a href="http://drupal.org/node/993570">#993570</a> Fixed: biblio: Orphaned authors (faster query)</li>
+<li><a href="http://drupal.org/node/987556">#987556</a> Fixed: CSE citation style no delimiter for first author's initials</li>
+<li><a href="http://drupal.org/node/978022">#978022</a> Fixed: Parentheses should be removed from Google Scholar link</li>
+<li><a href="http://drupal.org/node/978096">#978096</a> Fixed: Missing Magazine Article in tagged endnote publication type mapping</li>
+</ul>
+<hr />
+
+<h3>6.x-1.16</h3>
+<b> There was no 6.x-1.16 release (don't ask)</b>
+<hr />
+
+<h3>6.x-1.15</h3>
+<b>New features</b>
+<ul>
 <li> You can now mass import PubMed articles by listing the PubMed ID's in a text file (each on a separate line) and then importing the file like you would with other file formats (such as BibTex), just make sure to select PubMed ID's as the file type </li>
 <li> Title URL's are now aware of and use url aliases if they exist</li>
 <li> Added new Field mapper interface on the "admin/settings/biblio/fields/typemap" page.  This allows the admin to change the mapping (destination field)of data being imported from various file types</li>
@@ -18,22 +54,22 @@
 </ul>
 <b>Bugs fixed</b>
 <ul>
-<li><a href="/node/955258">#955258</a> Fixed: Biblio fields are not indexed by search</li>
-<li><a href="/node/946362">#946362</a> Fixed: Encoding issue in author formatter</li>
-<li><a href="/node/946492">#946492</a> Fixed: Subsidiary authors not imported by tagged EndNote parser</li>
-<li><a href="/node/939766">#939766</a> Fixed: Fatal error: Call to undefined function _build_biblio_tagged_link()</li>
-<li><a href="/node/908050">#908050</a> Fixed: Views: Author Lastname filter</li>
-<li><a href="/node/935562">#935562</a> Fixed: Biblio block and Restric users to view own biblio entries</li>
-<li><a href="/node/924094">#924094</a> Fixed: biblio import incomplete? (some MARC sub-fields missing)</li>
-<li><a href="/node/920910">#920910</a> Fixed: Retrieve Author name from username (revert some funtionality which was removed in the 5 to 6 transition)</li>
+<li><a href="http://drupal.org/node/955258">#955258</a> Fixed: Biblio fields are not indexed by search</li>
+<li><a href="http://drupal.org/node/946362">#946362</a> Fixed: Encoding issue in author formatter</li>
+<li><a href="http://drupal.org/node/946492">#946492</a> Fixed: Subsidiary authors not imported by tagged EndNote parser</li>
+<li><a href="http://drupal.org/node/939766">#939766</a> Fixed: Fatal error: Call to undefined function _build_biblio_tagged_link()</li>
+<li><a href="http://drupal.org/node/908050">#908050</a> Fixed: Views: Author Lastname filter</li>
+<li><a href="http://drupal.org/node/935562">#935562</a> Fixed: Biblio block and Restric users to view own biblio entries</li>
+<li><a href="http://drupal.org/node/924094">#924094</a> Fixed: biblio import incomplete? (some MARC sub-fields missing)</li>
+<li><a href="http://drupal.org/node/920910">#920910</a> Fixed: Retrieve Author name from username (revert some funtionality which was removed in the 5 to 6 transition)</li>
 <li> Fixed a bug which could lead to biblio nodes being owned by the anonymous user (uid=0) if there are CCK fields attached to the biblio content type.</li>
-<li><a href="/node/898544">#898544</a> Fixed: How to make a default blank option in the dropdown filter menu</li>
-<li><a href="/node/843580">#843580</a> Fixed: Error in theme_biblio_filters() parameters</li>
-<li><a href="/node/666672#comment-3364446">#666672</a> More authors button hangs with an AJAX working icon</li>
+<li><a href="http://drupal.org/node/898544">#898544</a> Fixed: How to make a default blank option in the dropdown filter menu</li>
+<li><a href="http://drupal.org/node/843580">#843580</a> Fixed: Error in theme_biblio_filters() parameters</li>
+<li><a href="http://drupal.org/node/666672#comment-3364446">#666672</a> More authors button hangs with an AJAX working icon</li>
 <li> Fixed a bug in the MARC parser which ignored repeating subfileds</li>
-<li><a href="/node/828728">#828728</a> Fixed: "SQL errors when migrating Biblio from Drupal 5</li>
-<li><a href="/node/859620">#859620</a> Fixed: "Populate using PubMed" overrides Citekey settings</li>
-<li><a href="/node/862740">#862740</a> Fixed: "Missing space between attachements in list output"</li>
+<li><a href="http://drupal.org/node/828728">#828728</a> Fixed: "SQL errors when migrating Biblio from Drupal 5</li>
+<li><a href="http://drupal.org/node/859620">#859620</a> Fixed: "Populate using PubMed" overrides Citekey settings</li>
+<li><a href="http://drupal.org/node/862740">#862740</a> Fixed: "Missing space between attachements in list output"</li>
 <li><a href="http://drupal.org/node/880218">#880218</a> Fixed: "Hyperlink author names" option ignored by theme_biblio_long()</li>
 <li><a href="http://drupal.org/node/844652#comment-3180882">#844652</a> Fixed: issue with citekey generation</li>
 </ul>

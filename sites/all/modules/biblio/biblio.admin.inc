@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio.admin.inc,v 1.9.2.101 2010/09/24 14:24:12 rjerome Exp $
 /**
  *   biblio.admin.inc
  *
@@ -33,7 +32,7 @@ function biblio_admin_ahah($form, $element, $value) {
 * Implementation of hook_settings().
 */
 function biblio_admin_settings() {
-  $version = '$Name: DRUPAL-6--1-15 $ $Date: 2010/09/24 14:24:12 $';
+  $version = '$Name$ $Date$';
   $version = str_replace('$', '', $version);
   $form['biblio_rev'] = array(
     '#value' => $version,
@@ -82,6 +81,14 @@ function biblio_admin_settings() {
     '#return_value' => 1,
     '#default_value' => variable_get('biblio_auto_orphaned_author_delete', 0),
     '#description' => t('Orphaned authors are those which are no longer linked to any entries as the result of a biblio update or delete.')
+  );
+  $form['authors']['biblio_init_auth_count'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of contributor fields to initially display on the input form'),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#default_value' => variable_get('biblio_init_auth_count', 4),
+    '#description' => t('Increasing this value will increase the number of input fields displayed in the contributors section of the input form')
   );
   $form['bibtex'] = array(
     '#type' => 'fieldset',
@@ -1849,7 +1856,10 @@ function biblio_admin_author_edit_form_submit($form, &$form_state) {
 
 function biblio_admin_orphans_form($form_state) {
   $base = variable_get('biblio_base', 'biblio');
-  $result = pager_query('SELECT * FROM {biblio_contributor_data} WHERE cid NOT IN (SELECT cid FROM {biblio_contributor} GROUP BY cid)', 50);
+  $result = pager_query('SELECT distinct d.cid cid, name, affiliation
+                         FROM {biblio_contributor_data} d
+                         LEFT JOIN {biblio_contributor} c ON (d.cid=c.cid)
+                         WHERE c.cid IS NULL', 50);
   $authors = array();
   while ($author = db_fetch_object($result)) {
     $authors[$author->cid] = '';
@@ -1883,7 +1893,10 @@ function biblio_admin_orphans_form_submit($form, &$form_state) {
 }
 function biblio_admin_keyword_orphans_form($form_state) {
   $base = variable_get('biblio_base', 'biblio');
-  $result = pager_query('SELECT * FROM {biblio_keyword_data} WHERE kid NOT IN (SELECT kid FROM {biblio_keyword} GROUP BY kid)', 50);
+  $result = pager_query('SELECT distinct bkd.kid kid, word
+                         FROM {biblio_keyword_data} bkd
+                         LEFT JOIN {biblio_keyword} bk ON (bkd.kid=bk.kid)
+                         WHERE bk.kid IS NULL', 50);
   $keywords = array();
   while ($keyword = db_fetch_object($result)) {
     $keywords[$keyword->kid] = '';

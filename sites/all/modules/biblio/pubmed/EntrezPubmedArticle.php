@@ -1,5 +1,4 @@
 <?php
-// $Id: EntrezPubmedArticle.php,v 1.1.2.6 2010/08/15 16:21:30 rjerome Exp $
 /**
  * @file EntrezPubmedArticle.php
  * Provides a class for handling PubMed articles retrieved with EFetch.
@@ -91,13 +90,16 @@ class BiblioEntrezPubmedArticle
         'biblio_issue'    => (string)$this->article->Article->Journal->JournalIssue->Issue,
         'biblio_issn'     => (string)$this->article->Article->Journal->ISSN,
         'biblio_pages'    => (string)$this->article->Article->Pagination->MedlinePgn,
-        'biblio_abst_e'   => (string)$this->article->Article->Abstract->AbstractText,
+        'biblio_abst_e'   => $this->abst(),
         'biblio_custom1'  => "http://www.ncbi.nlm.nih.gov/pubmed/{$this->id}?dopt=Abstract",
         'biblio_keywords' => $this->keywords(),
         'biblio_lang'     => $this->lang(),
       );
 
       $doi = $this->article->xpath('//ELocationID[@EIdType="doi"]/text()');
+      if (empty($doi)) {
+        $doi = $this->article->xpath('//ArticleId[@IdType="doi"]/text()');
+      }
       if (!empty($doi)) {
         $this->biblio['biblio_doi'] = (string)$doi[0];
       }
@@ -177,5 +179,20 @@ class BiblioEntrezPubmedArticle
       return (string)$this->article->Article->Language;
     }
 
+  }
+
+  private function abst() {
+    if (isset($this->article->Article->Abstract)) {
+      $abst = '';
+      foreach ($this->article->Article->Abstract->AbstractText  as $text) {
+        if (!empty($abst)) $abst .= "\n\n";
+        $attrs = $text->attributes();
+        if (isset($attrs['Label'])) {
+          $abst .= $attrs['Label'] . ': ';
+        }
+        $abst .=  (string)$text ;
+      }
+      return $abst;
+    }
   }
 }

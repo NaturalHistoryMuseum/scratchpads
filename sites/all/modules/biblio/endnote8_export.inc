@@ -1,5 +1,4 @@
 <?PHP
-// $Id: endnote8_export.inc,v 1.8.2.13 2009/09/29 01:34:42 rjerome Exp $
 function _endnote8_XML_export($node, $part = 'record'){
   $style_attr = 'face="normal" font="default" size="100%"';
   switch ($part) {
@@ -18,7 +17,7 @@ function _endnote8_XML_export($node, $part = 'record'){
       $xml .= en8_add_keywords($node);
       $xml .= en8_add_dates($node);
       $xml .= en8_add_urls($node);
-  
+
       foreach($node as $key => $value) {
         $entag = en8_field_map($key);
         if (!empty($entag) && !empty($value)) {
@@ -27,7 +26,7 @@ function _endnote8_XML_export($node, $part = 'record'){
       }
       $xml .= "</record>";
       break;
-    case 'end': 
+    case 'end':
       $xml .= '</records></xml>';
       break;
   }
@@ -77,7 +76,7 @@ function en8_add_urls(&$node) {
   // TODO: fix URLS
   if (!empty($node->biblio_url)) {
     $xml .= "<web-urls>";
-    $xml .= '<url><style face="normal" font="default" size="100%">'.$node->biblio_url."</style></url>";
+    $xml .= '<url><style face="normal" font="default" size="100%">' . htmlspecialchars($node->biblio_url) . "</style></url>";
     $xml .= "</web-urls>";
   }
   unset($node->biblio_url);
@@ -85,7 +84,7 @@ function en8_add_urls(&$node) {
     $xml .= "<related-urls>";
     foreach($node->files as $file) {
       $xml .= '<url><style face="normal" font="default" size="100%">';
-      $xml .= file_create_url($file->filepath);
+      $xml .= htmlspecialchars(file_create_url($file->filepath));
       $xml .= "</style></url>";
     }
     $xml .= "</related-urls>";

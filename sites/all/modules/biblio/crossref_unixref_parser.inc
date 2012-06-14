@@ -1,5 +1,4 @@
 <?php
-// $Id: crossref_unixref_parser.inc,v 1.1.2.12 2010/10/13 16:52:03 rjerome Exp $
 function unixref_startElement($parser, $name, $attrs) {
   global $node, $element,  $attribute, $auth_category, $contrib_count, $org_count;
   switch ($name) {

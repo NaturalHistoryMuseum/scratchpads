@@ -1,5 +1,4 @@
 <?php
-// $Id: biblio_pm.module,v 1.1.2.12 2010/10/13 16:52:03 rjerome Exp $
 /*
  * @file pubmed.module
  *
@@ -71,17 +70,17 @@ function biblio_pm_biblio_import_options() {
 function biblio_pm_biblio_import($file, $terms = array(), $batch = FALSE, $session_id = NULL, $save = TRUE, $string = FALSE) {
   $nids = array();
   $dups = array();
-  return _biblio_pm_import($file, $terms, $batch, $session_id);
-}
-
-function _biblio_pm_import($file, $terms, $batch, $session_id) {
-  module_load_include('php', 'biblio_pm', 'EntrezClient');
-  module_load_include('php', 'biblio_pm', 'EntrezPubmedArticle');
   $pmids = file($file->filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
   if (empty($pmids)) {
     drupal_set_message("Could not open PubMed ID file", 'error');
     return;
   }
+  return _biblio_pm_import_pmids($pmids, $terms, $batch, $session_id);
+}
+
+function _biblio_pm_import_pmids($pmids, $terms, $batch, $session_id) {
+  module_load_include('php', 'biblio_pm', 'EntrezClient');
+  module_load_include('php', 'biblio_pm', 'EntrezPubmedArticle');
   $retmax = 100;
   $resmax = count($pmids);
   $start = 0;
@@ -90,35 +89,58 @@ function _biblio_pm_import($file, $terms, $batch, $session_id) {
   $Eclient->setReturnMax($retmax);
   $nids = array();
   $dups = array();
-  $node = new stdClass();
-  $data = new BiblioEntrezPubmedArticle();
   while (($result = $Eclient->fetchRecords($start)) && $start < $resmax ) {
-    foreach ($result->xpath('//PubmedArticle') as $article) {
-      //$data->setArticle($article);
-      $node = $data->setArticle($article)->getBiblio();
-      if (isset($node)) {
-        if (!empty($terms)) {
-          if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
-          $node['taxonomy'] = array_merge($terms, $node['taxonomy']);
-        }
-        if (! ($dup = biblio_pm_check_md5($node['biblio_pubmed_md5']))) {
-          $nid = biblio_save_node($node, $batch, $session_id);
-          if (isset($nid)) {
-            $nids[] = $nid;
-          }
-        }
-        else {
-          $dups[] = $dup;
-        }
-        $node = null;
-      }
-      $start++;
-    }
-
+    $start += count($result->xpath('//PubmedArticle'));
+    list($nid, $dup) =  _biblio_pm_create_node_from_xml($result, $terms, $batch, $session_id);
+    $nids = array_merge($nids, $nid);
+    $dups = array_merge($dups, $dup);
   }
 
   return array($nids, $dups);
 }
+
+function biblio_pm_biblio_xml_import($file, $terms, $batch, $session_id) {
+  libxml_use_internal_errors(true);
+  $xml = @simplexml_load_file($file->filepath);
+  if(empty($xml) || isset($xml->body->pre->ERROR)) {
+    drupal_set_message("Could not parse file as PubMed XML", 'error');
+    return;
+  }
+  return _biblio_pm_create_node_from_xml($xml, $terms, $batch, $session_id);
+}
+
+function _biblio_pm_create_node_from_xml($xml, $terms, $batch, $session_id) {
+  module_load_include('php', 'biblio_pm', 'EntrezPubmedArticle');
+  $nids = array();
+  $dups = array();
+  $node = new stdClass();
+  $data = new BiblioEntrezPubmedArticle();
+
+  foreach ($xml->xpath('//PubmedArticle') as $article) {
+    //$data->setArticle($article);
+    $node = $data->setArticle($article)->getBiblio();
+    if (isset($node)) {
+      if (!empty($terms)) {
+        if (!isset($node['taxonomy'])) $node['taxonomy'] = array();
+        $node['taxonomy'] = array_merge($terms, $node['taxonomy']);
+      }
+      if (! ($dup = biblio_pm_check_md5($node['biblio_pubmed_md5']))) {
+        $nid = biblio_save_node($node, $batch, $session_id);
+        if (isset($nid)) {
+          $nids[] = $nid;
+        }
+      }
+      else {
+        $dups[] = $dup;
+      }
+      $node = null;
+    }
+    $start++;
+  }
+
+  return array($nids, $dups);
+}
+
 
 function biblio_pm_check_pmid($pmid) {
     return db_result(db_query("SELECT nid FROM {biblio_pubmed} WHERE biblio_pubmed_id = %d", $pmid));
