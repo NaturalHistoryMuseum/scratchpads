@@ -1,9 +1,12 @@
-// $Id: simplenews.js,v 1.1.2.2 2008/09/30 20:07:51 sutharsan Exp $
 
 /**
  * Set text of Save button dependent on the selected send option.
  */
 Drupal.behaviors.simplenewsCommandSend = function (context) {
+  // Workaround for a bug of Firefox that might change radio buttons on page reload.
+  // @see http://www.ryancramer.com/journal/entries/radio_buttons_firefox
+  $('.simplenews-command-send').attr('autocomplete', 'off');
+
   var simplenewsSendButton = function () {
     switch ($(".simplenews-command-send :radio:checked").val()) {
       case '0':

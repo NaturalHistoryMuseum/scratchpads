@@ -1,5 +1,4 @@
 <?php
-// $Id: simplenews-newsletter-body.tpl.php,v 1.1.2.4 2009/01/02 11:59:33 sutharsan Exp $
 
 /**
  * @file

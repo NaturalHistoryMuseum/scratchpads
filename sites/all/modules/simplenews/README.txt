@@ -1,4 +1,3 @@
-$Id: README.txt,v 1.5.2.10 2010/01/04 05:44:34 sutharsan Exp $
 
 DESCRIPTION
 -----------

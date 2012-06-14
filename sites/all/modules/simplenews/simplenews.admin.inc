@@ -1,5 +1,4 @@
 <?php
-// $Id: simplenews.admin.inc,v 1.5.2.54 2010/04/19 08:14:29 sutharsan Exp $
 
 /**
  * @file
@@ -437,6 +436,9 @@ function simplenews_subscription_list_add_submit($form, &$form_state) {
   $emails = preg_split("/[\s,]+/", $form_state['values']['emails']);
   foreach ($emails as $email) {
     $email = trim($email);
+    if ($email == '') {
+      continue;
+    }
     if (valid_email_address($email)) {
       foreach ($checked_newsletters as $tid) {
         $newsletter = taxonomy_get_term($tid);
@@ -789,7 +791,7 @@ function simplenews_admin_settings_submit($form, &$form_state) {
   unset($form_state['values']['simplenews_content_types']);
 
   drupal_set_message(t('Updated vocabulary %name.', array('%name' => $vocabulary['name'])));
-  watchdog('simplenews', 'Updated vocabulary %name.', array('%name' => $vocabulary['name']), WATCHDOG_NOTICE, l(t('edit'), 'admin/content/taxonomy/edit/vocabulary/'. $form_state['values']['vid']));
+  watchdog('simplenews', 'Updated vocabulary %name.', array('%name' => $vocabulary['name']), WATCHDOG_NOTICE, l(t('edit'), 'admin/content/taxonomy/edit/vocabulary/'. $form_state['values']['simplenews_vid']));
 }
 
 /**
@@ -925,7 +927,7 @@ function simplenews_admin_settings_mail(&$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Log emails'),
     '#default_value' => variable_get('simplenews_debug', FALSE),
-    '#description' => t('When checked all outgoing simplenews emails are logged in the system log. A logged email does not guarantee that it is send or will be delivered. It only indicates that a message is send to the PHP mail() function. No status information is available of delivery by the PHP mail() function.'),
+    '#description' => t('When checked all outgoing simplenews emails are logged in the system log. A logged email does not guarantee that it is sent or will be delivered. It only indicates that a message is send to the PHP mail() function. No status information is available of delivery by the PHP mail() function.'),
   );
 
   return system_settings_form($form);
@@ -1194,7 +1196,7 @@ function theme_simplenews_subscription_list($form) {
     }
   }
   else  {
-    $rows[] = array(array('data' => t('No subscriptions available.'), 'colspan' => '4'));
+    $rows[] = array(array('data' => t('No subscriptions available.'), 'colspan' => '5'));
   }
 
   // Render table header, pager and form

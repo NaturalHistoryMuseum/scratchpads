@@ -1,5 +1,4 @@
 <?php
-// $Id: simplenews-block.tpl.php,v 1.1.2.5 2009/01/02 11:59:33 sutharsan Exp $
 
 /**
  * @file
