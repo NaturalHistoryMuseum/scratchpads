@@ -1,5 +1,4 @@
 <?php
-// $Id: clone.module,v 1.23.4.4 2010/07/28 22:39:18 pwolanin Exp $
 
 /**
  * Implementation of hook_help().
@@ -114,3 +113,19 @@ function clone_init() {
   }
 }
 
+/**
+ * Implementation of hook_form_alter().
+ */
+function clone_form_alter(&$form, $form_state, $form_id) {
+  // Add the clone_from_original_nid value for node forms triggered by cloning.
+  // This will make sure the clone_from_original_nid property is still
+  // attached to the node when passing through hook_nodeapi($op = insert).
+  if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id) {
+    if (!empty($form['#node']->clone_from_original_nid)) {
+      $form['clone_from_original_nid'] = array(
+        '#type' => 'value',
+        '#value' => $form['#node']->clone_from_original_nid,
+      );
+    }
+  }
+}

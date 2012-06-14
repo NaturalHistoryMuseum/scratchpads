@@ -1,4 +1,3 @@
-$Id: README.txt,v 1.12.4.2 2010/07/30 20:53:07 pwolanin Exp $
 
 README file for the clone module for Drupal 6.x.
 

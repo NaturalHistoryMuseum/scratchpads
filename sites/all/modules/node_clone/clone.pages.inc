@@ -1,5 +1,4 @@
 <?php
-// $Id: clone.pages.inc,v 1.3.4.5 2010/07/28 22:22:16 pwolanin Exp $
 
 /**
  * Menu callback to configure module settings.
@@ -123,6 +122,7 @@ function clone_node_clone_menu_link($node) {
       $link['plid'] = $old_link['plid'];
       $link['menu_name'] = $old_link['menu_name'];
       $link['weight'] = $old_link['weight'];
+      $link['module'] = $old_link['module'];
       return $link;
     }
   }
@@ -148,6 +148,7 @@ function clone_node_prepopulate($original_node) {
       $node->menu = clone_node_clone_menu_link($original_node);
       if (isset($node->book['mlid'])) {
         $node->book['mlid'] = NULL;
+        $node->book['has_children'] = 0;
       }
       $node->path = NULL;
       $node->files = array();
@@ -192,7 +193,10 @@ function clone_node_save($nid) {
       $node->uid = $user->uid;
       $node->created = NULL;
       $node->menu = clone_node_clone_menu_link($original_node);
-      $node->book['mlid'] = NULL;
+      if (isset($node->book['mlid'])) {
+        $node->book['mlid'] = NULL;
+        $node->book['has_children'] = 0;
+      }
       $node->path = NULL;
       $node->files = array();
       $node->title = t('Clone of !title', array('!title' => $node->title));
