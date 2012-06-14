@@ -1,8 +1,5 @@
 <?php
-/**
- * @file
- * Code to migrate Events to use Date fields instead.
- */
+// $Id: date_tools.event.inc,v 1.1.2.1 2010/03/08 23:39:42 karens Exp $
 
 /**
  *  Event import form.
@@ -60,7 +57,7 @@ function date_tools_copy_import_event_form($form_state) {
       );
       $form['fields'] = array(
         '#type' => 'fieldset',
-        '#title' => t('!type Fields', array('!type' => check_plain($node_types[$type]))),
+        '#title' => t('!type Fields', array('!type' => $node_types[$type])),
         '#weight' => -1,
       );
       $form['fields'] += date_tools_copy_type_fields_form($type);
@@ -136,8 +133,6 @@ function date_tools_copy_convert_events( $source_type, $target_type, $date_field
 
   $rows = array();
   if ($start_nid) {
-    // We're skipping the placeholders so make sure this is an integer.
-    $start_nid = intval($start_nid);
     $where = " AND n.nid >= $start_nid ";
   }
   if (!$result = db_query_range("SELECT * FROM {event} e INNER JOIN {node} n ON e.nid=n.nid WHERE n.type = '%s' $where ORDER BY n.nid", array($source_type, $start_nid), $start, $limit)) {
@@ -179,7 +174,7 @@ function date_tools_copy_convert_events( $source_type, $target_type, $date_field
     $event_timezone = !empty($event->timezone) ? $timezones[$event->timezone] : date_default_timezone_name();
     // If this is a deprecated timezone, replace it.
     $event_timezone = _date_timezone_replacement($event_timezone);
-
+    
     if ($event_version == 1) {
       // Version 1 stores the UTC value in the database as a timestamp.
       $date = array(0 => array());
@@ -276,7 +271,7 @@ function date_tools_copy_type_form($target = TRUE) {
 
   // Find out what content types contain date fields and set them up as target options.
   foreach ($fields as $field_name => $field) {
-    if ($field['type'] == 'date' || $field['type'] == 'datestamp' || $field['type'] == 'datetime') {
+    if ($field['type'] == 'date' || $field['type'] == 'datestamp') {
       $type_options[$field['type_name']] = $node_types[$field['type_name']];
     }
   }
@@ -327,7 +322,7 @@ function date_tools_copy_type_fields_form($type, $extended = FALSE) {
   // Find out what content types contain date fields and set them up as target options.
   foreach ($fields as $field_name => $field) {
     if ($field['type_name'] == $type) {
-      if ($field['type'] == 'date' || $field['type'] == 'datestamp' || $field['type'] == 'datetime') {
+      if ($field['type'] == 'date' || $field['type'] == 'datestamp') {
         $date_options[$field_name] = $field['widget']['label'];
       }
       if ($field['type'] == 'text') {
