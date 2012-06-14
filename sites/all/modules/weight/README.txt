@@ -20,6 +20,6 @@ TO CREATE AN ORDERABLE VIEW (Admins can reweight nodes using drag-and-drop):
  * Create a view as normal with a "page" display
  * Change the view style to "weight changer"
  * Include Field Weight (though not as the first field you include).
- * Sort by Weight DESC.
+ * Sort by ASC (Ascending).
  * Ensure only appropriate roles have access to the view.
  * Load up the view, reorder, and save!
