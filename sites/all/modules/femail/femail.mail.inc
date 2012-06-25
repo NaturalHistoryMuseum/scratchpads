@@ -23,6 +23,7 @@ function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $ci
   global $user;
   if(is_object($tid)){
     $forum_term = $tid;
+    $tid = $forum_term->tid;
   } else {
     $forum_term = taxonomy_get_term($tid);
   }
