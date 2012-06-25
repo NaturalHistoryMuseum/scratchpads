@@ -21,8 +21,12 @@ function _femail_get_emails($tid, $account, $nid){
 
 function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $cid = 0, $inreplyto = FALSE){
   global $user;
-  $emails = _femail_get_emails($tid, $user, $nid);
-  $forum_term = taxonomy_get_term($tid);
+  if(is_object($tid)){
+    $forum_term = $tid;
+  } else {
+    $forum_term = taxonomy_get_term($tid);
+  }
+  $emails = _femail_get_emails($forum_term->tid, $user, $nid);
   if(count($emails)){
     $from_emails = variable_get('femail_emails', array());
     $from = ($user->name ? '=?UTF-8?B?' . base64_encode($user->name) . '?= ' : '') . '<' . ($user->mail ? $user->mail : $from_emails[$tid]) . '>';
