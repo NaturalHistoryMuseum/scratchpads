@@ -360,10 +360,13 @@ function femail_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL){
     }
     // We've added/updated a forum post, lets mail it out
     // First, we'll get the forum that this has been posted to.
+    watchdog('femail', 'femail_nodeapi reached');
     $forum_tid = $node->taxonomy[variable_get('forum_nav_vocabulary', 0)];
     if($forum_tid){
       module_load_include('mail.inc', 'femail');
       _femail_send_message($forum_tid, $node->title, $node->body, $node->nid, $node->files);
+    }else{
+      watchdog('femail', 'forum tid is not set: ' . print_r($node, 1));
     }
   }
 }
