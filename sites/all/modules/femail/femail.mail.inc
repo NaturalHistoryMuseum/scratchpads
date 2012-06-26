@@ -20,6 +20,7 @@ function _femail_get_emails($tid, $account, $nid){
 }
 
 function _femail_send_message($tid, $subject, $body, $nid, $files = array(), $cid = 0, $inreplyto = FALSE){
+  watchdog('femail', 'tid: '.print_r($tid, 1));
   global $user;
   if(is_object($tid)){
     $forum_term = $tid;
