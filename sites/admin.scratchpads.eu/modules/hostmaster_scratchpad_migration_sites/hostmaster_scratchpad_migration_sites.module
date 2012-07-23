@@ -80,9 +80,8 @@ function hostmaster_scratchpad_migration_sites_form_submit(&$form, &$form_state)
   // Loop the submission and submit as normal!
   unset($form['#submit']);
   // Loop through 20 domains and submit as normal.
-  $results = db_query("SELECT CONCAT('s2.', n.title) FROM {hosting_site} h INNER JOIN {node} n ON n.nid = h.nid WHERE platform = 4024 AND h.status = 1 AND profile IN (691, 1754) AND CONCAT('s2.', n.title) NOT IN (SELECT title FROM node) ORDER BY title");
-  $i = 0;
-  while($row = db_fetch_array($results) && $i < 20){
+  $results = db_query("SELECT CONCAT('s2.', n.title) FROM {hosting_site} h INNER JOIN {node} n ON n.nid = h.nid WHERE platform = 4024 AND h.status = 1 AND profile IN (691, 1754) AND CONCAT('s2.', n.title) NOT IN (SELECT title FROM node) ORDER BY title LIMIT 20");
+  while($row = db_fetch_array($results)){
     $form_copy = $form;
     $form_state_copy = $form_state;
     // Set correct title
@@ -91,6 +90,5 @@ function hostmaster_scratchpad_migration_sites_form_submit(&$form, &$form_state)
     $form_copy['title']['#value'] = $correct_title;
     module_load_include('pages.inc', 'node');
     node_form_submit($form_copy, $form_state_copy);
-    $i++;
   }
 }
