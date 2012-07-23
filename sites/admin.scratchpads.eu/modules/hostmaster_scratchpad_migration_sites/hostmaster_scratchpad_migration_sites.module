@@ -79,8 +79,8 @@ function hostmaster_scratchpad_migration_sites_form_site_node_form_alter(&$form,
 function hostmaster_scratchpad_migration_sites_form_submit(&$form, &$form_state){
   // Loop the submission and submit as normal!
   unset($form['#submit']);
-  // Loop through 20 domains and submit as normal.
-  $results = db_query("SELECT CONCAT('s2.', n.title) FROM {hosting_site} h INNER JOIN {node} n ON n.nid = h.nid WHERE platform = 4024 AND h.status = 1 AND profile IN (691, 1754) AND CONCAT('s2.', n.title) NOT IN (SELECT title FROM node) ORDER BY title LIMIT 20");
+  // Loop through 50 domains and submit as normal.
+  $results = db_query("SELECT CONCAT('s2.', n.title) FROM {hosting_site} h INNER JOIN {node} n ON n.nid = h.nid WHERE platform = 4024 AND h.status = 1 AND profile IN (691, 1754) AND CONCAT('s2.', n.title) NOT IN (SELECT title FROM node) ORDER BY title LIMIT 50");
   while($row = db_fetch_array($results)){
     $form_copy = $form;
     $form_state_copy = $form_state;
