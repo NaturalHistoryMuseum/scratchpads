@@ -1,0 +1,75 @@
+<?php
+
+function scratchpads_migrate_menu(){
+  $items['admin/content/scratchpads-migrate'] = array(
+	'title' => 'Scratchpads migrate',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'scratchpads_migrate_form'
+    ),
+    'access arguments' => array(
+      'access content'
+    )
+  );
+  return $items;
+}
+
+function scratchpads_migrate_form(&$form_state){
+
+	foreach(taxonomy_get_vocabularies() as $vocabulary){
+		$form['biological_classifications'][$vocabulary->vid] = array(
+	   '#type' => 'select', 
+	   '#title' => $vocabulary->name, 
+		'#options' => array(
+				0 => t('Not a biological classification'),
+		        1 => 'Animal',
+		        2 => 'Plant/Fungi',
+		        3 => 'Moneran'
+		      ),
+		'#default_value' => scratchpads_migrate_biological_classification_load($vocabulary->vid),
+		'#parents' => array('biological_classifications', $vocabulary->vid)
+		);      
+	}
+
+	$form['submit'] = array(
+	  '#type' => 'submit',
+	  '#value' => t('Save'),
+	);
+	
+	return $form;
+
+}
+
+function scratchpads_migrate_form_submit($form, &$form_state){
+
+	foreach($form_state['values']['biological_classifications'] as $vid => $classification_type){
+		
+		if($classification_type > 0){
+			scratchpads_migrate_biological_classification_save($vid, $classification_type);
+		}else{
+			scratchpads_migrate_biological_classification_delete($vid);
+		}
+	}
+	
+}
+
+function scratchpads_migrate_biological_classification_load($vid){
+  return db_result(db_query("SELECT type FROM {scratchpads_migrate_biological_classification} WHERE vid = %d", $vid));
+}
+
+function scratchpads_migrate_biological_classification_save($vid, $classification_type){
+  $data = array(
+    'vid' => $vid,
+	'type' => $classification_type
+  );
+  drupal_write_record('scratchpads_migrate_biological_classification', $data);
+}
+
+function scratchpads_migrate_biological_classification_delete($vid){
+  db_query('DELETE FROM {scratchpads_migrate_biological_classification} WHERE vid = %d', $vid);
+}
+
+function scratchpads_migrate_form_alter(&$form, &$form_state, $form_id) {
+	// dd($form_id);
+}
+
