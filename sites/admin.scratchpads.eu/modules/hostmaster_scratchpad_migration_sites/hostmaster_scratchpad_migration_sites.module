@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * S.D.Rycroft
+ * 
+ * Hostmaster_sites module
+ */
+function hostmaster_scratchpad_migration_sites_menu(){
+  return array(
+    'node/add/site/migrate' => array(
+      'title' => 'Create migration sites',
+      'page callback' => 'hostmaster_scratchpad_migration_sites_form',
+      'access arguments' => array(
+        'create site'
+      )
+    )
+  );
+}
+
+/**
+ * Get the form
+ *
+ */
+function hostmaster_scratchpad_migration_sites_form(){
+  // Pulled from node.pages.inc
+  global $user;
+  $types = node_get_types();
+  $type = 'site';
+  // If a node type has been specified, validate its existence.
+  if(isset($types[$type]) && node_access('create', $type)){
+    // Initialize settings:
+    $node = array(
+      'uid' => $user->uid,
+      'name' => (isset($user->name) ? $user->name : ''),
+      'type' => $type,
+      'language' => ''
+    );
+    drupal_set_title(t('Create @names', array(
+      '@name' => $types[$type]->name
+    )));
+    $output = drupal_get_form($type . '_node_form', $node);
+  }
+  return $output;
+}
+
+/**
+ * Tweak the form is being viewed on the multiple page.
+ */
+function hostmaster_scratchpad_migration_sites_form_site_node_form_alter(&$form, &$form_state){
+  if(arg(3) == 'migrate'){
+    // Unset submit functions and remove preview button
+    unset($form['buttons']['submit']['#submit']);
+    unset($form['buttons']['preview']);
+    // Add our own special submit function
+    $form['#submit'] = array(
+      'hostmaster_scratchpad_migration_sites_form_submit'
+    );
+    // Copy the title (prevent validation from failing), we'll hide the real
+    // title field and set its value to a valid fqdn
+    $form['title']['#type'] = 'hidden';
+    $form['title']['#value'] = 'example.com';
+  }else{
+    // We'll add the link to the multi page from the normal page, only if we're
+    // on node/add
+    if(arg(1) == 'add'){
+      $form['migrate_link'] = array(
+        '#value' => t('<h1>Migration sites must be created from the <a href="!url">Migration page</a>.', array(
+          '!url' => url('node/add/site/migrate')
+        )),
+        '#weight' => -100
+      );
+    }
+  }
+}
+
+/**
+ * Submit for multi form
+ */
+function hostmaster_scratchpad_migration_sites_form_submit(&$form, &$form_state){
+  // Loop the submission and submit as normal!
+  unset($form['#submit']);
+  // Loop through 50 domains and submit as normal.
+  $results = db_query("SELECT CONCAT('s2.', n.title) FROM {hosting_site} h INNER JOIN {node} n ON n.nid = h.nid WHERE platform = 4024 AND h.status = 1 AND profile IN (691, 1754) AND CONCAT('s2.', n.title) NOT IN (SELECT title FROM node) ORDER BY title LIMIT 50");
+  while($row = db_fetch_array($results)){
+    $form_copy = $form;
+    $form_state_copy = $form_state;
+    // Set correct title
+    $correct_title = array_pop($row);
+    $form_state_copy['values']['title'] = $correct_title;
+    $form_copy['title']['#value'] = $correct_title;
+    module_load_include('pages.inc', 'node');
+    node_form_submit($form_copy, $form_state_copy);
+  }
+}
