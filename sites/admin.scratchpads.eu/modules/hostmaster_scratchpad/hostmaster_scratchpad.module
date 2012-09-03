@@ -494,7 +494,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   $form['#submit'] = array_merge(array(
     'hostmaster_scratchpad_form_submit'
   ), (is_array($form['#submit']) ? $form['#submit'] : array()));
-  $form['site']['db_server']['#value'] = 3549;
+  $form['site']['db_server']['#value'] = 5067;
   $form['site']['db_server_description']['#value'] = '<div class="placeholder">msq-scratchpads.nhm.ac.uk</div>';
 }
 
