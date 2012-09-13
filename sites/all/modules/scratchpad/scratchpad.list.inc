@@ -192,6 +192,8 @@ function scratchpad_list_scratchpads_stats(){
       $sites_with_no_nodes[] = '<a href="http://' . $site . '">http://' . $site . '</a>';
     }
   }
+  // Sort the no nodes array
+  asort($sites_with_no_nodes);
   $output = '<pre style="font-family: mono, monospace">
 Users: ' . $total_users . ' (Total activated)
 Users: ' . $total_login_users . ' (Active and have logged in)
@@ -213,5 +215,5 @@ Nodes: ' . $total_nodes['totaltotaltotal'] . '
   return $output . '
   
 Sites with no nodes:
-' . implode("\n", $sites_with_no_nodes) . '</pre>';
+' . implode("\n\n", $sites_with_no_nodes) . '</pre>';
 }
