@@ -189,7 +189,7 @@ function scratchpad_list_scratchpads_stats(){
         $total_nodes[$type] += $num;
       }
     }else{
-      $sites_with_no_nodes[] = "http://" . $site;
+      $sites_with_no_nodes[] = '<a href="http://' . $site . '">http://' . $site . '</a>';
     }
   }
   $output = '<pre style="font-family: mono, monospace">
@@ -212,5 +212,6 @@ Nodes: ' . $total_nodes['totaltotaltotal'] . '
   }
   return $output . '
   
-Sites with no nodes: ' . implode(", ", $sites_with_no_nodes) . '</pre>';
+Sites with no nodes:
+' . implode("\n", $sites_with_no_nodes) . '</pre>';
 }
