@@ -102,6 +102,8 @@ function scratchpads_migrate_form(&$form_state){
 
 function scratchpads_migrate_form_submit($form, &$form_state){
 
+	global $base_url;
+
 	foreach($form_state['values']['biological_classifications'] as $vid => $classification_type){
 		
 		if($classification_type > 0){
@@ -121,8 +123,13 @@ function scratchpads_migrate_form_submit($form, &$form_state){
 
 		$message = array(
 		  'to' => 'ben@benscott.co.uk',
-		  'subject' => t('Ready for migration'),
-		  'body' => t('!site is ready for migration', array('!site' => variable_get('site_name', "Default site name")))
+		  'subject' => t('Migrate !host', array('
+			!host'=> parse_url($base_url, PHP_URL_HOST))
+		   ),
+		  'body' => t('!site !url is ready for migration', array(
+			'!site' => variable_get('site_name', "Default site name"), 
+			'!url' => $base_url)
+		   )
 		);
 		drupal_mail_send($message);		
 	}else{
