@@ -133,9 +133,7 @@ function scratchpads_migrate_form_submit($form, &$form_state){
 		);
 		drupal_mail_send($message);		
 	}else{
-		
 		drupal_set_message('Migration settings updated.');
-		
 	}
 
 	
