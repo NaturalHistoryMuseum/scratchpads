@@ -15,6 +15,14 @@ function scratchpads_migrate_menu(){
 }
 
 function scratchpads_migrate_form(&$form_state){
+	
+	$form['biological_classifications'] = array(
+		'#type' => 'fieldset', 
+		'#title' => t('Classifications'), 
+		'#collapsible' => TRUE, 
+		'#collapsed' => FALSE,
+		'#description' => t("Please select your biological classifications below.")
+	);
 
 	foreach(taxonomy_get_vocabularies() as $vocabulary){
 		$form['biological_classifications'][$vocabulary->vid] = array(
@@ -29,6 +37,58 @@ function scratchpads_migrate_form(&$form_state){
 		'#default_value' => scratchpads_migrate_biological_classification_load($vocabulary->vid),
 		'#parents' => array('biological_classifications', $vocabulary->vid)
 		);      
+	}
+	
+	$form['settings'] = array(
+		'#type' => 'fieldset', 
+		'#title' => t('Settings'), 
+		'#collapsible' => TRUE, 
+		'#collapsed' => FALSE,
+		'#description' => t("Scratchpads 2 has a completely redesigned home page. We <strong>highly recommend</strong> you use this, but if you really want to keep your old home page, check this box.")
+	);
+	
+	$form['settings']['keep_homepage'] = array(
+	   '#type' => 'checkbox', 
+	   '#title' => t('I want to keep my old home page.'),
+	   '#default_value' => variable_get('keep_homepage', false)
+	);
+	
+	$form['settings']['site_type'] = array(
+	   '#type' => 'select', 
+	   '#title' => t('Type of site'),
+	   '#description' => t('Please select one or more tags that describe your site.'),
+	   '#required' => TRUE,
+	   '#multiple' => TRUE,	
+	   '#default_value' => variable_get('site_type', array()),
+	   '#options' => array(
+	   	'taxonomic' => t('Taxonomic'),
+		'paleological' => t('Paleological'),
+		'mineralogical' => t('Mineralogical'),
+		'bio_geographic' => t('Bio-geographic'),
+		'marine' => t('Marine'),
+		'freshwater' => t('Freshwater'),
+		'terrestrial' => t('Terrestrial'),
+		'conservation' => t('Conservation'),
+		'society' => t('Society'),
+		'research_project' => t('Research project'),
+		'journal' => t('Journal'),
+		'literature' => t('Literature'),
+		'other' => t("Other")
+	   )
+	);
+	
+	$form['migrate_ready'] = array(
+	   '#type' => 'checkbox', 
+	   '#title' => t('Migrate my site now'),
+	   '#description' => t("Is your site ready to be migrated? Check this box and click 'Save'")
+	);
+	
+	if(variable_get('migrate_ready', false)){
+	
+		drupal_set_message('Your site has been queued for migration');
+		$form['migrate_ready']['#default_value'] = 1;
+		$form['migrate_ready']['#disabled'] = true;
+		
 	}
 
 	$form['submit'] = array(
@@ -51,6 +111,27 @@ function scratchpads_migrate_form_submit($form, &$form_state){
 		}
 	}
 	
+	variable_set('keep_homepage', $form_state['values']['keep_homepage']);
+	
+	variable_set('site_type', array_keys($form_state['values']['site_type']));
+	
+	if($form_state['values']['migrate_ready']){
+		
+		variable_set('migrate_ready', true);
+
+		$message = array(
+		  'to' => 'ben@benscott.co.uk',
+		  'subject' => t('Ready for migration'),
+		  'body' => t('!site is ready for migration', array('!site' => variable_get('site_name', "Default site name")))
+		);
+		drupal_mail_send($message);		
+	}else{
+		
+		drupal_set_message('Migration settings updated.');
+		
+	}
+
+	
 }
 
 function scratchpads_migrate_biological_classification_load($vid){
@@ -69,7 +150,4 @@ function scratchpads_migrate_biological_classification_delete($vid){
   db_query('DELETE FROM {scratchpads_migrate_biological_classification} WHERE vid = %d', $vid);
 }
 
-function scratchpads_migrate_form_alter(&$form, &$form_state, $form_id) {
-	// dd($form_id);
-}
 
