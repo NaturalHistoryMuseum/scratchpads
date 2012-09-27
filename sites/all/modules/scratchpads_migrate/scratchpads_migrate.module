@@ -2,7 +2,8 @@
 
 function scratchpads_migrate_menu(){
   $items['admin/content/scratchpads-migrate'] = array(
-	'title' => 'Scratchpads migrate',
+    'title' => 'Scratchpads migrate',
+    'description' => t('Scratchpad migration settings - please complete to get your site migrated.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array(
       'scratchpads_migrate_form'
@@ -15,128 +16,109 @@ function scratchpads_migrate_menu(){
 }
 
 function scratchpads_migrate_form(&$form_state){
-	
-	$form['biological_classifications'] = array(
-		'#type' => 'fieldset', 
-		'#title' => t('Classifications'), 
-		'#collapsible' => TRUE, 
-		'#collapsed' => FALSE,
-		'#description' => t("Please select your biological classifications below.")
-	);
-
-	foreach(taxonomy_get_vocabularies() as $vocabulary){
-		$form['biological_classifications'][$vocabulary->vid] = array(
-	   '#type' => 'select', 
-	   '#title' => $vocabulary->name, 
-		'#options' => array(
-				0 => t('Not a biological classification'),
-		        1 => 'Animal',
-		        2 => 'Plant/Fungi',
-		        3 => 'Moneran'
-		      ),
-		'#default_value' => scratchpads_migrate_biological_classification_load($vocabulary->vid),
-		'#parents' => array('biological_classifications', $vocabulary->vid)
-		);      
-	}
-	
-	$form['settings'] = array(
-		'#type' => 'fieldset', 
-		'#title' => t('Settings'), 
-		'#collapsible' => TRUE, 
-		'#collapsed' => FALSE,
-		'#description' => t("Scratchpads 2 has a completely redesigned home page. We <strong>highly recommend</strong> you use this, but if you really want to keep your old home page, check this box.")
-	);
-	
-	$form['settings']['keep_homepage'] = array(
-	   '#type' => 'checkbox', 
-	   '#title' => t('I want to keep my old home page.'),
-	   '#default_value' => variable_get('keep_homepage', false)
-	);
-	
-	$form['settings']['site_type'] = array(
-	   '#type' => 'select', 
-	   '#title' => t('Type of site'),
-	   '#description' => t('Please select one or more tags that describe your site.'),
-	   '#required' => TRUE,
-	   '#multiple' => TRUE,	
-	   '#default_value' => variable_get('site_type', array()),
-	   '#options' => array(
-	   	'taxonomic' => t('Taxonomic'),
-		'paleological' => t('Paleological'),
-		'mineralogical' => t('Mineralogical'),
-		'bio_geographic' => t('Bio-geographic'),
-		'marine' => t('Marine'),
-		'freshwater' => t('Freshwater'),
-		'terrestrial' => t('Terrestrial'),
-		'conservation' => t('Conservation'),
-		'society' => t('Society'),
-		'research_project' => t('Research project'),
-		'journal' => t('Journal'),
-		'literature' => t('Literature'),
-		'other' => t("Other")
-	   )
-	);
-	
-	$form['migrate_ready'] = array(
-	   '#type' => 'checkbox', 
-	   '#title' => t('Migrate my site now'),
-	   '#description' => t("Is your site ready to be migrated? Check this box and click 'Save'")
-	);
-	
-	if(variable_get('migrate_ready', false)){
-	
-		drupal_set_message('Your site has been queued for migration');
-		$form['migrate_ready']['#default_value'] = 1;
-		$form['migrate_ready']['#disabled'] = true;
-		
-	}
-
-	$form['submit'] = array(
-	  '#type' => 'submit',
-	  '#value' => t('Save'),
-	);
-	
-	return $form;
-
+  $form['biological_classifications'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Classifications'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#description' => t("Please select your biological classifications below.")
+  );
+  foreach(taxonomy_get_vocabularies() as $vocabulary){
+    $form['biological_classifications'][$vocabulary->vid] = array(
+      '#type' => 'select',
+      '#title' => $vocabulary->name,
+      '#options' => array(
+        0 => t('Not a biological classification'),
+        1 => 'Animal',
+        2 => 'Plant/Fungi',
+        3 => 'Moneran'
+      ),
+      '#default_value' => scratchpads_migrate_biological_classification_load($vocabulary->vid),
+      '#parents' => array(
+        'biological_classifications',
+        $vocabulary->vid
+      )
+    );
+  }
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#description' => t("Scratchpads 2 has a completely redesigned home page. We <strong>highly recommend</strong> you use this, but if you really want to keep your old home page, check this box.")
+  );
+  $form['settings']['keep_homepage'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('I want to keep my old home page.'),
+    '#default_value' => variable_get('keep_homepage', false)
+  );
+  $form['settings']['site_type'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Type of site'),
+    '#description' => t('Please select one or more tags that describe your site.'),
+    '#required' => TRUE,
+    '#multiple' => TRUE,
+    '#default_value' => variable_get('site_type', array()),
+    '#options' => array(
+      'taxonomic' => t('Taxonomic'),
+      'paleological' => t('Paleological'),
+      'mineralogical' => t('Mineralogical'),
+      'bio_geographic' => t('Bio-geographic'),
+      'marine' => t('Marine'),
+      'freshwater' => t('Freshwater'),
+      'terrestrial' => t('Terrestrial'),
+      'conservation' => t('Conservation'),
+      'society' => t('Society'),
+      'research_project' => t('Research project'),
+      'journal' => t('Journal'),
+      'literature' => t('Literature'),
+      'other' => t("Other")
+    )
+  );
+  $form['migrate_ready'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Migrate my site now'),
+    '#description' => t("Is your site ready to be migrated? Check this box and click 'Save'")
+  );
+  if(variable_get('migrate_ready', false)){
+    drupal_set_message('Your site has been queued for migration');
+    $form['migrate_ready']['#default_value'] = 1;
+    $form['migrate_ready']['#disabled'] = true;
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save')
+  );
+  return $form;
 }
 
 function scratchpads_migrate_form_submit($form, &$form_state){
-
-	global $base_url;
-
-	foreach($form_state['values']['biological_classifications'] as $vid => $classification_type){
-		
-		if($classification_type > 0){
-			scratchpads_migrate_biological_classification_save($vid, $classification_type);
-		}else{
-			scratchpads_migrate_biological_classification_delete($vid);
-		}
-	}
-	
-	variable_set('keep_homepage', $form_state['values']['keep_homepage']);
-	
-	variable_set('site_type', array_keys($form_state['values']['site_type']));
-	
-	if($form_state['values']['migrate_ready']){
-		
-		variable_set('migrate_ready', true);
-
-		$message = array(
-		  'to' => 'ben@benscott.co.uk',
-		  'subject' => t('Migrate !host', array(
-			'!host'=> parse_url($base_url, PHP_URL_HOST))
-		   ),
-		  'body' => t('!site !url is ready for migration', array(
-			'!site' => variable_get('site_name', "Default site name"), 
-			'!url' => $base_url)
-		   )
-		);
-		drupal_mail_send($message);		
-	}else{
-		drupal_set_message('Migration settings updated.');
-	}
-
-	
+  global $base_url;
+  foreach($form_state['values']['biological_classifications'] as $vid => $classification_type){
+    if($classification_type > 0){
+      scratchpads_migrate_biological_classification_save($vid, $classification_type);
+    }else{
+      scratchpads_migrate_biological_classification_delete($vid);
+    }
+  }
+  variable_set('keep_homepage', $form_state['values']['keep_homepage']);
+  variable_set('site_type', array_keys(array_filter($form_state['values']['site_type'])));
+  if($form_state['values']['migrate_ready']){
+    variable_set('migrate_ready', true);
+    $message = array(
+      'to' => 'ben@benscott.co.uk',
+      'subject' => t('Migrate !host', array(
+        '!host' => parse_url($base_url, PHP_URL_HOST)
+      )),
+      'body' => t('!site !url is ready for migration', array(
+        '!site' => variable_get('site_name', "Default site name"),
+        '!url' => $base_url
+      ))
+    );
+    drupal_mail_send($message);
+  }else{
+    drupal_set_message('Migration settings updated.');
+  }
 }
 
 function scratchpads_migrate_biological_classification_load($vid){
@@ -146,7 +128,7 @@ function scratchpads_migrate_biological_classification_load($vid){
 function scratchpads_migrate_biological_classification_save($vid, $classification_type){
   $data = array(
     'vid' => $vid,
-	'type' => $classification_type
+    'type' => $classification_type
   );
   drupal_write_record('scratchpads_migrate_biological_classification', $data);
 }
