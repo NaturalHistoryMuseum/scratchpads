@@ -206,10 +206,10 @@ function project_issue_priority($priority) {
 
 function project_issue_category($category = 0, $plural = 1) {
   if ($plural) {
-    $categories = array('bug' => t('bug reports'), 'task' => t('tasks'), 'feature' => t('feature requests'), 'support' => t('support requests'));
+    $categories = array('bug' => t('bug reports'), 'task' => t('tasks'), 'feature' => t('feature requests'), 'support' => t('support requests'), 'migrate' => t('Migrate bug'));
   }
   else {
-    $categories = array('bug' => t('bug report'), 'task' => t('task'), 'feature' => t('feature request'), 'support' => t('support request'));
+    $categories = array('bug' => t('bug report'), 'task' => t('task'), 'feature' => t('feature request'), 'support' => t('support request'), 'migrate' => t('Migrate bugs'));
   }
   return $category ? $categories[$category] : $categories;
 }
