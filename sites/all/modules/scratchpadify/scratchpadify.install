@@ -701,17 +701,6 @@ function scratchpadify_update_6130(){
 }
 
 /**
- * Clean up URL_ALIAS table - properly now that we have a fix for the issue
- */
-function scratchpadify_update_6132(){
-  $ret = array();
-  $ret[] = update_sql("CREATE TEMPORARY TABLE url_alias_temp AS ( SELECT lft.pid FROM {url_alias} lft, {url_alias} rgt WHERE lft.dst = rgt.dst AND lft.language='en' AND lft.pid != rgt.pid)");
-  $ret[] = update_sql("DELETE FROM {url_alias} WHERE pid IN (SELECT pid FROM url_alias_temp)");
-  $ret[] = update_sql("UPDATE url_alias SET language = 'en' WHERE language = ''");
-  return $ret;
-}
-
-/**
  * Delete vertical tab thingy (nobody is using them, so we can clear them all)
  */
 function scratchpadify_update_6134(){
@@ -1877,4 +1866,17 @@ function scratchpadify_update_6191(){
   return array(
     '#finished' => TRUE
   );
+}
+
+
+
+/**
+ * Clean up URL_ALIAS table - properly now that we have a fix for the issue
+ */
+function scratchpadify_update_6192(){
+  $ret = array();
+  $ret[] = update_sql("CREATE TEMPORARY TABLE url_alias_temp AS ( SELECT lft.pid FROM {url_alias} lft, {url_alias} rgt WHERE lft.dst = rgt.dst AND lft.language='en' AND lft.pid != rgt.pid)");
+  $ret[] = update_sql("DELETE FROM {url_alias} WHERE pid IN (SELECT pid FROM url_alias_temp)");
+  $ret[] = update_sql("UPDATE url_alias SET language = 'en' WHERE language = ''");
+  return $ret;
 }
