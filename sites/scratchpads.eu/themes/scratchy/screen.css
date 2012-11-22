@@ -385,3 +385,47 @@ p.faqquestion:hover {
   background-color:#f4f4f4;
   margin: 5px;
   border: solid 1px #ccc;}
+@import "http://fonts.googleapis.com/css?family=Ubuntu:400,500,400italic,500italic";
+
+body, h1, h2, h3, h4 {
+  font-family: Ubuntu, sans-serif;
+}
+
+body {
+  background: #EEE;
+}
+
+#header,
+div.navlinks,
+#iecentral {
+  width: 940px;
+  margin: auto;
+  background: #FFF;
+  padding: 0 10px;
+}
+
+#header {
+  padding: 20px 10px 0 10px;
+  height: 68px;
+}
+
+div.navlinks ul {
+  border-top: 1px solid #EEE;
+  border-bottom: 1px solid #EEE;
+  padding: 4px;
+}
+
+div.navlinks ul li a {
+  color: #000;
+  font-size: 14pt;
+  font-weight: normal;
+}
+
+div.navlinks ul li a:hover {
+  background: #87AE28;
+}
+
+#content, div#main-wide {
+  width: 940px;
+}
+
