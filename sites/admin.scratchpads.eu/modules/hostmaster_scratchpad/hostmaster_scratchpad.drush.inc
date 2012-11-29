@@ -20,8 +20,8 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
   switch($uri){
     case 'scratchpads.eu':
       return '
-    ProxyPass /dev http://web-scratchpad-solr.nhm.ac.uk:3000/
-    ProxyPassReverse /dev http://web-scratchpad-solr.nhm.ac.uk:3000/
+    ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
+    ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
 ';
   }
 }
