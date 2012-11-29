@@ -17,5 +17,11 @@ function drush_hostmaster_scratchpad_pre_provision_install($url = NULL){
  * Implements hook_provision_apache_vhost_config
  */
 function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
-  return "# $uri";
+  switch($uri){
+    case 'scratchpads.eu':
+      return '
+    ProxyPass /dev http://web-scratchpad-solr.nhm.ac.uk:3000/
+    ProxyPassReverse /dev http://web-scratchpad-solr.nhm.ac.uk:3000/
+';
+  }
 }
