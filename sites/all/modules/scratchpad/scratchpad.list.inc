@@ -172,6 +172,7 @@ function scratchpad_list_scratchpads_stats(){
   $total_nodes = array(
     'totaltotaltotal' => 0
   );
+  $sites_with_no_nodes = array();
   foreach($scratchpad_statistics as $site => $site_statistics){
     $total_users += $site_statistics['users']['total'];
     $total_login_users += $site_statistics['users']['login'];
