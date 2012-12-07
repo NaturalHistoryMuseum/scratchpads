@@ -54,6 +54,7 @@ function scratchpad_list_scratchpads_serial(){
 function scratchpad_list_scratchpads_table(){
   $header = array(
     'Site',
+    'Profile',
     'Last&nbsp;Login',
     'Last&nbsp;Edited',
     'Date reported',
@@ -68,6 +69,7 @@ function scratchpad_list_scratchpads_table(){
       l('http://' . $site, 'http://' . $site, array(
         'absolute' => TRUE
       )),
+      isset($data['profile']) ? $data['profile'] : 'unknown',
       '<span style="display:none;">' . $data['last_login_time'] . '</span>' . date('j-F-Y', $data['last_login_time']),
       '<span style="display:none;">' . $data['last_node_changed_time'] . '</span>' . date('j-F-Y', $data['last_node_changed_time']),
       '<span style="display:none;">' . $data['last_reported'] . '</span>' . date('j-F-Y', $data['last_reported']),
@@ -104,8 +106,10 @@ function scratchpad_report_site(){
       }
     }
     variable_set('scratchpad_sites_list', $sites);
-  } else {
-    watchdog('scratchpad_report', 'Error with data: %data', array('%data' => $_GET['data']));
+  }else{
+    watchdog('scratchpad_report', 'Error with data: %data', array(
+      '%data' => $_GET['data']
+    ));
   }
 }
 
