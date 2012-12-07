@@ -92,23 +92,18 @@ function scratchpad_report_site(){
   // front page and looking for our Google Analytics code
   $data = @unserialize($_GET['data']);
   if(is_array($data) && isset($data['site_url'])){
-    // Check for presence of the Scratchpad Google analytics code on the front
-    // page of the reporting site, if it is there, then it's a Scratchpad.
-    $front_page = file_get_contents('http://' . $data['site_url']);
-    if(strpos($front_page, 'UA-2428547-2')){
-      $sites = variable_get('scratchpad_sites_list', array());
-      $data['last_reported'] = time();
-      $sites[$data['site_url']] = $data;
-      // Loop through the sites, and delete the ones that haven't called
-      // in, in over a month.
-      $too_old_time = time() - 1209600; // Seconds in two weeks
-      foreach($sites as $site => $site_details){
-        if($site_details['last_reported'] < $too_old_time){
-          unset($sites[$site]);
-        }
+    $sites = variable_get('scratchpad_sites_list', array());
+    $data['last_reported'] = time();
+    $sites[$data['site_url']] = $data;
+    // Loop through the sites, and delete the ones that haven't called
+    // in, in over a month.
+    $too_old_time = time() - 1209600; // Seconds in two weeks
+    foreach($sites as $site => $site_details){
+      if($site_details['last_reported'] < $too_old_time){
+        unset($sites[$site]);
       }
-      variable_set('scratchpad_sites_list', $sites);
     }
+    variable_set('scratchpad_sites_list', $sites);
   } else {
     watchdog('scratchpad_report', 'Error with data: %data', array('%data' => $_GET['data']));
   }
