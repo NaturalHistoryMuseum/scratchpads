@@ -109,6 +109,8 @@ function scratchpad_report_site(){
       }
       variable_set('scratchpad_sites_list', $sites);
     }
+  } else {
+    watchdog('scratchpad_report', 'Error with data: %data', array('%data' => $_GET['data']));
   }
 }
 
