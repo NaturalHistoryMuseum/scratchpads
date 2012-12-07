@@ -509,7 +509,6 @@ function scratchpadify_update_6114(){
   $ret[] = update_sql("TRUNCATE {boost_cache}");
   return $ret;
 }
-
 // 6119 removed as 6120 replaces it completely.
 // 6135 replaces 6120
 function scratchpadify_update_6135(){
@@ -609,7 +608,6 @@ function scratchpadify_update_6122(){
   $ret[] = update_sql('ALTER TABLE creativecommons_lite DROP COLUMN id;');
   return $ret;
 }
-
 //function scratchpadify_update_6111(){
 function scratchpadify_update_6128(){
   $node_types = array(
@@ -700,17 +698,6 @@ function scratchpadify_update_6130(){
   return array(
     '#finished' => TRUE
   );
-}
-
-/**
- * Clean up URL_ALIAS table - properly now that we have a fix for the issue
- */
-function scratchpadify_update_6132(){
-  $ret = array();
-  $ret[] = update_sql("CREATE TEMPORARY TABLE url_alias_temp AS ( SELECT lft.pid FROM {url_alias} lft, {url_alias} rgt WHERE lft.dst = rgt.dst AND lft.language='en' AND lft.pid != rgt.pid)");
-  $ret[] = update_sql("DELETE FROM {url_alias} WHERE pid IN (SELECT pid FROM url_alias_temp)");
-  $ret[] = update_sql("UPDATE url_alias SET language = 'en' WHERE language = ''");
-  return $ret;
 }
 
 /**
@@ -1820,11 +1807,101 @@ function scratchpadify_update_6189(){
   $ret[] = update_sql("UPDATE {legal_conditions} SET language = 'en' WHERE language = ''");
   $ret[] = update_sql("UPDATE {legal_conditions} SET version = 1 WHERE version = 0");
   $ret[] = update_sql("UPDATE {legal_conditions} SET revision = 1 WHERE revision = 0");
-  return $ret;  
+  return $ret;
 }
 
 function scratchpadify_update_6190(){
   $ret = array();
   $ret[] = update_sql("DELETE FROM biblio_fields WHERE name = 'biblio_other_author_affiliations'");
-  return $ret;  
+  return $ret;
+}
+
+/**
+ * Clean up the excess Scratchpadify vocabularies.
+ */
+function scratchpadify_update_6191(){
+  $results = db_query("SELECT vid, name FROM {vocabulary} WHERE module = 'scratchpadify' ORDER BY vid ASC");
+  // We will assume that the lower vid is the one to keep.
+  $vocabs = array();
+  while(($row = db_fetch_array($results)) != FALSE){
+    if(!isset($vocabs[$row['name']])){
+      $vocabs[$row['name']] = array();
+    }
+    $vocabs[$row['name']][] = $row['vid'];
+  }
+  foreach($vocabs as $name => $vids){
+    $keep_vid = FALSE;
+    foreach($vids as $vid){
+      if(!$keep_vid){
+        $keep_vid = $vid;
+      }else{
+        // We have a vid to update all of the terms.  We simply change the vid
+        // in the term_data table to sort 'em out.
+        db_query('UPDATE {term_data} SET vid = %d WHERE vid = %d', $keep_vid, $vid);
+        taxonomy_del_vocabulary($vid);
+      }
+    }
+  }
+  // Next, we de-dupe for each vocab.
+  foreach($vocabs as $name => $vids){
+    $vid = array_shift($vids);
+    $results = db_query('SELECT lft.tid AS lft_tid, rgt.tid AS rgt_tid FROM {term_data} lft, {term_data} rgt WHERE lft.tid < rgt.tid AND lft.name = rgt.name AND lft.description = rgt.description AND lft.weight = rgt.weight AND lft.vid = rgt.vid AND lft.vid = %d', $vid);
+    $tids_map = array();
+    while(($row = db_fetch_array($results)) != FALSE){
+      $tids_map[$row['rgt_tid']] = $row['lft_tid'];
+    }
+    // Update all entries in the {term_node} table, although some will end up
+    // being duplicates, so we need to handle this cleverly.
+    // First we create a copy of the data, and update the new copy.
+    $temp_name = db_query_temporary('SELECT * FROM {term_node} WHERE tid IN (' . db_placeholders(tids_map) . ')', array_keys($tids_map), 'temp_term_node');
+    foreach($tids_map as $old_tid => $new_tid){
+      taxonomy_del_term($old_tid);
+      db_query('UPDATE temp_term_node SET tid = %d WHERE tid = %d', $new_tid, $old_tid);
+    }
+    // Next we insert the data into the live table
+    db_query('REPLACE INTO {term_node} SELECT * FROM temp_term_node');
+    // Drop the temp table
+    db_query('DROP TABLE temp_term_node');
+  }
+  return array(
+    '#finished' => TRUE
+  );
+}
+
+/**
+ * Clean up URL_ALIAS table - properly now that we have a fix for the issue
+ */
+function scratchpadify_update_6192(){
+  $ret = array();
+  $ret[] = update_sql("CREATE TEMPORARY TABLE url_alias_temp AS ( SELECT lft.pid FROM {url_alias} lft, {url_alias} rgt WHERE lft.dst = rgt.dst AND lft.language='en' AND lft.pid != rgt.pid)");
+  $ret[] = update_sql("DELETE FROM {url_alias} WHERE pid IN (SELECT pid FROM url_alias_temp)");
+  $ret[] = update_sql("UPDATE url_alias SET language = 'en' WHERE language = ''");
+  return $ret;
+}
+
+/**
+ * Update the remote issue queue tab.
+ * 
+ * NOTE, Scratchpads 1.0 is obsolete, so this function only exists here, and has
+ * not been updated in the install above.
+ */
+function scratchpadify_update_6193(){
+  $ret = array(
+    '#finished' => TRUE
+  );
+  $results = db_query("SELECT fid FROM {aggregator_feed} WHERE url = 'http://dev.scratchpads.eu/project/issues/rss/scratchpads'");
+  $row = db_fetch_array($results);
+  if($row && $row['fid']){
+    $feed = aggregator_feed_load($row['fid']);
+    $feed['url'] = 'http://support.scratchpads.eu/projects/scratchpads2/issues.atom';
+    try{
+      aggregator_save_feed($feed);
+    }
+    catch(Exception $e){
+    }
+    aggregator_remove($feed);
+    aggregator_refresh($feed);
+    variable_set('remote_issue_tab_uwho_url', 'http://support.scratchpads.eu/uwho');
+  }
+  return $ret;
 }

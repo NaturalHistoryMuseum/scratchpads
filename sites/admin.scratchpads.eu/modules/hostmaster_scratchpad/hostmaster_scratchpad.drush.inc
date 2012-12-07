@@ -12,3 +12,16 @@ function drush_hostmaster_scratchpad_pre_provision_install($url = NULL){
   drush_set_option('institution', drush_get_option('institution', FALSE), 'site');
   drush_set_option('taxonomic_scope', drush_get_option('taxonomic_scope', FALSE), 'site');
 }
+
+/**
+ * Implements hook_provision_apache_vhost_config
+ */
+function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
+  switch($uri){
+    case 'scratchpads.eu':
+      return '
+    ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
+    ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
+';
+  }
+}
