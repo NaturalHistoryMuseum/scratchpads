@@ -1905,3 +1905,24 @@ function scratchpadify_update_6193(){
   }
   return $ret;
 }
+
+/**
+ * Delete all terms that do not have a parent set.
+ */
+function scratchpadify_update_6194(){
+  $ret = array();
+  // Get all the TIDs without a parent, and without any content.  All the rest
+  // will be set to Zero.
+  $results = db_query('SELECT tid FROM {term_data} t WHERE tid NOT IN (SELECT tid FROM {term_hierarchy}) AND tid NOT IN (SELECT tid FROM {term_node})');
+  while(($row = db_fetch_array($results)) != FALSE){
+    taxonomy_del_term($row['tid']);
+    $ret[] = array(
+      'success' => TRUE,
+      'query' => t('Deleted term: !tid', array(
+        '!tid' => $row['tid']
+      ))
+    );
+  }
+  $ret[] = update_sql('INSERT INTO {term_hierarchy} (tid, parent) SELECT tid, 0 FROM {term_data} WHERE tid NOT IN (SELECT tid FROM {term_hierarchy})');
+  return $ret;
+}
