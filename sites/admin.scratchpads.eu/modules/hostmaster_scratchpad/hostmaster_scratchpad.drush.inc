@@ -26,10 +26,7 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
       break;
     case 'phthiraptera.info':
       return '
-    ServerAlias phthiraptera.myspecies.info
     RewriteEngine on
-    RewriteCond %{HTTP_HOST} !^phthiraptera.info$ [NC]
-    RewriteRule ^/*(.*)$ http://phthiraptera.info/$1 [NE,L,R=301]
     RewriteCond %{REQUEST_URI} /Publications/
     RewriteRule (.*) /var/www/phthiraptera.org$1
     RewriteCond %{REQUEST_URI} /phthiraptera.org
