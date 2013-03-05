@@ -23,5 +23,32 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
     ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
 ';
+      break;
+    case 'phthiraptera.info':
+      return '
+    ServerAlias phthiraptera.myspecies.info
+    RewriteEngine on
+    RewriteCond %{HTTP_HOST} !^phthiraptera.info$ [NC]
+    RewriteRule ^/*(.*)$ http://phthiraptera.info/$1 [NE,L,R=301]
+    RewriteCond %{REQUEST_URI} /Publications/
+    RewriteRule (.*) /var/www/phthiraptera.org$1
+    RewriteCond %{REQUEST_URI} /phthiraptera.org
+    RewriteRule /phthiraptera\.org(.*) /var/www/phthiraptera.org$1
+';
+      break;
+    case 'mosquito-taxonomic-inventory.info.myspecies.info':
+      return '
+    <Location />
+      AuthType Digest
+      AuthName "Hidden Upgrade Site"
+      AuthDigestProvider file
+      AuthUserFile /var/www/digest_passwd
+      Require valid-user
+      Order allow,deny
+      Allow from 157.140.0.0/255.255.0.0
+      Satisfy any
+    </Location>
+';
+      break;
   }
 }
