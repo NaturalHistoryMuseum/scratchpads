@@ -33,6 +33,8 @@ function hostmaster_scratchpad_signup_restricted(){
  * Implementation of hook_mail_alter().
  */
 function hostmaster_scratchpad_mail_alter(&$message){
+  // Set the from address for all emails from Aegir
+  $message['from'] = 'Scratchpads Team <no-reply@scratchpads.eu>';
   // Prevent sending of the "your new site" message. Gah!
   if(substr($message['subject'], 0, 13) == 'Your new site'){
     $message['to'] = '<aegir>';
