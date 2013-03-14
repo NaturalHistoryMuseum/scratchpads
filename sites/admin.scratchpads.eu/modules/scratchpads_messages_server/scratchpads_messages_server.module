@@ -16,14 +16,20 @@ function scratchpads_messages_server_menu(){
   return array(
     'messages' => array(
       'title' => 'Scratchpads messages',
-      'page callback' => 'scratchpads_messages_server_list_messages',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array(
+        'scratchpads_messages_server_list_messages'
+      ),
       'access arguments' => array(
         'addminister scratchpads messages'
       )
     ),
     'messages/add' => array(
       'title' => t('Add'),
-      'page callback' => 'scratchpads_messages_server_add_messages',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array(
+        'scratchpads_messages_server_add_messages'
+      ),
       'access arguments' => array(
         'addminister scratchpads messages'
       ),
@@ -40,4 +46,25 @@ function scratchpads_messages_server_menu(){
       'type' => MENU_CALLBACK
     )
   );
+}
+
+/**
+ * List the messages callback.
+ */
+function scratchpads_messages_server_list_messages(){
+  return array();
+}
+
+/**
+ * Add a message callback.
+ */
+function scratchpads_messages_server_add_messages(){
+  return array();
+}
+
+/**
+ * JSON callback.
+ */
+function scratchpads_messages_server_list_messages_json(){
+  return '';
 }
