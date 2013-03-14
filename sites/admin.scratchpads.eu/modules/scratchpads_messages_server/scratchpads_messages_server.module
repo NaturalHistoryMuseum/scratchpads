@@ -26,11 +26,18 @@ function scratchpads_messages_server_menu(){
       'page callback' => 'scratchpads_messages_server_add_messages',
       'access arguments' => array(
         'addminister scratchpads messages'
-      )
+      ),
+      'type' => MENU_LOCAL_TASK
     ),
     'messages/list' => array(
       'title' => t('List'),
       'type' => MENU_DEFAULT_LOCAL_TASK
+    ),
+    'messages/list.json' => array(
+      'title' => '',
+      'page callback' => 'scratchpads_messages_server_list_messages_json',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK
     )
   );
 }
