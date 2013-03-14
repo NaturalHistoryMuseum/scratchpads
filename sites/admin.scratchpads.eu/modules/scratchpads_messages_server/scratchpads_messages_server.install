@@ -31,7 +31,7 @@ function scratchpads_messages_server_schema(){
           'type' => 'text',
           'not null' => TRUE
         ),
-        'from' => array(
+        'created' => array(
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0
@@ -51,8 +51,8 @@ function scratchpads_messages_server_schema(){
         'mid'
       ),
       'indexes' => array(
-        'scratchpads_messages_server_message_from' => array(
-          'from'
+        'scratchpads_messages_server_message_created' => array(
+          'created'
         )
       )
     )
