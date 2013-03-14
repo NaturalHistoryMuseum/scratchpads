@@ -11,7 +11,7 @@ function hostmaster_scratchpad_install(){
  * Hook_uninstall
  */
 function hostmaster_scratchpad_uninstall(){
-  drupal_install_schema('hostmaster_scratchpad');
+  drupal_uninstall_schema('hostmaster_scratchpad');
 }
 
 /**
