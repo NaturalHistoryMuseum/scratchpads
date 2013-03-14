@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function scratchpads_messages_server_install(){
+  drupal_install_schema('scratchpads_messages_server');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function scratchpads_messages_server_uninstall(){
+  drupal_uninstall_schema('scratchpads_messages_server');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function scratchpads_messages_server_schema(){
+  return array(
+    'scratchpads_messages_server_message' => array(
+      'description' => 'Stores user data.',
+      'fields' => array(
+        'mid' => array(
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE
+        ),
+        'message' => array(
+          'type' => 'text',
+          'not null' => TRUE
+        ),
+        'from' => array(
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0
+        ),
+        'expire' => array(
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0
+        ),
+        'type' => array(
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 1
+        )
+      ),
+      'primary key' => array(
+        'mid'
+      ),
+      'indexes' => array(
+        'scratchpads_messages_server_message_from' => array(
+          'from'
+        )
+      )
+    )
+  );
+}

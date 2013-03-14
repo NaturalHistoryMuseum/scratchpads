@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Implements hook_perm()
+ */
+function scratchpads_messages_server_perm(){
+  return array(
+    'addminister scratchpads messages'
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function scratchpads_messages_server_menu(){
+  return array(
+    'messages' => array(
+      'title' => 'Scratchpads messages',
+      'page callback' => 'scratchpads_messages_server_list_messages',
+      'access arguments' => array(
+        'addminister scratchpads messages'
+      )
+    ),
+    'messages/add' => array(
+      'title' => t('Add'),
+      'page callback' => 'scratchpads_messages_server_add_messages',
+      'access arguments' => array(
+        'addminister scratchpads messages'
+      )
+    ),
+    'messages/list' => array(
+      'title' => t('List'),
+      'type' => MENU_DEFAULT_LOCAL_TASK
+    )
+  );
+}
