@@ -106,7 +106,7 @@ function scratchpads_migrate_form_submit($form, &$form_state){
   if($form_state['values']['migrate_ready']){
     variable_set('migrate_ready', true);
     $message = array(
-      'to' => 'a.heaton@nhm.ac.uk',
+      'to' => 'd.koureas@nhm.ac.uk',
       'subject' => t('Migrate !host', array(
         '!host' => parse_url($base_url, PHP_URL_HOST)
       )),
