@@ -37,7 +37,8 @@ function scratchpads_messages_server_menu(){
     ),
     'messages/list' => array(
       'title' => t('List'),
-      'type' => MENU_DEFAULT_LOCAL_TASK
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10
     ),
     'messages/list.json' => array(
       'title' => '',
@@ -49,22 +50,229 @@ function scratchpads_messages_server_menu(){
 }
 
 /**
+ * Implements hook_theme().
+ */
+function scratchpads_messages_server_theme($existing, $type, $theme, $path){
+  return array(
+    'scratchpads_messages_server_list_messages' => array(
+      'arguments' => array(
+        'form' => NULL
+      )
+    )
+  );
+}
+
+/**
  * List the messages callback.
  */
-function scratchpads_messages_server_list_messages(){
-  return array();
+function scratchpads_messages_server_list_messages($form_state){
+  if(isset($form_state['values']['op']) && $form_state['values']['op'] == t('Delete')){return scratchpads_messages_server_multiple_delete_confirm($form_state, array_filter($form_state['values']['msgs']));}
+  $form = array();
+  $result = db_query('SELECT * FROM {scratchpads_messages_server_message}');
+  $msgs = array();
+  while(($msg = db_fetch_object($result)) != FALSE){
+    $msgs[$msg->mid] = '';
+    $form['message'][$msg->mid] = array(
+      '#value' => $msg->message
+    );
+    $form['type'][$msg->mid] = array(
+      '#value' => scratchpads_messages_server_types($msg->type)
+    );
+    $form['created'][$msg->mid] = array(
+      '#value' => date('c', $msg->created)
+    );
+    $form['expire'][$msg->mid] = array(
+      '#value' => date('c', $msg->expire)
+    );
+  }
+  $form['msgs'] = array(
+    '#type' => 'checkboxes',
+    '#options' => $msgs
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#submit' => array(
+      'scratchpads_messages_server_list_messages_submit'
+    )
+  );
+  $form['#theme'] = 'scratchpads_messages_server_list_messages';
+  return $form;
+}
+
+/**
+ * Submit messages for deletion.
+ * 
+ * There should be no need to delete messages, but incase somebody adds a
+ * message by mistake, they can delete it here.
+ */
+function scratchpads_messages_server_list_messages_submit(&$form, &$form_state){
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Theme the form
+ */
+function theme_scratchpads_messages_server_list_messages($form){
+  // If there are rows in this form, then $form['title'] contains a list of
+  // the title form elements.
+  $has_posts = isset($form['message']) && is_array($form['message']);
+  $select_header = $has_posts ? theme('table_select_header_cell') : '';
+  $header = array(
+    $select_header,
+    t('Message'),
+    t('Type'),
+    t('Expire'),
+    t('Created')
+  );
+  $output = '';
+  if($has_posts){
+    foreach(element_children($form['message']) as $key){
+      $row = array();
+      $row[] = drupal_render($form['msgs'][$key]);
+      $row[] = drupal_render($form['message'][$key]);
+      $row[] = drupal_render($form['type'][$key]);
+      $row[] = drupal_render($form['expire'][$key]);
+      $row[] = drupal_render($form['created'][$key]);
+      $rows[] = $row;
+    }
+  }else{
+    $rows[] = array(
+      array(
+        'data' => t('No messages available.'),
+        'colspan' => '5'
+      )
+    );
+  }
+  $output .= theme('table', $header, $rows);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+function scratchpads_messages_server_multiple_delete_confirm(&$form_state, $messages){
+  $form['messages'] = array(
+    '#prefix' => '<ul>',
+    '#suffix' => '</ul>',
+    '#tree' => TRUE
+  );
+  // array_filter returns only elements with TRUE values
+  foreach(array_keys($messages) as $mid){
+    $title = db_result(db_query('SELECT message FROM {scratchpads_messages_server_message} WHERE mid = %d', $mid));
+    $form['messages'][$mid] = array(
+      '#type' => 'hidden',
+      '#value' => $mid,
+      '#prefix' => '<li>',
+      '#suffix' => check_plain($title) . "</li>\n"
+    );
+  }
+  $form['operation'] = array(
+    '#type' => 'hidden',
+    '#value' => 'delete'
+  );
+  $form['#submit'][] = 'scratchpads_messages_server_multiple_delete_confirm_submit';
+  return confirm_form($form, t('Are you sure you want to delete these items?'), 'node', t('This action cannot be undone.'), t('Delete all'), t('Cancel'));
+}
+
+function scratchpads_messages_server_multiple_delete_confirm_submit($form, &$form_state){
+  if($form_state['values']['confirm']){
+    $in = implode(',', array_keys($form_state['values']['messages']));
+    db_query('DELETE FROM {scratchpads_messages_server_message} WHERE mid IN (%s)', $in);
+    drupal_set_message(t('The items have been deleted.'));
+  }
+  $form_state['redirect'] = 'messages';
+  return;
+}
+
+/**
+ * Simple function to give an array of message types.
+ */
+function scratchpads_messages_server_types($key = FALSE){
+  $types = array(
+    1 => t('Status')
+  );
+  if($key){return $types[$key];}
+  return $types;
 }
 
 /**
  * Add a message callback.
  */
 function scratchpads_messages_server_add_messages(){
-  return array();
+  $date = date('c');
+  $expire = date('c', time() + 172800);
+  return array(
+    'message' => array(
+      '#title' => t('Message'),
+      '#type' => 'textarea',
+      '#required' => TRUE
+    ),
+    'created' => array(
+      '#title' => t('Created'),
+      '#type' => 'textfield',
+      '#default_value' => $date,
+      '#description' => t('Ensure the date format is kept <em>exactly</em> like !example_date', array(
+        '!example_date' => $date
+      )),
+      '#required' => TRUE
+    ),
+    'expire' => array(
+      '#title' => t('Expire'),
+      '#type' => 'textfield',
+      '#default_value' => $expire,
+      '#description' => t('Note, the default expiry date is two days hence.') . '<br/>' . t('Ensure the date format is kept <em>exactly</em> like !example_date', array(
+        '!example_date' => $expire
+      )),
+      '#required' => TRUE
+    ),
+    'type' => array(
+      '#title' => t('Type'),
+      '#type' => 'select',
+      '#options' => scratchpads_messages_server_types(),
+      '#required' => TRUE,
+      '#default_value' => 1
+    ),
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save')
+    ),
+    '#redirect' => 'messages'
+  );
+}
+
+/**
+ * Validate the string format of the dates and times.
+ */
+function scratchpads_messages_server_add_messages_validate(&$form, &$form_state){
+  $created = strtotime($form_state['values']['created']);
+  if(!$created){
+    form_set_error('created', t('Ensure you keep the time format.'));
+    unset($form['#redirect']);
+  }
+  $expire = strtotime($form_state['values']['expire']);
+  if(!$expire){
+    form_set_error('expire', t('Ensure you keep the time format.'));
+    unset($form['#redirect']);
+  }
+}
+
+/**
+ * Save a message
+ */
+function scratchpads_messages_server_add_messages_submit(&$form, &$form_state){
+  $created = strtotime($form_state['values']['created']);
+  $expire = strtotime($form_state['values']['expire']);
+  db_query("INSERT INTO {scratchpads_messages_server_message} (message, created, expire, type) VALUES ('%s', %d, %d, %d)", $form_state['values']['message'], $created, $expire, $form_state['values']['type']);
 }
 
 /**
  * JSON callback.
  */
 function scratchpads_messages_server_list_messages_json(){
-  return '';
+  $results = db_query('SELECT * FROM {scratchpads_messages_server_message}');
+  $msgs = array();
+  while(($row = db_fetch_array($results)) != FALSE){
+    $msgs[] = $row;
+  }
+  echo json_encode($msgs);
+  exit();
 }
