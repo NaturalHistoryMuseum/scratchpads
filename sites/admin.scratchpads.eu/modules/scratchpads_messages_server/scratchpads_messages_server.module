@@ -79,10 +79,10 @@ function scratchpads_messages_server_list_messages($form_state){
       '#value' => scratchpads_messages_server_types($msg->type)
     );
     $form['created'][$msg->mid] = array(
-      '#value' => date('c', $msg->created)
+      '#value' => format_date($msg->created)
     );
     $form['expire'][$msg->mid] = array(
-      '#value' => date('c', $msg->expire)
+      '#value' => format_date($msg->expire)
     );
   }
   $form['msgs'] = array(
@@ -122,8 +122,8 @@ function theme_scratchpads_messages_server_list_messages($form){
     $select_header,
     t('Message'),
     t('Type'),
-    t('Expire'),
-    t('Created')
+    t('Created'),
+    t('Expire')
   );
   $output = '';
   if($has_posts){
@@ -132,8 +132,8 @@ function theme_scratchpads_messages_server_list_messages($form){
       $row[] = drupal_render($form['msgs'][$key]);
       $row[] = drupal_render($form['message'][$key]);
       $row[] = drupal_render($form['type'][$key]);
-      $row[] = drupal_render($form['expire'][$key]);
       $row[] = drupal_render($form['created'][$key]);
+      $row[] = drupal_render($form['expire'][$key]);
       $rows[] = $row;
     }
   }else{
@@ -198,8 +198,8 @@ function scratchpads_messages_server_types($key = FALSE){
  * Add a message callback.
  */
 function scratchpads_messages_server_add_messages(){
-  $date = date('c');
-  $expire = date('c', time() + 172800);
+  $date = date('Y-m-d G:i');
+  $expire = date('Y-m-d G:i', time() + 172800);
   return array(
     'message' => array(
       '#title' => t('Message'),
@@ -275,4 +275,11 @@ function scratchpads_messages_server_list_messages_json(){
   }
   echo json_encode($msgs);
   exit();
+}
+
+/**
+ * Implements hook_cron().
+ */
+function scratchpads_messages_server_cron(){
+  db_query('DELETE FROM {scratchpads_messages_server_message} WHERE expire < %d', time());
 }
