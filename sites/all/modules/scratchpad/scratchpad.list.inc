@@ -37,7 +37,7 @@ function scratchpad_list_scratchpads_emails(){
   )) . '</h1>';
 }
 
-function scratchpad_list_scratchpads_serial(){
+function scratchpad_list_scratchpads_serial($json = FALSE){
   // We'll output the list serialized
   drupal_set_header('Content-Type: text/plain');
   $scratchpad_details = variable_get('scratchpad_sites_list', array());
@@ -47,7 +47,11 @@ function scratchpad_list_scratchpads_serial(){
       unset($scratchpad_details[$site]['maintainer_emails']);
     }
   }
-  echo serialize($scratchpad_details);
+  if($json){
+    echo json_encode($scratchpad_details);
+  }else{
+    echo serialize($scratchpad_details);
+  }
   exit();
 }
 

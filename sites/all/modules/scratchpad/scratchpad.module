@@ -157,6 +157,18 @@ function scratchpad_menu(){
       'file' => 'scratchpad.list.inc',
       'type' => MENU_CALLBACK
     ),
+    'scratchpads/json' => array(
+      'title' => 'Serial',
+      'page callback' => 'scratchpad_list_scratchpads_serial',
+      'page arguments' => array(
+        TRUE
+      ),
+      'access arguments' => array(
+        'access content'
+      ),
+      'file' => 'scratchpad.list.inc',
+      'type' => MENU_CALLBACK
+    ),
     'scratchpads/thumbs' => array(
       'title' => 'Thumbnails',
       'page callback' => 'scratchpad_list_scratchpads_thumbs',
