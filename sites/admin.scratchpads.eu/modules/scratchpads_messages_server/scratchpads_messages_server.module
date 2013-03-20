@@ -81,6 +81,10 @@ function scratchpads_messages_server_list_messages($form_state){
     $form['created'][$msg->mid] = array(
       '#value' => format_date($msg->created)
     );
+    $roles = unserialize($msg->roles);
+    $form['roles'][$msg->mid] = array(
+      '#value' => count($roles) ? implode('<br/>', $roles) : t('All roles')
+    );
     $form['expire'][$msg->mid] = array(
       '#value' => format_date($msg->expire)
     );
@@ -121,6 +125,7 @@ function theme_scratchpads_messages_server_list_messages($form){
   $header = array(
     $select_header,
     t('Message'),
+    t('Roles'),
     t('Type'),
     t('Created'),
     t('Expire')
@@ -131,6 +136,7 @@ function theme_scratchpads_messages_server_list_messages($form){
       $row = array();
       $row[] = drupal_render($form['msgs'][$key]);
       $row[] = drupal_render($form['message'][$key]);
+      $row[] = drupal_render($form['roles'][$key]);
       $row[] = drupal_render($form['type'][$key]);
       $row[] = drupal_render($form['created'][$key]);
       $row[] = drupal_render($form['expire'][$key]);
@@ -231,6 +237,20 @@ function scratchpads_messages_server_add_messages(){
       '#required' => TRUE,
       '#default_value' => 1
     ),
+    'roles' => array(
+      '#title' => t('Roles'),
+      '#type' => 'select',
+      '#options' => array(
+        'anonymous user' => 'anonymous user',
+        'authenticated user' => 'authenticated user',
+        'contributor' => 'contributor',
+        'editor' => 'editor',
+        'maintainer' => 'maintainer'
+      ),
+      '#multiple' => TRUE,
+      '#default_value' => FALSE,
+      '#description' => t('Leave blank to display to all roles')
+    ),
     'submit' => array(
       '#type' => 'submit',
       '#value' => t('Save')
@@ -261,7 +281,7 @@ function scratchpads_messages_server_add_messages_validate(&$form, &$form_state)
 function scratchpads_messages_server_add_messages_submit(&$form, &$form_state){
   $created = strtotime($form_state['values']['created']);
   $expire = strtotime($form_state['values']['expire']);
-  db_query("INSERT INTO {scratchpads_messages_server_message} (message, created, expire, type) VALUES ('%s', %d, %d, %d)", $form_state['values']['message'], $created, $expire, $form_state['values']['type']);
+  db_query("INSERT INTO {scratchpads_messages_server_message} (message, created, expire, type, roles) VALUES ('%s', %d, %d, %d, '%s')", $form_state['values']['message'], $created, $expire, $form_state['values']['type'], serialize($form_state['values']['roles']));
 }
 
 /**
@@ -271,6 +291,7 @@ function scratchpads_messages_server_list_messages_json(){
   $results = db_query('SELECT * FROM {scratchpads_messages_server_message}');
   $msgs = array();
   while(($row = db_fetch_array($results)) != FALSE){
+    $row['roles'] = unserialize($row['roles']);
     $msgs[] = $row;
   }
   echo json_encode($msgs);
