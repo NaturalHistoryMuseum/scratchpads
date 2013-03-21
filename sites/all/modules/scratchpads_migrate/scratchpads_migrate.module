@@ -15,6 +15,53 @@ function scratchpads_migrate_menu(){
   return $items;
 }
 
+/**
+ * Return the array defining the site type options
+ * (Implemented as function rather than constant
+ * for future compatibility as these may change
+ * in sync with SP2 counterparts)
+ */
+function _scratchpads_migrate_site_type_options() {
+  return array(
+    'Research domain' => array(
+      'biogeography' => t('Biogeography'),
+      'taxonomy_systematics' => t('Taxonomy/Systematics'),
+      'conservation' => t('Conservation'),
+      'paleontology_fossils' => t('Paleontology/Fossils'),
+      'mineralogy' => t('Mineralogy'),
+      'other_research_domain' => t('Other')
+    ),
+    'Scope/Focus' => array(
+      'society_organisation' => t('Society/Organisation'),
+      'journal' => t('Journal'),
+      'research_project_data' => t('Research project/data'),
+      'citizen_science_project' => t('Citizen science project'),
+      'other_scope_focus' => t('Other')
+    ),
+    'Taxonomic area' => array(
+      'plants' => t('Plants'),
+      'animals' => t('Animals'),
+      'algae_fungi' => t('Algae-Fungi'),
+      'other_taxonomic_area' => t('Other'),
+      'no_taxonomic_restriction' => t('No taxonomic restriction'),
+      'taxonomic_area_not_applicable' => t('Not applicable')
+    ),
+    'Ecoregion' => array(
+      'marine' => t('Marine'),
+      'freshwater' => t('Freshwater'),
+      'terrestrial' => t('Terrestrial'),
+      'no_ecoregional_restriction' => t('No ecoregional restriction'),
+      'ecoregion_not_applicable' => t('Not applicable')
+    ),
+    'Geographical extent' => array(
+      'global_no_geographic_restriction' => t('Global/No geographic restriction'),
+      'continental_subcontinental' => t('Continental/subcontinental'),
+      'regional' => t('Regional (More than one country in a region, eg. Baltic countries)'),
+      'local' => t('Local (Country/sub-country level)'),
+      'geographical_extent_not_applicable' => t('Not applicable')
+    )
+  );
+}
 function scratchpads_migrate_form(&$form_state){
   $form['biological_classifications'] = array(
     '#type' => 'fieldset',
@@ -53,28 +100,27 @@ function scratchpads_migrate_form(&$form_state){
     '#default_value' => variable_get('keep_homepage', false)
   );
   $form['settings']['site_type'] = array(
-    '#type' => 'checkboxes',
+    '#type' => 'fieldset',
     '#title' => t('Type of site'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
     '#description' => t('Please select one or more tags that describe your site.'),
-    '#required' => TRUE,
-    '#multiple' => TRUE,
-    '#default_value' => variable_get('site_type', array()),
-    '#options' => array(
-      'taxonomic' => t('Taxonomic'),
-      'paleological' => t('Paleological'),
-      'mineralogical' => t('Mineralogical'),
-      'bio_geographic' => t('Bio-geographic'),
-      'marine' => t('Marine'),
-      'freshwater' => t('Freshwater'),
-      'terrestrial' => t('Terrestrial'),
-      'conservation' => t('Conservation'),
-      'society' => t('Society'),
-      'research_project' => t('Research project'),
-      'journal' => t('Journal'),
-      'literature' => t('Literature'),
-      'other' => t("Other")
-    )
   );
+  $site_type_options = _scratchpads_migrate_site_type_options();
+  $site_type_defaults = variable_get('site_type', array());
+  foreach ($site_type_options as $site_type_category => $site_type_sub_options) {
+    $site_type_category_machine = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
+    $site_type_sub_defaults = array_intersect($site_type_defaults, array_keys($site_type_sub_options));
+    $site_type_definition = array(
+      '#type' => 'checkboxes',
+      '#title' => t($site_type_category),
+      '#required' => TRUE,
+      '#multiple' => TRUE,
+      '#default_value' => $site_type_sub_defaults,
+      '#options' => $site_type_sub_options
+    );
+    $form['settings']['site_type'][$site_type_category_machine] = $site_type_definition;
+  }
   $form['migrate_ready'] = array(
     '#type' => 'checkbox',
     '#title' => t('Migrate my site now'),
@@ -102,7 +148,13 @@ function scratchpads_migrate_form_submit($form, &$form_state){
     }
   }
   variable_set('keep_homepage', $form_state['values']['keep_homepage']);
-  variable_set('site_type', array_keys(array_filter($form_state['values']['site_type'])));
+  $site_type = array();
+  $site_type_options = _scratchpads_migrate_site_type_options();
+  foreach(array_keys($site_type_options) as $site_type_category) {
+    $site_type_category_machine = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
+    $site_type = array_merge($site_type, array_keys(array_filter($form_state['values']['site_type'][$site_type_category_machine])));
+  }
+  variable_set('site_type', $site_type);
   if($form_state['values']['migrate_ready']){
     variable_set('migrate_ready', true);
     $message = array(
