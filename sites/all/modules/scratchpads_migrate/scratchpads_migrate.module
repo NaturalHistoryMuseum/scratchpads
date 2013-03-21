@@ -109,7 +109,7 @@ function scratchpads_migrate_form(&$form_state){
   $site_type_options = _scratchpads_migrate_site_type_options();
   $site_type_defaults = variable_get('site_type', array());
   foreach ($site_type_options as $site_type_category => $site_type_sub_options) {
-    $site_type_category_machine = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
+    $site_type_category_machine = 'type_' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
     $site_type_sub_defaults = array_intersect($site_type_defaults, array_keys($site_type_sub_options));
     $site_type_definition = array(
       '#type' => 'checkboxes',
@@ -151,8 +151,8 @@ function scratchpads_migrate_form_submit($form, &$form_state){
   $site_type = array();
   $site_type_options = _scratchpads_migrate_site_type_options();
   foreach(array_keys($site_type_options) as $site_type_category) {
-    $site_type_category_machine = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
-    $site_type = array_merge($site_type, array_keys(array_filter($form_state['values']['site_type'][$site_type_category_machine])));
+    $site_type_category_machine = 'type_' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $site_type_category));
+    $site_type = array_merge($site_type, array_filter($form_state['values'][$site_type_category_machine]));
   }
   variable_set('site_type', $site_type);
   if($form_state['values']['migrate_ready']){
