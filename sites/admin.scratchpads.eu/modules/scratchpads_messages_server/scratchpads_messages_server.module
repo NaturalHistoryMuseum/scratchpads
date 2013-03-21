@@ -194,7 +194,8 @@ function scratchpads_messages_server_multiple_delete_confirm_submit($form, &$for
  */
 function scratchpads_messages_server_types($key = FALSE){
   $types = array(
-    1 => t('Status')
+    1 => t('Status'),
+    2 => t('Tip')
   );
   if($key){return $types[$key];}
   return $types;
@@ -227,7 +228,7 @@ function scratchpads_messages_server_add_messages(){
       '#default_value' => $expire,
       '#description' => t('Note, the default expiry date is two days hence.') . '<br/>' . t('Ensure the date format is kept <em>exactly</em> like !example_date', array(
         '!example_date' => $expire
-      )),
+      )) . '<br/>' . t('Note, you may "tips" to expire long into the future.'),
       '#required' => TRUE
     ),
     'type' => array(
@@ -302,5 +303,6 @@ function scratchpads_messages_server_list_messages_json(){
  * Implements hook_cron().
  */
 function scratchpads_messages_server_cron(){
-  db_query('DELETE FROM {scratchpads_messages_server_message} WHERE expire < %d', time());
+  // FIXME - We may not want "tips" to expire.
+  //db_query('DELETE FROM {scratchpads_messages_server_message} WHERE expire < %d', time());
 }
