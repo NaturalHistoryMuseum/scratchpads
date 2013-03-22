@@ -86,7 +86,7 @@ function scratchpads_messages_server_list_messages($form_state){
       '#value' => count($roles) ? implode('<br/>', $roles) : t('All roles')
     );
     $form['expire'][$msg->mid] = array(
-      '#value' => format_date($msg->expire)
+      '#value' => $msg->expire ? format_date($msg->expire) : t('Never')
     );
   }
   $form['msgs'] = array(
@@ -226,10 +226,9 @@ function scratchpads_messages_server_add_messages(){
       '#title' => t('Expire'),
       '#type' => 'textfield',
       '#default_value' => $expire,
-      '#description' => t('Note, the default expiry date is two days hence.') . '<br/>' . t('Ensure the date format is kept <em>exactly</em> like !example_date', array(
+      '#description' => t('Note, the default expiry date is two days hence.') . '<br/>' . t('Ensure the date format is kept <em>exactly</em> like !example_date, or blank to never expire.', array(
         '!example_date' => $expire
-      )) . '<br/>' . t('Note, you may "tips" to expire long into the future.'),
-      '#required' => TRUE
+      ))
     ),
     'type' => array(
       '#title' => t('Type'),
@@ -269,10 +268,12 @@ function scratchpads_messages_server_add_messages_validate(&$form, &$form_state)
     form_set_error('created', t('Ensure you keep the time format.'));
     unset($form['#redirect']);
   }
-  $expire = strtotime($form_state['values']['expire']);
-  if(!$expire){
-    form_set_error('expire', t('Ensure you keep the time format.'));
-    unset($form['#redirect']);
+  if(trim($form_state['values']['expire'])){
+    $expire = strtotime($form_state['values']['expire']);
+    if(!$expire){
+      form_set_error('expire', t('Ensure you keep the time format.'));
+      unset($form['#redirect']);
+    }
   }
 }
 
@@ -281,7 +282,11 @@ function scratchpads_messages_server_add_messages_validate(&$form, &$form_state)
  */
 function scratchpads_messages_server_add_messages_submit(&$form, &$form_state){
   $created = strtotime($form_state['values']['created']);
-  $expire = strtotime($form_state['values']['expire']);
+  if(trim($form_state['values']['expire'])){
+    $expire = strtotime($form_state['values']['expire']);
+  }else{
+    $expire = 0;
+  }
   db_query("INSERT INTO {scratchpads_messages_server_message} (message, created, expire, type, roles) VALUES ('%s', %d, %d, %d, '%s')", $form_state['values']['message'], $created, $expire, $form_state['values']['type'], serialize($form_state['values']['roles']));
 }
 
