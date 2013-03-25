@@ -47,5 +47,16 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     </Location>
 ';
       break;
+    // Any NHM only sites
+    case 'edit.nhm.ac.uk':
+    case 'zooemu.nhm.ac.uk':
+      return '
+    <Location />
+      Order allow,deny
+      Deny from all
+      Allow from 157.140.0.0/255.255.0.0
+    </Location>
+';
+      break;
   }
 }
