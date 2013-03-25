@@ -33,26 +33,12 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     RewriteRule /phthiraptera\.org(.*) /var/www/phthiraptera.org$1
 ';
       break;
-    case 'mosquito-taxonomic-inventory.info.myspecies.info':
-      return '
-    <Location />
-      AuthType Digest
-      AuthName "Hidden Upgrade Site"
-      AuthDigestProvider file
-      AuthUserFile /var/www/digest_passwd
-      Require valid-user
-      Order allow,deny
-      Allow from 157.140.0.0/255.255.0.0
-      Satisfy any
-    </Location>
-';
-      break;
     // Any NHM only sites
     case 'edit.nhm.ac.uk':
     case 'zooemu.nhm.ac.uk':
       return '
     <Location />
-      Order allow,deny
+      Order deny,allow
       Deny from all
       Allow from 157.140.0.0/255.255.0.0
     </Location>
