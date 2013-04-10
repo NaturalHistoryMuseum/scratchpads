@@ -48,6 +48,7 @@ function scratchpad_list_scratchpads_serial($json = FALSE){
     }
   }
   if($json){
+    drupal_set_header('Content-Type: application/json');
     echo json_encode($scratchpad_details);
   }else{
     echo serialize($scratchpad_details);
