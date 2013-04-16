@@ -5,7 +5,9 @@
 define('ADMIN_RID', 4);
 // Platforms
 define('SCRATCHPAD_PLATFORM', 5);
-define('SCRATCHPAD_2_PLATFORM', 3914);
+// We have moved to proper Scratchpads 2.0 releases, which means the platform
+// nid will constantly change.
+//define('SCRATCHPAD_2_PLATFORM', 3914);
 // Profiles
 define('SCRATCHPAD_PROFILE_NID', 691);
 define('EMONOCOT_PROFILE_NID', 1754);
@@ -456,9 +458,13 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
         EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad 2.0 (http://e-monocot.org)')
       )
     );
+    // Get the platform NID.
+    $results = db_query("SELECT MAX(nid) FROM node WHERE type = 'platform' AND title LIKE 'quartz.nhm.ac.uk_scratchpads-2.%'");
+    $s2_platform_nid = db_fetch_array($results);
+    $s2_platform_nid = array_pop($s2_platform_nid);
     $form['site']['platform'] = array(
       '#type' => 'hidden',
-      '#value' => SCRATCHPAD_2_PLATFORM
+      '#value' => $s2_platform_nid
     );
     $form['site']['site_language'] = array(
       '#type' => 'hidden',
@@ -497,8 +503,10 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
   $form['#submit'] = array_merge(array(
     'hostmaster_scratchpad_form_submit'
   ), (is_array($form['#submit']) ? $form['#submit'] : array()));
-  $form['site']['db_server']['#value'] = 5067;
-  $form['site']['db_server_description']['#value'] = '<div class="placeholder">msq-scratchpads.nhm.ac.uk</div>';
+  $results = db_query('SELECT db_server, title FROM hosting_site h, node n WHERE h.db_server = n.nid AND h.status = 1 AND db_server IN (6585, 5067) GROUP BY db_server ORDER BY COUNT(*) LIMIT 1');
+  $db_nid = db_fetch_array($results);
+  $form['site']['db_server']['#value'] = $db_nid['db_server'];
+  $form['site']['db_server_description']['#value'] = '<div class="placeholder">' . $db_nid['title'] . '</div>';
 }
 
 /**
