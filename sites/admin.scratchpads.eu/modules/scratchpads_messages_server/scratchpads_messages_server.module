@@ -274,6 +274,8 @@ function scratchpads_messages_server_add_messages_validate(&$form, &$form_state)
       form_set_error('expire', t('Ensure you keep the time format.'));
       unset($form['#redirect']);
     }
+  }else if($form_state['values']['type'] == 1){
+    form_set_error('expire', t('Status messages MUST have an expire date.'));
   }
 }
 
