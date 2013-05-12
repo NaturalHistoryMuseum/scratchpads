@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Disable all form elements and invalidate submissions.
+ */
+function hide_all_forms_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+  if ($user->uid != 1) {
+    $form = array();
+  }
+}
