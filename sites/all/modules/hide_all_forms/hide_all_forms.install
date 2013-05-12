@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Set the weight of the module to ensure it is executed last
+ */
+function hide_all_forms_install(){
+  db_query("UPDATE {system} SET weight = 10000 WHERE name = 'hide_all_forms'");
+}
