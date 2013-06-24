@@ -107,18 +107,6 @@ DirectoryIndex index.php
   # RewriteBase /
   ### BOOST START ###
 
-  # Gzip Cookie Test
-  RewriteRule ^(.*)boost-gzip-cookie-test\.html cache/perm/boost-gzip-cookie-test\.html\.gz [L,T=text/html,E=no-gzip:1]
-
-  # GZIP - Cached css & js files
-  RewriteCond %{HTTP_COOKIE} !(boost-gzip)
-  RewriteCond %{HTTP:Accept-encoding} !gzip
-  RewriteRule .* - [S=2]
-  RewriteCond %{DOCUMENT_ROOT}/cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.css\.gz -s
-  RewriteRule .* cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.css\.gz [L,QSA,T=text/css,E=no-gzip:1]
-  RewriteCond %{DOCUMENT_ROOT}/cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.js\.gz -s
-  RewriteRule .* cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.js\.gz [L,QSA,T=text/javascript,E=no-gzip:1]
-
   # NORMAL - Cached css & js files
   RewriteCond %{DOCUMENT_ROOT}/cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.css -s
   RewriteRule .* cache/perm/%{HTTP_HOST}%{REQUEST_URI}_\.css [L,QSA,T=text/css]
@@ -132,14 +120,7 @@ DirectoryIndex index.php
   RewriteCond %{HTTPS} on [OR]
   RewriteCond %{HTTP:Cache-Control} no-cache [OR]
   RewriteCond %{HTTP_COOKIE} DRUPAL_UID
-  RewriteRule .* - [S=3]
-
-  # GZIP
-  RewriteCond %{HTTP_COOKIE} !(boost-gzip)
-  RewriteCond %{HTTP:Accept-encoding} !gzip
   RewriteRule .* - [S=1]
-  RewriteCond %{DOCUMENT_ROOT}/cache/normal/%{HTTP_HOST}%{REQUEST_URI}_%{QUERY_STRING}\.html\.gz -s
-  RewriteRule .* cache/normal/%{HTTP_HOST}%{REQUEST_URI}_%{QUERY_STRING}\.html\.gz [L,T=text/html,E=no-gzip:1]
 
   # NORMAL
   RewriteCond %{DOCUMENT_ROOT}/cache/normal/%{HTTP_HOST}%{REQUEST_URI}_%{QUERY_STRING}\.html -s
