@@ -459,7 +459,7 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
       )
     );
     // Get the platform NID.
-    $results = db_query("SELECT MAX(nid) FROM node WHERE type = 'platform' AND title LIKE 'quartz.nhm.ac.uk_scratchpads-2.%'");
+    $results = db_query("SELECT MAX(nid) FROM node WHERE type = 'platform' AND title LIKE 'quartz.nhm.ac.uk%scratchpads-2.%'");
     $s2_platform_nid = db_fetch_array($results);
     $s2_platform_nid = array_pop($s2_platform_nid);
     $form['site']['platform'] = array(
