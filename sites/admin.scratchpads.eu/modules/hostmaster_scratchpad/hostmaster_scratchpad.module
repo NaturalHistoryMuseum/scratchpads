@@ -458,6 +458,11 @@ function hostmaster_scratchpad_form_hosting_signup_form_alter_alter(&$form, $for
         EMONOCOT_2_PROFILE_NID => t('emonocot Scratchpad 2.0 (http://e-monocot.org)')
       )
     );
+    // The following code removes the option to change the install profile.
+    $form['about_scratchpad']['profile'] = array(
+      '#type' => 'hidden',
+      '#value' => SCRATCHPAD_2_PROFILE_NID
+    );
     // Get the platform NID.
     $results = db_query("SELECT MAX(nid) FROM node WHERE type = 'platform' AND title LIKE 'quartz.nhm.ac.uk%%scratchpads-2.%%'");
     $s2_platform_nid = db_fetch_array($results);
