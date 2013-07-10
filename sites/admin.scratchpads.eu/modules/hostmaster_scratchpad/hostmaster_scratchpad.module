@@ -522,7 +522,15 @@ function hostmaster_scratchpad_form_validate($form, &$form_state){
   $site_url = strpos($form_state['values']['title'], '.') ? $form_state['values']['title'] : trim($form_state['values']['title']) . '.myspecies.info';
   if(db_result(db_query("SELECT COUNT(*) FROM node n, hosting_site h WHERE h.nid = n.nid AND (h.status = 1 OR h.status = 0) AND type = 'site' AND n.title = '%s'", $site_url))){
     // Site URL already in use.
-    form_set_error('title', 'The domain you have chosen is already in use');
+    form_set_error('title', t('The domain you have chosen is already in use'));
+  }
+  if(in_array($site_url, array(
+    'quartz.nhm.ac.uk',
+    'data.nhm.ac.uk',
+    'fencedine.myspecies.info',
+    'dungbeetle.co.uk'
+  )) || substr($site_url, -15) == '.scratchpads.eu' || substr($site_url, -11) == '.taxon.name'){
+    form_set_error('title', t('Use of the selected URL is restricted.  Please email the Scratchpads Team if you believe this to be a mistake.'));
   }
   // Only validate if we are trying to create a Scratchpad
   if($form_state['values']['profile'] == SCRATCHPAD_2_PROFILE_NID || $form_state['values']['profile'] == EMONOCOT_2_PROFILE_NID){
