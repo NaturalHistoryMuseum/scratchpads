@@ -24,6 +24,20 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
 ';
       break;
+    case 'macrostomorpha.info.myspecies.info':
+      return '
+    <Location />
+      AuthType Digest
+      AuthName "Hidden Upgrade Site"
+      AuthDigestProvider file
+      AuthUserFile /var/www/digest_passwd
+      Require valid-user
+      Order allow,deny
+      Allow from 157.140.0.0/255.255.0.0
+      Satisfy any
+    </Location>
+';
+      break;
     case 'phthiraptera.info':
       return '
     RewriteEngine on
