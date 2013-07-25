@@ -36,6 +36,10 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
       Allow from 157.140.0.0/255.255.0.0
       Satisfy any
     </Location>
+    <LocationMatch "/google[0-9a-f]*.html">
+      Order allow,deny
+      Allow from all
+    </LocationMatch>
 ';
       break;
     case 'phthiraptera.info':
