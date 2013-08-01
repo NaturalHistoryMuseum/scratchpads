@@ -542,6 +542,9 @@ function hostmaster_scratchpad_form_validate($form, &$form_state){
       if(gethostbyname($form_state['values']['title']) !== gethostbyname('quartz.nhm.ac.uk')){
         form_set_error('title', 'The domain name you have entered is not pointing at our server:<ul><li>' . $form_state['values']['title'] . ' = ' . gethostbyname($form_state['values']['title']) . '</li><li>quartz.nhm.ac.uk = ' . gethostbyname('quartz.nhm.ac.uk') . '</li></ul>');
       }
+      if(strpos($form_state['values']['title'], 'e-monocot.org')){
+        $form_state['values']['profile'] = EMONOCOT_2_PROFILE_NID;
+      }
     }else{
       $form_state['values']['subdomain'] = trim($form_state['values']['subdomain']) . '.myspecies.info';
     }
