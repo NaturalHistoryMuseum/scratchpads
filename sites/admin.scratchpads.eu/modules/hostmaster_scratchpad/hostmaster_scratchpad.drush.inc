@@ -27,14 +27,13 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     case 'macrostomorpha.info.myspecies.info':
       return '
     <Location />
+      Order deny,allow
+      Allow from all
       AuthType Digest
       AuthName "Hidden Upgrade Site"
       AuthDigestProvider file
       AuthUserFile /var/www/digest_passwd
       Require valid-user
-      Order allow,deny
-      Allow from 157.140.0.0/255.255.0.0
-      Satisfy any
     </Location>
     <LocationMatch "/google[0-9a-f]*.html">
       Order allow,deny
