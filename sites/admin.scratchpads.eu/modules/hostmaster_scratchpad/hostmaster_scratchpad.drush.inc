@@ -18,12 +18,17 @@ function drush_hostmaster_scratchpad_pre_provision_install($url = NULL){
  */
 function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
   switch($uri){
+    // This may no longer be required, but it certainly isn't causing harm being
+    // here, so it will remain for now.
     case 'scratchpads.eu':
       return '
     ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
     ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
 ';
       break;
+    // Password protected sites with google given access to /google*.html
+    // Useful for development sites.  Note, passwords will need to be added to
+    // the digest password file
     case 'macrostomorpha.info.myspecies.info':
       return '
     <Location />
@@ -41,6 +46,7 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     </LocationMatch>
 ';
       break;
+    // Display the old publications crap.
     case 'phthiraptera.info':
       return '
     RewriteEngine on
@@ -53,6 +59,7 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     // Any NHM only sites
     case 'edit.nhm.ac.uk':
     case 'zooemu.nhm.ac.uk':
+    case 'ukregionalcollections.myspecies.info':
       return '
     <Location />
       Order deny,allow
