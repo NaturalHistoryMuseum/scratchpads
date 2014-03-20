@@ -19,7 +19,7 @@ function drush_hostmaster_scratchpad_pre_provision_install($url = NULL){
 function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
   $additional_data = '
     RewriteEngine on
-    RewriteCond %{REQUEST_URI} /files/
+    RewriteCond %{REQUEST_URI} ^/files/
     RewriteRule (.*) http://%{HTTP_HOST}/sites/%{HTTP_HOST}$1 [L]
 ';
   switch($uri){
