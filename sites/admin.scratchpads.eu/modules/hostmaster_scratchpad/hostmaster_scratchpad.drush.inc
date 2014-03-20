@@ -17,21 +17,23 @@ function drush_hostmaster_scratchpad_pre_provision_install($url = NULL){
  * Implements hook_provision_apache_vhost_config
  */
 function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
+  $additional_data = '
+    RewriteEngine on
+    RewriteCond %{REQUEST_URI} /files/
+    RewriteRule (.*) http://%{HTTP_HOST}/sites/%{HTTP_HOST}$1 [L]
+';
   switch($uri){
     // This may no longer be required, but it certainly isn't causing harm being
     // here, so it will remain for now.
     case 'scratchpads.eu':
-      return '
-    ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
+      return $additional_data . '    ProxyPass /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
     ProxyPassReverse /support/issues http://web-scratchpad-solr.nhm.ac.uk:3000/
 ';
-      break;
     // Password protected sites with google given access to /google*.html
     // Useful for development sites.  Note, passwords will need to be added to
     // the digest password file
     case 'macrostomorpha.info.myspecies.info':
-      return '
-    <Location />
+      return $additional_data . '    <Location />
       Order deny,allow
       Allow from all
       AuthType Digest
@@ -45,28 +47,24 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
       Allow from all
     </LocationMatch>
 ';
-      break;
     // Display the old publications crap.
     case 'phthiraptera.info':
-      return '
-    RewriteEngine on
-    RewriteCond %{REQUEST_URI} /Publications/
+      return $additional_data . '    RewriteCond %{REQUEST_URI} /Publications/
     RewriteRule (.*) /var/www/phthiraptera.org$1
     RewriteCond %{REQUEST_URI} /phthiraptera.org
     RewriteRule /phthiraptera\.org(.*) /var/www/phthiraptera.org$1
 ';
-      break;
     // Any NHM only sites
     case 'edit.nhm.ac.uk':
     case 'zooemu.nhm.ac.uk':
     case 'ukregionalcollections.myspecies.info':
-      return '
-    <Location />
+      return $additional_data . '    <Location />
       Order deny,allow
       Deny from all
       Allow from 157.140.0.0/255.255.0.0
     </Location>
 ';
-      break;
+    default:
+      return $additional_data;
   }
 }
