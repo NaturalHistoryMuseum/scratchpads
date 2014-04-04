@@ -698,8 +698,8 @@ function simplenews_subscription_list_form() {
   // Subscription table and table pager
   while ($subscription = db_fetch_object($result)) {
     $snids[$subscription->snid] = '';
-    $form['mail'][$subscription->snid] = array('#value' => $subscription->mail);
-    $form['name'][$subscription->snid] =  array('#value' => isset($subscription->uid) ? l($subscription->name, 'user/'. $subscription->uid) : $subscription->name);
+    $form['mail'][$subscription->snid] = array('#value' => check_plain($subscription->mail));
+    $form['name'][$subscription->snid] =  array('#value' => isset($subscription->uid) ? l($subscription->name, 'user/'. $subscription->uid) : check_plain($subscription->name));
     $form['status'][$subscription->snid] = array('#value' => theme('simplenews_status', $subscription->activated, 'activated'));
     $form['operations'][$subscription->snid] = array('#value' => l(t('edit'), 'admin/content/simplenews/users/edit/'. $subscription->snid, array(), drupal_get_destination()));
   }
