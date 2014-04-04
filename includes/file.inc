@@ -38,7 +38,7 @@ define('FILE_STATUS_PERMANENT', 1);
  * @return A string containing a URL that can be used to download the file.
  */
 function file_create_url($path) {
-  // Strip file_directory_path from $path. We only include relative paths in urls.
+  // Strip file_directory_path from $path. We only include relative paths in URLs.
   if (strpos($path, file_directory_path() .'/') === 0) {
     $path = trim(substr($path, strlen(file_directory_path())), '\\/');
   }
@@ -134,20 +134,81 @@ function file_check_directory(&$directory, $mode = 0, $form_item = NULL) {
     }
   }
 
-  if ((file_directory_path() == $directory || file_directory_temp() == $directory) && !is_file("$directory/.htaccess")) {
-    $htaccess_lines = "SetHandler Drupal_Security_Do_Not_Remove_See_SA_2006_006\nOptions None\nOptions +FollowSymLinks";
+  if (file_directory_path() == $directory || file_directory_temp() == $directory) {
+    file_create_htaccess($directory, $form_item);
+  }
+
+  return TRUE;
+}
+
+/**
+ * Creates a .htaccess file in the given directory.
+ *
+ * @param $directory
+ *   The directory.
+ * @param $form_item
+ *   An optional string containing the name of a form item that any errors
+ *   will be attached to. Useful when called from file_check_directory() to
+ *   validate a directory path entered as a form value. An error will
+ *   consequently prevent form submit handlers from running, and instead
+ *   display the form along with the error messages.
+ * @param $force_overwrite
+ *   Set to TRUE to attempt to overwrite the existing .htaccess file if one is
+ *   already present. Defaults to FALSE.
+ */
+function file_create_htaccess($directory, $form_item = NULL, $force_overwrite = FALSE) {
+  if (!is_file("$directory/.htaccess") || $force_overwrite) {
+    $htaccess_lines = file_htaccess_lines();
     if (($fp = fopen("$directory/.htaccess", 'w')) && fputs($fp, $htaccess_lines)) {
       fclose($fp);
       chmod($directory .'/.htaccess', 0664);
     }
     else {
       $variables = array('%directory' => $directory, '!htaccess' => '<br />'. nl2br(check_plain($htaccess_lines)));
-      form_set_error($form_item, t("Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables));
+      if ($form_item) {
+        form_set_error($form_item, t("Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables));
+      }
       watchdog('security', "Security warning: Couldn't write .htaccess file. Please create a .htaccess file in your %directory directory which contains the following lines: <code>!htaccess</code>", $variables, WATCHDOG_ERROR);
     }
   }
+}
 
-  return TRUE;
+/**
+ * Returns the standard .htaccess lines that Drupal writes to file directories.
+ *
+ * @return
+ *   A string representing the desired contents of the .htaccess file.
+ *
+ * @see file_create_htaccess()
+ */
+function file_htaccess_lines() {
+  $lines = <<<EOF
+# Turn off all options we don't need.
+Options None
+Options +FollowSymLinks
+
+# Set the catch-all handler to prevent scripts from being executed.
+SetHandler Drupal_Security_Do_Not_Remove_See_SA_2006_006
+<Files *>
+  # Override the handler again if we're run later in the evaluation list.
+  SetHandler Drupal_Security_Do_Not_Remove_See_SA_2013_003
+</Files>
+
+# If we know how to do it safely, disable the PHP engine entirely.
+<IfModule mod_php5.c>
+  php_flag engine off
+</IfModule>
+# PHP 4, Apache 1.
+<IfModule mod_php4.c>
+  php_flag engine off
+</IfModule>
+# PHP 4, Apache 2.
+<IfModule sapi_apache2.c>
+  php_flag engine off
+</IfModule>
+EOF;
+
+  return $lines;
 }
 
 /**
@@ -403,6 +464,9 @@ function file_munge_filename($filename, $extensions, $alerts = TRUE) {
 
   // Allow potentially insecure uploads for very savvy users and admin
   if (!variable_get('allow_insecure_uploads', 0)) {
+    // Remove any null bytes. See http://php.net/manual/en/security.filesystem.nullbytes.php
+    $filename = str_replace(chr(0), '', $filename);
+
     $whitelist = array_unique(explode(' ', trim($extensions)));
 
     // Split the filename up by periods. The first part becomes the basename
@@ -862,7 +926,7 @@ function file_transfer($source, $headers) {
   }
   
   // IE cannot download private files because it cannot store files downloaded
-  // over https in the browser cache. The problem can be solved by sending
+  // over HTTPS in the browser cache. The problem can be solved by sending
   // custom headers to IE. See http://support.microsoft.com/kb/323308/en-us
   if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on')) {
     drupal_set_header('Cache-Control: private');
