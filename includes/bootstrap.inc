@@ -726,10 +726,9 @@ function drupal_load($type, $name) {
  * @see page_set_cache()
  */
 function drupal_page_header() {
-  header("Expires: Sun, 19 Nov 1978 05:00:00 GMT");
+  header("Expires: Sat, 01 Jan 2050 05:00:00 GMT");
   header("Last-Modified: ". gmdate("D, d M Y H:i:s") ." GMT");
-  header("Cache-Control: store, no-cache, must-revalidate");
-  header("Cache-Control: post-check=0, pre-check=0", FALSE);
+  header("Cache-Control: public");
 }
 
 /**

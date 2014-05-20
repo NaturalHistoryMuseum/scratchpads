@@ -6,7 +6,8 @@
 function hide_all_forms_form_alter(&$form, &$form_state, $form_id){
   global $user;
   if($user->uid != 1){
-    $form = array();
-    drupal_set_message('This site was archived on ' . date('Y-m-d'), 'status', FALSE);
+    $form = array(
+      '#value' => t('This form on this page or block has been disabled.')
+    );
   }
 }
