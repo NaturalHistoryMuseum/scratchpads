@@ -57,6 +57,7 @@ function hostmaster_scratchpad_provision_apache_vhost_config($uri, $data){
     // Any NHM only sites
     case 'edit.nhm.ac.uk':
     case 'zooemu.nhm.ac.uk':
+    case 'collectionsforall.myspecies.info':
     case 'ukregionalcollections.myspecies.info':
       return $additional_data . '    <Location />
       Order deny,allow
